@@ -26,7 +26,7 @@ import {
  * Менеджер видит свои задачи, руководитель — команду, владелец — всё
  * (seesTask в lib/admin/tasks.ts). Руководителю и владельцу сверху —
  * таблица по людям: у кого сколько сделано, не сделано и переносов.
- * Только просмотр: менять задачи — на главной, в блоке «Задачи».
+ * Только просмотр: менять задачи — выше на той же странице «Задачи».
  */
 
 const FIELD = "w-full min-w-0 rounded-lg border border-line bg-ink px-2 py-1.5 text-xs text-text";
@@ -73,17 +73,14 @@ export function TaskHistoryView({
   ];
 
   return (
-    <div>
-      <Link href="/admin#tasks" className="text-xs text-muted hover:text-text">
-        {h.back}
-      </Link>
-      <h1 className="mt-2 flex items-center gap-2 text-lg font-semibold">
+    <section id="history" className="scroll-mt-28">
+      <h2 className="flex items-center gap-2 text-lg font-semibold">
         {h.title}
-        <HelpHint topic={helpAnchor("/admin", "tasks-history")} />
-      </h1>
+        <HelpHint topic={helpAnchor("/admin/tasks", "history")} />
+      </h2>
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">{team ? h.leadTeam : h.leadMine}</p>
 
-      <form action="/admin/tasks" className="mt-4 flex flex-wrap items-end gap-2 text-xs text-muted">
+      <form action="/admin/tasks#history" className="mt-4 flex flex-wrap items-end gap-2 text-xs text-muted">
         <label className="grid min-w-0 gap-1">
           {h.filterKind}
           <select name="k" defaultValue={kind} className={FIELD}>
@@ -151,7 +148,7 @@ export function TaskHistoryView({
                 {people.map((row) => (
                   <tr key={row.id} className="border-t border-line">
                     <td className="py-1.5 pr-3">
-                      <Link href={`/admin/tasks?p=${row.id}&d=${days}`} className="hover:text-green">
+                      <Link href={`/admin/tasks?p=${row.id}&d=${days}#history`} className="hover:text-green">
                         {history.names.get(row.id) ?? "—"}
                       </Link>
                     </td>
@@ -201,6 +198,6 @@ export function TaskHistoryView({
         })}
       </ul>
       {history.more ? <p className="mt-3 text-xs text-faint">{h.more(HISTORY_LIMIT)}</p> : null}
-    </div>
+    </section>
   );
 }

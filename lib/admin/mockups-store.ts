@@ -3,6 +3,7 @@ import { ownPromo } from "@/lib/admin/mockup-offer";
 import type { PanelLocale } from "@/lib/admin/i18n";
 import {
   SHOWCASE_LOCK,
+  SHOWCASE_OWNER_KEY,
   assignsMockups,
   clientMessage,
   mockupNiche,
@@ -15,6 +16,7 @@ import {
   type MockupRow,
 } from "@/lib/admin/mockups";
 import type { Staff } from "@/lib/admin/session";
+import { orderOwners } from "@/lib/admin/mockup-order-store";
 import { accountTags } from "@/lib/admin/work-accounts-store";
 import { issueProtoCode, issueShowcaseCode, liveCodesUntil } from "@/lib/proto/code-store";
 import { protoUrl } from "@/lib/proto/store";
@@ -29,6 +31,8 @@ import { serviceClient } from "@/lib/supabase";
  * Что такое макет и откуда список — lib/admin/mockups.ts.
  */
 
+const str = (v: unknown) => (typeof v === "string" && v ? v : null);
+
 /**
  * Все отправки макетов клиентам: кому и с какого аккаунта (mockupSends).
  * Строка mockup_offers одна на клиента и макет, поэтому их немного.
@@ -38,7 +42,7 @@ async function allSends(refs: readonly string[]) {
   if (!db || !refs.length) return [];
   const { data, error } = await db
     .from("mockup_offers")
-    .select("mockup_ref, client, peer, account, sent_at, lead_id")
+    .select("mockup_ref, client, peer, account, sent_at, lead_id, prospect_id")
     .in("mockup_ref", [...refs])
     .order("sent_at", { ascending: true })
     .limit(3000);
@@ -65,16 +69,24 @@ export async function mockupList(locale: PanelLocale): Promise<MockupRow[]> {
     // Первая отправка клиенту — у каждого макета: по ней «отправлен клиенту»,
     // ответственный (хозяин лида) и сколько открытый ещё живёт без пароля
     // (24 часа, lib/proto/auto-close.ts).
-    const refs = (data ?? []).filter((r) => r.auto !== true).map((r) => `p:${r.id}`);
-    const [sends, every, tags] = await Promise.all([firstSends(refs), allSends(refs), accountTags()]);
+    const protoRows = (data ?? []).filter((r) => r.auto !== true);
+    const showcaseRefs = showcaseCases().map((item) => `s:${item.slug}`);
+    const refs = [...protoRows.map((r) => `p:${r.id}`), ...showcaseRefs];
+    const [sends, every, tags, showcaseSet] = await Promise.all([firstSends(refs), allSends(refs), accountTags(), showcaseOwners()]);
     const sendsByRef = mockupSends(every, tags);
-    const owners = await ownerIds(data ?? [], sends);
+    const owners = await ownerIds(
+      [
+        ...protoRows.map((r) => ({ ref: `p:${r.id}`, set: str(r.owner_staff_id), prospect: str(r.prospect_id), made: str(r.created_by) })),
+        ...showcaseRefs.map((ref) => ({ ref, set: showcaseSet.get(ref.slice(2)) ?? null, prospect: null, made: null })),
+      ],
+      sends,
+    );
+    const ownerOf = (ref: string) => mockupOwner(owners.ids.get(ref) ?? { set: null, lead: null, touch: null, made: null }, owners.names);
     const now = new Date();
-    for (const row of data ?? []) {
-      // Собранные ботом для касаний (lib/proto/auto) — не в списке. Владелец,
-      // 09.10.2026: «Убери из макетов „для касаний“… чтобы менеджеры не
-      // путались». Их ссылки у клиентов продолжают открываться.
-      if (row.auto === true) continue;
+    for (const row of protoRows) {
+      // Собранные ботом для касаний (lib/proto/auto) — не в списке (отсеяны
+      // выше). Владелец, 09.10.2026: «Убери из макетов „для касаний“… чтобы
+      // менеджеры не путались». Их ссылки у клиентов продолжают открываться.
       const id = String(row.id);
       const closed = Boolean(row.closed_at) || Boolean(activeLock(row));
       rows.push({
@@ -92,17 +104,24 @@ export async function mockupList(locale: PanelLocale): Promise<MockupRow[]> {
         opens: Number(row.opens ?? 0),
         lang: row.locale === "uz" ? "uz" : "ru",
         promo: promoOf(row.promo),
-        owner: mockupOwner(owners.ids.get(id) ?? { set: null, lead: null, touch: null, made: null }, owners.names),
+        owner: ownerOf(`p:${id}`),
         sentAt: sends.get(`p:${id}`)?.sent_at ?? null,
         sends: sendsByRef.get(`p:${id}`) ?? [],
         ...openState(row, sends.get(`p:${id}`), now),
       });
     }
-  }
-
-  for (const item of showcaseCases()) {
-    const key = SHOWCASE_LOCK[item.slug];
-    rows.push(showcaseRow(item, locale, key ? (live.showcases.get(key) ?? null) : null));
+    for (const item of showcaseCases()) {
+      const ref = `s:${item.slug}`;
+      const key = SHOWCASE_LOCK[item.slug];
+      rows.push({
+        ...showcaseRow(item, locale, key ? (live.showcases.get(key) ?? null) : null),
+        owner: ownerOf(ref),
+        sentAt: sends.get(ref)?.sent_at ?? null,
+        sends: sendsByRef.get(ref) ?? [],
+      });
+    }
+  } else {
+    for (const item of showcaseCases()) rows.push(showcaseRow(item, locale, null));
   }
 
   // Свежие сверху. У витрины дата без часов — она встаёт после прототипов того же дня.
@@ -111,52 +130,55 @@ export async function mockupList(locale: PanelLocale): Promise<MockupRow[]> {
 
 type OwnerIds = Parameters<typeof mockupOwner>[0];
 
+/** Макет для поиска ответственного: назначенный руками, касание прототипа, кто собрал. */
+type OwnerSeed = { ref: string; set: string | null; prospect: string | null; made: string | null };
+
 /**
- * Кандидаты в ответственные у каждого прототипа и имена сотрудников. Три
- * запроса на весь список, а не на строку: лиды первой отправки, касания и
- * сотрудники.
+ * Кандидаты в ответственные у каждого макета и имена сотрудников. Четыре
+ * запроса на весь список, а не на строку: лиды первой отправки, касания,
+ * заказы из задач (orderOwners) и сотрудники. У витрины «собрал» нет: её собирают в репозитории.
  */
 async function ownerIds(
-  rows: readonly Record<string, unknown>[],
+  seeds: readonly OwnerSeed[],
   sends: Map<string, FirstSend>,
 ): Promise<{ ids: Map<string, OwnerIds>; names: Map<string, string> }> {
   const ids = new Map<string, OwnerIds>();
   const names = new Map<string, string>();
   const db = serviceClient();
   if (!db) return { ids, names };
-  const str = (v: unknown) => (typeof v === "string" && v ? v : null);
 
   const leadIds = new Set<string>();
   const prospectIds = new Set<string>();
-  for (const row of rows) {
-    const sent = sends.get(`p:${String(row.id)}`);
+  for (const seed of seeds) {
+    const sent = sends.get(seed.ref);
     if (sent?.lead_id) leadIds.add(sent.lead_id);
-    const prospect = sent?.prospect_id ?? str(row.prospect_id);
+    const prospect = sent?.prospect_id ?? seed.prospect;
     if (prospect) prospectIds.add(prospect);
   }
-  const [leads, prospects] = await Promise.all([
+  const [leads, prospects, ordered] = await Promise.all([
     leadIds.size
       ? db.from("leads").select("id, assigned_staff_id").in("id", [...leadIds])
       : Promise.resolve({ data: [] as Record<string, unknown>[] }),
     prospectIds.size
       ? db.from("prospects").select("id, touched_by").in("id", [...prospectIds])
       : Promise.resolve({ data: [] as Record<string, unknown>[] }),
+    orderOwners(seeds.map((seed) => seed.ref)),
   ]);
   const leadOwner = new Map((leads.data ?? []).map((l) => [String(l.id), str(l.assigned_staff_id)]));
   const toucher = new Map((prospects.data ?? []).map((p) => [String(p.id), str(p.touched_by)]));
 
   const staffIds = new Set<string>();
-  for (const row of rows) {
-    const id = String(row.id);
-    const sent = sends.get(`p:${id}`);
-    const prospect = sent?.prospect_id ?? str(row.prospect_id);
+  for (const seed of seeds) {
+    const sent = sends.get(seed.ref);
+    const prospect = sent?.prospect_id ?? seed.prospect;
     const entry: OwnerIds = {
-      set: str(row.owner_staff_id),
+      set: seed.set,
+      order: ordered.get(seed.ref) ?? null,
       lead: sent?.lead_id ? (leadOwner.get(sent.lead_id) ?? null) : null,
       touch: prospect ? (toucher.get(prospect) ?? null) : null,
-      made: str(row.created_by),
+      made: seed.made,
     };
-    ids.set(id, entry);
+    ids.set(seed.ref, entry);
     for (const v of Object.values(entry)) if (v) staffIds.add(v);
   }
   if (staffIds.size) {
@@ -164,6 +186,24 @@ async function ownerIds(
     for (const s of data ?? []) if (s.display_name) names.set(String(s.id), String(s.display_name));
   }
   return { ids, names };
+}
+
+/**
+ * Назначенные руками ответственные витрины: строки stats_snapshots
+ * «showcase-owner:<проект>» (SHOWCASE_OWNER_KEY). Строки в protos у витрины
+ * нет — её макеты собраны в репозитории.
+ */
+export async function showcaseOwners(): Promise<Map<string, string>> {
+  const out = new Map<string, string>();
+  const db = serviceClient();
+  if (!db) return out;
+  const { data, error } = await db.from("stats_snapshots").select("key, payload").like("key", `${SHOWCASE_OWNER_KEY}%`).limit(500);
+  if (error) console.error("макеты: не прочитал ответственных витрины", error.message);
+  for (const row of data ?? []) {
+    const staffId = str((row.payload as { staffId?: unknown } | null)?.staffId);
+    if (staffId) out.set(String(row.key).slice(SHOWCASE_OWNER_KEY.length), staffId);
+  }
+  return out;
 }
 
 /** Кого можно назначить ответственным: все, кто работает сейчас. */
@@ -181,12 +221,13 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 /**
  * Назначить ответственного за прототип. Руководитель и владелец
  * (assignsMockups); пустой staffId — снять назначение, и ответственный снова
- * берётся по лиду и касанию. У витрины ответственного нет.
+ * берётся по лиду и касанию. У витрины — строка «showcase-owner:<проект>»
+ * в stats_snapshots: своей строки в базе у неё нет.
  */
 export async function setMockupOwner(ref: string, staffId: string, staff: Staff, ip: string | null): Promise<OwnerResult> {
   if (!assignsMockups(staff.role)) return { ok: false, reason: "forbidden" };
   const target = parseMockupRef(ref);
-  if (!target || target.kind !== "proto") return { ok: false, reason: "not_found" };
+  if (!target) return { ok: false, reason: "not_found" };
   if (staffId && !UUID.test(staffId)) return { ok: false, reason: "not_found" };
   const db = serviceClient();
   if (!db) return { ok: false, reason: "offline" };
@@ -196,6 +237,27 @@ export async function setMockupOwner(ref: string, staffId: string, staff: Staff,
     const { data: who } = await db.from("staff").select("id, display_name, is_active").eq("id", staffId).maybeSingle();
     if (!who?.is_active) return { ok: false, reason: "not_found" };
     ownerName = String(who.display_name ?? "");
+  }
+  if (target.kind === "showcase") {
+    const item = showcaseCases().find((c) => c.slug === target.slug);
+    if (!item) return { ok: false, reason: "not_found" };
+    const key = `${SHOWCASE_OWNER_KEY}${item.slug}`;
+    const at = new Date().toISOString();
+    const { error } = staffId
+      ? await db.from("stats_snapshots").upsert({ key, payload: { staffId, by: staff.id, at }, computed_at: at }, { onConflict: "key" })
+      : await db.from("stats_snapshots").delete().eq("key", key);
+    if (error) {
+      console.error("макеты: не сохранил ответственного витрины", error.message);
+      return { ok: false, reason: "offline" };
+    }
+    await record("mockup.owner", {
+      actorStaffId: staff.id,
+      targetType: "showcase",
+      targetId: item.slug,
+      meta: { name: item.name, owner: ownerName },
+      ip,
+    });
+    return { ok: true };
   }
   const { data: proto, error } = await db
     .from("protos")

@@ -8,7 +8,7 @@ import { defineDict, plural } from "@/lib/admin/i18n";
  * переводятся: они на языке покупателя и живут в lib/store.
  */
 export const ordersDict = defineDict({
-  title: { ru: "Заявки на покупку", uz: "Xarid buyurtmalari", pl: "Zamówienia" },
+  title: { ru: "Заказы магазина", uz: "Do‘kon buyurtmalari", pl: "Zamówienia sklepu" },
   bankMissing: {
     ru: (vars: string) =>
       `Банковские реквизиты не настроены: ${vars}. Счёт выставится, но покупатель не увидит, куда платить. Переменные задаются в окружении на сервере.`,

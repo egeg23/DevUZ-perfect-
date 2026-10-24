@@ -50,7 +50,7 @@ test("«Главная»: медленное — из памяти, отметк
   const page = read("app/admin/hq/page.tsx");
   assert.match(page, /memo\("hq:broadcast:staff", HISTORY_MS/);
   assert.match(page, /memo\("hq:audience", SLOW_MS/);
-  assert.match(read("lib/admin/sales-stages-store.ts"), /forget\("hq:deals:"\);\n {2}return "ok";/);
+  assert.match(read("lib/admin/sales-stages-store.ts"), /forget\("hq:deals:"\);\n {2}forget\("deals:"\);\n {2}return "ok";/);
   assert.match(read("lib/admin/broadcast-store.ts"), /forget\("hq:broadcast:"\);/);
   assert.match(read("lib/admin/bot-users-store.ts"), /forget\("hq:audience"\);/);
   assert.ok(SLOW_MS <= 5 * 60_000, "медленное — не дольше пяти минут");
@@ -149,4 +149,72 @@ test("счёт трафика: у каждого запуска своя стр�
   const egress = read("lib/egress.mjs");
   assert.match(egress, /const RUN = `\$\{process\.pid\}-\$\{Date\.now\(\)\.toString\(36\)\}`;/);
   assert.match(egress, /key: `egress-tally:\$\{snap\.day\}:\$\{processName\(\)\}:\$\{RUN\}`/);
+});
+
+test("разборы: список и страница — из памяти, любая правка снимает сразу", () => {
+  // 23.10.2026: 1 626 чтений разборов за день — 100 МБ.
+  const store = read("lib/razbor/store.ts");
+  assert.match(store, /export const RAZBOR_MS = 10 \* 60_000;/);
+  assert.match(store, /memo\(`razbor:list:\$\{locale\}`, RAZBOR_MS/);
+  assert.match(store, /memo\(`razbor:slug:\$\{locale\}:\$\{slug\}`, RAZBOR_MS/);
+  // После записи — не до: иначе чтение посередине запомнит старое, и
+  // проверка карты сайта после публикации не найдёт новый разбор.
+  for (const fn of ["saveDraft", "publish", "unpublish", "remove", "saveArticles", "reject"]) {
+    const start = store.indexOf(`export async function ${fn}(`);
+    const body = store.slice(start, store.indexOf("\n}\n", start));
+    const forgot = body.lastIndexOf("forgetRazbors();");
+    assert.ok(forgot > body.lastIndexOf('from("razbors")'), `${fn}: память снимается после записи`);
+  }
+  assert.match(read("lib/razbor/foreign-run.ts"), /if \(!error\) \{\n\s+forgetRazbors\(\);/);
+});
+
+test("сделки — одно чтение на 10 минут для всех, отметка ступени снимает", () => {
+  // 23.10.2026: 274 чтения сделок за день — ~70 МБ.
+  const store = read("lib/admin/sales-stages-store.ts");
+  assert.match(store, /export const DEALS_MS = 10 \* 60_000;/);
+  assert.match(store, /if \(Math\.abs\(Date\.now\(\) - now\.getTime\(\)\) < 60_000\) \{\n\s+return memo\(`deals:\$\{days\}:\$\{limit\}`, DEALS_MS, \(\) => readDeals\(now, days, limit\)\);/);
+  assert.match(store, /forget\("hq:deals:"\);\n\s+forget\("deals:"\);/);
+});
+
+test("пул порции: находки — только «есть или нет»", () => {
+  // 23.10.2026: 84 чтения пула с полным разбором — 29 МБ за день.
+  const store = read("lib/admin/portion-store.ts");
+  const pool = store.slice(store.indexOf("export async function pool("), store.indexOf("export type PortionAssign"));
+  assert.match(pool, /\.select\("id, host, contacts, status, f0:findings->0->>code"\)/);
+  assert.doesNotMatch(pool, /select\("[^"]*(^|, )findings(,|")/);
+});
+
+test("порция: замены и подготовка письма смотрят только статус карточки", () => {
+  // 23.10.2026: карточки целиком читались 1 386 раз за день — 44 МБ.
+  const out = read("lib/admin/outreach-store.ts");
+  const states = out.slice(out.indexOf("export async function prospectStates("), out.indexOf("export async function prospectById("));
+  assert.match(states, /\.select\("id, status, touched_by, touched_at, claimed_by"\)/);
+  assert.match(states, /\.select\("id"\)\.in\("id", part\)\.or\("message\.is\.null,message\.eq\."\)/);
+  assert.doesNotMatch(states, /COLUMNS|findings|walked/);
+  const portion = read("lib/admin/portion-store.ts");
+  for (const fn of ["prepareNextPortion", "topUpPortions"]) {
+    const start = portion.indexOf(`export async function ${fn}(`);
+    const body = portion.slice(start, portion.indexOf("\n}\n", start));
+    assert.match(body, /prospectStates\(/, fn);
+    assert.doesNotMatch(body, /prospectsByIds\(/, fn);
+  }
+});
+
+test("дожимы: сначала лёгкий список, целиком — только кому дожим уходит", () => {
+  // 23.10.2026: 30 касаний целиком на каждый проход — 18 МБ за день.
+  const f = read("lib/admin/outreach-followup.ts");
+  const run = f.slice(f.indexOf("export async function runFollowups("));
+  assert.match(run, /\.select\("id, status, replied_at, ai_handling, sent_at, followups, last_followup_at, target_kind"\)/);
+  assert.match(run, /\.not\("message", "is", null\)/);
+  // Целиком — после того, как счётчик дожима занят, по одной строке.
+  const claim = run.indexOf(".eq(\"followups\", n - 1)");
+  const full = run.indexOf('.select("host, label, message, findings, target, lead_id, walked, claimed_by")');
+  assert.ok(claim > 0 && full > claim, "письмо и разбор — только у того, кому дожим уходит");
+});
+
+test("пульс за 90 дней — из памяти на 5 минут", () => {
+  // 23.10.2026: недельные блоки «Главной» и «Финансов» — 44 чтения, ~25 МБ.
+  const p = read("lib/admin/pulse-store.ts");
+  assert.match(p, /return memo\("pulse:rows", SLOW_MS, async \(\) => \{/);
+  assert.match(p, /if \(rows\.offline\) throw new Error/);
 });

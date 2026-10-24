@@ -237,9 +237,10 @@ test("страницы проектов, договоров и расходов:
     const line = code.split("\n").find((l) => CYRILLIC.test(l));
     assert.equal(line, undefined, `${file}: русский текст мимо словаря: ${line?.trim()}`);
   }
-  // Страницы договора живут без AdminShell — язык для «?» ставят сами.
+  // Страницы самого договора и счёта живут без AdminShell — язык для «?»
+  // ставят сами. Раздел «Договоры» с 23.10.2026 — в общем каркасе с меню.
+  assert.match(read("app/admin/contracts/page.tsx"), /<AdminShell staff=\{staff\}>/);
   for (const file of [
-    "app/admin/contracts/page.tsx",
     "app/admin/contracts/[id]/page.tsx",
     "app/admin/contracts/[id]/invoice/[invoice]/page.tsx",
   ]) {

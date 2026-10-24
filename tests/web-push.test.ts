@@ -216,6 +216,9 @@ test("адрес нажатия: первая кнопка в панель, вх
   assert.equal(pushHref("x", [[{ text: "Открыть", url: enter }]], SITE), "/admin/leads/42");
   assert.equal(panelPath(`${SITE}/admin/enter`, SITE), "/admin");
   assert.equal(pushHref("x", [[{ text: "Сайт", url: "https://example.com/admin/x" }], [{ text: "Задача", url: `${SITE}/admin/tasks/7` }]], SITE), "/admin/tasks/7");
+  const id = "11111111-2222-3333-4444-555555555555";
+  assert.equal(pushHref("Новая задача", [[{ text: "✅ Взять в работу", callback_data: `tk:take:${id}` }]], SITE), `/admin/tasks/${id}`, "задача из бота — в раздел «Задачи»");
+  assert.equal(pushHref("x", [[{ text: "✋", callback_data: `tk:${id}` }]], SITE), "/admin/hq", "чужая кнопка с тем же началом — не задача");
   assert.equal(pushHref(`Карточка: <a href="${SITE}/admin/mockups?p=1">макет</a>`, [], SITE), "/admin/mockups?p=1");
   assert.equal(pushHref(`Вход: ${SITE}/admin/login?t=abc`, [], SITE), PUSH_HOME);
   assert.equal(pushHref("Без ссылок", [], SITE), "/admin/hq");

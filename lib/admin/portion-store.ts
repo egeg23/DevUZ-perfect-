@@ -3,7 +3,7 @@ import { wants } from "@/lib/admin/notify-prefs";
 import { QUEUE_ROLES } from "@/lib/admin/lead-queue";
 import { canContact, routeFor, whatsappLink } from "@/lib/admin/outreach";
 import { contactsFrom } from "@/lib/audit/contacts";
-import { prepareOutreach, prospectsByIds, type Prospect } from "@/lib/admin/outreach-store";
+import { prepareOutreach, prospectStates, prospectsByIds, type Prospect } from "@/lib/admin/outreach-store";
 import {
   ASSIGN_HOUR,
   DELIVER_HOUR,
@@ -88,7 +88,9 @@ export async function pool(limit: number, exclude: ReadonlySet<string> = new Set
   if (!db) return [];
   const { data } = await db
     .from("prospects")
-    .select("id, host, findings, contacts, status")
+    // Находки нужны только «есть или нет»: код первой вместо всего разбора
+    // (трафик базы, 23.10.2026: 84 чтения пула — 29 МБ за день).
+    .select("id, host, contacts, status, f0:findings->0->>code")
     .eq("status", "new")
     .is("claimed_by", null)
     // Карточку взял автопрогон (lib/admin/autopilot-store) — её письмо
@@ -103,7 +105,7 @@ export async function pool(limit: number, exclude: ReadonlySet<string> = new Set
     .filter((row) => !exclude.has(row.id as string))
     .filter((row) => {
       const contacts = contactsFrom(row.contacts);
-      const findings = (row.findings as Prospect["findings"]) ?? [];
+      const findings = (row.f0 ? [{ code: String(row.f0) }] : []) as unknown as Prospect["findings"];
       if (!row.host) return Boolean(routeFor(contacts));
       return canContact({ contacts, findings, status: "new" }) === "ok";
     })
@@ -189,10 +191,11 @@ export async function prepareNextPortion(now: Date = new Date()): Promise<boolea
     .order("created_at", { ascending: true })
     .limit(20);
 
-  const prospects = await prospectsByIds((data ?? []).map((r) => r.prospect_id as string));
+  // Только статус и «есть ли письмо»: текст и разбор здесь не нужны.
+  const prospects = await prospectStates((data ?? []).map((r) => r.prospect_id as string));
   const waiting = (data ?? []).find((row) => {
     const p = prospects.find((x) => x.id === row.prospect_id);
-    return p && !p.message && p.status === "new";
+    return p && !p.hasMessage && p.status === "new";
   });
   if (!waiting) {
     // Тем, у кого текст уже есть или карточку тронули, готовить нечего —
@@ -626,7 +629,8 @@ export async function topUpPortions(now: Date = new Date()): Promise<number> {
   if (!isWorkday(now) || tashkentHour(now) >= REPORT_HOUR) return 0;
   const day = todayInTashkent(now);
   const rows = (await rowsOfDay(day)).filter((r) => !r.closed && r.source === "portion");
-  const prospects = new Map((await prospectsByIds(rows.map((r) => r.prospect_id))).map((p) => [p.id, p]));
+  // Раз в пять минут: только статус и кто трогал (outcomeOf), без текста.
+  const prospects = new Map((await prospectStates(rows.map((r) => r.prospect_id))).map((p) => [p.id, p]));
   let made = 0;
   for (const staffId of new Set(rows.map((r) => r.staff_id))) {
     const mine = rows

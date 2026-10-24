@@ -88,7 +88,7 @@ export function dueText(due: string | null): string {
   return due ? formatDue(due) : "без срока";
 }
 
-type Shown = Pick<Task, "title" | "body" | "due_at">;
+type Shown = Pick<Task, "title" | "body" | "due_at" | "mockup" | "mockup_site">;
 
 function taskLines(task: Shown, project?: string | null): string[] {
   return [
@@ -96,6 +96,8 @@ function taskLines(task: Shown, project?: string | null): string[] {
     ...(task.body.trim() ? [esc(task.body.trim())] : []),
     "",
     ...(project ? [`Проект: ${esc(project)}`] : []),
+    // Заказ макета (lib/admin/mockup-order.ts): сайт — сразу в сообщении.
+    ...(task.mockup ? [`🎨 Заказ макета${task.mockup_site ? `: ${esc(task.mockup_site)}` : ""}`] : []),
     `Срок: <b>${dueText(task.due_at)}</b>`,
   ];
 }

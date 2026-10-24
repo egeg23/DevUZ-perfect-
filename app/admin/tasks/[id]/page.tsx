@@ -3,7 +3,7 @@ import Link from "next/link";
 import { AdminShell } from "@/components/admin/shell";
 import { TaskStepList } from "@/components/admin/tasks-block";
 import { taskCardDict, tasksDict } from "@/content/admin-panel/tasks";
-import { requireStaff } from "@/lib/admin/guard";
+import { requireSection } from "@/lib/admin/guard";
 import { pick } from "@/lib/admin/i18n";
 import { taskCard } from "@/lib/admin/task-store";
 import { formatDue, isOverdue } from "@/lib/admin/tasks";
@@ -17,7 +17,7 @@ export const dynamic = "force-dynamic";
  * (владелец, 14.10.2026). Видит тот же, кто видит её в «Истории задач».
  */
 export default async function TaskCardPage({ params }: { params: Promise<{ id: string }> }) {
-  const staff = await requireStaff();
+  const staff = await requireSection("/admin/tasks");
   const { id } = await params;
   const locale = staff.panel_locale;
   const t = pick(tasksDict, locale);

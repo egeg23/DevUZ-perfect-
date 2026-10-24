@@ -73,6 +73,7 @@ export const mockupsDict = defineDict({
     pl: (name: string, from: string) => `${name} (${from})`,
   },
   ownerFrom_set: { ru: "назначен", uz: "tayinlangan", pl: "wyznaczony" },
+  ownerFrom_order: { ru: "по заказу", uz: "buyurtma bo‘yicha", pl: "według zlecenia" },
   ownerFrom_lead: { ru: "по лиду", uz: "lid bo‘yicha", pl: "według leada" },
   ownerFrom_touch: { ru: "по касанию", uz: "aloqa bo‘yicha", pl: "według kontaktu" },
   ownerFrom_made: { ru: "собрал", uz: "yig‘gan", pl: "zbudował" },
@@ -82,6 +83,8 @@ export const mockupsDict = defineDict({
     pl: (time: string) => `wysłana klientowi ${time}`,
   },
   notSent: { ru: "клиенту не отправлен", uz: "mijozga yuborilmagan", pl: "nie wysłano klientowi" },
+  // Витрина открыта всем — «не отправлен» у неё не тревога, а просто факт.
+  notSentShowcase: { ru: "с рабочих аккаунтов не отправляли", uz: "ish akkauntlaridan yuborilmagan", pl: "nie wysyłano z kont roboczych" },
   /** Кому и с какого аккаунта ушёл (mockupSends): каждая отправка строкой. */
   sendsTitle: { ru: "Кому ушёл", uz: "Kimga yuborilgan", pl: "Do kogo wysłano" },
   /**
@@ -113,6 +116,47 @@ export const mockupsDict = defineDict({
     pl: "Nie znaleziono makiety lub pracownika. Odśwież stronę.",
   },
   ownerFail_offline: {
+    ru: "База не ответила. Попробуйте через минуту.",
+    uz: "Baza javob bermadi. Bir daqiqadan keyin urinib ko‘ring.",
+    pl: "Baza nie odpowiedziała. Spróbuj za minutę.",
+  },
+  // Заказ макета из задачи (lib/admin/mockup-order.ts): привязать макет к
+  // открытому заказу — тот, кто заказал, станет ответственным.
+  orderLabel: { ru: "Заказ", uz: "Buyurtma", pl: "Zlecenie" },
+  orderPick: { ru: "привязать к заказу…", uz: "buyurtmaga bog‘lash…", pl: "powiąż ze zleceniem…" },
+  orderOption: {
+    ru: (title: string, client: string | null, who: string | null) => `${title}${client ? ` · ${client}` : ""}${who ? ` · от ${who}` : ""}`,
+    uz: (title: string, client: string | null, who: string | null) => `${title}${client ? ` · ${client}` : ""}${who ? ` · ${who}dan` : ""}`,
+    pl: (title: string, client: string | null, who: string | null) => `${title}${client ? ` · ${client}` : ""}${who ? ` · od ${who}` : ""}`,
+  },
+  orderSuggested: { ru: "сайт совпадает", uz: "sayt mos keladi", pl: "strona się zgadza" },
+  orderLink: { ru: "Привязать", uz: "Bog‘lash", pl: "Powiąż" },
+  orderDone: {
+    ru: "Макет привязан к заказу: ответственный — тот, кто заказал.",
+    uz: "Maket buyurtmaga bog‘landi: mas’ul — buyurtma bergan xodim.",
+    pl: "Makieta powiązana ze zleceniem: odpowiada osoba, która zleciła.",
+  },
+  orderDoneClosed: {
+    ru: "Макет привязан к заказу, задача закрыта «Сделано» — заказавшему ушло сообщение.",
+    uz: "Maket buyurtmaga bog‘landi, vazifa «Bajarildi» bilan yopildi — buyurtma bergan xodimga xabar ketdi.",
+    pl: "Makieta powiązana ze zleceniem, zadanie zamknięte jako «Zrobione» — zlecający dostał wiadomość.",
+  },
+  orderFail_forbidden: {
+    ru: "Привязать может исполнитель задачи, руководитель или владелец.",
+    uz: "Vazifa ijrochisi, rahbar yoki egasi bog‘lashi mumkin.",
+    pl: "Powiązać może wykonawca zadania, kierownik lub właściciel.",
+  },
+  orderFail_not_found: {
+    ru: "Заказ или макет не найден. Обновите страницу.",
+    uz: "Buyurtma yoki maket topilmadi. Sahifani yangilang.",
+    pl: "Nie znaleziono zlecenia lub makiety. Odśwież stronę.",
+  },
+  orderFail_linked: {
+    ru: "К этому заказу макет уже привязан.",
+    uz: "Bu buyurtmaga maket allaqachon bog‘langan.",
+    pl: "Do tego zlecenia makieta jest już powiązana.",
+  },
+  orderFail_offline: {
     ru: "База не ответила. Попробуйте через минуту.",
     uz: "Baza javob bermadi. Bir daqiqadan keyin urinib ko‘ring.",
     pl: "Baza nie odpowiedziała. Spróbuj za minutę.",

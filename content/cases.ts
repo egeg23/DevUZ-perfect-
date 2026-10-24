@@ -93,7 +93,27 @@ export type Case = {
    * расширения: рядом лежат `-16.mp4` и `-9.mp4` (горизонтальный и
    * вертикальный) и постеры `poster-16.webp`, `poster-9.webp` в той же папке.
    */
-  prototype?: { href: `/proto/${string}`; teaser: `/cases/${string}/teaser` };
+  prototype?: {
+    href: `/proto/${string}`;
+    teaser: `/cases/${string}/teaser`;
+    /** Открыт без пароля по слову владельца (facts.open): одна кнопка «Открыть прототип». */
+    open?: true;
+  };
+  /**
+   * Ролик сцены без прототипа с карточки — у витрины под паролем (Engelberg):
+   * карточка играет ролик, а ведёт, как обычно, на страницу кейса. Файлы те
+   * же, что у `prototype.teaser`.
+   */
+  teaser?: `/cases/${string}/teaser`;
+  /**
+   * Сколько снимков экрана у макета (владелец, 24.10.2026: «для каждого
+   * макета сделай скрины, чтобы можно было посмотреть что мы делали, а то
+   * сейчас просто текст»). В public/cases/<slug>/: shot-1-desktop.webp …
+   * (1440×900) и shot-1-mobile.webp … (390×844 в двойной плотности).
+   * Страница кейса показывает их блоком «Как это выглядит», карточка без
+   * ролика — первым снимком компьютера.
+   */
+  shots?: number;
 };
 
 /**
@@ -174,6 +194,7 @@ export const cases: Case[] = [
     name: "MAVERA",
     monogram: "MV",
     date: "2026-09-15",
+    shots: 4,
     url: "https://cases.devuz.studio/mavera",
     tier: 1,
     niches: ["застройщик", "недвижимость", "жилой комплекс", "продажа квартир", "подбор квартиры", "ипотечный калькулятор", "real estate", "property developer", "ko‘chmas mulk", "quruvchi kompaniya", "房地产", "开发商"],
@@ -355,6 +376,7 @@ export const cases: Case[] = [
     name: "Harvest in Motion",
     monogram: "HM",
     date: "2026-08-21",
+    shots: 4,
     url: "https://cases.devuz.studio/motion.html",
     tier: 1,
     niches: ["экспорт", "производство", "сельское хозяйство", "промо-сайт", "презентация", "анимация", "прототип", "animation", "prototype", "animatsiya", "动效"],
@@ -396,6 +418,7 @@ export const cases: Case[] = [
     name: "Apollo Travel",
     monogram: "AT",
     date: "2026-10-07",
+    shots: 4,
     url: "https://cases.devuz.studio/apollo",
     tier: 2,
     niches: ["турагентство", "туризм", "туроператор", "туры", "горящие туры", "подбор тура", "авиабилеты", "путешествия", "travel agency", "tours", "tour operator", "sayohat", "turagentlik", "turizm agentligi", "旅行社"],
@@ -438,6 +461,8 @@ export const cases: Case[] = [
     name: "Engelberg",
     monogram: "EB",
     date: "2026-10-06",
+    teaser: "/cases/engelberg/teaser",
+    shots: 4,
     // Вторая, фотореалистичная версия — её владелец выбрал кейсом (07.10.2026).
     // Макет закрыт паролем: ссылка ведёт на страницу ввода, пароль даёт менеджер.
     url: "https://cases.devuz.studio/engelberg/v2",
@@ -580,6 +605,7 @@ export const cases: Case[] = [
     name: "Comfort Mebel",
     monogram: "CM",
     date: "2026-09-29",
+    shots: 4,
     url: "https://cases.devuz.studio/comfort",
     tier: 2,
     niches: ["мебель", "мебельная фабрика", "мебельный магазин", "мягкая мебель", "диваны", "спальные гарнитуры", "шкафы", "мебель в рассрочку", "furniture", "furniture store", "mebel", "mebel do‘koni", "家具"],
@@ -623,6 +649,7 @@ export const cases: Case[] = [
     name: "MedAcademy",
     monogram: "MA",
     date: "2026-10-01",
+    shots: 4,
     url: "https://cases.devuz.studio/medacademy",
     tier: 2,
     niches: ["учебный центр", "подготовка к поступлению", "курсы химии", "курсы биологии", "медвуз", "DTM", "o'quv markazi", "education", "培训中心"],
@@ -666,6 +693,7 @@ export const cases: Case[] = [
     name: "Delta IT-School",
     monogram: "DIT",
     date: "2026-09-23",
+    shots: 4,
     url: "https://cases.devuz.studio/delta",
     tier: 2,
     niches: ["IT-школа", "детская IT-школа", "программирование для детей", "курсы программирования", "школа программирования", "учебный центр", "образование для детей", "kids coding", "coding school", "IT maktab", "dasturlash kurslari", "少儿编程"],
@@ -709,6 +737,7 @@ export const cases: Case[] = [
     name: "Arsenal D",
     monogram: "AD",
     date: "2026-10-02",
+    shots: 4,
     url: "https://cases.devuz.studio/webname",
     tier: 2,
     niches: ["регистратор доменов", "домены .uz", "хостинг", "VPS", "SSL", "веб-студия", "domain registrar", "web hosting", "domen ro'yxatdan o'tkazish", "hosting", "域名注册"],
@@ -752,6 +781,7 @@ export const cases: Case[] = [
     name: "Akbar Rich",
     monogram: "AR",
     date: "2026-09-24",
+    shots: 4,
     url: "https://cases.devuz.studio/akbar",
     tier: 2,
     niches: ["двери", "межкомнатные двери", "межкомнатных дверей", "двери на заказ", "фабрика дверей", "стеновые панели", "погонаж", "конструктор двери", "interior doors", "doors", "eshiklar", "eshik", "门"],
@@ -795,6 +825,7 @@ export const cases: Case[] = [
     name: "Transtelecom",
     monogram: "TTC",
     date: "2026-09-25",
+    shots: 4,
     url: "https://cases.devuz.studio/ttc",
     tier: 2,
     niches: ["интернет-провайдер", "провайдер", "оператор связи", "телеком", "связь", "телефония", "дата-центр", "облако", "системный интегратор", "internet provider", "telecom", "provayder", "aloqa operatori", "电信"],
@@ -839,6 +870,7 @@ export const cases: Case[] = [
     name: "Tranio",
     monogram: "TR",
     date: "2026-09-25",
+    shots: 4,
     url: "https://cases.devuz.studio/tranio",
     tier: 1,
     niches: ["зарубежная недвижимость", "недвижимость за рубежом", "агентство недвижимости", "инвестиции в недвижимость", "ВНЖ за инвестиции", "риелтор", "overseas property", "real estate agency", "property investment", "xorijda ko‘chmas mulk", "ko‘chmas mulk agentligi", "海外房产"],
@@ -929,6 +961,7 @@ export const cases: Case[] = [
     name: "USTA",
     monogram: "USTA",
     date: "2026-07",
+    shots: 4,
     url: "https://usta.devuz.studio",
     tier: 2,
     niches: ["сфера услуг", "маркетплейс услуг", "ремонт", "бытовые услуги", "services", "xizmatlar"],
@@ -1215,6 +1248,8 @@ export const cases: Case[] = [
     name: "Tirex",
     monogram: "TX",
     date: "2026-09-21",
+    prototype: { href: "/proto/5emCJuGHMemdNs-F4Fmdzc79EdSRD0cD_OpPgL01w3Y", teaser: "/cases/tirex/teaser" },
+    shots: 4,
     tier: 3,
     niches: ["шиномонтаж", "выездной шиномонтаж", "вулканизация", "ремонт проколов", "замена колёс", "шиномонтаж 24/7", "shinamontaj", "vulkanizatsiya", "tyre service", "mobile tyre repair", "轮胎服务"],
     forNiches: [],
@@ -1295,6 +1330,7 @@ export const cases: Case[] = [
     name: "Bloger Agency",
     monogram: "BA",
     date: "2026-10-06",
+    shots: 4,
     tier: 2,
     niches: ["блогерское агентство", "инфлюенс-маркетинг", "реклама у блогеров", "UGC", "агентство блогеров", "influencer marketing", "influencer agency", "bloger agentligi", "blogerlarda reklama", "网红营销"],
     forNiches: [],
@@ -1335,6 +1371,7 @@ export const cases: Case[] = [
     name: "AUTOMECHANIC",
     monogram: "AM",
     date: "2026-10-07",
+    shots: 4,
     tier: 2,
     niches: ["автосервис", "СТО", "ремонт иномарок", "ремонт двигателя", "компьютерная диагностика", "ремонт ходовой", "аргонная сварка", "avtoservis", "avtomobil ta’miri", "car service", "auto repair", "汽车维修"],
     forNiches: ["avtoservis"],
@@ -1375,6 +1412,7 @@ export const cases: Case[] = [
     name: "Shox International Hospital",
     monogram: "SHOX",
     date: "2026-10-07",
+    shots: 4,
     tier: 1,
     niches: ["многопрофильная клиника", "частная клиника", "медицинский центр", "больница", "роботохирургия", "запись к врачу", "klinika", "tibbiyot markazi", "shifoxona", "hospital", "private clinic", "医院"],
     forNiches: ["medcentr"],
@@ -1415,6 +1453,7 @@ export const cases: Case[] = [
     name: "ShahaR.Uz",
     monogram: "SR",
     date: "2026-10-07",
+    shots: 4,
     tier: 1,
     niches: ["недвижимость", "портал недвижимости", "агентство недвижимости", "риэлтор", "продажа квартир", "аренда квартир", "новостройки", "ko‘chmas mulk", "kvartira sotish", "real estate", "property portal", "房地产"],
     // Пример для агентств недвижимости: каталог объектов, карточка с ипотекой
@@ -1458,6 +1497,7 @@ export const cases: Case[] = [
     name: "PK Vesta",
     monogram: "PKV",
     date: "2026-10-08",
+    shots: 4,
     tier: 1,
     niches: ["быстровозводимые здания", "металлоконструкции", "ЛСТК", "ангары", "склады", "производственные здания", "строительная компания", "tez quriladigan binolar", "metall konstruksiyalar", "prefabricated steel buildings", "steel structures", "钢结构建筑"],
     forNiches: ["stroitelnaya-kompaniya"],
@@ -1498,6 +1538,7 @@ export const cases: Case[] = [
     name: "Aipply Academy",
     monogram: "AA",
     date: "2026-10-08",
+    shots: 4,
     tier: 2,
     niches: ["учебный центр", "компьютерная грамотность", "курсы компьютера", "курсы ИИ", "курсы для начинающих", "kompyuter savodxonligi", "o‘quv markazi", "sun’iy intellekt kurslari", "computer literacy", "AI courses", "电脑培训"],
     forNiches: ["uchebnyy-centr"],
@@ -1538,6 +1579,8 @@ export const cases: Case[] = [
     name: "HOP.UZ",
     monogram: "HOP",
     date: "2026-10-08",
+    prototype: { href: "/proto/1P-UXUucmlrjINo5r6HimQJ185RHTSKUUBBvAX50OfE", teaser: "/cases/hop/teaser" },
+    shots: 4,
     tier: 2,
     niches: ["доска объявлений", "сайт объявлений", "барахолка", "классифайд", "маркетплейс", "аукцион", "безопасная сделка", "e’lonlar taxtasi", "e’lonlar sayti", "classifieds", "marketplace", "分类信息平台"],
     forNiches: [],
@@ -1578,6 +1621,8 @@ export const cases: Case[] = [
     name: "Enotmebel",
     monogram: "ENOT",
     date: "2026-10-11",
+    shots: 4,
+    prototype: { href: "/proto/cHcFubFKnwIrbPOJVsGl7FHXos08Pr9n08eMrXayyWw", teaser: "/cases/enotmebel/teaser" },
     tier: 2,
     niches: ["бескаркасная мебель", "кресло-мешок", "бин-бэг", "лежаки", "мебель", "мебель для офиса", "kreslo-qop", "karkassiz mebel", "mebel", "bean bag", "furniture", "懒人沙发"],
     forNiches: ["mebel"],
@@ -1618,6 +1663,7 @@ export const cases: Case[] = [
     name: "Giftora",
     monogram: "GF",
     date: "2026-10-12",
+    shots: 4,
     // Бренд, тексты и иллюстрации придуманы нами (рабочее имя, клиент бренд
     // не назвал), игра идёт на демо-валюте — это демо студии, а не продукт клиента.
     demo: true,
@@ -1661,6 +1707,7 @@ export const cases: Case[] = [
     name: "IntalimStudents",
     monogram: "IS",
     date: "2026-10-12",
+    shots: 4,
     tier: 2,
     niches: ["автошкола", "приложение автошколы", "подготовка к экзамену ПДД", "билеты ПДД", "учебный центр", "avtomaktab", "haydovchilik kursi", "YHQ testlari", "driving school", "driving theory test", "驾校"],
     // Пример для учебных центров: приложение ученика с уроками, тестами,
@@ -1703,6 +1750,8 @@ export const cases: Case[] = [
     name: "LIDER PROF PROEKT",
     monogram: "LPP",
     date: "2026-10-12",
+    shots: 4,
+    prototype: { href: "/proto/mQl7IuV_LKWPL6nPX3_BgnhK6j_u0APrdx7qOi8ywR0", teaser: "/cases/lider-prof/teaser" },
     tier: 2,
     niches: ["архитектурная студия", "архитектурное бюро", "проектирование зданий", "генплан", "ландшафтный дизайн", "дизайн интерьера", "проектная организация", "arxitektura byurosi", "loyihalash", "architecture studio", "architectural design", "建筑设计"],
     // Пример для строительных компаний: проектирование зданий, этапы работ,
@@ -1745,6 +1794,8 @@ export const cases: Case[] = [
     name: "Asmo Clinic",
     monogram: "AC",
     date: "2026-10-13",
+    shots: 4,
+    prototype: { href: "/proto/YSPcv7AI-_OY_SbysKIbY2ZUUYEkRnaGsUuIRS6toAQ", teaser: "/cases/asmo-clinic/teaser" },
     tier: 2,
     niches: ["дерматология", "дерматологическая клиника", "косметология", "физиотерапия", "клиника", "медцентр", "dermatologiya", "teri kasalliklari klinikasi", "tibbiyot markazi", "dermatology clinic", "皮肤科"],
     forNiches: ["medcentr"],
@@ -1785,6 +1836,8 @@ export const cases: Case[] = [
     name: "GAZMETPROD SERVIS",
     monogram: "GMP",
     date: "2026-10-13",
+    shots: 4,
+    prototype: { href: "/proto/TePoy6CM0m6ETBcvMEOmac6KYuOjfTqBFZWzhUcViR4", teaser: "/cases/gazmetprod/teaser" },
     tier: 2,
     niches: ["ГБО", "установка метана", "газобаллонное оборудование", "пропан", "испытание баллонов", "рефрижераторы на Labo", "автосервис", "metan o‘rnatish", "gaz ballon uskunasi", "CNG conversion", "LPG", "汽车燃气改装"],
     forNiches: ["avtoservis"],
@@ -1825,6 +1878,7 @@ export const cases: Case[] = [
     name: "DomTut",
     monogram: "DT",
     date: "2026-10-14",
+    shots: 4,
     tier: 1,
     niches: ["новостройки", "недвижимость", "портал недвижимости", "жилой комплекс", "квартиры в ипотеку", "аренда квартир", "yangi uylar", "ko‘chmas mulk", "kvartira", "real estate portal", "new builds", "新房"],
     // Пример и застройщику, и агентству: карточка ЖК с квартирами, планировкой,
@@ -1867,6 +1921,7 @@ export const cases: Case[] = [
     name: "inapp.uz",
     monogram: "IN",
     date: "2026-10-14",
+    shots: 4,
     tier: 2,
     niches: ["турагентство", "туры", "туроператор", "горящие туры", "приложение турагентства", "мобильное приложение", "travel agency", "travel app", "turagentlik", "sayohat ilovasi", "旅行社"],
     // Турагентство в Ташкенте: честный пример ниши для писем турагентствам.
@@ -1908,6 +1963,7 @@ export const cases: Case[] = [
     name: "Invis",
     monogram: "IV",
     date: "2026-10-15",
+    shots: 4,
     tier: 3,
     niches: ["компьютерный клуб", "игровой клуб", "киберклуб", "киберспорт", "бронь ПК", "computer club", "gaming club", "esports", "kompyuter klubi", "o‘yin klubi", "网吧"],
     // Компьютерного клуба в каталоге ниш нет.
@@ -1949,6 +2005,8 @@ export const cases: Case[] = [
     name: "LINIA",
     monogram: "LN",
     date: "2026-10-15",
+    shots: 4,
+    prototype: { href: "/proto/J0o2JSN83rs0J2MU4a6D89DQXScsz4qTFRkeKFlHEFk", teaser: "/cases/linia/teaser" },
     tier: 2,
     niches: ["архитектурное бюро", "архитектура", "дизайн интерьера", "проектирование домов", "портфолио", "architecture firm", "architecture studio", "arxitektura byurosi", "interyer dizayni", "建筑事务所"],
     // LINIA — рабочее имя: названия бюро в ТЗ нет. Ниши в каталоге нет.
@@ -1990,6 +2048,8 @@ export const cases: Case[] = [
     name: "SIA",
     monogram: "SIA",
     date: "2026-10-16",
+    shots: 4,
+    prototype: { href: "/proto/pzSEf9zWz4_gAJOy4B2wG-zFdxIWHTqicOa6pz3cRv0", teaser: "/cases/sia/teaser" },
     tier: 2,
     niches: ["архитектурное бюро", "архитектурное проектирование", "дизайн интерьера", "3D-визуализация", "авторский надзор", "architecture bureau", "interior design", "arxitektura byurosi", "loyihalash", "建筑设计"],
     // Московское бюро; ниши в каталоге нет.
@@ -2031,6 +2091,7 @@ export const cases: Case[] = [
     name: "Medikor",
     monogram: "MK",
     date: "2026-10-16",
+    shots: 4,
     tier: 2,
     niches: ["медицинское оборудование", "медтехника", "дефибрилляторы", "медицинские тренажёры", "B2B-магазин", "medical equipment", "medical supplies", "tibbiy uskunalar", "tibbiyot jihozlari", "医疗设备"],
     // Магазин медоборудования в России; ниши в каталоге нет.
@@ -2072,6 +2133,7 @@ export const cases: Case[] = [
     name: "Greenwell",
     monogram: "GW",
     date: "2026-10-16",
+    shots: 4,
     tier: 2,
     niches: ["биодобавки", "БАДы", "витамины", "интернет-магазин", "рассрочка", "supplements", "vitamins", "e-commerce", "biofaol qo‘shimchalar", "vitaminlar", "internet do‘kon", "保健品"],
     // Эталон админки в макетах (владелец, 19.10.2026).
@@ -2113,6 +2175,7 @@ export const cases: Case[] = [
     name: "vTashkente",
     monogram: "VT",
     date: "2026-10-16",
+    shots: 4,
     tier: 2,
     niches: ["кухни на заказ", "мебель на заказ", "кухонная мебель", "мебельное производство", "kitchens", "custom kitchens", "furniture", "oshxona mebeli", "buyurtma mebel", "定制橱柜"],
     forNiches: ["mebel"],
@@ -2153,6 +2216,8 @@ export const cases: Case[] = [
     name: "Amani",
     monogram: "AM",
     date: "2026-10-16",
+    shots: 4,
+    prototype: { href: "/proto/zTsEsEMDLPtCvScP9Ppdw94M5ZhE47-EzSJ7c83jQuo", teaser: "/cases/amani/teaser" },
     tier: 3,
     niches: ["закрытая одежда", "скромная мода", "одежда для умры", "платки и химары", "магазин одежды", "modest fashion", "modest wear", "yopiq kiyim", "ro‘mol", "ayollar kiyimi", "端庄时装"],
     forNiches: ["internet-magazin"],
@@ -2193,6 +2258,7 @@ export const cases: Case[] = [
     name: "Dilrabo Travel",
     monogram: "DT",
     date: "2026-10-16",
+    shots: 4,
     tier: 2,
     niches: ["турагентство", "туроператор", "туры по Узбекистану", "въездной туризм", "экскурсии", "приложение для турагентства", "travel agency", "inbound tours", "tour operator", "turagentlik", "O‘zbekiston bo‘ylab turlar", "旅行社"],
     forNiches: ["turagentstvo"],
@@ -2233,6 +2299,8 @@ export const cases: Case[] = [
     name: "Karomat",
     monogram: "KM",
     date: "2026-10-16",
+    shots: 4,
+    prototype: { href: "/proto/fSr83BiVMublyCpAnuezzcHcbPnh1yJo9cYBoFu_PK8", teaser: "/cases/karomat/teaser" },
     tier: 3,
     niches: ["ресторан", "семейный ресторан", "той-зал", "банкетный зал", "узбекская кухня", "доставка еды", "бронь столика", "restaurant", "banquet hall", "restoran", "to‘yxona", "餐厅"],
     forNiches: ["restoran"],
@@ -2273,6 +2341,8 @@ export const cases: Case[] = [
     name: "tovar.uz",
     monogram: "TV",
     date: "2026-10-18",
+    shots: 4,
+    prototype: { href: "/proto/V4XkH-klT5tx9Fy4CRiZQCE-qFK_hyYSok_audXpcBw", teaser: "/cases/tovar/teaser" },
     tier: 1,
     niches: ["маркетплейс", "торговая площадка", "интернет-магазин", "товары для бизнеса", "оптовые цены", "B2B", "каталог продавцов", "marketplace", "e-commerce", "savdo maydonchasi", "marketpleys", "电商平台"],
     forNiches: ["internet-magazin"],
@@ -2313,6 +2383,7 @@ export const cases: Case[] = [
     name: "Soffice",
     monogram: "SO",
     date: "2026-10-19",
+    shots: 4,
     tier: 1,
     niches: ["аренда офисов", "бизнес-центр", "коммерческая недвижимость", "управляющая компания", "коворкинг", "офис в аренду", "office rental", "business centre", "coworking", "ofis ijarasi", "biznes markaz", "写字楼租赁"],
     // Подбирают и сдают чужие площади, ведут брокерами просмотры и сделки —
@@ -2356,6 +2427,7 @@ export const cases: Case[] = [
     name: "Baldinini Tashkent",
     monogram: "BT",
     date: "2026-10-19",
+    shots: 4,
     tier: 3,
     niches: ["обувь", "бутик", "итальянская обувь", "сумки и аксессуары", "люкс", "интернет-магазин обуви", "shoe boutique", "luxury fashion", "online store", "poyabzal do‘koni", "butik", "意大利鞋履"],
     forNiches: ["internet-magazin"],
@@ -2396,6 +2468,8 @@ export const cases: Case[] = [
     name: "Сияние Севера",
     monogram: "СС",
     date: "2026-10-20",
+    shots: 4,
+    prototype: { href: "/proto/_MZZkDhEaYnZ7bIgaBPXe-Ny4xYy9GScTUblnAS45S4", teaser: "/cases/syanie-severa/teaser" },
     tier: 2,
     niches: ["стоматология", "имплантация зубов", "All-on-6", "All-on-4", "протезирование зубов", "стоматологическая клиника", "dental clinic", "dental implants", "stomatologiya", "tish implantatsiyasi", "牙科诊所"],
     forNiches: ["stomatologiya"],
@@ -2436,6 +2510,7 @@ export const cases: Case[] = [
     name: "IG Hub",
     monogram: "IGH",
     date: "2026-10-20",
+    shots: 4,
     tier: 2,
     niches: ["заявки из Instagram", "Instagram Direct", "Telegram для отдела продаж", "чат-хаб", "реклама в Instagram", "обработка заявок", "lead inbox", "Instagram to Telegram", "Click-to-Direct", "Instagram arizalari", "sotuv bo‘limi", "客户消息中心"],
     forNiches: [],
@@ -2481,7 +2556,7 @@ export const cases: Case[] = [
     // кейс, а чтобы после нажатия открывался этот прототип»). Макет без пароля
     // (facts.open), сцена зашифрована: ключ отдаёт только сам макет.
     url: "https://devuz.studio/proto/01nM7k5zLyQWcrikcaoIvihCuzy4-vct7wAzCjqo8Rs",
-    prototype: { href: "/proto/01nM7k5zLyQWcrikcaoIvihCuzy4-vct7wAzCjqo8Rs", teaser: "/cases/samauto/teaser" },
+    prototype: { href: "/proto/01nM7k5zLyQWcrikcaoIvihCuzy4-vct7wAzCjqo8Rs", teaser: "/cases/samauto/teaser", open: true },
     tier: 2,
     niches: ["автодилер", "автосалон", "грузовики", "коммерческий транспорт", "автобусы", "спецтехника", "автозавод", "car dealer", "commercial vehicles", "trucks", "avtosalon", "yuk mashinalari", "汽车经销商"],
     // Ниши «автосалон» в классификаторе нет, а автосервису завод — не пример.
@@ -2523,6 +2598,7 @@ export const cases: Case[] = [
     name: "Usemtau",
     monogram: "UT",
     date: "2026-10-21",
+    shots: 4,
     tier: 2,
     niches: ["металлопрокат", "металлобаза", "строительство складов", "ангары", "сэндвич-панели", "металлоконструкции", "строительная компания", "steel supply", "metal warehouse", "construction company", "qurilish kompaniyasi", "钢材"],
     forNiches: ["stroitelnaya-kompaniya"],
@@ -2563,6 +2639,8 @@ export const cases: Case[] = [
     name: "Жигули",
     monogram: "ЖГ",
     date: "2026-10-21",
+    shots: 4,
+    prototype: { href: "/proto/c5w3QESxxc0xu_RkrjInQ4k8r-BQ64SLvSkWzOxd2U4", teaser: "/cases/jiguli/teaser" },
     tier: 3,
     niches: ["пивной ресторан", "рестобар", "гастропаб", "ресторан", "бар-ресторан", "бронь столика", "restobar", "gastropub", "restaurant", "restoran", "pivo restorani", "餐吧"],
     forNiches: ["restoran"],
@@ -2603,6 +2681,7 @@ export const cases: Case[] = [
     name: "SEM Travel",
     monogram: "SM",
     date: "2026-10-21",
+    shots: 4,
     tier: 3,
     niches: ["турагентство", "туры из Ташкента", "горящие туры", "поиск туров", "туроператор", "визы", "travel agency", "tour operator", "package tours", "sayohat agentligi", "turagentlik", "旅行社"],
     forNiches: ["turagentstvo"],

@@ -101,7 +101,7 @@ export type MockupRow = {
   autoClosed?: boolean;
   /** Своя цена акции 48 часов (protos.facts.promo): бот пишет клиенту её, а не общие цены. */
   promo?: { price: number; regular: number } | null;
-  /** Ответственный за макет (mockupOwner). null — не нашли; у витрины поля нет. */
+  /** Ответственный за макет (mockupOwner). null — не нашли. */
   owner?: MockupOwner | null;
   /** Первая отправка клиенту с рабочего аккаунта (mockup_offers.sent_at). null — не отправлен. */
   sentAt?: string | null;
@@ -126,6 +126,8 @@ export type MockupSend = {
   from: MockupSendFrom;
   at: string;
   leadId: string | null;
+  /** Касание, из которого ушёл макет, — для «Показал макет» без лида. */
+  prospectId: string | null;
 };
 
 type SendRow = {
@@ -135,6 +137,7 @@ type SendRow = {
   account: unknown;
   sent_at: unknown;
   lead_id: unknown;
+  prospect_id?: unknown;
 };
 
 /**
@@ -166,6 +169,7 @@ export function mockupSends(rows: readonly SendRow[], tags: ReadonlyMap<string, 
       from,
       at: String(row.sent_at),
       leadId: typeof row.lead_id === "string" ? row.lead_id : null,
+      prospectId: typeof row.prospect_id === "string" ? row.prospect_id : null,
     });
     out.set(ref, list);
   }
@@ -173,10 +177,11 @@ export function mockupSends(rows: readonly SendRow[], tags: ReadonlyMap<string, 
 }
 
 /**
- * Откуда взят ответственный: назначен руками, хозяин лида, которому ушёл
- * макет, автор касания или тот, кто собрал макет в панели.
+ * Откуда взят ответственный: назначен руками, заказал макет задачей
+ * (lib/admin/mockup-order.ts), хозяин лида, которому ушёл макет, автор
+ * касания или тот, кто собрал макет в панели.
  */
-export type OwnerSource = "set" | "lead" | "touch" | "made";
+export type OwnerSource = "set" | "order" | "lead" | "touch" | "made";
 
 export type MockupOwner = { id: string; name: string; source: OwnerSource };
 
@@ -184,18 +189,21 @@ export type MockupOwner = { id: string; name: string; source: OwnerSource };
  * Ответственный за макет. Руководитель (Александр), 15.10.2026: «Добавить в
  * раздел макеты ответственного за макет менеджера».
  *
- * Назначенный руками (protos.owner_staff_id) главнее всего. Дальше — хозяин
+ * Назначенный руками (protos.owner_staff_id) главнее всего. Дальше — тот,
+ * кто заказал макет задачей (владелец, 23.10.2026: «Если нажимает — да,
+ * значит он ответственный за работу по этому макету с клиентом»), хозяин
  * лида, которому макет ушёл первым, потом автор касания, потом тот, кто
  * собрал макет в панели. Тот же порядок у строки «макет закрылся паролем»
  * (lib/proto/auto-close-store.ts). Сотрудника, которого нет в списке имён,
  * пропускаем: лучше «не назначен», чем пустое имя.
  */
 export function mockupOwner(
-  ids: { set: string | null; lead: string | null; touch: string | null; made: string | null },
+  ids: { set: string | null; order?: string | null; lead: string | null; touch: string | null; made: string | null },
   names: ReadonlyMap<string, string>,
 ): MockupOwner | null {
   const order: [OwnerSource, string | null][] = [
     ["set", ids.set],
+    ["order", ids.order ?? null],
     ["lead", ids.lead],
     ["touch", ids.touch],
     ["made", ids.made],
@@ -206,6 +214,12 @@ export function mockupOwner(
   }
   return null;
 }
+
+/**
+ * Ответственный витрины, назначенный руками: stats_snapshots
+ * «showcase-owner:<проект>», payload { staffId }. У прототипа — protos.owner_staff_id.
+ */
+export const SHOWCASE_OWNER_KEY = "showcase-owner:";
 
 /** Кто назначает ответственного: руководитель и владелец. Менеджер видит, но не меняет. */
 export function assignsMockups(role: Role): boolean {

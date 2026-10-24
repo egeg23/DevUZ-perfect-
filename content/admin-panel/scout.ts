@@ -9,7 +9,7 @@ import { defineDict, plural } from "@/lib/admin/i18n";
  * умолчанию.
  */
 export const scoutDict = defineDict({
-  title: { ru: "Холодный поиск", uz: "Sovuq qidiruv", pl: "Zimne wyszukiwanie" },
+  title: { ru: "Сигналы скаута", uz: "Skaut signallari", pl: "Sygnały skauta" },
   done: { ru: "Готово.", uz: "Tayyor.", pl: "Gotowe." },
   failed: { ru: "Не получилось.", uz: "Bo‘lmadi.", pl: "Nie udało się." },
   healthHelp: { ru: "Что значит это состояние", uz: "Bu holat nimani anglatadi", pl: "Co oznacza ten stan" },

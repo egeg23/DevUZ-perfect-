@@ -1,5 +1,7 @@
 import { HelpHint } from "@/components/admin/help-link";
 import { MockupList, type MockupView } from "@/components/admin/mockup-list";
+import { markResultText } from "@/components/admin/sales-stages";
+import { salesStagesDict } from "@/content/admin-panel/sales-stages";
 import { hoursLeft } from "@/lib/proto/auto-close";
 import { AdminShell } from "@/components/admin/shell";
 import { mockupsDict } from "@/content/admin-panel/mockups";
@@ -7,6 +9,7 @@ import { requireSection } from "@/lib/admin/guard";
 import { helpAnchor } from "@/lib/admin/help";
 import { pick } from "@/lib/admin/i18n";
 import { assignsMockups, tashkentTime } from "@/lib/admin/mockups";
+import { openMockupOrders } from "@/lib/admin/mockup-order-store";
 import { mockupList, mockupStaffOptions } from "@/lib/admin/mockups-store";
 
 export const dynamic = "force-dynamic";
@@ -28,13 +31,23 @@ function made(value: string): string {
  * в них». Откуда список и как живёт пароль — lib/admin/mockups.ts и
  * lib/proto/codes.ts.
  */
-export default async function MockupsPage() {
+export default async function MockupsPage({ searchParams }: { searchParams: Promise<{ mk?: string }> }) {
   const staff = await requireSection("/admin/mockups");
+  const { mk } = await searchParams;
+  // Чем кончилась отметка «Показал макет» (?mk=… из markStageAction).
+  const marked = markResultText(mk, pick(salesStagesDict, staff.panel_locale));
   const locale = staff.panel_locale;
   const t = pick(mockupsDict, locale);
   const now = new Date();
   const assigns = assignsMockups(staff.role);
-  const [list, team] = await Promise.all([mockupList(locale), assigns ? mockupStaffOptions() : Promise.resolve([])]);
+  const [list, team, openOrders] = await Promise.all([
+    mockupList(locale),
+    assigns ? mockupStaffOptions() : Promise.resolve([]),
+    openMockupOrders(staff),
+  ]);
+  // Открытые заказы макетов из задач: привязать готовый макет — заказавший
+  // станет ответственным (lib/admin/mockup-order.ts).
+  const orders = openOrders.map((o) => ({ taskId: o.taskId, label: t.orderOption(o.title, o.client, o.creatorName), site: o.site }));
   const rows: MockupView[] = list.map((row) => ({
     ...row,
     createdText: made(row.created),
@@ -52,8 +65,13 @@ export default async function MockupsPage() {
         <HelpHint topic={helpAnchor("/admin/mockups", "password")} />
       </h1>
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">{t.intro}</p>
+      {marked ? (
+        <p className={`mt-3 rounded-xl border px-4 py-2 text-sm ${marked.ok ? "border-green/30 bg-green/5 text-green" : "border-gold/30 bg-gold/10 text-gold"}`}>
+          {marked.text}
+        </p>
+      ) : null}
       <p className="mt-2 text-xs text-faint">{t.total(rows.length)}</p>
-      <MockupList rows={rows} team={team} />
+      <MockupList rows={rows} team={team} orders={orders} />
     </AdminShell>
   );
 }

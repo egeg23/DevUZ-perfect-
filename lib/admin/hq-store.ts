@@ -38,7 +38,7 @@ import { ACTIVE_MINUTES, QUEUE_ROLES } from "@/lib/admin/lead-queue";
 import { loadIdle } from "@/lib/admin/lead-tidy-store";
 import { stale as isStale, unanswered, type IdleLead } from "@/lib/admin/lead-tidy";
 import { pendingContracts } from "@/lib/admin/pulse-store";
-import { todayInTashkent } from "@/lib/admin/pulse";
+import { isInWork, todayInTashkent } from "@/lib/admin/pulse";
 import type { Role } from "@/lib/admin/roles";
 import type { Staff } from "@/lib/admin/session";
 import { touchesOnDay } from "@/lib/admin/touch-store";
@@ -308,7 +308,7 @@ export async function loadHq(viewer: Pick<Staff, "role">, now: Date = new Date()
     return out;
   };
   const inWorkBy = count(
-    leads.filter((l) => l.status === "taken"),
+    leads.filter(isInWork),
     (l) => l.assigned_staff_id,
   );
   const burned = (burnedRes.data ?? []) as { staff_id: string; lead_id: string }[];

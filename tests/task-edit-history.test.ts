@@ -225,7 +225,8 @@ test("«Изменить» — у поставившего; «История» �
   assert.match(boss, /переносов: 1/);
   assert.match(boss, /Ali перенёс\(ла\) срок: 12\.10 18:00 → 15\.10 18:00/);
   assert.match(boss, /название: «Offer» → «Prepare offer»; исполнитель: Timur → Ali/);
-  assert.match(boss, /href="\/admin\/tasks"/);
+  assert.match(boss, /href="#history"/, "история — ниже на той же странице");
+  assert.match(boss, /name="back" value="\/admin\/tasks"/, "нажатие возвращает в раздел «Задачи»");
 
   const worker = renderToStaticMarkup(
     createElement(TasksView, { staff: { id: "worker" }, locale: "ru", board: { ...board, mine: [task()], given: [] }, people, projects: [], now }),
@@ -272,7 +273,7 @@ test("«История задач»: менеджеру — свои без фи
   );
   assert.match(head, /name="p"/);
   assert.match(head, /По людям/);
-  assert.match(head, /href="\/admin\/tasks\?p=worker&amp;d=30"/);
+  assert.match(head, /href="\/admin\/tasks\?p=worker&amp;d=30#history"/);
   const one = renderToStaticMarkup(
     createElement(TaskHistoryView, { viewer: { id: "head", role: "head" }, locale: "ru", history: history(), days: 30, kind: "all", person: "worker", now }),
   );
@@ -292,12 +293,16 @@ test("«История задач»: менеджеру — свои без фи
   }
 });
 
-test("страница истории — у всех ролей, «Как пользоваться» ведёт в её пункт", () => {
+test("раздел «Задачи» — у всех ролей, блок и история на одной странице", () => {
   const page = read("app/admin/tasks/page.tsx");
-  assert.match(page, /await requireStaff\(\)/);
+  assert.match(page, /await requireSection\("\/admin\/tasks"\)/);
+  assert.match(page, /<TasksBlock/);
+  assert.match(page, /<TaskHistoryView/);
+  assert.doesNotMatch(read("app/admin/page.tsx"), /<TasksBlock/, "на «Лидах» блока задач нет");
   assert.match(page, /staff\.role !== "manager"/, "чужого человека менеджер в адресе не подставит");
-  assert.equal(helpTopicFor("/admin/tasks"), "/admin/help#leads-tasks-history");
-  assert.equal(helpTopicFor("/admin/tasks?d=7"), "/admin/help#leads-tasks-history");
+  assert.equal(helpTopicFor("/admin/tasks"), "/admin/help#tasks");
+  assert.equal(helpTopicFor("/admin/tasks?d=7"), "/admin/help#tasks");
+  assert.equal(helpTopicFor("/admin/tasks/7"), "/admin/help#tasks-history");
   assert.equal(helpTopicFor("/admin/leads/abc"), "/admin/help#leads-card", "карточки лида — как раньше");
   assert.equal(helpTopicFor("/admin/leads"), "/admin/help#leads", "список лидов — как раньше");
 });

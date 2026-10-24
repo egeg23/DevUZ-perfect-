@@ -159,10 +159,15 @@ export async function runFollowups(now: Date = new Date()): Promise<FollowupRun>
 
   const { data } = await db
     .from("prospects")
-    .select(
-      "id, host, label, message, findings, status, replied_at, ai_handling, sent_at, followups, last_followup_at, target, target_kind, lead_id, walked, claimed_by",
-    )
+    // Сначала — лёгкий список: пора ли дожимать. Письмо, разбор и обход
+    // читаются только у того, кому дожим правда уходит (трафик базы,
+    // 23.10.2026: 30 касаний целиком на каждый проход — 18 МБ за день).
+    .select("id, status, replied_at, ai_handling, sent_at, followups, last_followup_at, target_kind")
     .eq("status", "sent")
+    .not("host", "is", null)
+    .not("target", "is", null)
+    .not("message", "is", null)
+    .neq("message", "")
     .is("replied_at", null)
     // На «Здравствуйте» не ответили — ничего не шлём (lib/admin/hello-first.ts,
     // владелец, 07.10.2026: «Ничего не шлём»). Дожим остаётся только у касаний,
@@ -189,8 +194,8 @@ export async function runFollowups(now: Date = new Date()): Promise<FollowupRun>
       now,
     );
     // Без адреса бот не знает, куда писать: сообщение легло бы в очередь и
-    // висело там, не пуская следующие.
-    if (!n || !p.host || !p.message || !p.target) continue;
+    // висело там, не пуская следующие (отсечено в выборке).
+    if (!n) continue;
 
     // Уже что-то стоит в очереди — не наслаиваем второе сообщение на первое.
     const { count } = await db
@@ -209,43 +214,51 @@ export async function runFollowups(now: Date = new Date()): Promise<FollowupRun>
       .select("id");
     if (!claimed?.length) continue;
 
-    const { data: staff } = p.claimed_by
-      ? await db.from("staff").select("display_name").eq("id", p.claimed_by).eq("is_active", true).maybeSingle()
+    const { data: full } = await db
+      .from("prospects")
+      .select("host, label, message, findings, target, lead_id, walked, claimed_by")
+      .eq("id", p.id)
+      .maybeSingle();
+    if (!full?.host || !full.message || !full.target) continue;
+    const card = { ...p, ...full };
+
+    const { data: staff } = card.claimed_by
+      ? await db.from("staff").select("display_name").eq("id", card.claimed_by).eq("is_active", true).maybeSingle()
       : { data: null };
     const sender = String(staff?.display_name ?? "Команда");
-    const lang = (p.walked as { lang?: string } | null)?.lang ?? "ru";
+    const lang = (card.walked as { lang?: string } | null)?.lang ?? "ru";
 
     const prompt = followupPrompt({
-      host: String(p.host),
-      label: (p.label as string | null) ?? null,
-      firstMessage: String(p.message),
-      findings: (p.findings as Finding[] | null) ?? [],
+      host: String(card.host),
+      label: (card.label as string | null) ?? null,
+      firstMessage: String(card.message),
+      findings: (card.findings as Finding[] | null) ?? [],
       n,
       sender,
     });
     const written = await writeFollowup(prompt);
     const body =
-      written && !followupProblems(written, prompt, String(p.host)).length
+      written && !followupProblems(written, prompt, String(card.host)).length
         ? written
         : lang === "ru"
-          ? fallbackFollowup(n, String(p.host), sender)
+          ? fallbackFollowup(n, String(card.host), sender)
           : null;
     if (!body) {
       // Нерусское письмо запасным русским не дожимаем — лучше промолчать.
-      run.errors.push(`${p.host}: дожим не сложился`);
+      run.errors.push(`${card.host}: дожим не сложился`);
       continue;
     }
 
     const { error } = await db.from("outreach_messages").insert({
       prospect_id: p.id,
-      lead_id: p.lead_id ?? null,
+      lead_id: card.lead_id ?? null,
       direction: "out",
       author: "ai",
       body,
       status: "queued",
     });
     if (error) {
-      run.errors.push(`${p.host}: ${error.message}`);
+      run.errors.push(`${card.host}: ${error.message}`);
       continue;
     }
     run.queued += 1;

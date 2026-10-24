@@ -119,6 +119,6 @@ test("план ставит руководитель, а видит его ме�
   assert.match(read("app/admin/team/page.tsx"), /<form action=\{setPlan\}/, "план негде поставить");
   assert.match(read("content/admin-panel/team.ts"), /colPlan: \{ ru: "План касаний"/);
   // Обе страницы, где менеджер работает: главная и сами касания.
-  assert.match(read("app/admin/page.tsx"), /TouchPlanLine/);
+  assert.match(read("app/admin/hq/page.tsx"), /TouchPlanLine/, "план касаний — на «Главной», куда попадают после входа");
   assert.match(read("app/admin/prospect/page.tsx"), /TouchPlanLine/);
 });

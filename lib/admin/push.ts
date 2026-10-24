@@ -104,8 +104,15 @@ export function panelPath(href: string, site: string): string | null {
 }
 
 /**
- * Куда ведёт нажатие: первая кнопка-ссылка в панель, затем первая ссылка в
- * панель в самом тексте, иначе — «Главная».
+ * Кнопка задачи в боте: `tk:<действие>:<id задачи>` (TASK_CALLBACK и cb в
+ * lib/admin/task-bot.ts). Ссылки у сообщения о задаче нет — только эти
+ * кнопки, поэтому пуш по ним открывает саму задачу в разделе «Задачи».
+ */
+const TASK_BUTTON = /^tk:[a-z0-9]+:([0-9a-f-]{36})$/i;
+
+/**
+ * Куда ведёт нажатие: первая кнопка-ссылка в панель, затем задача по её
+ * кнопке, затем первая ссылка в панель в самом тексте, иначе — «Главная».
  */
 export function pushHref(html: string, rows: readonly (readonly PushButton[])[], site: string): string {
   for (const row of rows) {
@@ -113,6 +120,12 @@ export function pushHref(html: string, rows: readonly (readonly PushButton[])[],
       const href = "panel" in button ? button.panel : "url" in button ? button.url : null;
       const path = href ? panelPath(href, site) : null;
       if (path) return path;
+    }
+  }
+  for (const row of rows) {
+    for (const button of row) {
+      const task = "callback_data" in button ? TASK_BUTTON.exec(button.callback_data) : null;
+      if (task) return `/admin/tasks/${task[1]}`;
     }
   }
   for (const match of html.matchAll(/href="([^"]+)"|(https?:\/\/[^\s<>"]+)/g)) {

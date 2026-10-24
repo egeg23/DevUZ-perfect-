@@ -92,7 +92,6 @@ export const salesStagesDict = defineDict({
     uz: (stage: string) => `«${stage}» bosqichi`,
     pl: (stage: string) => `Etap „${stage}”`,
   },
-  back: { ru: "← На главную", uz: "← Bosh sahifaga", pl: "← Na pulpit" },
   p7: { ru: "за 7 дней", uz: "7 kunda", pl: "w 7 dni" },
   pprev7: { ru: "7 дней до них", uz: "undan oldingi 7 kun", pl: "7 dni wcześniej" },
   p30: { ru: "за 30 дней", uz: "30 kunda", pl: "w 30 dni" },

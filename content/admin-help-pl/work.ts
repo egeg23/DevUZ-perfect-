@@ -27,7 +27,7 @@ export const workSections: Record<string, HelpEntry> = {
         id: "limits",
         title: "Ile wiadomości i z którego konta",
         body: [
-          "Każde konto ma własny limit pierwszych wiadomości do nowych osób na godzinę: główne — 3, nowe — też 3. Świeżemu numerowi przez pierwszy tydzień lepiej ustawić 1–2 w polu «Wiadomości na godzinę»: nowe konto Telegram ogranicza szybciej. Pierwsze wiadomości wychodzą codziennie od 07:30 do 20:30 czasu taszkenckiego — dodane w nocy czekają i wychodzą rano; korespondencja z tymi, którzy już odpisali, toczy się o każdej porze i bez limitu. Na górze sekcji — ile wychodzi ze wszystkich razem; ta sama liczba stoi nad listą w [Kontaktach](/admin/prospect).",
+          "Każde konto ma własny limit pierwszych wiadomości do nowych osób na godzinę: główne — 3, nowe — też 3. Świeżemu numerowi przez pierwszy tydzień lepiej ustawić 1–2 w polu «Wiadomości na godzinę»: nowe konto Telegram ogranicza szybciej. Pierwsze wiadomości wychodzą codziennie od 07:30 do 20:30 czasu taszkenckiego — dodane w nocy czekają i wychodzą rano; korespondencja z tymi, którzy już odpisali, toczy się o każdej porze i bez limitu. Na górze sekcji — ile wychodzi ze wszystkich razem; ta sama liczba stoi nad listą w [Zimnych kontaktach](/admin/prospect).",
           "Kolejka kontaktów jest jedna: wiadomość wychodzi z konta, na którym wcześniej zwolniło się miejsce — menedżer niczego nie wybiera; jeśli ktoś jest przypisany do kont (punkt [kto pracuje na koncie](#accounts-staff)), — tylko z jego kont. Odpowiedzi do klienta, odpowiedzi modelu i poprawka wiadomości idą z tego samego konta, z którego wyszła pierwsza wiadomość: napisać do człowieka z innego numeru to pojawić się w jego rozmowie jako nieznajomy.",
           "Pod każdym kontem — ile pierwszych wiadomości wyszło w ostatniej godzinie i dziś, oraz «połączone», jeśli skaut trzyma je podłączone (znacznik co minutę). Brak znacznika dłużej niż trzy minuty — skaut nie pracuje tym kontem: sprawdź serwer albo podłącz konto ponownie.",
         ],
@@ -64,7 +64,7 @@ export const workSections: Record<string, HelpEntry> = {
         body: [
           "**«Wstrzymaj»** — konto przestaje pisać pierwsze wiadomości, ale odpowiada w już rozpoczętych rozmowach. **«Przywróć do pracy»** — znowu pisze.",
           "Jeśli Telegram ograniczy konto za masową wysyłkę, samo staje na dobę: pierwsze wiadomości wychodzą z pozostałych, korespondencja trwa, a przy koncie widać, do kiedy stoi. Wiadomość, przy której to się stało, wraca do kolejki i wyjdzie z innego konta. Jeśli nie ma już kto pisać, kolejka jest zdejmowana w całości, jak wcześniej. Co godzinę każde konto, także główne, samo pyta @SpamBot, czy nie jest ograniczone. Jeśli Telegram podał termin dłuższy niż doba, konto stoi do tego terminu. O ograniczeniu bot pisze do całego zespołu: które konto i do której godziny stoi, ile i czyich wiadomości czeka właśnie na nie i co robić — pisać do klientów z prywatnego konta albo z innego konta roboczego. Gdy ograniczenie zniknie, bot napisze, że konto znowu pisze. Żeby wiadomości menedżera nie czekały na ograniczone konto, przypisz go jeszcze do jednego — punkt [kto pracuje na koncie](#accounts-staff).",
-          "**«Odłącz»** — skaut zamyka sesję w Telegramie (zniknie z urządzeń na telefonie) i usuwa ją u nas. Rozmowy rozpoczęte z tego konta zostają w «Kontaktach», ale dalej odpowiadasz w nich sam: z tego numeru nie ma już kto pisać.",
+          "**«Odłącz»** — skaut zamyka sesję w Telegramie (zniknie z urządzeń na telefonie) i usuwa ją u nas. Rozmowy rozpoczęte z tego konta zostają w «Zimnych kontaktach», ale dalej odpowiadasz w nich sam: z tego numeru nie ma już kto pisać.",
         ],
       },
     ],
@@ -125,20 +125,28 @@ export const workSections: Record<string, HelpEntry> = {
         ],
       },
       {
+        id: "shown",
+        title: "«Pokazałem makietę» — prosto na liście",
+        body: [
+          "Przy każdej wysyłce w «Do kogo wysłano» jest przycisk **«Pokazałem makietę»**: kliknij i wybierz «na wideo» (nagrałeś wideo z makietą i je wysłałeś) albo «na żywo» (pokazałeś na spotkaniu lub rozmowie z ekranem). Zaznaczenie zapisuje się z datą i twoim imieniem, trafia do dziennika i od razu do [etapów sprzedaży](/admin/stages) oraz do normy — 2 pokazy w tygodniu.",
+          "Zaznaczyć możesz pokaz dla swojego klienta; kierownik i właściciel — dla dowolnego. Przycisku nie ma, jeśli wysyłka nie jest powiązana ani z leadem, ani z kontaktem (np. makieta poszła ręcznie z prywatnego konta) — wtedy zaznacz pokaz w [karcie leada](#leads-sales-marks). Ten sam przycisk jest w «Moje makiety» na «Pulpit».",
+        ],
+      },
+      {
         id: "owner",
         title: "Osoba odpowiedzialna i wysyłka do klienta",
         body: {
           manager: [
-            "Pod każdym prototypem jest wiersz «Odpowiedzialny» i wysyłka do klienta. Osobę odpowiedzialną panel znajduje sam, po kolei: wyznaczona ręcznie («wyznaczony»), potem właściciel leada, do którego makieta poszła najpierw («według leada»), potem autor kontaktu («według kontaktu»), potem ten, kto zbudował makietę w panelu («zbudował»). Nikogo z nich nie ma — «nie wyznaczono». Projekty witryny nie mają tego wiersza: to nasze prace, a nie makiety pod klienta. Wyznaczyć lub zmienić osobę odpowiedzialną mogą kierownik i właściciel.",
+            "Pod każdą makietą jest wiersz «Odpowiedzialny» i wysyłka do klienta. Osobę odpowiedzialną panel znajduje sam, po kolei: wyznaczona ręcznie («wyznaczony»), potem ten, kto zlecił makietę zadaniem («według zlecenia», zob. [zlecenie makiety](#tasks-mockup-order)), potem właściciel leada, do którego makieta poszła najpierw («według leada»), potem autor kontaktu («według kontaktu»), potem ten, kto zbudował makietę w panelu («zbudował»). Nikogo z nich nie ma — «nie wyznaczono». Makiety witryny zbudowane ręcznie nie mają «zbudował»: osoba odpowiedzialna to tam wyznaczona ręcznie, właściciel leada albo autor kontaktu, a jeśli witryny jeszcze nie wysyłano z kont roboczych — «nie wysyłano z kont roboczych». Wyznaczyć lub zmienić osobę odpowiedzialną mogą kierownik i właściciel.",
             "«wysłana klientowi 14.10 17:27» — kiedy link do makiety pierwszy raz poszedł do klienta z konta roboczego: z karty leada, odpowiedzią modelu, ręcznie w Telegramie albo znalazł go [skan](#mockups-scan) o 09:00 i 15:00. «nie wysłano klientowi» — takiej wysyłki nie ma. Linku z konta prywatnego bot nie widzi i makieta zostanie «nie wysłano»: wysyłaj z konta roboczego. Przycisk «Niewysłane» zostawia na liście tylko takie makiety. Niżej — «Do kogo wysłano»: każda wysyłka osobnym wierszem — klient (kto ma leada — link do jego karty), z którego konta roboczego i kiedy. Pierwsze trzy widać od razu, resztę pod «jeszcze N». «konto nie zapisane» — wczesne wysyłki, gdy konto jeszcze nie było zapamiętywane. Wyszukiwarka znajduje makietę także po kliencie.",
           ],
           head: [
-            "Pod każdym prototypem jest wiersz «Odpowiedzialny» i wysyłka do klienta. Osobę odpowiedzialną panel znajduje sam, po kolei: wyznaczona ręcznie («wyznaczony»), potem właściciel leada, do którego makieta poszła najpierw («według leada»), potem autor kontaktu («według kontaktu»), potem ten, kto zbudował makietę w panelu («zbudował»). Nikogo z nich nie ma — «nie wyznaczono». Projekty witryny nie mają tego wiersza: to nasze prace, a nie makiety pod klienta.",
+            "Pod każdą makietą jest wiersz «Odpowiedzialny» i wysyłka do klienta. Osobę odpowiedzialną panel znajduje sam, po kolei: wyznaczona ręcznie («wyznaczony»), potem ten, kto zlecił makietę zadaniem («według zlecenia», zob. [zlecenie makiety](#tasks-mockup-order)), potem właściciel leada, do którego makieta poszła najpierw («według leada»), potem autor kontaktu («według kontaktu»), potem ten, kto zbudował makietę w panelu («zbudował»). Nikogo z nich nie ma — «nie wyznaczono». Makiety witryny zbudowane ręcznie nie mają «zbudował»: osoba odpowiedzialna to tam wyznaczona ręcznie, właściciel leada albo autor kontaktu, a jeśli witryny jeszcze nie wysyłano z kont roboczych — «nie wysyłano z kont roboczych».",
             "Zmienić osobę odpowiedzialną możesz ty i właściciel: w wierszu «Odpowiedzialny» wybierz osobę z listy. Pierwsza pozycja listy to osoba znaleziona przez panel (na przykład «Арсений (według leada)») albo «nie wyznaczono»: wybierz ją, żeby zdjąć wyznaczenie. Każde wyznaczenie trafia do dziennika. Do osoby odpowiedzialnej bot pisze, gdy makieta [zamknęła się na hasło po 24 godzinach](#mockups-auto-close). Menedżer widzi osobę odpowiedzialną, ale jej nie zmienia.",
             "«wysłana klientowi 14.10 17:27» — kiedy link do makiety pierwszy raz poszedł do klienta z konta roboczego: z karty leada, odpowiedzią modelu, ręcznie w Telegramie albo znalazł go [skan](#mockups-scan) o 09:00 i 15:00. «nie wysłano klientowi» — takiej wysyłki nie ma. Linku z konta prywatnego bot nie widzi i makieta zostanie «nie wysłano»: wysyłaj z konta roboczego. Przycisk «Niewysłane» zostawia na liście tylko takie makiety. Niżej — «Do kogo wysłano»: każda wysyłka osobnym wierszem — klient (kto ma leada — link do jego karty), z którego konta roboczego i kiedy. Pierwsze trzy widać od razu, resztę pod «jeszcze N». «konto nie zapisane» — wczesne wysyłki, gdy konto jeszcze nie było zapamiętywane. Wyszukiwarka znajduje makietę także po kliencie.",
           ],
           admin: [
-            "Pod każdym prototypem jest wiersz «Odpowiedzialny» i wysyłka do klienta. Osobę odpowiedzialną panel znajduje sam, po kolei: wyznaczona ręcznie («wyznaczony»), potem właściciel leada, do którego makieta poszła najpierw («według leada»), potem autor kontaktu («według kontaktu»), potem ten, kto zbudował makietę w panelu («zbudował»). Nikogo z nich nie ma — «nie wyznaczono». Projekty witryny nie mają tego wiersza: to nasze prace, a nie makiety pod klienta.",
+            "Pod każdą makietą jest wiersz «Odpowiedzialny» i wysyłka do klienta. Osobę odpowiedzialną panel znajduje sam, po kolei: wyznaczona ręcznie («wyznaczony»), potem ten, kto zlecił makietę zadaniem («według zlecenia», zob. [zlecenie makiety](#tasks-mockup-order)), potem właściciel leada, do którego makieta poszła najpierw («według leada»), potem autor kontaktu («według kontaktu»), potem ten, kto zbudował makietę w panelu («zbudował»). Nikogo z nich nie ma — «nie wyznaczono». Makiety witryny zbudowane ręcznie nie mają «zbudował»: osoba odpowiedzialna to tam wyznaczona ręcznie, właściciel leada albo autor kontaktu, a jeśli witryny jeszcze nie wysyłano z kont roboczych — «nie wysyłano z kont roboczych».",
             "Zmienić osobę odpowiedzialną możesz ty i kierownik: w wierszu «Odpowiedzialny» wybierz osobę z listy. Pierwsza pozycja listy to osoba znaleziona przez panel (na przykład «Арсений (według leada)») albo «nie wyznaczono»: wybierz ją, żeby zdjąć wyznaczenie. Każde wyznaczenie trafia do dziennika. Do osoby odpowiedzialnej bot pisze, gdy makieta [zamknęła się na hasło po 24 godzinach](#mockups-auto-close). Menedżer widzi osobę odpowiedzialną, ale jej nie zmienia.",
             "«wysłana klientowi 14.10 17:27» — kiedy link do makiety pierwszy raz poszedł do klienta z konta roboczego: z karty leada, odpowiedzią modelu, ręcznie w Telegramie albo znalazł go [skan](#mockups-scan) o 09:00 i 15:00. «nie wysłano klientowi» — takiej wysyłki nie ma. Linku z konta prywatnego bot nie widzi i makieta zostanie «nie wysłano»: wysyłaj z konta roboczego. Przycisk «Niewysłane» zostawia na liście tylko takie makiety. Niżej — «Do kogo wysłano»: każda wysyłka osobnym wierszem — klient (kto ma leada — link do jego karty), z którego konta roboczego i kiedy. Pierwsze trzy widać od razu, resztę pod «jeszcze N». «konto nie zapisane» — wczesne wysyłki, gdy konto jeszcze nie było zapamiętywane. Wyszukiwarka znajduje makietę także po kliencie.",
           ],
@@ -280,7 +288,7 @@ export const workSections: Record<string, HelpEntry> = {
         title: "Zadania w projekcie",
         body: [
           "W karcie projektu, zaraz pod nazwą, jest **«Zadania w projekcie»**: wszystkie zadania do niego przypisane — od kogo, dla kogo, termin i co się z nimi teraz dzieje. Otwarte na górze, od najbliższego terminu, zamknięte niżej. Jeśli zadanie jest dla Ciebie albo Ty je zleciłeś, przyciski są tu te same co na stronie głównej.",
-          "Żeby zlecić zadanie w projekcie, kliknij **«Zleć zadanie»** po prawej: otworzy się strona główna z formularzem, w którym ten projekt jest już wybrany. Zadanie można przypisać do projektu tylko wtedy, gdy projekt jest założony tutaj, w «Projektach» — dlatego najpierw zakłada się projekt klienta. Więcej o zadaniach — w punkcie [zadania](#leads-tasks).",
+          "Żeby zlecić zadanie w projekcie, kliknij **«Zleć zadanie»** po prawej: otworzy się sekcja «Zadania» z formularzem, w którym ten projekt jest już wybrany. Zadanie można przypisać do projektu tylko wtedy, gdy projekt jest założony tutaj, w «Projektach» — dlatego najpierw zakłada się projekt klienta. Więcej o zadaniach — w punkcie [zadania](#tasks-board).",
         ],
       },
       {
@@ -370,7 +378,7 @@ export const workSections: Record<string, HelpEntry> = {
         title: "Tabela według osób",
         body: {
           manager: [
-            "Tabeli według osób nie widzisz — widzą ją kierownik i właściciel. Publiczny ranking obok nazwiska kolegi zmienia zachowanie szybciej niż wynik: leady zaczyna się brać według łatwości, a nie ważności. Swoje liczby sprawdzaj na [stronie głównej](/admin): kafelki i «Plan i wykonanie».",
+            "Tabeli według osób nie widzisz — widzą ją kierownik i właściciel. Publiczny ranking obok nazwiska kolegi zmienia zachowanie szybciej niż wynik: leady zaczyna się brać według łatwości, a nie ważności. Swoje liczby sprawdzaj na «Pulpit»: «Moja praca», «Moje etapy w tym tygodniu» i [«Plan i wykonanie»](#hq-week).",
           ],
           head: [
             "«Mój zespół» — Ty i Twoi menedżerowie: «W toku», «Wygrane», «Przegrane», «Łącznie» — za cały czas, według tego, kto teraz prowadzi leada. Menedżerowie tej tabeli nie widzą.",
@@ -385,13 +393,13 @@ export const workSections: Record<string, HelpEntry> = {
         title: "Gdzie są plany",
         body: {
           manager: [
-            "Planów tu nie ma. «Plan i wykonanie» jest na [stronie głównej](/admin), plan kontaktów — w [Kontaktach](/admin/prospect).",
+            "Planów tu nie ma. «Plan i wykonanie» jest na dole [«Pulpit»](/admin/hq), plan kontaktów — w [Zimnych kontaktach](/admin/prospect).",
           ],
           head: [
-            "Planów tu nie ma. «Plan i wykonanie» jest na [stronie głównej](/admin), plan kontaktów dla zespołu ustawia się w [Zespole](/admin/team).",
+            "Planów tu nie ma. «Plan i wykonanie» jest na dole [«Pulpit»](/admin/hq), plan kontaktów dla zespołu ustawia się w [Zespole](/admin/team).",
           ],
           admin: [
-            "Planów tu nie ma. «Plan i wykonanie» jest na zakładce «Zespół» [strony głównej](/admin), plan kontaktów — w [Zespole](/admin/team).",
+            "Planów tu nie ma. «Plan i wykonanie» jest na dole [«Pulpit»](/admin/hq), plan kontaktów — w [Zespole](/admin/team).",
           ],
         },
       },
@@ -399,6 +407,38 @@ export const workSections: Record<string, HelpEntry> = {
   },
 
   /* ── Трафик ───────────────────────────────────────────────────────── */
+  "/admin/stages": {
+    what: "Lista firm i leadów według etapów sprzedaży: do kogo napisaliśmy, kto odpowiedział, wykazał zainteresowanie, dostał makietę, widział prezentację, usłyszał cenę i zapłacił. Tu widać, gdzie dokładnie utyka sprzedaż i kogo trzeba popchnąć dalej. Wcześniej lista otwierała się tylko z liczby na «Pulpit», teraz to punkt w «Raporty». Liczy kod z bazy, bez sieci neuronowej.",
+    items: [
+      {
+        id: "list",
+        title: "Lista etapu: jak czytać",
+        body: {
+          manager: [
+            "Na górze — etapy: «napisaliśmy», «odpisali», «zainteresowanie», «makieta wysłana», «makieta pokazana», «cena podana», «płatność» — i okres: 7 lub 30 dni. Kliknij etap — niżej pojawią się firmy i leady, które do niego doszły w tym okresie: czyje, kiedy doszły i czy doszły do następnego etapu (na zielono — doszły).",
+            "Widzisz tylko swoje firmy i leady: te, które prowadzisz, i te, gdzie prezentację lub cenę zaznaczyłeś ty. Kliknij wiersz — otworzy się karta leada lub kontaktu. Te same liczby za tydzień — w bloku [«Moje etapy w tym tygodniu»](#hq-my-stages) na «Pulpit».",
+          ],
+          head: [
+            "Na górze — etapy: «napisaliśmy», «odpisali», «zainteresowanie», «makieta wysłana», «makieta pokazana», «cena podana», «płatność» — i okres: 7 lub 30 dni. Kliknij etap — niżej pojawią się firmy i leady, które do niego doszły w tym okresie: czyje, kiedy doszły i czy doszły do następnego etapu (na zielono — doszły).",
+            "Widzisz transakcje całego zespołu, w każdym wierszu — czyj to lead. Te same liczby za 7 i 30 dni — w bloku [«Etapy sprzedaży»](#hq-stages) na «Pulpit». Pieniędzy tu nie ma nikt: sumy wpływów widzi tylko właściciel na «Pulpit».",
+          ],
+          admin: [
+            "Na górze — etapy: «napisaliśmy», «odpisali», «zainteresowanie», «makieta wysłana», «makieta pokazana», «cena podana», «płatność» — i okres: 7 lub 30 dni. Kliknij etap — niżej pojawią się firmy i leady, które do niego doszły w tym okresie: czyje, kiedy doszły i czy doszły do następnego etapu (na zielono — doszły).",
+            "Widzisz transakcje całego zespołu, w każdym wierszu — czyj to lead. Te same liczby za 7 i 30 dni — w bloku [«Etapy sprzedaży»](#hq-stages) na «Pulpit». Na liście nie ma pieniędzy: sumy transakcji — w tym samym bloku, tylko u ciebie.",
+          ],
+        },
+      },
+      {
+        id: "marks",
+        title: "Dlaczego etap jest pusty",
+        body: [
+          "«Makieta pokazana» i «cena podana» baza sama nie widzi: prezentację przez wideo lub na żywo zaznacza człowiek przyciskiem «Pokazałem makietę» — w [«Makiety»](/admin/mockups), w «Moje makiety» na «Pulpit» albo w [karcie leada](#leads-sales-marks). Bez zaznaczenia etap zostanie zerem, a wszystko po nim wyda się gorsze, niż jest.",
+          "Jeśli wierszy jest ponad 200 — pokazujemy pierwsze 200 i linię «jeszcze N»: zawęź okres do 7 dni. Firmy, które przyszły same (zgłoszenie ze strony, czatu lub bota), nie wchodzą do «napisaliśmy» — od razu są «odpisali».",
+        ],
+      },
+    ],
+  },
+
   "/admin/traffic": {
     what: "Ile osób wchodzi na stronę devuz.studio, skąd przychodzą i od której strony zaczynają — według Yandex Metryki i Google Analytics. Przydaje się, żeby widzieć, czy działają reklama i publikacje: leady przychodzą ze strony, a jeśli ludzie przestali na nią wchodzić, leadów będzie mniej za tydzień lub dwa. Widzą to właściciel i kierownicy, menedżerowie — nie.",
     items: [
@@ -532,6 +572,15 @@ export const workSections: Record<string, HelpEntry> = {
         ],
       },
       {
+        id: "to-sign",
+        title: "«Umowy do podpisu»",
+        roles: ["admin"],
+        body: [
+          "Pierwszy blok na stronie — umowy, które menedżerowie wysłali ci do podpisu: numer, projekt i kwota. Kliknij wiersz — otworzy się umowa z przyciskami «Zatwierdź i podpisz» i «Zwróć do poprawy». Pusto — «Nic nie czeka na podpis».",
+          "Wcześniej ta lista była na zakładce «Dziś» na «Leady». Teraz sekcja, jak pozostałe, ma nagłówek z menu; bez nagłówka zostały tylko strony samej umowy i faktury — to dokumenty do druku i linki dla zamawiającego.",
+        ],
+      },
+      {
         id: "review",
         title: "Strona umowy: kosztorys i wysyłka do podpisu",
         body: {
@@ -545,7 +594,7 @@ export const workSections: Record<string, HelpEntry> = {
             "Robisz to samo co menedżer: kosztorys (Excel, CSV, PDF z tekstem albo wiersze ręcznie — bez wierszy nie da się wysłać), «Termin», «Wyślij do podpisu», «Wgraj podpisaną», faktury i link dla zamawiającego. Zatwierdza, zwraca i anuluje umowę tylko właściciel — zatwierdzenie to właśnie jego podpis.",
           ],
           admin: [
-            "Umowa do podpisu przychodzi do Ciebie w Telegramie i jest widoczna na zakładce «Dziś» — «Umowy do podpisu». Przyciski: **«Zatwierdź i podpisz»** albo **«Zwróć do poprawy»**. Zwrot to normalna część pracy, nie błąd.",
+            "Umowa do podpisu przychodzi do Ciebie w Telegramie i jest widoczna w «Wymaga uwagi» na «Pulpit» i w sekcji [Umowy](/admin/contracts). Przyciski: **«Zatwierdź i podpisz»** albo **«Zwróć do poprawy»**. Zwrot to normalna część pracy, nie błąd.",
             "Zatwierdzenie składa Twój podpis i **od razu wystawia fakturę za pierwszy etap**. Anulowanie zatwierdzonej umowy — «Powód anulowania» i «Anuluj»: umowy się nie usuwa, tylko oznacza. Zatwierdzonej nie da się edytować — jeśli potrzebna jest zmiana, przygotowuje się nową.",
             "Po wgraniu skanu z podpisami Twojego podpisu nie widać już na ekranie umowy — jest już na skanie.",
           ],
@@ -704,6 +753,15 @@ export const workSections: Record<string, HelpEntry> = {
             "«Wypłaty» → «Komu», «Kwota, $», «Data» (puste — dziś), «Notatka» («za sierpień») → «Zapisz wypłatę». Najpierw przelej pieniądze, potem zapisz. Wypłaty dla siebie nie da się zapisać: Tobie zostaje reszta.",
           ],
         },
+      },
+      {
+        id: "cash",
+        title: "Kasa, oczekiwane płatności i podatki",
+        roles: ["admin"],
+        body: [
+          "Na dole sekcji — «Kasa w podziale na miesiące»: wpływy i wydatki z pół roku, pod każdym miesiącem — różnica. Obok — «Oczekiwane płatności»: ile jeszcze mają zapłacić za aktywne projekty i kto je prowadzi, oraz «Podatki i sprawozdania w ciągu najbliższych dwóch tygodni». Wcześniej to była zakładka «Finanse» na «Leady».",
+          "Liczby pochodzą z tych samych zapisów co pozostałe bloki «Finanse»: wpływy — płatności klientów za projekty, wydatki — zapisy sekcji [Wydatki](/admin/expenses). Widzisz je tylko ty.",
+        ],
       },
     ],
   },

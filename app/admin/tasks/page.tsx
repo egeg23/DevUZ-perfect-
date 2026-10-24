@@ -1,22 +1,28 @@
 import { AdminShell } from "@/components/admin/shell";
 import { TaskHistoryView } from "@/components/admin/task-history";
-import { requireStaff } from "@/lib/admin/guard";
+import { TasksBlock } from "@/components/admin/tasks-block";
+import { requireSection } from "@/lib/admin/guard";
 import { taskHistory } from "@/lib/admin/task-store";
 import { historyDays, historyKind } from "@/lib/admin/tasks";
 
-// История — состояние базы сейчас, без кэша.
+// Задачи и история — состояние базы сейчас, без кэша.
 export const dynamic = "force-dynamic";
 
 /**
- * «История задач» — для всех ролей: задачи живут на главной, а «Лиды»
- * открыты каждому. Что кому видно, решает taskHistory (seesTask).
+ * Раздел «Задачи» — наша внутренняя CRM, своей кнопкой в меню (владелец,
+ * 23.10.2026: «вынесем CRM нашу отдельной кнопкой в наше меню, чтобы она не
+ * была в лидах»). Сверху — то, с чем работают каждый день: «Мне», «Я
+ * поставил», «Поставить задачу». Ниже — «История задач»: что кому видно,
+ * решает taskHistory (seesTask).
+ *
+ * Параметры не пересекаются: у блока — t, tg, tf, tp, у истории — k, p, d.
  */
-export default async function TaskHistoryPage({
+export default async function TasksPage({
   searchParams,
 }: {
-  searchParams: Promise<{ k?: string; p?: string; d?: string }>;
+  searchParams: Promise<{ t?: string; tg?: string; tf?: string; tp?: string; k?: string; p?: string; d?: string }>;
 }) {
-  const staff = await requireStaff();
+  const staff = await requireSection("/admin/tasks");
   const params = await searchParams;
   const now = new Date();
   const days = historyDays(params.d);
@@ -25,6 +31,13 @@ export default async function TaskHistoryPage({
   const history = await taskHistory({ id: staff.id, role: staff.role }, { days, kind, person }, now);
   return (
     <AdminShell staff={staff}>
+      <TasksBlock
+        staff={staff}
+        notice={params.t}
+        group={params.tg}
+        projectFilter={params.tf}
+        prefillProject={params.tp}
+      />
       <TaskHistoryView
         viewer={{ id: staff.id, role: staff.role }}
         locale={staff.panel_locale}

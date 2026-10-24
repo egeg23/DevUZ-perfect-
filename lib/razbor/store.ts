@@ -5,6 +5,7 @@ import { razborBySlug as staticBySlug, razborsFor as staticFor } from "@/content
 import type { Niche } from "@/content/razbor/catalog";
 import type { RazborLocale, RazborReadLocale } from "@/lib/razbor/model";
 import { parseNiche } from "@/lib/razbor/niche-words";
+import { forget, memo } from "@/lib/memo";
 import { serviceClient } from "@/lib/supabase";
 
 /**
@@ -198,27 +199,45 @@ function versionsOf(row: Record<string, unknown>): { locale: RazborReadLocale; s
  * вместе с базой, теряет ровно тот трафик из поиска, ради которого он и
  * написан.
  */
+/**
+ * Сколько держать разборы в памяти сайта.
+ *
+ * Трафик базы, 23.10.2026: страницы разборов, карта сайта и «похожие»
+ * читали разборы 1 626 раз за день — 100 МБ, самая тяжёлая выборка сайта.
+ * Меняются они несколько раз в день, и каждая правка здесь же снимает
+ * запомненное (`forgetRazbors`), поэтому вышедший разбор виден сразу, и
+ * проверка карты сайта после публикации его находит.
+ */
+export const RAZBOR_MS = 10 * 60_000;
+
+/** Разборы поменялись: список и страницы читаются заново. */
+export function forgetRazbors(): void {
+  forget("razbor:");
+}
+
 export async function listRazbors(locale: RazborReadLocale): Promise<RazborItem[]> {
   const db = serviceClient();
   if (!db) return staticFor(locale);
 
-  const { data, error } = await db
-    .from("razbors")
-    .select(columnsFor(locale))
-    .eq("status", "published")
-    .order("published_at", { ascending: false })
-    .limit(200);
-
-  if (error) {
-    console.error("разборы: не прочитались", error.message);
+  try {
+    const fromDb = await memo(`razbor:list:${locale}`, RAZBOR_MS, async () => {
+      const { data, error } = await db
+        .from("razbors")
+        .select(columnsFor(locale))
+        .eq("status", "published")
+        .order("published_at", { ascending: false })
+        .limit(200);
+      // Ошибку не запоминаем: memo отпускает отклонённое.
+      if (error) throw new Error(error.message);
+      return (data ?? [])
+        .map((row) => toItem(row as unknown as Record<string, unknown>, locale))
+        .filter((item): item is RazborItem => item !== null);
+    });
+    return [...fromDb, ...staticFor(locale)].sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
+  } catch (error) {
+    console.error("разборы: не прочитались", error instanceof Error ? error.message : error);
     return staticFor(locale);
   }
-
-  const fromDb = (data ?? [])
-    .map((row) => toItem(row as unknown as Record<string, unknown>, locale))
-    .filter((item): item is RazborItem => item !== null);
-
-  return [...fromDb, ...staticFor(locale)].sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
 }
 
 export async function razborBySlug(locale: RazborReadLocale, slug: string): Promise<RazborItem | null> {
@@ -228,14 +247,18 @@ export async function razborBySlug(locale: RazborReadLocale, slug: string): Prom
   const db = serviceClient();
   if (!db) return null;
 
-  const { data } = await db
-    .from("razbors")
-    .select(columnsFor(locale))
-    .eq("status", "published")
-    .eq(`slug_${locale}`, slug)
-    .maybeSingle();
-
-  return data ? toItem(data as unknown as Record<string, unknown>, locale) : null;
+  // Запоминаем только найденное: адреса, которых нет, память не копят.
+  return memo(`razbor:slug:${locale}:${slug}`, RAZBOR_MS, async () => {
+    const { data } = await db
+      .from("razbors")
+      .select(columnsFor(locale))
+      .eq("status", "published")
+      .eq(`slug_${locale}`, slug)
+      .maybeSingle();
+    const item = data ? toItem(data as unknown as Record<string, unknown>, locale) : null;
+    if (!item) throw new Error("нет разбора");
+    return item;
+  }).catch(() => null);
 }
 
 /**
@@ -444,6 +467,7 @@ export async function saveDraft(draft: RazborDraft): Promise<string | null> {
     console.error("разборы: черновик не лёг", error.message);
     return null;
   }
+  forgetRazbors();
   return data ? String(data.id) : null;
 }
 
@@ -636,6 +660,7 @@ export async function publish(id: string): Promise<PublishResult> {
     .from("razbors")
     .update({ status: "published", published_at: new Date().toISOString() })
     .eq("id", id);
+  forgetRazbors();
   return error ? { ok: false, why: "failed" } : { ok: true, paths: pathsOf(data) };
 }
 
@@ -655,6 +680,7 @@ export async function unpublish(id: string): Promise<RazborPaths | null> {
   if (!data) return null;
 
   await db.from("razbors").update({ status: "review", published_at: null }).eq("id", id);
+  forgetRazbors();
   return pathsOf(data);
 }
 
@@ -674,6 +700,7 @@ export async function remove(id: string): Promise<RazborPaths | null> {
   if (!data) return null;
 
   await db.from("razbors").delete().eq("id", id);
+  forgetRazbors();
   return pathsOf(data);
 }
 
@@ -722,6 +749,7 @@ export async function saveArticles(
     })
     .eq("id", id);
 
+  forgetRazbors();
   return error ? { ok: false, why: "failed", detail: error.message } : { ok: true, paths: pathsOf(data) };
 }
 
@@ -737,5 +765,6 @@ export async function reject(id: string, reason: string): Promise<RazborPaths | 
     .from("razbors")
     .update({ status: "rejected", notes: reason.slice(0, 2000) || "без причины" })
     .eq("id", id);
+  forgetRazbors();
   return pathsOf(data);
 }

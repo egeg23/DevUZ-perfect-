@@ -1,5 +1,5 @@
 import { WORKDAYS, tashkentHour } from "@/lib/admin/portion";
-import { TASHKENT_OFFSET_MS } from "@/lib/admin/pulse";
+import { IDLE_DAYS, TASHKENT_OFFSET_MS } from "@/lib/admin/pulse";
 
 /**
  * Порядок в лидах: «в работе» без движения — бот добивается решения.
@@ -34,7 +34,8 @@ export type TidySlot = (typeof TIDY_SLOTS)[number];
 /** Позже — уже конец рабочего дня: не досылаем. */
 export const TIDY_LATEST_HOUR = 18;
 export const TIDY_HOUR = TIDY_SLOTS[0];
-export const STALE_DAYS = 7;
+/** Без движения — столько дней; одно число с «Главной» и командой за неделю (IDLE_DAYS). */
+export const STALE_DAYS = IDLE_DAYS;
 export const AUTO_LOST_DAYS = 21;
 /** Лидов в одном сообщении: больше — порциями, чтобы не засыпать чат. */
 export const BATCH = 8;

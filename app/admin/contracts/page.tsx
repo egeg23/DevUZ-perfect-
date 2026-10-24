@@ -1,22 +1,26 @@
 import Link from "next/link";
 
-import { SectionHelpLink } from "@/components/admin/help-link";
-import { PanelLocaleProvider } from "@/components/admin/panel-locale";
+import { ContractsToSign } from "@/components/admin/dashboard";
+import { AdminShell } from "@/components/admin/shell";
 import { contractErrorDict, contractsPageDict } from "@/content/admin-panel/contracts";
 import { requireSection } from "@/lib/admin/guard";
 import { pick } from "@/lib/admin/i18n";
 import { approvesContract } from "@/lib/admin/contracts";
+import { pendingContracts } from "@/lib/admin/pulse-store";
 import { signatureExists } from "@/lib/admin/signature";
 import { uploadSignature } from "@/app/admin/contracts/actions";
 
 export const dynamic = "force-dynamic";
 
 /**
- * Договоры: подпись владельца и объяснение порядка.
+ * Договоры: что ждёт подписи, подпись владельца и объяснение порядка.
  *
  * Сами договоры живут в карточках проектов — там же, где сумма и стадия.
- * Отдельная страница нужна ровно для двух вещей: загрузить подпись и один
- * раз прочитать, кто что подписывает.
+ * Владелец, 23.10.2026, на разбор удобства: «Делаем все сразу» — у раздела
+ * не было шапки с меню (из него трудно было вернуться), а «Договоры на
+ * подпись» жили на вкладке «Сегодня» «Лидов». Теперь страница — в общем
+ * каркасе, и подписывающий видит здесь, что его ждёт. Страницы самого
+ * договора и счёта остаются документами без каркаса.
  */
 export default async function ContractsPage({
   searchParams,
@@ -37,24 +41,20 @@ export default async function ContractsPage({
         : error
     : null;
   const canApprove = approvesContract(staff.role);
-  const hasSignature = await signatureExists();
+  const [hasSignature, toSign] = await Promise.all([signatureExists(), canApprove ? pendingContracts() : Promise.resolve([])]);
 
-  // Своей шапки (AdminShell) у договоров нет, поэтому язык для клиентских
-  // кнопок — «?» и «Как пользоваться разделом» — ставится здесь.
   return (
-    <PanelLocaleProvider locale={locale}>
+    <AdminShell staff={staff}>
     <div className="space-y-8">
       <div>
-        {/* Своей шапки у договоров нет — это страницы-документы, — поэтому
-            кнопка инструкции стоит здесь, а не в общем каркасе. */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-2xl font-semibold">{t.title}</h1>
-          <SectionHelpLink />
-        </div>
+        <h1 className="text-2xl font-semibold">{t.title}</h1>
         <p className="mt-2 max-w-2xl text-sm text-muted">
           {t.intro}
         </p>
       </div>
+
+      {/* Что ждёт подписи — первым: ради этого сюда и заходят. */}
+      {canApprove ? <ContractsToSign rows={toSign} locale={locale} /> : null}
 
       {canApprove ? (
         <section className="rounded-2xl border border-line bg-surface px-6 py-5">
@@ -120,6 +120,6 @@ export default async function ContractsPage({
         {t.toProjects}
       </Link>
     </div>
-    </PanelLocaleProvider>
+    </AdminShell>
   );
 }

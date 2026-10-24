@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 
 import { hqTaskAction, type TaskState } from "@/app/admin/hq/actions";
+import { MockupOrderFields } from "@/components/admin/mockup-order-fields";
 import { usePanelDict } from "@/components/admin/panel-locale";
 import { hqTaskDict } from "@/content/admin-panel/hq-actions";
 
@@ -23,7 +24,16 @@ export const FIELD =
 export const PRIMARY =
   "inline-flex min-h-11 items-center justify-center rounded-2xl bg-green px-5 text-sm font-semibold text-ink transition hover:bg-green-dim disabled:opacity-60";
 
-export function HqTask({ people, preselect }: { people: { id: string; name: string }[]; preselect?: string | null }) {
+export function HqTask({
+  people,
+  preselect,
+  makerIds = [],
+}: {
+  people: { id: string; name: string }[];
+  preselect?: string | null;
+  /** Кто собирает макеты: отмечен — «Заказ макета» обязателен (lib/admin/mockup-order.ts). */
+  makerIds?: string[];
+}) {
   const t = usePanelDict(hqTaskDict);
   const [state, action, pending] = useActionState<TaskState, FormData>(hqTaskAction, null);
   const [due, setDue] = useState<"today" | "tomorrow" | "custom">("today");
@@ -54,6 +64,9 @@ export function HqTask({ people, preselect }: { people: { id: string; name: stri
           far: t.errFar,
           failed: t.errFailed,
           forbidden: t.errForbidden,
+          mockup: t.errMockup,
+          mockup_client: t.errMockupClient,
+          mockup_site: t.errMockupSite,
         }[state.error];
 
   return (
@@ -75,6 +88,8 @@ export function HqTask({ people, preselect }: { people: { id: string; name: stri
         <span className="text-xs font-medium uppercase tracking-wider text-faint">{t.what}</span>
         <input ref={title} name="title" required maxLength={200} placeholder={t.whatPlaceholder} className={FIELD} autoComplete="off" />
       </label>
+
+      <MockupOrderFields key={done} makerIds={makerIds} />
 
       <fieldset>
         <legend className="text-xs font-medium uppercase tracking-wider text-faint">{t.due}</legend>

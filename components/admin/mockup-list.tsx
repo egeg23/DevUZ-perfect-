@@ -3,11 +3,16 @@
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
-import { mockupCodeAction, mockupOwnerAction } from "@/app/admin/mockups/actions";
+import { markStageAction } from "@/app/admin/hq/actions";
+import { mockupCodeAction, mockupOrderAction, mockupOwnerAction } from "@/app/admin/mockups/actions";
 import { CopyMessage } from "@/components/admin/copy-message";
+import { SubmitButton } from "@/components/admin/submit-button";
 import { usePanelDict } from "@/components/admin/panel-locale";
 import { mockupsDict } from "@/content/admin-panel/mockups";
+import { salesStagesDict } from "@/content/admin-panel/sales-stages";
 import type { Picked } from "@/lib/admin/i18n";
+import type { LinkResult } from "@/lib/admin/mockup-order-store";
+import { siteHost } from "@/lib/admin/mockup-order";
 import type { MockupRow, MockupSend } from "@/lib/admin/mockups";
 import type { CodeResult, OwnerResult } from "@/lib/admin/mockups-store";
 
@@ -39,6 +44,9 @@ const SENDS_SHOWN = 3;
 /** Кого можно назначить ответственным. Пусто — назначать нельзя (менеджер). */
 export type MockupTeam = { id: string; name: string }[];
 
+/** Открытый заказ макета из задачи: подпись и сайт клиента (для подсказки). */
+export type MockupOrderOption = { taskId: string; label: string; site: string | null };
+
 type Filter = "all" | "hand" | "unsent" | "showcase";
 
 const INPUT = "w-full min-w-0 rounded-lg border border-line bg-ink px-3 py-2 text-sm text-text outline-none focus:border-green/50";
@@ -58,7 +66,7 @@ function matches(row: MockupView, filter: Filter): boolean {
   return true;
 }
 
-export function MockupList({ rows, team }: { rows: MockupView[]; team: MockupTeam }) {
+export function MockupList({ rows, team, orders = [] }: { rows: MockupView[]; team: MockupTeam; orders?: MockupOrderOption[] }) {
   const t = usePanelDict(mockupsDict);
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -66,6 +74,7 @@ export function MockupList({ rows, team }: { rows: MockupView[]; team: MockupTea
   const [busy, setBusy] = useState<string | null>(null);
   const [results, setResults] = useState<Record<string, CodeResult>>({});
   const [ownerFails, setOwnerFails] = useState<Record<string, Extract<OwnerResult, { ok: false }>["reason"]>>({});
+  const [linked, setLinked] = useState<Record<string, LinkResult>>({});
 
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -104,6 +113,20 @@ export function MockupList({ rows, team }: { rows: MockupView[]; team: MockupTea
       else setOwnerFails((prev) => ({ ...prev, [row.ref]: result.reason }));
     } catch {
       setOwnerFails((prev) => ({ ...prev, [row.ref]: "offline" }));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function linkOrder(row: MockupView, taskId: string) {
+    if (!taskId) return;
+    setBusy(row.ref);
+    try {
+      const result = await mockupOrderAction(row.ref, taskId);
+      setLinked((prev) => ({ ...prev, [row.ref]: result }));
+      if (result.ok) router.refresh();
+    } catch {
+      setLinked((prev) => ({ ...prev, [row.ref]: { ok: false, reason: "offline" } }));
     } finally {
       setBusy(null);
     }
@@ -188,43 +211,54 @@ export function MockupList({ rows, team }: { rows: MockupView[]; team: MockupTea
                       {row.opens ? <span className="text-faint">{t.opens(row.opens)}</span> : null}
                       {row.promo ? <span className="text-gold">{t.ownPromo(row.promo.price, row.promo.regular)}</span> : null}
                     </p>
-                    {row.kind === "proto" ? (
-                      <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs" data-mockup-owner>
-                        <span className="text-muted">{t.owner}:</span>
-                        {team.length ? (
-                          <select
-                            value={row.owner?.source === "set" ? row.owner.id : ""}
-                            onChange={(event) => assign(row, event.target.value)}
-                            disabled={busy !== null}
-                            aria-label={t.owner}
-                            className="max-w-[16rem] rounded-md border border-line bg-ink px-2 py-0.5 text-xs text-text outline-none focus:border-green/50 disabled:opacity-50"
-                          >
-                            <option value="">
-                              {row.owner && row.owner.source !== "set" ? t.ownerAuto(row.owner.name, t[`ownerFrom_${row.owner.source}`]) : t.ownerNone}
+                    <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs" data-mockup-owner>
+                      <span className="text-muted">{t.owner}:</span>
+                      {team.length ? (
+                        <select
+                          value={row.owner?.source === "set" ? row.owner.id : ""}
+                          onChange={(event) => assign(row, event.target.value)}
+                          disabled={busy !== null}
+                          aria-label={t.owner}
+                          className="max-w-[16rem] rounded-md border border-line bg-ink px-2 py-0.5 text-xs text-text outline-none focus:border-green/50 disabled:opacity-50"
+                        >
+                          <option value="">
+                            {row.owner && row.owner.source !== "set" ? t.ownerAuto(row.owner.name, t[`ownerFrom_${row.owner.source}`]) : t.ownerNone}
+                          </option>
+                          {row.owner?.source === "set" && !team.some((person) => person.id === row.owner?.id) ? (
+                            <option value={row.owner.id}>{row.owner.name}</option>
+                          ) : null}
+                          {team.map((person) => (
+                            <option key={person.id} value={person.id}>
+                              {person.name}
                             </option>
-                            {row.owner?.source === "set" && !team.some((person) => person.id === row.owner?.id) ? (
-                              <option value={row.owner.id}>{row.owner.name}</option>
-                            ) : null}
-                            {team.map((person) => (
-                              <option key={person.id} value={person.id}>
-                                {person.name}
-                              </option>
-                            ))}
-                          </select>
-                        ) : row.owner ? (
-                          <span className="text-text">
-                            {row.owner.name} <span className="text-faint">({t[`ownerFrom_${row.owner.source}`]})</span>
-                          </span>
-                        ) : (
-                          <span className="text-gold">{t.ownerNone}</span>
-                        )}
-                        <span className="text-faint">·</span>
-                        {row.sentAtText ? (
-                          <span className="text-green">{t.sentAt(row.sentAtText)}</span>
-                        ) : (
-                          <span className="text-gold">{t.notSent}</span>
-                        )}
-                        {ownerFails[row.ref] ? <span className="text-gold">{t[`ownerFail_${ownerFails[row.ref]}`]}</span> : null}
+                          ))}
+                        </select>
+                      ) : row.owner ? (
+                        <span className="font-medium text-text">
+                          {row.owner.name} <span className="text-faint">({t[`ownerFrom_${row.owner.source}`]})</span>
+                        </span>
+                      ) : (
+                        <span className="text-gold">{t.ownerNone}</span>
+                      )}
+                      <span className="text-faint">·</span>
+                      {row.sentAtText ? (
+                        <span className="text-green">{t.sentAt(row.sentAtText)}</span>
+                      ) : row.kind === "proto" ? (
+                        <span className="text-gold">{t.notSent}</span>
+                      ) : (
+                        <span className="text-faint">{t.notSentShowcase}</span>
+                      )}
+                      {ownerFails[row.ref] ? <span className="text-gold">{t[`ownerFail_${ownerFails[row.ref]}`]}</span> : null}
+                    </p>
+                    {orders.length && row.owner?.source !== "order" ? (
+                      <OrderPicker row={row} orders={orders} busy={busy !== null} onLink={(taskId) => linkOrder(row, taskId)} t={t} />
+                    ) : null}
+                    {linked[row.ref] ? (
+                      <p className={`mt-1 text-xs ${linked[row.ref].ok ? "text-green" : "text-gold"}`}>
+                        {(() => {
+                          const result = linked[row.ref];
+                          return result.ok ? (result.closed ? t.orderDoneClosed : t.orderDone) : t[`orderFail_${result.reason}`];
+                        })()}
                       </p>
                     ) : null}
                     {row.sendsText.length ? <SendList sends={row.sendsText} t={t} /> : null}
@@ -294,6 +328,7 @@ function SendList({ sends, t }: { sends: MockupView["sendsText"]; t: MockupsDict
       <span>{send.from === "unknown" ? t.sendFromUnknown : t.sendFrom(send.from.label, send.from.handle)}</span>
       <span className="text-faint">·</span>
       <span className="text-faint">{send.atText}</span>
+      {send.leadId || send.prospectId ? <ShownMark leadId={send.leadId} prospectId={send.prospectId} /> : null}
     </li>
   );
   const rest = sends.slice(SENDS_SHOWN);
@@ -308,5 +343,81 @@ function SendList({ sends, t }: { sends: MockupView["sendsText"]; t: MockupsDict
         </details>
       ) : null}
     </div>
+  );
+}
+
+/**
+ * «Показал макет» — у каждой отправки, рядом с паролем: показ отмечают там же,
+ * где выдают доступ (владелец, 23.10.2026, на разбор удобства: раньше кнопка
+ * была только на «Главной» и в карточке лида). Тот же markStageAction, что в
+ * карточке лида: кто может отметить — решает canMark (менеджер — по своему).
+ */
+function ShownMark({ leadId, prospectId }: { leadId: string | null; prospectId: string | null }) {
+  const s = usePanelDict(salesStagesDict);
+  return (
+    <details className="w-full sm:w-auto">
+      <summary className="inline-flex min-h-8 cursor-pointer list-none items-center gap-1 rounded-lg border border-green/40 px-2 py-0.5 text-green hover:bg-green/10 [&::-webkit-details-marker]:hidden">
+        🎬 {s.markShown}
+      </summary>
+      <div className="mt-1 flex flex-wrap gap-2">
+        {(["video", "live"] as const).map((via) => (
+          <form key={via} action={markStageAction}>
+            {leadId ? <input type="hidden" name="lead" value={leadId} /> : null}
+            {prospectId ? <input type="hidden" name="prospect" value={prospectId} /> : null}
+            <input type="hidden" name="back" value="/admin/mockups" />
+            <input type="hidden" name="kind" value="shown" />
+            <input type="hidden" name="via" value={via} />
+            <SubmitButton base="rounded-lg px-2.5 py-1 text-xs" tone="quiet" pendingLabel={s.saving}>
+              {via === "video" ? s.viaVideo : s.viaLive}
+            </SubmitButton>
+          </form>
+        ))}
+      </div>
+    </details>
+  );
+}
+
+/**
+ * «Заказ: привязать к заказу…» — открытые заказы макетов из задач. Заказ,
+ * чей сайт совпадает с сайтом макета, выбран сразу (orderForSite).
+ */
+function OrderPicker({
+  row,
+  orders,
+  busy,
+  onLink,
+  t,
+}: {
+  row: MockupView;
+  orders: MockupOrderOption[];
+  busy: boolean;
+  onLink: (taskId: string) => void;
+  t: Picked<typeof mockupsDict>;
+}) {
+  const host = siteHost(row.site);
+  const suggested = host ? (orders.find((o) => siteHost(o.site) === host)?.taskId ?? "") : "";
+  const [taskId, setTaskId] = useState(suggested);
+  return (
+    <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs" data-mockup-order>
+      <span className="text-muted">{t.orderLabel}:</span>
+      <select
+        value={taskId}
+        onChange={(event) => setTaskId(event.target.value)}
+        disabled={busy}
+        aria-label={t.orderLabel}
+        className="max-w-[20rem] rounded-md border border-line bg-ink px-2 py-0.5 text-xs text-text outline-none focus:border-green/50 disabled:opacity-50"
+      >
+        <option value="">{t.orderPick}</option>
+        {orders.map((o) => (
+          <option key={o.taskId} value={o.taskId}>
+            {o.label}
+            {o.taskId === suggested ? ` (${t.orderSuggested})` : ""}
+          </option>
+        ))}
+      </select>
+      <button type="button" onClick={() => onLink(taskId)} disabled={busy || !taskId} className={BUTTON}>
+        {t.orderLink}
+      </button>
+    </p>
   );
 }

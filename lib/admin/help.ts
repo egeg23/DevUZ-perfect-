@@ -123,10 +123,8 @@ export const PAGE_TOPICS: readonly { prefix: string; section: string; item: stri
   { prefix: "/admin/prospect/", section: "/admin/prospect", item: "texts" },
   { prefix: "/admin/ai-staff/", section: "/admin/ai-staff", item: "bloggers-agent" },
   { prefix: "/admin/learn/", section: "/admin/learn", item: "courses" },
-  // «История задач» — своя страница блока «Задачи» на главной.
-  { prefix: "/admin/tasks", section: "/admin", item: "tasks-history" },
-  // Список компаний одной ступени продажи — сюда ведут числа блока на «Главной».
-  { prefix: "/admin/hq/stages", section: "/admin/hq", item: "stages" },
+  // Карточка одной задачи — к пункту про историю: туда ведёт «просрочено» с «Главной».
+  { prefix: "/admin/tasks/", section: "/admin/tasks", item: "history" },
 ];
 
 /** Куда ведёт «Как пользоваться разделом» с этой страницы. null — страница без инструкции. */

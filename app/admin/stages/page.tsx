@@ -30,8 +30,11 @@ export const dynamic = "force-dynamic";
 const LIST_MAX = 200;
 
 /**
- * Список компаний и лидов одной ступени продажи за период — сюда ведёт
- * каждое число блока «Ступени продажи» (lib/admin/sales-stages.ts).
+ * Раздел «Ступени продажи» в «Отчётах»: список компаний и лидов одной
+ * ступени за период. Сюда же ведёт каждое число блока «Ступени продажи» на
+ * «Главной» (lib/admin/sales-stages.ts). До 23.10.2026 жил на
+ * /admin/hq/stages и открывался только по числу (владелец: «Делаем все
+ * сразу» на разбор удобства), старый адрес уводит сюда.
  * Менеджер видит только свои сделки; руководитель и владелец — все, и
  * могут сузить до человека (?owner=). Денег здесь нет ни у кого.
  */
@@ -40,7 +43,7 @@ export default async function StagesPage({
 }: {
   searchParams: Promise<{ stage?: string; period?: string; owner?: string }>;
 }) {
-  const staff = await requireSection("/admin/hq");
+  const staff = await requireSection("/admin/stages");
   const sp = await searchParams;
   const stage = isStage(sp.stage) ? sp.stage : "replied";
   const period = isStagesPeriod(sp.period) ? sp.period : "7";
@@ -73,12 +76,9 @@ export default async function StagesPage({
 
   return (
     <AdminShell staff={staff}>
-      <Link href="/admin/hq" className="text-sm text-muted hover:text-text">
-        {s.back}
-      </Link>
-      <h1 className="mt-3 flex items-center gap-2 text-2xl font-semibold tracking-tight text-text">
+      <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-text">
         {s.listTitle(s[stage])}
-        {everyone ? <HelpHint topic={helpAnchor("/admin/hq", "stages")} /> : <HelpHint topic={helpAnchor("/admin/hq", "my-stages")} />}
+        <HelpHint topic={helpAnchor("/admin/stages", "list")} />
       </h1>
       <p className="mt-1 text-sm text-muted">
         {s[`p${period}` as "p7"]} · {list.length}

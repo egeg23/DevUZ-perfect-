@@ -78,14 +78,14 @@ export const uz: HelpCopy = {
             head: [
               "To‘rtta kartochka. Katta raqam — kartochkadagi asosiy narsa, ostidagi qatorlar — tafsilotlar. Istalgan raqamni bosing — uning ortidagi narsa ochiladi: kerakli filtrli lidlar ro‘yxati, [Aloqalar](/admin/prospect), [Maketlar](/admin/mockups), vazifalar tarixi.",
               "«Lidlar»: katta raqam — butun jamoada «ishda» turgan lidlar soni. Ostida — bugun va 7 kunda yangilari, hozir navbat bo‘yicha kimgadir taklif qilinayotgan issiq lidlar (olish uchun 30 daqiqa bor), egasiz issiq lidlar (ularni hech kim ushlab turmaydi — bu aralashish uchun sabab), 7 kunda yutilgan va yutqazilganlar. «Yutildi» va «yutqazildi» holatni o‘zgartirish bosilgani bo‘yicha hisoblanadi, «yutqazildi»ga 21 kun harakatsiz qolgani uchun bot o‘zi yopganlari ham kiradi.",
-              "«Aloqalar»: katta raqam — bugun nechta kompaniya aloqa olgani, xodimlar va avtoyurish birga, kunlik me’yorga nisbatan. Me’yor — barcha xodimlarning kunlik porsiyasi va yoqilgan bo‘lsa avtoyurish me’yori. Chiziq qancha bajarilganini ko‘rsatadi. Ostida — xodimlar porsiyasi va avtoyurish alohida, bugun va 7 kunda nechta mijoz javob bergani. «7 kunda rad etishlar» qatori — nechta mijoz rad etgani: «mijoz rad etdi» bilan yopilgan aloqalar (tugma bilan yoki botning o‘zi) va saytdagi chat hamda botdagi «qiziq emas». Bot rad etishlar kartochkasini hech kimga yubormaydi — rad etishlar faqat shu yerda ko‘rinadi.",
+              "«Sovuq aloqalar»: katta raqam — bugun nechta kompaniya aloqa olgani, xodimlar va avtoyurish birga, kunlik me’yorga nisbatan. Me’yor — barcha xodimlarning kunlik porsiyasi va yoqilgan bo‘lsa avtoyurish me’yori. Chiziq qancha bajarilganini ko‘rsatadi. Ostida — xodimlar porsiyasi va avtoyurish alohida, bugun va 7 kunda nechta mijoz javob bergani. «7 kunda rad etishlar» qatori — nechta mijoz rad etgani: «mijoz rad etdi» bilan yopilgan aloqalar (tugma bilan yoki botning o‘zi) va saytdagi chat hamda botdagi «qiziq emas». Bot rad etishlar kartochkasini hech kimga yubormaydi — rad etishlar faqat shu yerda ko‘rinadi.",
               "«Maketlar»: katta raqam — 48 soatlik aksiya davom etayotgan paytda mijozlardagi maketlar soni, ostida — kimda aksiya hammadan oldin tugaydi. Yana — 7 kunda nechta maket yuborilgani va tasdiqlangani. «Vazifalar»: butun jamoaning ochiq, muddati o‘tgan va 7 kunda bajarilgan vazifalari.",
               "7 kunlik raqamlar yonida — oldingi 7 kun bilan solishtirish: «▲ +3» — ko‘paydi, «▼ −2» — kamaydi. Yashil — yaxshi, sariq — qarab chiqish kerak. Bu kalendar haftasi emas, siljuvchi 7 kun: dushanba ertalab solishtirish nolga tushmaydi. Rahbarda bu sahifada pul yo‘q — boshqa bo‘limlardagidek.",
             ],
             admin: [
               "Beshta kartochka: lidlar, aloqalar, maketlar, vazifalar va pul. Katta raqam — asosiysi, ostidagi qatorlar — tafsilotlar. Har bir raqam bosiladi va uning ortidagi narsani ochadi: filtrli lidlar ro‘yxati, [Aloqalar](/admin/prospect), [Maketlar](/admin/mockups), [Moliya](/admin/finance), [Shartnomalar](/admin/contracts).",
               "«Lidlar»: katta raqam — butun jamoada «ishda» turgan lidlar. Ostida — bugun va 7 kunda yangilari, hozir navbat bo‘yicha taklif qilinayotgan issiq lidlar (olish uchun 30 daqiqa), egasiz issiq lidlar, 7 kunda yutilgan va yutqazilganlar — holat o‘zgarishi jurnali bo‘yicha, 21 kun harakatsizlikdan keyin bot o‘zi yopganlari bilan birga.",
-              "«Aloqalar»: bugun nechta kompaniya aloqa olgani, xodimlar va avtoyurish birga, kunlik me’yorga nisbatan (barcha xodimlar porsiyasi va yoqilgan bo‘lsa avtoyurish me’yori). Ostida — porsiyalar va avtoyurish alohida, bugungi va 7 kunlik javoblar. «7 kunda rad etishlar» qatori — nechta mijoz rad etgani: «mijoz rad etdi» bilan yopilgan aloqalar (tugma bilan yoki botning o‘zi) va saytdagi chat hamda botdagi «qiziq emas». Bot rad etishlar kartochkasini hech kimga yubormaydi — rad etishlar faqat shu yerda ko‘rinadi. «Maketlar»: 48 soatlik aksiyada mijozlarda nechta, kimda aksiya hammadan oldin tugaydi, 7 kunda yuborilgan va tasdiqlangan. «Vazifalar»: ochiq, muddati o‘tgan, 7 kunda bajarilgan.",
+              "«Sovuq aloqalar»: bugun nechta kompaniya aloqa olgani, xodimlar va avtoyurish birga, kunlik me’yorga nisbatan (barcha xodimlar porsiyasi va yoqilgan bo‘lsa avtoyurish me’yori). Ostida — porsiyalar va avtoyurish alohida, bugungi va 7 kunlik javoblar. «7 kunda rad etishlar» qatori — nechta mijoz rad etgani: «mijoz rad etdi» bilan yopilgan aloqalar (tugma bilan yoki botning o‘zi) va saytdagi chat hamda botdagi «qiziq emas». Bot rad etishlar kartochkasini hech kimga yubormaydi — rad etishlar faqat shu yerda ko‘rinadi. «Maketlar»: 48 soatlik aksiyada mijozlarda nechta, kimda aksiya hammadan oldin tugaydi, 7 kunda yuborilgan va tasdiqlangan. «Vazifalar»: ochiq, muddati o‘tgan, 7 kunda bajarilgan.",
               "«Pul»ni faqat siz ko‘rasiz: 7 kunda qancha tushgani (loyihalardagi to‘lov sanasi bo‘yicha) va oy boshidan, hamda nechta shartnoma imzo kutayotgani. Rahbar bu kartochkani ko‘rmaydi.",
               "7 kunlik raqamlar yonida — oldingi 7 kun bilan solishtirish: «▲ +3» — ko‘proq, «▼ −2» — kamroq; yashil — yaxshi, sariq — qarab chiqish kerak. Bu kalendar haftasi emas, siljuvchi 7 kun: dushanba ertalab solishtirish nolga tushmaydi.",
             ],
@@ -315,8 +315,26 @@ export const uz: HelpCopy = {
           body: [
             "Tepada — kunlik ulush: belgilanganlardan nechta aloqa qilingani, chiziq bilan; bosing — [Aloqalar](/admin/prospect) ochiladi. Ulush hali olinmagan bo‘lsa — shunday yoziladi.",
             "«Bugun»: aloqalar, mijozlarning aloqalaringizga javoblari va sizda «ishda» nechta lid borligi. «7 kun» — oxirgi 7 × 24 soat oldingi 7 kunga nisbatan, strelka farqni ko‘rsatadi: aloqalar, javoblar, siz olgan va sizda yonib ketgan (30 daqiqada olinmagan) iliq lidlar, mijozlarga yuborilgan maketlar va yutilgan lidlar.",
-            "Har bir raqam bosiladi: aloqalar — «Aloqalar»ga, javoblar — [Nazorat](/admin/talks)ga, lidlar — lidlar ro‘yxatiga, maketlar — «Maketlar»ga. Raqamlar rahbar va ega jamoa kartalarida ko‘radigan raqamlar bilan bir xil.",
+            "Har bir raqam bosiladi: aloqalar — «Sovuq aloqalar»ga, javoblar — [Yozishmalar tahlili](/admin/talks)ga, lidlar — lidlar ro‘yxatiga, maketlar — «Maketlar»ga. Raqamlar rahbar va ega jamoa kartalarida ko‘radigan raqamlar bilan bir xil.",
           ],
+        },
+        {
+          id: "week",
+          title: "«Hafta: tavsiyalar, jamoa, reja»",
+          body: {
+            manager: [
+              "«Bosh sahifa» pastida — «Hafta: tavsiyalar, jamoa, reja» bloki: raqamlaringiz bo‘yicha «Haftalik tavsiyalar» (batafsil — [tavsiyalar](#leads-coach)) va [«Reja va fakt»](#leads-plan-fact) — sizga qo‘yilgan maqsadlar. Ilgari ular «Lidlar»da ro‘yxat ustida turardi.",
+              "Bu yerda pul yo‘q: qancha ishlab topganingiz va nima to‘lanishini kutayotgani — [Moliya](/admin/finance)da.",
+            ],
+            head: [
+              "«Bosh sahifa» pastida — «Hafta: tavsiyalar, jamoa, reja» bloki: «Bugun uchun» va «Haftalik tavsiyalar», [«Jamoa: shu hafta»](#leads-team-week), «Hafta yetakchilari», «Jamoaga haftalik tavsiyalar» va [«Reja va fakt»](#leads-plan-fact), bu yerda menejeringizga reja qo‘yasiz. Ilgari bularning hammasi «Lidlar»da ro‘yxat ustida turardi.",
+              "Reja qo‘yilgandan keyin sahifa shu blokka, natija haqidagi javob bilan qaytadi.",
+            ],
+            admin: [
+              "«Bosh sahifa» pastida — «Hafta: tavsiyalar, jamoa, reja» bloki: «qayta tayyorlash» tugmasi bilan «Bugun uchun», «to‘lanadi» bilan [«Jamoa: shu hafta»](#leads-team-week), «Hafta yetakchilari», «Jamoaga haftalik tavsiyalar» va [«Reja va fakt»](#leads-plan-fact), bu yerda rejalarni qo‘yasiz, o‘zgartirasiz va olib tashlaysiz. Ilgari bu «Lidlar»dagi «Jamoa» varag‘i edi.",
+              "«Oylar bo‘yicha kassa», «Kutilayotgan to‘lovlar» va soliq muddatlari — [Moliya](/admin/finance) pastida, imzoga kelgan shartnomalar — «E’tibor talab qiladi»da.",
+            ],
+          },
         },
         {
           id: "app",
@@ -334,40 +352,15 @@ export const uz: HelpCopy = {
       ],
     },
 
-    /* ── Лиды ─────────────────────────────────────────────────────────── */
-    "/admin": {
-      what: "Panelning bosh sahifasi va mijozlarning barcha murojaatlari: saytdagi chat, forma, Telegram-bot, vitrina, «Qidiruv» va sizning aloqalaringizdan. Bu yerda kim yozgani, unga nima kerakligi, qanchalik shoshilinchligi va u bilan kim ishlayotgani ko‘rinadi. Lid bilan har bir harakat — olish, kontaktni ochish, holatni o‘zgartirish — jurnalga ism va vaqt bilan yoziladi.",
+    /* ── Задачи ──────────────────────────────────────────────────────── */
+    "/admin/tasks": {
+      what: "Ichki CRM tizimimiz: mijozlarga va bir-birimizga bergan har bir va’da — muddati va mas’uli bor vazifa. Yuqorida — sizga qo‘yilgan vazifalar («Menga»), siz qo‘ygan vazifalar («Men qo‘yganlar») va «Vazifa qo‘yish» shakli. Shu sahifaning pastida — «Vazifalar tarixi»: nima bajarildi, nima bajarilmadi, nima bekor qilindi va muddat necha marta ko‘chirildi. Bo‘lim hammaga ochiq va belgilar bilan yopilmaydi: vazifani istalgan xodim olishi mumkin, botdagi vazifa tugmasi ham shu yerga olib keladi.",
       items: [
         {
-          id: "home",
-          title: "Bosh sahifada nima bor",
-          body: {
-            manager: [
-              "Bosh sahifada birinchi — [«Vazifalar»](#leads-tasks) bloki: sizga nima topshirilgan, siz nima topshirgansiz va «Vazifa qo‘yish» formasi. Pastroqda — plitkalar: **«to‘lanadi»** — qancha ishlab topganingiz va hali olmaganingiz (pastda mayda harf bilan — mijoz qolganini to‘lashini qanchasi kutayotgani), **«ishdagi lidlar»**, **«zudlik bilan bog‘lanish»** va loyihalaringiz bo‘yicha **«oylik tushumlar»**.",
-              "Agar rahbar sizga aloqalar rejasini qo‘ygan bo‘lsa, plitkalar ustida shunday qator chiqadi: «Rejagacha 12 ta qoldi — bu hafta 30 tadan 18 tasi bajarildi». Batafsil — [aloqalar rejasi](#prospect-plan) bandida.",
-              "Pastroqda: [«Zudlik bilan bog‘lanish»](#leads-urgent) — uzoq vaqt harakatsiz turgan lidlaringiz; «Haftalik tavsiyalar» — nimani yaxshilash kerak ([tavsiyalar](#leads-coach) bandiga qarang); [«Reja va fakt»](#leads-plan-fact) — sizga qo‘yilgan maqsadlar; eng pastda esa — [lidlar ro‘yxati](#leads-list).",
-            ],
-            head: [
-              "Birinchi bo‘lib — **«Qaroringizni kutmoqda»**: menejerlarning lidni hamkasbga berish haqidagi so‘rovlari. Buni siz yoki egasi hal qiladi — batafsil [lidni berish](#leads-transfer) bandida. Ularning ostida — [«Vazifalar»](#leads-tasks) bloki: sizga nima topshirilgan va siz nima topshirgansiz.",
-              "Plitkalar sizni va jamoangizni birga hisoblaydi: **«to‘lanadi»** — faqat sizning balansingiz, **«jamoadagi ishdagi lidlar»**, **«zudlik bilan bog‘lanish»**, **«haftalik tushumlar»**.",
-              "Keyin: «Bugun uchun» — lidlaringiz bo‘yicha ertalabki maslahatlar, siz va jamoa bo‘yicha ismlar bilan [«Zudlik bilan bog‘lanish»](#leads-urgent), [«Jamoa: shu hafta»](#leads-team-week), jamoaga va sizga tavsiyalar, «Hafta yetakchilari», [«Reja va fakt»](#leads-plan-fact) va [lidlar ro‘yxati](#leads-list).",
-              "Jamoa — bu [«Jamoa»](/admin/team) bo‘limida sizga biriktirilgan menejerlar. Jamoa bo‘lmaguncha, bosh sahifada uning bloklari chiqmaydi.",
-            ],
-            admin: [
-              "Sizda bosh sahifa varaqlarga bo‘lingan — bitta uzun lentani aylantirib o‘tirmaslik uchun. Varaq manzilda saqlanadi, uni xatcho‘plarga qo‘yib qo‘ysa bo‘ladi.",
-              "**«Bugun»** — kunni nimadan boshlash: «Qaroringizni kutmoqda» (lidni berish so‘rovlari), [«Vazifalar»](#leads-tasks) bloki, imzoga kelgan shartnomalar, pul plitkalari, «Bugun uchun» maslahatlari («qayta tayyorlash» tugmasi modelga bitta so‘rov sarflaydi), butun studiya bo‘yicha «Zudlik bilan bog‘lanish» va ikki haftalik soliq muddatlari.",
-              "**«Lidlar»** — barcha filtrlari bilan [lidlar ro‘yxati](#leads-list). Varaqdagi tilla rangli raqam — hozir nechta lid bo‘shligi.",
-              "**«Pul»** — «Oylar bo‘yicha kassa» (yarim yillik tushum va xarajatlar, har oy ostida — farqi) va «Kutilayotgan to‘lovlar»: faol loyihalar bo‘yicha yana qancha to‘lanishi kerak.",
-              "**«Jamoa»** — [haftalik jadval](#leads-team-week), eng yaxshilar, har biriga tavsiyalar va [«Reja va fakt»](#leads-plan-fact) — u yerda maqsadlarni qo‘yasiz va o‘zgartirasiz.",
-              "Metrika va Google Analytics bo‘yicha saytga tashriflar — varaq emas, alohida [Trafik](/admin/traffic) bo‘limi: uni siz va rahbarlar ko‘rasiz. Varaqqa eski xatcho‘plar ham o‘sha yerga olib boradi.",
-            ],
-          },
-        },
-        {
-          id: "tasks",
+          id: "board",
           title: "Vazifalar: qo‘yish, olish, yopish",
           body: [
-            "**«Vazifalar»** bloki bosh sahifada hammasidan yuqorida turadi (egasida — «Bugun» varag‘ida). Vazifani istalgan xodim istalgan xodimga, jumladan o‘ziga ham qo‘yishi mumkin: menejer — rahbarga, rahbar — egasiga, kim bo‘lsa ham — kimga bo‘lsa ham. Vazifani uni qo‘ygan va kimga qo‘yilgan ko‘radi; agar u loyihaga tegishli bo‘lsa — o‘sha loyiha kartochkasini ochadigan hamma ham.",
+            "Vazifalar — alohida bo‘lim: menyuda «Bosh sahifa»dan keyin **«Vazifalar»** tugmasi. **«Vazifalar»** bloki sahifaning yuqorisida, uning ostida — «Vazifalar tarixi». Vazifani istalgan xodim istalgan xodimga, jumladan o‘ziga ham qo‘yishi mumkin: menejer — rahbarga, rahbar — egasiga, kim bo‘lsa ham — kimga bo‘lsa ham. Vazifani uni qo‘ygan va kimga qo‘yilgan ko‘radi; agar u loyihaga tegishli bo‘lsa — o‘sha loyiha kartochkasini ochadigan hamma ham.",
             "**«Menga»** — sizga qo‘yilgan vazifalar: tepada eng yaqin muddat, pastroqda — uzoqroqlari, muddatsiz vazifalar — eng oxirida. Yangisi «yangi» deb belgilangan va **«Ishga olish»** tugmasini kutadi: shunda qo‘ygan odam vazifani ko‘rganingiz va qabul qilganingizni biladi. Olingani — «ishda», ostida **«Bajarildi»** va **«Bajarilmadi»**. Muddati o‘tgan vazifa qizil rang bilan ajratilgan va «muddati o‘tgan» deb belgilangan.",
             "**«Muddatni ko‘chirish»** variantlarni ochadi: «+1 soat», «Ertaga 18:00», «+3 kun», «Bir hafta» — yoki «Shu sanaga» tugmasi bilan o‘z sanangiz va vaqtingiz. «+1 soat», «+3 kun» va «Bir hafta» muddatdan hisoblanadi, agar u o‘tib ketgan yoki muddat bo‘lmagan bo‘lsa — hozirgi paytdan, toki yangi muddat o‘tmishda qolmasin. Muddatsiz vazifada bu joyda xuddi shu variantlar bilan **«Muddat belgilash»** turadi. Muddatni ijrochi ham, qo‘ygan odam ham ko‘chiradi — ikkinchi tomonga bot yangi muddatni darhol yozadi. Har bir ko‘chirish vazifa tarixida qoladi: eski muddat, yangisi va kim ko‘chirgani.",
             "**«Men qo‘yganlar»** — siz boshqalarga qo‘ygan vazifalar va ular hozir qanday holatda: «yangi» (hali olinmagan), «ishda», «bajarildi», «bajarilmadi», «muddati o‘tgan». Yopilganlari bu yerda yana bir hafta ko‘rinadi. «Bajarildi» va «Bajarilmadi» ni faqat vazifa kimda bo‘lsa, o‘sha bosadi — shuning uchun «bajarildi» doim ijrochining o‘zi bajarganini bildiradi. Siz muddatni ko‘chirishingiz yoki vazifa xato qo‘yilgan yoki endi kerak bo‘lmasa, **«Vazifani bekor qilish»** ni bosishingiz mumkin: vazifa «bekor qilingan» bo‘ladi, ijrochiga xabar boradi, uning Telegramidagi tugmalar «🚫 Задача отменена» ga almashadi.",
@@ -375,56 +368,114 @@ export const uz: HelpCopy = {
           ],
         },
         {
-          id: "tasks-history",
+          id: "mockup-order",
+          title: "Vazifadagi «Maket buyurtmasi»",
+          body: {
+            manager: [
+              "**«Maket buyurtmasi»** — «Vazifa qo‘yish» formasidagi savol: «Ha» yoki «Yo‘q». Agar «Kimga» da maket yig‘uvchi (egasi) belgilangan bo‘lsa, javob majburiy — savol yonida «majburiy» chiqadi va javobsiz vazifa qo‘yilmaydi. Boshqa odamlarga vazifada savol kerak emas, uni o‘tkazib yuborish mumkin.",
+              "«Ha» — siz maket buyurtma qilyapsiz. «Qaysi mijoz uchun» maydoniga kompaniya, ariza raqami, sayt yoki @nikni yoza boshlang va ro‘yxatdan lid yoki aloqani tanlang — qidiruv «Bo‘lim yoki kompaniyani topish» dagi bilan bir xil va faqat sizga ko‘rinadiganlarni ko‘rsatadi. «Mijoz sayti» aloqada o‘zi qo‘yiladi, lidda uni yozing, masalan tirex.uz. Ijrochi vazifa ostida «Maket buyurtmasi», kim uchun va saytni ko‘radi, bot esa vazifa haqidagi xabarda saytni yozadi.",
+              "Maket yig‘ilib, buyurtmaga bog‘langach, [Maketlar](/admin/mockups) da uning mas’uli siz bo‘lasiz — «buyurtma bo‘yicha» belgisi bilan: shu maket bo‘yicha mijozni siz olib borasiz, maket parol bilan yopilganda bot sizga yozadi, u «Bosh sahifa» dagi maketlaringizda turadi. Vazifa «Bajarildi» bilan yopiladi, unda «Maket tayyor» havolasi chiqadi. Rahbar yoki egasi mas’ulni qo‘lda tayinlagan bo‘lsa, tayinlangan ustun.",
+            ],
+            head: [
+              "**«Maket buyurtmasi»** — «Vazifa qo‘yish» formasida va «Bosh sahifa» dagi [tezkor vazifada](#hq-task) savol: «Ha» yoki «Yo‘q». Maket yig‘uvchi (egasi) belgilangan bo‘lsa, javob majburiy — javobsiz vazifa qo‘yilmaydi. Boshqa odamlarga vazifada savol kerak emas.",
+              "«Ha» — maket buyurtmasi: «Qaysi mijoz uchun» da lid yoki aloqani qidiruv orqali tanlang («Bo‘lim yoki kompaniyani topish» dagi bilan bir xil), «Mijoz sayti» da — sayt, aloqada u o‘zi qo‘yiladi. Ijrochi vazifa ostida «Maket buyurtmasi», kim uchun va saytni ko‘radi; bot vazifa haqidagi xabarda saytni yozadi.",
+              "Yig‘ilgan va buyurtmaga bog‘langan maketga «buyurtma bo‘yicha» mas’ul — vazifani qo‘ygan xodim tayinlanadi; vazifa «Bajarildi» bilan yopiladi, unda «Maket tayyor» chiqadi. Tayyor maketni istalgan ochiq buyurtmaga [Maketlar](/admin/mockups) da o‘zingiz bog‘lashingiz mumkin: maketdagi «Buyurtma» qatori, buyurtmani tanlash va «Bog‘lash». Siz qo‘lda tayinlagan mas’ul buyurtmadan ustun.",
+            ],
+            admin: [
+              "**«Maket buyurtmasi»** — «Vazifa qo‘yish» formasida va «Bosh sahifa» dagi [tezkor vazifada](#hq-task) savol: «Ha» yoki «Yo‘q». «Kimga» orasida siz bo‘lsangiz (maketlarni siz yig‘asiz), javob majburiy — javobsiz vazifa sizga qo‘yilmaydi. Shunda har bir maket buyurtmasi sizga yozishmadagi iltimos emas, mijoz va sayt bilan keladi.",
+              "Buyurtma «Menga» dagi vazifa ostida ko‘rinadi: «Maket buyurtmasi», kim uchun (lid yoki aloqaga havola) va sayt. **«Prototipni yig‘ish»** [Prototiplar](/admin/proto) ni sayt yozilgan va «Vazifadagi buyurtma bo‘yicha» maydonida buyurtma tanlangan holda ochadi. Yig‘dingiz — prototip buyurtmaga bog‘landi, vazifa «Bajarildi» bilan yopildi, buyurtma bergan xodimga bot yozdi. Qoralama buyurtmaga bog‘lanadi, lekin vazifa ochiq qoladi: mijoz uchun maket hali yo‘q.",
+              "Qo‘lda yig‘ilgan maketni (vitrina) [Maketlar](/admin/mockups) da bog‘lang: maketda «Buyurtma» qatori — buyurtmani tanlang (sayti bir xil buyurtma darhol tanlangan bo‘ladi) va «Bog‘lash» ni bosing. Maket uchun mas’ul uni buyurtma qilgan xodim bo‘ladi, «buyurtma bo‘yicha» belgisi bilan. Qo‘lda tayinlangan mas’ul buyurtmadan ustun.",
+            ],
+          },
+        },
+        {
+          id: "history",
           title: "Vazifani tahrirlash va vazifalar tarixi",
           body: {
             manager: [
               "**«Tahrirlash»** — siz qo‘ygan vazifa ostida, u ochiq ekan. «Nima qilish kerak», «Batafsil», «Ijrochi» va loyihani tuzatish mumkin, keyin **«Saqlash»**. Muddat bu yerda o‘zgarmaydi: buning uchun «Muddatni ko‘chirish» bor, uning o‘z ko‘chirishlar tarixi bor. Sizga qo‘yilgan vazifani siz tahrirlamaysiz: rozi bo‘lmasangiz — «Bajarilmadi» yoki muddatni ko‘chirish, qolgani — qo‘ygan odam bilan.",
               "Ijrochini almashtirdingiz — vazifa yangisida qaytadan boshlanadi: «yangi», bot unga uni yangi vazifa sifatida yuboradi, eslatmalar noldan boshlanadi. Avvalgisidan vazifa olib tashlanadi, unga bu haqda xabar keladi. Matn yoki loyihani o‘zgartirdingiz — bot ijrochiga aynan nima o‘zgarganini yozadi, uning Telegramidagi vazifa xabari esa yangilanadi.",
               "Biror narsa bo‘lgan vazifa pastida **«Tarix»** bor: kim qo‘ygan, kim olgan, qachon va qaysi muddatdan qaysi muddatga ko‘chirilgan, nima o‘zgartirilgan (edi → bo‘ldi), qanday tugagan. Vaqt — Toshkent vaqti. Muddat yonida u necha marta ko‘chirilgani ko‘rinadi.",
-              "**«Vazifalar tarixi»** — blok sarlavhasining o‘ng tomonidagi havola. U yerda davr ichida biror narsa bo‘lgan vazifalaringiz — siz qo‘yganlar ham, sizga qo‘yilganlar ham: bajarildi, bajarilmadi, bekor qilindi, muddat ko‘chirildi, o‘zgartirildi. «Nima» bitta turdagi qadamlarni qoldiradi, «Davr» — 7, 30 yoki 90 kun. Tepada — har bir turdan jami qanchaligi. Bu faqat ko‘rish uchun: vazifalarni o‘zgartirish — bu yerda, bosh sahifada.",
+              "**«Vazifalar tarixi»** — shu sahifaning pastida (blok sarlavhasidagi «Vazifalar tarixi ↓» havolasi unga aylantiradi). U yerda davr ichida biror narsa bo‘lgan vazifalaringiz — siz qo‘yganlar ham, sizga qo‘yilganlar ham: bajarildi, bajarilmadi, bekor qilindi, muddat ko‘chirildi, o‘zgartirildi. «Nima» bitta turdagi qadamlarni qoldiradi, «Davr» — 7, 30 yoki 90 kun. Tepada — har bir turdan jami qanchaligi. Bu faqat ko‘rish uchun: vazifalarni o‘zgartirish — yuqorida, «Vazifalar» blokida.",
             ],
             head: [
               "**«Tahrirlash»** — siz qo‘ygan vazifa ostida, u ochiq ekan: «Nima qilish kerak», «Batafsil», «Ijrochi», loyiha, keyin **«Saqlash»**. Muddat — «Muddatni ko‘chirish» tugmasi bilan, uning o‘z tarixi bor. Boshqalarning vazifalarini faqat ularni qo‘ygan odam tahrirlaydi: shunda tarixda doim kim nimani topshirgani ko‘rinadi.",
               "Ijrochini almashtirdingiz — yangisida vazifa qaytadan boshlanadi: «yangi», bot uni yangi vazifa sifatida yuboradi, eslatmalar noldan; avvalgisiga vazifa undan olib tashlangani haqida xabar keladi. Matn yoki loyihani o‘zgartirdingiz — bot ijrochiga aynan nima o‘zgarganini yozadi va vazifa xabarini yangilaydi.",
               "Biror narsa bo‘lgan vazifa pastida **«Tarix»**: kim qo‘ygan, olgan, muddatni ko‘chirgan (qaysidan qaysiga), nima o‘zgartirilgan (edi → bo‘ldi), qanday tugagan. Muddat yonida — u necha marta ko‘chirilgani.",
-              "**«Vazifalar tarixi»** — blok sarlavhasining o‘ng tomonidagi havola. U yerda davr ichida biror narsa bo‘lgan butun jamoa vazifalari: bajarildi, bajarilmadi, bekor qilindi, muddat ko‘chirildi, o‘zgartirildi. Filtrlar: «Nima» — qadamlar turi, «Kimniki» — bitta odam (uning vazifalari va u qo‘yganlar), «Davr» — 7, 30 yoki 90 kun. Tepada — jamlar, pastda — **«Odamlar bo‘yicha»**: kimning nechta vazifasi bajarildi, bajarilmadi, bekor qilindi va ularning muddati necha marta ko‘chirildi; ijrochi bo‘yicha hisoblanadi, ism uning vazifalarini ochadi. Bir odamda tez-tez ko‘chirish va «bajarilmadi» — gaplashish uchun sabab. Ega o‘ziga qo‘ygan vazifalar bu yerga tushmaydi.",
+              "**«Vazifalar tarixi»** — shu sahifaning pastida (blok sarlavhasidagi «Vazifalar tarixi ↓» havolasi unga aylantiradi). U yerda davr ichida biror narsa bo‘lgan butun jamoa vazifalari: bajarildi, bajarilmadi, bekor qilindi, muddat ko‘chirildi, o‘zgartirildi. Filtrlar: «Nima» — qadamlar turi, «Kimniki» — bitta odam (uning vazifalari va u qo‘yganlar), «Davr» — 7, 30 yoki 90 kun. Tepada — jamlar, pastda — **«Odamlar bo‘yicha»**: kimning nechta vazifasi bajarildi, bajarilmadi, bekor qilindi va ularning muddati necha marta ko‘chirildi; ijrochi bo‘yicha hisoblanadi, ism uning vazifalarini ochadi. Bir odamda tez-tez ko‘chirish va «bajarilmadi» — gaplashish uchun sabab. Ega o‘ziga qo‘ygan vazifalar bu yerga tushmaydi.",
             ],
             admin: [
               "**«Tahrirlash»** — siz qo‘ygan vazifa ostida, u ochiq ekan: «Nima qilish kerak», «Batafsil», «Ijrochi», loyiha, keyin **«Saqlash»**. Muddat — «Muddatni ko‘chirish» tugmasi bilan, uning o‘z tarixi bor. Boshqalarning vazifalarini faqat ularni qo‘ygan odam tahrirlaydi: shunda tarixda doim kim nimani topshirgani ko‘rinadi.",
               "Ijrochini almashtirdingiz — yangisida vazifa qaytadan boshlanadi: «yangi», bot uni yangi vazifa sifatida yuboradi, eslatmalar noldan; avvalgisiga vazifa undan olib tashlangani haqida xabar keladi. Matn yoki loyihani o‘zgartirdingiz — bot ijrochiga aynan nima o‘zgarganini yozadi va vazifa xabarini yangilaydi.",
               "Biror narsa bo‘lgan vazifa pastida **«Tarix»**: kim qo‘ygan, olgan, muddatni ko‘chirgan (qaysidan qaysiga), nima o‘zgartirilgan (edi → bo‘ldi), qanday tugagan. Muddat yonida — u necha marta ko‘chirilgani.",
-              "**«Vazifalar tarixi»** — blok sarlavhasining o‘ng tomonidagi havola. U yerda davr ichida biror narsa bo‘lgan studiyaning barcha vazifalari: bajarildi, bajarilmadi, bekor qilindi, muddat ko‘chirildi, o‘zgartirildi. Filtrlar: «Nima» — qadamlar turi, «Kimniki» — bitta odam (uning vazifalari va u qo‘yganlar), «Davr» — 7, 30 yoki 90 kun. Tepada — jamlar, pastda — **«Odamlar bo‘yicha»**: kimning nechta vazifasi bajarildi, bajarilmadi, bekor qilindi va ularning muddati necha marta ko‘chirildi; ijrochi bo‘yicha hisoblanadi, ism uning vazifalarini ochadi. Rahbar ham xuddi shuni ko‘radi, faqat siz o‘zingizga qo‘ygan vazifalardan tashqari.",
+              "**«Vazifalar tarixi»** — shu sahifaning pastida (blok sarlavhasidagi «Vazifalar tarixi ↓» havolasi unga aylantiradi). U yerda davr ichida biror narsa bo‘lgan studiyaning barcha vazifalari: bajarildi, bajarilmadi, bekor qilindi, muddat ko‘chirildi, o‘zgartirildi. Filtrlar: «Nima» — qadamlar turi, «Kimniki» — bitta odam (uning vazifalari va u qo‘yganlar), «Davr» — 7, 30 yoki 90 kun. Tepada — jamlar, pastda — **«Odamlar bo‘yicha»**: kimning nechta vazifasi bajarildi, bajarilmadi, bekor qilindi va ularning muddati necha marta ko‘chirildi; ijrochi bo‘yicha hisoblanadi, ism uning vazifalarini ochadi. Rahbar ham xuddi shuni ko‘radi, faqat siz o‘zingizga qo‘ygan vazifalardan tashqari.",
             ],
           },
         },
         {
-          id: "tasks-filter",
+          id: "filter",
           title: "Vazifalarda tartib, guruhlar va loyihalar",
           body: [
             "Sukut bo‘yicha vazifalar eng yaqin muddatdan eng uzog‘iga qarab boradi: nima yonayotgan bo‘lsa, o‘sha tepada. Muddatsiz vazifalar — oxirida, yangilari birinchi. «Men qo‘yganlar» da avval ochiqlari, pastroqda — hafta ichida yopilganlari.",
             "Ro‘yxatlar ustida — filtr. **«Guruhlash»**: «guruhlamaslik» (shunchaki muddat bo‘yicha), «muddat bo‘yicha» — «Muddat o‘tgan», «Muddat bugun», «Muddat ertaga», «Yaqin 7 kun ichida», «Keyinroq», «Muddatsiz» to‘plamlari; «loyiha bo‘yicha» — har bir loyihaning vazifalari birga, «Loyihasiz» oxirida; «odam bo‘yicha» — «Menga» da kim qo‘ygani bo‘yicha, «Men qo‘yganlar» da kimga qo‘yilgani bo‘yicha. Guruh ichida tartib o‘sha — eng yaqin muddatdan.",
             "**«Loyiha»** bitta loyihaning yoki «Loyihasiz» vazifalarni qoldiradi. Tanlang va **«Ko‘rsatish»** ni bosing. Tanlov sahifa manzilida saqlanadi: vazifalardagi tugmalar bosilgandan keyin u tushib qolmaydi, bu sahifani xatcho‘plarda ham saqlash mumkin.",
-            "Loyihali vazifa qatorida loyiha nomi bor — bosing, loyiha kartochkasi ochiladi. Loyiha kartochkasida — uning barcha vazifalari va «Vazifa qo‘yish» havolasi: u bosh sahifaga, formada loyiha allaqachon tanlangan holda olib boradi.",
+            "Loyihali vazifa qatorida loyiha nomi bor — bosing, loyiha kartochkasi ochiladi. Loyiha kartochkasida — uning barcha vazifalari va «Vazifa qo‘yish» havolasi: u [«Vazifalar»](/admin/tasks) bo‘limini formada loyiha allaqachon tanlangan holda ochadi.",
           ],
         },
         {
-          id: "tasks-bot",
+          id: "bot",
           title: "Vazifalar Telegramda va eslatmalar",
           body: {
-            manager: [...TASKS_BOT, "Agar vazifalar haqidagi Telegram xabarlari sizga kerak bo‘lmasa, ularni rahbar yoki egasi o‘chiradi — bildirishnomalaringizdagi «Vazifalar» belgisi bilan. Vazifalar bunda bosh sahifada qoladi, brauzerdagi ovoz esa avvalgidek ishlaydi."],
-            head: [...TASKS_BOT, "Vazifalar haqidagi xabarlar odamning [bildirishnomalaridagi](#team-notices) «Vazifalar» belgisi bilan o‘chiriladi — o‘zingizda va menejerlaringizda ularni «Jamoa» bo‘limida o‘zgartirasiz. Vazifalar bunda bosh sahifada qoladi, brauzerdagi ovoz ishlaydi."],
-            admin: [...TASKS_BOT, "Vazifalar haqidagi xabarlar [bildirishnomalardagi](#team-notices) «Vazifalar» belgisi bilan o‘chiriladi — istalgan xodimda, «Jamoa» bo‘limida. Vazifalar bunda bosh sahifada qoladi, brauzerdagi ovoz ishlaydi."],
+            manager: [...TASKS_BOT, "Agar vazifalar haqidagi Telegram xabarlari sizga kerak bo‘lmasa, ularni rahbar yoki egasi o‘chiradi — bildirishnomalaringizdagi «Vazifalar» belgisi bilan. Vazifalar bunda «Vazifalar» bo‘limida qoladi, brauzerdagi ovoz esa avvalgidek ishlaydi."],
+            head: [...TASKS_BOT, "Vazifalar haqidagi xabarlar odamning [bildirishnomalaridagi](#team-notices) «Vazifalar» belgisi bilan o‘chiriladi — o‘zingizda va menejerlaringizda ularni «Jamoa» bo‘limida o‘zgartirasiz. Vazifalar bunda «Vazifalar» bo‘limida qoladi, brauzerdagi ovoz ishlaydi."],
+            admin: [...TASKS_BOT, "Vazifalar haqidagi xabarlar [bildirishnomalardagi](#team-notices) «Vazifalar» belgisi bilan o‘chiriladi — istalgan xodimda, «Jamoa» bo‘limida. Vazifalar bunda «Vazifalar» bo‘limida qoladi, brauzerdagi ovoz ishlaydi."],
           },
         },
         {
-          id: "tasks-alerts",
+          id: "alerts",
           title: "Brauzerdagi ovoz va bildirishnomalar",
           body: [
-            "Panel ochiq ekan — istalgan bo‘limda — u har 45 soniyada serverdan yangilik bor-yo‘qligini so‘raydi: sizga qo‘yilgan vazifa, vazifangizni qo‘ygan odam tomonidan ko‘chirish yoki bekor qilish, yoki siz qo‘ygan vazifa bo‘yicha qadam (oldi, bajarildi, bajarilmadi, muddat ko‘chirildi). Bo‘lsa — qisqa «din-don» chalinadi, o‘ng pastki burchakda «Vazifalarni ochish» tugmali plashka chiqadi, bosh sahifa esa o‘zi yangilanadi.",
+            "Panel ochiq ekan — istalgan bo‘limda — u har 45 soniyada serverdan yangilik bor-yo‘qligini so‘raydi: sizga qo‘yilgan vazifa, vazifangizni qo‘ygan odam tomonidan ko‘chirish yoki bekor qilish, yoki siz qo‘ygan vazifa bo‘yicha qadam (oldi, bajarildi, bajarilmadi, muddat ko‘chirildi). Bo‘lsa — qisqa «din-don» chalinadi, o‘ng pastki burchakda «Vazifalarni ochish» tugmali plashka chiqadi, «Vazifalar» bo‘limi ochiq bo‘lsa, o‘zi yangilanadi.",
             "Tizim bildirishnomasi ham chiqishi uchun — hatto varaq yig‘ilgan bo‘lsa ham — vazifalar blokidagi **«Bildirishnomalarni yoqish»** ni bosing va brauzer oynasida ruxsat bering. Brauzer ruxsatni faqat bosilgandan keyin so‘raydi — shuning uchun tugma. Ruxsatdan keyin uning o‘rnida — «Bildirishnomalar yoqilgan».",
             "Agar brauzer taqiqlagan bo‘lsa, tugma o‘rnida maslahat chiqadi: bildirishnomalarga sayt sozlamalarida (manzil chap tomonidagi belgi) ruxsat berish mumkin. Ovozni brauzer paneldagi birinchi bosishdan keyin yoqadi — undan oldin sahifa ovoz chiqara olmaydi, barcha brauzerlar shunday ishlaydi. O‘z amallaringiz ovoz bilan belgilanmaydi. Panel yopiq bo‘lsa — brauzerda hech narsa yo‘q, Telegram qoladi.",
           ],
+        },
+      ],
+    },
+
+    /* ── Лиды ─────────────────────────────────────────────────────────── */
+    "/admin": {
+      what: "Panelning bosh sahifasi va mijozlarning barcha murojaatlari: saytdagi chat, forma, Telegram-bot, vitrina, «Skaut signallari» va sizning aloqalaringizdan. Bu yerda kim yozgani, unga nima kerakligi, qanchalik shoshilinchligi va u bilan kim ishlayotgani ko‘rinadi. Lid bilan har bir harakat — olish, kontaktni ochish, holatni o‘zgartirish — jurnalga ism va vaqt bilan yoziladi.",
+      items: [
+        {
+          id: "home",
+          title: "«Lidlar» sahifasida nima bor",
+          body: {
+            manager: [
+              "«Lidlar» — faqat ro‘yxat: qidiruv, filtrlar va jadval. Ilgari bu yerda ro‘yxat ustida turgan qolgan hammasi ko‘chdi: tavsiyalar va «Reja va fakt» — [«Bosh sahifa»](/admin/hq) pastiga, pul — [Moliya](/admin/finance)ga, vazifalar — [«Vazifalar»](#tasks-board) bo‘limiga.",
+              "Tepada — **«Lidni topish»**: kompaniya nomi, ism, ariza raqami yoki sohaning bir qismini yozing va «Topish»ni bosing. Sizga ko‘rinadigan lidlar orasidan qidiriladi: bo‘sh va sizniki. Pastroqda — yonida soni bor «barcha lidlar / bo‘sh lidlar / meniki» chiplari, ustuvorlik va holat, keyin [ro‘yxat](#leads-list)ning o‘zi. «Tozalash» qidiruvni olib tashlaydi.",
+              "Ro‘yxat ostida — yig‘ilgan [«Lidni qo‘lda qo‘shish»](#leads-add) tugmasi: mijoz sayt va botni chetlab kelgan bo‘lsa.",
+            ],
+            head: [
+              "«Lidlar» — faqat ro‘yxat: qidiruv, filtrlar va jadval. Ilgari bu yerda ro‘yxat ustida turgan haftalik bloklar — «Bugun uchun», haftalik jamoa, tavsiyalar, «Hafta yetakchilari», «Reja va fakt» — endi [«Bosh sahifa»](/admin/hq) pastida, vazifalar — [«Vazifalar»](#tasks-board) bo‘limida.",
+              "Birinchi bo‘lib — **«Qaroringizni kutmoqda»**: menejerlarning lidni hamkasbga berish so‘rovlari (batafsil — [lidni berish](#leads-transfer)). Pastroqda — **«Lidni topish»**: kompaniya nomi, ism, ariza raqami yoki sohaning bir qismi. Yonida — **«Kimniki»**: «hammasi», «bo‘sh lidlar», «meniki» yoki aniq xodim — bitta menejerning lidlari shunday ko‘riladi.",
+              "Qidiruv ostida — yonida soni bor «barcha lidlar / bo‘sh lidlar / meniki» chiplari, ustuvorlik va holat, keyin [ro‘yxat](#leads-list). «Tozalash» qidiruvni va odam tanlovini olib tashlaydi. Ro‘yxat ostida — yig‘ilgan [«Lidni qo‘lda qo‘shish»](#leads-add).",
+              "Jamoa — [Jamoa](/admin/team) bo‘limida sizga biriktirilgan menejerlar: ularning haftalik raqamlari — «Bosh sahifa» pastidagi jadvalda.",
+            ],
+            admin: [
+              "«Lidlar» — faqat ro‘yxat: qidiruv, filtrlar va jadval. Bu yerda endi varaqlar yo‘q: «Bugun» «Bosh sahifa»ni, «Pul» esa «Moliya»ni takrorlardi. «Oylar bo‘yicha kassa», «Kutilayotgan to‘lovlar» va soliq muddatlari — [Moliya](/admin/finance)da; «Bugun uchun» maslahatlari, haftalik jamoa, yetakchilar, tavsiyalar va «Reja va fakt» — [«Bosh sahifa»](/admin/hq) pastida; imzoga kelgan shartnomalar — «Bosh sahifa»dagi «E’tibor talab qiladi»da.",
+              "Birinchi bo‘lib — **«Qaroringizni kutmoqda»**: lidni hamkasbga berish so‘rovlari. Pastroqda — **«Lidni topish»** (kompaniya nomi, ism, ariza raqami yoki sohaning bir qismi) va **«Kimniki»**: «hammasi», «bo‘sh lidlar», «meniki» yoki aniq xodim.",
+              "Qidiruv ostida — soni bilan «barcha lidlar / bo‘sh lidlar / meniki» chiplari, ustuvorlik va holat, keyin [ro‘yxat](#leads-list); ro‘yxat ostida — yig‘ilgan [«Lidni qo‘lda qo‘shish»](#leads-add). Varaqlarga eski xatcho‘plar ular endi turgan joyga olib boradi: «Bugun» — «Bosh sahifa»ga, «Pul» — «Moliya»ga, «Jamoa» — «Bosh sahifa» pastiga.",
+              "Metrika va Google Analytics’dan sayt tashriflari — alohida [Trafik](/admin/traffic) bo‘limi: uni siz va rahbarlar ko‘rasiz.",
+              "Vazifalar — [«Vazifalar»](#tasks-board) bo‘limida, «Lidlar»da ular haqida bitta havola qatori.",
+              "Ilgari «Bugun» varag‘ida bo‘lgan hech narsa yo‘qolmadi: «Bosh sahifa»dagi «E’tibor talab qiladi» qatorlari — imzoga kelgan shartnomalar, harakatsiz lidlar, yonib ketgan takliflar — kunlik ishlar ro‘yxatining o‘zi.",
+            ],
+          },
+        },
+        {
+          id: "tasks",
+          title: "Vazifalar — endi alohida bo‘lim",
+          body: ["Vazifalar endi «Lidlar»da turmaydi: bu menyuda «Bosh sahifa»dan keyingi alohida [«Vazifalar»](/admin/tasks) tugmasi. U yerda «Menga», «Men qo‘yganlar», «Vazifa qo‘yish» va «Vazifalar tarixi» — batafsil [vazifalar](#tasks-board) bandida. «Lidlar»da ularning o‘rnida yangi bo‘limga bitta havola qatori qoldi — vazifalarni eski odat bilan qidirgan adashmasin."],
         },
         {
           id: "queue",
@@ -515,7 +566,7 @@ export const uz: HelpCopy = {
           title: "Lidlar ro‘yxati: filtrlar va ustunlar",
           body: {
             manager: [
-              "Siz **bo‘sh lidlarni va o‘zingiznikini** ko‘rasiz. Hamkasb olgan lid sizga na ro‘yxatda, na to‘g‘ridan-to‘g‘ri havola orqali ko‘rsatiladi — egasi shunday qaror qilgan. Shuning uchun sizdagi «jami» plitkasi — bo‘shlar va sizniki birgalikda.",
+              "Siz **bo‘sh lidlarni va o‘zingiznikini** ko‘rasiz. Hamkasb olgan lid sizga na ro‘yxatda, na to‘g‘ridan-to‘g‘ri havola orqali ko‘rsatiladi — egasi shunday qaror qilgan. Shuning uchun sizdagi «barcha lidlar» chipi yonidagi son — bo‘shlar va sizniki birgalikda.",
               "Tepadagi filtrlar: «barcha lidlar / bo‘sh lidlar / meniki», ustuvorlik va holat. Ro‘yxatda har sahifada 50 ta lid.",
               "**«Qachon»** — Toshkent vaqti. **«Byudjet»** — summa emas, mijoz pul haqida qanday gapirayotgani: «aytilgan va tasdiqlangan», «bor, solishtirmoqda» yoki «aytilmagan». Formadan va aloqalardan kelgan murojaatlarda byudjet deyarli doim «aytilmagan» — pul haqida gap hali bo‘lmagan.",
               "**«Ball»** — lidning 0 dan 100 gacha bahosi va harf: A — 75 dan, B — 55 dan, C — 35 dan, D — undan past. **«Ustuvorlik»**: «issiq» — A baho yoki mijoz tirik odam so‘ragan; «iliq» — B; «pishib yetiladi» — qolganlari; «arxiv» — mijoz rad etgan.",
@@ -529,7 +580,7 @@ export const uz: HelpCopy = {
               "«Hamkordan» lidlar sariq rang bilan ajratilgan. Hech kimniki bo‘lmaguncha — ro‘yxatda birinchi, «ustuvor — birinchi bo‘lib oling» belgisi bilan; olinganda vaqti bo‘yicha joyiga o‘tadi, ajratish qoladi.",
             ],
             admin: [
-              "Ro‘yxat — «Lidlar» varag‘ida. Siz barcha lidlarni ko‘rasiz. Filtrlar: «barcha lidlar / bo‘sh lidlar / meniki», ustuvorlik va holat; har sahifada 50 ta.",
+              "Siz barcha lidlarni ko‘rasiz. Qidiruv, «Kimniki» va filtrlar: «barcha lidlar / bo‘sh lidlar / meniki», ustuvorlik va holat; har sahifada 50 ta.",
               "**«Byudjet»** — summa emas, mijoz pul haqida qanday gapirayotgani («aytilgan va tasdiqlangan», «bor, solishtirmoqda», «aytilmagan»). **«Ball»**: A — 75 dan, B — 55 dan, C — 35 dan, D — undan past. **«Ustuvorlik»**: «issiq» — A yoki odam so‘ragan, «iliq» — B, «pishib yetiladi» — qolganlari, «arxiv» — rad etgan.",
               "Ro‘yxatda kontaktlar ataylab yo‘q: aks holda «kontaktlarni kim ko‘rgan» degani «panelni ochgan hamma» degani bo‘lardi. Kartochkada kontaktning har bir ochilishi — [jurnalda](/admin/audit) bitta qator.",
               "«Hamkordan» lidlar sariq rang bilan ajratilgan; hech kimniki bo‘lgani ro‘yxatda birinchi turadi, «ustuvor — birinchi bo‘lib oling» belgisi bilan. Bunday lid kartochkasida hamkor bergan hamma narsa bor (nom, STIR, kontakt, sayt, nima kerak), «Qayerdan yozgan» esa — «mijozni hamkor kabinetda biriktirgan».",
@@ -541,15 +592,15 @@ export const uz: HelpCopy = {
           title: "«Lidni qo‘lda qo‘shish»: mijoz sayt va botni chetlab keldi",
           body: {
             manager: [
-              "Mijoz qo‘ng‘iroq qildi, tavsiya bo‘yicha keldi yoki shaxsan uchrashdingiz — uni ro‘yxat ustidagi **«Lidni qo‘lda qo‘shish»** tugmasi bilan yozib qo‘ying. «Mijoz ismi» va «Telefon, Telegram yoki pochta» kerak; «Kompaniya», «Mijozga nima kerak» va «Mijoz qayerdan» — xohishga ko‘ra, lekin yozilgan hamma narsa keyin [kartochkada](#leads-card) ko‘rinadi. Kontaktsiz lid qo‘shilmaydi: aks holda mijoz bilan bog‘lanib bo‘lmaydi.",
+              "Mijoz qo‘ng‘iroq qildi, tavsiya bo‘yicha keldi yoki shaxsan uchrashdingiz — uni ro‘yxat ostidagi **«Lidni qo‘lda qo‘shish»** tugmasi bilan yozib qo‘ying. «Mijoz ismi» va «Telefon, Telegram yoki pochta» kerak; «Kompaniya», «Mijozga nima kerak» va «Mijoz qayerdan» — xohishga ko‘ra, lekin yozilgan hamma narsa keyin [kartochkada](#leads-card) ko‘rinadi. Kontaktsiz lid qo‘shilmaydi: aks holda mijoz bilan bog‘lanib bo‘lmaydi.",
               "Lid darhol sizniki, navbatsiz: «ishda» holati, ariza raqami, 4 soatdan keyin esa «Взят в работу — что дальше?» eslatmasi. Kartochkada «Qayerdan yozgan» qatorida «panelda qo‘lda qo‘shilgan» bo‘ladi. Uni hamkasbga berish — har qanday lid kabi: [«Berishni so‘rash»](#leads-transfer).",
             ],
             head: [
-              "Mijoz qo‘ng‘iroq qildi, tavsiya bo‘yicha keldi yoki shaxsan uchrashdingiz — uni ro‘yxat ustidagi **«Lidni qo‘lda qo‘shish»** tugmasi bilan yozib qo‘ying. «Mijoz ismi» va «Telefon, Telegram yoki pochta» kerak; «Kompaniya», «Mijozga nima kerak» va «Mijoz qayerdan» — xohishga ko‘ra, lekin yozilgan hamma narsa keyin [kartochkada](#leads-card) ko‘rinadi.",
+              "Mijoz qo‘ng‘iroq qildi, tavsiya bo‘yicha keldi yoki shaxsan uchrashdingiz — uni ro‘yxat ostidagi **«Lidni qo‘lda qo‘shish»** tugmasi bilan yozib qo‘ying. «Mijoz ismi» va «Telefon, Telegram yoki pochta» kerak; «Kompaniya», «Mijozga nima kerak» va «Mijoz qayerdan» — xohishga ko‘ra, lekin yozilgan hamma narsa keyin [kartochkada](#leads-card) ko‘rinadi.",
               "Formada sizda **«Lid kimga»** bor: «O‘zimga» yoki istalgan xodim. Lid darhol tanlangan odamda «ishda» bo‘ladi, navbatsiz, ariza raqami va 4 soatdan keyin «Взят в работу — что дальше?» eslatmasi bilan; boshqaga bersangiz — unga darhol Telegramga kartochka havolasi bilan «Вам добавили лид» keladi. Menejerlar tanlay olmaydi: ular lidni faqat o‘zlariga qo‘shadi.",
             ],
             admin: [
-              "Mijoz qo‘ng‘iroq qildi, tavsiya bo‘yicha keldi yoki shaxsan uchrashdingiz — uni «Lidlar» varag‘idagi ro‘yxat ustidagi **«Lidni qo‘lda qo‘shish»** tugmasi bilan yozib qo‘ying. «Mijoz ismi» va «Telefon, Telegram yoki pochta» kerak; «Kompaniya», «Mijozga nima kerak» va «Mijoz qayerdan» — xohishga ko‘ra, lekin yozilgan hamma narsa keyin [kartochkada](#leads-card) ko‘rinadi.",
+              "Mijoz qo‘ng‘iroq qildi, tavsiya bo‘yicha keldi yoki shaxsan uchrashdingiz — uni ro‘yxat ostidagi **«Lidni qo‘lda qo‘shish»** tugmasi bilan yozib qo‘ying. «Mijoz ismi» va «Telefon, Telegram yoki pochta» kerak; «Kompaniya», «Mijozga nima kerak» va «Mijoz qayerdan» — xohishga ko‘ra, lekin yozilgan hamma narsa keyin [kartochkada](#leads-card) ko‘rinadi.",
               "Formada **«Lid kimga»** bor: «O‘zimga» yoki istalgan xodim. Lid darhol tanlangan odamda «ishda» bo‘ladi, navbatsiz, ariza raqami va 4 soatdan keyin «Взят в работу — что дальше?» eslatmasi bilan; boshqaga bersangiz — unga darhol Telegramga havola bilan «Вам добавили лид» keladi. Kim qo‘shgani — [jurnalda](/admin/audit). Menejerlar lidni faqat o‘zlariga qo‘shadi, rahbar — siz kabi.",
             ],
           },
@@ -559,9 +610,9 @@ export const uz: HelpCopy = {
           title: "Lid kartochkasi",
           body: {
             manager: [
-              "Ro‘yxatdan, «Zudlik bilan bog‘lanish» blokidan va Telegramdagi «🔓 Открыть карточку» tugmasi bilan ochiladi — bu tugma panelga o‘zi kiritadi. Har bir ochilish yozib qo‘yiladi.",
+              "Ro‘yxatdan, «Bosh sahifa» qatorlaridan va Telegramdagi «🔓 Открыть карточку» tugmasi bilan ochiladi — bu tugma panelga o‘zi kiritadi. Har bir ochilish yozib qo‘yiladi.",
               "**«Mas’ul»** — lid kimga biriktirilgan. Shu yerda [«O‘zimga olish» va «Navbatga qaytarish»](#leads-take) hamda [«Berishni so‘rash»](#leads-transfer) tugmalari bor.",
-              "**«Holat»** — «yangi», «ishda», «qoldirilgan», «yutilgan», «yutqazilgan». Har bir suhbatdan keyin o‘zgartiring: [statistika](/admin/stats) va «Zudlik bilan bog‘lanish» holatlar bo‘yicha hisoblanadi. «Yutilgan», «yutqazilgan» va «qoldirilgan» avtoeslatmalarni bekor qiladi. «Yangi» faqat bo‘sh lidda bor: sizning lidingizda u yo‘q, lidni qo‘yib yuborish — «Navbatga qaytarish». **Bot unutilgan lidlar bo‘yicha javobga erishadi.** Ish kunlari ikki marta — **10:00 va 16:00 da** — u «Sizda N ta «ishda» lid 7+ kundan beri harakatsiz» degan xulosani yuboradi va ostida barcha shunday lidlaringizni sakkiztadan bo‘lib yuboradi: har birida raqam va «🏆 1», «❌ 1», «⏳ 1» tugmalari (raqam — ro‘yxatdagi lid raqami). Harakatsiz — 7+ kun yozishma ham, holat o‘zgarishi ham, lid bo‘yicha boshqa amallar ham yo‘q degani. Belgilangan lid boshqa kelmaydi; belgilanmaganlarini bot javob bermaguningizcha qayta yuboradi. **«⏳ Ещё в работе»** — bot mijoz bilan keyingi qadam qachonligini so‘raydi: «Завтра», «Через 3 дня» yoki «Через неделю» — va o‘sha kunga soat 10:00 ga sizga «Связаться: …» vazifasini qo‘yadi (shanba va yakshanba dushanbaga o‘tadi). O‘sha kungacha lid haqida so‘ramaydi. Holat o‘zgarmasdan ketma-ket uchinchi «hali ishda» — oxirgisi: keyin lidda faqat «🏆» va «❌» qoladi, rahbar esa lid qoldirilayotganini biladi. Botga ikki ish kuni javob bermasangiz — rahbar ham biladi. 21+ kun harakatsiz va uch kun javob berilmagan lidni bot o‘zi kartochkada belgi bilan «yutqazilgan»ga o‘tkazadi — uni «ishda» tugmasi bilan qaytarish mumkin. «🏆»dan keyin bot **«Завести проект»**ni taklif qiladi: [Loyihalar](/admin/projects)dagi forma liddan to‘ldiriladi va loyiha sizga yoziladi — shunda sotuv hisob-kitoblaringizga tushadi.",
+              "**«Holat»** — «yangi», «ishda», «qoldirilgan», «yutilgan», «yutqazilgan». Har bir suhbatdan keyin o‘zgartiring: [statistika](/admin/stats) va [harakatsiz lidlar](#leads-urgent) hisobi holatlar bo‘yicha hisoblanadi. «Yutilgan», «yutqazilgan» va «qoldirilgan» avtoeslatmalarni bekor qiladi. «Yangi» faqat bo‘sh lidda bor: sizning lidingizda u yo‘q, lidni qo‘yib yuborish — «Navbatga qaytarish». **Bot unutilgan lidlar bo‘yicha javobga erishadi.** Ish kunlari ikki marta — **10:00 va 16:00 da** — u «Sizda N ta «ishda» lid 7+ kundan beri harakatsiz» degan xulosani yuboradi va ostida barcha shunday lidlaringizni sakkiztadan bo‘lib yuboradi: har birida raqam va «🏆 1», «❌ 1», «⏳ 1» tugmalari (raqam — ro‘yxatdagi lid raqami). Harakatsiz — 7+ kun yozishma ham, holat o‘zgarishi ham, lid bo‘yicha boshqa amallar ham yo‘q degani. Belgilangan lid boshqa kelmaydi; belgilanmaganlarini bot javob bermaguningizcha qayta yuboradi. **«⏳ Ещё в работе»** — bot mijoz bilan keyingi qadam qachonligini so‘raydi: «Завтра», «Через 3 дня» yoki «Через неделю» — va o‘sha kunga soat 10:00 ga sizga «Связаться: …» vazifasini qo‘yadi (shanba va yakshanba dushanbaga o‘tadi). O‘sha kungacha lid haqida so‘ramaydi. Holat o‘zgarmasdan ketma-ket uchinchi «hali ishda» — oxirgisi: keyin lidda faqat «🏆» va «❌» qoladi, rahbar esa lid qoldirilayotganini biladi. Botga ikki ish kuni javob bermasangiz — rahbar ham biladi. 21+ kun harakatsiz va uch kun javob berilmagan lidni bot o‘zi kartochkada belgi bilan «yutqazilgan»ga o‘tkazadi — uni «ishda» tugmasi bilan qaytarish mumkin. «🏆»dan keyin bot **«Завести проект»**ni taklif qiladi: [Loyihalar](/admin/projects)dagi forma liddan to‘ldiriladi va loyiha sizga yoziladi — shunda sotuv hisob-kitoblaringizga tushadi.",
               "**«Mijoz kontakti»** → «Kontaktni ko‘rsatish». Faqat olingan lid bo‘yicha ochiladi: avval «O‘zimga olish». Har bir ochilish jurnalga tushadi, shuning uchun yozmoqchi bo‘lganingizda oching.",
               "**«Mijoz bilan yozishma»** → «Yozishmani ko‘rsatish»: mijoz saytdagi yoki botdagi assistentga vazifa, pul va muddatlar haqida aytgan hamma narsa. Bu ham faqat olgandan keyin ochiladi va bu ham yoziladi. Formadan kelgan murojaatlarda yozishma yo‘q.",
               "**«Muhokama»** — mijoz haqida butun jamoa uchun izohlar; lidni olib borayotgan odamga Telegramda xabar keladi. Mijoz kontaktini u yerga yozmang. Pastroqda — brif, saytdan kelgan smeta va izohlar. Aloqalardan kelgan lidlar haqida — [aloqa bo‘yicha birlamchi suhbat](#prospect-replies) bandi.",
@@ -632,22 +683,22 @@ export const uz: HelpCopy = {
             ],
             head: [
               "Sizning tugmangiz — **«Berish»**: lid tanlangan odamga darhol o‘tadi, unga «…передал вам лид. Он уже ваш» xabari keladi.",
-              "Jamoangiz menejerlarining so‘rovlari («Berishni so‘rash») sizga Telegramda **«✅ Подтвердить»** va **«✖ Отклонить»** tugmalari bilan keladi — xabarning o‘zida hal qiling; avval ko‘rmoqchi bo‘lsangiz, «Открыть лид» kartochkaga olib boradi. Xuddi shu so‘rovlar bosh sahifadagi «Qaroringizni kutmoqda» blokida va lid kartochkasida ham bor. Kimdir bittasi hal qilsa — qolganlarda tugmalar «Подтвердил …» yoki «Отклонил …» ga almashadi. Studiyadagi istalgan so‘rovni hal qila olasiz, faqat o‘z jamoangiznikini emas.",
+              "Jamoangiz menejerlarining so‘rovlari («Berishni so‘rash») sizga Telegramda **«✅ Подтвердить»** va **«✖ Отклонить»** tugmalari bilan keladi — xabarning o‘zida hal qiling; avval ko‘rmoqchi bo‘lsangiz, «Открыть лид» kartochkaga olib boradi. Xuddi shu so‘rovlar «Lidlar»dagi «Qaroringizni kutmoqda» blokida va lid kartochkasida ham bor. Kimdir bittasi hal qilsa — qolganlarda tugmalar «Подтвердил …» yoki «Отклонил …» ga almashadi. Studiyadagi istalgan so‘rovni hal qila olasiz, faqat o‘z jamoangiznikini emas.",
               "Tasdiqlangan lidga 4 soatdan keyin yangi eslatma qo‘yiladi. Aloqadan kelgan lid yozishma bilan birga o‘tadi: mijoz xabarlari, qayta yozish va model imzosi — yangi mas’ulga. Oldingi mas’ulning eski eslatmalari o‘zi yopilmaydi — kerak bo‘lsa, ularni yoping.",
             ],
             admin: [
-              "Sizning tugmangiz — **«Berish»**: lid darhol o‘tadi. Menejerlarning so‘rovlari sizga Telegramda **«✅ Подтвердить»** va **«✖ Отклонить»** tugmalari bilan keladi — xabarning o‘zida hal qilasiz, — shuningdek «Bugun» varag‘idagi «Qaroringizni kutmoqda» blokiga va lid kartochkasiga. Ularni rahbar ham hal qila oladi: u o‘z jamoasining so‘rovlarini xuddi shu tugmalar bilan oladi. Kim birinchi hal qilsa — qolganlarda tugmalar natijaga almashadi va hal qilingan so‘rovni qayta bosib bo‘lmaydi.",
+              "Sizning tugmangiz — **«Berish»**: lid darhol o‘tadi. Menejerlarning so‘rovlari sizga Telegramda **«✅ Подтвердить»** va **«✖ Отклонить»** tugmalari bilan keladi — xabarning o‘zida hal qilasiz, — shuningdek «Lidlar»dagi «Qaroringizni kutmoqda» blokiga va lid kartochkasiga. Ularni rahbar ham hal qila oladi: u o‘z jamoasining so‘rovlarini xuddi shu tugmalar bilan oladi. Kim birinchi hal qilsa — qolganlarda tugmalar natijaga almashadi va hal qilingan so‘rovni qayta bosib bo‘lmaydi.",
               "Bu sizning qoidangiz bo‘yicha shunday qilingan: lid rahbar yoki sizning tasdig‘ingiz bilan beriladi va qaror chiqquncha oldingi mas’ulda qoladi. Aloqadan kelgan lid yozishma bilan birga o‘tadi — lid kimda bo‘lsa, mijoz bilan suhbat ham o‘shanda.",
             ],
           },
         },
         {
           id: "urgent",
-          title: "«Zudlik bilan bog‘lanish»",
+          title: "Harakatsiz lidlar: bitta qoida",
           body: [
-            "Bu yerda «ishda» holatidagi, juda uzoq harakatsiz turgan lidlar: «issiq» — 2 kun va undan ko‘p, «iliq» — 3, «pishib yetiladi» — 5, «arxiv» — 14.",
-            "Harakat — bu panelda lid bilan har qanday ish (hatto kartochkani ochish ham) yoki «Muhokama» blokidagi xabar. Shuning uchun lid bilan shug‘ullanishingiz bilan u ro‘yxatdan chiqadi. Lekin halolroq yo‘li — qadam qo‘yish: mijozga yozish, holatni o‘zgartirish, eslatma qo‘yish.",
-            "Tepada — eng eskilari. Bo‘sh bo‘lsa — «Ishdagi barcha lidlarda yaqinda harakat bo‘lgan».",
+            "«Harakatsiz» lid — «ishda» holatida va 7 kun yoki undan ko‘p qadamsiz: uni hech kim olmagan, yozishmada va «Muhokama»da yozmagan, holatini o‘zgartirmagan va eslatma qo‘ymagan. Kartochkani ko‘rish va botga «⏳ Ещё в работе» deb javob berish qadam hisoblanmaydi: ochib yopish — shug‘ullanish degani emas.",
+            "Qoida butun panel va bot uchun bitta: rahbar va egasida «Bosh sahifa»dagi «E’tibor talab qiladi», menejerda «Muddati o‘tgan», jamoa jadvalidagi «Harakatsiz» ustuni va botning 10:00 va 16:00 dagi unutilgan lidlar haqidagi savollari bir xil hisoblaydi. Ilgari «zudlik bilan bog‘lanish» ustuvorlik bo‘yicha o‘z chegaralari bilan hisoblanardi va bitta lid bir joyda yonardi, boshqasida yo‘q.",
+            "Lid bu hisobdan chiqishi uchun haqiqiy qadam qo‘ying: mijozga yozing, holatni o‘zgartiring, eslatma yoki «Bog‘lanish» vazifasini qo‘ying.",
           ],
         },
         {
@@ -665,7 +716,7 @@ export const uz: HelpCopy = {
               "Chiziq: 100% dan — yashil, 50% dan past — tilla rang.",
             ],
             admin: [
-              "«Jamoa» varag‘ida. Siz istalgan odamga reja qo‘yasiz, yana «o‘zgartirish» va «olib tashlash» bilan istalgan rejani o‘zgartira va olib tashlay olasiz. Rahbar faqat o‘z menejeriga reja qo‘sha oladi — siz shunday qaror qilgansiz.",
+              "[«Bosh sahifa»](/admin/hq#hq-week) pastida, «Hafta: tavsiyalar, jamoa, reja» blokida. Siz istalgan odamga reja qo‘yasiz, yana «o‘zgartirish» va «olib tashlash» bilan istalgan rejani o‘zgartira va olib tashlay olasiz. Rahbar faqat o‘z menejeriga reja qo‘sha oladi — siz shunday qaror qilgansiz.",
               "Ko‘rsatkichlar: «tushumlar, $», «yutilgan lidlar», «birinchi bog‘lanishlar» (bu «Kontaktni ko‘rsatish» bosilishlari). Davrlar: dushanbadan boshlanadigan joriy hafta va joriy oy.",
             ],
           },
@@ -695,7 +746,7 @@ export const uz: HelpCopy = {
           body: {
             head: [
               "Siz va jamoangiz bo‘yicha jadval, strelka — o‘tgan haftaga nisbatan.",
-              "**«Ishda»** — «ishda» holatidagi lidlar. **«Shoshilinch»** — ulardan nechtasi [uzoq vaqt harakatsiz](#leads-urgent). **«Aloqalar»** — odamning hafta davomida lidlar bilan barcha harakatlari: kartochkani, kontaktni ochdi, eslatma, holat, muhokamadagi xabar. Bu lidlar bilan ish, sovuq aloqalar emas. **«Bog‘lanishlar»** — «Kontaktni ko‘rsatish» bosilishlari. **«Yutilgan»**, **«Tushumlar»** — hafta davomida uning loyihalari bo‘yicha kelgan pul. **«Aloqalar rejasi»** — sovuq aloqalar siz [«Jamoa»](/admin/team) bo‘limida qo‘yadigan rejaga nisbatan.",
+              "**«Ishda»** — «ishda» holatidagi lidlar. **«Harakatsiz»** — ulardan nechtasi 7+ kun [qadamsiz](#leads-urgent) turibdi. **«Aloqalar»** — odamning hafta davomida lidlar bilan barcha harakatlari: kartochkani, kontaktni ochdi, eslatma, holat, muhokamadagi xabar. Bu lidlar bilan ish, sovuq aloqalar emas. **«Bog‘lanishlar»** — «Kontaktni ko‘rsatish» bosilishlari. **«Yutilgan»**, **«Tushumlar»** — hafta davomida uning loyihalari bo‘yicha kelgan pul. **«Aloqalar rejasi»** — sovuq aloqalar siz [«Jamoa»](/admin/team) bo‘limida qo‘yadigan rejaga nisbatan.",
               "«Hafta yetakchilari» jamoada ikki va undan ko‘p odam bo‘lganda chiqadi.",
             ],
             admin: [
@@ -709,7 +760,7 @@ export const uz: HelpCopy = {
           title: "Qizil ogohlantirish «Eslatmalar yetib bormayapti»",
           body: {
             manager: [
-              "Agar eslatmalarni yarim soatdan ko‘p hech kim yubormagan bo‘lsa, bosh sahifa tepasida chiqadi. Darhol egasiga ayting: u turganda lidlaringiz bo‘yicha eslatmalar kelmaydi — ularni kartochkalarda o‘zingiz tekshiring.",
+              "Agar eslatmalarni yarim soatdan ko‘p hech kim yubormagan bo‘lsa, «Bosh sahifa» va «Lidlar» tepasida chiqadi. Darhol egasiga ayting: u turganda lidlaringiz bo‘yicha eslatmalar kelmaydi — ularni kartochkalarda o‘zingiz tekshiring.",
             ],
             head: [
               "Svip — jadval bo‘yicha har besh daqiqada bir marta ishga tushadigan jarayon — yarim soatdan ko‘p ishlamagan bo‘lsa chiqadi. U turganda eslatmalar hech kimga kelmaydi. Egasiga ayting.",
@@ -1106,17 +1157,17 @@ export const uz: HelpCopy = {
           body: {
             manager: [
               "**Telegramda — kompaniya kartochkasi ostida.** «📤 Отправить через бота»dan keyin, xat navbatda kutib turganda, kartochka ostida «✋ Напишу сам — не отправлять» tugmasi turadi. Bosdingiz — bot bu xatni endi yubormaydi, tugmada «✋ Снято с очереди · пишете сами» paydo bo‘ladi, pastda esa xabar keladi: kimga yozish, xat matni (ustiga bosing — nusxalanadi) va Telegram yoki WhatsApp’da yozishmani tayyor matn bilan ochadigan tugma. Tugma ertasi kuni ham ishlaydi: cheklangan akkauntni kutayotgan xatni u ketmaguncha istalgan paytda olish mumkin. Kechikdingiz va bot yuborib ulgurdi — tugma «📤 Бот уже отправил это письмо» deydi: ikkinchi marta yozish shart emas.",
-              "**Panelda — bir nechtasini birdan.** «Aloqalar»da ro‘yxat ustida «O‘zim yozaman — yubormang» va «Hammasini belgilash» tugmalari bilan sariq blok paydo bo‘ladi, navbatdagi har bir xatingizda esa — «O‘zim yozaman» belgisi. Keraklilarini belgilang va tugmani bosing: bot ulardan birortasini ham yubormaydi, yuqorida esa nechtasi olingani va nechtasini bot oldinroq yuborib ulgurgani chiqadi. Telegram ishchi akkauntni cheklab qo‘ygan va xatlaringiz uni ertagacha kutayotganda qulay (batafsil — [ishchi akkaunt navbati](#prospect-queue) bandida). Boshqalarning xatlarida belgi yo‘q: ularni muallif, rahbar yoki egasi oladi.",
+              "**Panelda — bir nechtasini birdan.** «Sovuq aloqalar»da ro‘yxat ustida «O‘zim yozaman — yubormang» va «Hammasini belgilash» tugmalari bilan sariq blok paydo bo‘ladi, navbatdagi har bir xatingizda esa — «O‘zim yozaman» belgisi. Keraklilarini belgilang va tugmani bosing: bot ulardan birortasini ham yubormaydi, yuqorida esa nechtasi olingani va nechtasini bot oldinroq yuborib ulgurgani chiqadi. Telegram ishchi akkauntni cheklab qo‘ygan va xatlaringiz uni ertagacha kutayotganda qulay (batafsil — [ishchi akkaunt navbati](#prospect-queue) bandida). Boshqalarning xatlarida belgi yo‘q: ularni muallif, rahbar yoki egasi oladi.",
               "Keyin hammasi [«O‘zim bog‘landim»](#prospect-self)dan keyingidek: kartochka «yuborildi» bo‘ladi, aloqa va lid — sizniki. Mijozga o‘zingiz yozasiz — o‘z akkauntingizdan, WhatsApp orqali yoki qo‘ng‘iroq bilan. Javob shaxsan sizga keladi: uni kartochkaga ko‘chiring — «Mijoz nima deb javob berdi» maydoniga, va SI nima deb javob berishni aytib beradi ([qo‘lda yozish](#prospect-manual) bandi).",
             ],
             head: [
               "**Telegramda — kompaniya kartochkasi ostida.** «📤 Отправить через бота»dan keyin, xat navbatda kutib turganda, kartochka ostida «✋ Напишу сам — не отправлять» tugmasi turadi. Bosdingiz — bot bu xatni endi yubormaydi, tugmada «✋ Снято с очереди · пишете сами» paydo bo‘ladi, pastda esa xabar keladi: kimga yozish, xat matni (ustiga bosing — nusxalanadi) va Telegram yoki WhatsApp’da yozishmani tayyor matn bilan ochadigan tugma. Tugma ertasi kuni ham ishlaydi: cheklangan akkauntni kutayotgan xatni u ketmaguncha istalgan paytda olish mumkin. Kechikdingiz va bot yuborib ulgurdi — tugma «📤 Бот уже отправил это письмо» deydi: ikkinchi marta yozish shart emas.",
-              "**Panelda — bir nechtasini birdan.** «Aloqalar»da ro‘yxat ustida «O‘zim yozaman — yubormang» va «Hammasini belgilash» tugmalari bilan sariq blok paydo bo‘ladi, «O‘zim yozaman» belgisi esa navbatdagi har bir xatda turadi — sizniki, menejerlaringizniki va avtomatik aloqalarniki. Keraklilarini belgilang va tugmani bosing: bot ulardan birortasini ham yubormaydi, yuqorida esa nechtasi olingani va nechtasini bot oldinroq yuborib ulgurgani chiqadi. Aloqa tugmani bosgan odamga — mijozga yozadigan odamga yoziladi. Shuning uchun menejer xatini faqat o‘zingiz yozsangiz oling; uning xatlari cheklangan akkauntni kutmasligi uchun yaxshisi uni [Akkauntlar](/admin/accounts) bo‘limida yana bitta, ishlayotgan akkauntda belgilang.",
+              "**Panelda — bir nechtasini birdan.** «Sovuq aloqalar»da ro‘yxat ustida «O‘zim yozaman — yubormang» va «Hammasini belgilash» tugmalari bilan sariq blok paydo bo‘ladi, «O‘zim yozaman» belgisi esa navbatdagi har bir xatda turadi — sizniki, menejerlaringizniki va avtomatik aloqalarniki. Keraklilarini belgilang va tugmani bosing: bot ulardan birortasini ham yubormaydi, yuqorida esa nechtasi olingani va nechtasini bot oldinroq yuborib ulgurgani chiqadi. Aloqa tugmani bosgan odamga — mijozga yozadigan odamga yoziladi. Shuning uchun menejer xatini faqat o‘zingiz yozsangiz oling; uning xatlari cheklangan akkauntni kutmasligi uchun yaxshisi uni [Akkauntlar](/admin/accounts) bo‘limida yana bitta, ishlayotgan akkauntda belgilang.",
               "Keyin hammasi [«O‘zim bog‘landim»](#prospect-self)dan keyingidek: kartochka «yuborildi» bo‘ladi, aloqa — sizniki, lid esa xatni navbatga qo‘ygan odamda qoladi (avtomatik aloqalar xatida lid — sizniki). Mijozga o‘zingiz yozasiz — o‘z akkauntingizdan, WhatsApp orqali yoki qo‘ng‘iroq bilan. Javob shaxsan sizga keladi: uni kartochkaga ko‘chiring — «Mijoz nima deb javob berdi» maydoniga, va SI nima deb javob berishni aytib beradi ([qo‘lda yozish](#prospect-manual) bandi).",
             ],
             admin: [
               "**Telegramda — kompaniya kartochkasi ostida.** «📤 Отправить через бота»dan keyin, xat navbatda kutib turganda, kartochka ostida «✋ Напишу сам — не отправлять» tugmasi turadi. Bosdingiz — bot bu xatni endi yubormaydi, tugmada «✋ Снято с очереди · пишете сами» paydo bo‘ladi, pastda esa xabar keladi: kimga yozish, xat matni (ustiga bosing — nusxalanadi) va Telegram yoki WhatsApp’da yozishmani tayyor matn bilan ochadigan tugma. Tugma ertasi kuni ham ishlaydi: cheklangan akkauntni kutayotgan xatni u ketmaguncha istalgan paytda olish mumkin. Kechikdingiz va bot yuborib ulgurdi — tugma «📤 Бот уже отправил это письмо» deydi: ikkinchi marta yozish shart emas.",
-              "**Panelda — bir nechtasini birdan.** «Aloqalar»da ro‘yxat ustida «O‘zim yozaman — yubormang» va «Hammasini belgilash» tugmalari bilan sariq blok paydo bo‘ladi, «O‘zim yozaman» belgisi esa navbatdagi har bir xatda turadi — sizniki, menejerlarniki va avtomatik aloqalarniki. Keraklilarini belgilang va tugmani bosing: bot ulardan birortasini ham yubormaydi, yuqorida esa nechtasi olingani va nechtasini bot oldinroq yuborib ulgurgani chiqadi. Aloqa tugmani bosgan odamga — mijozga yozadigan odamga yoziladi. Shuning uchun menejer xatini faqat o‘zingiz yozsangiz oling; uning xatlari cheklangan akkauntni kutmasligi uchun yaxshisi uni [Akkauntlar](/admin/accounts) bo‘limida yana bitta, ishlayotgan akkauntda belgilang.",
+              "**Panelda — bir nechtasini birdan.** «Sovuq aloqalar»da ro‘yxat ustida «O‘zim yozaman — yubormang» va «Hammasini belgilash» tugmalari bilan sariq blok paydo bo‘ladi, «O‘zim yozaman» belgisi esa navbatdagi har bir xatda turadi — sizniki, menejerlarniki va avtomatik aloqalarniki. Keraklilarini belgilang va tugmani bosing: bot ulardan birortasini ham yubormaydi, yuqorida esa nechtasi olingani va nechtasini bot oldinroq yuborib ulgurgani chiqadi. Aloqa tugmani bosgan odamga — mijozga yozadigan odamga yoziladi. Shuning uchun menejer xatini faqat o‘zingiz yozsangiz oling; uning xatlari cheklangan akkauntni kutmasligi uchun yaxshisi uni [Akkauntlar](/admin/accounts) bo‘limida yana bitta, ishlayotgan akkauntda belgilang.",
               "Keyin hammasi [«O‘zim bog‘landim»](#prospect-self)dan keyingidek: kartochka «yuborildi» bo‘ladi, aloqa — sizniki, lid esa xatni navbatga qo‘ygan odamda qoladi (avtomatik aloqalar xatida lid — sizniki). Mijozga o‘zingiz yozasiz — o‘z akkauntingizdan, WhatsApp orqali yoki qo‘ng‘iroq bilan. Javob shaxsan sizga keladi: uni kartochkaga ko‘chiring — «Mijoz nima deb javob berdi» maydoniga, va SI nima deb javob berishni aytib beradi ([qo‘lda yozish](#prospect-manual) bandi).",
             ],
           },
@@ -1292,7 +1343,7 @@ export const uz: HelpCopy = {
           body: [
             "**«Pauza»** — akkaunt birinchi xatlarni yozishni to‘xtatadi, lekin boshlangan suhbatlarda javob beradi. **«Ishga qaytarish»** — yana yozadi.",
             "Telegram akkauntni ommaviy tarqatma uchun cheklasa, u o‘zi bir sutkaga to‘xtaydi: birinchi xatlar qolganlaridan ketadi, yozishma davom etadi, akkauntda esa qachongacha turgani yoziladi. Shu holat yuz bergan xat navbatga qaytadi va boshqa akkauntdan ketadi. Yozadigan boshqa hech kim qolmasa, navbat avvalgidek butunlay olib tashlanadi. Har soatda har bir akkaunt, asosiysi ham, @SpamBot’dan o‘zi cheklanganmi-yo‘qmi deb so‘raydi. Telegram bir sutkadan uzoqroq muddat aytgan bo‘lsa — akkaunt shu muddatgacha to‘xtaydi. Cheklov haqida bot butun jamoaga yozadi: qaysi akkaunt soat nechagacha to‘xtagan, aynan uni nechta va kimning xatlari kutmoqda va nima qilish kerak — mijozlarga shaxsiy akkauntdan yoki boshqa ishchi akkauntdan yozish. Cheklov olib tashlansa — bot akkaunt yana yozayotganini aytadi. Menejerning xatlari cheklangan akkauntni kutmasligi uchun uni yana bitta akkauntda belgilang — [akkauntda kim ishlaydi](#accounts-staff) bandi.",
-            "**«O‘chirish»** — skaut Telegramdagi seansni yopadi (u telefondagi qurilmalardan yo‘qoladi) va uni bizda o‘chiradi. Shu akkauntdan boshlangan suhbatlar «Aloqalar»da qoladi, lekin ularga keyin o‘zingiz javob berasiz: bu raqamdan yozadigan boshqa hech kim yo‘q.",
+            "**«O‘chirish»** — skaut Telegramdagi seansni yopadi (u telefondagi qurilmalardan yo‘qoladi) va uni bizda o‘chiradi. Shu akkauntdan boshlangan suhbatlar «Sovuq aloqalar»da qoladi, lekin ularga keyin o‘zingiz javob berasiz: bu raqamdan yozadigan boshqa hech kim yo‘q.",
           ],
         },
       ],
@@ -1353,20 +1404,28 @@ export const uz: HelpCopy = {
           ],
         },
         {
+          id: "shown",
+          title: "«Maketni ko‘rsatdim» — to‘g‘ridan-to‘g‘ri ro‘yxatda",
+          body: [
+            "«Kimga yuborilgan»dagi har bir yuborish yonida — **«Maketni ko‘rsatdim»** tugmasi: bosing va «video orqali» (maket bilan video yozib yubordingiz) yoki «yuzma-yuz» (uchrashuvda yoki ekranli qo‘ng‘iroqda ko‘rsatdingiz)ni tanlang. Belgi sana va ismingiz bilan qo‘yiladi, jurnalga yoziladi va darhol [sotuv bosqichlari](/admin/stages)ga hamda normaga — haftasiga 2 ta ko‘rsatish — kiradi.",
+            "O‘z mijozingiz bo‘yicha ko‘rsatishni belgilashingiz mumkin; rahbar va egasi — istalganini. Yuborish na lid, na aloqa bilan bog‘lanmagan bo‘lsa (masalan, maket shaxsiy akkauntdan qo‘lda ketgan), tugma yo‘q — unda ko‘rsatishni [lid kartochkasida](#leads-sales-marks) belgilang. Xuddi shu tugma «Bosh sahifa»dagi «Mening maketlarim»da ham bor.",
+          ],
+        },
+        {
           id: "owner",
           title: "Mas’ul va mijozga yuborish",
           body: {
             manager: [
-              "Har bir prototip ostida «Mas’ul» qatori va mijozga yuborilgani bor. Mas’ulni panel o‘zi topadi, tartib bilan: qo‘lda tayinlangan («tayinlangan»), keyin maket birinchi ketgan lid egasi («lid bo‘yicha»), keyin aloqa muallifi («aloqa bo‘yicha»), keyin maketni panelda yig‘gan kishi («yig‘gan»). Ulardan hech kim bo‘lmasa — «tayinlanmagan». Vitrina loyihalarida bu qator yo‘q: bular mijoz uchun maket emas, bizning ishlarimiz. Mas’ulni rahbar va egasi tayinlaydi yoki almashtiradi.",
+              "Har bir maket ostida «Mas’ul» qatori va mijozga yuborilgani bor. Mas’ulni panel o‘zi topadi, tartib bilan: qo‘lda tayinlangan («tayinlangan»), keyin maketni vazifa orqali buyurtma qilgan xodim («buyurtma bo‘yicha», qarang: [maket buyurtmasi](#tasks-mockup-order)), keyin maket birinchi ketgan lid egasi («lid bo‘yicha»), keyin aloqa muallifi («aloqa bo‘yicha»), keyin maketni panelda yig‘gan kishi («yig‘gan»). Ulardan hech kim bo‘lmasa — «tayinlanmagan». Qo‘lda yig‘ilgan vitrina maketlarida «yig‘gan» bo‘lmaydi: u yerda mas’ul — qo‘lda tayinlangan, lid egasi yoki aloqa muallifi, vitrina hali ish akkauntlaridan yuborilmagan bo‘lsa — «ish akkauntlaridan yuborilmagan». Mas’ulni rahbar va egasi tayinlaydi yoki almashtiradi.",
               "«mijozga 14.10 17:27 da yuborilgan» — maket havolasi mijozga ishchi akkauntdan birinchi marta ketgan payt: lid kartochkasidan, model javobi bilan, Telegramda qo‘lda yoki 09:00 va 15:00 dagi [skan](#mockups-scan) topgan. «mijozga yuborilmagan» — bunday yuborish yo‘q. Shaxsiy akkauntdan ketgan havolani bot ko‘rmaydi va maket «yuborilmagan» bo‘lib qolaveradi: ishchi akkauntdan yuboring. «Yuborilmagan» tugmasi ro‘yxatda faqat shunday maketlarni qoldiradi. Pastda — «Kimga yuborilgan»: har bir yuborish alohida qatorda — mijoz (lidi borlarda uning kartochkasiga havola), qaysi ishchi akkauntdan va qachon. Birinchi uchtasi darhol ko‘rinadi, qolganlari «yana N ta» ostida. «akkaunt yozilmagan» — akkaunt hali eslab qolinmagan dastlabki yuborishlar. Qidiruv maketni mijoz bo‘yicha ham topadi.",
             ],
             head: [
-              "Har bir prototip ostida «Mas’ul» qatori va mijozga yuborilgani bor. Mas’ulni panel o‘zi topadi, tartib bilan: qo‘lda tayinlangan («tayinlangan»), keyin maket birinchi ketgan lid egasi («lid bo‘yicha»), keyin aloqa muallifi («aloqa bo‘yicha»), keyin maketni panelda yig‘gan kishi («yig‘gan»). Ulardan hech kim bo‘lmasa — «tayinlanmagan». Vitrina loyihalarida bu qator yo‘q: bular mijoz uchun maket emas, bizning ishlarimiz.",
+              "Har bir maket ostida «Mas’ul» qatori va mijozga yuborilgani bor. Mas’ulni panel o‘zi topadi, tartib bilan: qo‘lda tayinlangan («tayinlangan»), keyin maketni vazifa orqali buyurtma qilgan xodim («buyurtma bo‘yicha», qarang: [maket buyurtmasi](#tasks-mockup-order)), keyin maket birinchi ketgan lid egasi («lid bo‘yicha»), keyin aloqa muallifi («aloqa bo‘yicha»), keyin maketni panelda yig‘gan kishi («yig‘gan»). Ulardan hech kim bo‘lmasa — «tayinlanmagan». Qo‘lda yig‘ilgan vitrina maketlarida «yig‘gan» bo‘lmaydi: u yerda mas’ul — qo‘lda tayinlangan, lid egasi yoki aloqa muallifi, vitrina hali ish akkauntlaridan yuborilmagan bo‘lsa — «ish akkauntlaridan yuborilmagan».",
               "Mas’ulni siz va egasi almashtira olasiz: «Mas’ul» qatorida ro‘yxatdan odamni tanlang. Ro‘yxatning birinchi bandi — panel o‘zi topgan kishi (masalan, «Арсений (lid bo‘yicha)») yoki «tayinlanmagan»: tayinlashni olib tashlash uchun uni tanlang. Har bir tayinlash jurnalga yoziladi. Maket [24 soatdan keyin parol bilan yopilganda](#mockups-auto-close) bot mas’ulga yozadi. Menejer mas’ulni ko‘radi, lekin almashtirmaydi.",
               "«mijozga 14.10 17:27 da yuborilgan» — maket havolasi mijozga ishchi akkauntdan birinchi marta ketgan payt: lid kartochkasidan, model javobi bilan, Telegramda qo‘lda yoki 09:00 va 15:00 dagi [skan](#mockups-scan) topgan. «mijozga yuborilmagan» — bunday yuborish yo‘q. Shaxsiy akkauntdan ketgan havolani bot ko‘rmaydi va maket «yuborilmagan» bo‘lib qolaveradi: ishchi akkauntdan yuboring. «Yuborilmagan» tugmasi ro‘yxatda faqat shunday maketlarni qoldiradi. Pastda — «Kimga yuborilgan»: har bir yuborish alohida qatorda — mijoz (lidi borlarda uning kartochkasiga havola), qaysi ishchi akkauntdan va qachon. Birinchi uchtasi darhol ko‘rinadi, qolganlari «yana N ta» ostida. «akkaunt yozilmagan» — akkaunt hali eslab qolinmagan dastlabki yuborishlar. Qidiruv maketni mijoz bo‘yicha ham topadi.",
             ],
             admin: [
-              "Har bir prototip ostida «Mas’ul» qatori va mijozga yuborilgani bor. Mas’ulni panel o‘zi topadi, tartib bilan: qo‘lda tayinlangan («tayinlangan»), keyin maket birinchi ketgan lid egasi («lid bo‘yicha»), keyin aloqa muallifi («aloqa bo‘yicha»), keyin maketni panelda yig‘gan kishi («yig‘gan»). Ulardan hech kim bo‘lmasa — «tayinlanmagan». Vitrina loyihalarida bu qator yo‘q: bular mijoz uchun maket emas, bizning ishlarimiz.",
+              "Har bir maket ostida «Mas’ul» qatori va mijozga yuborilgani bor. Mas’ulni panel o‘zi topadi, tartib bilan: qo‘lda tayinlangan («tayinlangan»), keyin maketni vazifa orqali buyurtma qilgan xodim («buyurtma bo‘yicha», qarang: [maket buyurtmasi](#tasks-mockup-order)), keyin maket birinchi ketgan lid egasi («lid bo‘yicha»), keyin aloqa muallifi («aloqa bo‘yicha»), keyin maketni panelda yig‘gan kishi («yig‘gan»). Ulardan hech kim bo‘lmasa — «tayinlanmagan». Qo‘lda yig‘ilgan vitrina maketlarida «yig‘gan» bo‘lmaydi: u yerda mas’ul — qo‘lda tayinlangan, lid egasi yoki aloqa muallifi, vitrina hali ish akkauntlaridan yuborilmagan bo‘lsa — «ish akkauntlaridan yuborilmagan».",
               "Mas’ulni siz va rahbar almashtira olasiz: «Mas’ul» qatorida ro‘yxatdan odamni tanlang. Ro‘yxatning birinchi bandi — panel o‘zi topgan kishi (masalan, «Арсений (lid bo‘yicha)») yoki «tayinlanmagan»: tayinlashni olib tashlash uchun uni tanlang. Har bir tayinlash jurnalga yoziladi. Maket [24 soatdan keyin parol bilan yopilganda](#mockups-auto-close) bot mas’ulga yozadi. Menejer mas’ulni ko‘radi, lekin almashtirmaydi.",
               "«mijozga 14.10 17:27 da yuborilgan» — maket havolasi mijozga ishchi akkauntdan birinchi marta ketgan payt: lid kartochkasidan, model javobi bilan, Telegramda qo‘lda yoki 09:00 va 15:00 dagi [skan](#mockups-scan) topgan. «mijozga yuborilmagan» — bunday yuborish yo‘q. Shaxsiy akkauntdan ketgan havolani bot ko‘rmaydi va maket «yuborilmagan» bo‘lib qolaveradi: ishchi akkauntdan yuboring. «Yuborilmagan» tugmasi ro‘yxatda faqat shunday maketlarni qoldiradi. Pastda — «Kimga yuborilgan»: har bir yuborish alohida qatorda — mijoz (lidi borlarda uning kartochkasiga havola), qaysi ishchi akkauntdan va qachon. Birinchi uchtasi darhol ko‘rinadi, qolganlari «yana N ta» ostida. «akkaunt yozilmagan» — akkaunt hali eslab qolinmagan dastlabki yuborishlar. Qidiruv maketni mijoz bo‘yicha ham topadi.",
             ],
@@ -1507,8 +1566,8 @@ export const uz: HelpCopy = {
           id: "tasks",
           title: "Loyiha bo‘yicha vazifalar",
           body: [
-            "Loyiha kartochkasida, nomining darhol ostida — **«Loyiha bo‘yicha vazifalar»**: unga biriktirilgan barcha vazifalar — kimdan, kimga, muddat va hozir ular qanday holatda. Ochiqlari tepada, eng yaqin muddatdan, yopilganlari pastda. Agar vazifa sizda bo‘lsa yoki uni siz qo‘ygan bo‘lsangiz, bu yerdagi tugmalar bosh sahifadagi bilan bir xil.",
-            "Loyiha bo‘yicha vazifa qo‘yish uchun o‘ngdagi **«Vazifa qo‘yish»** ni bosing: bosh sahifa forma bilan ochiladi, unda bu loyiha allaqachon tanlangan. Vazifani loyihaga faqat loyiha shu yerda, «Loyihalar» da qo‘shilgan bo‘lsa biriktirish mumkin — shuning uchun avval mijoz loyihasi qo‘shiladi. Vazifalar haqida batafsil — [vazifalar](#leads-tasks) bandida.",
+            "Loyiha kartochkasida, nomining darhol ostida — **«Loyiha bo‘yicha vazifalar»**: unga biriktirilgan barcha vazifalar — kimdan, kimga, muddat va hozir ular qanday holatda. Ochiqlari tepada, eng yaqin muddatdan, yopilganlari pastda. Agar vazifa sizda bo‘lsa yoki uni siz qo‘ygan bo‘lsangiz, bu yerdagi tugmalar [«Vazifalar»](#tasks-board) bo‘limidagi bilan bir xil.",
+            "Loyiha bo‘yicha vazifa qo‘yish uchun o‘ngdagi **«Vazifa qo‘yish»** ni bosing: «Vazifalar» bo‘limi forma bilan ochiladi, unda bu loyiha allaqachon tanlangan. Vazifani loyihaga faqat loyiha shu yerda, «Loyihalar» da qo‘shilgan bo‘lsa biriktirish mumkin — shuning uchun avval mijoz loyihasi qo‘shiladi. Vazifalar haqida batafsil — [vazifalar](#tasks-board) bandida.",
           ],
         },
         {
@@ -1598,7 +1657,7 @@ export const uz: HelpCopy = {
           title: "Odamlar bo‘yicha jadval",
           body: {
             manager: [
-              "Odamlar bo‘yicha jadvalni siz ko‘rmaysiz — uni rahbar va egasi ko‘radi. Hamkasb ismi yonidagi ochiq reyting natijadan oldin xulqni o‘zgartiradi: lidlarni muhimligiga qarab emas, osonligiga qarab olishni boshlashadi. O‘z raqamlaringizni [bosh sahifada](/admin) ko‘ring: plitkalar va «Reja va fakt».",
+              "Odamlar bo‘yicha jadvalni siz ko‘rmaysiz — uni rahbar va egasi ko‘radi. Hamkasb ismi yonidagi ochiq reyting natijadan oldin xulqni o‘zgartiradi: lidlarni muhimligiga qarab emas, osonligiga qarab olishni boshlashadi. O‘z raqamlaringizni «Bosh sahifa»da ko‘ring: «Mening ishim», «Haftalik bosqichlarim» va [«Reja va fakt»](#hq-week).",
             ],
             head: [
               "«Mening jamoam bo‘yicha» — siz va menejerlaringiz: «Ishda», «Yutdi», «Yutqazdi», «Jami» — butun vaqt uchun, lid hozir kimga biriktirilganiga qarab. Menejerlar bu jadvalni ko‘rmaydi.",
@@ -1613,13 +1672,13 @@ export const uz: HelpCopy = {
           title: "Rejalar qayerda",
           body: {
             manager: [
-              "Bu yerda rejalar yo‘q. «Reja va fakt» — [bosh sahifada](/admin), aloqalar rejasi — [«Aloqalar»](/admin/prospect) bo‘limida.",
+              "Bu yerda rejalar yo‘q. «Reja va fakt» — [«Bosh sahifa»](/admin/hq) pastida, aloqalar rejasi — [«Sovuq aloqalar»](/admin/prospect) bo‘limida.",
             ],
             head: [
-              "Bu yerda rejalar yo‘q. «Reja va fakt» — [bosh sahifada](/admin), jamoaga aloqalar rejasi [«Jamoa»](/admin/team) bo‘limida qo‘yiladi.",
+              "Bu yerda rejalar yo‘q. «Reja va fakt» — [«Bosh sahifa»](/admin/hq) pastida, jamoaga aloqalar rejasi [«Jamoa»](/admin/team) bo‘limida qo‘yiladi.",
             ],
             admin: [
-              "Bu yerda rejalar yo‘q. «Reja va fakt» — [bosh sahifaning](/admin) «Jamoa» varag‘ida, aloqalar rejasi — [«Jamoa»](/admin/team) bo‘limida.",
+              "Bu yerda rejalar yo‘q. «Reja va fakt» — [«Bosh sahifa»](/admin/hq) pastida, aloqalar rejasi — [«Jamoa»](/admin/team) bo‘limida.",
             ],
           },
         },
@@ -1627,6 +1686,38 @@ export const uz: HelpCopy = {
     },
 
     /* ── Трафик ───────────────────────────────────────────────────────── */
+    "/admin/stages": {
+      what: "Kompaniyalar va lidlar sotuv bosqichlari bo‘yicha ro‘yxati: kimga yozildi, kim javob berdi, qiziqish bildirdi, maket oldi, ko‘rsatuvni ko‘rdi, narxni eshitdi va to‘ladi. Bu yerda sotuv aynan qayerda to‘xtab qolayotgani va kimni oldinga surish kerakligi ko‘rinadi. Ilgari ro‘yxat faqat «Bosh sahifa»dagi raqam orqali ochilardi, endi u «Hisobotlar»dagi band. Bazadan kod hisoblaydi, neyrotarmoqsiz.",
+      items: [
+        {
+          id: "list",
+          title: "Bosqich ro‘yxati: qanday o‘qish kerak",
+          body: {
+            manager: [
+              "Yuqorida — bosqichlar: «yozdik», «javob berdi», «qiziqish», «maket yuborildi», «maket ko‘rsatildi», «narx aytildi», «to‘lov» — va davr: 7 yoki 30 kun. Bosqichni bosing — pastda davr ichida unga yetgan kompaniyalar va lidlar chiqadi: kimniki, qachon yetgan va keyingi bosqichga yetganmi (yashil — yetgan).",
+              "Siz faqat o‘z kompaniya va lidlaringizni ko‘rasiz: o‘zingiz olib borayotganlar va ko‘rsatuv yoki narxni siz belgilaganlar. Qatorni bosing — lid yoki aloqa kartochkasi ochiladi. Hafta bo‘yicha xuddi shu raqamlar — «Bosh sahifa»dagi [«Haftalik bosqichlarim»](#hq-my-stages) blokida.",
+            ],
+            head: [
+              "Yuqorida — bosqichlar: «yozdik», «javob berdi», «qiziqish», «maket yuborildi», «maket ko‘rsatildi», «narx aytildi», «to‘lov» — va davr: 7 yoki 30 kun. Bosqichni bosing — pastda davr ichida unga yetgan kompaniyalar va lidlar chiqadi: kimniki, qachon yetgan va keyingi bosqichga yetganmi (yashil — yetgan).",
+              "Siz butun jamoa bitimlarini ko‘rasiz, har bir qatorda — lid kimniki. 7 va 30 kunlik xuddi shu raqamlar — «Bosh sahifa»dagi [«Sotuv bosqichlari»](#hq-stages) blokida. Bu yerda hech kimda pul yo‘q: tushumlar summasini faqat egasi «Bosh sahifa»da ko‘radi.",
+            ],
+            admin: [
+              "Yuqorida — bosqichlar: «yozdik», «javob berdi», «qiziqish», «maket yuborildi», «maket ko‘rsatildi», «narx aytildi», «to‘lov» — va davr: 7 yoki 30 kun. Bosqichni bosing — pastda davr ichida unga yetgan kompaniyalar va lidlar chiqadi: kimniki, qachon yetgan va keyingi bosqichga yetganmi (yashil — yetgan).",
+              "Siz butun jamoa bitimlarini ko‘rasiz, har bir qatorda — lid kimniki. 7 va 30 kunlik xuddi shu raqamlar — «Bosh sahifa»dagi [«Sotuv bosqichlari»](#hq-stages) blokida. Ro‘yxatda pul yo‘q: bitimlar summasi — o‘sha blokda, faqat sizda.",
+            ],
+          },
+        },
+        {
+          id: "marks",
+          title: "Nega bosqich bo‘sh",
+          body: [
+            "«Maket ko‘rsatildi» va «narx aytildi»ni baza o‘zi ko‘rmaydi: video yoki jonli ko‘rsatuvni odam «Maketni ko‘rsatdim» tugmasi bilan belgilaydi — [«Maketlar»](/admin/mockups)da, «Bosh sahifa»dagi «Mening maketlarim»da yoki [lid kartochkasida](#leads-sales-marks). Belgilanmasa — bosqich nol bo‘lib qoladi va undan keyingi hammasi aslidagidan yomonroq ko‘rinadi.",
+            "Qatorlar 200 dan ko‘p bo‘lsa — birinchi 200 tasi va «yana N» qatori ko‘rsatiladi: davrni 7 kungacha qisqartiring. O‘zi kelgan kompaniyalar (saytdan, chatdan yoki botdan ariza) «yozdik»ga kirmaydi — ular darhol «javob berdi».",
+          ],
+        },
+      ],
+    },
+
     "/admin/traffic": {
       what: "devuz.studio saytiga qancha odam kiradi, ular qayerdan keladi va qaysi sahifadan boshlaydi — Yandex Metrika va Google Analytics bo‘yicha. Reklama va e’lonlar ishlayaptimi, shuni ko‘rish uchun kerak: lidlar saytdan keladi, saytga kirish kamaysa, bir-ikki haftadan keyin lidlar ham kamayadi. Egasi va rahbarlar ko‘radi, menejerlar — yo‘q.",
       items: [
@@ -1760,6 +1851,15 @@ export const uz: HelpCopy = {
           ],
         },
         {
+          id: "to-sign",
+          title: "«Imzolanadigan shartnomalar»",
+          roles: ["admin"],
+          body: [
+            "Sahifadagi birinchi blok — menejerlar sizga imzoga yuborgan shartnomalar: raqam, loyiha va summa. Qatorni bosing — «Tasdiqlash va imzolash» va «Qayta ishlashga qaytarish» tugmalari bilan shartnoma ochiladi. Bo‘sh bo‘lsa — «Imzo kutayotgan hech narsa yo‘q».",
+            "Ilgari bu ro‘yxat «Lidlar»ning «Bugun» varag‘ida edi. Endi bo‘limda, boshqalar kabi, menyuli sarlavha bor; sarlavhasiz faqat shartnoma va hisobning o‘z sahifalari qoldi — bu chop etish uchun hujjatlar va buyurtmachiga havolalar.",
+          ],
+        },
+        {
           id: "review",
           title: "Shartnoma sahifasi: smeta va imzoga yuborish",
           body: {
@@ -1773,7 +1873,7 @@ export const uz: HelpCopy = {
               "Siz ham menejer qiladigan ishni qilasiz: smeta (Excel, CSV, matnli PDF yoki qo‘lda qatorlar — qatorlarsiz yuborib bo‘lmaydi), «Muddat», «Imzoga yuborish», «Imzolanganini yuklash», hisoblar va buyurtmachi uchun havola. Shartnomani faqat egasi tasdiqlaydi, qaytaradi va bekor qiladi — tasdiqlash uning imzosining o‘zi.",
             ],
             admin: [
-              "Imzoga shartnoma sizga Telegramda keladi va «Bugun» varag‘ida — «Imzolanadigan shartnomalar» blokida ko‘rinadi. Tugmalar: **«Tasdiqlash va imzolash»** yoki **«Qayta ishlashga qaytarish»**. Qaytarish — ishning oddiy qismi, xato emas.",
+              "Imzoga shartnoma sizga Telegramda keladi va «Bosh sahifa»dagi «E’tibor talab qiladi»da hamda [Shartnomalar](/admin/contracts) bo‘limida ko‘rinadi. Tugmalar: **«Tasdiqlash va imzolash»** yoki **«Qayta ishlashga qaytarish»**. Qaytarish — ishning oddiy qismi, xato emas.",
               "Tasdiqlash imzongizni qo‘yadi va **birinchi bosqichga darhol hisob chiqaradi**. Tasdiqlangan shartnomani bekor qilish — «Bekor qilish sababi» va «Bekor qilish»: shartnomalar o‘chirilmaydi, faqat belgilanadi. Tasdiqlangani tahrirlanmaydi — tuzatish kerak bo‘lsa, yangisi tayyorlanadi.",
               "Imzolar bilan skan yuklangandan keyin shartnoma ekranida imzongiz boshqa ko‘rinmaydi — u allaqachon skanda bor.",
             ],
@@ -1933,12 +2033,21 @@ export const uz: HelpCopy = {
             ],
           },
         },
+        {
+          id: "cash",
+          title: "Kassa, kutilayotgan to‘lovlar va soliqlar",
+          roles: ["admin"],
+          body: [
+            "Bo‘lim pastida — «Oylar bo‘yicha kassa»: yarim yillik tushumlar va xarajatlar, har oy ostida — farq. Yonida — «Kutilayotgan to‘lovlar»: faol loyihalar bo‘yicha yana qancha to‘lanishi kerakligi va ularni kim olib borayotgani, hamda «Yaqin ikki haftadagi soliqlar va hisobotlar». Ilgari bu «Lidlar»dagi «Pul» varag‘i edi.",
+            "Raqamlar «Moliya»ning boshqa bloklari bilan bir xil yozuvlardan olinadi: tushumlar — loyihalar bo‘yicha mijoz to‘lovlari, xarajatlar — [Xarajatlar](/admin/expenses) bo‘limi yozuvlari. Ularni faqat siz ko‘rasiz.",
+          ],
+        },
       ],
     },
 
     /* ── Релизы ───────────────────────────────────────────────────────── */
     "/admin/releases": {
-      what: "«Buyurtmalar» bo‘limida to‘lovdan keyin xaridorlar oladigan tayyor mahsulot fayllari. Faylni joylash — allaqachon to‘lagan har bir kishi aynan nimani olishini hal qilish demak, shuning uchun bo‘lim faqat egasida.",
+      what: "«Do‘kon buyurtmalari» bo‘limida to‘lovdan keyin xaridorlar oladigan tayyor mahsulot fayllari. Faylni joylash — allaqachon to‘lagan har bir kishi aynan nimani olishini hal qilish demak, shuning uchun bo‘lim faqat egasida.",
       items: [
         {
           id: "upload",
@@ -1953,7 +2062,7 @@ export const uz: HelpCopy = {
           title: "Xaridor nimani ko‘radi",
           body: [
             "To‘lovdan keyin — buyurtma sahifasida yuklab olish tugmasini: jami 20 tagacha va kuniga 10 tagacha yuklab olish, har bir havola 60 soniya yashaydi. Reliz bo‘lmaguncha — «fayl tayyorlanmoqda».",
-            "Tepada `DOWNLOAD_SIGNING_SECRET` haqida ogohlantirish bo‘lsa — yuklab olish hech kimda ishlamaydi. Kirishni yopish — [«Buyurtmalar»](/admin/orders) bo‘limidagi buyurtma kartochkasidagi tugma bilan.",
+            "Tepada `DOWNLOAD_SIGNING_SECRET` haqida ogohlantirish bo‘lsa — yuklab olish hech kimda ishlamaydi. Kirishni yopish — [«Do‘kon buyurtmalari»](/admin/orders) bo‘limidagi buyurtma kartochkasidagi tugma bilan.",
           ],
         },
       ],
@@ -2039,7 +2148,7 @@ export const uz: HelpCopy = {
             head: [
               "Oxirgi ustunda har bir menejeringizda va o‘zingizda **«Bildirishnomalar»** qatori bor — yonida «hammasi keladi» yoki «o‘chirilgan: 8 tadan 2 tasi» deb yozilgan. Uni bosing: belgilar ochiladi. Belgi turgan bo‘lsa — bot buni yuboradi, olib tashlansa — yo‘q. Keraklisini belgilab, **«Saqlash»**ni bosing. Yangi xodimlarda sukut bo‘yicha barcha belgilar turadi.",
               "Har bir belgi ostida usiz nima bo‘lishi yozilgan — olib tashlashdan oldin o‘qing. Asosiysi: **«Navbat bo‘yicha yangi buyurtmalar»**. Usiz odam [navbatdan](#leads-queue) chiqadi — lidlar unga taklif qilinmaydi va darhol keyingisiga ketadi. Bu ta’til yoki kasallik vaqtida qulay: kirish qoladi, arizalar esa yarim soatdan turib qolmaydi.",
-              "Qolgan belgilar faqat Telegramdagi xabarni olib tashlaydi — ishning o‘zi panelda qoladi: eslatma lid kartochkasida ko‘rinadi, kunlik to‘plam — [«Aloqalar»](/admin/prospect)da, mijozning aloqaga javobi — o‘sha yerda. «Mijozlarning aloqalarga javoblari»ni olib tashlasangiz, menejer o‘zi «Aloqalar»ga kirmaguncha mijoz javob kutib qolishi mumkin — faqat javoblarni boshqa odam olib borsa, olib tashlang. **«Ertalabki salom 09:00 da»** — har kuni ertalab bot odamga ismi bilan, uning panel tilida xayrli kun tilaydi; agar bu unga kerak bo‘lmasa, olib tashlang. **«Kun boshlanmagan bo‘lsa, 12:00 dagi eslatma»** — tushda bot odamga, agar kun davomida hali aloqa va panel bo‘lmasa, to‘plamni eslatadi; olib tashlash shart emas — jimlik haqida soat 15:00 da baribir bilib olasiz.",
+              "Qolgan belgilar faqat Telegramdagi xabarni olib tashlaydi — ishning o‘zi panelda qoladi: eslatma lid kartochkasida ko‘rinadi, kunlik to‘plam — [«Sovuq aloqalar»](/admin/prospect)da, mijozning aloqaga javobi — o‘sha yerda. «Mijozlarning aloqalarga javoblari»ni olib tashlasangiz, menejer o‘zi «Sovuq aloqalar»ga kirmaguncha mijoz javob kutib qolishi mumkin — faqat javoblarni boshqa odam olib borsa, olib tashlang. **«Ertalabki salom 09:00 da»** — har kuni ertalab bot odamga ismi bilan, uning panel tilida xayrli kun tilaydi; agar bu unga kerak bo‘lmasa, olib tashlang. **«Kun boshlanmagan bo‘lsa, 12:00 dagi eslatma»** — tushda bot odamga, agar kun davomida hali aloqa va panel bo‘lmasa, to‘plamni eslatadi; olib tashlash shart emas — jimlik haqida soat 15:00 da baribir bilib olasiz.",
               "O‘chirilmaydi: panelga taklif, rol va rahbar almashishi, lidni berishni tasdiqlash so‘rovi — bu xabarlarsiz amal bajarilmaydi. Menejerlarga belgilarni siz va egasi o‘zgartirasiz; menejerlarning o‘zi ularni ko‘rmaydi. Kim va qachon o‘zgartirgani — jurnalda.",
             ],
             admin: [
@@ -2272,7 +2381,7 @@ export const uz: HelpCopy = {
           id: "shift",
           title: "Tahlillar smenasi",
           body: [
-            "Har kuni Toshkent vaqti bilan 08:03 da smena «Aloqalar» bo‘limidagi hali yozilmagan saytlarni oladi, 12 tagachasini ko‘radi va 3 tagacha tahlil yozadi — ruscha va o‘zbekcha — va ularni darhol e’lon qiladi. «Смена разборов» hisoboti Telegramga keladi: nechtasi chiqdi, chiqqan sahifalarga havolalar, ular sayt xaritasida bormi (smena uni qidiruv tizimi kabi ochadi va har bir tahlilning ikkala sahifasini qidiradi) va qolgan saytlar nega olinmadi.",
+            "Har kuni Toshkent vaqti bilan 08:03 da smena «Sovuq aloqalar» bo‘limidagi hali yozilmagan saytlarni oladi, 12 tagachasini ko‘radi va 3 tagacha tahlil yozadi — ruscha va o‘zbekcha — va ularni darhol e’lon qiladi. «Смена разборов» hisoboti Telegramga keladi: nechtasi chiqdi, chiqqan sahifalarga havolalar, ular sayt xaritasida bormi (smena uni qidiruv tizimi kabi ochadi va har bir tahlilning ikkala sahifasini qidiradi) va qolgan saytlar nega olinmadi.",
             "Rad etish sabablari: sayt ochilmadi, sayt joyida yoki topilmalar kam, nisha yoki shahar aniqlanmadi, nishani tahlil qilmaymiz (tibbiyot va boshqa taqiqlanganlar), so‘rov band (bunday tahlil allaqachon bor — bu model maqola yozishidan oldin tekshiriladi), maqola tekshiruvdan o‘tmadi. 11:03 gacha hisobot bo‘lmasa — «Смена разборов — молчит» keladi.",
           ],
         },
@@ -2493,7 +2602,7 @@ export const uz: HelpCopy = {
           id: "courses",
           title: "Sotuv kurslari",
           body: [
-            "Oltita kurs: «Ikki qadamli aloqa», «Dumaloq video», «+» — maketga rozilik», «E’tirozlar», «Xat yondashuvlari» va «Iliq lidlar». Bu kitoblardagi umumiy maslahatlar emas, bizning jarayonimiz: nega birinchi bo‘lib faqat salom ketadi, qachon dumaloq video o‘rniga xat ketadi, dumaloq videoga nima «ha» hisoblanadi, «qimmat» va «taklif yuboring»ga nima deyish kerak, iliq lidlar navbati qanday ishlaydi. Yondashuvlar kursida avtoaloqaning haqiqiy matnlari bor — [«Aloqalar»](/admin/prospect) → «Xat matnlari va A/B»dagilarning o‘zi.",
+            "Oltita kurs: «Ikki qadamli aloqa», «Dumaloq video», «+» — maketga rozilik», «E’tirozlar», «Xat yondashuvlari» va «Iliq lidlar». Bu kitoblardagi umumiy maslahatlar emas, bizning jarayonimiz: nega birinchi bo‘lib faqat salom ketadi, qachon dumaloq video o‘rniga xat ketadi, dumaloq videoga nima «ha» hisoblanadi, «qimmat» va «taklif yuboring»ga nima deyish kerak, iliq lidlar navbati qanday ishlaydi. Yondashuvlar kursida avtoaloqaning haqiqiy matnlari bor — [«Sovuq aloqalar»](/admin/prospect) → «Xat matnlari va A/B»dagilarning o‘zi.",
             "Kurs **«Sotuv kurslari»** blokidagi kartochka orqali ochiladi. Ichida — tartib bilan darslar, ular ostida **«Materiallar»** — egasi qo‘shadigan havolalar (video, suhbat yozuvlari, maqolalar) va test. Kurs kartochkasida unda nechta dars va savol borligi hamda eng yaxshi natijangiz ko‘rinadi: «topshirildi», eng yaxshi hisob bilan «topshirilmadi» yoki «hali topshirilmagan».",
           ],
         },
@@ -2600,22 +2709,22 @@ export const uz: HelpCopy = {
         },
         {
           id: "menu",
-          title: "Menyu: bo‘lim guruhlari va «Bo‘limni topish»",
+          title: "Menyu: bo‘lim guruhlari va «Bo‘lim yoki kompaniyani topish»",
           body: {
             manager: [
-              "Tepadagi bo‘limlar guruhlarga yig‘ilgan: **«Sotuv»** — «Lidlar», «Buyurtmalar», «Qidiruv», «Aloqalar», «Nazorat», «Maketlar»; **«Loyihalar va pul»** — «Loyihalar», «Shartnomalar», «Moliya». «Statistika» va «Yo‘riqnoma» alohida havola bo‘lib turadi: ularning guruhida sizda bittadan bo‘lim bor, bitta bo‘limli guruh esa ro‘yxatsiz, to‘g‘ridan-to‘g‘ri havola. Kompyuterda sichqonchani guruh ustiga olib boring — uning bo‘limlari ro‘yxati ochiladi; guruhga bosish ro‘yxatni mahkamlaydi, ikkinchi bosish yopadi.",
-              "Ochiq bo‘lim guruhi yashil rangda ajralib turadi, nomi yonida esa bo‘limning o‘zi yoziladi, masalan «Sotuv · Aloqalar»; guruh ro‘yxatida ham ochiq bo‘lim yashil. Telefonda guruhlar qatori o‘rniga bitta **«Menyu»** tugmasi: yonida qaysi bo‘limda ekaningiz yozilgan, bosilganda esa barcha guruhlar bitta ro‘yxatda ochiladi. Menyu xoch belgisi, Esc tugmasi, chetga bosish bilan yoki bo‘limga o‘tishingiz bilan o‘zi yopiladi. Eskicha qulayroq bo‘lsa — menyu qatorining o‘ng tomonidagi **«Yangi menyu»** tugmachasini o‘chiring: bo‘limlar yana avvalgidek bitta qatorda, guruhlar va qidiruvsiz turadi. Yoqsangiz — guruhlar qaytadi. Tanlov sizga, barcha qurilmalaringizda saqlanadi va hamkasblarga ta’sir qilmaydi.",
-              "Eng tezi — menyu qatorining o‘ng tomonidagi **«Bo‘limni topish»** (tor ekranda — lupa belgisi) yoki panelning istalgan joyida **Ctrl+K** (Mac’da — ⌘K) tugmalari. Nomini yoza boshlang: «shar» — va birinchi bo‘lib «Shartnomalar» chiqadi; Enter birinchisini ochadi, ↑ ↓ strelkalari boshqasini tanlaydi. Bo‘limlar panel tilidagi nomi, guruh nomi («sotuv» guruhning barcha bo‘limlarini ko‘rsatadi) va har ehtimolga qarshi boshqa tillardagi nomlari bo‘yicha qidiriladi. Telefonda xuddi shu maydon «Menyu» boshida turadi. Faqat menyuingizda bor narsani topish mumkin: qidiruv yopiq bo‘limlarni ochmaydi.",
+              "Har kuni ishlatiladiganlar tepada to‘g‘ridan-to‘g‘ri tugma bo‘lib turadi: «Bosh sahifa», «Vazifalar» (yonida — ochiq vazifalaringiz soni, muddati o‘tgani bo‘lsa qizil), «Lidlar», «Sovuq aloqalar», «Maketlar». Qolganlari guruhlarga yig‘ilgan: **«Sotuv»** — «Skaut signallari», «Yozishmalar tahlili»; **«Pul»** — «Loyihalar», «Shartnomalar», «Moliya», «Do‘kon buyurtmalari»; **«Hisobotlar»** — «Statistika», «Sotuv bosqichlari». «Yo‘riqnoma» — alohida havola. Kompyuterda sichqonchani guruh ustiga olib boring — uning bo‘limlari ro‘yxati ochiladi; guruhga bosish ro‘yxatni mahkamlaydi, ikkinchi bosish yopadi.",
+              "Ochiq bo‘lim guruhi yashil rangda ajralib turadi, eng keng ekranda esa nomi yonida bo‘limning o‘zi ham yoziladi, masalan «Pul · Shartnomalar»; guruh ro‘yxatida ham ochiq bo‘lim yashil. Telefonda guruhlar qatori o‘rniga bitta **«Menyu»** tugmasi: yonida qaysi bo‘limda ekaningiz yozilgan, bosilganda esa barcha guruhlar bitta ro‘yxatda ochiladi. Menyu xoch belgisi, Esc tugmasi, chetga bosish bilan yoki bo‘limga o‘tishingiz bilan o‘zi yopiladi. Eskicha qulayroq bo‘lsa — menyu qatorining o‘ng tomonidagi **«Yangi menyu»** tugmachasini o‘chiring: bo‘limlar yana avvalgidek bitta qatorda, guruhlar va qidiruvsiz turadi. Yoqsangiz — guruhlar qaytadi. Tanlov sizga, barcha qurilmalaringizda saqlanadi va hamkasblarga ta’sir qilmaydi.",
+              "Eng tezi — menyu qatorining o‘ng tomonidagi **«Bo‘lim yoki kompaniyani topish»** (tor ekranda — lupa belgisi) yoki panelning istalgan joyida **Ctrl+K** (Mac’da — ⌘K) tugmalari. Yozishni boshlang: «shar» — birinchi bo‘lib «Shartnomalar» bo‘limi chiqadi. Kompaniya nomi, ism, ariza raqami, sayt, telefon yoki @nik — pastda **«Kompaniyalar va lidlar»** chiqadi: lidlar, sovuq aloqalar va loyihalar, o‘ng tomonda nima ekanligi yozilgan. Enter tanlanganini ochadi, ↑ ↓ strelkalari boshqasini tanlaydi. Lidlar faqat «Lidlar»da sizga ko‘rinadiganlar orasidan qidiriladi; telefon va @nik bo‘yicha menejer faqat o‘z lidlarini topadi — boshqaning kontakti unga kartochkada ham ochiq emas. Lid o‘sib chiqqan aloqa lid kartochkasi bo‘lib ochiladi. Telefonda xuddi shu maydon «Menyu» boshida turadi.",
             ],
             head: [
-              "Tepadagi bo‘limlar guruhlarga yig‘ilgan: **«Sotuv»** — «Lidlar», «Buyurtmalar», «Qidiruv», «Aloqalar», «Nazorat», «Maketlar»; **«Loyihalar va pul»** — «Loyihalar», «Shartnomalar», «Moliya», «Xarajatlar»; **«Marketing»** — «Trafik», «Reklama», «Hamkorlar», «SI xodimlar»; **«Jamoa»** — «Akkauntlar», «Nomzodlar», «Jamoa», «Ta’lim». «Statistika» va «Yo‘riqnoma» alohida havola bo‘lib turadi: sizda bitta bo‘limi bor guruh ro‘yxatsiz, to‘g‘ridan-to‘g‘ri havola. Kompyuterda sichqonchani guruh ustiga olib boring — uning bo‘limlari ro‘yxati ochiladi; guruhga bosish ro‘yxatni mahkamlaydi, ikkinchi bosish yopadi.",
-              "Ochiq bo‘lim guruhi yashil rangda ajralib turadi, nomi yonida esa bo‘limning o‘zi yoziladi, masalan «Sotuv · Aloqalar»; guruh ro‘yxatida ham ochiq bo‘lim yashil. Telefonda guruhlar qatori o‘rniga bitta **«Menyu»** tugmasi: yonida qaysi bo‘limda ekaningiz yozilgan, bosilganda esa barcha guruhlar bitta ro‘yxatda ochiladi. Menyu xoch belgisi, Esc tugmasi, chetga bosish bilan yoki bo‘limga o‘tishingiz bilan o‘zi yopiladi. Eskicha qulayroq bo‘lsa — menyu qatorining o‘ng tomonidagi **«Yangi menyu»** tugmachasini o‘chiring: bo‘limlar yana avvalgidek bitta qatorda, guruhlar va qidiruvsiz turadi. Yoqsangiz — guruhlar qaytadi. Tanlov sizga, barcha qurilmalaringizda saqlanadi va hamkasblarga ta’sir qilmaydi.",
-              "Eng tezi — menyu qatorining o‘ng tomonidagi **«Bo‘limni topish»** (tor ekranda — lupa belgisi) yoki panelning istalgan joyida **Ctrl+K** (Mac’da — ⌘K) tugmalari. Nomini yoza boshlang: «shar» — va birinchi bo‘lib «Shartnomalar» chiqadi; Enter birinchisini ochadi, ↑ ↓ strelkalari boshqasini tanlaydi. Bo‘limlar panel tilidagi nomi, guruh nomi («sotuv» guruhning barcha bo‘limlarini ko‘rsatadi) va har ehtimolga qarshi boshqa tillardagi nomlari bo‘yicha qidiriladi. Telefonda xuddi shu maydon «Menyu» boshida turadi. Faqat menyuingizda bor narsani topish mumkin: qidiruv yopiq bo‘limlarni ochmaydi.",
+              "Har kuni ishlatiladiganlar tepada to‘g‘ridan-to‘g‘ri tugma bo‘lib turadi: «Bosh sahifa», «Vazifalar» (yonida — ochiq vazifalaringiz soni, muddati o‘tgani bo‘lsa qizil), «Lidlar», «Sovuq aloqalar», «Maketlar». Qolganlari guruhlarga yig‘ilgan: **«Sotuv»** — «Skaut signallari», «Yozishmalar tahlili»; **«Pul»** — «Loyihalar», «Shartnomalar», «Xarajatlar», «Moliya», «Do‘kon buyurtmalari»; **«Marketing»** — «Trafik», «Reklama», «Hamkorlar», «SI xodimlar»; **«Jamoa»** — «Akkauntlar», «Nomzodlar», «Jamoa», «Ta’lim»; **«Hisobotlar»** — «Statistika», «Sotuv bosqichlari». «Yo‘riqnoma» — alohida havola. Kompyuterda sichqonchani guruh ustiga olib boring — uning bo‘limlari ro‘yxati ochiladi; guruhga bosish ro‘yxatni mahkamlaydi, ikkinchi bosish yopadi.",
+              "Ochiq bo‘lim guruhi yashil rangda ajralib turadi, eng keng ekranda esa nomi yonida bo‘limning o‘zi ham yoziladi, masalan «Pul · Shartnomalar»; guruh ro‘yxatida ham ochiq bo‘lim yashil. Telefonda guruhlar qatori o‘rniga bitta **«Menyu»** tugmasi: yonida qaysi bo‘limda ekaningiz yozilgan, bosilganda esa barcha guruhlar bitta ro‘yxatda ochiladi. Menyu xoch belgisi, Esc tugmasi, chetga bosish bilan yoki bo‘limga o‘tishingiz bilan o‘zi yopiladi. Eskicha qulayroq bo‘lsa — menyu qatorining o‘ng tomonidagi **«Yangi menyu»** tugmachasini o‘chiring: bo‘limlar yana avvalgidek bitta qatorda, guruhlar va qidiruvsiz turadi. Yoqsangiz — guruhlar qaytadi. Tanlov sizga, barcha qurilmalaringizda saqlanadi va hamkasblarga ta’sir qilmaydi.",
+              "Eng tezi — menyu qatorining o‘ng tomonidagi **«Bo‘lim yoki kompaniyani topish»** (tor ekranda — lupa belgisi) yoki panelning istalgan joyida **Ctrl+K** (Mac’da — ⌘K) tugmalari. Yozishni boshlang: «shar» — birinchi bo‘lib «Shartnomalar» bo‘limi chiqadi. Kompaniya nomi, ism, ariza raqami, sayt, telefon yoki @nik — pastda **«Kompaniyalar va lidlar»** chiqadi: lidlar, sovuq aloqalar va loyihalar, o‘ng tomonda nima ekanligi yozilgan. Enter tanlanganini ochadi, ↑ ↓ strelkalari boshqasini tanlaydi. Lidlar faqat «Lidlar»da sizga ko‘rinadiganlar orasidan qidiriladi; telefon va @nik bo‘yicha menejer faqat o‘z lidlarini topadi — boshqaning kontakti unga kartochkada ham ochiq emas. Lid o‘sib chiqqan aloqa lid kartochkasi bo‘lib ochiladi. Telefonda xuddi shu maydon «Menyu» boshida turadi.",
             ],
             admin: [
-              "Tepadagi bo‘limlar oltita guruhga yig‘ilgan: **«Sotuv»** — «Lidlar», «Buyurtmalar», «Qidiruv», «Aloqalar», «Nazorat», «Maketlar», «Prototiplar»; **«Loyihalar va pul»** — «Loyihalar», «Shartnomalar», «Xarajatlar», «Moliya»; **«Marketing»** — «Trafik», «Reklama», «Hamkorlar», «Tahlillar», «SI xodimlar»; **«Jamoa»** — «Akkauntlar», «Nomzodlar», «Jamoa», «Ta’lim»; **«Hisobotlar»** — «Statistika», «Relizlar», «Jurnal», «Foydalanish»; alohida havola — «Yo‘riqnoma». Kompyuterda sichqonchani guruh ustiga olib boring — uning bo‘limlari ro‘yxati ochiladi; guruhga bosish ro‘yxatni mahkamlaydi, ikkinchi bosish yopadi.",
-              "Ochiq bo‘lim guruhi yashil rangda ajralib turadi, nomi yonida esa bo‘limning o‘zi yoziladi, masalan «Sotuv · Aloqalar»; guruh ro‘yxatida ham ochiq bo‘lim yashil. Telefonda guruhlar qatori o‘rniga bitta **«Menyu»** tugmasi: yonida qaysi bo‘limda ekaningiz yozilgan, bosilganda esa barcha guruhlar bitta ro‘yxatda ochiladi. Menyu xoch belgisi, Esc tugmasi, chetga bosish bilan yoki bo‘limga o‘tishingiz bilan o‘zi yopiladi. Eskicha qulayroq bo‘lsa — menyu qatorining o‘ng tomonidagi **«Yangi menyu»** tugmachasini o‘chiring: bo‘limlar yana avvalgidek bitta qatorda, guruhlar va qidiruvsiz turadi. Yoqsangiz — guruhlar qaytadi. Tanlov sizga, barcha qurilmalaringizda saqlanadi va hamkasblarga ta’sir qilmaydi.",
-              "Eng tezi — menyu qatorining o‘ng tomonidagi **«Bo‘limni topish»** (tor ekranda — lupa belgisi) yoki panelning istalgan joyida **Ctrl+K** (Mac’da — ⌘K) tugmalari. Nomini yoza boshlang: «shar» — va birinchi bo‘lib «Shartnomalar» chiqadi; Enter birinchisini ochadi, ↑ ↓ strelkalari boshqasini tanlaydi. Bo‘limlar panel tilidagi nomi, guruh nomi («sotuv» guruhning barcha bo‘limlarini ko‘rsatadi) va har ehtimolga qarshi boshqa tillardagi nomlari bo‘yicha qidiriladi. Telefonda xuddi shu maydon «Menyu» boshida turadi. Faqat menyuingizda bor narsani topish mumkin: qidiruv yopiq bo‘limlarni ochmaydi.",
+              "Har kuni ishlatiladiganlar tepada to‘g‘ridan-to‘g‘ri tugma bo‘lib turadi: «Bosh sahifa», «Vazifalar» (yonida — ochiq vazifalaringiz soni, muddati o‘tgani bo‘lsa qizil), «Lidlar», «Sovuq aloqalar», «Maketlar». Qolganlari guruhlarga yig‘ilgan: **«Sotuv»** — «Skaut signallari», «Yozishmalar tahlili», «Prototiplar»; **«Pul»** — «Loyihalar», «Shartnomalar», «Xarajatlar», «Moliya», «Do‘kon buyurtmalari», «Relizlar»; **«Marketing»** — «Trafik», «Reklama», «Hamkorlar», «Tahlillar», «SI xodimlar»; **«Jamoa»** — «Akkauntlar», «Nomzodlar», «Jamoa», «Ta’lim»; **«Hisobotlar»** — «Statistika», «Sotuv bosqichlari», «Jurnal», «Foydalanish». «Yo‘riqnoma» — alohida havola. Kompyuterda sichqonchani guruh ustiga olib boring — uning bo‘limlari ro‘yxati ochiladi; guruhga bosish ro‘yxatni mahkamlaydi, ikkinchi bosish yopadi.",
+              "Ochiq bo‘lim guruhi yashil rangda ajralib turadi, eng keng ekranda esa nomi yonida bo‘limning o‘zi ham yoziladi, masalan «Pul · Shartnomalar»; guruh ro‘yxatida ham ochiq bo‘lim yashil. Telefonda guruhlar qatori o‘rniga bitta **«Menyu»** tugmasi: yonida qaysi bo‘limda ekaningiz yozilgan, bosilganda esa barcha guruhlar bitta ro‘yxatda ochiladi. Menyu xoch belgisi, Esc tugmasi, chetga bosish bilan yoki bo‘limga o‘tishingiz bilan o‘zi yopiladi. Eskicha qulayroq bo‘lsa — menyu qatorining o‘ng tomonidagi **«Yangi menyu»** tugmachasini o‘chiring: bo‘limlar yana avvalgidek bitta qatorda, guruhlar va qidiruvsiz turadi. Yoqsangiz — guruhlar qaytadi. Tanlov sizga, barcha qurilmalaringizda saqlanadi va hamkasblarga ta’sir qilmaydi.",
+              "Eng tezi — menyu qatorining o‘ng tomonidagi **«Bo‘lim yoki kompaniyani topish»** (tor ekranda — lupa belgisi) yoki panelning istalgan joyida **Ctrl+K** (Mac’da — ⌘K) tugmalari. Yozishni boshlang: «shar» — birinchi bo‘lib «Shartnomalar» bo‘limi chiqadi. Kompaniya nomi, ism, ariza raqami, sayt, telefon yoki @nik — pastda **«Kompaniyalar va lidlar»** chiqadi: lidlar, sovuq aloqalar va loyihalar, o‘ng tomonda nima ekanligi yozilgan. Enter tanlanganini ochadi, ↑ ↓ strelkalari boshqasini tanlaydi. Lidlar faqat «Lidlar»da sizga ko‘rinadiganlar orasidan qidiriladi; telefon va @nik bo‘yicha menejer faqat o‘z lidlarini topadi — boshqaning kontakti unga kartochkada ham ochiq emas. Lid o‘sib chiqqan aloqa lid kartochkasi bo‘lib ochiladi. Telefonda xuddi shu maydon «Menyu» boshida turadi.",
               "Menyu sizning [bo‘lim belgilaringizga](#team-sections) bo‘ysunadi: kimgadir bo‘lim ochsangiz — u unda o‘z guruhida paydo bo‘ladi (masalan, «Trafik» — «Marketing»da; agar u yerda bu uning yagona bo‘limi bo‘lsa — alohida havola bo‘lib), yopsangiz — guruhdan ham, qidiruvdan ham yo‘qoladi. Menejer va rahbarda guruhlar kamroq: odamda birorta ham bo‘limi bo‘lmagan guruh tepada chizilmaydi. Panelning yangi bo‘limi guruhni ishlab chiqishda oladi — menyuni alohida sozlash kerak emas.",
             ],
           },
@@ -2708,14 +2817,14 @@ export const uz: HelpCopy = {
         "/login deb yozing — «🔓 Открыть панель» tugmasi va 15 daqiqalik bir martalik havola keladi. Xabarlar ostidagi «Открыть» tugmalari ham panelga o‘zi kiritadi. Bot «Не смог проверить вход: база сейчас не отвечает» deb javob berdi — bu bizdagi nosozlik, sizning ruxsatingiz emas: bir daqiqa kuting va /login ni qayta yozing. «Такой команды у меня нет» javobi Telegramingiz xodimga bog‘lanmaganini yoki sizni o‘chirib qo‘yishganini bildiradi: rahbarga ayting.",
         "Ovozni o‘chirmang: navbat taklifi 30 daqiqa yashaydi, bildirishnoma jim tursa, lid keyingi odamga ketadi.",
         "Bot qaysi xabarlarni yuborishini egasi va loyihalar rahbari «Jamoa» sahifasidagi belgilar bilan tanlaydi. Nimadir kelmasa — ulardan so‘rang: ehtimol, o‘sha belgi olib tashlangan.",
-        "Menejerlar va rahbarlarga: chat pastidagi «▶️ Получать лиды» tugmasi (yoki /leads) to‘plamdan tashqari kompaniyalar oqimini yoqadi, «⏸ Не получать лиды» — o‘chiradi. Batafsil — «Aloqalar» bo‘limida.",
+        "Menejerlar va rahbarlarga: chat pastidagi «▶️ Получать лиды» tugmasi (yoki /leads) to‘plamdan tashqari kompaniyalar oqimini yoqadi, «⏸ Не получать лиды» — o‘chiradi. Batafsil — «Sovuq aloqalar» bo‘limida.",
         "Mijoz olib kelib foiz olmoqchi bo‘lsangiz, /ref deb yozing.",
       ],
     },
     {
       name: "«Devuz Scout» kanali",
       url: SCOUT_URL,
-      what: "Skaut bu yerga ochiq chatlarda hozir dasturchi qidirayotgan odamlarni va ertalabki xulosani yuboradi. Batafsil — «Qidiruv» bo‘limida.",
+      what: "Skaut bu yerga ochiq chatlarda hozir dasturchi qidirayotgan odamlarni va ertalabki xulosani yuboradi. Batafsil — «Skaut signallari» bo‘limida.",
       how: [
         "Havolani oching va kanalga qo‘shiling. Ovozni yoqing: bunday postlar bir-ikki soat yashaydi.",
         "«Сильный сигнал» belgisi bor signalga o‘zingiz yozmang — u navbat bo‘yicha lid bo‘lib keladi.",

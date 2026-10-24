@@ -55,7 +55,7 @@ test("коротко, от первого лица, названия — как 
     assert.doesNotMatch(plain, /[<>]/);
     assert.ok(text.includes(`«${editSentDict.edit.ru}»`), "кнопка «Исправить» названа не так, как в панели");
     assert.ok(text.includes("«Макетах»") && SECTIONS.some((s) => s.href === "/admin/mockups" && s.label.ru === "Макеты"));
-    assert.ok(text.includes("«Касаниях»") && SECTIONS.some((s) => s.href === "/admin/prospect" && s.label.ru === "Касания"));
+    assert.ok(text.includes("«Касаниях»") && SECTIONS.some((s) => s.href === "/admin/prospect" && /касания/i.test(s.label.ru)), "ушло 12.10, когда раздел звался «Касания»");
     assert.ok(text.includes("+48 574 050 123"));
     // «Обучение» выключено до кнопки владельца — о нём не пишем.
     assert.doesNotMatch(text, /Обучени/);

@@ -13,6 +13,8 @@ import {
   previousPeriodStart,
   pulseOf,
   stuckLeads,
+  IDLE_DAYS,
+  isInWork,
   tashkentDate,
   todayInTashkent,
   windowOf,
@@ -65,24 +67,29 @@ const ev = (over: Partial<EventLite>): EventLite => ({
   ...over,
 });
 
-test("застрявший лид: молчание считается от последнего движения, порог зависит от приоритета", () => {
+test("лид без движения: 7 дней тишины от последнего движения, просмотр — не движение", () => {
   const leads = [
-    lead({ id: "L1", priority: "hot", assigned_at: "2026-09-14T10:00:00Z" }),
-    lead({ id: "L2", priority: "warm", assigned_at: "2026-09-14T10:00:00Z" }),
-    lead({ id: "L3", priority: "warm", assigned_at: "2026-09-10T10:00:00Z" }),
+    lead({ id: "L1", priority: "hot", assigned_at: "2026-09-09T10:00:00Z" }),
+    lead({ id: "L2", priority: "hot", assigned_at: "2026-09-14T10:00:00Z" }),
+    lead({ id: "L3", priority: "warm", assigned_at: "2026-09-01T10:00:00Z" }),
     lead({ id: "L4", priority: "warm", assigned_at: "2026-09-01T10:00:00Z", status: "won" }),
   ];
   const messages: MessageLite[] = [{ lead_id: "L3", author_staff_id: "danil", created_at: "2026-09-16T09:00:00Z" }];
   const stuck = stuckLeads(leads, [], messages, NOW);
-  // L1: горячий, 2 дня тишины — застрял. L2: тёплый, 2 дня — ещё нет.
-  // L3: взят давно, но вчера была запись — движение есть. L4: закрыт.
+  // Одно правило на все экраны (владелец, 23.10.2026): 7 дней, без порогов по
+  // приоритету. L1: 7 дней тишины — висит. L2: горячий, но 2 дня — ещё нет.
+  // L3: взят давно, но вчера была запись. L4: закрыт.
+  assert.equal(IDLE_DAYS, 7);
   assert.deepEqual(stuck.map((s) => s.id), ["L1"]);
-  assert.equal(stuck[0].days, 2);
+  assert.equal(stuck[0].days, 7);
   assert.equal(stuck[0].label, "DZ-101");
 
-  // Действие в журнале по лиду — тоже движение.
-  const touched = stuckLeads(leads, [ev({ target_id: "L1", created_at: "2026-09-16T20:00:00Z", action: "lead.viewed" })], messages, NOW);
+  // Действие в журнале по лиду — движение; просмотр — нет.
+  const touched = stuckLeads(leads, [ev({ target_id: "L1", created_at: "2026-09-16T20:00:00Z", action: "lead.status_changed" })], messages, NOW);
   assert.deepEqual(touched.map((s) => s.id), []);
+  const viewed = stuckLeads(leads, [ev({ target_id: "L1", created_at: "2026-09-16T20:00:00Z", action: "lead.viewed" })], messages, NOW);
+  assert.deepEqual(viewed.map((s) => s.id), ["L1"], "просмотр — не движение, как у бота порядка в лидах");
+  assert.ok(isInWork({ status: "taken" }) && !isInWork({ status: "new" }));
 });
 
 test("пульс сотрудника: выигранные, контакты, касания и поступления — за окно", () => {
@@ -186,21 +193,16 @@ test("план ставится и снимается через проверк�
   assert.match(read("app/admin/plans/actions.ts"), /periodStart: periodStart\(period, new Date\(\)\)/);
 });
 
-test("главная панели показывает дашборд роли выше общего списка", () => {
+test("«Лиды» — только список; недельные блоки — внизу «Главной», касса — в «Финансах»", () => {
+  // Владелец, 23.10.2026, на разбор удобства: «Делаем все сразу».
   const page = read("app/admin/page.tsx");
-  assert.match(page, /<DashboardHome staff=\{staff\} planNotice=\{params\.p\} \/>/);
-  // Без вкладок (менеджер, руководитель) — дашборд выше списка лидов.
-  const plain = page.slice(page.indexOf("{pendingBlock}", page.indexOf(") : (")));
-  assert.ok(plain.indexOf("<DashboardHome") < plain.indexOf("{leadsBlock}"), "дашборд ниже списка лидов");
-
+  assert.doesNotMatch(page, /<DashboardHome|OWNER_TABS|<TasksBlock/, "на «Лидах» снова вторая «Главная»");
+  assert.match(page, /OLD_TABS[\s\S]{0,120}money: "\/admin\/finance"/, "старая вкладка «Деньги» не ведёт в «Финансы»");
+  assert.match(read("app/admin/hq/page.tsx"), /<DashboardHome staff=\{staff\} planNotice=\{p\} where="hq" \/>/);
+  assert.match(read("app/admin/finance/page.tsx"), /<DashboardHome staff=\{staff\} where="finance" \/>/);
   const home = read("components/admin/dashboard-home.tsx");
-  // Владелец: договоры на подпись — первыми, до денег и команды.
-  const owner = home.slice(home.indexOf("── Владелец"));
-  // У владельца вкладки: на «Сегодня» договоры стоят раньше денег.
-  const today = owner.slice(owner.indexOf('section === "today"'));
-  assert.ok(today.indexOf("<ContractsToSign") >= 0, "договоров нет на «Сегодня»");
-  assert.ok(today.indexOf("<ContractsToSign") < today.indexOf("{moneyTiles}"), "договоры не первые");
-  assert.ok(owner.indexOf("<Tiles") < owner.indexOf("<CashChart"));
+  assert.match(home, /if \(staff\.role !== "admin"\) return null;/, "касса — только владельцу");
+  assert.match(read("app/admin/plans/actions.ts"), /redirect\(`\/admin\/hq\?p=/, "после плана — обратно на «Главную»");
   // Менеджеру план не ставить, руководителю — ставить, владельцу — и менять.
   assert.match(home, /canAdd=\{false\} canEdit=\{false\}/);
   assert.match(home, /canAdd=\{options\.length > 0\} canEdit=\{false\}/);

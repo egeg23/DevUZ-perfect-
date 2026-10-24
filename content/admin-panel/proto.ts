@@ -87,6 +87,12 @@ function missingText(detail: string, locale: PanelLocale): string {
  */
 export const protoResultDict = defineDict({
   ok: { ru: () => "Готово.", uz: () => "Tayyor.", pl: () => "Gotowe." },
+  // Собран по заказу из задачи (lib/admin/mockup-order-store.ts).
+  order: {
+    ru: () => "Готово. Прототип привязан к заказу: ответственный — тот, кто заказал, задача закрыта «Сделано».",
+    uz: () => "Tayyor. Prototip buyurtmaga bog‘landi: mas’ul — buyurtma bergan xodim, vazifa «Bajarildi» bilan yopildi.",
+    pl: () => "Gotowe. Prototyp powiązany ze zleceniem: odpowiada osoba, która zleciła, zadanie zamknięte jako «Zrobione».",
+  },
   no_url: {
     ru: () => "Не указан сайт клиента.",
     uz: () => "Mijoz sayti ko‘rsatilmagan.",
@@ -214,6 +220,19 @@ export const protoDict = defineDict({
     pl: "Linijka o sobie — jego słowami, nie naszymi",
   },
   build: { ru: "Собрать прототип", uz: "Prototipni yig‘ish", pl: "Zbuduj prototyp" },
+  // Заказ макета из задачи: собранный прототип привяжется к нему сам.
+  order: { ru: "По заказу из задачи", uz: "Vazifadagi buyurtma bo‘yicha", pl: "Według zlecenia z zadania" },
+  orderNone: { ru: "без заказа", uz: "buyurtmasiz", pl: "bez zlecenia" },
+  orderOption: {
+    ru: (title: string, client: string | null, who: string | null) => `${title}${client ? ` · ${client}` : ""}${who ? ` · от ${who}` : ""}`,
+    uz: (title: string, client: string | null, who: string | null) => `${title}${client ? ` · ${client}` : ""}${who ? ` · ${who}dan` : ""}`,
+    pl: (title: string, client: string | null, who: string | null) => `${title}${client ? ` · ${client}` : ""}${who ? ` · od ${who}` : ""}`,
+  },
+  orderHint: {
+    ru: "Ответственным за прототип станет тот, кто заказал, задача закроется «Сделано». Черновик к заказу привязывается, но задача остаётся открытой.",
+    uz: "Prototip uchun mas’ul buyurtma bergan xodim bo‘ladi, vazifa «Bajarildi» bilan yopiladi. Qoralama buyurtmaga bog‘lanadi, lekin vazifa ochiq qoladi.",
+    pl: "Za prototyp odpowiada osoba, która zleciła, a zadanie zamknie się jako «Zrobione». Szkic wiąże się ze zleceniem, ale zadanie zostaje otwarte.",
+  },
   draft: { ru: "черновик", uz: "qoralama", pl: "szkic" },
   ready: { ru: "готов", uz: "tayyor", pl: "gotowy" },
   sent: { ru: "отправлен", uz: "yuborilgan", pl: "wysłany" },

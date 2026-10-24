@@ -26,7 +26,7 @@ import { listCampaigns, pendingPlaces, usageToday } from "@/lib/maps/store";
 import { loadQueueEtas, queueOwners, sentLastHour } from "@/lib/admin/outreach-queue";
 import { hourlyCapacity } from "@/lib/admin/work-accounts";
 import { accountTags, listAccounts } from "@/lib/admin/work-accounts-store";
-import { listProspects, manualReplies } from "@/lib/admin/outreach-store";
+import { listProspects, manualReplies, prospectById } from "@/lib/admin/outreach-store";
 import { parseMore, REST_PAGE, visibleProspects } from "@/lib/admin/outreach-view";
 import { BATCH_CAP } from "@/lib/audit/batch";
 import { AutopilotPanel } from "@/components/admin/autopilot-panel";
@@ -63,7 +63,7 @@ export default async function ProspectPage({
   // Автопрогон касаний видят те же, кто ведёт автопоиск: он из него и
   // берёт компании. Менеджеру его касания приходят лидами в очередь.
   const autoStats = seesMaps ? await dayStats() : null;
-  const [rows, hour, replies, plan, portion, owners, stream, accounts, etas, tags] = await Promise.all([
+  const [latest, hour, replies, plan, portion, owners, stream, accounts, etas, tags] = await Promise.all([
     listProspects(),
     sentLastHour(),
     manualReplies(),
@@ -79,6 +79,10 @@ export default async function ProspectPage({
     // С какого аккаунта ушло каждое касание — подпись на карточке.
     accountTags(),
   ]);
+  // Открыли из поиска (Ctrl+K) компанию старше двухсот последних — она тоже на месте.
+  const opened =
+    open && /^[0-9a-f-]{36}$/i.test(open) && !latest.some((r) => r.id === open) ? await prospectById(open) : null;
+  const rows = opened ? [opened, ...latest] : latest;
   const today = todayInTashkent(new Date());
   // Порция и поток «Получать лиды» приходят одним списком: поток — сверх
   // порции, и в её счёт не идёт.

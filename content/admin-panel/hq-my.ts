@@ -233,9 +233,9 @@ export const hqMyDict = defineDict({
     pl: (done: number, target: number) => `Porcja dnia: ${done} z ${target}`,
   },
   workNoPortion: {
-    ru: "Порцию дня ещё не брали — откройте «Касания»",
-    uz: "Kunlik ulush hali olinmagan — «Aloqalar»ni oching",
-    pl: "Porcja dnia jeszcze nie pobrana — otwórz „Kontakty”",
+    ru: "Порцию дня ещё не брали — откройте «Холодные касания»",
+    uz: "Kunlik ulush hali olinmagan — «Sovuq aloqalar»ni oching",
+    pl: "Porcja dnia jeszcze nie pobrana — otwórz „Zimne kontakty”",
   },
   workTouches: { ru: "Касания", uz: "Aloqalar", pl: "Kontakty" },
   workReplies: { ru: "Ответили", uz: "Javob berdi", pl: "Odpowiedzi" },

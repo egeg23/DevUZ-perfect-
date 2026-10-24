@@ -7,6 +7,8 @@ import { createPortal } from "react-dom";
 
 import { setNavClassic } from "@/app/admin/actions";
 import { AdminNavLink } from "@/components/admin/nav-link";
+import { TaskCount } from "@/components/admin/task-count";
+import { useFindHits } from "@/components/admin/use-find-hits";
 import { usePanelDict } from "@/components/admin/panel-locale";
 import { shellDict } from "@/content/admin-panel/shell";
 import { sectionOfHref } from "@/lib/admin/help";
@@ -27,6 +29,9 @@ import { findSections, type Findable } from "@/lib/admin/nav";
  */
 
 export type NavMenuItem = Findable & { quiet: boolean };
+
+/** У этого пункта — число открытых задач (components/admin/task-count.tsx). */
+const TASKS_HREF = "/admin/tasks";
 export type NavMenuGroup = { id: string; label: string; items: NavMenuItem[] };
 
 /** Что сейчас открыто и на какой странице. Перешёл на другую — всё закрыто само, без эффекта. */
@@ -102,13 +107,14 @@ export function NavMenu({ groups }: { groups: NavMenuGroup[] }) {
   return (
     <div ref={rootRef} className="mx-auto max-w-7xl px-4 pb-2.5 sm:px-5 sm:pb-3">
       {/* Компьютер: строка групп. */}
-      <nav aria-label={t.nav} className="hidden items-center gap-x-4 text-sm md:flex lg:gap-x-5">
+      <nav aria-label={t.nav} className="hidden flex-wrap items-center gap-x-4 gap-y-2 text-sm md:flex lg:gap-x-5">
         {groups.map((group) => {
           if (group.items.length === 1) {
             const only = group.items[0];
             return (
               <AdminNavLink key={only.href} href={only.href} quiet={only.quiet}>
                 {only.label}
+                {only.href === TASKS_HREF ? <TaskCount /> : null}
               </AdminNavLink>
             );
           }
@@ -127,7 +133,8 @@ export function NavMenu({ groups }: { groups: NavMenuGroup[] }) {
                 }`}
               >
                 {group.label}
-                {here ? <span className="font-normal text-green/70">· {here.label}</span> : null}
+                {/* Открытый раздел рядом с группой — с самых широких экранов: на 1440 подпись выталкивала поиск во вторую строку. Группа и так зелёная, раздел — в её списке. */}
+                {here ? <span className="hidden font-normal text-green/70 2xl:inline">· {here.label}</span> : null}
                 <Chevron up={shown} />
               </button>
               <div
@@ -146,7 +153,7 @@ export function NavMenu({ groups }: { groups: NavMenuGroup[] }) {
             </div>
           );
         })}
-        <NavToggle classic={false} className="ml-auto" />
+        <NavToggle classic={false} compact className="ml-auto" />
         {/* На узком экране — только значок: длинные названия групп по-польски
             и по-узбекски иначе выталкивают кнопку за край. */}
         <button
@@ -156,8 +163,8 @@ export function NavMenu({ groups }: { groups: NavMenuGroup[] }) {
           className="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md border border-line px-2.5 py-1.5 text-faint transition hover:border-muted hover:text-text lg:py-1"
         >
           <SearchIcon />
-          <span className="hidden lg:inline">{t.findSection}</span>
-          <kbd className="hidden rounded bg-surface-2 px-1.5 font-mono text-[11px] text-faint lg:inline">Ctrl K</kbd>
+          <span className="hidden 2xl:inline">{t.findSection}</span>
+          <kbd className="hidden rounded bg-surface-2 px-1.5 font-mono text-[11px] text-faint xl:inline">Ctrl K</kbd>
         </button>
       </nav>
 
@@ -194,6 +201,7 @@ export function NavMenu({ groups }: { groups: NavMenuGroup[] }) {
                   {group.items.map((item) => (
                     <AdminNavLink key={item.href} href={item.href} quiet={item.quiet} variant="item" onClick={close}>
                       {item.label}
+                      {item.href === TASKS_HREF ? <TaskCount /> : null}
                     </AdminNavLink>
                   ))}
                 </section>
@@ -211,7 +219,7 @@ export function NavMenu({ groups }: { groups: NavMenuGroup[] }) {
  * сделай возможность оставить как сейчас тумблером». Выбор пишется в
  * `staff.nav_classic` — один на человека, на всех его устройствах.
  */
-export function NavToggle({ classic, className = "" }: { classic: boolean; className?: string }) {
+export function NavToggle({ classic, compact = false, className = "" }: { classic: boolean; compact?: boolean; className?: string }) {
   const t = usePanelDict(shellDict);
   return (
     <form action={setNavClassic} className={`shrink-0 ${className}`}>
@@ -223,7 +231,8 @@ export function NavToggle({ classic, className = "" }: { classic: boolean; class
         title={t.navNewHint}
         className="flex items-center gap-2 whitespace-nowrap text-xs text-faint transition hover:text-text"
       >
-        <span>{t.navNew}</span>
+        {/* В строке нового меню место занимают кнопки разделов: подпись — с самых широких экранов, смысл — в подсказке. */}
+        <span className={compact ? "hidden 2xl:inline" : ""}>{t.navNew}</span>
         <span
           aria-hidden
           className={`relative inline-block h-4 w-7 rounded-full transition-colors ${classic ? "bg-line" : "bg-green/70"}`}
@@ -290,7 +299,10 @@ function FindBox({
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [index, setIndex] = useState(0);
+  const hits = useFindHits(query);
   const found = findSections(query, items);
+  // Разделы и найденные компании — одним списком для стрелок и Enter.
+  const all: { href: string }[] = [...found, ...hits.list];
   const go = (href: string) => {
     onGo();
     router.push(href);
@@ -298,15 +310,16 @@ function FindBox({
   const onKey = (e: ReactKeyboardEvent<HTMLInputElement>) => {
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      setIndex((i) => Math.min(i + 1, found.length - 1));
+      setIndex((i) => Math.min(i + 1, all.length - 1));
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       setIndex((i) => Math.max(i - 1, 0));
-    } else if (e.key === "Enter" && found[index]) {
+    } else if (e.key === "Enter" && all[index]) {
       e.preventDefault();
-      go(found[index].href);
+      go(all[index].href);
     }
   };
+  const kindLabel = { lead: t.findKindLead, prospect: t.findKindProspect, project: t.findKindProject };
   return (
     <>
       <div className="flex items-center gap-2 border-b border-line px-4 py-2">
@@ -330,27 +343,57 @@ function FindBox({
       <div className="overflow-y-auto overscroll-contain p-1.5">
         {!query.trim() && children ? (
           children
-        ) : found.length ? (
-          <ul>
-            {found.map((item, i) => (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  onClick={onGo}
-                  onMouseMove={() => setIndex(i)}
-                  aria-current={item.href === current ? "page" : undefined}
-                  className={`flex items-baseline justify-between gap-3 rounded-md px-3 py-2 ${i === index ? "bg-surface-2" : ""} ${
-                    item.href === current ? "font-medium text-green" : "text-text"
-                  }`}
-                >
-                  <span>{item.label}</span>
-                  <span className="text-xs text-faint">{item.group}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
         ) : (
-          <p className="px-3 py-4 text-sm text-faint">{t.findNothing}</p>
+          <>
+            {found.length ? (
+              <ul>
+                {found.map((item, i) => (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      onClick={onGo}
+                      onMouseMove={() => setIndex(i)}
+                      aria-current={item.href === current ? "page" : undefined}
+                      className={`flex items-baseline justify-between gap-3 rounded-md px-3 py-2 ${i === index ? "bg-surface-2" : ""} ${
+                        item.href === current ? "font-medium text-green" : "text-text"
+                      }`}
+                    >
+                      <span>{item.label}</span>
+                      <span className="text-xs text-faint">{item.group}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            {hits.list.length ? (
+              <section className={found.length ? "mt-2 border-t border-line pt-2" : ""}>
+                <h2 className="px-3 pb-1 font-mono text-[11px] uppercase tracking-[0.15em] text-faint">{t.findHits}</h2>
+                <ul>
+                  {hits.list.map((hit, j) => {
+                    const i = found.length + j;
+                    return (
+                      <li key={hit.href}>
+                        <Link
+                          href={hit.href}
+                          onClick={onGo}
+                          onMouseMove={() => setIndex(i)}
+                          className={`flex items-baseline justify-between gap-3 rounded-md px-3 py-2 text-text ${i === index ? "bg-surface-2" : ""}`}
+                        >
+                          <span className="min-w-0">
+                            <span className="block truncate">{hit.label}</span>
+                            {hit.meta ? <span className="block truncate text-xs text-faint">{hit.meta}</span> : null}
+                          </span>
+                          <span className="shrink-0 text-xs text-faint">{kindLabel[hit.kind]}</span>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            ) : null}
+            {hits.loading ? <p className="px-3 py-2 text-xs text-faint">{t.findSearching}</p> : null}
+            {!found.length && !hits.list.length && !hits.loading ? <p className="px-3 py-4 text-sm text-faint">{t.findNothing}</p> : null}
+          </>
         )}
       </div>
       <p className="hidden border-t border-line px-4 py-2 text-[11px] text-faint md:block">{t.findKeys}</p>

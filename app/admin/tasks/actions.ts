@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { after } from "next/server";
 
 import { requestIp, requireStaff } from "@/lib/admin/guard";
+import { orderFromForm } from "@/lib/admin/mockup-order";
 import { actOnTask, afterAct, afterEdit, createTasks, deliverAssignment, editTask, taskById } from "@/lib/admin/task-store";
 import {
   QUICK_DUES,
@@ -19,26 +20,28 @@ import {
 import type { taskNoticeDict } from "@/content/admin-panel/tasks";
 
 /**
- * Действия блока «Задачи» на главной и на карточке проекта.
+ * Действия блока «Задачи» в разделе «Задачи» и на карточке проекта.
  *
  * Итог едет обратно кодом `?t=` в адресе, как у остальных действий панели:
  * после редиректа состояние в памяти теряется, а параметр переживает и
  * перезагрузку. Текст по коду — в словаре (content/admin-panel/tasks.ts).
- * Куда вернуться — поле `back`: главная или карточка проекта.
+ * Куда вернуться — поле `back`: раздел «Задачи» или карточка проекта.
  */
 
 type NoticeCode = keyof typeof taskNoticeDict;
 
-/** Вернуться можно только в панель: на главную или в карточку проекта. */
+const TASKS = "/admin/tasks";
+
+/** Вернуться можно только в панель: в раздел «Задачи» или в карточку проекта. */
 function backPath(formData: FormData): string {
   const raw = String(formData.get("back") ?? "");
-  return /^\/admin\/projects\/[0-9a-f-]{36}$/i.test(raw) ? raw : "/admin";
+  return /^\/admin\/projects\/[0-9a-f-]{36}$/i.test(raw) ? raw : TASKS;
 }
 
 function back(formData: FormData, code: NoticeCode): never {
   const path = backPath(formData);
   revalidatePath(path);
-  const keep = path === "/admin" ? keepFilters(formData) : "";
+  const keep = path === TASKS ? keepFilters(formData) : "";
   redirect(`${path}?t=${code}${keep}#tasks`);
 }
 
@@ -69,6 +72,9 @@ const REASON: Record<string, NoticeCode> = {
   offline: "offline",
   failed: "failedTry",
   unchanged: "unchanged",
+  mockup: "mockup",
+  mockup_client: "mockupClientBad",
+  mockup_site: "mockupSiteBad",
 };
 
 /** Срок из формы: быстрый вариант, своя дата (по Ташкенту) или без срока. */
@@ -94,6 +100,7 @@ export async function createTaskAction(formData: FormData) {
       assigneeIds: formData.getAll("assignee").map(String),
       due,
       projectId: project || null,
+      order: orderFromForm((name) => (formData.get(name) === null ? null : String(formData.get(name)))),
     },
     staff,
     await requestIp(),

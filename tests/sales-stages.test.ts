@@ -216,8 +216,8 @@ test("блок рисуется на трёх языках: каждое чис�
   for (const locale of PANEL_LOCALES) {
     const html = renderToStaticMarkup(createElement(StagesCard, { stages: stagesPulse(deals, "admin", NOW), locale }));
     for (const s of STAGES) {
-      assert.ok(html.includes(`/admin/hq/stages?stage=${s}&amp;period=7`), `${locale}: ${s} за 7 дней`);
-      assert.ok(html.includes(`/admin/hq/stages?stage=${s}&amp;period=30`), `${locale}: ${s} за 30 дней`);
+      assert.ok(html.includes(`/admin/stages?stage=${s}&amp;period=7`), `${locale}: ${s} за 7 дней`);
+      assert.ok(html.includes(`/admin/stages?stage=${s}&amp;period=30`), `${locale}: ${s} за 30 дней`);
     }
     if (locale !== "ru") assert.ok(!/[а-яё]/i.test(html.replace(/<[^>]+>/g, "")), `${locale}: русский текст в блоке`);
   }
@@ -311,7 +311,7 @@ test("отчёт 18:00: у каждого — показы, цены и опла
 });
 
 test("без модели и без Firecrawl", () => {
-  for (const f of ["lib/admin/sales-stages.ts", "lib/admin/sales-stages-store.ts", "components/admin/sales-stages.tsx", "app/admin/hq/stages/page.tsx"]) {
+  for (const f of ["lib/admin/sales-stages.ts", "lib/admin/sales-stages-store.ts", "components/admin/sales-stages.tsx", "app/admin/stages/page.tsx"]) {
     const src = read(f);
     assert.ok(!/anthropic|claude-|firecrawl|completeText|askModel/i.test(src), `${f}: модель или Firecrawl`);
   }

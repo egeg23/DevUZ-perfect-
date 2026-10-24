@@ -335,7 +335,7 @@ export function reportText(s: DayStats, escape: (t: string) => string): string {
   const lines: (string | null)[] = [
     `🤖 <b>Автопрогон касаний — отчёт за ${shortDay(s.day)}</b>`,
     `<i>За сутки до ${reportClock(s.day)} — с прошлого отчёта.</i>`,
-    s.enabled ? null : "⏸ Автопрогон выключен в разделе «Касания».",
+    s.enabled ? null : "⏸ Автопрогон выключен в разделе «Холодные касания».",
     "",
     `✉️ Написали — ушло в Telegram: <b>${s.sent}</b> из ${s.target}${mark}${accounts}`,
     s.trouble && s.sent < s.target

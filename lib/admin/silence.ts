@@ -85,21 +85,21 @@ const NUDGE: Record<PanelLocale, { hello: string; bare: string; body: string; bu
     hello: "{name}, добрый день!",
     bare: "Добрый день!",
     body:
-      "Уже полдень, а касаний сегодня ещё не было. Порция дня ждёт в «Касаниях»: тексты готовы, на каждую компанию — пара минут. Если сегодня не получается — напишите руководителю, чтобы он знал.",
+      "Уже полдень, а касаний сегодня ещё не было. Порция дня ждёт в «Холодных касаниях»: тексты готовы, на каждую компанию — пара минут. Если сегодня не получается — напишите руководителю, чтобы он знал.",
     button: "Открыть порцию дня",
   },
   uz: {
     hello: "{name}, xayrli kun!",
     bare: "Xayrli kun!",
     body:
-      "Tush bo‘ldi, bugun hali birorta aloqa yo‘q. Kunlik to‘plam «Aloqalar»da kutyapti: matnlar tayyor, har bir kompaniyaga bir-ikki daqiqa. Bugun ulgurmasangiz, rahbarga yozing, u bilib tursin.",
+      "Tush bo‘ldi, bugun hali birorta aloqa yo‘q. Kunlik to‘plam «Sovuq aloqalar»da kutyapti: matnlar tayyor, har bir kompaniyaga bir-ikki daqiqa. Bugun ulgurmasangiz, rahbarga yozing, u bilib tursin.",
     button: "Kunlik to‘plamni ochish",
   },
   pl: {
     hello: "{name}, dzień dobry!",
     bare: "Dzień dobry!",
     body:
-      "Jest już południe, a dziś nie było jeszcze żadnego kontaktu. Porcja dnia czeka w «Kontaktach»: teksty są gotowe, na każdą firmę wystarczy kilka minut. Jeśli dziś się nie da, napisz do kierownika, żeby wiedział.",
+      "Jest już południe, a dziś nie było jeszcze żadnego kontaktu. Porcja dnia czeka w «Zimnych kontaktach»: teksty są gotowe, na każdą firmę wystarczy kilka minut. Jeśli dziś się nie da, napisz do kierownika, żeby wiedział.",
     button: "Otwórz porcję dnia",
   },
 };
