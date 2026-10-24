@@ -19,7 +19,7 @@ import {
 } from "@/lib/admin/sales-stages";
 import type { Staff } from "@/lib/admin/session";
 import { esc, sendMessage } from "@/lib/qualify/telegram";
-import { forget } from "@/lib/memo";
+import { forget, memo } from "@/lib/memo";
 import { serviceClient } from "@/lib/supabase";
 
 /**
@@ -75,8 +75,26 @@ function toLead(r: Record<string, unknown>): StageLead {
   };
 }
 
+/**
+ * Сколько держать сделки в памяти сайта.
+ *
+ * Трафик базы, 23.10.2026: сделки читали «Главная» владельца и менеджеров,
+ * «Ступени», недельные карточки людей и уровни — 274 раза за день, ~70 МБ
+ * (касания, лиды, журнал). Теперь одно чтение на 10 минут для всех, кто
+ * спрашивает «на сейчас»; отметка ступени снимает его сразу (markStage).
+ * Отчёт за прошлый день (`now` в прошлом) читается как раньше.
+ */
+export const DEALS_MS = 10 * 60_000;
+
 /** Все сделки, у которых за STAGES_DAYS дней была хоть одна ступень. */
 export async function loadDeals(now: Date = new Date(), days = STAGES_DAYS, limit = LIMIT): Promise<Deal[]> {
+  if (Math.abs(Date.now() - now.getTime()) < 60_000) {
+    return memo(`deals:${days}:${limit}`, DEALS_MS, () => readDeals(now, days, limit));
+  }
+  return readDeals(now, days, limit);
+}
+
+async function readDeals(now: Date, days: number, limit: number): Promise<Deal[]> {
   const db = serviceClient();
   if (!db) return [];
   const from = new Date(now.getTime() - days * 24 * 3600_000).toISOString();
@@ -244,6 +262,7 @@ export async function markStage(
   // Ступени на «Главной» живут в памяти несколько минут (lib/memo.ts): своя
   // отметка должна быть видна сразу.
   forget("hq:deals:");
+  forget("deals:");
   return "ok";
 }
 

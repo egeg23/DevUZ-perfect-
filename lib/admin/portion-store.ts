@@ -88,7 +88,9 @@ export async function pool(limit: number, exclude: ReadonlySet<string> = new Set
   if (!db) return [];
   const { data } = await db
     .from("prospects")
-    .select("id, host, findings, contacts, status")
+    // Находки нужны только «есть или нет»: код первой вместо всего разбора
+    // (трафик базы, 23.10.2026: 84 чтения пула — 29 МБ за день).
+    .select("id, host, contacts, status, f0:findings->0->>code")
     .eq("status", "new")
     .is("claimed_by", null)
     // Карточку взял автопрогон (lib/admin/autopilot-store) — её письмо
@@ -103,7 +105,7 @@ export async function pool(limit: number, exclude: ReadonlySet<string> = new Set
     .filter((row) => !exclude.has(row.id as string))
     .filter((row) => {
       const contacts = contactsFrom(row.contacts);
-      const findings = (row.findings as Prospect["findings"]) ?? [];
+      const findings = (row.f0 ? [{ code: String(row.f0) }] : []) as unknown as Prospect["findings"];
       if (!row.host) return Boolean(routeFor(contacts));
       return canContact({ contacts, findings, status: "new" }) === "ok";
     })
