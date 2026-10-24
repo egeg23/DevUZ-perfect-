@@ -183,3 +183,19 @@ test("пул порции: находки — только «есть или н�
   assert.match(pool, /\.select\("id, host, contacts, status, f0:findings->0->>code"\)/);
   assert.doesNotMatch(pool, /select\("[^"]*(^|, )findings(,|")/);
 });
+
+test("порция: замены и подготовка письма смотрят только статус карточки", () => {
+  // 23.10.2026: карточки целиком читались 1 386 раз за день — 44 МБ.
+  const out = read("lib/admin/outreach-store.ts");
+  const states = out.slice(out.indexOf("export async function prospectStates("), out.indexOf("export async function prospectById("));
+  assert.match(states, /\.select\("id, status, touched_by, touched_at, claimed_by"\)/);
+  assert.match(states, /\.select\("id"\)\.in\("id", part\)\.or\("message\.is\.null,message\.eq\."\)/);
+  assert.doesNotMatch(states, /COLUMNS|findings|walked/);
+  const portion = read("lib/admin/portion-store.ts");
+  for (const fn of ["prepareNextPortion", "topUpPortions"]) {
+    const start = portion.indexOf(`export async function ${fn}(`);
+    const body = portion.slice(start, portion.indexOf("\n}\n", start));
+    assert.match(body, /prospectStates\(/, fn);
+    assert.doesNotMatch(body, /prospectsByIds\(/, fn);
+  }
+});
