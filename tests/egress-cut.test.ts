@@ -199,3 +199,22 @@ test("порция: замены и подготовка письма смотр
     assert.doesNotMatch(body, /prospectsByIds\(/, fn);
   }
 });
+
+test("дожимы: сначала лёгкий список, целиком — только кому дожим уходит", () => {
+  // 23.10.2026: 30 касаний целиком на каждый проход — 18 МБ за день.
+  const f = read("lib/admin/outreach-followup.ts");
+  const run = f.slice(f.indexOf("export async function runFollowups("));
+  assert.match(run, /\.select\("id, status, replied_at, ai_handling, sent_at, followups, last_followup_at, target_kind"\)/);
+  assert.match(run, /\.not\("message", "is", null\)/);
+  // Целиком — после того, как счётчик дожима занят, по одной строке.
+  const claim = run.indexOf(".eq(\"followups\", n - 1)");
+  const full = run.indexOf('.select("host, label, message, findings, target, lead_id, walked, claimed_by")');
+  assert.ok(claim > 0 && full > claim, "письмо и разбор — только у того, кому дожим уходит");
+});
+
+test("пульс за 90 дней — из памяти на 5 минут", () => {
+  // 23.10.2026: недельные блоки «Главной» и «Финансов» — 44 чтения, ~25 МБ.
+  const p = read("lib/admin/pulse-store.ts");
+  assert.match(p, /return memo\("pulse:rows", SLOW_MS, async \(\) => \{/);
+  assert.match(p, /if \(rows\.offline\) throw new Error/);
+});
