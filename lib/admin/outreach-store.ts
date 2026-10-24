@@ -378,6 +378,53 @@ export async function prospectsByIds(ids: readonly string[]): Promise<Prospect[]
   });
 }
 
+/** Что о карточке знает раздача порции: статус и кто трогал. Без письма, разбора и обхода сайта. */
+export type ProspectState = Pick<Prospect, "id" | "status" | "touched_by" | "touched_at" | "claimed_by"> & { hasMessage: boolean };
+
+/**
+ * Состояние карточек — для проверок свипа, которым не нужен текст.
+ *
+ * Трафик базы, 23.10.2026: карточки целиком (`COLUMNS`, с разбором, письмом
+ * и обходом) читались 1 386 раз за день — 44 МБ; замены порции и подготовка
+ * писем смотрят только на статус, кто трогал и есть ли письмо.
+ */
+export async function prospectStates(ids: readonly string[]): Promise<ProspectState[]> {
+  if (!ids.length) return [];
+  const db = serviceClient();
+  if (!db) return [];
+  const unique = [...new Set(ids)];
+  const parts: string[][] = [];
+  for (let i = 0; i < unique.length; i += IDS_PER_QUERY) parts.push(unique.slice(i, i + IDS_PER_QUERY));
+  // Есть ли письмо — вторым запросом: id тех, у кого его нет. Сам текст не читаем.
+  const answers = await Promise.all(
+    parts.map(async (part) => {
+      const [states, bare] = await Promise.all([
+        db.from("prospects").select("id, status, touched_by, touched_at, claimed_by").in("id", part),
+        db.from("prospects").select("id").in("id", part).or("message.is.null,message.eq."),
+      ]);
+      return { states, bare };
+    }),
+  );
+  return answers.flatMap(({ states, bare }) => {
+    if (states.error || bare.error) {
+      console.error("касания: не прочитал состояние карточек", (states.error ?? bare.error)?.message);
+      return [];
+    }
+    const noText = new Set((bare.data ?? []).map((r) => String((r as { id: unknown }).id)));
+    return (states.data ?? []).map((r) => {
+      const row = r as Record<string, unknown>;
+      return {
+        id: String(row.id),
+        status: String(row.status ?? "") as Prospect["status"],
+        touched_by: (row.touched_by as string | null) ?? null,
+        touched_at: (row.touched_at as string | null) ?? null,
+        claimed_by: (row.claimed_by as string | null) ?? null,
+        hasMessage: !noText.has(String(row.id)),
+      };
+    });
+  });
+}
+
 export async function prospectById(id: string): Promise<Prospect | null> {
   const db = serviceClient();
   if (!db) return null;
