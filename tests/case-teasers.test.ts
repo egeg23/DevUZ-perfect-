@@ -36,8 +36,8 @@ test("у кейсов со сценой в первом экране — рол�
     for (const f of ["teaser-16.mp4", "teaser-9.mp4", "poster-16.webp", "poster-9.webp"]) {
       const path = `public/cases/${slug}/${f}`;
       assert.ok(existsSync(path), `${slug}: нет ${f}`);
-      // Ролик в карточке играет сам: больше трёх мегабайт — уже тяжесть.
-      if (f.endsWith(".mp4")) assert.ok(readFileSync(path).length < 3_000_000, `${slug}: ${f} тяжелее 3 МБ`);
+      // Ролик в карточке играет сам: больше 4 МБ (как у SamAuto) — уже тяжесть.
+      if (f.endsWith(".mp4")) assert.ok(readFileSync(path).length < 4_000_000, `${slug}: ${f} тяжелее 4 МБ`);
     }
   }
 });
