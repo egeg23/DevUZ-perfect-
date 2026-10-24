@@ -8,7 +8,7 @@ import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { casesTitle } from "@/content/company";
-import { caseDate, casesByDate, showcaseSlug, type Case } from "@/content/cases";
+import { caseDate, casesOnSite, showcaseSlug, type Case } from "@/content/cases";
 import type { Dictionary } from "@/content/dictionaries";
 import { cn } from "@/lib/cn";
 import { localeHref, t, type Locale } from "@/lib/i18n";
@@ -237,10 +237,11 @@ export function CasesSection({ locale, dict }: { locale: Locale; dict: Dictionar
   // Сайт студии на главной показан отдельным блоком выше — в сетке он был бы
   // вторым рассказом об одном и том же. Шесть карточек — ровно два полных
   // ряда по три на широком экране, седьмая оставила бы дыру. Полный список,
-  // вместе с сайтом студии, живёт на странице /cases. Шесть — самые свежие:
-  // владелец, 03.10.2026, «свежие проекты с датами ставь наверх». Демо
-  // студии (игры для рекламы) сюда не идут: на главной — проекты клиентов.
-  const featured = casesByDate.filter((item) => item.slug !== showcaseSlug && !item.demo).slice(0, 6);
+  // вместе с сайтом студии, живёт на странице /cases. Шесть — первые в
+  // порядке сайта: сначала с роликом, внутри — свежие (casesOnSite;
+  // владелец, 24.10.2026). Демо студии (игры для рекламы) сюда не идут: на
+  // главной — проекты клиентов.
+  const featured = casesOnSite.filter((item) => item.slug !== showcaseSlug && !item.demo).slice(0, 6);
 
   return (
     <section id="cases" className="border-t border-line py-24 md:py-32">

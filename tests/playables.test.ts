@@ -18,7 +18,7 @@ import assert from "node:assert/strict";
 import { readFileSync, statSync } from "node:fs";
 import { test } from "node:test";
 
-import { cases, casesByDate, showcaseSlug } from "@/content/cases";
+import { cases, casesOnSite, showcaseSlug } from "@/content/cases";
 import { getDictionary } from "@/content/dictionaries";
 import { locales } from "@/lib/i18n";
 import { plainTextProblems } from "@/lib/proto/plain-text";
@@ -43,7 +43,7 @@ test("игра — демо студии: без примера для писе�
     assert.deepEqual([...item.forNiches], [], `${item.slug}: демо не пример ниши в письме клиенту`);
     assert.equal(item.url, undefined, `${item.slug}: у демо нет «живого сайта»`);
   }
-  const home = casesByDate.filter((c) => c.slug !== showcaseSlug && !c.demo).slice(0, 6);
+  const home = casesOnSite.filter((c) => c.slug !== showcaseSlug && !c.demo).slice(0, 6);
   assert.ok(home.every((c) => !c.playable), "игра попала в шестёрку главной");
   assert.match(read("app/[locale]/partners/deck/studio/page.tsx"), /!c\.demo/);
 });
