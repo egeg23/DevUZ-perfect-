@@ -9,20 +9,24 @@ import { logView, markOpened, protoPage } from "@/lib/proto/store";
 import { PIN_LIMIT, hasPinCookie, pinCookieHeader, pinMatches, pinPage, type PinState } from "@/lib/proto/lock";
 import { CODE_LIMIT, codeCookieHeader, readCodeCookie, type CodeKind } from "@/lib/proto/codes";
 import { codeAccess, liveProtoCode, noteProtoPinFailure, protoPinBlocked } from "@/lib/proto/code-store";
+import { caseCookieHeader, hasCaseCookie, isOpenCase, wantsCasePass } from "@/lib/proto/case-pass";
 import { ipFromHeaders, rateLimit } from "@/lib/qualify/limiter";
 
 /**
  * Чем этот браузер открывает макет: постоянный пароль владельца, пароль
- * клиента на сутки или «Открыть» из панели. null — ничем.
+ * клиента на сутки, «Открыть» из панели или пропуск кейса — посетитель сайта
+ * открыл прототип кнопкой открытого кейса (lib/proto/case-pass). null — ничем.
  */
 export async function accessBy(
   cookie: string | null,
   page: { id: string; lock: string | null; closed: boolean },
-): Promise<"pin" | CodeKind | null> {
+  token: string,
+): Promise<"pin" | CodeKind | "case" | null> {
   if (page.lock && hasPinCookie(cookie, page.id, page.lock)) return "pin";
   const key = readCodeCookie(cookie, page.id);
-  if (!key) return null;
-  return (await codeAccess(page.id, key))?.kind ?? null;
+  const code = key ? ((await codeAccess(page.id, key))?.kind ?? null) : null;
+  if (code) return code;
+  return isOpenCase(token) && hasCaseCookie(cookie) ? "case" : null;
 }
 
 /**
@@ -48,11 +52,22 @@ export async function serveProto(request: Request, token: string, path = ""): Pr
   const page = await protoPage(token, path);
   if (!page) return new Response(null, { status: 404 });
 
+  // Кнопка открытого кейса на сайте студии (`?from=case`): пропуск кейса и
+  // тот же адрес без хвоста. Пароль, выданный клиенту, такого посетителя не
+  // останавливает (владелец, 24.10.2026).
+  if (isOpenCase(token) && wantsCasePass(new URL(request.url))) {
+    const self = `/proto/${token}${path ? `/${path}` : ""}`;
+    return new Response(null, {
+      status: 303,
+      headers: { Location: self, "Set-Cookie": caseCookieHeader(token), "Cache-Control": "no-store", "X-Robots-Tag": "noindex, nofollow, noarchive" },
+    });
+  }
+
   // Пароль на макет: постоянный пароль владельца (lib/proto/lock) или пароль
   // на сутки из раздела «Макеты» (lib/proto/codes). Без верного — форма, а
   // не макет, и в журнал показа ничего не пишется.
   const cookie = request.headers.get("cookie");
-  const access = await accessBy(cookie, page);
+  const access = await accessBy(cookie, page, token);
   if ((page.lock || page.closed) && !access) return pinResponse("ask");
 
   // Отметка об открытии не задерживает ответ: человеку страница нужна сейчас.
@@ -62,7 +77,8 @@ export async function serveProto(request: Request, token: string, path = ""): Pr
   // Манифест, service worker и офлайн-страницу запрашивает телефон, а не
   // человек: в журнал показа они не идут (lib/proto/pages).
   // «Открыть» из панели (доступ команды) — тоже свой человек, не клиент.
-  const countable = !isQuietProtoPath(path) && access !== "team";
+  // Посетитель кейса — гость сайта студии: журнал показа — про клиента.
+  const countable = !isQuietProtoPath(path) && access !== "team" && access !== "case";
   if (countable && !isPreviewFetch(request.headers.get("user-agent")) && !fromPanel(cookie, SESSION_COOKIE)) {
     // Журнал показа — доказательство, что клиент видел макет (условия,
     // раздел 5). Адрес — тем же способом, что у ограничителя запросов.

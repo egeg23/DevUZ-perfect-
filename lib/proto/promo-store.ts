@@ -26,7 +26,7 @@ async function bundleFor(request: Request, token: string): Promise<string | null
   if (typeof facts?.bundle !== "string") return null;
   const lock = activeLock(facts);
   const closed = Boolean(data.closed_at);
-  if ((lock || closed) && !(await accessBy(request.headers.get("cookie"), { id: String(data.id), lock, closed }))) return null;
+  if ((lock || closed) && !(await accessBy(request.headers.get("cookie"), { id: String(data.id), lock, closed }, token))) return null;
   return facts.bundle;
 }
 

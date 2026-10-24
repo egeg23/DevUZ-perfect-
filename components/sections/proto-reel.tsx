@@ -6,6 +6,7 @@ import { useCallback, useRef, useState } from "react";
 import type { Case } from "@/content/cases";
 import { cn } from "@/lib/cn";
 import { localeHref, t, type Locale, type LocalizedText } from "@/lib/i18n";
+import { caseProtoHref } from "@/lib/proto/case-link";
 
 /** Кейс, чей ролик стоит на главной; данные кейса передаёт страница. */
 const REEL_SLUG = "samauto";
@@ -155,7 +156,7 @@ export function ProtoReel({ locale, proto }: { locale: Locale; proto: NonNullabl
           <p className="mt-4 max-w-md text-[0.92rem] leading-relaxed text-white/75">{t(lead, locale)}</p>
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <a
-              href={proto.href}
+              href={caseProtoHref(proto)}
               target="_blank"
               rel="noopener"
               className="proto-glow inline-flex rounded-full p-[1.5px] transition active:scale-[0.98]"
