@@ -54,7 +54,10 @@ const PUBLIC_PL: BotCommand[] = [
   { command: "reset", description: "Zacznij rozmowę od nowa" },
 ];
 
-const STAFF_EXTRA: BotCommand[] = [{ command: "login", description: "Вход в панель (для сотрудников)" }];
+const STAFF_EXTRA: BotCommand[] = [
+  { command: "login", description: "Вход в панель (для сотрудников)" },
+  { command: "code", description: "Код для входа в приложение панели" },
+];
 
 /**
  * Поток «Получать лиды» — тем, кто получает порцию: менеджерам и

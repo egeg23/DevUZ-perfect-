@@ -5,6 +5,7 @@ import { isWorkday, tashkentHour } from "@/lib/admin/portion";
 import type { Role } from "@/lib/admin/roles";
 import { periodReport } from "@/lib/admin/period-report-store";
 import { STREAM_ON } from "@/lib/admin/stream";
+import { APP_CODE_BUTTON } from "@/lib/admin/app-login";
 import { messageWindow } from "@/lib/admin/tasks";
 import { sendKeyboard, sendMessage, sendPhotoFile } from "@/lib/qualify/telegram";
 import { serviceClient } from "@/lib/supabase";
@@ -850,7 +851,7 @@ export async function sendTeamNews(now: Date = new Date(), list: readonly News[]
         : news.photo
           ? await sendWithPhoto(reader.chat, news.photo, text)
           : news.streamKey
-          ? await sendKeyboard(reader.chat, text, [[STREAM_ON]])
+          ? await sendKeyboard(reader.chat, text, [[STREAM_ON], [APP_CODE_BUTTON]])
           : await sendMessage(reader.chat, text);
       if (ok) {
         sent += 1;

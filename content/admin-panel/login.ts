@@ -62,6 +62,11 @@ export const loginDict = defineDict({
     uz: "Bot 6 ta raqam yuboradi. Bu yerga qayting va ularni kiriting — kod 5 daqiqa amal qiladi va bir marta ishlaydi.",
     pl: "Bot wyśle 6 cyfr. Wróć tutaj i wpisz je — kod jest ważny 5 minut i działa jeden raz.",
   },
+  appFallback: {
+    ru: "Бот не прислал код? Откройте его и отправьте /code или нажмите «🔑 Код для приложения» внизу чата — код придёт к этому входу.",
+    uz: "Bot kod yubormadimi? Botni oching va /code buyrug‘ini yuboring — kod shu kirish uchun darhol keladi.",
+    pl: "Bot nie wysłał kodu? Otwórz go i wyślij /code — kod do tego logowania przyjdzie od razu.",
+  },
   appCodeLabel: { ru: "Код из бота", uz: "Botdan kelgan kod", pl: "Kod od bota" },
   appSignIn: { ru: "Войти", uz: "Kirish", pl: "Zaloguj się" },
   appErrFormat: {

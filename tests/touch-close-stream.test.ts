@@ -291,5 +291,6 @@ test("объявление: у каждого — своё, и всё про н�
   // Отметка — до сообщения и условно; не дошло — снимается.
   assert.match(store, /onConflict: "news_id,staff_id", ignoreDuplicates: true/);
   assert.match(store, /else \{\s*await db\.from\("team_news_sent"\)\.delete\(\)/);
-  assert.match(store, /sendKeyboard\(reader\.chat, text, \[\[STREAM_ON\]\]\)/);
+  // Рядом с потоком — «🔑 Код для приложения» (tests/app-code-button.test.ts).
+  assert.match(store, /sendKeyboard\(reader\.chat, text, \[\[STREAM_ON\], \[APP_CODE_BUTTON\]\]\)/);
 });
