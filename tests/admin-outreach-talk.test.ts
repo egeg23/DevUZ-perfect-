@@ -183,14 +183,15 @@ test("вердикт по входящему не остаётся в чисто
   // «Хотят прототип» — не одному менеджеру, а всей команде (кто первый
   // возьмёт); остальное, и повторная просьба о прототипе, — как раньше.
   assert.match(store, /const announced = verdict === "proto" \? await announcePrototype\(String\(prospect\.id\), body\) : null;/);
-  assert.match(store, /if \(verdict !== "talk" && !announced\) \{[\s\S]{0,400}?await tellManager\(/);
+  // Ничьё касание автопрогона — лидом в очередь, иначе строка человеку (toHuman).
+  assert.match(store, /if \(verdict !== "talk" && !announced\) \{[\s\S]{0,400}?await toHuman\(/);
 });
 
 test("после «Отвечать самому» каждое сообщение клиента уходит тому, кто перехватил", () => {
   // Модель в таком разговоре молчит. Раньше обычный ответ клиента ложился в
   // переписку, и никто о нём не знал, пока не открывал карточку.
   const store = read("lib/admin/outreach-talk-store.ts");
-  assert.match(store, /\} else if \(!prospect\.ai_handling\) \{[\s\S]{0,400}?await tellManager\(/);
+  assert.match(store, /\} else if \(!prospect\.ai_handling\) \{[\s\S]{0,400}?await toHuman\(/);
   // Перехватить может руководитель или владелец — писать надо ему, а не
   // менеджеру касания.
   assert.match(store, /handover_reason: "менеджер отвечает сам", handled_by: staffId/);

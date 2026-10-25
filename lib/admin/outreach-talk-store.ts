@@ -250,7 +250,7 @@ export async function recordInbound(input: {
 }
 
 const PROSPECT_FIELDS =
-  "id, host, status, target, target_kind, target_user_id, contacts, message, claimed_by, touched_by, lead_id, ai_handling, closed_reason, proto_url, hello_at, pitch_at, checked_at, walked, autopilot_at";
+  "id, host, url, label, status, target, target_kind, target_user_id, contacts, message, claimed_by, touched_by, lead_id, ai_handling, closed_reason, proto_url, hello_at, pitch_at, checked_at, walked, autopilot_at";
 
 /** Чем узнаётся касание по входящему: id, @адрес, номер. Без письма и обхода сайта. */
 const MATCH_FIELDS = "id, status, target, target_kind, target_user_id, contacts";
@@ -350,7 +350,7 @@ export async function recordManualInbound(
 
   const { data: prospect } = await db
     .from("prospects")
-    .select("id, host, target, target_user_id, lead_id, claimed_by, ai_handling, closed_reason, proto_url, message, hello_at, pitch_at, checked_at, walked, autopilot_at")
+    .select("id, host, url, label, target, target_user_id, lead_id, claimed_by, ai_handling, closed_reason, proto_url, message, hello_at, pitch_at, checked_at, walked, autopilot_at")
     .eq("id", prospectId)
     .maybeSingle();
   if (!prospect) return { matched: false };
@@ -370,11 +370,40 @@ function writesAgain(closedReason: unknown): string {
     : "Клиент написал — отвечаете вы:";
 }
 
+/**
+ * Сайта у компании нет: касание завели по карточке на картах. Кружка «нашли
+ * ошибки на вашем сайте» такой компании не шлём, проверки сайта у неё нет —
+ * письмо от ниши пишет свип (lib/admin/letter-later.ts). Признак тот же, что
+ * у письма после ответа: нет домена или адреса.
+ */
+export function withoutSite(p: { host?: unknown; url?: unknown }): boolean {
+  return !p.host || !p.url;
+}
+
+/** Как назвать касание в строке человеку: сайт, а без сайта — название компании. */
+function touchName(p: { host?: unknown; label?: unknown }): string {
+  return String(p.host || p.label || "компания без сайта");
+}
+
+/**
+ * Разговор, который бот отпустил, — человеку. Касание автопрогона до лида
+ * ничьё, и строке tellManager некуда идти: так с 24.10.2026 молча ждали
+ * ответа Koshona и ещё дюжина клиентов без сайта. Тогда лид заводится и идёт
+ * в очередь на тёплые лиды (leadOnHandover) — как при любой передаче
+ * разговора моделью (handOver).
+ */
+async function toHuman(prospectId: string, text: string, options: { refuse?: boolean } = {}): Promise<void> {
+  if (await leadOnHandover(prospectId, text).catch(() => null)) return;
+  await tellManager(prospectId, text, options);
+}
+
 /** Общий хвост обоих путей: записать, оценить, при нужде отпустить модель. */
 async function saveInbound(
   prospect: {
     id: unknown;
     host: unknown;
+    url?: unknown;
+    label?: unknown;
     lead_id: unknown;
     ai_handling: unknown;
     closed_reason?: unknown;
@@ -528,14 +557,14 @@ async function saveInbound(
     // Ответили на «Здравствуйте» — письма о сайте клиент не видел, и
     // менеджер, открыв переписку, должен это знать до того, как напишет.
     const unseen = hello ? "\n\nКлиент получил только «Здравствуйте» — письмо о сайте не уходило." : "";
-    await tellManager(String(prospect.id), `Ответ по ${prospect.host}: ${HANDOVER_TEXT[verdict] ?? verdict}.${unseen}\n\n${body.slice(0, 500)}`, {
+    await toHuman(String(prospect.id), `Ответ по ${touchName(prospect)}: ${HANDOVER_TEXT[verdict] ?? verdict}.${unseen}\n\n${body.slice(0, 500)}`, {
       refuse: true,
     });
   } else if (!prospect.ai_handling) {
     // Модель разговор не ведёт — её отпустили или его забрал человек. Тогда
     // кроме человека ответить некому, и молчать о сообщении нельзя: раньше
     // оно ложилось в переписку, и клиент ждал, пока кто-то откроет карточку.
-    await tellManager(String(prospect.id), `${writesAgain(prospect.closed_reason)}\n\n${body.slice(0, 500)}`, { refuse: true });
+    await toHuman(String(prospect.id), `${writesAgain(prospect.closed_reason)}\n\n${body.slice(0, 500)}`, { refuse: true });
   }
 
   return { matched: true, host: String(prospect.host), verdict };
@@ -592,7 +621,11 @@ async function answerHello(
   const sentLang = letterLang(String(prospect.message ?? ""), (prospect.walked as { lang?: string } | null)?.lang);
   const lang = replyLang(body, sentLang);
 
-  const circle = circleLangFor(lang);
+  // Кружок говорит «посмотрели ваш сайт, нашли ошибки». Компании без сайта
+  // это неправда, и в ответ приходит «Какой сайт?» (Koshona, BMW Auto
+  // Service, Ishonch Tour — 24.10.2026): ей вместо кружка уходит письмо от
+  // ниши, как когда кружок не ушёл.
+  const circle = withoutSite(prospect) ? null : circleLangFor(lang);
   if (circle) {
     const sendAfter = new Date(now + CIRCLE_AFTER_MS).toISOString();
     // Половина «new»: за несколько секунд до кружка — строка, что он про его
@@ -681,18 +714,22 @@ async function queueHelloLetter(
   const db = serviceClient();
   if (!db) return false;
   const id = String(prospect.id);
-  const host = String(prospect.host);
+  const host = String(prospect.host ?? "");
   const letter = withoutGreeting(String(prospect.message ?? "")).trim();
   const fresh = checkFresh((prospect.checked_at as string | null) ?? null, Date.now());
+  // Без сайта проверять нечего: письмо от ниши (writeNoSite) ничего о сайте
+  // не утверждает. Раньше такой ответ уходил человеку «проверке больше трёх
+  // дней», а касание автопрогона ничьё — клиент ждал молча.
+  const noSite = withoutSite(prospect);
   const sentLang = letterLang(String(prospect.message ?? ""), (prospect.walked as { lang?: string } | null)?.lang);
 
   const handOverHello = async (reason: string) => {
     await db.from("prospects").update({ ai_handling: false, handover_reason: reason }).eq("id", id);
-    await tellManager(id, `Ответ по ${host}: ${reason}.\n\n${inbound.slice(0, 500)}`, { refuse: true });
+    await toHuman(id, `Ответ по ${touchName(prospect)}: ${reason}.\n\n${inbound.slice(0, 500)}`, { refuse: true });
     return false;
   };
   const onWhat = options.after === "circle" ? "ответил на кружок и ждёт разбор" : "ответил на «Здравствуйте»";
-  if (!fresh) return handOverHello(`${onWhat}, но проверке сайта больше трёх дней — письмо не ушло: проверьте сайт и напишите сами`);
+  if (!fresh && !noSite) return handOverHello(`${onWhat}, но проверке сайта больше трёх дней — письмо не ушло: проверьте сайт и напишите сами`);
   // Автопрогон пишет письмо после ответа (LETTER_AFTER_REPLY): скаут только
   // отмечает, на каком языке ответили, письмо напишет и поставит свип
   // (lib/admin/letter-later.ts) — модель процессу скаута не грузим.
@@ -706,7 +743,7 @@ async function queueHelloLetter(
       .is("letter_wanted", null);
     return true;
   }
-  if (!letter) return handOverHello(`${onWhat}, а письма о сайте нет — напишите сами`);
+  if (!letter) return handOverHello(noSite ? `${onWhat}, а сайта у компании нет и письма для неё нет — напишите сами` : `${onWhat}, а письма о сайте нет — напишите сами`);
 
   // Письмо на языке сайта, а ответили на другом — перевод того же письма,
   // уже прошедшего проверку. Модель грузится только здесь: этот файл читает
@@ -1097,7 +1134,7 @@ export async function tellManager(
 
   const { data: p } = await db
     .from("prospects")
-    .select("claimed_by, handled_by, lead_id, host, status, closed_reason, sent_via, target_kind")
+    .select("claimed_by, handled_by, lead_id, host, label, status, closed_reason, sent_via, target_kind")
     .eq("id", prospectId)
     .maybeSingle();
   const to = p?.handled_by ?? p?.claimed_by;
@@ -1120,7 +1157,7 @@ export async function tellManager(
   const via = from ? `\nАккаунт: ${esc(sentFromText(from))}` : "";
   const url = p.lead_id ? `${siteUrl}/admin/leads/${p.lead_id}#talk` : "";
   const link = !url ? "" : from ? `\n\nОтветить прямо в карточке лида — уйдёт с этого аккаунта:\n${url}` : `\n\n${url}`;
-  const body = `<b>Касание · ${esc(String(p.host))}</b>${via}\n${esc(text)}${link}`;
+  const body = `<b>Касание · ${esc(touchName(p))}</b>${via}\n${esc(text)}${link}`;
   // Под ответом клиента — «Клиент отказался»: «не интересно» читают здесь,
   // и закрыть касание надо там же, не открывая панель.
   if (options.refuse && canClose({ status: String(p.status), closed_reason: p.closed_reason as string | null })) {
@@ -1349,7 +1386,7 @@ export async function markCircleSkipped(id: string, reason: string): Promise<voi
 
   const { data: prospect } = await db
     .from("prospects")
-    .select("id, host, lead_id, ai_handling, message, checked_at, walked, proto_url, autopilot_at")
+    .select("id, host, url, label, lead_id, ai_handling, message, checked_at, walked, proto_url, autopilot_at")
     .eq("id", row.prospect_id)
     .maybeSingle();
   if (!prospect) return;
