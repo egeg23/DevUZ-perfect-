@@ -56,7 +56,7 @@ export async function loadBotAudience(): Promise<{ users: BotUser[]; marks: Mark
   const empty = { users: [], marks: { staff: new Set<number>(), partners: new Set<number>(), buyers: new Set<number>() } };
   if (!db) return empty;
   const [{ data: users }, { data: staff }, { data: partners }, { data: buyers }] = await Promise.all([
-    db.from("bot_users").select("chat_id, username, first_name, blocked_at").limit(20000),
+    db.from("bot_users").select("chat_id, username, first_name, blocked_at, first_at, last_at").limit(20000),
     // Сотрудники — все, и бывшие тоже: рассылка клиентам не должна приходить своим.
     db.from("staff").select("telegram_user_id").limit(1000),
     db.from("partners").select("telegram_user_id").eq("status", "active").not("telegram_user_id", "is", null).limit(5000),

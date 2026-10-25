@@ -11,7 +11,7 @@ import { touchProgressOf } from "@/lib/admin/touch-store";
 import { repeatOf, sendsBroadcasts } from "@/lib/admin/broadcast";
 import { giveLeadAction } from "@/app/admin/hq/actions";
 import { broadcastById, broadcastHistory, broadcastPeople } from "@/lib/admin/broadcast-store";
-import { segmentCounts } from "@/lib/admin/bot-users";
+import { botSubs, segmentCounts } from "@/lib/admin/bot-users";
 import { loadBotAudience } from "@/lib/admin/bot-users-store";
 import { makesMockups } from "@/lib/admin/mockup-order";
 import { requireSection } from "@/lib/admin/guard";
@@ -117,6 +117,7 @@ export default async function HqPage({
                   }
                 : null
             }
+            subs={audience ? botSubs(audience.users, audience.marks, now) : null}
             now={now}
           />
         }
