@@ -219,3 +219,34 @@ export const broadcastDict = defineDict({
     pl: "Treść i odbiorcy jak poprzednio. Sprawdź i otwórz podgląd.",
   },
 });
+
+/** «Подписчики бота» на «Главной» владельцу и руководителю (lib/admin/bot-users.ts → botSubs). */
+export const botSubsDict = defineDict({
+  title: { ru: "Подписчики бота", uz: "Bot obunachilari", pl: "Subskrybenci bota" },
+  now: { ru: "сейчас в боте", uz: "hozir botda", pl: "teraz w bocie" },
+  caption: {
+    ru: "Новые и активные подписчики бота за сутки, неделю и месяц",
+    uz: "Kun, hafta va oy davomida botning yangi va faol obunachilari",
+    pl: "Nowi i aktywni subskrybenci bota w ciągu doby, tygodnia i miesiąca",
+  },
+  day: { ru: "24 часа", uz: "24 soat", pl: "24 godziny" },
+  week: { ru: "7 дней", uz: "7 kun", pl: "7 dni" },
+  month: { ru: "30 дней", uz: "30 kun", pl: "30 dni" },
+  fresh: { ru: "Новые", uz: "Yangilar", pl: "Nowi" },
+  prev: {
+    ru: (n: number) => `до этого ${n}`,
+    uz: (n: number) => `oldin ${n}`,
+    pl: (n: number) => `wcześniej ${n}`,
+  },
+  active: { ru: "Были в боте", uz: "Botda bo‘lganlar", pl: "Aktywni w bocie" },
+  blocked: {
+    ru: (n: number) => `Заблокировали бота: ${n}`,
+    uz: (n: number) => `Botni bloklaganlar: ${n}`,
+    pl: (n: number) => `Zablokowali bota: ${n}`,
+  },
+  note: {
+    ru: "Подписчик — тот, кто сам написал боту или нажал «Start». Сотрудники не считаются. Числа обновляются раз в 5 минут.",
+    uz: "Obunachi — botga o‘zi yozgan yoki «Start»ni bosgan kishi. Xodimlar hisobga olinmaydi. Raqamlar har 5 daqiqada yangilanadi.",
+    pl: "Subskrybent to osoba, która sama napisała do bota albo nacisnęła «Start». Pracownicy się nie liczą. Liczby odświeżają się co 5 minut.",
+  },
+});

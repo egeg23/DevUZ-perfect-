@@ -4,9 +4,9 @@ import { cancelBroadcastAction } from "@/app/admin/hq/actions";
 import { HelpHint } from "@/components/admin/help-link";
 import { HqBroadcast, type RepeatOf } from "@/components/admin/hq-broadcast";
 import { HqTask } from "@/components/admin/hq-task";
-import { broadcastDict, hqTaskDict } from "@/content/admin-panel/hq-actions";
+import { botSubsDict, broadcastDict, hqTaskDict } from "@/content/admin-panel/hq-actions";
 import { canCancel, statusOf, type BroadcastPerson } from "@/lib/admin/broadcast";
-import type { Segment } from "@/lib/admin/bot-users";
+import { SUB_WINDOWS, type BotSubs, type Segment } from "@/lib/admin/bot-users";
 import type { HistoryItem } from "@/lib/admin/broadcast-store";
 import { helpAnchor } from "@/lib/admin/help";
 import { clockOf } from "@/lib/admin/hq";
@@ -134,6 +134,7 @@ export function HqSide({
   makerIds = [],
   preselect,
   broadcast,
+  subs = null,
   now,
 }: {
   locale: PanelLocale;
@@ -151,10 +152,13 @@ export function HqSide({
     /** «Повторить»: прошлая рассылка для формы. */
     repeat?: RepeatOf | null;
   } | null;
+  /** Подписчики бота — владельцу и руководителю, рядом с рассылкой «Пользователям бота». */
+  subs?: BotSubs | null;
   now: Date;
 }) {
   const tt = pick(hqTaskDict, locale);
   const tb = pick(broadcastDict, locale);
+  const ts = pick(botSubsDict, locale);
   return (
     <>
       <section id="task" className={`${CARD} scroll-mt-24`} aria-labelledby="hq-task">
@@ -167,6 +171,53 @@ export function HqSide({
             появилась бы — так и было у владельца на телефоне 14.10.2026. */}
         <HqTask key={preselect ?? "none"} people={taskPeople} preselect={preselect} makerIds={makerIds} />
       </section>
+
+      {subs ? (
+        <section id="bot-subs" className={`${CARD} scroll-mt-24`} aria-labelledby="hq-bot-subs">
+          <h2 id="hq-bot-subs" className="mb-3 flex items-center gap-2 text-sm font-semibold">
+            {ts.title}
+            <HelpHint topic={helpAnchor("/admin/hq", "bot-subs")} />
+          </h2>
+          <p className="flex items-baseline gap-2">
+            <span className="font-mono text-4xl font-semibold leading-none tracking-tight tabular-nums text-text">{subs.total}</span>
+            <span className="text-xs text-muted">{ts.now}</span>
+          </p>
+          <table className="mt-4 w-full text-xs">
+            <caption className="sr-only">{ts.caption}</caption>
+            <thead>
+              <tr className="text-faint">
+                <td />
+                {SUB_WINDOWS.map((w) => (
+                  <th key={w.key} scope="col" className="pb-1 text-right font-normal">
+                    {ts[w.key]}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-t border-line/60">
+                <th scope="row" className="py-2 text-left font-medium">{ts.fresh}</th>
+                {SUB_WINDOWS.map((w) => (
+                  <td key={w.key} className="py-2 text-right font-mono tabular-nums">
+                    <span className="text-sm font-semibold text-green">{subs.fresh[w.key].now}</span>
+                    <span className="block text-[0.65rem] text-faint">{ts.prev(subs.fresh[w.key].prev)}</span>
+                  </td>
+                ))}
+              </tr>
+              <tr className="border-t border-line/60">
+                <th scope="row" className="py-2 text-left font-medium">{ts.active}</th>
+                {SUB_WINDOWS.map((w) => (
+                  <td key={w.key} className="py-2 text-right font-mono text-sm tabular-nums text-text">
+                    {subs.active[w.key]}
+                  </td>
+                ))}
+              </tr>
+            </tbody>
+          </table>
+          {subs.blocked ? <p className="mt-2 text-xs text-muted">{ts.blocked(subs.blocked)}</p> : null}
+          <p className="mt-2 text-[0.7rem] leading-snug text-faint">{ts.note}</p>
+        </section>
+      ) : null}
 
       {broadcast ? (
         <section id="broadcast" className={`${CARD} scroll-mt-24`} aria-labelledby="hq-broadcast">

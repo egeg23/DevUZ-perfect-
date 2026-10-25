@@ -187,6 +187,15 @@ export const leadsSections: Record<string, HelpEntry> = {
         ],
       },
       {
+        id: "bot-subs",
+        roles: ["admin", "head"],
+        title: "«Subskrybenci bota»",
+        body: [
+          "Ile osób jest w [bocie studia](https://t.me/Devuz_studio_bot). Duża liczba, «teraz w bocie», to osoby, które same napisały do bota albo nacisnęły «Start», nie zablokowały go i nie pracują u nas: dokładnie do nich pójdzie wiadomość «Wszystkim» w zakładce «Użytkownikom bota». Niżej — tabela za 24 godziny, 7 dni i 30 dni. «Nowi» — kto po raz pierwszy przyszedł do bota w tym czasie; pod liczbą «wcześniej» — ilu przyszło w takim samym okresie przed nim, dzięki temu widać, czy reklama zadziałała. «Aktywni w bocie» — kto w tym czasie pisał do bota albo naciskał przyciski.",
+          "Wiersz «Zablokowali bota» pojawia się dopiero po wysyłce: o blokadzie Telegram mówi tylko wtedy, gdy piszemy do człowieka. Dopóki nie było wiadomości do użytkowników, wiersza nie ma, nawet jeśli ktoś usunął bota. Liczby są liczone z bazy, bez AI, i odświeżają się co 5 minut. Blok widzą właściciel i kierownik.",
+        ],
+      },
+      {
         id: "voice",
         roles: ["admin", "head"],
         title: "Wiadomość głosowa → tekst w bocie",

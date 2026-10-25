@@ -35,6 +35,10 @@ export type BotUser = {
   username: string | null;
   first_name: string | null;
   blocked_at: string | null;
+  /** Первый раз написал боту или нажал «Start». */
+  first_at?: string | null;
+  /** Последний раз писал или нажимал кнопку. */
+  last_at?: string | null;
 };
 
 export type Marks = {
@@ -65,6 +69,53 @@ export function segmentCounts(users: readonly BotUser[], marks: Marks): Record<S
   const out = { all: 0, partners: 0, buyers: 0, clients: 0 } as Record<Segment, number>;
   for (const s of SEGMENTS) out[s] = audienceOf(users, marks, s).length;
   return out;
+}
+
+/**
+ * Подписчики бота на «Главной» (владелец, 25.10.2026: «Выведи мне и
+ * руководителям количество подписчиков в боте со статистикой 24 часа / 7
+ * дней / месяц… Как посмотреть сколько пользователей не понимаю»).
+ */
+export const SUB_WINDOWS = [
+  { key: "day", ms: 24 * 60 * 60_000 },
+  { key: "week", ms: 7 * 24 * 60 * 60_000 },
+  { key: "month", ms: 30 * 24 * 60 * 60_000 },
+] as const;
+export type SubWindow = (typeof SUB_WINDOWS)[number]["key"];
+
+export type BotSubs = {
+  /** Сейчас в боте: писали сами, не заблокировали, не сотрудники — те, кому дойдёт рассылка «Всем». */
+  total: number;
+  /** Заблокировали бота — это видно только по отказу Telegram на рассылку. */
+  blocked: number;
+  /** Новые в окне и в таком же окне перед ним — чтобы было с чем сравнить. */
+  fresh: Record<SubWindow, { now: number; prev: number }>;
+  /** Были в боте в окне: писали или нажимали кнопки. */
+  active: Record<SubWindow, number>;
+};
+
+/** Счёт подписчиков правилами, без базы: сотрудники не считаются нигде. */
+export function botSubs(users: readonly BotUser[], marks: Marks, now: Date): BotSubs {
+  const at = now.getTime();
+  const people = users.filter((u) => !marks.staff.has(u.chat_id));
+  const time = (iso: string | null | undefined) => (iso ? Date.parse(iso) : Number.NaN);
+  const fresh = {} as BotSubs["fresh"];
+  const active = {} as BotSubs["active"];
+  for (const { key, ms } of SUB_WINDOWS) {
+    let current = 0;
+    let before = 0;
+    let seen = 0;
+    for (const u of people) {
+      const first = time(u.first_at);
+      if (first > at - ms && first <= at) current += 1;
+      else if (first > at - 2 * ms && first <= at - ms) before += 1;
+      if (time(u.last_at) > at - ms) seen += 1;
+    }
+    fresh[key] = { now: current, prev: before };
+    active[key] = seen;
+  }
+  const blocked = people.filter((u) => u.blocked_at).length;
+  return { total: people.length - blocked, blocked, fresh, active };
 }
 
 function esc(value: string): string {

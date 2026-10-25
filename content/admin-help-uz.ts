@@ -188,6 +188,15 @@ export const uz: HelpCopy = {
           ],
         },
         {
+          id: "bot-subs",
+          roles: ["admin", "head"],
+          title: "«Bot obunachilari»",
+          body: [
+            "[Studiya botida](https://t.me/Devuz_studio_bot) qancha odam borligi. Katta raqam, «hozir botda», — botga o‘zi yozgan yoki «Start»ni bosgan, uni bloklamagan va bizda ishlamaydigan kishilar: «Bot foydalanuvchilariga» yorlig‘idagi «Hammaga» xabari aynan ularga ketadi. Pastda — 24 soat, 7 kun va 30 kun bo‘yicha jadval. «Yangilar» — shu vaqt ichida botga birinchi marta kelganlar; raqam ostidagi «oldin» — undan oldingi xuddi shunday muddatda nechta kelgani, shunda reklama ishladimi-yo‘qmi ko‘rinadi. «Botda bo‘lganlar» — shu vaqt ichida botga yozgan yoki tugmalarni bosganlar.",
+            "«Botni bloklaganlar» qatori faqat xabar yuborilgandan keyin chiqadi: bloklash haqida Telegram biz odamga yozgandagina aytadi. Foydalanuvchilarga hali xabar yuborilmagan bo‘lsa, qator yo‘q, hatto kimdir botni o‘chirib tashlagan bo‘lsa ham. Raqamlar bazadan, SIsiz hisoblanadi va har 5 daqiqada yangilanadi. Blokni egasi va rahbar ko‘radi.",
+          ],
+        },
+        {
           id: "voice",
           roles: ["admin", "head"],
           title: "Ovozli xabar → botda matn",
