@@ -22,10 +22,11 @@ function tabbed(section: Section, open: readonly Section[]): boolean {
  * Группы этого человека в порядке шапки. Пустых нет: группа без открытых
  * разделов не рисуется. Вкладки открытых разделов в меню не идут — они в
  * `tabsOf`; закрыт родитель — вкладка встаёт в свою группу, как раньше.
+ * Раздел в углу шапки (`corner`, «Настройки») в меню тоже не идёт.
  */
 export function menuOf(who: Viewer): MenuGroup[] {
   const open = navOf(who);
-  const shown = open.filter((s) => !tabbed(s, open));
+  const shown = open.filter((s) => !tabbed(s, open) && !s.corner);
   return NAV_GROUPS.map((group) => ({ group, sections: shown.filter((s) => s.group === group) })).filter(
     (g) => g.sections.length > 0,
   );
@@ -39,7 +40,7 @@ export function menuOf(who: Viewer): MenuGroup[] {
 export function tabsOf(who: Viewer): Section[][] {
   const open = navOf(who);
   return open
-    .filter((s) => !tabbed(s, open))
+    .filter((s) => !tabbed(s, open) && !s.corner)
     .map((parent) => [parent, ...open.filter((s) => s.parent === parent.href)])
     .filter((family) => family.length > 1);
 }

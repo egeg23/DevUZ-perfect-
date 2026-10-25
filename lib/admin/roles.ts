@@ -99,6 +99,12 @@ export type Section = {
    * раздела (`menuOf`), и не теряется.
    */
   parent?: string;
+  /**
+   * Раздел в углу шапки, а не в меню: «Настройки» — шестерёнкой рядом с
+   * именем (components/admin/shell.tsx), как в любой CRM. «Найти раздел»
+   * его находит, в меню и во вкладках его нет.
+   */
+  corner?: boolean;
 };
 
 const EVERYONE: readonly Role[] = ROLES;
@@ -223,6 +229,11 @@ export const SECTIONS: readonly Section[] = [
   // Инструкции — последними: это справка, а не ежедневная работа. Видят все,
   // и каждый читает только про свои вкладки.
   { href: "/admin/help", label: { ru: "Инструкции", uz: "Yo‘riqnoma", pl: "Instrukcje" }, roles: EVERYONE, group: "help" },
+  // Настройки — всё, что настраивают, одной страницей (lib/admin/settings.ts):
+  // своё — язык, меню, телефон, сообщения бота; касаний и команды — ссылками
+  // туда, где они живут. Владелец, 25.10.2026: «Погнали по порядку».
+  // Шестерёнкой в шапке, а не пунктом меню.
+  { href: "/admin/settings", label: { ru: "Настройки", uz: "Sozlamalar", pl: "Ustawienia" }, roles: EVERYONE, group: "help", corner: true },
 ];
 
 /** Название раздела на языке панели. */
@@ -257,9 +268,10 @@ export type SectionAccess = Readonly<Record<string, boolean>>;
 /**
  * Разделы, которые не закрываются никому: «Лиды» — главная панели,
  * «Задачи» — задачу может получить любой, и кнопка бота у неё ведёт сюда,
- * «Инструкции» — справка.
+ * «Инструкции» — справка, «Настройки» — свой язык и телефон есть у каждого,
+ * а чужие настройки там и так отобраны по галочкам (`settingsFor`).
  */
-export const ALWAYS_OPEN: readonly string[] = ["/admin", "/admin/tasks", "/admin/help"];
+export const ALWAYS_OPEN: readonly string[] = ["/admin", "/admin/tasks", "/admin/help", "/admin/settings"];
 
 /** Строка из базы — в галочки: только известные разделы и только да/нет. */
 export function sectionAccess(raw: unknown): SectionAccess {

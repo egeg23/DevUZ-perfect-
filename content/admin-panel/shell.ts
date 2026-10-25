@@ -23,6 +23,8 @@ export const shellDict = defineDict({
     pl: (n: number, late: number) => `Otwarte zadania dla ciebie: ${n}, po terminie: ${late}`,
   },
   language: { ru: "Язык панели", uz: "Panel tili", pl: "Język panelu" },
+  // Шестерёнка в шапке — в «Настройки» (app/admin/settings).
+  settings: { ru: "Настройки", uz: "Sozlamalar", pl: "Ustawienia" },
   sectionHelp: {
     ru: "Как пользоваться разделом",
     uz: "Bo‘limdan qanday foydalanish",
