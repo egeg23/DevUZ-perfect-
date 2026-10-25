@@ -50,5 +50,5 @@ test("проверка стоит до очереди: ответ из карт�
   const bot = read("lib/qualify/bot-inbox-store.ts");
   const write = bot.slice(bot.indexOf("export async function writeToClient("));
   assert.ok(write.indexOf('return "bot_bad_link"') > 0 && write.indexOf('return "bot_bad_link"') < write.indexOf("sendMessage("));
-  assert.match(read("components/admin/talk-chat.tsx"), /t\.badLinkFix\(b\.link, b\.fix\)/);
+  assert.match(read("components/admin/lead-timeline.tsx"), /t\.badLinkFix\(b\.link, b\.fix\)/);
 });

@@ -177,6 +177,39 @@ export async function replyInTalkAction(
   return result;
 }
 
+/**
+ * Одно поле ответа под лентой карточки (components/admin/lead-timeline.tsx):
+ * куда уйдёт — выбрал человек, проверки — те же, что у прежних трёх полей.
+ * Клиенту с рабочего аккаунта — replyInTalkAction; клиенту от бота — как
+ * writeToClientAction (контакт должен быть открыт); заметка команде — как
+ * sendMessageToThread. Ответ — кодом: страница сама подставит слова.
+ */
+export async function sendFromCardAction(
+  leadId: string,
+  channel: string,
+  body: string,
+  prospectId: string | null,
+): Promise<{ ok: true } | { ok: false; reason: string; bad?: BadLink[] }> {
+  if (channel === "touch") {
+    if (!prospectId) return { ok: false, reason: "forbidden" };
+    return replyInTalkAction(leadId, prospectId, body);
+  }
+  const staff = await requireStaff();
+  const lead = await leadById(leadId);
+  if (!lead) return { ok: false, reason: "forbidden" };
+  if (channel === "bot") {
+    if (!canReveal(lead, staff)) return { ok: false, reason: "forbidden" };
+    const result = await writeToClient({ tgUsername: lead.tg_username, staff, text: String(body ?? "") });
+    revalidatePath(`/admin/leads/${leadId}`);
+    return result === "bot_sent" ? { ok: true } : { ok: false, reason: result };
+  }
+  if (channel !== "note") return { ok: false, reason: "forbidden" };
+  // Пустое поле кнопка не отправляет; пришло мимо неё — postMessage не запишет, ответ «не получилось».
+  const ok = await postMessage(leadId, staff, String(body ?? "").slice(0, MAX_BODY), await requestIp());
+  revalidatePath(`/admin/leads/${leadId}`);
+  return ok ? { ok: true } : { ok: false, reason: "failed" };
+}
+
 export async function toggleAutoReminder(formData: FormData) {
   const staff = await requireStaff();
   const leadId = leadIdFrom(formData);
@@ -220,23 +253,6 @@ export async function finishReminder(formData: FormData) {
   const ok = await completeReminder(reminderId, staff, await requestIp());
   revalidatePath(`/admin/leads/${leadId}`);
   backTo(leadId, ok ? { ok: true } : { ok: false, reason: "forbidden" });
-}
-
-/**
- * Написать в обсуждение лида.
- *
- * Писать может любой сотрудник, а не только владелец: половина смысла
- * ветки в том, чтобы спросить «возьмёшь или мне забрать?» там, где вопрос
- * останется видимым, а не в личке.
- */
-export async function sendMessageToThread(formData: FormData) {
-  const staff = await requireStaff();
-  const leadId = leadIdFrom(formData);
-  const body = String(formData.get("body") ?? "").slice(0, MAX_BODY);
-
-  const ok = await postMessage(leadId, staff, body, await requestIp());
-  revalidatePath(`/admin/leads/${leadId}`);
-  backTo(leadId, ok ? { ok: true } : { ok: false, reason: "failed" }, "#thread");
 }
 
 /**
@@ -313,22 +329,3 @@ export async function saveInnAction(formData: FormData) {
   redirect(`/admin/leads/${leadId}?inn=${claimed ? "client" : "saved"}#inn`);
 }
 
-/**
- * «Написать клиенту в бот» — первым, от бота студии (владелец, 23.10.2026:
- * «С личного писать аккаунта мы не будем»). Вправе тот, кому открыт контакт
- * лида (canReveal): за кем лид, руководитель и владелец; свободный лид —
- * только владелец, иначе это обход очереди.
- */
-export async function writeToClientAction(formData: FormData) {
-  const staff = await requireStaff();
-  const leadId = leadIdFrom(formData);
-  const lead = await leadById(leadId);
-  if (!lead || !canReveal(lead, staff)) redirect(`/admin/leads/${leadId}?r=forbidden`);
-  const result = await writeToClient({
-    tgUsername: lead.tg_username,
-    staff,
-    text: String(formData.get("text") ?? ""),
-  });
-  revalidatePath(`/admin/leads/${leadId}`);
-  redirect(`/admin/leads/${leadId}?r=${result}#botwrite`);
-}

@@ -5,7 +5,7 @@ import { createElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { CopyMessage } from "@/components/admin/copy-message";
-import { LeadThread } from "@/components/admin/lead-thread";
+import { LeadTimeline } from "@/components/admin/lead-timeline";
 import { PanelLocaleProvider } from "@/components/admin/panel-locale";
 import { QuoteCard } from "@/components/admin/quote-card";
 import { SubmitButton } from "@/components/admin/submit-button";
@@ -17,6 +17,7 @@ import {
 } from "@/content/admin-panel/lead-card";
 import { PANEL_LOCALES, type PanelLocale } from "@/lib/admin/i18n";
 import { STATUSES } from "@/lib/admin/leads";
+import { buildTimeline, channelsOf, reminderEvents, stageEvents } from "@/lib/admin/lead-timeline";
 import type { LeadMessage } from "@/lib/admin/messages";
 import type { Quote } from "@/lib/admin/quote";
 import type { Staff } from "@/lib/admin/session";
@@ -178,10 +179,38 @@ function withLocale(locale: PanelLocale, node: ReactNode): string {
   return renderToStaticMarkup(createElement(PanelLocaleProvider, { locale, children: node }));
 }
 
+/** Лента карточки — так же, как её собирает страница: заметка, реплика касания, ступень, напоминание. */
+const timeline = buildTimeline({
+  created: "2026-09-18T08:00:00Z",
+  touch: [
+    { id: "t-1", direction: "in", author: "staff", body: DATA[1], created_at: "2026-09-18T08:30:00Z", status: "done", failure: null },
+    { id: "t-2", direction: "out", author: "ai", body: "x", created_at: "2026-09-18T08:31:00Z", status: "queued", failure: null },
+  ],
+  notes: messages.map((m) => ({ id: m.id, at: m.created_at, author: m.author_name, admin: true, own: false, body: m.body, edited: true })),
+  events: [
+    ...stageEvents({ own: { interest: { at: "2026-09-18T10:00:00Z", by: DATA[0] } } }),
+    ...reminderEvents([{ id: "r-1", due_at: "2026-09-19T05:00:00Z", note: null, done_at: null }]),
+  ],
+});
+const limits = { touch: 4000, bot: 3500, note: 4000 };
+const lenta = (locale: PanelLocale, empty = false) =>
+  withLocale(
+    locale,
+    createElement(LeadTimeline, {
+      leadId: "l-1",
+      prospectId: empty ? null : "p-1",
+      initial: empty ? [] : timeline,
+      channels: channelsOf({ touch: !empty, bot: !empty }),
+      from: empty ? null : DATA[2],
+      aiHandling: false,
+      limits,
+    }),
+  );
+
 function render(locale: PanelLocale): Record<string, string> {
   return {
-    thread: withLocale(locale, createElement(LeadThread, { leadId: "l-1", messages, staff: staff(locale) })),
-    emptyThread: withLocale(locale, createElement(LeadThread, { leadId: "l-1", messages: [], staff: staff(locale) })),
+    thread: lenta(locale),
+    emptyThread: lenta(locale, true),
     copy: withLocale(locale, createElement(CopyMessage, { text: "x" })),
     submit: withLocale(
       locale,
@@ -197,9 +226,19 @@ function render(locale: PanelLocale): Record<string, string> {
 
 test("обсуждение, смета и общие кнопки рисуются на каждом языке без русского в uz и pl", () => {
   const ru = render("ru");
-  assert.match(ru.thread, />Обсуждение</);
-  assert.match(ru.thread, /placeholder="Что известно по этому клиенту"/);
-  assert.match(ru.emptyThread, /Пока пусто\./);
+  // Лента: заметка команды, реплики касания, ступень и напоминание — и выбор, куда уйдёт ответ.
+  assert.match(ru.thread, /заметка команде · Азиз Каримов/);
+  assert.match(ru.thread, />клиент</);
+  assert.match(ru.thread, />отправляется…</);
+  assert.match(ru.thread, /Ступень: интерес · Азиз Каримов/);
+  assert.match(ru.thread, /⏰ Напоминание на /);
+  assert.match(ru.thread, /role="radio" aria-checked="true"[^>]*>Клиенту Тест</);
+  assert.match(ru.thread, />Клиенту от бота студии</);
+  assert.match(ru.thread, />Заметка команде</);
+  // Нет касания и бота — пишется только заметка, без лишнего выбора.
+  assert.match(ru.emptyThread, /placeholder="Что известно по этому клиенту"/);
+  assert.doesNotMatch(ru.emptyThread, /role="radiogroup"/);
+  assert.match(ru.emptyThread, /Пока пусто: здесь появятся переписка, заметки и ступени\./);
   assert.match(ru.copy, />Скопировать текст</);
   assert.match(ru.quote, /не ниже/);
 
@@ -214,11 +253,11 @@ test("обсуждение, смета и общие кнопки рисуютс
   }
 
   const uz = render("uz");
-  assert.match(uz.thread, />Muhokama</);
+  assert.match(uz.thread, />Jamoaga izoh</);
   assert.match(uz.thread, />Yuborish</);
   assert.match(uz.copy, />Matnni nusxalash</);
   const pl = render("pl");
-  assert.match(pl.thread, />Dyskusja</);
+  assert.match(pl.thread, />Notatka dla zespołu</);
   assert.match(pl.quote, /2–3 tyg\./);
 });
 

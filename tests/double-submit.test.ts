@@ -38,8 +38,9 @@ test("кнопки: пока идёт сохранение, они серые и
   const card = read("app/admin/leads/[id]/page.tsx");
   const reminderForm = card.slice(card.indexOf("<form action={addReminder}"));
   assert.match(reminderForm.slice(0, reminderForm.indexOf("</form>")), /<SubmitButton/);
-  const thread = read("components/admin/lead-thread.tsx");
-  assert.match(thread.slice(thread.indexOf("<form action={sendMessageToThread}")), /<SubmitButton/);
+  // Лента (components/admin/lead-timeline.tsx): пока ответ уходит, кнопка серая и не нажимается.
+  const lenta = read("components/admin/lead-timeline.tsx");
+  assert.match(lenta, /disabled=\{pending \|\| !text\.trim\(\)\}/);
 });
 
 test("«новый» бывает только у свободного лида", () => {

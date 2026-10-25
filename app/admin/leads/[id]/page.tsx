@@ -14,17 +14,16 @@ import {
   takeOverTalkAction,
   take,
   toggleAutoReminder,
-  writeToClientAction,
 } from "./actions";
 import { QuoteCard } from "@/components/admin/quote-card";
 import { AdminShell } from "@/components/admin/shell";
-import { TalkChat } from "@/components/admin/talk-chat";
+import { LeadTimeline } from "@/components/admin/lead-timeline";
+import { buildTimeline, channelsOf, reminderEvents, stageEvents } from "@/lib/admin/lead-timeline";
 import type { VoidReason } from "@/lib/partners/rules";
 import { clientById, partnerById } from "@/lib/partners/store";
 import { partnerClientsDict } from "@/content/admin-panel/partner-clients";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { HelpHint } from "@/components/admin/help-link";
-import { LeadThread } from "@/components/admin/lead-thread";
 import { helpAnchor } from "@/lib/admin/help";
 import { pick, tr, type PanelLocale, type Tr } from "@/lib/admin/i18n";
 import {
@@ -47,6 +46,8 @@ import { record } from "@/lib/admin/audit";
 import { clock, mayTake } from "@/lib/admin/lead-queue";
 import { nightShareFor, queueState } from "@/lib/admin/lead-queue-store";
 import { BOT_WRITE_MAX, botChatOf } from "@/lib/qualify/bot-inbox-store";
+import { MAX_BODY } from "@/lib/admin/messages";
+import { STAFF_REPLY_MAX } from "@/lib/admin/outreach-talk-store";
 import { requestIp, requireStaff } from "@/lib/admin/guard";
 import { quoteForLead } from "@/lib/admin/quote";
 import { STATUSES, leadById } from "@/lib/admin/leads";
@@ -257,6 +258,32 @@ export default async function LeadPage({
   const ss = pick(salesStagesDict, locale);
   const marked = markResultText(markResult, ss);
   const open = reminders.filter((item) => !item.done_at);
+
+  // Лента (lib/admin/lead-timeline): переписка касания — только тому, за кем
+  // лид, как было у «Первички по касанию»; напоминания — ему же.
+  const talkMine = talk && mine ? talk : null;
+  const nameOf = (id: string | null) => (id ? (colleagues.find((c) => c.id === id)?.display_name ?? null) : null);
+  const timeline = buildTimeline({
+    created: lead.created_at,
+    touch: talkMine?.lines ?? [],
+    notes: messages.map((m) => ({
+      id: m.id,
+      at: m.created_at,
+      author: m.author_name,
+      admin: m.author_role === "admin",
+      own: m.author_staff_id === staff.id,
+      body: m.body,
+      edited: Boolean(m.edited_at),
+    })),
+    events: [
+      ...stageEvents(deal).map((item) =>
+        item.type === "event" && item.event.kind === "stage" ? { ...item, event: { ...item.event, by: nameOf(item.event.by) } } : item,
+      ),
+      ...(mine ? reminderEvents(reminders) : []),
+    ],
+  });
+  // Ответить клиенту с рабочего аккаунта — только своему разговору не «Написал сам».
+  const channels = channelsOf({ touch: Boolean(talkMine?.from), bot: Boolean(botChat) });
 
   return (
     <AdminShell staff={staff}>
@@ -557,55 +584,107 @@ export default async function LeadPage({
         ) : null}
       </section>
 
-      {/* ── Первичка по касанию ─────────────────────────────────────── */}
-      {talk && mine ? (
-        <section id="talk" className="mt-4 rounded-xl border border-line bg-surface px-5 py-4">
-          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <p className="flex items-center gap-2 text-xs uppercase tracking-wider text-faint">
-              {t.talk}
-              <HelpHint topic={helpAnchor("/admin/prospect", "replies")} label={t.talkHelp} />
-            </p>
-            <span className="font-mono text-xs text-blue-soft">{talk.host}</span>
+      {/* ── Лента ─────────────────────────────────────────────────────
+          Владелец, 25.10.2026: одна лента и одно поле ответа вместо
+          «Первички по касанию», «Переписки с клиентом» и «Обсуждения»
+          (components/admin/lead-timeline.tsx). Кто что видит — как было у
+          каждого блока: переписку касания и напоминания — тот, за кем лид;
+          обсуждение и ступени — все; переписку из чата — по кнопке, с
+          записью в журнал. Старые ссылки (#talk, #transcript, #thread,
+          #botwrite: бот, «Главная») ведут сюда же. */}
+      <section id="talk" className="mt-4 scroll-mt-24 rounded-xl border border-line bg-surface px-5 py-4">
+        <span id="transcript" className="block scroll-mt-24" aria-hidden />
+        <span id="thread" className="block scroll-mt-24" aria-hidden />
+        <span id="botwrite" className="block scroll-mt-24" aria-hidden />
+        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <p className="flex items-center gap-2 text-xs uppercase tracking-wider text-faint">
+            {t.timeline}
+            <HelpHint topic={helpAnchor("/admin", "timeline")} label={t.timeline} />
+          </p>
+          {talkMine ? <span className="font-mono text-xs text-blue-soft">{talkMine.host}</span> : null}
+          {talkMine ? (
             <span
               className={`ml-auto rounded-full border px-2 py-0.5 text-xs ${
-                talk.aiHandling ? "border-green/40 bg-green/10 text-green" : "border-gold/40 bg-gold/10 text-gold"
+                talkMine.aiHandling ? "border-green/40 bg-green/10 text-green" : "border-gold/40 bg-gold/10 text-gold"
               }`}
             >
-              {talk.aiHandling ? t.aiAnswers : t.youAnswer(talk.handoverReason ?? "")}
+              {talkMine.aiHandling ? t.aiAnswers : t.youAnswer(talkMine.handoverReason ?? "")}
             </span>
-          </div>
+          ) : null}
+        </div>
+        <p className="mt-1 text-xs text-faint">{t.timelineHint}</p>
 
-          {/* Переписка как чат: обновляется сама, ответ уходит с рабочего
-              аккаунта разговора (владелец, 11.10.2026: «чтобы менеджеры не
-              переключались между несколькими аккаунтами»). */}
-          <TalkChat
-            leadId={lead.id}
-            prospectId={talk.prospectId}
-            initial={talk.lines}
-            from={talk.from ? t.from(talk.from.label, talk.from.handle) : null}
-            aiHandling={talk.aiHandling}
-            emptyText={t.talkEmpty}
-            quick={talk.quick}
-          />
+        <LeadTimeline
+          leadId={lead.id}
+          prospectId={talkMine ? talkMine.prospectId : null}
+          initial={timeline}
+          channels={channels}
+          from={talkMine?.from ? t.from(talkMine.from.label, talkMine.from.handle) : null}
+          aiHandling={talkMine ? talkMine.aiHandling : false}
+          quick={talkMine ? talkMine.quick : []}
+          limits={{ touch: STAFF_REPLY_MAX, bot: BOT_WRITE_MAX, note: MAX_BODY }}
+          chat={
+            transcript ? (
+              transcript.length ? (
+                <div className="mt-3 rounded-lg border border-line-soft px-3 py-3">
+                  <p className="text-xs text-faint">{t.chatEarlier}</p>
+                  <div className="mt-2 flex flex-col gap-3">
+                    {transcript.map((line, i) => (
+                      <div
+                        key={i}
+                        className={
+                          line.role === "user"
+                            ? "max-w-[85%] self-start rounded-xl rounded-bl-sm bg-surface-2 px-4 py-2.5"
+                            : "max-w-[85%] self-end rounded-xl rounded-br-sm border border-line px-4 py-2.5"
+                        }
+                      >
+                        <p className="text-[0.7rem] uppercase tracking-wider text-faint">
+                          {line.role === "user" ? t.client : t.assistant}
+                        </p>
+                        {/* whitespace-pre-wrap: человек писал абзацами, и склеенный
+                            в одну строку разговор читается вдвое дольше. */}
+                        <p className="mt-1 whitespace-pre-wrap text-sm text-text">{line.content}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="mt-3 text-xs text-faint">{t.viewLogged}</p>
+                </div>
+              ) : (
+                <p className="mt-2 text-sm text-muted">{t.noTranscript}</p>
+              )
+            ) : reveals ? (
+              <div className="mt-2 flex flex-wrap items-center gap-3">
+                <form action={revealTranscriptAction}>
+                  <input type="hidden" name="lead" value={lead.id} />
+                  <button type="submit" className={BUTTON}>
+                    {t.showTranscript}
+                  </button>
+                </form>
+                <span className="text-xs text-faint">{t.transcriptHint}</span>
+              </div>
+            ) : (
+              <p className="mt-2 text-sm text-muted">{free ? t.takeForTranscript : t.heldByOther}</p>
+            )
+          }
+        />
 
+        {talkMine ? (
           <div className="mt-3 flex flex-wrap items-center gap-3">
-            {talk.aiHandling ? (
+            {talkMine.aiHandling ? (
               <>
                 <form action={takeOverTalkAction}>
                   <input type="hidden" name="lead" value={lead.id} />
-                  <input type="hidden" name="prospect" value={talk.prospectId} />
+                  <input type="hidden" name="prospect" value={talkMine.prospectId} />
                   <button type="submit" className={BUTTON}>
                     {t.takeOverTalk}
                   </button>
                 </form>
-                <span className="text-xs text-faint">
-                  {t.aiNote}
-                </span>
+                <span className="text-xs text-faint">{t.aiNote}</span>
               </>
-            ) : talk.target ? (
+            ) : talkMine.target ? (
               <>
                 <a
-                  href={`https://t.me/${talk.target.replace(/^@/, "")}`}
+                  href={`https://t.me/${talkMine.target.replace(/^@/, "")}`}
                   target="_blank"
                   rel="noreferrer noopener"
                   className={BUTTON}
@@ -613,96 +692,11 @@ export default async function LeadPage({
                   {t.openTelegram}
                 </a>
                 <span className="text-xs text-faint">
-                  {talk.from ? t.telegramFrom(t.from(talk.from.label, talk.from.handle)) : t.telegramNote}
+                  {talkMine.from ? t.telegramFrom(t.from(talkMine.from.label, talkMine.from.handle)) : t.telegramNote}
                 </span>
               </>
             ) : null}
           </div>
-        </section>
-      ) : null}
-
-      {/* ── Переписка с клиентом ────────────────────────────────────── */}
-      <section
-        id="transcript"
-        className="mt-4 rounded-xl border border-line bg-surface px-5 py-4"
-      >
-        <p className="text-xs uppercase tracking-wider text-faint">{t.transcript}</p>
-
-        {transcript ? (
-          transcript.length ? (
-            <>
-              <div className="mt-3 flex flex-col gap-3">
-                {transcript.map((line, i) => (
-                  <div
-                    key={i}
-                    className={
-                      line.role === "user"
-                        ? "max-w-[85%] self-start rounded-xl rounded-bl-sm bg-surface-2 px-4 py-2.5"
-                        : "max-w-[85%] self-end rounded-xl rounded-br-sm border border-line px-4 py-2.5"
-                    }
-                  >
-                    <p className="text-[0.7rem] uppercase tracking-wider text-faint">
-                      {line.role === "user" ? t.client : t.assistant}
-                    </p>
-                    {/* whitespace-pre-wrap: человек писал абзацами, и склеенный
-                        в одну строку разговор читается вдвое дольше. */}
-                    <p className="mt-1 whitespace-pre-wrap text-sm text-text">{line.content}</p>
-                  </div>
-                ))}
-              </div>
-              <p className="mt-3 text-xs text-faint">{t.viewLogged}</p>
-            </>
-          ) : (
-            <p className="mt-2 text-sm text-muted">
-              {t.noTranscript}
-            </p>
-          )
-        ) : reveals ? (
-          <div className="mt-2 flex flex-wrap items-center gap-3">
-            <form action={revealTranscriptAction}>
-              <input type="hidden" name="lead" value={lead.id} />
-              <button type="submit" className={BUTTON}>
-                {t.showTranscript}
-              </button>
-            </form>
-            <span className="text-xs text-faint">
-              {t.transcriptHint}
-            </span>
-          </div>
-        ) : (
-          <p className="mt-2 text-sm text-muted">
-            {free
-              ? t.takeForTranscript
-              : t.heldByOther}
-          </p>
-        )}
-
-        {/* Первым написать клиенту, который писал боту студии: от бота, не с
-            личного аккаунта. Дальше — как ответ из «📩 Обращение в бота». */}
-        {botChat ? (
-          <details id="botwrite" className="mt-4 scroll-mt-24">
-            <summary className={`${BUTTON} inline-flex cursor-pointer list-none items-center gap-2`}>
-              ✍️ {t.botWrite}
-            </summary>
-            <form action={writeToClientAction} className="mt-3 flex max-w-xl flex-col gap-2">
-              <input type="hidden" name="lead" value={lead.id} />
-              <textarea
-                name="text"
-                required
-                rows={4}
-                maxLength={BOT_WRITE_MAX}
-                placeholder={t.botWritePlaceholder}
-                className="rounded-lg border border-line bg-ink px-3 py-2 text-sm text-text outline-none focus:border-green/50"
-              />
-              <p className="flex items-center gap-2 text-xs leading-snug text-faint">
-                {t.botWriteHint}
-                <HelpHint topic={helpAnchor("/admin", "bot-write")} label={t.botWriteHelp} />
-              </p>
-              <button type="submit" className={`${BUTTON} self-start`}>
-                {t.botWriteSend}
-              </button>
-            </form>
-          </details>
         ) : null}
       </section>
 
@@ -802,8 +796,6 @@ export default async function LeadPage({
           </form>
         </section>
       ) : null}
-
-      <LeadThread leadId={lead.id} messages={messages} staff={staff} />
 
       {lead.opening_line ? (
         <p className="mt-6 max-w-3xl rounded-xl border border-line bg-surface px-5 py-4 text-sm leading-relaxed">

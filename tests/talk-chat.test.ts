@@ -38,7 +38,7 @@ test("ответ ложится в очередь скаута, ИИ замол�
 test("снятое до отправки в ленте не показывается, у своего видно статус", () => {
   const view = between(read("lib/admin/outreach-talk-store.ts"), "export async function talkForLead(", "\n}\n");
   assert.match(view, /\.filter\(\(row\) => !\(row\.direction === "out" && row\.status === "done" && row\.failure\)\)/);
-  const chat = read("components/admin/talk-chat.tsx");
+  const chat = read("components/admin/lead-timeline.tsx");
   assert.match(chat, /line\.status === "queued"[\s\S]*?t\.lineQueued/);
   assert.match(chat, /line\.status === "failed"[\s\S]*?t\.lineFailed/);
 });
@@ -52,12 +52,18 @@ test("права: ответить и читать свежую ленту мо�
   assert.match(route, /if \(!lead \|\| !canEdit\(lead, staff\)\)/);
 });
 
-test("чат обновляется сам, а поле ответа есть только у разговора на рабочем аккаунте", () => {
-  const chat = read("components/admin/talk-chat.tsx");
+test("лента обновляется сама, а «Клиенту с аккаунта» есть только у своего разговора на рабочем аккаунте", () => {
+  const chat = read("components/admin/lead-timeline.tsx");
   assert.match(chat, /fetch\(`\/admin\/leads\/\$\{leadId\}\/talk`/);
   assert.match(chat, /document\.visibilityState !== "visible"/);
-  assert.match(chat, /\{from \? \(\s*<div className="mt-3">\s*<textarea/);
-  assert.match(read("app/admin/leads/[id]/page.tsx"), /<TalkChat[\s\S]*?from=\{talk\.from \? t\.from\(talk\.from\.label, talk\.from\.handle\) : null\}/);
+  const page = read("app/admin/leads/[id]/page.tsx");
+  assert.match(page, /const talkMine = talk && mine \? talk : null;/);
+  assert.match(page, /channelsOf\(\{ touch: Boolean\(talkMine\?\.from\), bot: Boolean\(botChat\) \}\)/);
+  assert.match(page, /<LeadTimeline[\s\S]*?from=\{talkMine\?\.from \? t\.from\(talkMine\.from\.label, talkMine\.from\.handle\) : null\}/);
+  // Ответ с аккаунта — тем же действием с теми же правами.
+  const actions = read("app/admin/leads/[id]/actions.ts");
+  const send = between(actions, "export async function sendFromCardAction(", "\n}\n");
+  assert.match(send, /return replyInTalkAction\(leadId, prospectId, body\);/);
 });
 
 test("бот зовёт ответить в карточке, когда разговор на рабочем аккаунте", () => {

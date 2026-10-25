@@ -102,12 +102,15 @@ test("«Написать клиенту в бот»: первым, от бота
   assert.match(after, /human_at: new Date\(\)\.toISOString\(\), human_by: staff\.id/);
   assert.match(after, /record\("bot\.replied"/);
 
+  // «Написать клиенту в бот» — теперь «Клиенту от бота студии» в поле ответа ленты карточки.
   const actions = read("app/admin/leads/[id]/actions.ts");
-  const action = actions.slice(actions.indexOf("export async function writeToClientAction"));
-  assert.match(action, /if \(!lead \|\| !canReveal\(lead, staff\)\) redirect/, "свободный лид — только владельцу, чужой — не менеджеру");
+  const action = actions.slice(actions.indexOf("export async function sendFromCardAction"));
+  assert.match(action, /if \(!canReveal\(lead, staff\)\) return \{ ok: false, reason: "forbidden" \}/, "свободный лид — только владельцу, чужой — не менеджеру");
+  assert.match(action, /await writeToClient\(\{ tgUsername: lead\.tg_username, staff, text: String\(body \?\? ""\) \}\)/);
   const page = read("app/admin/leads/[id]/page.tsx");
   assert.match(page, /const botChat = reveals && lead\.tg_username \? await botChatOf\(lead\.tg_username\)/);
-  assert.match(page, /\{botChat \? \(\s*<details id="botwrite"/);
+  assert.match(page, /bot: Boolean\(botChat\)/);
+  assert.match(page, /<span id="botwrite"/, "старые ссылки #botwrite ведут в ленту");
 });
 
 test("не текст от клиента — голосовое, фото, файл — владельцу и руководителю копией, не мимо", async () => {
