@@ -1,5 +1,6 @@
 import { PUSH_TIMEOUT_MS, privateChatId, pushPayload, type PushButton } from "@/lib/admin/push";
 import { deliverAll, subscribedChats, type FanoutResult, type StoredSubscription } from "@/lib/admin/push-store";
+import { noteBell } from "@/lib/admin/bell-store";
 import { siteUrl } from "@/lib/seo";
 
 /**
@@ -21,6 +22,9 @@ import { siteUrl } from "@/lib/seo";
  * Telegram пуш никогда не ждёт: вызов не возвращает обещание, всё
  * происходит в фоне, отправка в службу пуша ограничена пятью секундами, а
  * ошибки только пишутся в лог.
+ *
+ * Отсюда же — колокольчик в шапке панели (lib/admin/bell-store.ts): то же
+ * сообщение строкой у сотрудника, с подпиской на пуш или без.
  */
 
 type Deps = {
@@ -29,6 +33,8 @@ type Deps = {
   site?: string;
   /** Сколько ждать всё вместе — для тестов. */
   timeoutMs?: number;
+  /** Колокольчик: по умолчанию noteBell, false — не писать (тесты). */
+  bell?: typeof noteBell | false;
 };
 
 const inFlight = new Set<Promise<unknown>>();
@@ -68,6 +74,13 @@ export function mirrorToPush(
 ): void {
   // Группа или канал — даже в базу не ходим.
   if (privateChatId(chatId) === null) return;
+  const bell = deps.bell === undefined ? noteBell : deps.bell;
+  if (bell) {
+    const noted = bell(chatId, html, rows)
+      .catch((error: unknown) => console.error("колокольчик: не записал —", error instanceof Error ? error.message : error))
+      .finally(() => inFlight.delete(noted));
+    inFlight.add(noted);
+  }
   let timer: ReturnType<typeof setTimeout> | undefined;
   const run = Promise.race([
     mirror(chatId, html, rows, options.silent ?? false, deps),

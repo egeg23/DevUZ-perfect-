@@ -60,6 +60,7 @@ import { bloggerPass } from "@/lib/bloggers/run";
 import { refreshStudioToken } from "@/lib/bloggers/direct";
 import { runTelegramAgent } from "@/lib/bloggers/tg-agent";
 import { secretOk } from "@/lib/secret-ok";
+import { pruneBell } from "@/lib/admin/bell-store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -381,6 +382,11 @@ async function sweep(): Promise<Response> {
   // сотрудникам с рекомендациями (lib/admin/staff-week-store).
   after(async () => {
     await sendStaffWeek(new Date()).catch((error) => console.error("сотрудники за неделю:", error));
+  });
+  // Колокольчик в шапке (lib/admin/bell-store): строки старше 30 дней — из
+  // базы, не чаще раза в час (pruneBell помнит, когда чистил).
+  after(async () => {
+    await pruneBell(new Date()).catch((error) => console.error("колокольчик, чистка:", error));
   });
   // Уровни менеджеров — снимок очков раз в час (lib/admin/levels-store):
   // «Главная» читает одну строку, а не всю историю.
