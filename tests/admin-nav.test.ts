@@ -52,9 +52,9 @@ test("группы и вкладки не меняют, что кому откр
       `${role}: группы не по порядку`,
     );
   }
-  // У владельца разделов больше двадцати — а пунктов в меню 17, остальное вкладками.
+  // У владельца разделов больше двадцати — а пунктов в меню 18 (17 и «Входящие»), остальное вкладками.
   assert.ok(navOf({ role: "admin" }).length > 20);
-  assert.equal(menuOf({ role: "admin" }).flatMap((g) => g.sections).length, 17);
+  assert.equal(menuOf({ role: "admin" }).flatMap((g) => g.sections).length, 18);
   assert.equal(menuOf({ role: "admin" }).length, NAV_GROUPS.length);
 });
 

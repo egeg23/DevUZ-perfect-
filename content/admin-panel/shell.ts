@@ -65,6 +65,7 @@ export const shellDict = defineDict({
 export const navGroupDict = defineDict({
   home: { ru: "Главная", uz: "Bosh sahifa", pl: "Pulpit" },
   tasks: { ru: "Задачи", uz: "Vazifalar", pl: "Zadania" },
+  inbox: { ru: "Входящие", uz: "Kiruvchi", pl: "Skrzynka" },
   leads: { ru: "Лиды", uz: "Lidlar", pl: "Leady" },
   prospect: { ru: "Холодные касания", uz: "Sovuq aloqalar", pl: "Zimne kontakty" },
   mockups: { ru: "Макеты", uz: "Maketlar", pl: "Makiety" },

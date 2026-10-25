@@ -353,8 +353,29 @@ export async function writeToClient(input: {
   if (badOurLinks(words).length) return "bot_bad_link";
   const chat = await botChatOf(input.tgUsername);
   if (!chat) return "bot_no_chat";
-  if (!(await sendMessage(chat, esc(words)))) return "bot_failed";
-  await afterHuman({ clientChat: chat, staff: input.staff, words, kind: "text", via: "panel", fromChat: null });
+  return writeToChat({ chat, staff: input.staff, words });
+}
+
+/**
+ * Ответ клиенту бота по его чату — из «Входящих» (lib/admin/inbox-store.ts):
+ * там клиент известен по чату, а не по нику лида. Проверки и всё, что после
+ * ответа, — те же, что у writeToClient. Кто вправе — решает действие.
+ */
+export async function writeToBotChat(input: {
+  chat: number;
+  staff: { id: string; display_name: string };
+  text: string;
+}): Promise<BotWriteResult> {
+  const words = input.text.replace(/\r\n/g, "\n").trim().slice(0, BOT_WRITE_MAX);
+  if (!words) return "bot_empty";
+  if (badOurLinks(words).length) return "bot_bad_link";
+  if (!Number.isSafeInteger(input.chat) || input.chat <= 0) return "bot_no_chat";
+  return writeToChat({ chat: input.chat, staff: input.staff, words });
+}
+
+async function writeToChat(input: { chat: number; staff: { id: string; display_name: string }; words: string }): Promise<BotWriteResult> {
+  if (!(await sendMessage(input.chat, esc(input.words)))) return "bot_failed";
+  await afterHuman({ clientChat: input.chat, staff: input.staff, words: input.words, kind: "text", via: "panel", fromChat: null });
   return "bot_sent";
 }
 

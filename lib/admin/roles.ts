@@ -68,6 +68,7 @@ export const ROLE_BADGE: Record<Role, Tr> = {
 export const NAV_GROUPS = [
   "home",
   "tasks",
+  "inbox",
   "leads",
   "prospect",
   "mockups",
@@ -126,6 +127,10 @@ export const SECTIONS: readonly Section[] = [
   // а «История задач» — страницей без пункта меню. Группа из одного раздела —
   // просто ссылка (isSingle в lib/admin/nav.ts).
   { href: "/admin/tasks", label: { ru: "Задачи", uz: "Vazifalar", pl: "Zadania" }, roles: EVERYONE, group: "tasks" },
+  // Входящие — всё, что ждёт ответа человека, одной очередью (владелец,
+  // 25.10.2026: «Погнали по порядку», на «у HubSpot и Close всё, на что надо
+  // ответить, — одной очередью»). Своей кнопкой рядом с «Задачами».
+  { href: "/admin/inbox", label: { ru: "Входящие", uz: "Kiruvchi", pl: "Skrzynka" }, roles: EVERYONE, group: "inbox" },
   { href: "/admin", label: { ru: "Лиды", uz: "Lidlar", pl: "Leady" }, roles: EVERYONE, group: "leads" },
   // Названия — как заголовки страниц (владелец, 23.10.2026): «Касания»
   // было «Холодными касаниями» только на странице, «Поиск» новичок путал с

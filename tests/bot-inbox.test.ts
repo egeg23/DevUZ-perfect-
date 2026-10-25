@@ -94,8 +94,11 @@ test("«Написать клиенту в бот»: первым, от бота
   const write = store.slice(store.indexOf("export async function writeToClient"));
   assert.match(write, /if \(!words\) return "bot_empty";/);
   assert.match(write, /if \(!chat\) return "bot_no_chat";/, "клиенту, который боту не писал, бот первым не напишет");
-  assert.match(write, /sendMessage\(chat, esc\(words\)\)/, "текст экранируется");
-  assert.match(write, /afterHuman\(\{ clientChat: chat, staff: input\.staff, words, kind: "text", via: "panel", fromChat: null \}\)/, "дальше — как ответ из бота: модель молчит, журнал, карточка");
+  // Отправка — общая с ответом из «Входящих» (writeToBotChat → writeToChat).
+  assert.match(write, /return writeToChat\(\{ chat, staff: input\.staff, words \}\);/);
+  const send = store.slice(store.indexOf("async function writeToChat("));
+  assert.match(send, /sendMessage\(input\.chat, esc\(input\.words\)\)/, "текст экранируется");
+  assert.match(send, /afterHuman\(\{ clientChat: input\.chat, staff: input\.staff, words: input\.words, kind: "text", via: "panel", fromChat: null \}\)/, "дальше — как ответ из бота: модель молчит, журнал, карточка");
   const chatOf = store.slice(store.indexOf("export async function botChatOf"), store.indexOf("export type BotWriteResult"));
   assert.match(chatOf, /\.is\("blocked_at", null\)/);
   const after = store.slice(store.indexOf("async function afterHuman"), store.indexOf("export const BOT_WRITE_MAX"));
