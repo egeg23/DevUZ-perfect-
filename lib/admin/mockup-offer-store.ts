@@ -1,4 +1,4 @@
-import { OFFER_MS, mockupLinks, type MockupLink, type OfferLang } from "@/lib/admin/mockup-offer";
+import { OFFER_MS, foreignMockup, mockupLinks, type MockupLink, type MockupOwner, type OfferLang } from "@/lib/admin/mockup-offer";
 import { scanFields } from "@/lib/admin/mockup-scan";
 import { SHOWCASE_HOST, showcaseCases } from "@/lib/admin/mockups";
 import { normalizeHandle } from "@/lib/admin/outreach-talk";
@@ -26,7 +26,7 @@ import { serviceClient } from "@/lib/supabase";
  * lib/admin/mockup-offer-run.ts, кнопки бота — mockup-offer-bot.ts.
  */
 
-type Resolved = { ref: string; name: string; url: string; lang: OfferLang | null };
+type Resolved = { ref: string; name: string; url: string; lang: OfferLang | null; owner: MockupOwner };
 
 async function resolve(link: MockupLink): Promise<Resolved | null> {
   if (link.kind === "showcase") {
@@ -35,22 +35,31 @@ async function resolve(link: MockupLink): Promise<Resolved | null> {
       .map((c) => ({ c, path: c.url!.slice(SHOWCASE_HOST.length).replace(/\/+$/, "") }))
       .filter(({ path }) => path && (link.path === path || link.path.startsWith(`${path}/`)))
       .sort((a, b) => b.path.length - a.path.length)[0]?.c;
-    return item ? { ref: `s:${item.slug}`, name: item.name, url: item.url!, lang: null } : null;
+    return item
+      ? { ref: `s:${item.slug}`, name: item.name, url: item.url!, lang: null, owner: { prospectId: null, hosts: [], names: [item.name] } }
+      : null;
   }
   const db = serviceClient();
   if (!db) return null;
   const { data } = await db
     .from("protos")
-    .select("id, name, locale, status, token")
+    .select("id, name, locale, status, token, prospect_id, facts")
     .eq("token", link.token)
     .neq("status", "draft")
     .maybeSingle();
   if (!data) return null;
+  const facts = (data.facts ?? {}) as { source?: unknown; name?: unknown };
+  const text = (v: unknown) => (typeof v === "string" && v.trim() ? [v] : []);
   return {
     ref: `p:${data.id}`,
     name: String(data.name ?? ""),
     url: `${siteUrl}/proto/${data.token}`,
     lang: data.locale === "uz" ? "uz" : null,
+    owner: {
+      prospectId: (data.prospect_id as string | null) ?? null,
+      hosts: text(facts.source),
+      names: [...text(data.name), ...text(facts.name)],
+    },
   };
 }
 
@@ -80,6 +89,8 @@ export async function recordMockupSent(input: {
   let client = input.client || input.peer || "";
   let leadId = input.leadId ?? null;
   let lang: OfferLang = "ru";
+  // С чем сверять, свой ли это макет: касание, сайт, название. @ник — не название.
+  const who = { prospectId: input.prospectId, host: null as string | null, names: input.client ? [input.client] : [] };
   if (input.prospectId) {
     const { data: p } = await db
       .from("prospects")
@@ -88,6 +99,8 @@ export async function recordMockupSent(input: {
       .maybeSingle();
     if (p) {
       client = String(p.label || p.host || client);
+      who.host = (p.host as string | null) ?? null;
+      if (p.label) who.names = [String(p.label)];
       leadId = leadId ?? ((p.lead_id as string | null) ?? null);
       if ((p.walked as { lang?: string } | null)?.lang === "uz") lang = "uz";
     }
@@ -98,6 +111,8 @@ export async function recordMockupSent(input: {
   for (const link of links) {
     const mockup = await resolve(link);
     if (!mockup) continue;
+    // Пример чужого проекта — не его макет: акции нет (lib/admin/mockup-offer, foreignMockup).
+    if (foreignMockup(mockup.owner, who)) continue;
     const { error } = await db.from("mockup_offers").insert({
       mockup_ref: mockup.ref,
       mockup_name: mockup.name,

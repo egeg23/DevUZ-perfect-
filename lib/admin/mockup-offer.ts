@@ -172,6 +172,57 @@ export function mockupLinks(text: string): MockupLink[] {
   return out;
 }
 
+/**
+ * Чей макет: для кого его собирали. Прототип — касание, сайт и название
+ * (protos.prospect_id, facts.source, name); проект витрины — его название.
+ */
+export type MockupOwner = { prospectId: string | null; hosts: readonly string[]; names: readonly string[] };
+
+/** Кому ушла ссылка: касание, сайт и название компании; @ник сюда не идёт. */
+export type MockupClient = { prospectId: string | null; host: string | null; names: readonly string[] };
+
+/** «https://www.Karomat-restaurant.uz/menu» → «karomat-restaurant.uz». */
+function hostOf(raw: string): string {
+  const m = raw.trim().toLowerCase().match(/^(?:[a-z]+:\/\/)?(?:www\.)?([a-z0-9.-]+\.[a-z]{2,})(?:[/:?#]|$)/);
+  return m ? m[1] : "";
+}
+
+/** Только буквы и цифры: «БИН•БЭГ Enotmebel» → «бинбэгenotmebel». */
+const bareName = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "");
+
+/** Ключи для сверки: название до « · » и сайт без зоны («kmediwell.uz» → «kmediwell»). */
+function keysOf(names: readonly string[], hosts: readonly string[]): string[] {
+  const out = [
+    ...names.map((n) => bareName(n.split(" · ")[0])),
+    ...hosts.map(hostOf).filter(Boolean).map((h) => bareName(h.replace(/\.[a-z]{2,}$/, ""))),
+  ];
+  return [...new Set(out.filter((k) => k.length >= 3))];
+}
+
+/**
+ * Ссылка — пример чужого проекта, а не макет этого клиента (владелец,
+ * 25.10.2026: «Не запускать акцию когда отправляем пример чужого проекта»).
+ * Повод: Александр прислал YANGI KUN mebel в пример витрину Comfort Mebel, и
+ * клиенту ушли «Спецусловия по макету» на чужой макет.
+ *
+ * Свой — то же касание, тот же сайт или название одного внутри другого
+ * («Karomat» — «Karomat oilaviy restorani»). Чужой — только когда сверить
+ * есть с чем и ничего не сошлось: кому ушло, не знаем (только @ник) или у
+ * макета нет ни сайта, ни названия — акция идёт, как раньше.
+ */
+export function foreignMockup(owner: MockupOwner, client: MockupClient): boolean {
+  if (owner.prospectId && client.prospectId && owner.prospectId === client.prospectId) return false;
+  const clientHost = client.host ? hostOf(client.host) : "";
+  if (clientHost && owner.hosts.some((h) => hostOf(h) === clientHost)) return false;
+  const mine = keysOf(owner.names, owner.hosts);
+  const theirs = keysOf(client.names, client.host ? [client.host] : []);
+  if (!mine.length || !theirs.length) return false;
+  const same = mine.some((m) =>
+    theirs.some((t) => m === t || (m.length >= 4 && t.includes(m)) || (t.length >= 6 && m.includes(t))),
+  );
+  return !same;
+}
+
 /** Есть ли в тексте ссылка на макет — для скаута, без разбора. */
 export function hasMockupLink(text: string): boolean {
   return mockupLinks(text).length > 0;
@@ -318,7 +369,7 @@ function promoAnnounce(lang: OfferLang, expiresAt: string, own: OwnPromo | null)
           `Shu muddatda shartnoma imzolasak, narx shunday qoladi. Keyin odatiy narx amal qiladi.`,
         ].join("\n")
       : [
-          `Спецусловия по макету — ${OFFER_HOURS} часа, до ${until} по Ташкенту:`,
+          `Спецусловия по макету — ${OFFER_HOURS} ${plural(OFFER_HOURS, "час", "часа", "часов")}, до ${until} по Ташкенту:`,
           ...ownLines(own, "ru").map((x) => `• ${x}.`),
           ...(own.cash ? [`• ${cashLine(own, "ru")}`] : []),
           `Если подпишем договор до этого времени, цена останется такой. Потом — обычная цена.`,
@@ -335,7 +386,7 @@ function promoAnnounce(lang: OfferLang, expiresAt: string, own: OwnPromo | null)
     ].join("\n");
   }
   return [
-    `Спецусловия по макету — ${OFFER_HOURS} часа, до ${until} по Ташкенту:`,
+    `Спецусловия по макету — ${OFFER_HOURS} ${plural(OFFER_HOURS, "час", "часа", "часов")}, до ${until} по Ташкенту:`,
     `• лендинг по этому макету со всем функционалом и ${l.addons} допами на выбор — ${l.price} $ вместо ${l.regular} $;`,
     `• полноразмерный корпоративный сайт — ${c.price} $ вместо ${c.regular} $.`,
     `Если подпишем договор до этого времени, цена останется такой. Потом — обычные цены.`,
