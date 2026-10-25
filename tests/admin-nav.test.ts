@@ -7,7 +7,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { AdminShell } from "@/components/admin/shell";
 import { navGroupDict } from "@/content/admin-panel/shell";
 import { PANEL_LOCALES, pick, type PanelLocale } from "@/lib/admin/i18n";
-import { findSections, findable, foldName, isSingle, menuOf } from "@/lib/admin/nav";
+import { findSections, findable, foldName, isSingle, menuOf, parentsOf, tabsOf } from "@/lib/admin/nav";
 import { NAV_GROUPS, ROLES, SECTIONS, navOf, type Role } from "@/lib/admin/roles";
 import type { Staff } from "@/lib/admin/session";
 
@@ -37,12 +37,14 @@ test("каждый раздел — в одной из групп меню, и �
   );
 });
 
-test("группы не меняют, что кому открыто: те же разделы, что navOf, в порядке групп", () => {
+test("группы и вкладки не меняют, что кому открыто: меню плюс вкладки — те же разделы, что navOf", () => {
   for (const role of ROLES) {
     const who = { role };
     const menu = menuOf(who);
     const flat = menu.flatMap((g) => g.sections.map((s) => s.href));
-    assert.deepEqual([...flat].sort(), navOf(who).map((s) => s.href).sort(), `${role}: разделы в меню не те`);
+    const tabs = tabsOf(who).flatMap((family) => family.slice(1).map((s) => s.href));
+    assert.equal(new Set([...flat, ...tabs]).size, flat.length + tabs.length, `${role}: раздел и в меню, и вкладкой`);
+    assert.deepEqual([...flat, ...tabs].sort(), navOf(who).map((s) => s.href).sort(), `${role}: разделы в меню не те`);
     assert.ok(menu.every((g) => g.sections.length > 0), `${role}: пустая группа`);
     assert.deepEqual(
       menu.map((g) => g.group),
@@ -50,9 +52,48 @@ test("группы не меняют, что кому открыто: те же 
       `${role}: группы не по порядку`,
     );
   }
-  // У владельца разделов больше двадцати — а групп в шапке шесть.
+  // У владельца разделов больше двадцати — а пунктов в меню 17, остальное вкладками.
   assert.ok(navOf({ role: "admin" }).length > 20);
+  assert.equal(menuOf({ role: "admin" }).flatMap((g) => g.sections).length, 17);
   assert.equal(menuOf({ role: "admin" }).length, NAV_GROUPS.length);
+});
+
+/**
+ * Владелец, 25.10.2026, на «какие разделы можно объединить»: «Погнали по
+ * порядку». Редкое — вкладкой своего раздела, адреса и права прежние.
+ */
+test("вкладки: редкие разделы — над страницей своего, у каждого роль та же", () => {
+  const family = (who: Parameters<typeof tabsOf>[0], href: string) =>
+    tabsOf(who).find((f) => f[0].href === href)?.map((s) => s.href);
+  const admin = { role: "admin" as const };
+  assert.deepEqual(family(admin, "/admin/prospect"), ["/admin/prospect", "/admin/scout", "/admin/talks", "/admin/accounts"]);
+  assert.deepEqual(family(admin, "/admin/mockups"), ["/admin/mockups", "/admin/proto"]);
+  assert.deepEqual(family(admin, "/admin/projects"), ["/admin/projects", "/admin/contracts"]);
+  assert.deepEqual(family(admin, "/admin/finance"), ["/admin/finance", "/admin/expenses"]);
+  assert.deepEqual(family(admin, "/admin/orders"), ["/admin/orders", "/admin/releases"]);
+  assert.deepEqual(family(admin, "/admin/traffic"), ["/admin/traffic", "/admin/ads"]);
+  assert.deepEqual(family(admin, "/admin/team"), ["/admin/team", "/admin/candidates"]);
+  assert.deepEqual(family(admin, "/admin/stats"), ["/admin/stats", "/admin/stages"]);
+  assert.deepEqual(family(admin, "/admin/audit"), ["/admin/audit", "/admin/usage"]);
+  // Менеджеру — только положенное: без «Аккаунтов», «Прототипов», «Расходов».
+  const manager = { role: "manager" as const };
+  assert.deepEqual(family(manager, "/admin/prospect"), ["/admin/prospect", "/admin/scout", "/admin/talks"]);
+  assert.equal(family(manager, "/admin/mockups"), undefined, "одна вкладка — не выбор");
+  assert.equal(family(manager, "/admin/finance"), undefined);
+  // Вкладка у вкладки не бывает, и родитель — раздел из списка.
+  for (const s of SECTIONS.filter((x) => x.parent)) {
+    const parent = SECTIONS.find((x) => x.href === s.parent);
+    assert.ok(parent && !parent.parent, `${s.href}: родитель ${s.parent}`);
+    assert.equal(s.group, parent!.group, `${s.href}: группа не родителя`);
+  }
+  assert.equal(parentsOf(admin)["/admin/contracts"], "/admin/projects");
+});
+
+test("закрыт раздел — его вкладка встаёт в меню сама, а не теряется", () => {
+  const who = { role: "manager" as const, section_access: { "/admin/prospect": false } };
+  const prospect = menuOf(who).find((g) => g.group === "prospect");
+  assert.deepEqual(prospect?.sections.map((s) => s.href), ["/admin/scout", "/admin/talks"]);
+  assert.equal(tabsOf(who).find((f) => f[0].href === "/admin/prospect"), undefined);
 });
 
 test("группа, где у человека один раздел, — просто ссылка; закрытый раздел группу не рисует", () => {
@@ -64,7 +105,8 @@ test("группа, где у человека один раздел, — про
     assert.ok(isSingle(g), `${group}: не просто ссылка`);
     assert.equal(g.sections[0].href, href);
   }
-  assert.deepEqual(manager.find((g) => g.group === "reports")?.sections.map((s) => s.href), ["/admin/stats", "/admin/stages"]);
+  // «Ступени продажи» — вкладкой «Статистики»: в «Отчётах» у менеджера один пункт, и он ссылкой.
+  assert.deepEqual(manager.find((g) => g.group === "reports")?.sections.map((s) => s.href), ["/admin/stats"]);
   assert.equal(manager.find((g) => g.group === "marketing"), undefined);
   // Обучение выключено для команды — «Команда» у менеджера пропадает целиком.
   const off = menuOf({ role: "manager", sections_off: ["/admin/learn"] });
@@ -75,12 +117,13 @@ test("группа, где у человека один раздел, — про
 test("галочка владельца кладёт открытый раздел в его группу", () => {
   const plain = menuOf({ role: "manager" });
   assert.ok(!plain.some((g) => g.sections.some((s) => s.href === "/admin/traffic")));
-  const granted = menuOf({ role: "manager", section_access: { "/admin/traffic": true, "/admin/talks": false } });
+  const who = { role: "manager" as const, section_access: { "/admin/traffic": true, "/admin/talks": false } };
+  const granted = menuOf(who);
   const marketing = granted.find((g) => g.group === "marketing");
   assert.deepEqual(marketing?.sections.map((s) => s.href), ["/admin/traffic"]);
   assert.ok(isSingle(marketing!), "один открытый раздел группы — ссылка");
-  const sales = granted.find((g) => g.group === "sales")!;
-  assert.ok(!sales.sections.some((s) => s.href === "/admin/talks"), "закрытый галочкой раздел из группы ушёл");
+  const prospect = tabsOf(who).find((f) => f[0].href === "/admin/prospect")!;
+  assert.ok(!prospect.some((s) => s.href === "/admin/talks"), "закрытый галочкой раздел из вкладок ушёл");
 });
 
 const items = (locale: PanelLocale) =>
@@ -109,9 +152,11 @@ test("поиск: сначала начало названия, потом сл�
   const ru = items("ru");
   assert.equal(findSections("", ru).length, SECTIONS.length);
   assert.deepEqual(findSections("сотр", ru).map((i) => i.href), ["/admin/ai-staff"]);
-  // «Продажи» — группа: находятся её разделы и «Ступени продажи».
-  const sales = findSections("продаж", ru).map((i) => i.href);
-  assert.ok(sales.includes("/admin/scout") && sales.includes("/admin/talks") && sales.includes("/admin/stages"));
+  // «Деньги» — группа: находятся все её разделы, вкладки тоже.
+  const money = findSections("деньг", ru).map((i) => i.href);
+  for (const href of ["/admin/projects", "/admin/contracts", "/admin/finance", "/admin/expenses", "/admin/orders", "/admin/releases"]) {
+    assert.ok(money.includes(href), href);
+  }
   // Набрал на другом языке — тоже найдётся, но после своих.
   assert.equal(findSections("umowy", ru)[0]?.href, "/admin/contracts");
   assert.deepEqual(findSections("щщщ", ru), []);
@@ -128,23 +173,43 @@ const staff = (locale: PanelLocale, role: Role): Staff => ({
   panel_locale: locale,
 });
 
-test("шапка владельца: шесть групп вместо двадцати пунктов, открытая группа подсвечена", () => {
+test("шапка владельца: группы вместо двадцати пунктов, открытая группа подсвечена", () => {
   globalThis.__pathname = "/admin/contracts/42";
   const html = renderToStaticMarkup(createElement(AdminShell, { staff: staff("ru", "admin"), children: "x" }));
-  for (const group of ["Продажи", "Деньги", "Маркетинг", "Команда", "Отчёты"]) {
+  for (const group of ["Деньги", "Маркетинг", "Команда", "Отчёты"]) {
     assert.match(html, new RegExp(`aria-haspopup="true"[^>]*>${group}`), `нет группы «${group}»`);
   }
-  // Открытая группа — зелёная, рядом — открытый раздел.
+  assert.doesNotMatch(html, />Продажи</, "группа «Продажи» ушла: её разделы — вкладками");
+  // Открытая группа — зелёная, рядом — открытая вкладка своим именем.
   assert.match(html, /border-green font-medium text-green[^"]*">Деньги<span[^>]*>· Договоры/);
   // Ежедневное — ссылками без списка, сразу за «Главной» и «Задачами».
   for (const [href, name] of [["/admin", "Лиды"], ["/admin/prospect", "Холодные касания"], ["/admin/mockups", "Макеты"]]) {
     assert.match(html, new RegExp(`href="${href}"[^>]*>${name}<`), `${name}: не прямая кнопка`);
   }
-  assert.match(html, /aria-current="page"[^>]*>Договоры</);
+  // «Договоры» — вкладка «Проектов»: в списке группы горит «Проекты».
+  assert.match(html, /aria-current="page"[^>]*>Проекты</);
+  // В карточке договора строки вкладок нет — она только на страницах разделов.
+  assert.doesNotMatch(html, /aria-label="Вкладки раздела"/);
   // Инструкции — ссылкой, без списка.
   assert.match(html, /href="\/admin\/help"[^>]*>Инструкции</);
   assert.match(html, /Найти раздел/);
   assert.match(html, />Меню</);
+});
+
+test("на странице вкладки — строка вкладок раздела, открытая подсвечена; в меню «как раньше» её нет", () => {
+  globalThis.__pathname = "/admin/contracts";
+  const html = renderToStaticMarkup(createElement(AdminShell, { staff: staff("ru", "admin"), children: "x" }));
+  const tabs = /<nav aria-label="Вкладки раздела"[^>]*>([\s\S]*?)<\/nav>/.exec(html)?.[1] ?? "";
+  assert.match(tabs, /href="\/admin\/projects"[^>]*>Проекты</);
+  assert.match(tabs, /href="\/admin\/contracts"[^>]*aria-current="page"[^>]*>Договоры</);
+  for (const [locale, name] of [["uz", "Bo‘lim yorliqlari"], ["pl", "Karty sekcji"]] as const) {
+    const other = renderToStaticMarkup(createElement(AdminShell, { staff: staff(locale, "admin"), children: "x" }));
+    assert.match(other, new RegExp(`aria-label="${name}"`));
+  }
+  const classic = renderToStaticMarkup(
+    createElement(AdminShell, { staff: { ...staff("ru", "admin"), nav_classic: true }, children: "x" }),
+  );
+  assert.doesNotMatch(classic, /aria-label="Вкладки раздела"/);
 });
 
 test("Ctrl+K — по коду клавиши, чтобы работал и на русской раскладке; окна — через портал", () => {

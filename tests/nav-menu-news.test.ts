@@ -9,7 +9,7 @@ import assert from "node:assert/strict";
 import { existsSync, statSync } from "node:fs";
 import { test } from "node:test";
 
-import { navGroupDict, shellDict } from "@/content/admin-panel/shell";
+import { shellDict } from "@/content/admin-panel/shell";
 import { NEWS, navMenuNews, newsActive } from "@/lib/admin/team-news";
 
 const news = NEWS.find((n) => n.id === "2026-10-13-nav-menu");
@@ -33,8 +33,9 @@ test("со скриншотом, подпись влезает в Telegram, на
   const text = navMenuNews();
   const plain = text.replace(/<\/?b>/g, "");
   assert.ok(plain.length < 900, `подпись длиннее предела Telegram: ${plain.length}`);
-  // Объявление ушло 13.10 с тогдашними названиями групп: «Проекты и деньги» с 23.10 зовётся «Деньги».
-  for (const name of [shellDict.navNew.ru, "Найти раздел", shellDict.menu.ru, navGroupDict.sales.ru, "Проекты и деньги"]) {
+  // Объявление ушло 13.10 с тогдашними названиями групп: «Проекты и деньги» с 23.10 зовётся «Деньги»,
+  // «Продажи» с 25.10 разошлись вкладками по своим разделам.
+  for (const name of [shellDict.navNew.ru, "Найти раздел", shellDict.menu.ru, "Продажи", "Проекты и деньги"]) {
     assert.ok(text.includes(`«${name}»`), `в тексте нет «${name}»`);
   }
   assert.match(text, /Ctrl\+K/);

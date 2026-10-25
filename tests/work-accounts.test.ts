@@ -190,7 +190,9 @@ test("в верхнем меню панели открытый раздел по
   assert.equal(sectionOfHref("/admin/leads/42"), "/admin", "карточка лида — раздел «Лиды»");
   const link = read("components/admin/nav-link.tsx");
   // С 14.10.2026 — ещё и сразу по нажатию, до ответа сервера (hq-fixes.test.ts).
-  assert.match(link, /const active = sectionOfHref\(pathname \?\? ""\) === href \|\| pressed;/);
+  assert.match(link, /const here = sectionOfHref\(pathname \?\? ""\);/);
+  // Пункт горит и на своих вкладках (lib/admin/nav.ts, tabsOf): открыты «Договоры» — горят «Проекты».
+  assert.match(link, /const active = here === href \|\| \(here !== null && also\.includes\(here\)\) \|\| pressed;/);
   assert.match(link, /aria-current=\{active \? "page" : undefined\}/);
   assert.match(link, /border-green font-medium text-green/);
   assert.match(read("components/admin/nav-menu.tsx"), /<AdminNavLink key=\{item\.href\} href=\{item\.href\}/);

@@ -27,12 +27,15 @@ import { sectionOfHref } from "@/lib/admin/help";
 export function AdminNavLink({
   href,
   quiet,
+  also = [],
   variant = "tab",
   onClick,
   children,
 }: {
   href: string;
   quiet: boolean;
+  /** Вкладки этого раздела (lib/admin/nav.ts, tabsOf): открыта вкладка — пункт тоже горит. */
+  also?: readonly string[];
   /** «tab» — в строке шапки, «item» — строкой в списке группы. */
   variant?: "tab" | "item";
   onClick?: () => void;
@@ -44,7 +47,8 @@ export function AdminNavLink({
   // решает уже он.
   const [pressedAt, setPressedAt] = useState<string | null>(null);
   const pressed = pressedAt !== null && pressedAt === pathname;
-  const active = sectionOfHref(pathname ?? "") === href || pressed;
+  const here = sectionOfHref(pathname ?? "");
+  const active = here === href || (here !== null && also.includes(here)) || pressed;
   const tone = quiet ? "text-faint" : "text-muted";
   const ref = useRef<HTMLAnchorElement>(null);
 
