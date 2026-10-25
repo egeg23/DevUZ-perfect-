@@ -5,6 +5,7 @@ import { AdminShell } from "@/components/admin/shell";
 import { SweepBanner } from "@/components/admin/sweep-banner";
 import { LeadAdd } from "@/components/admin/lead-add";
 import { LeadTable } from "@/components/admin/lead-table";
+import { LeadBoard } from "@/components/admin/lead-board";
 import { homeDict, priorityFilterDict, statusFilterDict } from "@/content/admin-panel/home";
 import { requireStaff } from "@/lib/admin/guard";
 import { pick } from "@/lib/admin/i18n";
@@ -12,6 +13,9 @@ import { LEAD_SEARCH_MAX, PRIORITIES, STATUSES, leadCounts, listLeads, scopeFor 
 import { opens } from "@/lib/admin/roles";
 import { activeStaff } from "@/lib/admin/team";
 import { approves, pendingTransfers } from "@/lib/admin/transfers";
+import { boardOf } from "@/lib/admin/lead-board";
+import { loadDeals } from "@/lib/admin/sales-stages-store";
+import { nextStepsFor } from "@/lib/admin/next-step-store";
 
 // Панель показывает состояние базы прямо сейчас. Любое кэширование здесь
 // означает менеджера, который звонит по лиду, взятому полчаса назад другим.
@@ -70,6 +74,8 @@ export default async function AdminHome({
 }: {
   searchParams: Promise<{
     q?: string;
+    /** «board» — доской по ступеням продажи (components/admin/lead-board.tsx). */
+    view?: string;
     priority?: string;
     status?: string;
     owner?: string;
@@ -124,7 +130,8 @@ export default async function AdminHome({
   // Менеджер видит свободных и своих, руководитель и владелец — всех.
   const scope = scopeFor(staff);
   const everyone = scope === "all";
-  const [counts, leads, pending, people] = await Promise.all([
+  const board = params.view === "board";
+  const [counts, leads, pending, people, deals] = await Promise.all([
     leadCounts(staff.id, scope),
     listLeads(
       {
@@ -142,13 +149,17 @@ export default async function AdminHome({
     // «Чьи» — тем, кто видит всех; им же — кому отдать лид, добавленный вручную
     // (lib/admin/lead-add.ts): менеджер добавляет себе.
     everyone || approves(staff.role) ? activeStaff() : Promise.resolve([]),
+    // Доска — те же сделки, что «Ступени продажи» и «Главная» (10 минут в памяти).
+    board ? loadDeals().catch(() => []) : Promise.resolve([]),
   ]);
   const assignees = approves(staff.role) ? people : [];
+  // Следующий шаг лидов этой страницы — одним запросом (lib/admin/next-step-store.ts).
+  const steps = board ? {} : await nextStepsFor(leads.rows.map((l) => l.id)).catch(() => ({}));
   const person = everyone && /^[0-9a-f-]{36}$/.test(params.owner ?? "") ? params.owner! : "";
 
   const base = (patch: Record<string, string | undefined>) => {
     const next = new URLSearchParams();
-    const merged = { q: q || undefined, priority: params.priority, status: params.status, owner: params.owner, ...patch };
+    const merged = { q: q || undefined, view: board ? "board" : undefined, priority: params.priority, status: params.status, owner: params.owner, ...patch };
     for (const [key, value] of Object.entries(merged)) {
       if (value) next.set(key, value);
     }
@@ -239,6 +250,7 @@ export default async function AdminHome({
         ) : params.owner ? (
           <input type="hidden" name="owner" value={params.owner} />
         ) : null}
+        {board ? <input type="hidden" name="view" value="board" /> : null}
         {params.priority ? <input type="hidden" name="priority" value={params.priority} /> : null}
         {params.status ? <input type="hidden" name="status" value={params.status} /> : null}
         <button type="submit" className="rounded-lg bg-green/90 px-4 py-2.5 text-sm font-medium text-ink hover:bg-green">
@@ -251,9 +263,27 @@ export default async function AdminHome({
         ) : null}
       </form>
 
+      {/* Список или доска по ступеням продажи (владелец, 25.10.2026). */}
+      <div role="group" aria-label={t.viewLabel} className="mt-4 inline-flex rounded-full border border-line p-0.5 text-xs">
+        {[
+          { on: !board, href: base({ view: undefined }), label: t.viewList },
+          { on: board, href: base({ view: "board", priority: undefined, status: undefined }), label: t.viewBoard },
+        ].map((v) => (
+          <Link
+            key={v.label}
+            href={v.href}
+            aria-current={v.on ? "page" : undefined}
+            className={`rounded-full px-3 py-1.5 transition ${v.on ? "bg-green/15 font-medium text-green" : "text-muted hover:text-text"}`}
+          >
+            {v.label}
+          </Link>
+        ))}
+      </div>
+
       {/* Чей лид — чипами с числом: «все / свободные / мои» — то, что раньше
           было тремя большими плитками над списком. */}
-      <div className="mt-4 flex flex-wrap items-center gap-2">
+      {/* Числа чипов — про лиды; на доске «чьи» решает поле выше (менеджеру — свои). */}
+      <div className={`mt-4 flex-wrap items-center gap-2 ${board ? "hidden" : "flex"}`}>
         <Chip href={base({ owner: undefined })} active={!params.owner} count={counts.total}>
           {t.allLeads}
         </Chip>
@@ -265,6 +295,17 @@ export default async function AdminHome({
         </Chip>
       </div>
 
+      {board ? (
+        <LeadBoard
+          board={boardOf(deals, { id: staff.id, everyone }, { owner: params.owner, q })}
+          locale={locale}
+          names={Object.fromEntries(people.map((p) => [p.id, p.display_name]))}
+          showOwner={everyone}
+          autopilotLink={staff.role === "admin"}
+          now={Date.now()}
+        />
+      ) : (
+        <>
       <div className="mt-2 flex flex-wrap items-center gap-2">
         <Chip href={base({ priority: undefined })} active={!params.priority}>
           {t.allPriorities}
@@ -288,7 +329,7 @@ export default async function AdminHome({
       </div>
 
       <div className="mt-6">
-        <LeadTable rows={leads.rows} locale={locale} />
+        <LeadTable rows={leads.rows} locale={locale} steps={steps} />
       </div>
 
       {pages > 1 ? (
@@ -300,6 +341,8 @@ export default async function AdminHome({
           {page < pages ? <Link href={pageHref(page + 1)}>{t.pageNext}</Link> : null}
         </div>
       ) : null}
+        </>
+      )}
 
       {/* Добавить лид руками — ниже списка и свёрнуто: это редкое действие. */}
       <div className="mt-8">

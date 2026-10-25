@@ -672,6 +672,24 @@ export const leadsSections: Record<string, HelpEntry> = {
         ],
       },
       {
+        id: "board",
+        title: "«Tablica»: leady według etapów sprzedaży",
+        body: {
+          manager: [
+            "Nad listą jest przełącznik **«Lista» / «Tablica»**. Na tablicy Twoje firmy z 30 dni leżą w kolumnach według etapów sprzedaży: odpisali, zainteresowanie, makieta wysłana, makieta pokazana, cena podana, płatność. Firma stoi w kolumnie najdalszego etapu, najnowsze na górze, pod nazwą — ile dni jest w tej kolumnie: tak widać, kto utknął. Tych, do których napisaliśmy, a nie odpisali, na tablicy nie ma — ich liczba z linkiem do [Zimne kontakty](/admin/prospect). Etapy są te same co na [Pulpit](/admin/hq) i w [Etapy sprzedaży](/admin/stages).",
+            "Nad każdą kolumną jest napisane, co na tym etapie dzieje się samo, a co robisz Ty: na «odpisali» bot sam wysyła kółko wideo i analizę strony, na «makieta wysłana» — warunki promocji i przypomnienia. **«Jest zainteresowanie»**, **«Pokazałem makietę»** i **«Podałem cenę»** — przyciski na karcie; na komputerze wystarczy przeciągnąć kartę do kolumny: zainteresowanie zaznaczy się od razu, przy pokazie i cenie otworzy się wybór (jak pokazano, jaka kwota). «Makieta wysłana» i «płatność» zaznaczają się same — tam karty nie przeciągniesz, kolumna zrobi się czerwona. Twoje zaznaczenie widać na tablicy od razu, nowe odpowiedzi i makiety — w ciągu 10 minut.",
+          ],
+          head: [
+            "Nad listą jest przełącznik **«Lista» / «Tablica»**. Na tablicy firmy całego zespołu z 30 dni leżą w kolumnach według etapów sprzedaży: odpisali, zainteresowanie, makieta wysłana, makieta pokazana, cena podana, płatność. Firma stoi w kolumnie najdalszego etapu, najnowsze na górze, pod nazwą — ile dni tam jest i kto ją prowadzi. **«Czyje»** nad tablicą — wszystkie, wolne, moje albo osoba. Tych, do których napisaliśmy, a nie odpisali, na tablicy nie ma — ich liczba z linkiem do [Zimne kontakty](/admin/prospect). Etapy są te same co na [Pulpit](/admin/hq) i w [Etapy sprzedaży](/admin/stages).",
+            "Nad każdą kolumną jest napisane, co na tym etapie dzieje się samo, a co robisz Ty: na «odpisali» bot sam wysyła kółko wideo i analizę strony, na «makieta wysłana» — warunki promocji i przypomnienia. **«Jest zainteresowanie»**, **«Pokazałem makietę»** i **«Podałem cenę»** — przyciski na karcie; na komputerze wystarczy przeciągnąć kartę do kolumny: zainteresowanie zaznaczy się od razu, przy pokazie i cenie otworzy się wybór (jak pokazano, jaka kwota). «Makieta wysłana» i «płatność» zaznaczają się same — tam karty nie przeciągniesz, kolumna zrobi się czerwona. Twoje zaznaczenie widać na tablicy od razu, nowe odpowiedzi i makiety — w ciągu 10 minut.",
+          ],
+          admin: [
+            "Nad listą jest przełącznik **«Lista» / «Tablica»**. Na tablicy firmy całego zespołu z 30 dni leżą w kolumnach według etapów sprzedaży: odpisali, zainteresowanie, makieta wysłana, makieta pokazana, cena podana, płatność. Firma stoi w kolumnie najdalszego etapu, najnowsze na górze, pod nazwą — ile dni tam jest i kto ją prowadzi. **«Czyje»** nad tablicą — wszystkie, wolne, moje albo osoba. Tych, do których napisaliśmy, a nie odpisali, na tablicy nie ma — ich liczba z linkiem do [Zimne kontakty](/admin/prospect). Etapy są te same co na [Pulpit](/admin/hq) i w [Etapy sprzedaży](/admin/stages).",
+            "Nad każdą kolumną jest napisane, co na tym etapie dzieje się samo, a co robisz Ty: na «odpisali» bot sam wysyła kółko wideo i analizę strony, na «makieta wysłana» — warunki promocji i przypomnienia. **«Jest zainteresowanie»**, **«Pokazałem makietę»** i **«Podałem cenę»** — przyciski na karcie; na komputerze wystarczy przeciągnąć kartę do kolumny: zainteresowanie zaznaczy się od razu, przy pokazie i cenie otworzy się wybór (jak pokazano, jaka kwota). «Makieta wysłana» i «płatność» zaznaczają się same — tam karty nie przeciągniesz, kolumna zrobi się czerwona. Twoje zaznaczenie widać na tablicy od razu, nowe odpowiedzi i makiety — w ciągu 10 minut. Autopilot kontaktów włącza się i wyłącza w [Zimne kontakty](/admin/prospect) — link na dole tablicy.",
+          ],
+        },
+      },
+      {
         id: "sales-marks",
         title: "Etapy sprzedaży w karcie: «Jest zainteresowanie», «Pokazałem makietę», «Podałem cenę»",
         body: [
@@ -703,6 +721,14 @@ export const leadsSections: Record<string, HelpEntry> = {
             "«Nie dostarczono» po pięciu próbach — bot nie może napisać do tej osoby: jest zablokowany albo ta osoba ani razu nie kliknęła «Start». Próby liczą się tylko wtedy, gdy Telegram odpowiada: jeśli serwer w ogóle nie widzi Telegrama, przypomnienie czeka, a nie przepada.",
           ],
         },
+      },
+      {
+        id: "next-step",
+        title: "«Następny krok»: co dalej z każdym leadem",
+        body: [
+          "**Następny krok** — Twoje najbliższe otwarte przypomnienie dla leada: kiedy i co zrobić (od 25.10.2026). Widać go na liście leadów w osobnej kolumnie i na górze bloku «Przypomnienia» w karcie, po terminie — na czerwono. Lead «w toku» bez kroku ma na liście żółte **«brak kroku»**: tak widać, o którym kliencie zapomniano. Nowy i zamknięty lead kroku nie potrzebuje.",
+          "Krok ustawia się tym samym przypomnieniem: «przypomnij za», notatka «o czym przypomnieć» i «Ustaw». Dopóki krok jest przed Tobą, bot porządku w leadach (o 10:00 i 16:00) nie pyta o ten lead — jak po «⏳ Ещё в работе». Termin minął, a lead stoi — zapyta znowu. Zrobione — kliknij «zrobione» i ustaw następny.",
+        ],
       },
       {
         id: "transfer",

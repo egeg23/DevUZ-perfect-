@@ -296,5 +296,5 @@ test("главная и её блоки: весь текст — из слова
   const page = readFileSync(new URL("../app/admin/page.tsx", import.meta.url), "utf8");
   assert.match(page, /const t = pick\(homeDict, locale\)/);
   assert.match(page, /<SweepBanner locale=\{locale\} \/>/);
-  assert.match(page, /<LeadTable rows=\{leads\.rows\} locale=\{locale\} \/>/);
+  assert.match(page, /<LeadTable rows=\{leads\.rows\} locale=\{locale\} steps=\{steps\} \/>/);
 });

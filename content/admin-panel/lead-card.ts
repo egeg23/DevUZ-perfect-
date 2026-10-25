@@ -532,6 +532,17 @@ export const leadCardDict = defineDict({
 
   // ── Напоминания ──
   reminders: { ru: "Напоминания", uz: "Eslatmalar", pl: "Przypomnienia" },
+  /** Ближайшее открытое напоминание — «Следующий шаг» (lib/admin/next-step.ts). */
+  nextStep: {
+    ru: (due: string, note: string | null) => `Следующий шаг: ${due}${note ? ` — ${note}` : ""}`,
+    uz: (due: string, note: string | null) => `Keyingi qadam: ${due}${note ? ` — ${note}` : ""}`,
+    pl: (due: string, note: string | null) => `Następny krok: ${due}${note ? ` — ${note}` : ""}`,
+  },
+  noNextStep: {
+    ru: "Следующего шага нет: назначьте напоминание, когда и что сделать. Пока шаг впереди, бот «Порядок в лидах» про этот лид не спрашивает.",
+    uz: "Keyingi qadam yo‘q: qachon va nima qilishni eslatma qilib qo‘ying. Qadam oldinda turganda «Lidlarda tartib» boti bu lid haqida so‘ramaydi.",
+    pl: "Brak następnego kroku: ustaw przypomnienie, kiedy i co zrobić. Dopóki krok jest przed Tobą, bot porządku w leadach nie pyta o ten lead.",
+  },
   remindersHelp: { ru: "Как работают напоминания", uz: "Eslatmalar qanday ishlaydi", pl: "Jak działają przypomnienia" },
   autoOff: { ru: "Выключить автонапоминания", uz: "Avtoeslatmalarni o‘chirish", pl: "Wyłącz automatyczne przypomnienia" },
   autoOn: { ru: "Включить автонапоминания", uz: "Avtoeslatmalarni yoqish", pl: "Włącz automatyczne przypomnienia" },

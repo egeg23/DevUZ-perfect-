@@ -56,6 +56,13 @@ import { serviceClient } from "@/lib/supabase";
 // Что не движение — то же, что у «Главной» и команды за неделю (lib/admin/pulse.ts).
 const NOT_MOVES = [...PULSE_NOT_MOVES];
 
+/** Из двух отсрочек — дальняя: «⏳» или следующий шаг, что позже. */
+function laterOf(a: string | null, b: string | null): string | null {
+  if (!a) return b;
+  if (!b) return a;
+  return Date.parse(b) > Date.parse(a) ? b : a;
+}
+
 /** Все лиды «в работе» действующих сотрудников — с последним движением. */
 export async function loadIdle(ownerIds?: readonly string[]): Promise<IdleLead[]> {
   const db = serviceClient();
@@ -84,10 +91,14 @@ export async function loadIdle(ownerIds?: readonly string[]): Promise<IdleLead[]
   }
 
   const ids = leads.map((l) => l.id as string);
+  // «Следующий шаг» (lib/admin/next-step.ts) — открытое напоминание впереди:
+  // у лида есть план, и бот до этого дня о нём не спрашивает, как после «⏳».
+  const planned = new Map<string, string>();
+  const nowIso = new Date().toISOString();
   // Кусками: длинный список id не влезает в адрес запроса.
   for (let i = 0; i < ids.length; i += 200) {
     const part = ids.slice(i, i + 200);
-    const [{ data: msgs }, { data: acts }] = await Promise.all([
+    const [{ data: msgs }, { data: acts }, { data: steps }] = await Promise.all([
       db.from("lead_messages").select("lead_id, created_at").in("lead_id", part).limit(20000),
       db
         .from("audit_events")
@@ -98,7 +109,12 @@ export async function loadIdle(ownerIds?: readonly string[]): Promise<IdleLead[]
         // Просмотры движением не считаются — и не читаются: их больше всего.
         .not("action", "in", `(${NOT_MOVES.join(",")})`)
         .limit(20000),
+      db.from("lead_reminders").select("lead_id, due_at").in("lead_id", part).is("done_at", null).gt("due_at", nowIso).limit(20000),
     ]);
+    for (const r of steps ?? []) {
+      const prev = planned.get(r.lead_id as string);
+      if (!prev || Date.parse(r.due_at as string) > Date.parse(prev)) planned.set(r.lead_id as string, r.due_at as string);
+    }
     for (const m of msgs ?? []) bump(m.lead_id as string, m.created_at);
     for (const a of acts ?? []) if (!NOT_MOVES.includes(a.action as string)) bump(a.target_id as string, a.created_at);
   }
@@ -108,7 +124,7 @@ export async function loadIdle(ownerIds?: readonly string[]): Promise<IdleLead[]
     label: String(l.company || l.contact_name || (l.request_no ? `заявка ${l.request_no}` : "лид без имени")),
     ownerId: l.assigned_staff_id as string,
     movedAt: moved.get(l.id as string) ?? (l.created_at as string),
-    snoozedUntil: (l.tidy_snoozed_until as string | null) ?? null,
+    snoozedUntil: laterOf((l.tidy_snoozed_until as string | null) ?? null, planned.get(l.id as string) ?? null),
     askedAt: (l.tidy_asked_at as string | null) ?? null,
     firstAskedAt: (l.tidy_first_asked_at as string | null) ?? null,
     waitStreak: Number(l.tidy_wait_streak ?? 0),

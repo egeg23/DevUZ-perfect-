@@ -673,6 +673,24 @@ export const uz: HelpCopy = {
           ],
         },
         {
+          id: "board",
+          title: "«Taxta»: lidlar sotuv bosqichlari bo‘yicha",
+          body: {
+            manager: [
+              "Ro‘yxat ustida — **«Ro‘yxat» / «Taxta»** almashtirgichi. Taxtada 30 kunlik kompaniyalaringiz sotuv bosqichlari bo‘yicha ustunlarda turadi: javob berdi, qiziqish, maket yuborildi, maket ko‘rsatildi, narx aytildi, to‘lov. Kompaniya eng uzoq bosqich ustunida turadi, yangilari tepada, nomi ostida — shu ustunda necha kundan beri turgani: kim qotib qolgani shunday ko‘rinadi. Yozilgan, lekin javob bermaganlar taxtada yo‘q — ularning soni [Sovuq aloqalar](/admin/prospect) ga havola bilan. Bosqichlar [Bosh sahifa](/admin/hq) va [Sotuv bosqichlari](/admin/stages) dagi bilan bir xil.",
+              "Har bir ustun ustida shu bosqichda nima o‘zi bo‘lishi va nimani siz qilishingiz yozilgan: «javob berdi» da bot o‘zi dumaloq video va sayt tahlilini yuboradi, «maket yuborildi» da — aksiya shartlari va eslatmalarni. **«Qiziqish bor»**, **«Maketni ko‘rsatdim»** va **«Narxni aytdim»** — kartochkadagi tugmalar; kompyuterda kartochkani ustunga olib o‘tish kifoya: qiziqish darhol belgilanadi, ko‘rsatish va narxda tanlov ochiladi (qanday ko‘rsatildi, qancha summa). «Maket yuborildi» va «to‘lov» o‘zi belgilanadi — u yerga kartochkani olib o‘tib bo‘lmaydi, ustun qizaradi. Belgingiz taxtada darhol ko‘rinadi, yangi javoblar va maketlar — 10 daqiqa ichida.",
+            ],
+            head: [
+              "Ro‘yxat ustida — **«Ro‘yxat» / «Taxta»** almashtirgichi. Taxtada butun jamoaning 30 kunlik kompaniyalari sotuv bosqichlari bo‘yicha ustunlarda turadi: javob berdi, qiziqish, maket yuborildi, maket ko‘rsatildi, narx aytildi, to‘lov. Kompaniya eng uzoq bosqich ustunida turadi, yangilari tepada, nomi ostida — u yerda necha kundan beri turgani va kim olib borayotgani. Taxta ustidagi **«Kimniki»** — hammasi, bo‘shlari, meniki yoki xodim. Yozilgan, lekin javob bermaganlar taxtada yo‘q — ularning soni [Sovuq aloqalar](/admin/prospect) ga havola bilan. Bosqichlar [Bosh sahifa](/admin/hq) va [Sotuv bosqichlari](/admin/stages) dagi bilan bir xil.",
+              "Har bir ustun ustida shu bosqichda nima o‘zi bo‘lishi va nimani siz qilishingiz yozilgan: «javob berdi» da bot o‘zi dumaloq video va sayt tahlilini yuboradi, «maket yuborildi» da — aksiya shartlari va eslatmalarni. **«Qiziqish bor»**, **«Maketni ko‘rsatdim»** va **«Narxni aytdim»** — kartochkadagi tugmalar; kompyuterda kartochkani ustunga olib o‘tish kifoya: qiziqish darhol belgilanadi, ko‘rsatish va narxda tanlov ochiladi (qanday ko‘rsatildi, qancha summa). «Maket yuborildi» va «to‘lov» o‘zi belgilanadi — u yerga kartochkani olib o‘tib bo‘lmaydi, ustun qizaradi. Belgingiz taxtada darhol ko‘rinadi, yangi javoblar va maketlar — 10 daqiqa ichida.",
+            ],
+            admin: [
+              "Ro‘yxat ustida — **«Ro‘yxat» / «Taxta»** almashtirgichi. Taxtada butun jamoaning 30 kunlik kompaniyalari sotuv bosqichlari bo‘yicha ustunlarda turadi: javob berdi, qiziqish, maket yuborildi, maket ko‘rsatildi, narx aytildi, to‘lov. Kompaniya eng uzoq bosqich ustunida turadi, yangilari tepada, nomi ostida — u yerda necha kundan beri turgani va kim olib borayotgani. Taxta ustidagi **«Kimniki»** — hammasi, bo‘shlari, meniki yoki xodim. Yozilgan, lekin javob bermaganlar taxtada yo‘q — ularning soni [Sovuq aloqalar](/admin/prospect) ga havola bilan. Bosqichlar [Bosh sahifa](/admin/hq) va [Sotuv bosqichlari](/admin/stages) dagi bilan bir xil.",
+              "Har bir ustun ustida shu bosqichda nima o‘zi bo‘lishi va nimani siz qilishingiz yozilgan: «javob berdi» da bot o‘zi dumaloq video va sayt tahlilini yuboradi, «maket yuborildi» da — aksiya shartlari va eslatmalarni. **«Qiziqish bor»**, **«Maketni ko‘rsatdim»** va **«Narxni aytdim»** — kartochkadagi tugmalar; kompyuterda kartochkani ustunga olib o‘tish kifoya: qiziqish darhol belgilanadi, ko‘rsatish va narxda tanlov ochiladi (qanday ko‘rsatildi, qancha summa). «Maket yuborildi» va «to‘lov» o‘zi belgilanadi — u yerga kartochkani olib o‘tib bo‘lmaydi, ustun qizaradi. Belgingiz taxtada darhol ko‘rinadi, yangi javoblar va maketlar — 10 daqiqa ichida. Aloqalar avtoyurishi [Sovuq aloqalar](/admin/prospect) da yoqiladi va o‘chiriladi — havola taxta pastida.",
+            ],
+          },
+        },
+        {
           id: "sales-marks",
           title: "Kartochkadagi sotuv bosqichlari: «Qiziqish bor», «Maketni ko‘rsatdim», «Narxni aytdim»",
           body: [
@@ -704,6 +722,14 @@ export const uz: HelpCopy = {
               "Besh urinishdan keyingi «yetkazilmadi» — bot odamga yozolmayapti: bot bloklangan yoki odam bir marta ham «Старт» tugmasini bosmagan. Urinishlar faqat Telegram javob berganda hisoblanadi: server Telegramni umuman ko‘rmasa, eslatma tashlab yuborilmaydi, kutadi.",
             ],
           },
+        },
+        {
+          id: "next-step",
+          title: "«Keyingi qadam»: har bir lid bo‘yicha keyin nima",
+          body: [
+            "**Keyingi qadam** — lid bo‘yicha eng yaqin ochiq eslatmangiz: qachon va nima qilish (25.10.2026 dan). U lidlar ro‘yxatida alohida ustun bo‘lib va kartochkadagi «Eslatmalar» bloki tepasida ko‘rinadi, muddati o‘tgani — qizil. Qadamsiz «ishda» lidda ro‘yxatda sariq **«qadam yo‘q»** turadi: qaysi mijoz unutilgani shunday ko‘rinadi. Yangi va yopilgan lidga qadam kerak emas.",
+            "Qadam o‘sha eslatma bilan qo‘yiladi: «eslatish:», «nima haqida eslatish» izohi va «Qo‘yish». Qadam oldinda turganda lidlarda tartib boti (10:00 va 16:00 da) bu lid haqida so‘ramaydi — «⏳ Ещё в работе» dan keyingidek. Muddat o‘tdi, lid esa harakatsiz — yana so‘raydi. Bajardingiz — «bajarildi» ni bosing va keyingisini qo‘ying.",
+          ],
         },
         {
           id: "transfer",
