@@ -53,7 +53,8 @@ import {
   takeLead,
 } from "@/lib/admin/ownership";
 import { noteBotSeen } from "@/lib/admin/lead-queue-store";
-import { noteBotUser } from "@/lib/admin/bot-users-store";
+import { lastBroadcastTo, noteBotUser } from "@/lib/admin/bot-users-store";
+import { BROADCAST_NOTE, broadcastTurn } from "@/lib/admin/bot-users";
 import { NO_MORE_WAIT, TIDY_CALLBACK, parseTidyCallback } from "@/lib/admin/lead-tidy";
 import { answerTidy } from "@/lib/admin/lead-tidy-store";
 import { findStaffByTelegram, issueLoginToken, staffByTelegramId, type Staff } from "@/lib/admin/session";
@@ -1211,6 +1212,13 @@ async function respond(
   options: { resuming?: boolean; brief?: boolean; scoutNote?: string | null } = {},
 ) {
   const copy = botCopy(session.locale);
+  // Клиент отвечает на рассылку «Пользователям бота»: её текст — репликой
+  // студии перед его словами (lib/admin/bot-users.ts → broadcastTurn), иначе
+  // на «Да» модель знакомится заново. Продолжение разговора с сайта — нет.
+  const broadcast = options.resuming
+    ? null
+    : broadcastTurn(session.transcript, session.updatedAt ?? null, await lastBroadcastTo(chatId).catch(() => null), Date.now());
+  if (broadcast) session.transcript = [...session.transcript, { role: "assistant" as const, content: broadcast }];
   const history = [...session.transcript, { role: "user" as const, content: text }];
   const client = { chatId, name: from?.first_name ?? "", username: from?.username ?? null };
   void noteClientText(chatId, text).catch(() => undefined);
@@ -1266,6 +1274,7 @@ async function respond(
       channelNote: [
         channelNote(from, chatId, options.resuming === true, options.brief === true),
         options.scoutNote,
+        broadcast ? BROADCAST_NOTE : null,
       ]
         .filter(Boolean)
         .join("\n\n"),

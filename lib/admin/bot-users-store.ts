@@ -1,6 +1,7 @@
 import { record } from "@/lib/admin/audit";
 import { GIVE_UP_H, sendableNow, sendsBroadcasts, textProblem, type TextProblem } from "@/lib/admin/broadcast";
 import {
+  BROADCAST_CONTEXT_MS,
   GAP_MS,
   MAX_ATTEMPTS,
   PASS_CAP,
@@ -217,4 +218,27 @@ export async function userTallies(items: readonly { id: string; total: number }[
   const rows = (data ?? []) as { broadcast_id: string; status: UserOutcome; attempts: number }[];
   for (const item of items) out.set(item.id, tallyOf(item.total, rows.filter((r) => r.broadcast_id === item.id)));
   return out;
+}
+
+/**
+ * Последняя рассылка, которая дошла до этого чата за BROADCAST_CONTEXT_MS:
+ * её текст и когда дошла. Нужна переписке бота (broadcastTurn): на ответ
+ * клиента модель отвечает, зная, на что он отвечает.
+ */
+export async function lastBroadcastTo(chatId: number, now = Date.now()): Promise<{ text: string; at: string } | null> {
+  const db = serviceClient();
+  if (!db) return null;
+  const { data: row } = await db
+    .from("bot_broadcast_sent")
+    .select("broadcast_id, at")
+    .eq("chat_id", chatId)
+    .eq("status", "sent")
+    .gt("at", new Date(now - BROADCAST_CONTEXT_MS).toISOString())
+    .order("at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!row) return null;
+  const { data: b } = await db.from("staff_broadcasts").select("text").eq("id", String(row.broadcast_id)).maybeSingle();
+  const text = typeof b?.text === "string" ? b.text : "";
+  return text ? { text, at: String(row.at) } : null;
 }
