@@ -9,6 +9,8 @@ import { defineDict } from "@/lib/admin/i18n";
 export const shellDict = defineDict({
   panel: { ru: "панель", uz: "panel", pl: "panel" },
   signOut: { ru: "Выйти", uz: "Chiqish", pl: "Wyloguj" },
+  // Строка вкладок над разделом (components/admin/section-tabs.tsx) — подпись для экранного диктора.
+  sectionTabs: { ru: "Вкладки раздела", uz: "Bo‘lim yorliqlari", pl: "Karty sekcji" },
   // Число на кнопке «Задачи» (components/admin/task-count.tsx) — подсказка при наведении.
   tasksCount: {
     ru: (n: number) => `Открытых задач на вас: ${n}`,
@@ -66,7 +68,6 @@ export const navGroupDict = defineDict({
   leads: { ru: "Лиды", uz: "Lidlar", pl: "Leady" },
   prospect: { ru: "Холодные касания", uz: "Sovuq aloqalar", pl: "Zimne kontakty" },
   mockups: { ru: "Макеты", uz: "Maketlar", pl: "Makiety" },
-  sales: { ru: "Продажи", uz: "Sotuv", pl: "Sprzedaż" },
   money: { ru: "Деньги", uz: "Pul", pl: "Pieniądze" },
   marketing: { ru: "Маркетинг", uz: "Marketing", pl: "Marketing" },
   team: { ru: "Команда", uz: "Jamoa", pl: "Zespół" },

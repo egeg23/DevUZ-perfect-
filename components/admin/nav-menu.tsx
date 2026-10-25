@@ -37,17 +37,31 @@ export type NavMenuGroup = { id: string; label: string; items: NavMenuItem[] };
 /** Что сейчас открыто и на какой странице. Перешёл на другую — всё закрыто само, без эффекта. */
 type Opened = { kind: "group"; id: string; pinned: boolean; path: string } | { kind: "sheet" | "finder"; path: string };
 
-export function NavMenu({ groups }: { groups: NavMenuGroup[] }) {
+export function NavMenu({
+  groups,
+  find,
+  parents = {},
+}: {
+  groups: NavMenuGroup[];
+  /** Все открытые разделы, вкладки тоже — для «Найти раздел». Нет — те же, что в меню. */
+  find?: NavMenuItem[];
+  /** Вкладка → её раздел: открыты «Договоры» — горят «Деньги» и «Проекты». */
+  parents?: Readonly<Record<string, string>>;
+}) {
   const t = usePanelDict(shellDict);
   const pathname = usePathname() ?? "";
-  const current = sectionOfHref(pathname);
+  const section = sectionOfHref(pathname);
+  // В меню вкладки нет — подсвечиваем её раздел.
+  const current = section ? (parents[section] ?? section) : null;
+  const tabsOf = (href: string) => Object.keys(parents).filter((tab) => parents[tab] === href);
   const [state, setState] = useState<Opened | null>(null);
   const opened = state && state.path === pathname ? state : null;
   const close = () => setState(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const leaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const items = groups.flatMap((g) => g.items);
-  const currentItem = items.find((i) => i.href === current);
+  const items = find ?? groups.flatMap((g) => g.items);
+  // На телефоне рядом с «Меню» — где ты сейчас, вкладку тоже называем своим именем.
+  const currentItem = items.find((i) => i.href === section);
 
   // Ctrl+K / ⌘K — из любого места панели. По коду клавиши, а не по букве:
   // на русской раскладке та же клавиша — «л».
@@ -112,7 +126,7 @@ export function NavMenu({ groups }: { groups: NavMenuGroup[] }) {
           if (group.items.length === 1) {
             const only = group.items[0];
             return (
-              <AdminNavLink key={only.href} href={only.href} quiet={only.quiet}>
+              <AdminNavLink key={only.href} href={only.href} quiet={only.quiet} also={tabsOf(only.href)}>
                 {only.label}
                 {only.href === TASKS_HREF ? <TaskCount /> : null}
               </AdminNavLink>
@@ -120,7 +134,8 @@ export function NavMenu({ groups }: { groups: NavMenuGroup[] }) {
           }
           const active = group.items.some((i) => i.href === current);
           const shown = opened?.kind === "group" && opened.id === group.id;
-          const here = active ? group.items.find((i) => i.href === current) : undefined;
+          // Рядом с группой — где ты: вкладка своим именем («Деньги · Договоры»), а не её раздел.
+          const here = active ? (items.find((i) => i.href === section) ?? group.items.find((i) => i.href === current)) : undefined;
           return (
             <div key={group.id} className="relative" onMouseEnter={() => hover(group.id)} onMouseLeave={leave}>
               <button
@@ -144,7 +159,7 @@ export function NavMenu({ groups }: { groups: NavMenuGroup[] }) {
               >
                 <div className="min-w-[13rem] rounded-lg border border-line bg-surface p-1.5 shadow-xl shadow-black/40">
                   {group.items.map((item) => (
-                    <AdminNavLink key={item.href} href={item.href} quiet={item.quiet} variant="item" onClick={close}>
+                    <AdminNavLink key={item.href} href={item.href} quiet={item.quiet} also={tabsOf(item.href)} variant="item" onClick={close}>
                       {item.label}
                     </AdminNavLink>
                   ))}
@@ -185,13 +200,13 @@ export function NavMenu({ groups }: { groups: NavMenuGroup[] }) {
 
       {opened?.kind === "finder" ? (
         <Overlay onClose={close} label={t.findSection} top>
-          <FindBox items={items} current={current} autoFocus onGo={close} />
+          <FindBox items={items} current={section} autoFocus onGo={close} />
         </Overlay>
       ) : null}
 
       {opened?.kind === "sheet" ? (
         <Overlay onClose={close} label={t.menu}>
-          <FindBox items={items} current={current} autoFocus={false} onGo={close}>
+          <FindBox items={items} current={section} autoFocus={false} onGo={close}>
             <div className="space-y-4">
               {groups.map((group) => (
                 <section key={group.id}>
@@ -199,7 +214,7 @@ export function NavMenu({ groups }: { groups: NavMenuGroup[] }) {
                     <h2 className="px-3 pb-1 font-mono text-[11px] uppercase tracking-[0.15em] text-faint">{group.label}</h2>
                   ) : null}
                   {group.items.map((item) => (
-                    <AdminNavLink key={item.href} href={item.href} quiet={item.quiet} variant="item" onClick={close}>
+                    <AdminNavLink key={item.href} href={item.href} quiet={item.quiet} also={tabsOf(item.href)} variant="item" onClick={close}>
                       {item.label}
                       {item.href === TASKS_HREF ? <TaskCount /> : null}
                     </AdminNavLink>

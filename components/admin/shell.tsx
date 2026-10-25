@@ -3,7 +3,7 @@ import { Suspense, type ReactNode } from "react";
 
 import { signOut } from "@/app/admin/actions";
 import { ROLE_BADGE, homeOf, navOf } from "@/lib/admin/roles";
-import { findable, menuOf } from "@/lib/admin/nav";
+import { findable, menuOf, parentsOf, tabsOf } from "@/lib/admin/nav";
 import type { Staff } from "@/lib/admin/session";
 import { pick } from "@/lib/admin/i18n";
 import { navGroupDict, shellDict } from "@/content/admin-panel/shell";
@@ -15,6 +15,7 @@ import { PanelLocaleProvider } from "@/components/admin/panel-locale";
 import { UsageBeacon } from "@/components/admin/usage-beacon";
 import { TaskPulse } from "@/components/admin/task-alerts";
 import { NavProgress } from "@/components/admin/nav-progress";
+import { SectionTabs } from "@/components/admin/section-tabs";
 
 /**
  * Каркас панели.
@@ -43,6 +44,11 @@ export function AdminShell({
     label: groupName[group],
     items: sections.map((s) => ({ ...findable(s, groupName[group], locale), quiet: s.roles.length === 1 })),
   }));
+  // Вкладки разделов (lib/admin/nav.ts): в меню их нет, но «Найти раздел»
+  // ищет и их — человек помнит «Договоры», а не то, что они теперь в «Проектах».
+  const parents = parentsOf(staff);
+  const find = navOf(staff).map((s) => ({ ...findable(s, groupName[s.group], locale), quiet: s.roles.length === 1 }));
+  const tabs = tabsOf(staff).map((family) => family.map((s) => ({ href: s.href, label: s.label[locale] })));
   return (
     <PanelLocaleProvider locale={locale}>
       <div className="admin-panel min-h-screen">
@@ -112,11 +118,15 @@ export function AdminShell({
               <NavToggle classic className="pt-0.5" />
             </div>
           ) : (
-            <NavMenu groups={menu} />
+            <NavMenu groups={menu} find={find} parents={parents} />
           )}
         </header>
 
-        <main className="mx-auto max-w-7xl px-4 py-6 sm:px-5 sm:py-8">{children}</main>
+        <main className="mx-auto max-w-7xl px-4 py-6 sm:px-5 sm:py-8">
+          {/* В меню «как раньше» все разделы и так в строке — вкладки там не нужны. */}
+          {staff.nav_classic ? null : <SectionTabs families={tabs} />}
+          {children}
+        </main>
       </div>
     </PanelLocaleProvider>
   );

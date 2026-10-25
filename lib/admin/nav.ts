@@ -13,12 +13,42 @@ import { NAV_GROUPS, navOf, type NavGroup, type Section, type Viewer } from "@/l
 
 export type MenuGroup = { group: NavGroup; sections: Section[] };
 
-/** Группы этого человека в порядке шапки. Пустых нет: группа без открытых разделов не рисуется. */
+/** Раздел — вкладка открытого раздела: в меню его нет, он над страницей родителя (`tabsOf`). */
+function tabbed(section: Section, open: readonly Section[]): boolean {
+  return Boolean(section.parent) && open.some((s) => s.href === section.parent);
+}
+
+/**
+ * Группы этого человека в порядке шапки. Пустых нет: группа без открытых
+ * разделов не рисуется. Вкладки открытых разделов в меню не идут — они в
+ * `tabsOf`; закрыт родитель — вкладка встаёт в свою группу, как раньше.
+ */
 export function menuOf(who: Viewer): MenuGroup[] {
   const open = navOf(who);
-  return NAV_GROUPS.map((group) => ({ group, sections: open.filter((s) => s.group === group) })).filter(
+  const shown = open.filter((s) => !tabbed(s, open));
+  return NAV_GROUPS.map((group) => ({ group, sections: shown.filter((s) => s.group === group) })).filter(
     (g) => g.sections.length > 0,
   );
+}
+
+/**
+ * Вкладки над страницей раздела: раздел первым, за ним — его открытые
+ * вкладки в порядке SECTIONS. Раздел без открытых вкладок строки не
+ * получает: одна вкладка — не выбор.
+ */
+export function tabsOf(who: Viewer): Section[][] {
+  const open = navOf(who);
+  return open
+    .filter((s) => !tabbed(s, open))
+    .map((parent) => [parent, ...open.filter((s) => s.parent === parent.href)])
+    .filter((family) => family.length > 1);
+}
+
+/** Чей раздел вкладка — чтобы в меню подсветить родителя: «Договоры» открыты — горит «Проекты». */
+export function parentsOf(who: Viewer): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const family of tabsOf(who)) for (const tab of family.slice(1)) out[tab.href] = family[0].href;
+  return out;
 }
 
 /** Группа с одним разделом — просто ссылка на него: выпадающий список из одного пункта — лишний щелчок. */

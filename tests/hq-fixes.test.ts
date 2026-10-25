@@ -101,7 +101,9 @@ test("«Поставить задачу» из карточки: форма за
 test("нажатие видно сразу: пункт меню подсвечен до ответа, точка ожидания, полоса загрузки, :active", () => {
   const link = read("components/admin/nav-link.tsx");
   assert.match(link, /setPressedAt\(pathname\)/);
-  assert.match(link, /const active = sectionOfHref\(pathname \?\? ""\) === href \|\| pressed;/);
+  assert.match(link, /const here = sectionOfHref\(pathname \?\? ""\);/);
+  // Пункт горит и на своих вкладках (lib/admin/nav.ts, tabsOf): открыты «Договоры» — горят «Проекты».
+  assert.match(link, /const active = here === href \|\| \(here !== null && also\.includes\(here\)\) \|\| pressed;/);
   assert.match(link, /<LinkPending \/>/);
   assert.match(read("components/admin/link-pending.tsx"), /const \{ pending \} = useLinkStatus\(\);/);
   // Меню группами и меню телефона рисуют пункты этим же компонентом.
