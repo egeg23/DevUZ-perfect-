@@ -84,6 +84,16 @@ export function AdminShell({
                   {ROLE_BADGE[staff.role][locale]}
                 </span>
               </span>
+              {/* «Настройки» (lib/admin/settings.ts) — шестерёнкой рядом с именем,
+                  как в любой CRM: своё и ссылки на настройки касаний и команды. */}
+              <Link
+                href="/admin/settings"
+                title={t.settings}
+                aria-label={t.settings}
+                className="text-base leading-none text-faint transition hover:text-green"
+              >
+                <span aria-hidden>⚙</span>
+              </Link>
               <form action={signOut}>
                 <button type="submit" className="text-faint transition hover:text-text">
                   {t.signOut}

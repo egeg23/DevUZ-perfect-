@@ -274,6 +274,18 @@ export async function allowsChat(kind: NoticeKind, chat: number | string | null 
   return !(await mutedChats(kind)).has(String(chat));
 }
 
+/**
+ * Свои галочки — для «Настроек» (app/admin/settings). `undefined` — база не
+ * ответила: странице лучше промолчать, чем сказать «приходит всё».
+ */
+export async function notifyOffOf(staffId: string): Promise<string[] | null | undefined> {
+  const db = serviceClient();
+  if (!db) return undefined;
+  const { data, error } = await db.from("staff").select("notify_off").eq("id", staffId).maybeSingle();
+  if (error || !data) return undefined;
+  return (data.notify_off as string[] | null) ?? null;
+}
+
 export type NoticesResult = { ok: true } | { ok: false; reason: "offline" | "gone" | "failed" };
 
 /** Записать галочки. Кто вправе — решает `tunesNotices` в действии страницы. */

@@ -31,20 +31,22 @@ test("каждый раздел — в одной из групп меню, и �
     for (const locale of PANEL_LOCALES) assert.ok(navGroupDict[group][locale].trim(), `${group}: нет «${locale}»`);
   }
   // Инструкции — отдельно и одни: «всегда под рукой», ссылкой, а не списком.
+  // «Настройки» в той же группе, но шестерёнкой в шапке (`corner`), не в меню.
   assert.deepEqual(
-    SECTIONS.filter((s) => s.group === "help").map((s) => s.href),
+    SECTIONS.filter((s) => s.group === "help" && !s.corner).map((s) => s.href),
     ["/admin/help"],
   );
 });
 
-test("группы и вкладки не меняют, что кому открыто: меню плюс вкладки — те же разделы, что navOf", () => {
+test("группы и вкладки не меняют, что кому открыто: меню, вкладки и угол шапки — те же разделы, что navOf", () => {
   for (const role of ROLES) {
     const who = { role };
     const menu = menuOf(who);
     const flat = menu.flatMap((g) => g.sections.map((s) => s.href));
     const tabs = tabsOf(who).flatMap((family) => family.slice(1).map((s) => s.href));
+    const corner = navOf(who).filter((s) => s.corner).map((s) => s.href);
     assert.equal(new Set([...flat, ...tabs]).size, flat.length + tabs.length, `${role}: раздел и в меню, и вкладкой`);
-    assert.deepEqual([...flat, ...tabs].sort(), navOf(who).map((s) => s.href).sort(), `${role}: разделы в меню не те`);
+    assert.deepEqual([...flat, ...tabs, ...corner].sort(), navOf(who).map((s) => s.href).sort(), `${role}: разделы в меню не те`);
     assert.ok(menu.every((g) => g.sections.length > 0), `${role}: пустая группа`);
     assert.deepEqual(
       menu.map((g) => g.group),
