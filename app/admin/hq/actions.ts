@@ -29,6 +29,8 @@ import { QUICK_DUES, messageWindow, parseLocalInput, quickDue, type QuickDue } f
  */
 
 const HREF = "/admin/hq";
+/** Доска лидов — единственный адрес возврата с параметром. */
+const BOARD_HREF = "/admin?view=board";
 
 export type TaskState =
   | { ok: true; n: number; later: boolean; at: number }
@@ -222,6 +224,8 @@ export async function myContactAction(leadId: string): Promise<ContactOpen> {
 /** Куда вернуться после отметки: только страница панели, не чужой адрес. */
 function backOf(raw: unknown): string {
   const back = String(raw ?? "");
+  // «Лиды» доской (components/admin/lead-board.tsx): отметка с карточки доски — обратно на доску.
+  if (back === BOARD_HREF) return back;
   return /^\/admin(\/[A-Za-z0-9/_-]*)?$/.test(back) ? back : HREF;
 }
 
@@ -250,5 +254,5 @@ export async function markStageAction(formData: FormData): Promise<void> {
       )
     : "bad";
   revalidatePath(back);
-  redirect(`${back}?mk=${result}${back.startsWith("/admin/leads/") ? "#stages" : ""}`);
+  redirect(`${back}${back.includes("?") ? "&" : "?"}mk=${result}${back.startsWith("/admin/leads/") ? "#stages" : ""}`);
 }

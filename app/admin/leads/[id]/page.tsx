@@ -19,6 +19,7 @@ import { QuoteCard } from "@/components/admin/quote-card";
 import { AdminShell } from "@/components/admin/shell";
 import { LeadTimeline } from "@/components/admin/lead-timeline";
 import { buildTimeline, channelsOf, reminderEvents, stageEvents } from "@/lib/admin/lead-timeline";
+import { nextStepOf } from "@/lib/admin/next-step";
 import type { VoidReason } from "@/lib/partners/rules";
 import { clientById, partnerById } from "@/lib/partners/store";
 import { partnerClientsDict } from "@/content/admin-panel/partner-clients";
@@ -258,6 +259,7 @@ export default async function LeadPage({
   const ss = pick(salesStagesDict, locale);
   const marked = markResultText(markResult, ss);
   const open = reminders.filter((item) => !item.done_at);
+  const next = nextStepOf(reminders);
 
   // Лента (lib/admin/lead-timeline): переписка касания — только тому, за кем
   // лид, как было у «Первички по касанию»; напоминания — ему же.
@@ -717,6 +719,14 @@ export default async function LeadPage({
             </form>
           </div>
 
+          {/* «Следующий шаг» — ближайшее открытое напоминание (lib/admin/next-step.ts). */}
+          {next ? (
+            <p className={`mt-3 text-sm font-medium ${Date.parse(next.due_at) < Date.now() ? "text-red-300" : "text-text"}`}>
+              {t.nextStep(when(next.due_at), next.note)}
+            </p>
+          ) : lead.status === "taken" ? (
+            <p className="mt-3 rounded-lg border border-gold/30 bg-gold/5 px-3 py-2 text-sm text-gold">{t.noNextStep}</p>
+          ) : null}
           {open.length ? (
             <ul className="mt-3 space-y-2">
               {open.map((item) => (

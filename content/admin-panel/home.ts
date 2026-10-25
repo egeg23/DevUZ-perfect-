@@ -11,6 +11,77 @@ import { defineDict, plural } from "@/lib/admin/i18n";
  * польский — как в польских CRM.
  */
 export const homeDict = defineDict({
+  // «Список / Доска» над лидами (components/admin/lead-board.tsx, владелец, 25.10.2026).
+  viewList: { ru: "Список", uz: "Ro‘yxat", pl: "Lista" },
+  viewBoard: { ru: "Доска", uz: "Taxta", pl: "Tablica" },
+  viewLabel: { ru: "Как показать", uz: "Qanday ko‘rsatish", pl: "Jak pokazać" },
+  boardLead: {
+    ru: "Компании по ступеням продажи за 30 дней. Над колонкой — что бот делает сам; отметку ставите вы: кнопкой на карточке или переносом в колонку.",
+    uz: "Kompaniyalar sotuv bosqichlari bo‘yicha, 30 kun. Ustun ustida — bot o‘zi nima qiladi; belgini siz qo‘yasiz: kartochkadagi tugma bilan yoki ustunga olib o‘tib.",
+    pl: "Firmy według etapów sprzedaży z 30 dni. Nad kolumną — co bot robi sam; zaznaczasz Ty: przyciskiem na karcie albo przeciągając do kolumny.",
+  },
+  boardWritten: {
+    ru: (n: number) => `Ещё ${n} — написали, ответа нет: они в «Холодных касаниях».`,
+    uz: (n: number) => `Yana ${n} ta — yozdik, javob yo‘q: ular «Sovuq aloqalar» da.`,
+    pl: (n: number) => `Jeszcze ${n} — napisaliśmy, bez odpowiedzi: są w «Zimne kontakty».`,
+  },
+  boardEmpty: { ru: "Пусто", uz: "Bo‘sh", pl: "Pusto" },
+  boardDays: {
+    ru: (n: number) => (n === 0 ? "сегодня" : `${n} дн.`),
+    uz: (n: number) => (n === 0 ? "bugun" : `${n} kun`),
+    pl: (n: number) => (n === 0 ? "dziś" : `${n} dn.`),
+  },
+  boardAuto: {
+    ru: "Сама, без кнопки",
+    uz: "O‘zi, tugmasiz",
+    pl: "Samo, bez przycisku",
+  },
+  boardDropHint: {
+    ru: "Отпустите — откроется отметка",
+    uz: "Qo‘yib yuboring — belgi ochiladi",
+    pl: "Upuść — otworzy się zaznaczenie",
+  },
+  boardDropNo: {
+    ru: "Сюда переносом не поставить: эта ступень отмечается сама",
+    uz: "Bu yerga olib o‘tib bo‘lmaydi: bu bosqich o‘zi belgilanadi",
+    pl: "Tu nie da się przeciągnąć: ten etap zaznacza się sam",
+  },
+  boardAutopilot: {
+    ru: "Автопрогон касаний включается и выключается в «Холодных касаниях».",
+    uz: "Aloqalar avtoyurishi «Sovuq aloqalar» da yoqiladi va o‘chiriladi.",
+    pl: "Autopilot kontaktów włącza się i wyłącza w «Zimne kontakty».",
+  },
+  // Что бот делает сам на каждой ступени (правила — CLAUDE.md, коротко).
+  rule_replied: {
+    ru: "Бот: кружок через 2 мин (компании без сайта — письмо от ниши), на ответ — разбор сайта через 3 мин. Отказ — касание закрывается само. Ночью, 21:00–08:00, модель молчит.",
+    uz: "Bot: 2 daqiqadan keyin dumaloq video (saytsiz kompaniyaga — soha bo‘yicha xat), javobga — 3 daqiqadan keyin sayt tahlili. Rad etish — aloqa o‘zi yopiladi. Kechasi, 21:00–08:00, model jim.",
+    pl: "Bot: kółko wideo po 2 min (firmie bez strony — list według branży), na odpowiedź — analiza strony po 3 min. Odmowa — kontakt zamyka się sam. W nocy, 21:00–08:00, AI milczy.",
+  },
+  rule_interest: {
+    ru: "Бот: на «+» — «готовим макет» со ссылкой на условия и цена; команде — «🔥 Нужен прототип», лид — в очередь тёплых (по 30 минут каждому).",
+    uz: "Bot: «+» ga — shartlar havolasi va narx bilan «maket tayyorlaymiz»; jamoaga — 🔥 prototip kerakligi haqida xabar, lid — iliq lidlar navbatiga (har biriga 30 daqiqa).",
+    pl: "Bot: na «+» — «przygotowujemy makietę» z linkiem do warunków i ceną; zespołowi — 🔥 wiadomość, że potrzebny prototyp, lead — do kolejki ciepłych (po 30 minut każdemu).",
+  },
+  rule_mockup: {
+    ru: "Сама, когда ссылка на макет ушла клиенту. Бот: условия акции через 3 мин, напоминания в 13:00 и за 2 часа; через 24 часа макет закрывается паролем. Чужой пример — без акции.",
+    uz: "O‘zi, maket havolasi mijozga ketganda. Bot: 3 daqiqadan keyin aksiya shartlari, 13:00 da va 2 soat oldin eslatma; 24 soatdan keyin maket parol bilan yopiladi. Boshqa loyiha namunasi — aksiyasiz.",
+    pl: "Samo, gdy link do makiety trafił do klienta. Bot: warunki promocji po 3 min, przypomnienia o 13:00 i 2 godziny przed końcem; po 24 godzinach makieta zamyka się hasłem. Cudzy przykład — bez promocji.",
+  },
+  rule_shown: {
+    ru: "Отмечаете вы: «Показал макет», по видео или вживую. Норма — 2 показа в неделю, с пятницы ноль — «горит».",
+    uz: "Siz belgilaysiz: «Maketni ko‘rsatdim», video orqali yoki jonli. Me’yor — haftasiga 2 ta ko‘rsatish, jumadan nol — «yonmoqda».",
+    pl: "Zaznaczasz Ty: «Pokazałem makietę», przez wideo albo na żywo. Norma — 2 pokazy w tygodniu, od piątku zero — «pali się».",
+  },
+  rule_priced: {
+    ru: "Отмечаете вы: «Назвал цену» с суммой. На «дорого» — лесенка цен в «Ответах на возражения».",
+    uz: "Siz belgilaysiz: summa bilan «Narxni aytdim». «Qimmat» ga — «E’tirozlarga javoblar» dagi narxlar zinapoyasi.",
+    pl: "Zaznaczasz Ty: «Podałem cenę» z kwotą. Na «drogo» — drabinka cen w «Odpowiedzi na zastrzeżenia».",
+  },
+  rule_paid: {
+    ru: "Сама — по первой оплате проекта из лида. Это сделка: 3 сделки в месяц — 15% и премия.",
+    uz: "O‘zi — lid loyihasining birinchi to‘lovi bo‘yicha. Bu bitim: oyiga 3 ta bitim — 15% va mukofot.",
+    pl: "Samo — po pierwszej płatności projektu z leada. To transakcja: 3 transakcje w miesiącu — 15% i premia.",
+  },
   // Поиск и «чьи лиды» над списком.
   searchLabel: { ru: "Найти лид", uz: "Lidni topish", pl: "Znajdź leada" },
   searchPlaceholder: {
@@ -90,6 +161,10 @@ export const homeDict = defineDict({
   colScore: { ru: "Балл", uz: "Ball", pl: "Ocena" },
   colPriority: { ru: "Приоритет", uz: "Ustuvorlik", pl: "Priorytet" },
   colStatus: { ru: "Статус", uz: "Holat", pl: "Status" },
+  // «Следующий шаг» — ближайшее открытое напоминание (lib/admin/next-step.ts, владелец, 25.10.2026).
+  colStep: { ru: "Следующий шаг", uz: "Keyingi qadam", pl: "Następny krok" },
+  stepNone: { ru: "нет шага", uz: "qadam yo‘q", pl: "brak kroku" },
+  stepLate: { ru: "просрочен", uz: "muddati o‘tgan", pl: "po terminie" },
 
   // Плашка «напоминания не доставляются».
   sweepTitle: {

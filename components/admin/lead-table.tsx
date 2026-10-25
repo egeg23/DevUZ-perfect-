@@ -4,6 +4,7 @@ import { budgetDict, homeDict, priorityDict, statusDict } from "@/content/admin-
 import { partnerClientsDict } from "@/content/admin-panel/partner-clients";
 import { PANEL_INTL, pick, type PanelLocale, type Tr } from "@/lib/admin/i18n";
 import type { LeadRow } from "@/lib/admin/leads";
+import { stepState, type NextStep } from "@/lib/admin/next-step";
 
 const GRADE_TONE: Record<string, string> = {
   A: "bg-green/15 text-green",
@@ -50,7 +51,18 @@ function when(iso: string, locale: PanelLocale = "ru"): string {
   }).format(new Date(iso));
 }
 
-export function LeadTable({ rows, locale }: { rows: LeadRow[]; locale: PanelLocale }) {
+export function LeadTable({
+  rows,
+  locale,
+  steps = {},
+  now = Date.now(),
+}: {
+  rows: LeadRow[];
+  locale: PanelLocale;
+  /** Следующий шаг по лиду (lib/admin/next-step-store.ts); нет — колонка пустая. */
+  steps?: Readonly<Record<string, NextStep>>;
+  now?: number;
+}) {
   const t = pick(homeDict, locale);
   const tp = pick(partnerClientsDict, locale);
   if (!rows.length) {
@@ -74,6 +86,7 @@ export function LeadTable({ rows, locale }: { rows: LeadRow[]; locale: PanelLoca
             <th className="px-4 py-3 font-medium">{t.colScore}</th>
             <th className="px-4 py-3 font-medium">{t.colPriority}</th>
             <th className="px-4 py-3 font-medium">{t.colStatus}</th>
+            <th className="px-4 py-3 font-medium">{t.colStep}</th>
           </tr>
         </thead>
         <tbody>
@@ -134,11 +147,28 @@ export function LeadTable({ rows, locale }: { rows: LeadRow[]; locale: PanelLoca
                   <span className="block text-xs text-faint">{lead.assigned_to}</span>
                 ) : null}
               </td>
+              <td data-label={t.colStep} className="px-4 py-3">
+                <StepCell step={steps[lead.id]} state={stepState(steps[lead.id], lead, now)} locale={locale} />
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
     </div>
+  );
+}
+
+/** Следующий шаг: дата и что сделать; просроченный — красным, у лида в работе без шага — «нет шага». */
+function StepCell({ step, state, locale }: { step: NextStep | undefined; state: ReturnType<typeof stepState>; locale: PanelLocale }) {
+  const t = pick(homeDict, locale);
+  if (state === "none") return <span className="rounded bg-gold/15 px-1.5 py-0.5 text-xs text-gold">{t.stepNone}</span>;
+  if (!step) return <span className="text-faint">—</span>;
+  return (
+    <span className={`block text-xs ${state === "late" ? "text-red-300" : "text-muted"}`}>
+      <span className="font-mono">{when(step.due_at, locale)}</span>
+      {state === "late" ? ` · ${t.stepLate}` : null}
+      {step.note ? <span className="block max-w-[14rem] truncate text-faint">{step.note}</span> : null}
+    </span>
   );
 }
 
