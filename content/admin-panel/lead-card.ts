@@ -358,6 +358,65 @@ export const leadCardDict = defineDict({
     pl: (from: string) => `pisz ${from} — z niego wyszła wiadomość, a dla klienta to jeden rozmówca`,
   },
 
+  // ── Лента карточки (components/admin/lead-timeline.tsx, владелец, 25.10.2026) ──
+  timeline: { ru: "Лента", uz: "Lenta", pl: "Oś zdarzeń" },
+  timelineHint: {
+    ru: "Всё с клиентом по времени: переписка, заметки команды, ступени и напоминания. Ответ — в поле внизу.",
+    uz: "Mijoz bilan bo‘lgan hammasi vaqt bo‘yicha: yozishma, jamoa izohlari, bosqichlar va eslatmalar. Javob — pastdagi maydonda.",
+    pl: "Wszystko z klientem według czasu: korespondencja, notatki zespołu, etapy i przypomnienia. Odpowiedź — w polu na dole.",
+  },
+  evCreated: { ru: "Лид пришёл", uz: "Lid keldi", pl: "Lead wpłynął" },
+  evStage: {
+    ru: (stage: string, by: string | null) => `Ступень: ${stage}${by ? ` · ${by}` : ""}`,
+    uz: (stage: string, by: string | null) => `Bosqich: ${stage}${by ? ` · ${by}` : ""}`,
+    pl: (stage: string, by: string | null) => `Etap: ${stage}${by ? ` · ${by}` : ""}`,
+  },
+  evReminder: {
+    ru: (due: string, note: string | null) => `Напоминание на ${due}${note ? `: ${note}` : ""}`,
+    uz: (due: string, note: string | null) => `${due} ga eslatma${note ? `: ${note}` : ""}`,
+    pl: (due: string, note: string | null) => `Przypomnienie na ${due}${note ? `: ${note}` : ""}`,
+  },
+  evReminderDone: {
+    ru: (note: string | null) => `Напоминание закрыто${note ? `: ${note}` : ""}`,
+    uz: (note: string | null) => `Eslatma yopildi${note ? `: ${note}` : ""}`,
+    pl: (note: string | null) => `Przypomnienie zamknięte${note ? `: ${note}` : ""}`,
+  },
+  /** Заметка команды в ленте: «Команде · Имя». Имя — как в «Команде», не переводится. */
+  noteBy: {
+    ru: (name: string) => `заметка команде · ${name}`,
+    uz: (name: string) => `jamoaga izoh · ${name}`,
+    pl: (name: string) => `notatka dla zespołu · ${name}`,
+  },
+  chanLabel: { ru: "Куда", uz: "Qayerga", pl: "Dokąd" },
+  /** `from` — готовое «с аккаунта «…»» (from). */
+  chanTouch: {
+    ru: (from: string) => `Клиенту ${from}`,
+    uz: (from: string) => `Mijozga ${from}`,
+    pl: (from: string) => `Do klienta ${from}`,
+  },
+  chanBot: { ru: "Клиенту от бота студии", uz: "Mijozga studiya botidan", pl: "Do klienta od bota studia" },
+  chanNote: { ru: "Заметка команде", uz: "Jamoaga izoh", pl: "Notatka dla zespołu" },
+  notePlaceholder: {
+    ru: "Что известно по этому клиенту",
+    uz: "Bu mijoz haqida nima ma’lum",
+    pl: "Co wiadomo o tym kliencie",
+  },
+  noteHint: {
+    ru: "Клиенту не уходит. Видно всей команде, владельцу лида придёт в Telegram.",
+    uz: "Mijozga ketmaydi. Butun jamoaga ko‘rinadi, lid egasiga Telegramda xabar keladi.",
+    pl: "Nie trafia do klienta. Widzi to cały zespół, osoba prowadząca leada dostanie powiadomienie w Telegramie.",
+  },
+  timelineEmpty: {
+    ru: "Пока пусто: здесь появятся переписка, заметки и ступени.",
+    uz: "Hozircha bo‘sh: bu yerda yozishma, izohlar va bosqichlar paydo bo‘ladi.",
+    pl: "Na razie pusto: tu pojawią się korespondencja, notatki i etapy.",
+  },
+  chatEarlier: {
+    ru: "Переписка в чате сайта или в боте — до того, как лид попал к нам:",
+    uz: "Sayt chati yoki botdagi yozishma — lid bizga kelishidan oldin:",
+    pl: "Korespondencja na czacie strony lub w bocie — zanim lead do nas trafił:",
+  },
+
   // ── Ответ клиенту из карточки (components/admin/talk-chat.tsx) ──
   replyPlaceholder: { ru: "Напишите клиенту…", uz: "Mijozga yozing…", pl: "Napisz do klienta…" },
   replySend: { ru: "Отправить", uz: "Yuborish", pl: "Wyślij" },

@@ -130,8 +130,8 @@ test("база: номер сообщения, реплика и автор пр
 test("кнопка — в карточке касания и в чате карточки лида, со статусом правки", () => {
   const list = read("components/admin/outreach-list.tsx");
   assert.match(list, /viewer && mayClose\(row, viewer\) && \(edits\[row\.id\] \|\| lastEdits\[row\.id\]\) \? \(\s*<EditSent/);
-  const chat = read("components/admin/talk-chat.tsx");
-  assert.match(chat, /line\.direction === "out" && \(line\.editable \|\| line\.edit\) \? \(\s*<EditSent/);
+  const chat = read("components/admin/lead-timeline.tsx");
+  assert.match(chat, /prospectId && line\.direction === "out" && \(line\.editable \|\| line\.edit\) \? \(\s*<EditSent/);
   const button = read("components/admin/edit-sent.tsx");
   assert.match(button, /editSentAction\(/);
   assert.match(button, /t\.stateFailed\(shown\.failure/);

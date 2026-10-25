@@ -258,7 +258,7 @@ test("6. возражения ru и uz: распознавание и текст
   assert.match(run, /const objection = inbound\.untilMockup && inbound\.salesNew \? objectionOf\(inbound\.body\) : null;/);
   assert.ok(run.indexOf("objectionReply(") < run.indexOf("await runQualifyTurn("), "готовый текст — до модели");
   // У менеджера — кнопки для всех.
-  const chat = read("components/admin/talk-chat.tsx");
+  const chat = read("components/admin/lead-timeline.tsx");
   assert.match(chat, /onClick=\{\(\) => setText\(q\.text\)\}/);
   assert.match(read("lib/admin/outreach-talk-store.ts"), /const quick: TalkView\["quick"\] = OBJECTIONS\.map/);
 });
