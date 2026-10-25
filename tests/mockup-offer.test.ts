@@ -58,7 +58,7 @@ test("цены и срок акции — те, что решил владеле
   assert.equal(PROMO.landing.addons, 3);
   assert.equal(PROMO.corporate.price, 1000);
   const ru = announceText("ru", "2026-10-15T06:00:00.000Z");
-  assert.match(ru, /48 часа, до 15\.10 11:00 по Ташкенту/);
+  assert.match(ru, /48 часов, до 15\.10 11:00 по Ташкенту/);
   assert.match(ru, /лендинг по этому макету со всем функционалом и 3 допами на выбор — 500 \$ вместо 1700 \$/);
   assert.match(ru, /корпоративный сайт — 1000 \$ вместо 2500 \$/);
   assert.match(ru, /Потом — обычные цены/);
