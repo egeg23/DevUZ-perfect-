@@ -24,6 +24,7 @@ import { handledLabel, markLeadCards } from "@/lib/qualify/telegram";
 import { attributeClientAndNotify } from "@/lib/partners/attribute";
 import { setLeadInn } from "@/lib/partners/store";
 import { writeToClient } from "@/lib/qualify/bot-inbox-store";
+import type { BadLink } from "@/lib/admin/our-links";
 
 /**
  * Переписать карточки лида в Telegram у всей команды.
@@ -157,7 +158,7 @@ export async function replyInTalkAction(
   leadId: string,
   prospectId: string,
   body: string,
-): Promise<{ ok: true } | { ok: false; reason: StaffReplyError | "forbidden" }> {
+): Promise<{ ok: true } | { ok: false; reason: StaffReplyError | "forbidden"; bad?: BadLink[] }> {
   const staff = await requireStaff();
   const lead = await leadById(leadId);
   if (!lead || !canEdit(lead, staff) || !prospectId) return { ok: false, reason: "forbidden" };

@@ -971,6 +971,11 @@ export const editSentDict = defineDict({
     uz: "Telegramdagi bitta xabar uchun juda uzun.",
     pl: "Za długie na jedną wiadomość w Telegramie.",
   },
+  err_bad_link: {
+    ru: "В тексте ссылка на витрину или кейс, которых у нас нет: у клиента откроется пустая страница. Ссылку на макет берите в «Макетах».",
+    uz: "Matnda bizda yo‘q vitrina yoki loyiha havolasi bor: mijozda bo‘sh sahifa ochiladi. Maket havolasini «Maketlar»dan oling.",
+    pl: "W tekście jest link do witryny lub realizacji, których u nas nie ma: klient zobaczy pustą stronę. Link do makiety weź z «Makiety».",
+  },
   err_same: { ru: "Текст не изменился.", uz: "Matn o‘zgarmadi.", pl: "Tekst się nie zmienił." },
   err_hello: {
     ru: "Приветствие не исправляется: до ответа клиента ему уходит только оно.",

@@ -88,7 +88,9 @@ export function TalkChat({
     start(async () => {
       const result = await replyInTalkAction(leadId, prospectId, body);
       if (!result.ok) {
-        setError(t[`re_${result.reason}`]);
+        // Битая ссылка — какая и куда должна вести, чтобы поправить, не ища.
+        const bad = result.reason === "bad_link" ? (result.bad ?? []).map((b) => (b.fix ? t.badLinkFix(b.link, b.fix) : t.badLinkNone(b.link))) : [];
+        setError([t[`re_${result.reason}`], ...bad].join(" "));
         return;
       }
       setText("");
