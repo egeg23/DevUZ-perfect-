@@ -194,7 +194,7 @@ test("ответ на приветствие: по-русски — кружок
   assert.match(hello, /const lang = replyLang\(body, sentLang\);/);
   // Русский или узбекский ответ — только кружок на этом языке, и сразу
   // выход: письма за ним нет.
-  const ru = between(hello, "const circle = circleLangFor(lang);", "const queued = await queueHelloLetter(");
+  const ru = between(hello, "const circle = withoutSite(prospect) ? null : circleLangFor(lang);", "const queued = await queueHelloLetter(");
   assert.match(ru, /if \(circle\) \{/);
   assert.match(ru, /kind: "circle"/);
   assert.match(ru, /body: circleBody\(circle\)/);
@@ -206,7 +206,7 @@ test("ответ на приветствие: по-русски — кружок
   // Письмо — после проверки по факту и на языке ответа.
   const letter = between(hello, "async function queueHelloLetter(", "const LANG_LABEL");
   assert.match(letter, /checkFresh\(/);
-  assert.match(letter, /if \(!fresh\) return handOverHello\(/);
+  assert.match(letter, /if \(!fresh && !noSite\) return handOverHello\(/);
   assert.match(letter, /if \(lang !== sentLang\) \{[\s\S]{0,300}?translateLetter\(letter, lang, host\)/);
   assert.match(letter, /kind: "text"/);
   // Лид автопрогона — на ответ на кружок или письмо, не на «да?».
@@ -354,7 +354,8 @@ test("письмо автопрогона — после ответа: скау�
   const talk = read("lib/admin/outreach-talk-store.ts");
   const letter = between(talk, "async function queueHelloLetter(", "const LANG_LABEL");
   // Проверка сайта устарела — человеку, как и раньше; свежая — отметка, а не модель в скауте.
-  assert.ok(letter.indexOf("if (!fresh) return handOverHello") < letter.indexOf("letter_wanted: lang"));
+  // Без сайта проверять нечего (tests/nosite-reply.test.ts).
+  assert.ok(letter.indexOf("if (!fresh && !noSite) return handOverHello") < letter.indexOf("letter_wanted: lang"));
   assert.match(letter, /!letter && prospect\.autopilot_at && LETTER_AFTER_REPLY && options\.defer !== false/);
   assert.doesNotMatch(talk, /writeLetterLater|outreach-store"/, "модуль касаний процессу скаута не грузим");
 

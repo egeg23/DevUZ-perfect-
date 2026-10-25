@@ -127,7 +127,7 @@ async function take(
  */
 export const OWNER_FLOOR_MS = 60_000;
 
-const QUEUED_COLUMNS = "id, target, target_kind, message, host, claimed_by, walked, autopilot_at";
+const QUEUED_COLUMNS = "id, target, target_kind, message, host, label, claimed_by, walked, autopilot_at";
 
 /**
  * Кто на каких аккаунтах работает: сотрудник → ключи аккаунтов.
@@ -165,7 +165,10 @@ function toQueued(data: Record<string, unknown> | null, hellos: HelloTexts = HEL
     message: String(data.message ?? ""),
     // Своё приветствие руководителя или владельца (lib/admin/hello-text.ts), нет — обычное.
     hello: helloFor(String(data.message ?? ""), (data.walked as { lang?: string } | null)?.lang, hellos),
-    host: String(data.host),
+    // Им скаут подписывает номер в контактах рабочего аккаунта. У компании
+    // без сайта — название: «null» в списке контактов клиент видел сам
+    // (Koshona, 24.10.2026).
+    host: String(data.host ?? data.label ?? ""),
   };
 }
 
