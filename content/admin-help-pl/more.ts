@@ -225,6 +225,14 @@ export const moreSections: Record<string, HelpEntry> = {
         },
       },
       {
+        id: "card",
+        title: "Karta partnera: jego klienci",
+        body: [
+          "Kliknij imię partnera w «Wszyscy partnerzy» (albo liczbę w kolumnie «Klienci») — otworzy się jego karta. Na górze: wejścia ze wszystkich jego linków, ilu ma klientów i ile projektów opłacono, «Zarobione» i «Dostępne». Niżej — «Linki partnera»: każdy link z wejściami i zgłoszeniami.",
+          "Najważniejsze w karcie — **«Klienci partnera»**: każde zgłoszenie zaliczone partnerowi, nowe na górze. W wierszu: kiedy przyszło; klient — kliknięcie otwiera [kartę leada](#leads-card); skąd — etykieta linku, agencja albo przypięty klient; «Gdzie teraz» — zgłoszenie, w pracy, umowa, umowa podpisana, opłacone albo nie wyszło, dokładnie to, co partner widzi u siebie w panelu; «Prowadzi» — kto z zespołu wziął leada; «Projekt» i «Naliczone partnerowi». Niżej — projekty zaliczone mu ręcznie w karcie projektu, jego przypięci klienci i agencje. Partner nie widzi kontaktów swoich klientów, ty — widzisz w karcie leada, jak zwykle.",
+        ],
+      },
+      {
         id: "percent",
         title: "Procent",
         body: [

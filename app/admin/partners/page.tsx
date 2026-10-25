@@ -300,7 +300,10 @@ export default async function PartnersPage({
             {summaries.map(({ partner, links, balance, leads, projects, paidProjects, accruals, payouts }) => (
               <tr key={partner.id} className="border-b border-line-soft last:border-0 align-top">
                 <td data-label={t.colWho} className={TD}>
-                  {partner.name}
+                  {/* Имя — в карточку партнёра: его клиенты и где каждый (app/admin/partners/[id]). */}
+                  <Link href={`/admin/partners/${partner.id}`} className="font-medium text-text hover:text-green">
+                    {partner.name}
+                  </Link>
                   {partner.status === "blocked" ? <span className="ml-2 text-xs text-gold">{t.blocked}</span> : null}
                   {partner.telegram_user_id && staffIds.has(partner.telegram_user_id) ? (
                     <span className="ml-2 rounded border border-gold/40 px-1.5 py-0.5 text-xs text-gold">{t.isStaff}</span>
@@ -353,7 +356,14 @@ export default async function PartnersPage({
                     </span>
                   ) : null}
                 </td>
-                <td data-label={t.colClients} className={`${TD} font-mono text-xs`}>{leads}</td>
+                <td data-label={t.colClients} className={`${TD} font-mono text-xs`}>
+                  <Link href={`/admin/partners/${partner.id}#clients`} className="hover:text-green">
+                    {leads}
+                  </Link>
+                  <Link href={`/admin/partners/${partner.id}#clients`} className="block font-sans text-faint hover:text-green">
+                    {t.open}
+                  </Link>
+                </td>
                 <td data-label={t.colProjects} className={`${TD} font-mono text-xs`}>
                   {paidProjects} / {projects.length}
                   <span className="block font-sans text-faint">{t.paidOfAll}</span>

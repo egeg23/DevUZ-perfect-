@@ -2362,6 +2362,14 @@ export const uz: HelpCopy = {
           },
         },
         {
+          id: "card",
+          title: "Hamkor kartochkasi: uning mijozlari",
+          body: [
+            "«Barcha hamkorlar»da hamkor ismini (yoki «Mijozlar» ustunidagi raqamni) bosing — uning kartochkasi ochiladi. Tepada: uning barcha havolalari bo‘yicha o‘tishlar, nechta mijozi bor va nechta loyiha to‘langan, «Ishlab topilgan» va «Mavjud». Pastda — «Hamkor havolalari»: har bir havola o‘tishlar va arizalar bilan.",
+            "Kartochkada asosiysi — **«Hamkor mijozlari»**: unga hisoblangan har bir ariza, yangilari tepada. Qatorda: qachon kelgan; mijoz — bosilsa [lid kartochkasi](#leads-card) ochiladi; qayerdan — havola belgisi, agentlik yoki biriktirilgan mijoz; «Hozir qayerda» — ariza, ishda, shartnoma, shartnoma imzolangan, to‘langan yoki bo‘lmadi, hamkor o‘z kabinetida ko‘radiganning aynan o‘zi; «Olib boradi» — jamoadan lidni kim olgan; «Loyiha» va «Hamkorga hisoblangan». Pastda — loyiha kartochkasida unga qo‘lda hisoblangan loyihalar, u biriktirgan mijozlar va agentliklari. Hamkor o‘z mijozlarining kontaktlarini ko‘rmaydi, siz esa odatdagidek lid kartochkasida ko‘rasiz.",
+          ],
+        },
+        {
           id: "percent",
           title: "Foiz",
           body: [
