@@ -105,6 +105,11 @@ export const leadResultDict = defineDict({
     pl: "Wysłano klientowi od bota studia. Model milczy w tej rozmowie 7 dni, dalej odpowiadasz Ty.",
   },
   bot_empty: { ru: "Пустое сообщение не отправляется.", uz: "Bo‘sh xabar yuborilmaydi.", pl: "Pustej wiadomości nie wysyłamy." },
+  bot_bad_link: {
+    ru: "Не ушло: в тексте ссылка на витрину или кейс, которых у нас нет, у клиента откроется пустая страница. Ссылку на макет берите в «Макетах».",
+    uz: "Ketmadi: matnda bizda yo‘q vitrina yoki loyiha havolasi bor, mijozda bo‘sh sahifa ochiladi. Maket havolasini «Maketlar»dan oling.",
+    pl: "Nie wysłano: w tekście jest link do witryny lub realizacji, których u nas nie ma, klient zobaczy pustą stronę. Link do makiety weź z «Makiety».",
+  },
   bot_no_chat: {
     ru: "Клиент не писал боту студии или заблокировал его: бот первым написать не может.",
     uz: "Mijoz studiya botiga yozmagan yoki uni bloklagan: bot birinchi bo‘lib yoza olmaydi.",
@@ -394,6 +399,22 @@ export const leadCardDict = defineDict({
     ru: "Слишком длинно: в Telegram одним сообщением уходит до 4000 знаков.",
     uz: "Juda uzun: Telegramda bitta xabarda 4000 belgigacha ketadi.",
     pl: "Za długo: w Telegramie jedna wiadomość to do 4000 znaków.",
+  },
+  // lib/admin/our-links.ts: адрес витрины или кейса, которого у нас нет.
+  re_bad_link: {
+    ru: "Ссылка не откроется: у клиента будет пустая страница. Поправьте и отправьте снова.",
+    uz: "Havola ochilmaydi: mijozda bo‘sh sahifa chiqadi. Tuzatib, qayta yuboring.",
+    pl: "Link się nie otworzy: klient zobaczy pustą stronę. Popraw i wyślij ponownie.",
+  },
+  badLinkFix: {
+    ru: (link: string, fix: string) => `${link}: такой страницы нет, верная ссылка ${fix}.`,
+    uz: (link: string, fix: string) => `${link}: bunday sahifa yo‘q, to‘g‘ri havola ${fix}.`,
+    pl: (link: string, fix: string) => `${link}: takiej strony nie ma, poprawny link to ${fix}.`,
+  },
+  badLinkNone: {
+    ru: (link: string) => `${link}: такой страницы нет. Ссылку на макет берите в «Макетах», на кейс — в «Кейсах» на сайте.`,
+    uz: (link: string) => `${link}: bunday sahifa yo‘q. Maket havolasini «Maketlar»dan, loyiha havolasini saytdagi «Loyihalar»dan oling.`,
+    pl: (link: string) => `${link}: takiej strony nie ma. Link do makiety weź z «Makiety», do realizacji — z «Realizacje» na stronie.`,
   },
   re_gone: {
     ru: "Переписка изменилась — обновите страницу.",

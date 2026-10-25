@@ -14,6 +14,7 @@ import { protoTermsText } from "@/lib/admin/prototype-claim";
 import { announcePrototype } from "@/lib/admin/prototype-claim-store";
 import { leadOnHandover, offerLead, routeAutopilotReply } from "@/lib/admin/autopilot-reply";
 import { hasMockupLink } from "@/lib/admin/mockup-offer";
+import { badOurLinks, type BadLink } from "@/lib/admin/our-links";
 import { recordMockupSent } from "@/lib/admin/mockup-offer-store";
 import { CLOSE_TEXT, canClose, closeCallback, closesLead, isCloseReason } from "@/lib/admin/touch-close";
 import { esc, sendMessage, sendWithRows } from "@/lib/qualify/telegram";
@@ -1557,7 +1558,7 @@ const STAFF_TOOK_OVER = "не отправлено: менеджер ответ�
 /** Длиннее ответа менеджера в Telegram не отправить одним сообщением. */
 export const STAFF_REPLY_MAX = 4000;
 
-export type StaffReplyError = "empty" | "too_long" | "gone" | "manual" | "offline" | "failed";
+export type StaffReplyError = "empty" | "too_long" | "bad_link" | "gone" | "manual" | "offline" | "failed";
 
 /**
  * Ответ менеджера прямо из карточки лида.
@@ -1579,10 +1580,13 @@ export async function queueStaffReply(input: {
   leadId: string;
   staffId: string;
   body: string;
-}): Promise<{ ok: true } | { ok: false; reason: StaffReplyError }> {
+}): Promise<{ ok: true } | { ok: false; reason: StaffReplyError; bad?: BadLink[] }> {
   const body = input.body.trim();
   if (!body) return { ok: false, reason: "empty" };
   if (body.length > STAFF_REPLY_MAX) return { ok: false, reason: "too_long" };
+  // Ссылка на витрину или кейс, которой у нас нет, у клиента — 404 (lib/admin/our-links).
+  const bad = badOurLinks(body);
+  if (bad.length) return { ok: false, reason: "bad_link", bad };
   const db = serviceClient();
   if (!db) return { ok: false, reason: "offline" };
 

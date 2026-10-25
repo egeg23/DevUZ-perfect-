@@ -1,5 +1,6 @@
 import { record } from "@/lib/admin/audit";
 import { wants } from "@/lib/admin/notify-prefs";
+import { badOurLinks } from "@/lib/admin/our-links";
 import { TASHKENT_OFFSET_MS, todayInTashkent } from "@/lib/admin/pulse";
 import { dayStartUtc } from "@/lib/admin/portion";
 import { staffByTelegramId } from "@/lib/admin/session";
@@ -333,7 +334,7 @@ export async function botChatOf(username: string | null | undefined): Promise<nu
   return error || !data ? null : Number(data.chat_id);
 }
 
-export type BotWriteResult = "bot_sent" | "bot_empty" | "bot_no_chat" | "bot_failed";
+export type BotWriteResult = "bot_sent" | "bot_empty" | "bot_bad_link" | "bot_no_chat" | "bot_failed";
 
 /**
  * «Написать клиенту в бот» из карточки лида (владелец, 23.10.2026): первым,
@@ -349,6 +350,7 @@ export async function writeToClient(input: {
 }): Promise<BotWriteResult> {
   const words = input.text.replace(/\r\n/g, "\n").trim().slice(0, BOT_WRITE_MAX);
   if (!words) return "bot_empty";
+  if (badOurLinks(words).length) return "bot_bad_link";
   const chat = await botChatOf(input.tgUsername);
   if (!chat) return "bot_no_chat";
   if (!(await sendMessage(chat, esc(words)))) return "bot_failed";

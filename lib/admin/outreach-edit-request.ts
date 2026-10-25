@@ -3,6 +3,7 @@ import type { MessageProblem } from "@/lib/admin/outreach";
 import { EDIT_WINDOW_MS, isHelloLine, lineEditable, type EditState, type EditableLine } from "@/lib/admin/outreach-edit";
 import { prospectById, sendProblems, type Prospect } from "@/lib/admin/outreach-store";
 import { STAFF_REPLY_MAX } from "@/lib/admin/outreach-talk-store";
+import { badOurLinks } from "@/lib/admin/our-links";
 import type { Staff } from "@/lib/admin/session";
 import { mayClose } from "@/lib/admin/touch-close";
 import { record } from "@/lib/admin/audit";
@@ -35,6 +36,7 @@ export type EditError =
   | "gone"
   | "empty"
   | "too_long"
+  | "bad_link"
   | "same"
   | "hello"
   | "not_editable"
@@ -58,10 +60,11 @@ export function letterEditProblems(prospect: Prospect, body: string, sender: str
 }
 
 /** Проверка ответа в переписке — как у ответа менеджера из карточки лида. */
-export function replyEditProblem(body: string): "empty" | "too_long" | null {
+export function replyEditProblem(body: string): "empty" | "too_long" | "bad_link" | null {
   const text = body.trim();
   if (!text) return "empty";
   if (text.length > STAFF_REPLY_MAX) return "too_long";
+  if (badOurLinks(text).length) return "bad_link";
   return null;
 }
 
