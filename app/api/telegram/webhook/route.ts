@@ -57,8 +57,17 @@ import { noteBotUser } from "@/lib/admin/bot-users-store";
 import { NO_MORE_WAIT, TIDY_CALLBACK, parseTidyCallback } from "@/lib/admin/lead-tidy";
 import { answerTidy } from "@/lib/admin/lead-tidy-store";
 import { findStaffByTelegram, issueLoginToken, staffByTelegramId, type Staff } from "@/lib/admin/session";
-import { APP_START_NO_REQUEST, APP_START_STALE, codeMessage, isAppStart, requestFromStart } from "@/lib/admin/app-login";
-import { issueAppCode } from "@/lib/admin/app-login-store";
+import {
+  APP_CODE_NONE,
+  APP_START_NO_REQUEST,
+  APP_START_STALE,
+  appCodeCommand,
+  codeMessage,
+  isAppStart,
+  requestFromStart,
+  startPayloadOf,
+} from "@/lib/admin/app-login";
+import { issueAppCode, issueLatestAppCode } from "@/lib/admin/app-login-store";
 import { siteUrl } from "@/lib/seo";
 import { linkSignalsToLead, signalsByAuthor } from "@/lib/scout/store";
 import { helloTexts } from "@/lib/admin/hello-text-store";
@@ -289,6 +298,24 @@ async function route(update: Update): Promise<void> {
       if (chat.type === "private" && loginCommand(update.message.text)) {
         await handleStaffLogin(update.message);
         return;
+      }
+
+      // Вход кнопками со страницы входа и из приложения — тоже раньше чата
+      // продаж: личка владельца назначена чатом продаж (TELEGRAM_SALES_CHAT_ID),
+      // и «/start app-…» там уходил в handleSales — код в приложение не
+      // приходил (владелец, 25.10.2026). И отдельная кнопка «🔑 Код для
+      // приложения» / /code — код без ссылки, к последнему входу в приложении.
+      if (chat.type === "private") {
+        const start = startPayloadOf(update.message.text);
+        if (start === "login") {
+          await handleStaffLogin(update.message);
+          return;
+        }
+        if (start !== null && isAppStart(start)) {
+          await handleAppCode(update.message, start);
+          return;
+        }
+        if (appCodeCommand(update.message.text) && (await handleAppCodeButton(update.message))) return;
       }
 
       // Ответ владельца или руководителя на «📩 Обращение в бота» — клиенту
@@ -626,6 +653,30 @@ async function handleAppCode(message: NonNullable<Update["message"]>, payload: s
   }
   await record("login.requested", { actorStaffId: staff.id, meta: { via: "app_code" } });
   await sendMessage(chat.id, codeMessage(code), { mirror: false });
+}
+
+/**
+ * «🔑 Код для приложения» и /code: код к последнему входу, начатому в
+ * приложении (lib/admin/app-login-store.ts → issueLatestAppCode). true —
+ * это сотрудник и он получил ответ; незнакомцу — false, его слова идут в
+ * обычный разговор.
+ */
+async function handleAppCodeButton(message: NonNullable<Update["message"]>): Promise<boolean> {
+  const chat = message.chat;
+  const { staff, offline } = await findStaffByTelegram(message.from?.id ?? chat.id);
+  if (offline) {
+    await sendMessage(chat.id, "Не смог проверить вход: база сейчас не отвечает. Попробуйте через минуту.");
+    return true;
+  }
+  if (!staff) return false;
+  const code = await issueLatestAppCode(staff.id);
+  if (!code) {
+    await sendMessage(chat.id, APP_CODE_NONE);
+    return true;
+  }
+  await record("login.requested", { actorStaffId: staff.id, meta: { via: "app_code_button" } });
+  await sendMessage(chat.id, codeMessage(code), { mirror: false });
+  return true;
 }
 
 // ───────────────────────────────────────────────────────────────────────────

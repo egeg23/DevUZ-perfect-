@@ -90,6 +90,9 @@ export function AppLogin({ locale, forced, children }: { locale: PanelLocale; fo
         {pending ? t.appOpening : asked || state.error ? t.appGetCodeAgain : t.appGetCode}
       </button>
       <p className="mt-3 text-xs leading-relaxed text-faint">{t.appStep}</p>
+      {/* Start в боте не сработал (так было у владельца 25.10.2026) — код
+          без ссылки: /code или кнопка внизу чата, к этому же входу. */}
+      {asked || state.error ? <p className="mt-2 text-xs leading-relaxed text-faint">{t.appFallback}</p> : null}
 
       <form action={submit} className="mt-6 flex flex-col gap-3">
         <label className="text-xs text-faint" htmlFor="app-code">

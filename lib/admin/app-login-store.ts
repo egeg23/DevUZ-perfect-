@@ -67,6 +67,46 @@ export async function issueAppCode(requestId: string, staffId: string, now = Dat
   return code;
 }
 
+/**
+ * Код по кнопке «🔑 Код для приложения» и /code в боте — к последнему входу,
+ * начатому в приложении за 15 минут: ещё ничьему или уже этого сотрудника.
+ * null — такого входа нет.
+ */
+export async function issueLatestAppCode(staffId: string, now = Date.now()): Promise<string | null> {
+  const db = serviceClient();
+  if (!db) return null;
+  const since = new Date(now - APP_REQUEST_TTL_MS).toISOString();
+  const open = `staff_id.is.null,staff_id.eq.${staffId}`;
+  const { data: row } = await db
+    .from("app_login_codes")
+    .select("id, request_hash")
+    .is("used_at", null)
+    .gt("created_at", since)
+    .or(open)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!row) return null;
+  const code = mintCode();
+  const { data, error } = await db
+    .from("app_login_codes")
+    .update({
+      staff_id: staffId,
+      code_hash: codeHash(String(row.request_hash), code),
+      attempts: 0,
+      issued_at: new Date(now).toISOString(),
+      expires_at: new Date(now + APP_CODE_TTL_MS).toISOString(),
+      used_at: null,
+    })
+    .eq("id", row.id)
+    .is("used_at", null)
+    .or(open)
+    .select("id")
+    .maybeSingle();
+  if (error || !data) return null;
+  return code;
+}
+
 export type AppCodeResult = { check: CodeCheck | "offline"; staffId: string | null; attempts: number };
 
 /**

@@ -17,6 +17,7 @@ import {
 import { todayInTashkent } from "@/lib/admin/pulse";
 import { staffById, type Staff } from "@/lib/admin/session";
 import { STREAM_BUFFER, STREAM_OFF, STREAM_ON, streamHours, streamNeed, streamWaiting } from "@/lib/admin/stream";
+import { APP_CODE_BUTTON } from "@/lib/admin/app-login";
 import { sendKeyboard, sendMessage, sendWithRows, type Button } from "@/lib/qualify/telegram";
 import { serviceClient } from "@/lib/supabase";
 
@@ -99,7 +100,7 @@ export const STREAM_OFF_TEXT = [
 
 /** Ответ человеку с нужной кнопкой внизу чата. */
 export async function answerStream(chat: number, on: boolean, now: Date = new Date()): Promise<void> {
-  await sendKeyboard(chat, on ? streamOnText(now) : STREAM_OFF_TEXT, [[on ? STREAM_OFF : STREAM_ON]]);
+  await sendKeyboard(chat, on ? streamOnText(now) : STREAM_OFF_TEXT, [[on ? STREAM_OFF : STREAM_ON], [APP_CODE_BUTTON]]);
 }
 
 type Person = { id: string; chat: number };

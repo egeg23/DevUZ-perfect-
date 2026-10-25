@@ -111,3 +111,32 @@ export const APP_START_NO_REQUEST =
 
 export const APP_START_STALE =
   "Эта попытка входа устарела. Нажмите «Получить код в боте» в приложении ещё раз.";
+
+/** «/start <ключ>» — ключ, иначе null. Регистр и @имя бота не мешают. */
+export function startPayloadOf(text: string | null | undefined): string | null {
+  const match = /^\/start(?:@\w+)?(?:\s+(\S+))?\s*$/i.exec((text ?? "").trim());
+  return match ? (match[1] ?? "") : null;
+}
+
+/**
+ * Код без ссылки из приложения: кнопка внизу чата и команда /code
+ * (владелец, 25.10.2026: «он отправляет в бот Start, но код не выдаёт.
+ * Сделай отдельную кнопку для генерации кода в боте»). Код — к последнему
+ * входу, начатому в приложении за 15 минут и ещё ничьему (или уже этого
+ * сотрудника). Чужого входа так не открыть: код видит только тот, кому его
+ * прислал бот, а подходит он только приложению, где нажали «Получить код в
+ * боте».
+ */
+export const APP_CODE_BUTTON = "🔑 Код для приложения";
+
+export function appCodeCommand(text: string | null | undefined): boolean {
+  const plain = (text ?? "")
+    .trim()
+    .replace(/^[^\p{L}/]+/u, "")
+    .trim()
+    .toLowerCase();
+  return /^\/code(?:@\w+)?$/.test(plain) || plain === "код для приложения";
+}
+
+export const APP_CODE_NONE =
+  "Сначала откройте приложение DevUz на телефоне и нажмите «Получить код в боте». Потом здесь — «🔑 Код для приложения» или /code, и код придёт сразу.";
