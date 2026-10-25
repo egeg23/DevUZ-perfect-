@@ -16,6 +16,7 @@ import { UsageBeacon } from "@/components/admin/usage-beacon";
 import { TaskPulse } from "@/components/admin/task-alerts";
 import { NavProgress } from "@/components/admin/nav-progress";
 import { SectionTabs } from "@/components/admin/section-tabs";
+import { Bell } from "@/components/admin/bell";
 
 /**
  * Каркас панели.
@@ -84,6 +85,8 @@ export function AdminShell({
                   {ROLE_BADGE[staff.role][locale]}
                 </span>
               </span>
+              {/* Колокольчик (lib/admin/bell.ts): что бот писал мне, с «✓ Сделано». */}
+              <Bell />
               {/* «Настройки» (lib/admin/settings.ts) — шестерёнкой рядом с именем,
                   как в любой CRM: своё и ссылки на настройки касаний и команды. */}
               <Link
