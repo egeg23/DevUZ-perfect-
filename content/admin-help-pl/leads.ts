@@ -377,6 +377,47 @@ export const leadsSections: Record<string, HelpEntry> = {
   },
 
   /* ── Zadania ─────────────────────────────────────────────────────── */
+  "/admin/inbox": {
+    what: "Wszystko, co czeka na odpowiedź człowieka, w jednej kolejce: kto dłużej czeka — wyżej. Odpowiedzieć można stąd, tą samą drogą co z karty leada.",
+    items: [
+      {
+        id: "queue",
+        title: "Co tu trafia",
+        body: {
+          manager: [
+            "Od 25.10.2026 — **«Skrzynka»** obok «Zadania». Tu są Twoje kontakty, w których klient odpisał, a odpowiedzieć musi człowiek: AI oddało rozmowę albo kliknąłeś «Odpowiadam osobiście». Czyje — jak na [Pulpit](/admin/hq): kontakt z leadem — osoby, u której jest lead, bez leada — osoby, która prowadzi kontakt. Autoodpowiedzi („odpowiemy w godzinach pracy”) tu nie trafiają.",
+            "Na górze — ile nowych zgłoszeń nikt jeszcze nie wziął, z linkiem do nich w [Leady](/admin). Wiersz, który czeka godzinę i dłużej, jest podświetlony na żółto. Rozmów prowadzonych przez AI tu nie ma: jej nie trzeba odpowiadać.",
+          ],
+          head: [
+            "Od 25.10.2026 — **«Skrzynka»** obok «Zadania». Tu są kontakty całego zespołu, w których klient odpisał, a odpowiedzieć musi człowiek: AI oddało rozmowę albo przejęto ją przyciskiem «Odpowiadam osobiście», — oraz **wiadomości do bota**, gdzie rozmowę prowadzi człowiek, a klient napisał po jego odpowiedzi. Przy każdym wierszu — kto prowadzi. Autoodpowiedzi tu nie trafiają.",
+            "Na górze — ile nowych zgłoszeń nikt jeszcze nie wziął, z linkiem do nich w [Leady](/admin). Wiersz, który czeka godzinę i dłużej, jest podświetlony na żółto. Rozmów prowadzonych przez AI tu nie ma: jej nie trzeba odpowiadać. Każda wiadomość klienta do bota jak dawniej przychodzi do Ciebie na Telegram jako «📩 Обращение в бота».",
+          ],
+          admin: [
+            "Od 25.10.2026 — **«Skrzynka»** obok «Zadania». Tu są kontakty całego zespołu, w których klient odpisał, a odpowiedzieć musi człowiek: AI oddało rozmowę albo przejęto ją przyciskiem «Odpowiadam osobiście», — oraz **wiadomości do bota**, gdzie rozmowę prowadzi człowiek, a klient napisał po jego odpowiedzi. Przy każdym wierszu — kto prowadzi. Autoodpowiedzi tu nie trafiają.",
+            "Na górze — ile nowych zgłoszeń nikt jeszcze nie wziął, z linkiem do nich w [Leady](/admin). Wiersz, który czeka godzinę i dłużej, jest podświetlony na żółto. Rozmów prowadzonych przez AI tu nie ma: jej nie trzeba odpowiadać. Każda wiadomość klienta do bota jak dawniej przychodzi do Ciebie na Telegram jako «📩 Обращение в бота».",
+          ],
+        },
+      },
+      {
+        id: "reply",
+        title: "Odpowiedz z wiersza",
+        body: {
+          manager: [
+            "**«Odpowiedz klientowi»** otwiera pole w samym wierszu; Ctrl+Enter — wyślij. Kontaktowi odpowiedź idzie z konta firmowego kontaktu, jak z pola pod [«Oś zdarzeń»](#leads-timeline) w karcie, a AI potem milczy. Nasze linki do makiet i realizacji są sprawdzane przed wysłaniem.",
+            "Potrzebna cała rozmowa — **«Otwórz kartę»**: oś otworzy się na korespondencji. Kontakt bez leada otwiera się w [Zimne kontakty](/admin/prospect). Gdy odpowiedź wyszła, wiersz znika: wiadomość ma odpowiedź.",
+          ],
+          head: [
+            "**«Odpowiedz klientowi»** otwiera pole w samym wierszu; Ctrl+Enter — wyślij. Kontaktowi odpowiedź idzie z konta firmowego kontaktu, jak z pola pod [«Oś zdarzeń»](#leads-timeline) w karcie; klientowi bota — od bota studia, jak odpowiedź na «📩 Обращение в бота», a AI milczy jeszcze 7 dni. Nasze linki do makiet i realizacji są sprawdzane przed wysłaniem.",
+            "Potrzebna cała rozmowa — **«Otwórz kartę»**: oś otworzy się na korespondencji. Kontakt bez leada otwiera się w [Zimne kontakty](/admin/prospect). Gdy odpowiedź wyszła, wiersz znika: wiadomość ma odpowiedź.",
+          ],
+          admin: [
+            "**«Odpowiedz klientowi»** otwiera pole w samym wierszu; Ctrl+Enter — wyślij. Kontaktowi odpowiedź idzie z konta firmowego kontaktu, jak z pola pod [«Oś zdarzeń»](#leads-timeline) w karcie; klientowi bota — od bota studia, jak odpowiedź na «📩 Обращение в бота», a AI milczy jeszcze 7 dni. Nasze linki do makiet i realizacji są sprawdzane przed wysłaniem.",
+            "Potrzebna cała rozmowa — **«Otwórz kartę»**: oś otworzy się na korespondencji. Kontakt bez leada otwiera się w [Zimne kontakty](/admin/prospect). Gdy odpowiedź wyszła, wiersz znika: wiadomość ma odpowiedź.",
+          ],
+        },
+      },
+    ],
+  },
   "/admin/tasks": {
     what: "Nasz wewnętrzny CRM: wszystko, co obiecujemy klientom i sobie nawzajem, jest zadaniem z terminem i osobą odpowiedzialną. Na górze — zadania dla ciebie («Dla mnie»), zadania zlecone przez ciebie («Zleciłem») i formularz «Zleć zadanie». Niżej na tej samej stronie — «Historia zadań»: co zrobione, niezrobione, anulowane i ile razy przesuwano termin. Sekcja jest otwarta dla wszystkich i nie zamyka się znacznikami: zadanie może dostać każdy, a przycisk bota przy zadaniu prowadzi tutaj.",
     items: [
