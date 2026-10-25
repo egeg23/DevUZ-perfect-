@@ -118,6 +118,41 @@ export function botSubs(users: readonly BotUser[], marks: Marks, now: Date): Bot
   return { total: people.length - blocked, blocked, fresh, active };
 }
 
+/**
+ * Ответ на рассылку — с её текстом (владелец, 25.10.2026, на «бот подхватит
+ * дальнейшее общение с теми, кто продолжит диалог?» — «Делай»). Рассылка
+ * уходит мимо переписки бота, и на «Да» после «Хотите бесплатный макет?»
+ * модель видела одно «Да» и знакомилась заново. Теперь последняя дошедшая
+ * рассылка за BROADCAST_CONTEXT_MS встаёт в переписку репликой студии перед
+ * ответом клиента.
+ */
+export const BROADCAST_CONTEXT_MS = 3 * 24 * 60 * 60_000;
+
+/** Что модели сказать о вставленной рассылке — одной строкой в заметке канала. */
+export const BROADCAST_NOTE =
+  "Последней репликой от нас в переписке стоит рассылка студии всем подписчикам бота. Клиент отвечает на неё: продолжай с неё, не знакомься заново и не переспрашивай то, что в ней уже сказано.";
+
+/**
+ * Текст рассылки, который надо вставить в переписку перед ответом клиента,
+ * или null: рассылки не было, она старше трёх дней, уже стоит в переписке
+ * или разговор после неё уже шёл (`sessionAt` — когда переписка бота
+ * менялась последний раз).
+ */
+export function broadcastTurn(
+  transcript: readonly { role: string; content: string }[],
+  sessionAt: number | null,
+  last: { text: string; at: string } | null,
+  now: number,
+): string | null {
+  if (!last) return null;
+  const at = Date.parse(last.at);
+  const text = last.text.trim();
+  if (!text || !Number.isFinite(at) || now - at > BROADCAST_CONTEXT_MS) return null;
+  if (transcript.some((m) => m.role === "assistant" && m.content.trim() === text)) return null;
+  if (transcript.length && sessionAt !== null && sessionAt > at) return null;
+  return text;
+}
+
 function esc(value: string): string {
   return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
