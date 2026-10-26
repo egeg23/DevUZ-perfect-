@@ -131,7 +131,20 @@ for (const w of [390, 768, 1440]) {
   ok((await pg.textContent(".gb-card h3")) === "Масштабирование", `${w}: блок не показал шаг`);
   await pg.goto(`${BASE}/partners`, { waitUntil: "load" });
   await pg.locator(".gl-r").nth(2).focus();
-  ok((await pg.textContent(".gl-card h3")) === "Продукт и рынок", `${w}: маршрут не показал шаг`);
+  ok((await pg.textContent(".gl-card h3")) === "Бренд под рынок", `${w}: маршрут не показал шаг`);
+  // Путь бренда: название на коробке, пять этапов, заявка заполняется сама.
+  await pg.goto(`${BASE}/`, { waitUntil: "load" });
+  await pg.locator("#launch").scrollIntoViewIfNeeded();
+  await pg.fill("#ln-name", "Vitalix");
+  ok((await pg.textContent(".bx-name")) === "Vitalix", `${w}: название не на коробке`);
+  await pg.locator('.ln-steps button[data-s="0"]').click();
+  for (let i = 0; i < 4; i++) await pg.locator("#ln-next").click({ force: true });
+  ok((await pg.getAttribute("#ln", "data-s")) === "4" && (await pg.isVisible("#ln-go")), `${w}: путь бренда не дошёл до «под ключ»`);
+  await pg.locator("#ln-go").click(); await pg.waitForLoadState("load");
+  ok((await pg.inputValue('#form [name="msg"]')).includes("Vitalix"), `${w}: заявка не заполнилась из пути бренда`);
+  await pg.goto(`${BASE}/`, { waitUntil: "load" });
+  await pg.locator("#vs").scrollIntoViewIfNeeded(); await pg.locator('.vs-sw [data-v="1"]').click();
+  ok((await pg.getAttribute("#vs", "data-on")) === "1", `${w}: «Сам или с CHECHFARM» не переключается`);
   console.log(w, "путь пройден");
   await ctx.close();
 }
