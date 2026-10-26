@@ -40,6 +40,9 @@ const SAYS = {
   billing:
     "На ключе модели кончились деньги. Пополните баланс в Anthropic Console — " +
     "всё заработает само, выкатывать ничего не нужно.",
+  gateway:
+    "На ProxyAPI кончились деньги, а прокси не отвечает — модель молчит. Пополните баланс " +
+    "в кабинете ProxyAPI → «Биллинг», дальше всё само.",
   auth: "Ключ модели не принят. Проверьте ANTHROPIC_API_KEY на сервере.",
   limit: "Модель отказывает по частоте запросов. Подождите минуту и повторите.",
   down: "Модель временно недоступна — это на стороне поставщика. Повторите через несколько минут.",
@@ -59,6 +62,12 @@ export function modelTrouble(error: unknown): ModelTrouble | null {
 
   if (status === 400 && BILLING.test(text)) {
     return { kind: "billing", says: SAYS.billing };
+  }
+  // 402 отдаёт только шлюз ProxyAPI, когда на нём кончился баланс, а прокси
+  // лежит (lib/model-road.ts): 26.10.2026 так полдня молчали бот, чат на
+  // сайте и касания, а чат показывал посетителям «ошибку» вместо формы.
+  if (status === 402) {
+    return { kind: "billing", says: SAYS.gateway };
   }
   if (status === 401 || status === 403) {
     return { kind: "auth", says: SAYS.auth };

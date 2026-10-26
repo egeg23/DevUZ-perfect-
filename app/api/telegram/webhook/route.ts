@@ -142,7 +142,7 @@ import { grade, isRight, questionsFor } from "@/lib/learn/quiz";
 import { saveAttempt } from "@/lib/learn/store";
 import { CIRCLE_NICHE_RU } from "@/lib/admin/sales-after-reply";
 import { secretOk } from "@/lib/secret-ok";
-import { humanOf, mediaOf, noteClientText, notifyInbox, relayClientMedia, relayInboxReply } from "@/lib/qualify/bot-inbox-store";
+import { humanOf, mediaOf, noteClientText, notifyInbox, relayClientMedia, relayInboxReply, type InboxClient } from "@/lib/qualify/bot-inbox-store";
 import { tellLeadOwner } from "@/lib/qualify/lead-owner-notify";
 
 export const runtime = "nodejs";
@@ -1298,18 +1298,19 @@ async function respond(
   } catch (error) {
     console.error("bot turn", error);
     stopTyping();
-    await sendMessage(chatId, copy.error);
+    await modelSilent(chatId, session, history, client, text);
     return;
   }
 
   stopTyping();
 
-  if (reply.trim()) {
-    await sendPlain(chatId, reply);
-    history.push({ role: "assistant", content: reply.trim() });
-  } else {
-    await sendMessage(chatId, copy.error);
+  if (!reply.trim()) {
+    console.error("bot turn: модель вернула пустой ответ");
+    await modelSilent(chatId, session, history, client, text);
+    return;
   }
+  await sendPlain(chatId, reply);
+  history.push({ role: "assistant", content: reply.trim() });
 
   // Каждое обращение — владельцу и руководителю, с ответом из Telegram
   // (lib/qualify/bot-inbox-store.ts). Лид уже взят — слова клиента его
@@ -1326,6 +1327,43 @@ async function respond(
 
   session.transcript = history;
   session.resumed = true;
+  saveSession(chatId, session);
+}
+
+/**
+ * Модель не ответила: кончились деньги на шлюзе, лежит прокси, пустой ответ.
+ *
+ * 26.10.2026 прокси proxy6 умер, ProxyAPI остался без денег, и клиентка в
+ * 12:07 и 12:08 («нам нужен свой интернет-магазин») дважды получила «Напишите
+ * ещё раз — обычно со второго всё проходит», а до владельца и руководителя
+ * её слова не дошли вовсе: обращение уходило только после ответа модели.
+ *
+ * Теперь клиенту — честное «передали менеджеру» (один раз подряд), слова —
+ * владельцу и руководителю «📩 Обращением в бота» с пометкой: ответ на него
+ * уходит клиенту, модель после этого молчит, как после любого ответа
+ * человека. Переписка сохраняется: вернётся модель — продолжит с ней.
+ */
+async function modelSilent(
+  chatId: number,
+  session: BotSession,
+  history: BotSession["transcript"],
+  client: InboxClient,
+  text: string,
+) {
+  const copy = botCopy(session.locale);
+  const last = session.transcript[session.transcript.length - 1];
+  if (!(last?.role === "assistant" && last.content === copy.later)) {
+    await sendMessage(chatId, copy.later);
+    history.push({ role: "assistant", content: copy.later });
+  }
+  const fresh = history.slice(session.transcript.length);
+  void notifyInbox({ client, text, botReply: null, human: null, modelDown: true })
+    .catch(() => new Set<number>())
+    .then((notified) => tellLeadOwner({ username: client.username, text, turns: fresh, skipChats: notified }))
+    .catch((error: unknown) => {
+      console.error("бот: обращение без ответа модели не ушло", error instanceof Error ? error.message : error);
+    });
+  session.transcript = history;
   saveSession(chatId, session);
 }
 

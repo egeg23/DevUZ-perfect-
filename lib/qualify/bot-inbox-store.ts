@@ -54,21 +54,30 @@ function quote(text: string, max: number): string {
 
 const REPLY_HINT = "↩️ Ответьте на это сообщение — ответ уйдёт клиенту от бота студии, модель замолчит.";
 
+/**
+ * Модель не ответила клиенту: кончились деньги на шлюзе, лежит прокси, сбой.
+ * Клиенту ушло «передали менеджеру» (botCopy.later), отвечать — человеку.
+ */
+export const MODEL_DOWN_LINE = "⚠️ Модель не ответила. Клиенту ушло «передали менеджеру» — ответьте ему сами.";
+
 export function inboxNotice(input: {
   client: InboxClient;
   text: string;
   botReply: string | null;
   lead: InboxLead;
   human: string | null;
+  modelDown?: boolean;
 }): string {
   const lead = input.lead
     ? `🧾 ${esc(input.lead.requestNo ?? input.lead.label)} · ${siteUrl}/admin/leads/${input.lead.id}`
     : null;
   const bot = input.human
     ? `🤐 Модель молчит: разговор ведёт ${esc(input.human)}.`
-    : input.botReply?.trim()
-      ? `🤖 Бот ответил: «${quote(input.botReply, 400)}»`
-      : null;
+    : input.modelDown
+      ? MODEL_DOWN_LINE
+      : input.botReply?.trim()
+        ? `🤖 Бот ответил: «${quote(input.botReply, 400)}»`
+        : null;
   return [`📩 <b>Обращение в бота</b> · ${who(input.client)}`, `«${quote(input.text, 900)}»`, bot, lead, "", REPLY_HINT]
     .filter((line) => line !== null)
     .join("\n");
@@ -151,7 +160,7 @@ async function sendNotice(reader: Reader, clientChat: number, text: string): Pro
  * шлём (lead-owner-notify).
  */
 export async function notifyInbox(
-  input: { client: InboxClient; text: string; botReply: string | null; human: string | null },
+  input: { client: InboxClient; text: string; botReply: string | null; human: string | null; modelDown?: boolean },
   now: Date = new Date(),
 ): Promise<Set<number>> {
   const sent = new Set<number>();
