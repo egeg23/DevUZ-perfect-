@@ -1,7 +1,8 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dzIntroSolo } from "../../../lib/proto/dz-video.mjs";
-import { LANGS, PILLARS, CHAIN, AUDIENCES, PARTNER_STEPS, PRODUCT_FIELDS, FACTS, IR_DOCS } from "./data.mjs";
+import { LANGS, PILLARS, CHAIN, PARTNER_STEPS, PRODUCT_FIELDS, IR_DOCS } from "./data.mjs";
 import { PANEL_UI } from "./panel-ui.mjs";
+import { makeBlocks, SCENE_FRAMES } from "./blocks.mjs";
 
 /*
  * Макет корпоративного сайта CHECHFARM (фармацевтическая компания) по ТЗ
@@ -30,8 +31,8 @@ import { PANEL_UI } from "./panel-ui.mjs";
 const DIR = new URL(".", import.meta.url).pathname;
 const IMG = "/protos/chechfarm";
 const strip = (s) => s.replace(/\/\*[\s\S]*?\*\//g, "");
-const CSS = strip(readFileSync(DIR + "site.css", "utf8")).replace(/\n\s*/g, "");
-const JS = strip(readFileSync(DIR + "site.js", "utf8")).replace(/\n\s*\n/g, "\n");
+const CSS = strip(readFileSync(DIR + "site.css", "utf8") + readFileSync(DIR + "premium.css", "utf8")).replace(/\n\s*/g, "");
+const JS = strip(readFileSync(DIR + "site.js", "utf8") + "\n" + readFileSync(DIR + "premium.js", "utf8")).replace(/\n\s*\n/g, "\n");
 const BASE_URL = "__PROTO_BASE__";
 const TERMS = (l) => `https://devuz.studio/${l}/mockup-terms`;
 const FONTS = "https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,700&family=Onest:wght@400;700&display=swap";
@@ -90,6 +91,7 @@ const NAV = [
 ];
 const navName = (p, l) => NAV.find((n) => n[0] === p)[1][LANGS.indexOf(l)];
 const L3 = (o, l) => o[l];
+const PB = makeBlocks({ T, href, ICON, IMG, L3, CHAIN, pad, BASE_URL });
 
 /* ── Шапка, меню, подвал ───────────────────────────────────────────── */
 function headerHtml(l, p) {
@@ -223,14 +225,6 @@ ${withHead ? `<div class="sec-h mv mv-up"><p class="kicker">${t("Формула 
 <div class="pill3">${PILLARS.map((p, i) => `<article class="pl mv ${mv[i]}" data-k="${p.id}" style="--d:${i * 120}ms"><span class="pl-i">${ICON[p.id]}</span><span class="pl-w">${p.word}</span><h3>${L3(p, l)[0]}</h3><p>${L3(p, l)[1]}</p></article>`).join("")}</div>
 </div></section>`;
 }
-function audienceBlock(l) {
-  const t = T(l);
-  const mv = ["mv-up", "mv-tilt", "mv-drop", "mv-left", "mv-right"];
-  return `<section class="sec mint" id="audience"><div class="wrap">
-<div class="sec-h mv mv-up"><p class="kicker">${t("Направления и аудитории", "Yo‘nalishlar va auditoriya", "Who it is for")}</p><h2 class="h2">${t("Пять дверей <b>в одну компанию</b>", "Bitta kompaniyaga <b>beshta eshik</b>", "Five doors <b>into one company</b>")}</h2></div>
-<div class="aud">${AUDIENCES.map((a, i) => `<a class="au mv ${mv[i]}${a.id === "investors" ? " inv" : ""}" style="--d:${(i % 3) * 100}ms" href="${href(l, a.to)}"><span class="au-i">${ICON[a.id]}</span><h3>${L3(a, l)[0]}</h3><p>${L3(a, l)[1]}</p><span class="link">${t("Перейти", "O‘tish", "Open")}${ICON.arrow}</span></a>`).join("")}</div>
-</div></section>`;
-}
 function portfolioTeaser(l) {
   const t = T(l);
   return `<section class="sec" id="portfolio"><div class="wrap pf">
@@ -250,20 +244,18 @@ function ctaEnd(l) {
 /* ── Страницы ──────────────────────────────────────────────────────── */
 function home(l) {
   const t = T(l);
-  const hero = `<section class="hero" aria-label="CHECHFARM">
-<div class="hero-img" aria-hidden="true"><picture><source media="(max-width: 899px) and (orientation: portrait)" srcset="${IMG}/hero-m-1080.webp"><img src="${IMG}/hero-2400.webp" srcset="${IMG}/hero-900.webp 900w, ${IMG}/hero-1400.webp 1400w, ${IMG}/hero-2400.webp 2400w" sizes="100vw" alt="" fetchpriority="high"></picture></div>
-<div class="hero-in"><div style="display:grid;gap:24px">
+  const hero = PB.heroScene(l, `<div class="hero-in"><div style="display:grid;gap:24px">
 <p class="kicker rise">${t("Фармацевтическая компания", "Farmatsevtika kompaniyasi", "Pharmaceutical company")}</p>
 <h1 aria-label="CHECHFARM. Health. Trust. Value."><span class="w"><span>Health.</span></span><span class="w"><span>Trust.</span></span><span class="w"><span>Value.</span></span></h1>
 <p class="lead rise" style="--d:380ms">${t("CHECHFARM улучшает здоровье и качество жизни людей через доступ к современным решениям.", "CHECHFARM zamonaviy yechimlardan foydalanish orqali odamlarning salomatligi va hayot sifatini yaxshilaydi.", "CHECHFARM improves people’s health and quality of life through access to modern solutions.")}</p>
-<div class="hero-act rise" style="--d:500ms"><a class="btn btn-pri" href="${href(l, "partners")}">${t("Стать партнёром", "Hamkor bo‘lish", "Become a partner")}${ICON.arrow}</a><a class="link" href="${href(l, "investors")}">${t("Инвесторам", "Investorlarga", "For investors")}${ICON.arrow}</a></div></div>
+<div class="hero-act rise" style="--d:500ms"><a class="btn btn-pri" id="hero-cta" href="${href(l, "partners")}"><span>${t("Стать партнёром", "Hamkor bo‘lish", "Become a partner")}</span>${ICON.arrow}</a><a class="link" href="${href(l, "investors")}">${t("Инвесторам", "Investorlarga", "For investors")}${ICON.arrow}</a></div></div>
 <div class="hero-card glass rise" id="hc" style="--d:650ms"><div class="hc-row" role="group" aria-label="${t("Формула бренда", "Brend formulasi", "Brand formula")}">${PILLARS.map((p, i) => `<button type="button" aria-pressed="${i ? "false" : "true"}">${p.word}</button>`).join("")}</div><p class="hc-txt" aria-live="polite">${L3(PILLARS[0], l)[1]}</p></div>
-</div></section>`;
+</div>`);
   return [hero, missionBlock(l), pillarsBlock(l), chainBlock(l, {
     k: t("Как работает модель CHECHFARM", "CHECHFARM modeli qanday ishlaydi", "How the CHECHFARM model works"),
     h: t("Улучшение здоровья <b>создаёт стоимость</b>", "Salomatlikni yaxshilash <b>qiymat yaratadi</b>", "Better health <b>creates value</b>"),
     p: t("Семь шагов от здоровья человека до роста компании. Импульс идёт по цепочке сам; нажмите на шаг, чтобы прочитать о нём.", "Inson salomatligidan kompaniya o‘sishigacha yetti qadam. Impuls zanjir bo‘ylab o‘zi yuradi; qadam haqida o‘qish uchun uni bosing.", "Seven steps from a person’s health to the company’s growth. The pulse runs on its own; tap a step to read about it."),
-  }), audienceBlock(l), portfolioTeaser(l), ctaEnd(l)].join("\n");
+  }), PB.audienceSwitch(l), portfolioTeaser(l), ctaEnd(l), PB.priceBlock(l)].join("\n");
 }
 
 function about(l) {
@@ -278,10 +270,7 @@ function about(l) {
     h: t("Продукты, рынок, <b>повторный спрос</b>", "Mahsulotlar, bozor, <b>takroriy talab</b>", "Products, market, <b>repeat demand</b>"),
     p: t("Продукт, которому доверяют, выбирают снова. Повторный спрос даёт денежный поток, а он идёт в новые продукты и масштабирование.", "Ishonchli mahsulot yana tanlanadi. Takroriy talab pul oqimini beradi, u esa yangi mahsulotlar va kengayishga yo‘naltiriladi.", "A trusted product gets chosen again. Repeat demand brings cash flow, which goes into new products and growth."),
   }),
-  `<section class="sec" id="facts"><div class="wrap"><div class="sec-h mv mv-up"><p class="kicker">${t("Факты о компании", "Kompaniya haqida faktlar", "Company facts")}</p><h2 class="h2">${t("Здесь будут <b>ваши цифры</b>", "Bu yerda <b>sizning raqamlaringiz</b> bo‘ladi", "<b>Your figures</b> go here")}</h2><p class="lead">${t("История, география, команда, филиалы и показатели: блок готов, данные даёт и подтверждает компания. Выдуманных цифр на сайте фармацевтической компании быть не должно.", "Tarix, geografiya, jamoa, filiallar va ko‘rsatkichlar: blok tayyor, ma’lumotlarni kompaniya beradi va tasdiqlaydi. Farmatsevtika kompaniyasi saytida o‘ylab topilgan raqamlar bo‘lmasligi kerak.", "History, geography, team, branches and figures: the block is ready, and the company provides and confirms the data. A pharmaceutical company’s website should carry no invented numbers.")}</p></div>
-<div class="facts">${FACTS.map((f, i) => `<div class="fact mv ${i % 2 ? "mv-drop" : "mv-up"}" style="--d:${(i % 3) * 90}ms"><span class="ph-num" aria-hidden="true">00</span><b>${f[l]}</b><span class="chip">${t("Ждём от компании", "Kompaniyadan kutamiz", "Awaiting data")}</span></div>`).join("")}</div></div></section>`,
-  `<section class="sec mint" id="team"><div class="wrap"><div class="sec-h mv mv-up"><p class="kicker">${t("Руководство и команда", "Rahbariyat va jamoa", "Leadership and team")}</p><h2 class="h2">${t("Люди, <b>которым доверяют</b>", "<b>Ishonch qozongan</b> odamlar", "People <b>others trust</b>")}</h2><p class="lead">${t("Предварительный блок: фото, имя и должность появятся, когда компания их пришлёт.", "Dastlabki blok: rasm, ism va lavozim kompaniya yuborgach chiqadi.", "A placeholder block: photo, name and role will appear once the company sends them.")}</p></div>
-<div class="team">${[0, 1, 2, 3].map((i) => `<div class="pers mv mv-scale" style="--d:${i * 90}ms"><div class="ava" aria-hidden="true"><svg viewBox="0 0 100 100"><circle cx="50" cy="38" r="18" fill="currentColor"/><path d="M14 100a36 36 0 0 1 72 0Z" fill="currentColor"/></svg></div><b>${t("Имя и фамилия", "Ism va familiya", "Full name")}</b><span class="note">${t("Должность", "Lavozim", "Role")}</span></div>`).join("")}</div></div></section>`].join("\n");
+  PB.needsBlock(l)].join("\n");
 }
 
 function products(l) {
@@ -308,6 +297,7 @@ function partners(l) {
     t("Доверие как основа: продукт представляют честной и утверждённой информацией.", "Asos ishonch: mahsulot halol va tasdiqlangan ma’lumot bilan taqdim etiladi.", "Trust first: the product is presented with honest, approved information."),
     t("Долгий горизонт: цель в повторном спросе и устойчивом росте, а не в разовой продаже.", "Uzoq ufq: maqsad bir martalik savdo emas, takroriy talab va barqaror o‘sish.", "A long horizon: the goal is repeat demand and steady growth, not a one-off sale."),
   ].map((x) => `<li>${ICON.check}<span>${x}</span></li>`).join("")}</ul></div></section>`,
+  PB.globeBlock(l),
   `<section class="sec dark" id="steps"><div class="wrap"><div class="sec-h mv mv-up"><p class="kicker">${t("Как начинается сотрудничество", "Hamkorlik qanday boshlanadi", "How a partnership starts")}</p><h2 class="h2">${t("Пять шагов <b>от заявки до запуска</b>", "Arizadan ishga tushirishgacha <b>besh qadam</b>", "Five steps <b>from request to launch</b>")}</h2></div>
 <ol class="steps">${PARTNER_STEPS.map((s, i) => `<li class="glass-d mv mv-up" style="--d:${i * 90}ms"><h3>${L3(s, l)[0]}</h3><p>${L3(s, l)[1]}</p></li>`).join("")}</ol></div></section>`,
   `<section class="sec mint" id="form"><div class="wrap split"><div class="sec-h mv mv-left" style="margin:0"><p class="kicker">${t("Контакт по сотрудничеству", "Hamkorlik bo‘yicha aloqa", "Partnership contact")}</p><h2 class="h2">${t("Расскажите <b>о своём продукте</b>", "<b>Mahsulotingiz</b> haqida aytib bering", "Tell us <b>about your product</b>")}</h2><p class="lead">${t("Заявка приходит команде CHECHFARM, которая отвечает за партнёров.", "Ariza CHECHFARM’ning hamkorlar bilan ishlaydigan jamoasiga keladi.", "The request goes to the CHECHFARM partnerships team.")}</p></div>
@@ -327,6 +317,7 @@ function investors(l) {
     h: t("От здоровья <b>до масштабирования</b>", "Salomatlikdan <b>kengayishgacha</b>", "From health <b>to scale</b>"),
     p: t("Здоровье, доверие, продукты, рынок, продажи, денежный поток, масштабирование. Каждый шаг опирается на предыдущий.", "Salomatlik, ishonch, mahsulotlar, bozor, savdo, pul oqimi, kengayish. Har qadam oldingisiga tayanadi.", "Health, trust, products, market, sales, cash flow, scale. Each step rests on the one before."),
   }),
+  PB.blocksStage(l),
   `<section class="sec" id="materials"><div class="wrap"><div class="sec-h mv mv-up"><p class="kicker">${t("Показатели и материалы", "Ko‘rsatkichlar va materiallar", "Figures and materials")}</p><h2 class="h2">${t("Цифры <b>по запросу</b>", "Raqamlar <b>so‘rov bo‘yicha</b>", "Figures <b>on request</b>")}</h2><p class="lead">${t("Показатели компания публикует сама, когда будет готова. До этого материалы выдаются по запросу.", "Ko‘rsatkichlarni kompaniya tayyor bo‘lganda o‘zi e’lon qiladi. Ungacha materiallar so‘rov bo‘yicha beriladi.", "The company publishes its figures itself when ready. Until then, materials are shared on request.")}</p></div>
 <div class="docs">${IR_DOCS.map((x, i) => `<div class="doc mv mv-tilt" style="--d:${i * 100}ms"><span class="lock">${ICON.lock}</span><h3>${L3(x, l)[0]}</h3><p class="note">${L3(x, l)[1]}</p><span class="chip">${t("По запросу", "So‘rov bo‘yicha", "On request")}</span></div>`).join("")}</div></div></section>`,
   `<section class="sec mint" id="form"><div class="wrap split"><div class="sec-h mv mv-left" style="margin:0"><p class="kicker">${t("Для инвесторов", "Investorlar uchun", "For investors")}</p><h2 class="h2">${t("Запросить материалы <b>или встречу</b>", "Materiallar <b>yoki uchrashuv</b> so‘rash", "Request materials <b>or a meeting</b>")}</h2></div>
@@ -375,6 +366,12 @@ function K(l, p) {
   return {
     lang: l,
     page: p || "home",
+    base: BASE_URL,
+    img: IMG,
+    scene: { n: SCENE_FRAMES },
+    aud: PB.audCta(l),
+    steps: PARTNER_STEPS.map((x) => x[l]),
+    offer: PB.offerData(l),
     panel: href(l, "panel"),
     pillars: PILLARS.map((x) => x[l][1]),
     chain: CHAIN.map((c) => c[l]),
