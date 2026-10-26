@@ -21,7 +21,7 @@ import { modelTroubleSays } from "@/lib/model-trouble";
  * а не письмо на чужом языке.
  */
 
-const MODEL = process.env.OUTREACH_MODEL || "claude-sonnet-5";
+const MODEL = process.env.OUTREACH_MODEL || "claude-sonnet-5-5";
 
 const LANG_NAME: Record<HelloLang, string> = {
   ru: "русский",

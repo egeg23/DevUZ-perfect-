@@ -23,7 +23,7 @@ import { checkSitemap, sitemapLine } from "@/lib/seo/sitemap-check";
 // Статья — той же моделью, что русские разборы: Sonnet, не Opus
 // (владелец, 04.10.2026: «не используй сильно дорогую модель»). Короткий
 // ответ «как это назвать на другом языке» — Хайку, как статьи о маркетинге.
-const MODEL = process.env.RAZBOR_MODEL || "claude-sonnet-5";
+const MODEL = process.env.RAZBOR_MODEL || "claude-sonnet-5-5";
 const NAME_MODEL = process.env.ARTICLE_MODEL || "claude-haiku-4-5";
 
 /**

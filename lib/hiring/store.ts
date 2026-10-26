@@ -25,7 +25,7 @@ import { anthropic } from "@/lib/model-road";
  */
 
 /** Разбор резюме — Соннет: задача та же, что у письма, и цена вчетверо ниже. */
-const MODEL = process.env.HIRING_MODEL || "claude-sonnet-5";
+const MODEL = process.env.HIRING_MODEL || "claude-sonnet-5-5";
 
 /**
  * Почему разбор не получился — кодом: панель показывает причину на языке

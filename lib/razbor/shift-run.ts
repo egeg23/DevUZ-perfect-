@@ -31,7 +31,7 @@ import { keywordResearch } from "@/lib/seo/keywords";
 // сильно дорогую модель, стараемся сэкономить не в ущерб качеству». Разбор —
 // статья по готовому аудиту с проверкой каждого числа кодом; Sonnet с этим
 // справляется, а стоит заметно дешевле. Сменить — RAZBOR_MODEL в .env.
-const MODEL = process.env.RAZBOR_MODEL || "claude-sonnet-5";
+const MODEL = process.env.RAZBOR_MODEL || "claude-sonnet-5-5";
 
 /**
  * Ночная смена разборов — на сервере, а не в плановой сессии.

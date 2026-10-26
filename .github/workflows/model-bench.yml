@@ -15,7 +15,7 @@ on:
     inputs:
       models:
         description: Модели через запятую
-        default: claude-opus-5,claude-sonnet-5,claude-haiku-4-5
+        default: claude-opus-5,claude-sonnet-5-5,claude-haiku-4-5
       samples:
         description: Сколько настоящих сигналов взять для скаута
         default: "20"

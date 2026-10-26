@@ -24,6 +24,7 @@ import {
   outreachPrompt,
 } from "@/lib/admin/outreach";
 import { effortFor } from "@/lib/model-limits";
+import { softToolChoice } from "@/lib/model-road";
 import { auditDeep } from "@/lib/audit/batch";
 import { nicheByKey, articleProblems } from "@/lib/razbor/shift";
 import { cityFrom } from "@/lib/razbor/shift";
@@ -37,6 +38,7 @@ const LETTERS = Number(process.env.BENCH_LETTERS || 3);
 /** Цены за миллион токенов, доллары. Правятся здесь, а не в трёх местах. */
 const PRICE = {
   "claude-opus-5": { in: 5, out: 25, cacheRead: 0.5, cacheWrite: 6.25 },
+  "claude-sonnet-5-5": { in: 2, out: 10, cacheRead: 0.2, cacheWrite: 2.5 },
   "claude-sonnet-5": { in: 2, out: 10, cacheRead: 0.2, cacheWrite: 2.5 },
   "claude-haiku-4-5": { in: 1, out: 5, cacheRead: 0.1, cacheWrite: 1.25 },
 };
@@ -192,7 +194,9 @@ async function letterTask() {
 
   const rows = (data ?? []).filter((r) => Array.isArray(r.findings) && r.findings.length);
   const Anthropic = (await import("@anthropic-ai/sdk")).default;
-  const client = new Anthropic();
+  // Через ту же переделку запроса, что в бою: Sonnet 5.5 принудительный
+  // инструмент не принимает (softToolChoice, lib/model-road.ts).
+  const client = new Anthropic({ fetch: softToolChoice((input, init) => globalThis.fetch(input, init)) });
 
   const before = snapshot();
   const started = Date.now();
