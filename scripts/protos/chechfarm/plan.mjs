@@ -24,6 +24,10 @@ export const ADDON_OFF = 0.5;
 
 /* star — включено сразу: то, ради чего макет. */
 export const ADDONS = [
+  { id: "launch", h: 16, star: true,
+    ru: { t: "«Путь вашего бренда» и «Сам или с CHECHFARM»", e: "Производитель вписывает свой препарат и видит его запуск: бренд, маркетинг, полки аптек, под ключ; заявка заполняется сама" },
+    uz: { t: "«Brendingiz yo‘li» va «O‘zingiz yoki CHECHFARM bilan»", e: "Ishlab chiqaruvchi dorisini yozadi va uning ishga tushishini ko‘radi: brend, marketing, dorixona peshtaxtalari, kalit topshirish; ariza o‘zi to‘ldiriladi" },
+    en: { t: "“Your brand’s path” and “On your own or with CHECHFARM”", e: "A manufacturer types in their product and watches it launch: brand, marketing, pharmacy shelves, turnkey; the request fills itself in" } },
   { id: "scene", h: 24, star: true,
     ru: { t: "Сцена на первом экране", e: "Капсула раскрывается по прокрутке: кадры в высоком качестве, загрузка до 100%, отдельный вариант для телефона, кадры защищены шифром" },
     uz: { t: "Birinchi ekrandagi sahna", e: "Aylantirganda kapsula ochiladi: yuqori sifatli kadrlar, 100% gacha yuklash, telefon uchun alohida variant, kadrlar shifr bilan himoyalangan" },

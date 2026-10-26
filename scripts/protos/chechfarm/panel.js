@@ -32,7 +32,7 @@ function lsGet(k,def){try{var v=JSON.parse(localStorage.getItem(k)||'null');retu
 function load(){PS=lsGet(PK,{})||{};PS.st=PS.st||{};PS.notes=PS.notes||{};PS.news=PS.news||[];PS.prod=PS.prod||[];PS.seo=PS.seo||{};PS.log=PS.log||[];PS.mgr=PS.mgr||{}}
 function save(){try{localStorage.setItem(PK,JSON.stringify(PS))}catch(e){}}
 load();
-function live(){var a=lsGet(LK,[]);return (Array.isArray(a)?a:[]).map(function(x){return {id:x.id,ts:x.ts,kind:x.kind||'other',st:PS.st[x.id]||'new',name:x.name||'',org:x.org||'',email:x.email||'',phone:x.phone||'',msg:x.msg||'',country:x.country||'',want:x.want||'',page:x.page||'home',mgr:PS.mgr[x.id]||'',live:1}})}
+function live(){var a=lsGet(LK,[]);return (Array.isArray(a)?a:[]).map(function(x){return {id:x.id,ts:x.ts,kind:x.kind||'other',st:PS.st[x.id]||'new',name:x.name||'',org:x.org||'',email:x.email||'',phone:x.phone||'',msg:x.msg||'',country:x.country||'',want:x.want||'',scale:x.scale||'',page:x.page||'home',mgr:PS.mgr[x.id]||'',live:1}})}
 function all(){return live().concat(DEMO.map(function(o){o.st=PS.st[o.id]||o.st;return o}))}
 var R={role:PS.role||'owner',tab:'dash',kind:'',st:'',q:''};
 function sees(o){return R.role!=='manager'||o.kind!=='investor'}
@@ -71,7 +71,7 @@ function leadById(id){return all().filter(function(o){return o.id===id})[0]}
 function openLead(id){var o=leadById(id);if(!o)return;var m=$('#mdl');
   var hist=PS.log.filter(function(x){return x.ref===id});
   m.innerHTML='<div class="sheet" role="dialog" aria-modal="true" aria-label="'+h(o.id)+'"><div class="sheet-h"><div><span class="k-'+o.kind+'"><b>'+h(t('k_'+o.kind))+'</b></span><h1>'+h(o.id)+'</h1><p class="muted">'+h(when(o.ts))+(o.live?' · <span class="tag site">'+h(t('fromSite'))+'</span>':'')+'</p></div><button class="ib" data-x aria-label="'+h(t('close'))+'">'+ic('x')+'</button></div>'+
-  '<div class="card"><b>'+h(o.name)+'</b><span class="muted">'+h(o.org)+(o.country?' · '+h(o.country):'')+'</span>'+(o.email||o.phone?'<p>'+h(t('contact'))+': '+h([o.email,o.phone].filter(Boolean).join(' · '))+'</p>':'')+(o.msg?'<p><b>'+h(t('msg'))+':</b> '+h(o.msg)+'</p>':'')+'<p class="sm muted">'+h(t('page'))+': '+h((G.pages.filter(function(p){return p.k===o.page})[0]||{n:o.page}).n)+'</p>'+
+  '<div class="card"><b>'+h(o.name)+'</b><span class="muted">'+h(o.org)+(o.country?' · '+h(o.country):'')+'</span>'+(o.email||o.phone?'<p>'+h(t('contact'))+': '+h([o.email,o.phone].filter(Boolean).join(' · '))+'</p>':'')+(o.scale?'<p><b>'+h(t('scale'))+':</b> '+h(t('sc_'+o.scale))+'</p>':'')+(o.msg?'<p><b>'+h(t('msg'))+':</b> '+h(o.msg)+'</p>':'')+'<p class="sm muted">'+h(t('page'))+': '+h((G.pages.filter(function(p){return p.k===o.page})[0]||{n:o.page}).n)+'</p>'+
   (o.email?'<a class="btn ln" href="mailto:'+h(o.email)+'?subject='+encodeURIComponent('CHECHFARM '+o.id)+'" data-reply>'+ic('mail')+h(t('reply'))+'</a>':'')+'</div>'+
   '<div class="card"><h2>'+h(t('setSt'))+'</h2><div class="stbtns">'+ST.map(function(s){return '<button data-st="'+s+'" class="'+(o.st===s?'on':'')+'" aria-pressed="'+(o.st===s)+'">'+h(t('s_'+s))+'</button>'}).join('')+'</div><p class="sm muted">'+h(t('stNote'))+'</p></div>'+
   '<div class="card"><label class="lab">'+h(t('note'))+'<textarea class="inp" id="nt" placeholder="'+h(t('notePh'))+'">'+h(PS.notes[id]||'')+'</textarea></label><button class="btn" data-note>'+h(t('save'))+'</button></div>'+

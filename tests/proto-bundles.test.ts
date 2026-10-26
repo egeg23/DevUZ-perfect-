@@ -2115,13 +2115,16 @@ test("CHECHFARM: 7 страниц и панель на ru, uz, en — услов
     if (p === "") {
       assert.ok(page.includes('id="dzi"') && page.includes("dzVideo(b,close)"), `${path}: нет видео DevUz`);
       assert.ok(page.includes("Health.") && page.includes("Trust.") && page.includes("Value."), `${path}: нет формулы бренда`);
-      for (const id of ["hero", "mission", "formula", "model", "audience", "portfolio", "contact", "cena"]) assert.ok(page.includes(`id="${id}"`), `${path}: нет блока ${id}`);
+      for (const id of ["hero", "launch", "compare", "mission", "formula", "model", "audience", "portfolio", "contact", "cena"]) assert.ok(page.includes(`id="${id}"`), `${path}: нет блока ${id}`);
       assert.ok(page.includes('class="hs-cv"') && page.includes("/promo/scene"), `${path}: нет сцены первого экрана`);
       assert.equal((page.match(/role="tab" id="as-t-/g) ?? []).length, 5, `${path}: не пять аудиторий`);
     }
     if (p === "" || p === "about" || p === "investors") assert.equal((page.match(/class="ch-n"/g) ?? []).length, 14, `${path}: в цепочке не 7 шагов на двух схемах`);
     if (p === "investors") assert.equal((page.match(/class="gb-b"/g) ?? []).length, 7, `${path}: не семь стеклянных блоков`);
     if (p === "partners") assert.equal((page.match(/class="gl-r"/g) ?? []).length, 5, `${path}: не пять маршрутов на глобусе`);
+    /* Главный смысл со слов клиента (26.10.2026): запуск фарм-брендов под ключ. */
+    if (p === "partners") assert.ok(page.includes('name="scale"'), `${path}: в заявке нет масштаба запуска`);
+    if (p === "") assert.equal((page.match(/<button type="button" data-s="\d">/g) ?? []).length, 5, `${path}: в «Пути бренда» не пять этапов`);
     if (p === "about") assert.ok(page.includes('id="needs"'), `${path}: нет «Что нужно от CHECHFARM»`);
     if (["", "partners", "investors", "contacts"].includes(p)) assert.match(page, /data-lead="(partner|investor)"/, `${path}: нет формы обращения`);
     if (p === "panel") {
