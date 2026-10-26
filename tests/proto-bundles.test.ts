@@ -2131,3 +2131,63 @@ test("CHECHFARM: 7 страниц и панель на ru, uz, en — услов
   assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
   assert.notEqual(stamped.pages["en/investors"], site.pages["en/investors"], "отпечаток не поставился на внутренней странице");
 });
+
+test("FinTax: 5 страниц и панель на ru, uz, en — условия, noindex, видео DevUz, шапка 3 с, интерактив, заявки в панель, только факты с их сайта", async () => {
+  const { existsSync, readdirSync, statSync } = await import("node:fs");
+  const site = bundlePages("fintax");
+  assert.ok(site);
+  const all: Record<string, string> = { "": site.html, ...site.pages };
+  const PAGES = ["", "services", "prices", "about", "contacts", "panel"];
+  const keys = ["ru", "uz", "en"].flatMap((l) => PAGES.map((p) => [l === "ru" ? "" : l, p].filter(Boolean).join("/")));
+  assert.deepEqual(Object.keys(all).sort(), keys.sort());
+  for (const [path, page] of Object.entries(all)) {
+    const lang = path.startsWith("uz") ? "uz" : path.startsWith("en") ? "en" : "ru";
+    assert.doesNotMatch(page, /@@[A-Z]+@@/, `${path}: метка сборки осталась в странице`);
+    assert.ok(page.includes(`<html lang="${lang}">`), `${path}: язык страницы`);
+    assert.ok(page.includes(`https://devuz.studio/${lang}/mockup-terms`), `${path}: нет условий на языке страницы`);
+    assert.match(page, /<meta name="robots" content="noindex/, `${path}: нет noindex`);
+    assert.match(page, /prefers-reduced-motion/, `${path}: анимацию нечем выключить`);
+    assert.doesNotMatch(page, /stamp|watermark|fingerprint|отпечат|seed|data-mark/i, `${path}: слово, по которому находят отпечаток`);
+    assert.doesNotMatch(page, /proto-ai|proxyapi/i, `${path}: макет не зовёт модель`);
+    assert.doesNotMatch(page, /href="#"/, `${path}: ссылка в никуда`);
+    for (const img of page.match(/<img [^>]+>/g) ?? []) assert.match(img, /alt="/, `${path}: картинка без alt`);
+    for (const src of page.match(/\/protos\/fintax\/[\w./-]+\.(?:webp|png|svg)/g) ?? []) assert.ok(existsSync("public" + src), `${path}: нет файла ${src}`);
+    if (lang !== "ru") assert.doesNotMatch(page, /[А-Яа-яЁё]/, `${path}: кириллица на странице ${lang}`);
+    /* Год основания на их сайте расходится (2019 и 2016): на макете года нет. */
+    assert.doesNotMatch(page, /20(16|19) год|since 20|yildan/i, `${path}: год основания, который не сходится у них самих`);
+    if (!path.endsWith("panel")) {
+      assert.ok(page.includes("t.me/fintax_admin") && page.includes("tel:+998978900770"), `${path}: главное действие не ведёт в их Telegram и телефон`);
+      assert.match(page, /\bIDLE=3000\b/, `${path}: шапка не по правилу 3 секунд`);
+      assert.match(page, /classList\.add\('hide'\)[\s\S]*IDLE\)/, `${path}: шапка не прячется`);
+      assert.ok(page.includes("'ft-leads-1'") && page.includes("'ft-panel-1'"), `${path}: сайт не связан с панелью`);
+      assert.doesNotMatch(page, /scroll-behavior|preventDefault\(\);?\s*\}\s*,\s*\{\s*passive:\s*false/, `${path}: перехват прокрутки`);
+      /* Цены — только их: «от 1 500 000» и четыре тарифа сайта. */
+      for (const m of page.match(/\d[\d ,.]*\s?(?:млн|mln|million)/g) ?? []) assert.match(m, /^(1,5|1\.5|4|6|10|100|300) ?/, `${path}: цена не с их сайта: ${m}`);
+    }
+    const p = path.replace(/^(uz|en)\/?/, "");
+    if (p === "") {
+      assert.ok(page.includes('id="dzi"') && page.includes("dzVideo(b,close)"), `${path}: нет видео DevUz`);
+      for (const id of ["hero", "order", "picker", "scheme", "desk", "reviews", "consult"]) assert.ok(page.includes(`id="${id}"`), `${path}: нет блока ${id}`);
+      assert.equal((page.match(/class="doc"/g) ?? []).length, 12, `${path}: в «хаос → порядок» не 12 документов`);
+      assert.equal((page.match(/class="nd"/g) ?? []).length, 10, `${path}: на схеме не 10 услуг`);
+      assert.equal((page.match(/data-w="/g) ?? []).length, 7, `${path}: на столе не 7 пунктов «почему»`);
+    }
+    if (["", "prices"].includes(p)) assert.ok(page.includes("data-picker"), `${path}: нет подбора тарифа`);
+    if (["", "contacts"].includes(p)) assert.match(page, /<form class="form" data-lead/, `${path}: нет заявки`);
+    if (p === "panel") {
+      for (const v of ["dash", "leads", "clients", "tariffs", "log", "team"]) assert.match(page, new RegExp(`V\\.${v}=function`), `${path}: нет раздела ${v}`);
+      for (const r of ["owner", "head", "manager"]) assert.ok(page.includes(`<option value="${r}">`), `${path}: нет роли ${r}`);
+      assert.match(page, /\.tw\{overflow-x:auto/, `${path}: таблицы без своей прокрутки`);
+      assert.match(page, /function money\(\)\{return R\.role!=='manager'\}/, `${path}: менеджер видит деньги`);
+    }
+  }
+  const pub = "public/protos/fintax";
+  assert.ok(readdirSync(pub).reduce((s, f) => s + statSync(`${pub}/${f}`).size, 0) < 3_000_000, "картинки тяжелее 3 МБ");
+  const data = await import("../scripts/protos/fintax/data.mjs");
+  assert.deepEqual(data.TARIFFS.map((t) => t.ru[3]), ["от 1,5 до 4 млн сум/мес", "от 4 до 6 млн сум/мес", "от 6 до 10 млн сум/мес", "от 10 млн сум/мес"], "тарифы не как на их сайте");
+  assert.equal(data.SERVICES.length, 10, "услуг не десять, как на сайте");
+  assert.equal(data.TEAM.length, 9, "команда не как на сайте");
+  const stamped = stampedBundle("fintax", SEED)!;
+  assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
+  assert.notEqual(stamped.pages["en/prices"], site.pages["en/prices"], "отпечаток не поставился на внутренней странице");
+});
