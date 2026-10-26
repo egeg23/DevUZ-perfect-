@@ -236,4 +236,6 @@ export const mockupNicheDict = defineDict({
   restoran: { ru: "Ресторан", uz: "Restoran", pl: "Restauracja" },
   medoborudovanie: { ru: "Медицинское оборудование", uz: "Tibbiy uskunalar", pl: "Sprzęt medyczny" },
   obuv: { ru: "Обувь и аксессуары", uz: "Poyabzal va aksessuarlar", pl: "Obuwie i akcesoria" },
+  farma: { ru: "Фармацевтика", uz: "Farmatsevtika", pl: "Farmacja" },
+  buhgalteriya: { ru: "Бухгалтерские услуги", uz: "Buxgalteriya xizmatlari", pl: "Usługi księgowe" },
 });
