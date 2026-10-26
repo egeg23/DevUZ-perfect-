@@ -377,7 +377,7 @@ test("Giftora: демо мини-приложения и панель опера
     assert.match(page, /id="closing" data-until="\d{4}-\d\d-\d\dT[\d:]+Z"/, `${path}: нет плашки о закрытии`);
     assert.match(page, /class="chip demo"/, `${path}: нет пометки «Демо»`);
     assert.ok(page.includes("gx-admin-1") && page.includes("/admin"), `${path}: приложение не читает настройки панели или нет входа в неё`);
-    for (const view of ["home", "box", "hub", "rocket", "dice", "upgrade", "pvp", "inv", "top", "tasks", "profile"]) {
+    for (const view of ["home", "box", "hub", "rocket", "dice", "upgrade", "pvp", "mines", "plinko", "towers", "wheel", "inv", "top", "tasks", "profile"]) {
       assert.ok(page.includes(`V.${view} = function`), `${path}: нет экрана ${view}`);
     }
     assert.match(page, /TelegramWebviewProxy/, `${path}: нет моста к Telegram`);

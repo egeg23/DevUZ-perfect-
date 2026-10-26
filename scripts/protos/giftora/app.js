@@ -23,7 +23,7 @@ function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return { '&': 
 
 /* Настройки из панели оператора (BASE/admin): RTP, промокоды, блокировка. Общие через localStorage. */
 var AKEY = 'gx-admin-1';
-var RTP_DEF = { box: 90, rocket: 96, dice: 96, upgrade: 92, pvp: 95 };
+var RTP_DEF = { box: 90, rocket: 96, dice: 96, upgrade: 92, pvp: 95, mines: 97, plinko: 97, towers: 97, wheel: 96 };
 function adm(){ try { var a = JSON.parse(localStorage.getItem(AKEY) || 'null'); if (a && a.v === 1) return a; } catch (e) {} return null; }
 function rtp(k){ var a = adm(), v = a && a.rtp ? +a.rtp[k] : 0; return (v >= 50 && v <= 99.5 ? v : RTP_DEF[k]) / 100; }
 function banned(){ var a = adm(); return !!(a && a.users && a.users.me && a.users.me.ban); }
@@ -337,7 +337,7 @@ function winModal(gifts, opts){
 
 /* ── Навигация ── */
 var view = $('#view'), cur = null, curName = '', curArg = null;
-var PARENT = { box: 'home', rocket: 'hub', dice: 'hub', upgrade: 'hub', pvp: 'hub', tasks: 'top' };
+var PARENT = { box: 'home', rocket: 'hub', dice: 'hub', upgrade: 'hub', pvp: 'hub', mines: 'hub', plinko: 'hub', towers: 'hub', wheel: 'hub', tasks: 'top' };
 var V = {};
 function go(name, arg){
   if (!V[name]) name = 'home';
@@ -533,9 +533,13 @@ V.hub = function(){
     ['rocket', 'Rocket', L('Множитель растёт, пока ракета летит. Заберите до того, как она улетит.', 'The multiplier climbs while the rocket flies. Cash out before it is gone.'), 'g-rk', 1840],
     ['pvp', 'PvP', L('Ставки в общий банк. Шанс равен доле ставки, победитель забирает всё.', 'Bets go to one pot. Your chance equals your share, the winner takes it all.'), 'g-pv', 612],
     ['dice', 'Dice', L('Сами ставите шанс. Чем он ниже, тем выше множитель.', 'You set the chance. The lower it is, the higher the multiplier.'), 'g-dc', 935],
-    ['upgrade', 'Upgrade', L('Улучшите подарок до более дорогого с шансом на колесе.', 'Upgrade a gift to a pricier one with a chance on the wheel.'), 'g-up', 427]
+    ['upgrade', 'Upgrade', L('Улучшите подарок до более дорогого с шансом на колесе.', 'Upgrade a gift to a pricier one with a chance on the wheel.'), 'g-up', 427],
+    ['mines', 'Mines', L('Открывайте клетки без бомб, забирайте когда хотите.', 'Open cells without bombs, cash out whenever you want.'), 'g-mn', 1120],
+    ['plinko', 'Plinko', L('Бросьте шарик, он скатится в ячейку с множителем.', 'Drop a ball and it rolls into a multiplier slot.'), 'g-pl', 880],
+    ['towers', 'Towers', L('Поднимайтесь по этажам, выбирая безопасную клетку.', 'Climb the floors by picking the safe tile.'), 'g-tw', 540],
+    ['wheel', 'Wheel', L('Крутите колесо, выбирайте уровень риска.', 'Spin the wheel, pick your risk level.'), 'g-wh', 760]
   ];
-  var ICN = { rocket: 'rocket', pvp: 'pvp', dice: 'dice', upgrade: 'up' };
+  var ICN = { rocket: 'rocket', pvp: 'pvp', dice: 'dice', upgrade: 'up', mines: 'mines', plinko: 'plinko', towers: 'towers', wheel: 'wheel' };
   return {
     html: head('Play Hub', L('Очки рейтинга идут за каждую игру', 'Every game earns leaderboard points')) +
       '<div class="games">' + games.map(function(g, i){ return '<button class="game ' + g[3] + '" data-go="' + g[0] + '" style="--d:' + i * 60 + 'ms"><span class="game-ic">' + ic(ICN[g[0]]) + '</span><b>' + g[1] + '</b><p>' + g[2] + '</p><span class="online"><i></i>' + fmt0(g[4] + Math.round(rnd() * 80)) + L(' играют', ' playing') + '</span></button>'; }).join('') + '</div>' + legal()
@@ -822,6 +826,324 @@ V.dice = function(){
         if (x) inp.value = String(r2(clamp(v * parseFloat(x.getAttribute('data-x')), 0.1, 1000)));
         if (d || x) { sync(); TG.haptic('select'); }
       });
+    }
+  };
+};
+
+/* ── Ставка: одна и та же строка во всех новых играх ── */
+function betRow(id, val){
+  return '<div class="bet-r"><label>' + L('Ставка', 'Bet') + '</label><div class="num-in"><button data-d="-1">−</button><input id="' + id + '" inputmode="decimal" value="' + (val || 1) + '"><button data-d="1">+</button></div><div class="chips"><button data-x=".5">½</button><button data-x="2">×2</button></div></div>';
+}
+function wireBet(pg, id, after){
+  pg.addEventListener('click', function(e){
+    var d = e.target.closest('[data-d]'), x = e.target.closest('[data-x]'), inp = $('#' + id, pg);
+    if (!d && !x) return;
+    var v = parseFloat(String(inp.value).replace(',', '.')) || 1;
+    if (d) inp.value = String(r2(clamp(v + (+d.getAttribute('data-d')) * (v >= 10 ? 5 : v >= 2 ? 1 : 0.5), 0.5, 1000)));
+    if (x) inp.value = String(r2(clamp(v * parseFloat(x.getAttribute('data-x')), 0.1, 1000)));
+    TG.haptic('select'); if (after) after();
+  });
+  $('#' + id, pg).addEventListener('input', function(){ if (after) after(); });
+}
+function readBet(id){ return clamp(parseFloat(String($('#' + id).value).replace(',', '.')) || 0, 0.1, 1000); }
+
+/* ── Mines: поле 5×5, бомбы прячутся, множитель растёт с каждой чистой клеткой ── */
+V.mines = function(){
+  var N = 25, M = 3, picks = 0, busy = false, active = false, mineSet = {}, bet = 0;
+  function survive(k){ var p = 1; for (var i = 0; i < k; i++) p *= (N - M - i) / (N - i); return p; }
+  function mult(k){ return k ? rtp('mines') / survive(k) : 1; }
+  var html = head('Mines', L('Открывайте клетки без бомб, забирайте когда хотите', 'Open cells without bombs, cash out whenever'), 'hub') +
+    '<div class="mn-top glass"><div><small>' + L('Сейчас заберёте', 'Cash out now') + '</small><b id="mn-now">' + ic('ton') + '0.00</b></div><div><small>' + L('Следующая клетка', 'Next cell') + '</small><b id="mn-next">×1.00</b></div></div>' +
+    '<div class="mn-grid" id="mn-grid">' + Array.apply(null, Array(N)).map(function(_, i){ return '<button class="mn-c" data-i="' + i + '"></button>'; }).join('') + '</div>' +
+    '<div class="bet glass"><div class="opt"><span class="opt-l">' + L('Бомбы', 'Mines') + '</span><div class="seg wide" id="mn-m"><button data-m="1">1</button><button data-m="3" class="on">3</button><button data-m="5">5</button><button data-m="10">10</button></div></div>' +
+    betRow('mn-bet') +
+    '<button class="btn big" id="mn-go">' + L('Играть', 'Play') + '</button></div>' +
+    '<p class="note">' + L('Каждая чистая клетка поднимает множитель. Бомба сжигает ставку. Чем больше бомб, тем круче множитель.', 'Every clean cell raises the multiplier. A mine burns the bet. More mines, steeper multiplier.') + '</p>';
+  function refresh(){
+    $('#mn-now').innerHTML = ic('ton') + fmt(active ? bet * mult(picks) : 0);
+    $('#mn-next').textContent = '×' + mult(picks + 1).toFixed(2);
+    var btn = $('#mn-go');
+    if (active) { btn.innerHTML = picks ? L('Забрать ', 'Cash out ') + ic('ton') + fmt(bet * mult(picks)) : L('Забрать', 'Cash out'); btn.className = 'btn big ' + (picks ? 'cash' : 'ghost'); }
+    else { btn.innerHTML = L('Играть за ', 'Play for ') + ic('ton') + fmt(readBet('mn-bet')); btn.className = 'btn big'; }
+  }
+  function start(){
+    bet = readBet('mn-bet'); if (!pay(bet)) return;
+    active = true; picks = 0; mineSet = {};
+    var idx = []; for (var i = 0; i < N; i++) idx.push(i);
+    for (var m = 0; m < M; m++) { var j = Math.floor(rnd() * idx.length); mineSet[idx[j]] = 1; idx.splice(j, 1); }
+    count('mines'); points(bet * 10); save(); renderMe();
+    $$('.mn-c', $('#mn-grid')).forEach(function(c){ c.className = 'mn-c'; c.innerHTML = ''; });
+    $('#mn-grid').classList.add('on'); TG.haptic('medium'); refresh();
+  }
+  function cashOut(){
+    if (!active || !picks) { if (active) toast(L('Откройте хотя бы одну клетку', 'Open at least one cell'), 'bad'); return; }
+    var win = r2(bet * mult(picks)); money(win); count('mineswin'); S.best = Math.max(S.best, win);
+    active = false; save(); renderMe();
+    confetti(mult(picks) >= 5 ? 130 : 55, null, 150); flash(mult(picks) >= 5 ? 'gold' : ''); snd(mult(picks) >= 5 ? 'big' : 'coin'); TG.haptic('success');
+    toast(L('Забрали ', 'Cashed out ') + fmt(win) + ' TON · ' + mult(picks).toFixed(2) + '×', 'good');
+    reveal(true); refresh();
+  }
+  function reveal(won){ $$('.mn-c', $('#mn-grid')).forEach(function(c){ var i = +c.getAttribute('data-i'); if (mineSet[i] && !c.classList.contains('safe')) { c.classList.add('bomb'); c.innerHTML = ic('bolt'); } else if (!mineSet[i] && !c.classList.contains('safe')) c.classList.add('dim'); }); $('#mn-grid').classList.remove('on'); }
+  function hit(c){
+    if (!active || c.classList.contains('safe') || c.classList.contains('bomb')) return;
+    var i = +c.getAttribute('data-i');
+    if (mineSet[i]) {
+      c.classList.add('bomb', 'boom'); c.innerHTML = ic('bolt'); active = false;
+      snd('boom'); flash('lose'); TG.haptic('error'); toast(L('Бомба! Ставка сгорела', 'Mine! The bet burned'), 'bad');
+      reveal(false); save(); renderMe(); refresh(); return;
+    }
+    c.classList.add('safe'); c.innerHTML = art({ m: pick(['star', 'clover', 'gem', 'peach']), b: 'mint' });
+    picks++; snd('tick'); TG.haptic('light'); refresh();
+    if (picks === N - M) cashOut();
+  }
+  return {
+    html: html,
+    mount: function(pg){
+      refresh();
+      $('#mn-go', pg).addEventListener('click', function(){ if (active) cashOut(); else start(); });
+      $('#mn-grid', pg).addEventListener('click', function(e){ var c = e.target.closest('.mn-c'); if (c) hit(c); });
+      $('#mn-m', pg).addEventListener('click', function(e){ var b = e.target.closest('[data-m]'); if (!b || active) return; M = +b.getAttribute('data-m'); $$('[data-m]', $('#mn-m', pg)).forEach(function(x){ x.classList.toggle('on', x === b); }); TG.haptic('select'); refresh(); });
+      wireBet(pg, 'mn-bet', refresh);
+    },
+    leave: function(){ if (active) { active = false; save(); } }
+  };
+};
+
+/* ── Plinko: шарик по пирамиде гвоздиков, canvas, ячейки с множителями ── */
+var PL_ROWS = 12;
+function binP(k){ var c = 1; for (var i = 0; i < k; i++) c = c * (PL_ROWS - i) / (i + 1); return c / Math.pow(2, PL_ROWS); }
+var PL_RAW = {
+  low: [5, 2, 1.3, 1.1, 1, 0.95, 0.9, 0.95, 1, 1.1, 1.3, 2, 5],
+  med: [26, 6, 2, 1.2, 0.8, 0.5, 0.4, 0.5, 0.8, 1.2, 2, 6, 26],
+  high: [130, 22, 5, 1.5, 0.4, 0.2, 0.2, 0.2, 0.4, 1.5, 5, 22, 130]
+};
+function plMults(risk){
+  var raw = PL_RAW[risk], ev = 0;
+  for (var i = 0; i <= PL_ROWS; i++) ev += binP(i) * raw[i];
+  var k = rtp('plinko') / ev;
+  return raw.map(function(v){ return Math.round(v * k * 100) / 100; });
+}
+V.plinko = function(){
+  var risk = 'med', busy = false, hist = [], mults = plMults(risk);
+  var html = head('Plinko', L('Выберите риск и бросьте шарик', 'Pick the risk and drop a ball'), 'hub') +
+    '<div class="pl glass"><canvas id="pl-c"></canvas></div>' +
+    '<div class="pl-m" id="pl-slots"></div>' +
+    '<div class="bet glass"><div class="opt"><span class="opt-l">' + L('Риск', 'Risk') + '</span><div class="seg wide" id="pl-risk"><button data-r="low">' + L('Низкий', 'Low') + '</button><button data-r="med" class="on">' + L('Средний', 'Medium') + '</button><button data-r="high">' + L('Высокий', 'High') + '</button></div></div>' +
+    betRow('pl-bet') +
+    '<button class="btn big" id="pl-go">' + L('Бросить шарик', 'Drop a ball') + '</button></div>' +
+    '<p class="note">' + L('Края дают крупный множитель, но шарик чаще падает в центр. Чем выше риск, тем выше края.', 'The edges pay big, but the ball lands in the middle more often. Higher risk, higher edges.') + '</p>';
+  var cv, ctx, W = 0, H = 0, balls = [], raf = 0, pegs = [];
+  function slots(){
+    mults = plMults(risk);
+    $('#pl-slots').innerHTML = mults.map(function(m){ return '<span class="pl-s ' + (m >= 5 ? 't3' : m >= 1.5 ? 't2' : m >= 1 ? 't1' : 't0') + '">' + m.toFixed(m >= 10 ? 0 : m >= 1 ? 1 : 2) + '×</span>'; }).join('');
+  }
+  function size(){
+    if (!cv) return;
+    var r = cv.parentNode.getBoundingClientRect(); W = r.width; H = r.height;
+    var d = S.q === 'low' ? 1 : Math.min(2, window.devicePixelRatio || 1);
+    cv.width = Math.round(W * d); cv.height = Math.round(H * d); ctx.setTransform(d, 0, 0, d, 0, 0);
+    pegs = [];
+    var top = 24, gap = (H - top - 36) / PL_ROWS;
+    for (var row = 0; row <= PL_ROWS; row++) {
+      var n = row + 2, span = Math.min(W - 32, gap * (PL_ROWS + 1) * 0.92), x0 = (W - span) / 2, step = span / (n - 1);
+      for (var i = 0; i < n; i++) pegs.push({ x: x0 + step * i, y: top + row * gap, row: row });
+    }
+    PL_colX = function(row, i){ var n = row + 2, span = Math.min(W - 32, gap * (PL_ROWS + 1) * 0.92), x0 = (W - span) / 2; return x0 + span / (n - 1) * i; };
+    PL_rowY = function(row){ return top + row * gap; };
+    PL_binY = H - 18;
+  }
+  var PL_colX, PL_rowY, PL_binY;
+  function drop(){
+    if (busy && balls.length > 3) return;
+    var bet = readBet('pl-bet'); if (!pay(bet)) return;
+    count('plinko'); points(bet * 10); save(); renderMe(); TG.haptic('light'); snd('tick');
+    var bits = [], bin = 0;
+    for (var r = 0; r < PL_ROWS; r++) { var right = rnd() < 0.5 ? 1 : 0; bits.push(right); bin += right; }
+    balls.push({ bet: bet, bits: bits, bin: bin, row: 0, col: 0, t: 0, x: W / 2, y: PL_rowY(0) - 10, done: false });
+    if (!raf) loop(performance.now());
+  }
+  function land(b){
+    var m = mults[b.bin], win = r2(b.bet * m);
+    if (win > 0) { money(win); S.best = Math.max(S.best, win); }
+    hist.unshift(m); hist = hist.slice(0, 12);
+    var big = m >= 5;
+    if (big) { confetti(120, PL_colX(PL_ROWS, b.bin), PL_binY - 20); flash('gold'); }
+    snd(m >= 1 ? (big ? 'big' : 'coin') : 'lose'); TG.haptic(m >= 1 ? 'success' : 'light');
+    if (m >= 1) toast('+' + fmt(win) + ' TON · ' + m.toFixed(m >= 10 ? 0 : 1) + '×', 'good');
+    var el = $$('.pl-s')[b.bin]; if (el) { el.classList.add('hit'); setTimeout(function(){ el.classList.remove('hit'); }, 500); }
+    save(); renderMe();
+  }
+  function loop(now){
+    raf = requestAnimationFrame(loop);
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = 'rgba(255,255,255,.22)';
+    for (var p = 0; p < pegs.length; p++) { ctx.beginPath(); ctx.arc(pegs[p].x, pegs[p].y, 2.4, 0, 7); ctx.fill(); }
+    var speed = REDUCED ? 0.4 : 0.16;
+    for (var i = balls.length - 1; i >= 0; i--) {
+      var b = balls[i];
+      if (!b.done) {
+        b.t += speed * (S.q === 'low' ? 1.6 : 1);
+        if (b.t >= 1) { b.t = 0; b.col += b.bits[b.row] || 0; b.row++; if (b.row > PL_ROWS) { b.done = true; land(b); } }
+      }
+      var fromX, fromY, toX, toY;
+      if (b.done) { fromX = PL_colX(PL_ROWS, b.bin); fromY = PL_rowY(PL_ROWS); toX = fromX; toY = PL_binY; b.t = Math.min(1, b.t + 0.2); }
+      else { fromX = b.row ? PL_colX(b.row - 1, b.col) : W / 2; fromY = b.row ? PL_rowY(b.row - 1) : PL_rowY(0) - 10; toX = PL_colX(b.row, b.col + (b.bits[b.row] || 0)); toY = PL_rowY(b.row); }
+      var e = b.t, ease = e * e;
+      b.x = fromX + (toX - fromX) * e; b.y = fromY + (toY - fromY) * ease;
+      var g = ctx.createRadialGradient(b.x - 2, b.y - 2, 1, b.x, b.y, 7);
+      g.addColorStop(0, '#fff3c4'); g.addColorStop(1, '#ff9d2f');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(b.x, b.y, 6, 0, 7); ctx.fill();
+      if (b.done && b.t >= 1) balls.splice(i, 1);
+    }
+    if (!balls.length) { cancelAnimationFrame(raf); raf = 0; ctx.clearRect(0, 0, W, H); ctx.fillStyle = 'rgba(255,255,255,.22)'; for (var q = 0; q < pegs.length; q++) { ctx.beginPath(); ctx.arc(pegs[q].x, pegs[q].y, 2.4, 0, 7); ctx.fill(); } }
+  }
+  return {
+    html: html,
+    mount: function(pg){
+      cv = $('#pl-c', pg); ctx = cv.getContext('2d'); size(); slots();
+      var ro = window.ResizeObserver ? new ResizeObserver(function(){ size(); }) : null; if (ro) ro.observe(cv);
+      loop(performance.now());
+      $('#pl-go', pg).addEventListener('click', drop);
+      $('#pl-risk', pg).addEventListener('click', function(e){ var b = e.target.closest('[data-r]'); if (!b) return; risk = b.getAttribute('data-r'); $$('[data-r]', $('#pl-risk', pg)).forEach(function(x){ x.classList.toggle('on', x === b); }); slots(); TG.haptic('select'); });
+      wireBet(pg, 'pl-bet');
+      this.leave = function(){ cancelAnimationFrame(raf); raf = 0; if (ro) ro.disconnect(); };
+    }
+  };
+};
+
+/* ── Towers: лесенка, выбираешь безопасную клетку на каждом этаже ── */
+var TW_LVL = { easy: [3, 1], medium: [2, 1], hard: [3, 2] };
+V.towers = function(){
+  var ROWS = 8, lvl = 'medium', busy = false, active = false, floor = 0, bet = 0, safeIdx = [];
+  function cols(){ return TW_LVL[lvl][0]; }
+  function bombs(){ return TW_LVL[lvl][1]; }
+  function step(){ return (cols() - bombs()) / cols(); }
+  function mult(r){ return r ? rtp('towers') / Math.pow(step(), r) : 1; }
+  var html = head('Towers', L('Поднимайтесь по этажам, выбирая безопасную клетку', 'Climb the floors picking the safe tile'), 'hub') +
+    '<div class="tw-top glass"><div><small>' + L('Сейчас заберёте', 'Cash out now') + '</small><b id="tw-now">' + ic('ton') + '0.00</b></div><div><small>' + L('Следующий этаж', 'Next floor') + '</small><b id="tw-next">×1.00</b></div></div>' +
+    '<div class="tw-grid" id="tw-grid"></div>' +
+    '<div class="bet glass"><div class="opt"><span class="opt-l">' + L('Сложность', 'Difficulty') + '</span><div class="seg wide" id="tw-lvl"><button data-l="easy">' + L('Легко', 'Easy') + '</button><button data-l="medium" class="on">' + L('Средне', 'Medium') + '</button><button data-l="hard">' + L('Сложно', 'Hard') + '</button></div></div>' +
+    betRow('tw-bet') +
+    '<button class="btn big" id="tw-go">' + L('Играть', 'Play') + '</button></div>' +
+    '<p class="note">' + L('На каждом этаже одна или несколько клеток прячут бомбу. Угадали, идёте выше и множитель растёт.', 'On each floor one or more tiles hide a bomb. Pick right, climb higher and the multiplier grows.') + '</p>';
+  function grid(){
+    var c = cols(), rows = [];
+    for (var r = ROWS - 1; r >= 0; r--) {
+      var cells = [];
+      for (var i = 0; i < c; i++) cells.push('<button class="tw-c" data-r="' + r + '" data-i="' + i + '"></button>');
+      rows.push('<div class="tw-row ' + (active && r === floor ? 'cur' : '') + '" data-row="' + r + '"><span class="tw-mx">×' + mult(r + 1).toFixed(2) + '</span><div class="tw-cells">' + cells.join('') + '</div></div>');
+    }
+    $('#tw-grid').innerHTML = rows.join('');
+  }
+  function refresh(){
+    $('#tw-now').innerHTML = ic('ton') + fmt(active ? bet * mult(floor) : 0);
+    $('#tw-next').textContent = '×' + mult(floor + 1).toFixed(2);
+    var btn = $('#tw-go');
+    if (active) { btn.innerHTML = floor ? L('Забрать ', 'Cash out ') + ic('ton') + fmt(bet * mult(floor)) : L('Забрать', 'Cash out'); btn.className = 'btn big ' + (floor ? 'cash' : 'ghost'); }
+    else { btn.innerHTML = L('Играть за ', 'Play for ') + ic('ton') + fmt(readBet('tw-bet')); btn.className = 'btn big'; }
+    $$('.tw-row').forEach(function(row){ row.classList.toggle('cur', active && +row.getAttribute('data-row') === floor); });
+  }
+  function start(){
+    bet = readBet('tw-bet'); if (!pay(bet)) return;
+    active = true; floor = 0; safeIdx = [];
+    for (var r = 0; r < ROWS; r++) { var safe = []; for (var i = 0; i < cols(); i++) safe.push(i); for (var m = 0; m < bombs(); m++) safe.splice(Math.floor(rnd() * safe.length), 1); safeIdx.push(safe); }
+    count('towers'); points(bet * 10); save(); renderMe(); grid(); TG.haptic('medium'); refresh();
+  }
+  function cashOut(){
+    if (!active || !floor) { if (active) toast(L('Пройдите хотя бы один этаж', 'Clear at least one floor'), 'bad'); return; }
+    var win = r2(bet * mult(floor)); money(win); count('towerswin'); S.best = Math.max(S.best, win); active = false; save(); renderMe();
+    confetti(mult(floor) >= 5 ? 130 : 55, null, 150); flash(mult(floor) >= 5 ? 'gold' : ''); snd(mult(floor) >= 5 ? 'big' : 'coin'); TG.haptic('success');
+    toast(L('Забрали ', 'Cashed out ') + fmt(win) + ' TON · ' + mult(floor).toFixed(2) + '×', 'good');
+    revealAll(); refresh();
+  }
+  function revealAll(){ $$('.tw-c').forEach(function(c){ var r = +c.getAttribute('data-r'), i = +c.getAttribute('data-i'); if (c.classList.contains('ok') || c.classList.contains('no')) return; if (safeIdx[r] && safeIdx[r].indexOf(i) < 0) { c.classList.add('no'); c.innerHTML = ic('bolt'); } else c.classList.add('dim'); }); }
+  function hit(c){
+    if (!active) return;
+    var r = +c.getAttribute('data-r'), i = +c.getAttribute('data-i');
+    if (r !== floor || c.classList.contains('ok') || c.classList.contains('no')) return;
+    if (safeIdx[r].indexOf(i) < 0) {
+      c.classList.add('no', 'boom'); c.innerHTML = ic('bolt'); active = false;
+      snd('boom'); flash('lose'); TG.haptic('error'); toast(L('Бомба! Ставка сгорела', 'Bomb! The bet burned'), 'bad');
+      revealAll(); save(); renderMe(); refresh(); return;
+    }
+    c.classList.add('ok'); c.innerHTML = ic('check'); floor++; snd('tick'); TG.haptic('light');
+    $$('.tw-c').forEach(function(x){ if (+x.getAttribute('data-r') === r && x !== c) x.classList.add('dim'); });
+    refresh();
+    if (floor === ROWS) cashOut();
+  }
+  return {
+    html: html,
+    mount: function(pg){
+      grid(); refresh();
+      $('#tw-go', pg).addEventListener('click', function(){ if (active) cashOut(); else start(); });
+      $('#tw-grid', pg).addEventListener('click', function(e){ var c = e.target.closest('.tw-c'); if (c) hit(c); });
+      $('#tw-lvl', pg).addEventListener('click', function(e){ var b = e.target.closest('[data-l]'); if (!b || active) return; lvl = b.getAttribute('data-l'); $$('[data-l]', $('#tw-lvl', pg)).forEach(function(x){ x.classList.toggle('on', x === b); }); grid(); TG.haptic('select'); refresh(); });
+      wireBet(pg, 'tw-bet', refresh);
+    }
+  };
+};
+
+/* ── Wheel: колесо с секторами-множителями, выбор риска ── */
+var WH_RAW = {
+  low: [0, 1.5, 1.2, 0, 1.7, 1.2, 1.5, 0, 1.2, 1.5, 0, 1.7, 1.2, 0, 1.5, 1.2],
+  med: [0, 2, 0, 3, 0, 1.5, 0, 4, 0, 2, 0, 3, 0, 1.5, 0, 9],
+  high: [0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 48]
+};
+function whMults(risk){
+  var raw = WH_RAW[risk], ev = raw.reduce(function(a, b){ return a + b; }, 0) / raw.length, k = rtp('wheel') / ev;
+  return raw.map(function(v){ return Math.round(v * k * 100) / 100; });
+}
+V.wheel = function(){
+  var risk = 'med', busy = false, angle = 0, hist = [], mults = whMults(risk);
+  var COLOR = function(m){ return m <= 0 ? 'hsl(250 14% 28%)' : m < 1.5 ? 'hsl(205 85% 55%)' : m < 4 ? 'hsl(150 70% 48%)' : m < 10 ? 'hsl(266 85% 62%)' : 'hsl(42 96% 58%)'; };
+  function seg(){
+    var n = mults.length, out = '', r = 100, cx = 110, cy = 110;
+    for (var i = 0; i < n; i++) {
+      var a0 = i / n * 360 - 90, a1 = (i + 1) / n * 360 - 90, rad = Math.PI / 180;
+      var x0 = cx + r * Math.cos(a0 * rad), y0 = cy + r * Math.sin(a0 * rad), x1 = cx + r * Math.cos(a1 * rad), y1 = cy + r * Math.sin(a1 * rad);
+      out += '<path d="M' + cx + ' ' + cy + ' L' + x0.toFixed(1) + ' ' + y0.toFixed(1) + ' A' + r + ' ' + r + ' 0 0 1 ' + x1.toFixed(1) + ' ' + y1.toFixed(1) + ' Z" fill="' + COLOR(mults[i]) + '" stroke="rgba(0,0,0,.25)" stroke-width="1"/>';
+      var am = (a0 + a1) / 2 * rad, tr = 72;
+      out += '<text x="' + (cx + tr * Math.cos(am)).toFixed(1) + '" y="' + (cy + tr * Math.sin(am) + 3).toFixed(1) + '" class="wh-lbl" text-anchor="middle" transform="rotate(' + ((a0 + a1) / 2 + 90).toFixed(1) + ' ' + (cx + tr * Math.cos(am)).toFixed(1) + ' ' + (cy + tr * Math.sin(am)).toFixed(1) + ')">' + (mults[i] <= 0 ? '0' : mults[i].toFixed(mults[i] >= 10 ? 0 : 1)) + '</text>';
+    }
+    return out;
+  }
+  var html = head('Wheel', L('Крутите колесо, выбирайте риск', 'Spin the wheel, pick your risk'), 'hub') +
+    '<div class="wh glass"><svg viewBox="0 0 220 220" class="wh-svg"><g id="wh-g">' + seg() + '</g></svg><i class="wh-ptr"></i><div class="wh-c" id="wh-c"><small>×</small><b id="wh-last">0</b></div></div>' +
+    '<div class="dc-h" id="wh-h"></div>' +
+    '<div class="bet glass"><div class="opt"><span class="opt-l">' + L('Риск', 'Risk') + '</span><div class="seg wide" id="wh-risk"><button data-r="low">' + L('Низкий', 'Low') + '</button><button data-r="med" class="on">' + L('Средний', 'Medium') + '</button><button data-r="high">' + L('Высокий', 'High') + '</button></div></div>' +
+    betRow('wh-bet') +
+    '<button class="btn big" id="wh-go">' + L('Крутить', 'Spin') + '</button></div>' +
+    '<p class="note">' + L('Все сектора равновероятны. Ноль сжигает ставку. Чем выше риск, тем реже, но крупнее куш.', 'All segments are equally likely. A zero burns the bet. Higher risk means rarer but bigger wins.') + '</p>';
+  function renderHist(){ $('#wh-h').innerHTML = hist.slice(0, 10).map(function(m){ return '<span class="hc ' + (m <= 0 ? 'h1' : m < 4 ? 'h2' : 'h3') + '">' + (m <= 0 ? '0×' : m.toFixed(m >= 10 ? 0 : 1) + '×') + '</span>'; }).join(''); }
+  function redraw(){ mults = whMults(risk); $('#wh-g').innerHTML = seg(); }
+  function spin(){
+    if (busy) return;
+    var bet = readBet('wh-bet'); if (!pay(bet)) return;
+    busy = true; count('wheel'); points(bet * 10); save(); renderMe(); TG.haptic('medium');
+    var n = mults.length, win = Math.floor(rnd() * n);
+    var segA = 360 / n, target = 360 - (win * segA + segA / 2);
+    var end = angle + 360 * (REDUCED ? 1 : 5) + (((target - (angle % 360)) % 360) + 360) % 360;
+    var g = $('#wh-g'), t0 = performance.now(), dur = REDUCED ? 500 : 3800, from = angle, lt = -1;
+    (function stepf(now){
+      var q = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - q, 4);
+      angle = from + (end - from) * e; g.setAttribute('transform', 'rotate(' + angle.toFixed(2) + ' 110 110)');
+      var tk = Math.floor(angle / segA); if (tk !== lt) { lt = tk; snd('tick'); }
+      if (q < 1) { requestAnimationFrame(stepf); return; }
+      var m = mults[win], w = r2(bet * m);
+      $('#wh-last').textContent = m <= 0 ? '0' : m.toFixed(m >= 10 ? 0 : 1); $('#wh-c').className = 'wh-c ' + (m >= 4 ? 'big' : m > 0 ? 'win' : 'lose');
+      hist.unshift(m); renderHist();
+      if (w > 0) { money(w); S.best = Math.max(S.best, w); var big = m >= 4; if (big) { confetti(130, null, 150); flash('gold'); } snd(big ? 'big' : 'coin'); TG.haptic('success'); toast('+' + fmt(w) + ' TON · ' + m.toFixed(m >= 10 ? 0 : 1) + '×', 'good'); }
+      else { snd('lose'); TG.haptic('error'); }
+      save(); renderMe(); busy = false;
+    })(t0);
+  }
+  return {
+    html: html,
+    mount: function(pg){
+      renderHist();
+      $('#wh-go', pg).addEventListener('click', spin);
+      $('#wh-risk', pg).addEventListener('click', function(e){ var b = e.target.closest('[data-r]'); if (!b || busy) return; risk = b.getAttribute('data-r'); $$('[data-r]', $('#wh-risk', pg)).forEach(function(x){ x.classList.toggle('on', x === b); }); redraw(); TG.haptic('select'); });
+      wireBet(pg, 'wh-bet');
     }
   };
 };
@@ -1244,7 +1566,7 @@ V.profile = function(){
   var link = 't.me/…/app?startapp=' + code;
   var name = TG.user && TG.user.first_name ? TG.user.first_name : L('Гость', 'Guest');
   var html = '<div class="pf glass"><span class="av big" style="--h:268">' + esc(name.slice(0, 1).toUpperCase()) + '</span><div><h2>' + esc(name) + '</h2><p>' + L('Уровень ', 'Level ') + level() + ' · ' + fmt0(S.all) + L(' очков за всё время', ' lifetime points') + '</p></div></div>' +
-    '<div class="stats">' + [[L('Боксов', 'Boxes'), S.cnt.boxes || 0], [L('Игр', 'Games'), (S.cnt.rocket || 0) + (S.cnt.dice || 0) + (S.cnt.pvp || 0) + (S.cnt.upgrade || 0)], [L('Лучший выигрыш', 'Best win'), fmt(S.best)], [L('Подарков', 'Gifts'), S.inv.length]].map(function(s){ return '<div class="glass"><small>' + s[0] + '</small><b>' + s[1] + '</b></div>'; }).join('') + '</div>' +
+    '<div class="stats">' + [[L('Боксов', 'Boxes'), S.cnt.boxes || 0], [L('Игр', 'Games'), (S.cnt.rocket || 0) + (S.cnt.dice || 0) + (S.cnt.pvp || 0) + (S.cnt.upgrade || 0) + (S.cnt.mines || 0) + (S.cnt.plinko || 0) + (S.cnt.towers || 0) + (S.cnt.wheel || 0)], [L('Лучший выигрыш', 'Best win'), fmt(S.best)], [L('Подарков', 'Gifts'), S.inv.length]].map(function(s){ return '<div class="glass"><small>' + s[0] + '</small><b>' + s[1] + '</b></div>'; }).join('') + '</div>' +
     '<div class="ref glass"><div class="ref-h">' + ic('users') + '<div><b>' + L('10% с каждого депозита друга', '10% of every friend deposit') + '</b><small>' + L('Пожизненно, сразу на баланс', 'For life, straight to your balance') + '</small></div></div>' +
     '<div class="ref-l"><code>' + link + '</code><button class="btn sm" id="ref-c">' + ic('copy') + L('Копировать', 'Copy') + '</button></div>' +
     '<label class="ref-calc"><span>' + L('Если друзья внесут за месяц', 'If friends deposit per month') + ' <b id="ref-a">100 TON</b></span><input type="range" class="rng" id="ref-r" min="10" max="2000" step="10" value="100"><span>' + L('ваш доход', 'your income') + ' <b id="ref-i" class="ok">10 TON</b></span></label>' +
