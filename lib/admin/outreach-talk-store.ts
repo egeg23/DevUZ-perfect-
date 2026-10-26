@@ -251,7 +251,7 @@ export async function recordInbound(input: {
 }
 
 const PROSPECT_FIELDS =
-  "id, host, url, label, status, target, target_kind, target_user_id, contacts, message, claimed_by, touched_by, lead_id, ai_handling, closed_reason, proto_url, hello_at, pitch_at, checked_at, walked, autopilot_at";
+  "id, host, url, label, status, target, target_kind, target_user_id, contacts, message, claimed_by, touched_by, lead_id, ai_handling, handover_reason, closed_reason, proto_url, hello_at, pitch_at, checked_at, walked, autopilot_at";
 
 /** Чем узнаётся касание по входящему: id, @адрес, номер. Без письма и обхода сайта. */
 const MATCH_FIELDS = "id, status, target, target_kind, target_user_id, contacts";
@@ -267,6 +267,7 @@ type ProspectRow = HandTouch &
     | "message"
     | "lead_id"
     | "ai_handling"
+    | "handover_reason"
     | "closed_reason"
     | "proto_url"
     | "hello_at"
@@ -351,7 +352,7 @@ export async function recordManualInbound(
 
   const { data: prospect } = await db
     .from("prospects")
-    .select("id, host, url, label, target, target_user_id, lead_id, claimed_by, ai_handling, closed_reason, proto_url, message, hello_at, pitch_at, checked_at, walked, autopilot_at")
+    .select("id, host, url, label, target, target_user_id, lead_id, claimed_by, ai_handling, handover_reason, closed_reason, proto_url, message, hello_at, pitch_at, checked_at, walked, autopilot_at")
     .eq("id", prospectId)
     .maybeSingle();
   if (!prospect) return { matched: false };
@@ -398,6 +399,32 @@ async function toHuman(prospectId: string, text: string, options: { refuse?: boo
   await tellManager(prospectId, text, options);
 }
 
+/**
+ * Разговор отпущен ботом как «коротко и непонятно», и с тех пор ни бот, ни
+ * человек клиенту ничего не написали: последнее наше сообщение — кружок.
+ * Тогда ясный ответ клиента возвращает разговор боту. Забрал человек
+ * («Отвечать самому» — другая причина) или уже ответил — не трогаем.
+ */
+export function resumableAfterUnclear(handoverReason: unknown, lastOutKind: string | null): boolean {
+  return handoverReason === HANDOVER_TEXT.unclear && lastOutKind === "circle";
+}
+
+async function resumesAfterUnclear(prospect: { id: unknown; handover_reason?: unknown }): Promise<boolean> {
+  if (prospect.handover_reason !== HANDOVER_TEXT.unclear) return false;
+  const db = serviceClient();
+  if (!db) return false;
+  const { data } = await db
+    .from("outreach_messages")
+    .select("kind")
+    .eq("prospect_id", String(prospect.id))
+    .eq("direction", "out")
+    .in("status", ["queued", "sending", "sent"])
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return resumableAfterUnclear(prospect.handover_reason, (data?.kind as string | null) ?? null);
+}
+
 /** Общий хвост обоих путей: записать, оценить, при нужде отпустить модель. */
 async function saveInbound(
   prospect: {
@@ -407,6 +434,7 @@ async function saveInbound(
     label?: unknown;
     lead_id: unknown;
     ai_handling: unknown;
+    handover_reason?: unknown;
     closed_reason?: unknown;
     proto_url?: unknown;
     message?: unknown;
@@ -462,8 +490,13 @@ async function saveInbound(
   const pitched = !pitching && prospect.pitch_at ? await pitchStage(String(prospect.id), String(prospect.pitch_at)) : null;
   const read = readInbound(body, { stage: pitched?.stage ?? null });
   // Разбор шлёт код, пока разговор у бота. Забрал человек — разбор пишет он
-  // (verdict "breakdown" ниже, строка ему).
-  const breakdown = read === "breakdown" && prospect.ai_handling !== false;
+  // (verdict "breakdown" ниже, строка ему). Бот отпустил разговор сам, потому
+  // что первый ответ на кружок был «коротко и непонятно», а следом клиент
+  // ответил ясно и после кружка никто ничего не написал — разбор шлёт код
+  // (orbitagroup.uz, 26.10.2026: на «Летс го» разговор ушёл человеку, а
+  // «давайте за дело» и вопросы следом час лежали без ответа).
+  const resumed = read === "breakdown" && prospect.ai_handling === false && (await resumesAfterUnclear(prospect));
+  const breakdown = read === "breakdown" && (prospect.ai_handling !== false || resumed);
 
   await db.from("outreach_messages").insert({
     prospect_id: prospect.id,
@@ -475,6 +508,13 @@ async function saveInbound(
     ...(pitching || breakdown ? { answered_at: new Date().toISOString() } : {}),
   });
   if (pitching) return { matched: true, host: String(prospect.host), verdict: "hello" };
+  if (resumed) {
+    await db.from("prospects").update({ ai_handling: true, handover_reason: null }).eq("id", prospect.id);
+    await tellManager(
+      String(prospect.id),
+      `Клиент по ${touchName(prospect)} ответил ясно, а после кружка ему никто не писал: бот сам отправит обещанный разбор через 3 минуты и дальше ведёт разговор. Хотите ответить сами — «Отвечать самому» в карточке лида.\n\n${body.slice(0, 500)}`,
+    );
+  }
   if (breakdown) return answerCircle(prospect, body, pitched?.circleLang ?? CIRCLE_LANG);
 
   const patch: Record<string, unknown> = { replied_at: new Date().toISOString() };
