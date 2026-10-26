@@ -169,7 +169,7 @@ test("ответ на кружок: уходит разбор по провер�
   // Разбор — раньше рассылки «Нужен прототип» и условий макета.
   const turn = save.indexOf("if (breakdown) return answerCircle(");
   assert.ok(turn > 0 && turn < save.indexOf("announcePrototype("), "разбор решается до макета");
-  assert.match(save, /const breakdown = read === "breakdown" && prospect\.ai_handling !== false;/);
+  assert.match(save, /const breakdown = read === "breakdown" && \(prospect\.ai_handling !== false \|\| resumed\);/);
   // Входящее отвечено сразу — модель поверх разбора не пишет.
   assert.match(save, /\.\.\.\(pitching \|\| breakdown \? \{ answered_at:/);
   const answer = between(talk, "async function answerCircle(", "/**\n * Письмо тем, кто ответил");
