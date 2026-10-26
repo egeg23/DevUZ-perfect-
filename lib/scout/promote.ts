@@ -31,7 +31,7 @@ export const PROMOTE_WINDOW_HOURS = 12;
 /** За один проход — не больше: лента, куда разом падает десяток, перестаёт читаться. */
 const PER_PASS = 5;
 
-const MODEL = process.env.SCOUT_MODEL || "claude-sonnet-5";
+const MODEL = process.env.SCOUT_MODEL || "claude-sonnet-5-5";
 
 export type SignalRow = {
   id: string;

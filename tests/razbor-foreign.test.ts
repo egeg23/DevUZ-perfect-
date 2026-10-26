@@ -233,7 +233,7 @@ test("подписи снимков есть на английском и пол
 
 test("версии идут свипом, по одной на язык, той же моделью разборов", () => {
   const run = read("lib/razbor/foreign-run.ts");
-  assert.match(run, /process\.env\.RAZBOR_MODEL \|\| "claude-sonnet-5"/);
+  assert.match(run, /process\.env\.RAZBOR_MODEL \|\| "claude-sonnet-5-5"/);
   assert.match(run, /process\.env\.ARTICLE_MODEL \|\| "claude-haiku-4-5"/, "название — дешёвой моделью");
   assert.match(run, /keywordResearch\(query\)/, "запрос не сверен с Trends и Вордстатом");
   assert.match(run, /\.eq\("status", "published"\)/, "переводится только вышедшее");

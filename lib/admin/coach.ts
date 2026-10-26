@@ -21,7 +21,7 @@ import { anthropic } from "@/lib/model-road";
  */
 
 /** Подсказки менеджеру — Соннет: их читает свой, а не клиент. */
-const MODEL = process.env.COACH_MODEL || "claude-sonnet-5";
+const MODEL = process.env.COACH_MODEL || "claude-sonnet-5-5";
 
 export type ReviewKind = "weekly" | "daily";
 

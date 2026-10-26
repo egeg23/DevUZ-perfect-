@@ -58,7 +58,7 @@ import { serviceClient } from "@/lib/supabase";
 export const AUTO_PROTO = false;
 
 /** Своя переменная, как у писем: разбор страницы проще письма, и модель можно взять дешевле. */
-const MODEL = process.env.PROTO_MODEL || process.env.OUTREACH_MODEL || "claude-sonnet-5";
+const MODEL = process.env.PROTO_MODEL || process.env.OUTREACH_MODEL || "claude-sonnet-5-5";
 
 
 export type AutoProto = { url: string } | { url: null; note: AutoNote | "tried" | "no_site" };

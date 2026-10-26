@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 
 import { directDispatcher } from "@/lib/egress.mjs";
 import { qwenFetch, qwenFor } from "@/lib/llm/route";
+import { calledTool, nudgedBody, softenToolChoice } from "@/lib/model-limits";
 import { appSecret } from "@/lib/secrets";
 import { serviceClient } from "@/lib/supabase";
 
@@ -37,6 +38,9 @@ import { serviceClient } from "@/lib/supabase";
  * разборов, а прокси до конца трёх часов даже не пробовали. Теперь отказ
  * шлюза — повод тут же попробовать прокси, пробовать его первым в каждом
  * следующем запросе, пока шлюз не заработает, и сразу написать владельцу.
+ *
+ * Модели, которая не принимает принудительный инструмент (Sonnet 5.5),
+ * запрос переписывается здесь же — `softToolChoice`.
  *
  * Всё это — в fetch, который получает SDK: вызывающему коду менять нечего,
  * ни в стриминге чата, ни в беттах, ни в повторах самого SDK.
@@ -395,17 +399,69 @@ async function meter(site: string, url: string, response: Response, road: string
   });
 }
 
+type Fetch = (input: string | URL | Request, init?: RequestInit) => Promise<Response>;
+
+/** Тот же ответ из уже прочитанного текста: длина и сжатие — от прочитанного, их не переносим. */
+function rebuilt(response: Response, text: string): Response {
+  const headers = new Headers(response.headers);
+  headers.delete("content-length");
+  headers.delete("content-encoding");
+  return new Response(text, { status: response.status, statusText: response.statusText, headers });
+}
+
+/**
+ * Принудительный инструмент для модели, которая его не принимает
+ * (`rejectsForcedTool`, lib/model-limits.ts): запрос уходит с «auto» и
+ * строкой, какой инструмент нужен. «auto» вызова не обещает — ответила
+ * текстом, один повтор с замечанием. Не вышло и со второго раза — ответ
+ * отдаётся как есть: узлы и так это ловят («модель не вернула …»).
+ *
+ * Поток и подсчёт токенов переписываются без повтора: там ответ не
+ * посмотреть заранее. Каждый заход проходит учёт расхода сам.
+ */
+export function softToolChoice(fetcher: Fetch): Fetch {
+  return async (input, init = {}) => {
+    const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+    const path = new URL(url).pathname;
+    if (!/\/v1\/messages(?:\/count_tokens)?$/.test(path) || typeof init.body !== "string") return fetcher(input, init);
+    let body: Record<string, unknown>;
+    try {
+      body = JSON.parse(init.body);
+    } catch {
+      return fetcher(input, init);
+    }
+    const soft = softenToolChoice(body);
+    if (!soft) return fetcher(input, init);
+
+    const first = await fetcher(input, { ...init, body: JSON.stringify(soft.body) });
+    if (!first.ok || soft.body.stream === true || path.endsWith("/count_tokens")) return first;
+    const text = await first.text();
+    let message: { content?: unknown; stop_reason?: unknown };
+    try {
+      message = JSON.parse(text);
+    } catch {
+      return rebuilt(first, text);
+    }
+    if (calledTool(message, soft.want) || message.stop_reason === "refusal") return rebuilt(first, text);
+    return fetcher(input, { ...init, body: JSON.stringify(nudgedBody(soft.body, message, soft.want)) });
+  };
+}
+
 function meteredFetch(site: string) {
   return async (input: string | URL | Request, init: RequestInit = {}): Promise<Response> => {
     // Место переведено на Qwen (lib/llm/route.ts) — запрос туда, дорога
     // в model_usage — «qwen». Нет настройки — Claude, как всегда.
     const qwen = await qwenFor(site).catch(() => null);
-    const response = qwen ? await qwenFetch(qwen)(input, init) : await shared.modelFetch(input, init);
-    if (response.ok) {
-      const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
-      meter(site, url, response.clone(), qwen ? "qwen" : undefined).catch((error) => console.error("model-road: учёт расхода", error));
-    }
-    return response;
+    const once: Fetch = async (target, options = {}) => {
+      const response = qwen ? await qwenFetch(qwen)(target, options) : await shared.modelFetch(target, options);
+      if (response.ok) {
+        const url = typeof target === "string" ? target : target instanceof URL ? target.href : target.url;
+        meter(site, url, response.clone(), qwen ? "qwen" : undefined).catch((error) => console.error("model-road: учёт расхода", error));
+      }
+      return response;
+    };
+    // Qwen принуждение понимает сам (lib/llm/openai-compat.ts).
+    return qwen ? once(input, init) : softToolChoice(once)(input, init);
   };
 }
 

@@ -29,7 +29,7 @@ export const FOLLOWUP_TO_HOUR = 17;
 /** За проход свипа — не больше: рабочий аккаунт не должен выглядеть рассылкой. */
 const PER_PASS = 3;
 
-const MODEL = process.env.OUTREACH_MODEL || "claude-sonnet-5";
+const MODEL = process.env.OUTREACH_MODEL || "claude-sonnet-5-5";
 const DAY_MS = 24 * 3600_000;
 
 /** Между двумя дожимами — не меньше: иначе у давних касаний оба ушли бы подряд. */

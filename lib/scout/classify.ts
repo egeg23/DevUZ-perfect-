@@ -26,7 +26,7 @@ import { anthropic } from "@/lib/model-road";
  * двадцать, то есть запас нулевой — экономия шести десятых цента не стоит
  * потерянных лидов.
  */
-const MODEL = process.env.SCOUT_MODEL || "claude-sonnet-5";
+const MODEL = process.env.SCOUT_MODEL || "claude-sonnet-5-5";
 
 /** Больше двадцати в пачке — и ответ начинает упираться в предел длины. */
 export const BATCH_SIZE = 20;

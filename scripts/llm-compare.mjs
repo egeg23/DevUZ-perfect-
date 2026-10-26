@@ -54,7 +54,7 @@ const providers = [
     modelFor: (c) => (c.kind === "talk" ? process.env.ANTHROPIC_MODEL || "claude-opus-5" : modelFor("standard")),
   },
 ];
-// Claude против Claude: «claude-haiku-4-5,claude-sonnet-5» — каждая модель
+// Claude против Claude: «claude-haiku-4-5,claude-sonnet-5-5» — каждая модель
 // отвечает на все разговоры сама (владелец, 22.10.2026: «пока оставим haiku
 // или sonnet», Qwen — на своём компьютере позже). Пусто — как в бою.
 const MODELS = (process.argv[4] || process.env.COMPARE_MODELS || "")

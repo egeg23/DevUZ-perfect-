@@ -110,7 +110,7 @@ test("усилие не уезжает модели, которая про не�
 
   assert.equal(supportsEffort("claude-opus-5"), true);
   assert.equal(supportsEffort("claude-haiku-4-5"), false);
-  assert.deepEqual(effortFor("claude-sonnet-5", "low"), { output_config: { effort: "low" } });
+  assert.deepEqual(effortFor("claude-sonnet-5-5", "low"), { output_config: { effort: "low" } });
   assert.deepEqual(effortFor("claude-haiku-4-5", "low"), {});
 
   const scout = read("lib/scout/classify.ts");
@@ -136,14 +136,14 @@ test("усилие не уезжает модели, которая про не�
  */
 test("модель выбирается на каждый узел отдельно", () => {
   const nodes = {
-    "письма касаний": ["lib/admin/outreach-store.ts", "OUTREACH_MODEL", "claude-sonnet-5"],
-    "отбор скаута": ["lib/scout/classify.ts", "SCOUT_MODEL", "claude-sonnet-5"],
-    "разбор резюме": ["lib/hiring/store.ts", "HIRING_MODEL", "claude-sonnet-5"],
-    "подсказки менеджеру": ["lib/admin/coach.ts", "COACH_MODEL", "claude-sonnet-5"],
+    "письма касаний": ["lib/admin/outreach-store.ts", "OUTREACH_MODEL", "claude-sonnet-5-5"],
+    "отбор скаута": ["lib/scout/classify.ts", "SCOUT_MODEL", "claude-sonnet-5-5"],
+    "разбор резюме": ["lib/hiring/store.ts", "HIRING_MODEL", "claude-sonnet-5-5"],
+    "подсказки менеджеру": ["lib/admin/coach.ts", "COACH_MODEL", "claude-sonnet-5-5"],
     // Статьи — недорогой моделью (владелец, 04.10.2026).
-    "разборы сайтов": ["lib/razbor/shift-run.ts", "RAZBOR_MODEL", "claude-sonnet-5"],
-    "тендерный разбор": ["lib/razbor/tender-run.ts", "RAZBOR_MODEL", "claude-sonnet-5"],
-    "разборы на других языках": ["lib/razbor/foreign-run.ts", "RAZBOR_MODEL", "claude-sonnet-5"],
+    "разборы сайтов": ["lib/razbor/shift-run.ts", "RAZBOR_MODEL", "claude-sonnet-5-5"],
+    "тендерный разбор": ["lib/razbor/tender-run.ts", "RAZBOR_MODEL", "claude-sonnet-5-5"],
+    "разборы на других языках": ["lib/razbor/foreign-run.ts", "RAZBOR_MODEL", "claude-sonnet-5-5"],
     "статьи о маркетинге": ["lib/marketing/articles-run.ts", "ARTICLE_MODEL", "claude-haiku-4-5"],
     // ИИ на прототипах — открыт клиентам, значит самой дешёвой моделью.
     "ИИ на прототипах": ["lib/proto/ai.ts", "PROTO_AI_MODEL", "claude-haiku-4-5"],

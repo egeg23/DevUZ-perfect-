@@ -100,7 +100,7 @@ const ownerId = (writer: Writer): string | null => (isAutopilot(writer) ? null :
  * Своя переменная, а не общая ANTHROPIC_MODEL: у чата на сайте задача
  * другая — там продажа, и менять его модель заодно с письмами нельзя.
  */
-const MODEL = process.env.OUTREACH_MODEL || "claude-sonnet-5";
+const MODEL = process.env.OUTREACH_MODEL || "claude-sonnet-5-5";
 
 export type ProspectStatus = "new" | "contacting" | "sending" | "sent" | "failed" | "skipped" | "manual";
 

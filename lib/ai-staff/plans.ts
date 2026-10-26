@@ -113,7 +113,7 @@ export function extendPaid(paidUntil: string | null, months: number, now: Date):
 export function modelFor(tier: "standard" | "premium"): string {
   return tier === "premium"
     ? process.env.AI_STAFF_PREMIUM_MODEL || "claude-opus-5"
-    : process.env.AI_STAFF_MODEL || "claude-sonnet-5";
+    : process.env.AI_STAFF_MODEL || "claude-sonnet-5-5";
 }
 
 /** Модель разбора сайта клиента в базу знаний — недорогая. */
