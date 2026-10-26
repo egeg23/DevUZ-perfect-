@@ -30,6 +30,11 @@ export type BotCopy = {
   minuteLate: string;
   /** Ответ не получился. */
   error: string;
+  /**
+   * Модель не ответила (кончились деньги, лежит дорога): слова клиента уже
+   * у владельца и руководителя «📩 Обращением в бота», ответит человек.
+   */
+  later: string;
   /** Непонятная команда в личке. */
   unknown: string;
   /** Короткая публичная справка. */
@@ -88,6 +93,7 @@ const ru: BotCopy = {
   ].join("\n"),
   error:
     "Что-то пошло не так на нашей стороне. Напишите сообщение ещё раз — обычно со второго всё проходит.",
+  later: "Спасибо, сообщение получили и передали менеджеру. Он ответит вам здесь, в этом чате.",
   unknown: "Такой команды у меня нет. Просто напишите, что нужно сделать, — я на связи.",
   help: [
     "<b>DevUz Studio</b>",
@@ -139,6 +145,7 @@ const en: BotCopy = {
     "Tell us in your own words what you need built.",
   ].join("\n"),
   error: "Something broke on our side. Send the message again — it usually goes through the second time.",
+  later: "Thank you, we got your message and passed it to a manager. They will reply right here in this chat.",
   unknown: "I don't have that command. Just write what you need — I'm here.",
   help: [
     "<b>DevUz Studio</b>",
@@ -190,6 +197,7 @@ const uz: BotCopy = {
     "O‘z so‘zlaringiz bilan nima kerakligini ayting.",
   ].join("\n"),
   error: "Bizning tomonda nimadir ishlamadi. Xabarni yana yuboring — odatda ikkinchi marta o‘tib ketadi.",
+  later: "Rahmat, xabaringizni oldik va menejerga yetkazdik. U sizga shu yerda, shu chatda javob beradi.",
   unknown: "Bunday buyruq yo‘q. Shunchaki nima kerakligini yozing — men shu yerdaman.",
   help: [
     "<b>DevUz Studio</b>",
@@ -233,6 +241,7 @@ const zh: BotCopy = {
     "请用您自己的话说说需要做什么。",
   ].join("\n"),
   error: "我们这边出了点问题。请再发一次消息 — 通常第二次就能成功。",
+  later: "谢谢，我们已收到您的消息并转交给经理。经理会在这个聊天里回复您。",
   unknown: "我没有这个命令。直接写下您的需求就好 — 我在。",
   help: ["<b>DevUz Studio</b>", "", "用普通消息描述您的需求 — 我会问一两个补充问题，然后连同申请编号一起转交客户经理。", "", "/ref — 合作伙伴计划：链接与余额", "/reset — 重新开始对话"].join("\n"),
   reset: "好的，重新开始。请说说需要做什么。",
@@ -278,6 +287,7 @@ const uk: BotCopy = {
   ].join("\n"),
   error:
     "Щось пішло не так на нашому боці. Надішліть повідомлення ще раз — зазвичай із другої спроби все проходить.",
+  later: "Дякуємо, повідомлення отримали й передали менеджеру. Він відповість вам тут, у цьому чаті.",
   unknown: "Такої команди в мене немає. Просто напишіть, що потрібно зробити, — я на зв'язку.",
   help: [
     "<b>DevUz Studio</b>",
@@ -330,6 +340,7 @@ const pl: BotCopy = {
   ].join("\n"),
   error:
     "Coś poszło nie tak po naszej stronie. Wyślij wiadomość jeszcze raz — zwykle za drugim razem wszystko działa.",
+  later: "Dziękujemy, wiadomość dotarła i przekazaliśmy ją menedżerowi. Odpowie tutaj, w tym czacie.",
   unknown: "Nie znam takiej komendy. Po prostu napisz, czego potrzebujesz — jestem tutaj.",
   help: [
     "<b>DevUz Studio</b>",

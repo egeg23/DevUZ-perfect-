@@ -36,6 +36,7 @@ function rig(behaviour: Behaviour, key: string | null = "pa-key") {
   let clock = 1_000_000;
   const seen: Seen[] = [];
   const switches: ModelRoad[] = [];
+  const settles: ModelRoad[] = [];
   const gateway: GatewayEvent[] = [];
   const fetchImpl = async (url: string, init: RequestInit & { dispatcher?: unknown } = {}) => {
     const road: ModelRoad = url.startsWith(PROXYAPI_BASE) ? "proxyapi" : "proxy";
@@ -52,6 +53,9 @@ function rig(behaviour: Behaviour, key: string | null = "pa-key") {
     onSwitch: (to) => {
       switches.push(to);
     },
+    onSettle: (road) => {
+      settles.push(road);
+    },
     onGateway: (event) => {
       gateway.push(event);
     },
@@ -62,7 +66,7 @@ function rig(behaviour: Behaviour, key: string | null = "pa-key") {
       headers: { "x-api-key": "sk-ant-secret", "anthropic-version": "2023-06-01", "content-type": "application/json" },
       body: JSON.stringify({ model: "claude-sonnet-5", max_tokens: 1 }),
     });
-  return { road, call, seen, switches, gateway, advance: (ms: number) => (clock += ms) };
+  return { road, call, seen, switches, settles, gateway, advance: (ms: number) => (clock += ms) };
 }
 
 test("порядок дорог: без ключа — только прокси; на ProxyAPI до срока — только шлюз", () => {
@@ -126,6 +130,22 @@ test("через три часа прокси всё ещё мёртв — ещ�
   assert.equal(r.road.state().road, "proxyapi");
   assert.ok(r.road.state().retryAt > RETRY_PROXY_MS, "срок следующей пробы не сдвинулся");
   assert.deepEqual(r.switches, ["proxyapi"]);
+});
+
+test("первая дорога процесса сверяется с объявленной — один раз, смена её не дублирует", async () => {
+  // Процесс начинает «на прокси» и смены на прокси не видит: без сверки в
+  // базе навсегда оставалось «объявлен ProxyAPI», и следующий уход на шлюз
+  // владельцу не объявлялся (26.10.2026).
+  const alive = rig({ proxy: "ok" });
+  await alive.call();
+  await alive.call();
+  assert.deepEqual(alive.settles, ["proxy"]);
+  assert.deepEqual(alive.switches, []);
+
+  const dead = rig({ proxy: "dead", proxyapi: "ok" });
+  await dead.call();
+  assert.deepEqual(dead.switches, ["proxyapi"]);
+  assert.deepEqual(dead.settles, [], "смена уже объявлена — сверять нечего");
 });
 
 test("ответ с ошибкой — дорога рабочая: через шлюз не повторяем и не переключаемся", async () => {

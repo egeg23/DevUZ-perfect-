@@ -1,0 +1,164 @@
+# Замена прокси на сервере, по кнопке.
+#
+# 26.10.2026 у proxy6 кончился срок: порт 196.19.10.243:8000 перестал
+# принимать соединения, ProxyAPI в тот же день остался без денег, и
+# полдня молчали бот, чат на сайте и касания. Прокси — строка HTTPS_PROXY в
+# .env на сервере, а доступ к серверу есть только у задач GitHub. Класть
+# логин и пароль прокси в открытый репозиторий или во входные поля задачи
+# нельзя: и то и другое видно всем.
+#
+# Поэтому новый прокси кладётся в хранилище секретов Supabase
+# (app.HTTPS_PROXY, функция app_secret_put — та же, что у ключей), по
+# одному на строку, если их несколько. Эта задача на сервере сама берёт
+# список оттуда, проверяет каждый (модель, Telegram, страна выхода) и
+# ставит в .env первый годный; старый .env остаётся копией рядом. Потом —
+# сайт, бот и скаут заново, и проверка модели тем же путём, что у сайта.
+#
+# В лог идёт только адрес прокси, без логина и пароля.
+# Запуск: Actions → «Прокси: заменить» → Run workflow.
+name: "Прокси: заменить"
+
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: "Поставить годный прокси (нет — только проверить список)"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vps-proxy
+  cancel-in-progress: false
+
+jobs:
+  proxy:
+    name: Заменить прокси на сервере
+    runs-on: ubuntu-latest
+    steps:
+      - name: Проверить и поставить прокси по SSH
+        uses: appleboy/ssh-action@v1
+        env:
+          VPS_APP_DIR_IN: ${{ secrets.VPS_APP_DIR }}
+          APPLY_IN: ${{ inputs.apply }}
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          envs: VPS_APP_DIR_IN,APPLY_IN
+          command_timeout: 15m
+          script: |
+            set -uo pipefail
+
+            APP_DIR="${VPS_APP_DIR_IN:-/opt/devuz}"
+            cd "$APP_DIR" || { echo "✗ нет каталога приложения"; exit 1; }
+            # Старый прокси мёртв — ни одна проверка не должна идти через него.
+            unset HTTPS_PROXY HTTP_PROXY ALL_PROXY https_proxy http_proxy all_proxy
+
+            envval() { grep -m1 "^$1=" .env 2>/dev/null | cut -d= -f2- | sed -E "s/^[\"']//; s/[\"']\$//"; }
+            # Адрес без логина и пароля — единственное, что можно писать в лог.
+            hostof() { printf '%s' "$1" | sed -E 's#^[a-zA-Z0-9]+://##; s#^[^@]*@##; s#/.*$##'; }
+            # Прокси в curl — через stdin (-K -), а не аргументом: пароля нет
+            # ни в выводе, ни в списке процессов.
+            via() { printf 'proxy = "%s"\n' "$1"; }
+
+            SB_URL="$(envval NEXT_PUBLIC_SUPABASE_URL)"
+            SB_KEY="$(envval SUPABASE_SERVICE_ROLE_KEY)"
+            [ -n "$SB_URL" ] && [ -n "$SB_KEY" ] || { echo "✗ в .env нет адреса или ключа базы"; exit 1; }
+
+            echo "════ Список из хранилища ════"
+            RAW="$(printf 'url = "%s/rest/v1/rpc/app_secret"\nheader = "apikey: %s"\nheader = "Authorization: Bearer %s"\nheader = "Content-Type: application/json"\ndata = "{\\"p_name\\":\\"app.HTTPS_PROXY\\"}"\n' \
+              "$SB_URL" "$SB_KEY" "$SB_KEY" | curl -sS --max-time 20 --noproxy '*' -K - 2>/dev/null || true)"
+            LIST="$(printf '%s' "$RAW" | node -e 'let s="";process.stdin.on("data",c=>s+=c).on("end",()=>{try{const v=JSON.parse(s);if(typeof v==="string")process.stdout.write(v)}catch{}})' 2>/dev/null || true)"
+            [ -n "$LIST" ] || { echo "✗ app.HTTPS_PROXY в хранилище пуст или база не ответила"; exit 1; }
+
+            PICK=""
+            N=0
+            while IFS= read -r LINE; do
+              LINE="$(printf '%s' "$LINE" | tr -d '[:space:]')"
+              case "$LINE" in ""|\#*) continue ;; esac
+              N=$((N + 1))
+              case "$LINE" in
+                http://*) ;;
+                *) echo "✗ $N. $(hostof "$LINE"): не http:// — Node умеет только HTTP-прокси"; continue ;;
+              esac
+              # Anthropic без ключа: 401 — дорога есть, страна подходит;
+              # 403 — страна под запретом; 407 — прокси не принял логин.
+              A="$(via "$LINE" | curl -sS -o /dev/null -w '%{http_code}' --max-time 20 -K - https://api.anthropic.com/v1/models 2>/dev/null || true)"
+              T="$(via "$LINE" | curl -sS -o /dev/null -w '%{http_code}' --max-time 20 -K - https://api.telegram.org 2>/dev/null || true)"
+              CC="$(via "$LINE" | curl -sS --max-time 15 -K - https://ipinfo.io/country 2>/dev/null | tr -d '\n' || true)"
+              VERDICT="модель ${A:-000} · Telegram ${T:-000} · страна ${CC:-?}"
+              case "$A" in
+                401|404|200) ;;
+                403) echo "✗ $N. $(hostof "$LINE"): $VERDICT — страна под запретом у модели"; continue ;;
+                407) echo "✗ $N. $(hostof "$LINE"): $VERDICT — прокси не принял логин или пароль"; continue ;;
+                *) echo "✗ $N. $(hostof "$LINE"): $VERDICT — до модели не дошли"; continue ;;
+              esac
+              case "$T" in 000|"") echo "✗ $N. $(hostof "$LINE"): $VERDICT — Telegram не ответил"; continue ;; esac
+              echo "✓ $N. $(hostof "$LINE"): $VERDICT"
+              [ -n "$PICK" ] || PICK="$LINE"
+            done <<< "$LIST"
+
+            [ -n "$PICK" ] || { echo; echo "✗ Ни один прокси из списка не годится — .env не трогаю."; exit 1; }
+            echo
+            echo "годный: $(hostof "$PICK")"
+            OLD="$(envval HTTPS_PROXY)"
+            echo "сейчас в .env: $( [ -n "$OLD" ] && hostof "$OLD" || echo 'пусто')"
+            if [ "$APPLY_IN" != "true" ]; then
+              echo "· только проверка — .env не трогаю"
+              exit 0
+            fi
+            if [ "$OLD" = "$PICK" ]; then
+              echo "· этот прокси уже стоит — перезапускать нечего"
+              exit 0
+            fi
+
+            echo
+            echo "════ .env ════"
+            BACKUPS="$HOME/.devuz-env-backups"
+            mkdir -p "$BACKUPS" && chmod 700 "$BACKUPS"
+            STAMP="$(date +%Y%m%d-%H%M%S)"
+            cp -p .env "$BACKUPS/env-$STAMP" && chmod 600 "$BACKUPS/env-$STAMP"
+            ls -1t "$BACKUPS"/env-* 2>/dev/null | tail -n +6 | xargs -r rm -f
+            NEW="$PICK" node -e '
+              const fs = require("fs");
+              let t = fs.readFileSync(".env", "utf8");
+              for (const k of ["HTTPS_PROXY", "HTTP_PROXY"]) {
+                const line = `${k}=${process.env.NEW}`;
+                const re = new RegExp(`^${k}=.*$`, "m");
+                t = re.test(t) ? t.replace(re, () => line) : `${t.replace(/\n*$/, "\n")}${line}\n`;
+              }
+              fs.writeFileSync(".env", t);
+            ' || { echo "✗ .env не записан — остался прежним"; exit 1; }
+            echo "✓ HTTPS_PROXY и HTTP_PROXY → $(hostof "$PICK"), копия прежнего: $BACKUPS/env-$STAMP"
+
+            echo
+            echo "════ Перезапуск ════"
+            # Сайт: тот же образ, новое окружение — compose пересоздаёт контейнер.
+            docker compose up -d --no-build >/dev/null 2>&1 || echo "✗ docker compose up не прошёл"
+            for UNIT in devuz-bot devuz-scout devuz-ai-staff-bot devuz-maximova-bot; do
+              if systemctl is-active --quiet "$UNIT.service"; then
+                systemctl restart "$UNIT.service" && echo "✓ $UNIT перезапущен" || echo "✗ $UNIT не перезапустился"
+              fi
+            done
+            PORT="$(envval APP_PORT)"; PORT="${PORT:-3310}"
+            UP=0
+            for _ in $(seq 1 30); do
+              if curl -fsS --max-time 5 --noproxy '*' "http://127.0.0.1:$PORT/api/health" >/dev/null 2>&1; then UP=1; break; fi
+              sleep 3
+            done
+            [ "$UP" = 1 ] && echo "✓ сайт отвечает" || echo "✗ сайт не поднялся за 90 секунд — сторож вернёт его сам"
+
+            echo
+            echo "════ Модель тем же путём, что у сайта ════"
+            SECRET="$(envval REMINDER_SWEEP_SECRET)"
+            if [ -n "$SECRET" ] && [ "$UP" = 1 ]; then
+              printf 'url = "http://127.0.0.1:%s/api/health?deep=1"\nheader = "x-devuz-sweep: %s"\n' "$PORT" "$SECRET" \
+                | curl -sS --max-time 60 --noproxy '*' -K - 2>/dev/null \
+                | node -e 'let s="";process.stdin.on("data",c=>s+=c).on("end",()=>{try{const b=JSON.parse(s);console.log("дорога:",b.model,"· проба:",JSON.stringify(b.reachable??null))}catch{console.log("ответ не разобрать")}})'
+            else
+              echo "· пробу пропускаю: нет секрета свипа или сайт не поднялся"
+            fi

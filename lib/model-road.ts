@@ -95,6 +95,8 @@ type Deps = {
   direct?: () => unknown;
   now?: () => number;
   onSwitch?: (to: ModelRoad) => void | Promise<void>;
+  /** Первая дорога процесса — сверить с той, что объявлена владельцу. */
+  onSettle?: (road: ModelRoad) => void | Promise<void>;
   onGateway?: (event: GatewayEvent) => void | Promise<void>;
 };
 
@@ -110,9 +112,12 @@ export function createModelFetch(deps: Deps = {}) {
   const now = deps.now ?? Date.now;
   const onSwitch = deps.onSwitch ?? announceSwitch;
   const onGateway = deps.onGateway ?? announceGateway;
+  const onSettle = deps.onSettle ?? settleAnnounced;
   const state: RoadState = { road: "proxy", retryAt: 0 };
   /** Шлюз отказал и с тех пор ни разу не ответил по-настоящему. */
   let refused = false;
+  /** Процесс уже доехал до модели хоть раз. */
+  let settled = false;
 
   function arrive(road: ModelRoad) {
     const changed = state.road !== road;
@@ -121,7 +126,14 @@ export function createModelFetch(deps: Deps = {}) {
     if (changed) {
       // Смена дороги не должна задерживать ответ клиенту.
       Promise.resolve(onSwitch(road)).catch((error) => console.error("model-road:", error));
+    } else if (!settled) {
+      // Процесс начинает с прокси и «смены» на него не видит. Перезапуск на
+      // ProxyAPI с живым прокси оставлял в базе «объявлен ProxyAPI», и
+      // следующий уход на шлюз молчал: 26.10.2026 владелец не узнал, что
+      // прокси умер, — в базе это стояло с 26.09.
+      Promise.resolve(onSettle(road)).catch((error) => console.error("model-road:", error));
     }
+    settled = true;
   }
 
   function tell(event: GatewayEvent) {
@@ -229,6 +241,15 @@ async function announceSwitch(to: ModelRoad): Promise<void> {
 }
 
 const ANNOUNCED = "model_road";
+
+/** Объявлена не та дорога, по которой процесс доехал, — объявить эту. */
+async function settleAnnounced(road: ModelRoad): Promise<void> {
+  const db = serviceClient();
+  if (!db) return;
+  const { data } = await db.from("stats_snapshots").select("payload").eq("key", ANNOUNCED).maybeSingle();
+  const before = (data?.payload as { road?: ModelRoad } | null)?.road ?? "proxy";
+  if (before !== road) await announceSwitch(road);
+}
 
 /** Об отказе шлюза напоминаем не чаще раза в сутки: сайт и скаут узнают о нём каждый сам. */
 const GATEWAY_ANNOUNCED = "model_gateway";
