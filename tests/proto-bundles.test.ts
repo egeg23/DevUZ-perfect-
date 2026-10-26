@@ -2079,3 +2079,55 @@ test("SamAuto: D-MAX из-под покрывала, разлёт, фара, п�
   const stamped = stampedBundle("samauto", SEED)!;
   assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
 });
+
+test("CHECHFARM: 7 страниц и панель на ru, uz, en — условия, noindex, видео DevUz, шапка 3 с, цепочка, формы в панель, только факты из ТЗ", async () => {
+  const { existsSync, readdirSync, statSync } = await import("node:fs");
+  const site = bundlePages("chechfarm");
+  assert.ok(site);
+  const all: Record<string, string> = { "": site.html, ...site.pages };
+  const PAGES = ["", "about", "products", "partners", "investors", "news", "contacts", "panel"];
+  const keys = ["ru", "uz", "en"].flatMap((l) => PAGES.map((p) => [l === "ru" ? "" : l, p].filter(Boolean).join("/")));
+  assert.deepEqual(Object.keys(all).sort(), keys.sort());
+  for (const [path, page] of Object.entries(all)) {
+    const lang = path.startsWith("uz") ? "uz" : path.startsWith("en") ? "en" : "ru";
+    assert.doesNotMatch(page, /@@[A-Z]+@@/, `${path}: метка сборки осталась в странице`);
+    assert.ok(page.includes(`<html lang="${lang}">`), `${path}: язык страницы`);
+    assert.ok(page.includes(`https://devuz.studio/${lang}/mockup-terms`), `${path}: нет условий на языке страницы`);
+    assert.match(page, /<meta name="robots" content="noindex/, `${path}: нет noindex`);
+    assert.match(page, /prefers-reduced-motion/, `${path}: анимацию нечем выключить`);
+    assert.doesNotMatch(page, /stamp|watermark|fingerprint|отпечат|seed|data-mark/i, `${path}: слово, по которому находят отпечаток`);
+    assert.doesNotMatch(page, /proto-ai|proxyapi/i, `${path}: макет не зовёт модель`);
+    assert.doesNotMatch(page, /href="#"/, `${path}: ссылка в никуда`);
+    for (const img of page.match(/<img [^>]+>/g) ?? []) assert.match(img, /alt="/, `${path}: картинка без alt`);
+    for (const src of page.match(/\/protos\/chechfarm\/[\w./-]+\.(?:webp|png|svg)/g) ?? []) assert.ok(existsSync("public" + src), `${path}: нет файла ${src}`);
+    if (lang !== "ru") assert.doesNotMatch(page, /[А-Яа-яЁё]/, `${path}: кириллица на странице ${lang}`);
+    /* Фарма строго: ни телефонов, ни адресов, ни цен, ни процентов на сайте — их даёт компания. */
+    if (!path.endsWith("panel")) {
+      assert.doesNotMatch(page, /href="tel:|wa\.me|\+998\s?\d|\d\s?(\$|сум|so‘m|UZS)/, `${path}: контакт или цена, которых нет в ТЗ`);
+      assert.match(page, /\bIDLE=3000\b/, `${path}: шапка не по правилу 3 секунд`);
+      assert.match(page, /classList\.add\('hide'\)[\s\S]*IDLE\)/, `${path}: шапка не прячется`);
+      assert.ok(page.includes("'cf-leads-1'") && page.includes("'cf-panel-1'"), `${path}: сайт не связан с панелью`);
+      assert.doesNotMatch(page, /scroll-behavior|preventDefault\(\);?\s*\}\s*,\s*\{\s*passive:\s*false/, `${path}: перехват прокрутки`);
+    }
+    const p = path.replace(/^(uz|en)\/?/, "");
+    if (p === "") {
+      assert.ok(page.includes('id="dzi"') && page.includes("dzVideo(b,close)"), `${path}: нет видео DevUz`);
+      assert.ok(page.includes("Health.") && page.includes("Trust.") && page.includes("Value."), `${path}: нет формулы бренда`);
+      for (const id of ["mission", "formula", "model", "audience", "portfolio", "contact"]) assert.ok(page.includes(`id="${id}"`), `${path}: нет блока ${id}`);
+    }
+    if (p === "" || p === "about" || p === "investors") assert.equal((page.match(/class="ch-n"/g) ?? []).length, 14, `${path}: в цепочке не 7 шагов на двух схемах`);
+    if (["", "partners", "investors", "contacts"].includes(p)) assert.match(page, /data-lead="(partner|investor)"/, `${path}: нет формы обращения`);
+    if (p === "panel") {
+      for (const v of ["dash", "leads", "news", "products", "seo", "log", "team"]) assert.match(page, new RegExp(`V\\.${v}=function`), `${path}: нет раздела ${v}`);
+      for (const r of ["owner", "head", "manager"]) assert.ok(page.includes(`<option value="${r}">`), `${path}: нет роли ${r}`);
+      assert.match(page, /\.tw\{overflow-x:auto/, `${path}: таблицы без своей прокрутки`);
+    }
+  }
+  const pub = "public/protos/chechfarm";
+  assert.ok(readdirSync(pub).reduce((s, f) => s + statSync(`${pub}/${f}`).size, 0) < 4_000_000, "картинки тяжелее 4 МБ");
+  const data = await import("../scripts/protos/chechfarm/data.mjs");
+  assert.deepEqual(data.CHAIN.map((c: { ru: string[] }) => c.ru[0]), ["Здоровье", "Доверие", "Продукты", "Рынок", "Продажи", "Денежный поток", "Масштабирование"], "цепочка не как в ТЗ");
+  const stamped = stampedBundle("chechfarm", SEED)!;
+  assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
+  assert.notEqual(stamped.pages["en/investors"], site.pages["en/investors"], "отпечаток не поставился на внутренней странице");
+});

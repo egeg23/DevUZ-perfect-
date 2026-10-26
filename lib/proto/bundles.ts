@@ -47,6 +47,7 @@ import jiguli from "@/content/proto-bundles/jiguli.json" with { type: "json" };
 import usemtau from "@/content/proto-bundles/usemtau.json" with { type: "json" };
 import semtravel from "@/content/proto-bundles/semtravel.json" with { type: "json" };
 import samauto from "@/content/proto-bundles/samauto.json" with { type: "json" };
+import chechfarm from "@/content/proto-bundles/chechfarm.json" with { type: "json" };
 import { stampPages } from "@/lib/proto/stamp";
 
 type Bundle = { parts: Record<string, string>; pages: Record<string, string> };
@@ -85,6 +86,7 @@ const BUNDLES: Record<string, Bundle> = {
   usemtau: usemtau as Bundle,
   semtravel: semtravel as Bundle,
   samauto: samauto as Bundle,
+  chechfarm: chechfarm as Bundle,
 };
 
 /** Имена всех сборок — для проверок, которые идут по каждой (tests/proto-plain-text). */
