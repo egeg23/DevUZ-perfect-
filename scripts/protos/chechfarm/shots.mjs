@@ -22,7 +22,9 @@ for (const w of widths) {
     await pg.waitForTimeout(900);
     const sx = await pg.evaluate(() => document.documentElement.scrollWidth - innerWidth);
     const png = await pg.screenshot({ fullPage: true });
-    await sharp(png, { limitInputPixels: false }).resize({ width: 900, withoutEnlargement: true }).webp({ quality: 68 }).toFile(`${OUT}${p || "home"}-${w}.webp`);
+    const { data, info } = await sharp(png, { limitInputPixels: false }).resize({ width: 900, withoutEnlargement: true }).png().toBuffer({ resolveWithObject: true });
+    /* WebP не больше 16383 px: длинную страницу телефона режем снизу. */
+    await sharp(data, { limitInputPixels: false }).extract({ left: 0, top: 0, width: info.width, height: Math.min(info.height, 16000) }).webp({ quality: 68 }).toFile(`${OUT}${p || "home"}-${w}.webp`);
     console.log(w, p || "home", sx > 0 ? "ГОРИЗОНТАЛЬНАЯ ПРОКРУТКА " + sx : "ok");
   }
   if (errs.length) console.log("ошибки:", errs);

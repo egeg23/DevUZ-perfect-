@@ -2103,7 +2103,9 @@ test("CHECHFARM: 7 страниц и панель на ru, uz, en — услов
     if (lang !== "ru") assert.doesNotMatch(page, /[А-Яа-яЁё]/, `${path}: кириллица на странице ${lang}`);
     /* Фарма строго: ни телефонов, ни адресов, ни цен, ни процентов на сайте — их даёт компания. */
     if (!path.endsWith("panel")) {
-      assert.doesNotMatch(page, /href="tel:|wa\.me|\+998\s?\d|\d\s?(\$|сум|so‘m|UZS)/, `${path}: контакт или цена, которых нет в ТЗ`);
+      /* Цены — только в «Стоимости» (plan.mjs), остальное — без чисел, которых нет в ТЗ. */
+      const body = page.replace(/<section class="sec dark offer" id="cena"[\s\S]*?<\/section>/, "").replace(/"offer":\{[\s\S]*?\}\]/, "");
+      assert.doesNotMatch(body, /href="tel:|wa\.me|\+998\s?\d|\d\s?(\$|сум|so‘m|UZS)/, `${path}: контакт или цена, которых нет в ТЗ`);
       assert.match(page, /\bIDLE=3000\b/, `${path}: шапка не по правилу 3 секунд`);
       assert.match(page, /classList\.add\('hide'\)[\s\S]*IDLE\)/, `${path}: шапка не прячется`);
       assert.ok(page.includes("'cf-leads-1'") && page.includes("'cf-panel-1'"), `${path}: сайт не связан с панелью`);
@@ -2113,9 +2115,14 @@ test("CHECHFARM: 7 страниц и панель на ru, uz, en — услов
     if (p === "") {
       assert.ok(page.includes('id="dzi"') && page.includes("dzVideo(b,close)"), `${path}: нет видео DevUz`);
       assert.ok(page.includes("Health.") && page.includes("Trust.") && page.includes("Value."), `${path}: нет формулы бренда`);
-      for (const id of ["mission", "formula", "model", "audience", "portfolio", "contact"]) assert.ok(page.includes(`id="${id}"`), `${path}: нет блока ${id}`);
+      for (const id of ["hero", "mission", "formula", "model", "audience", "portfolio", "contact", "cena"]) assert.ok(page.includes(`id="${id}"`), `${path}: нет блока ${id}`);
+      assert.ok(page.includes('class="hs-cv"') && page.includes("/promo/scene"), `${path}: нет сцены первого экрана`);
+      assert.equal((page.match(/role="tab" id="as-t-/g) ?? []).length, 5, `${path}: не пять аудиторий`);
     }
     if (p === "" || p === "about" || p === "investors") assert.equal((page.match(/class="ch-n"/g) ?? []).length, 14, `${path}: в цепочке не 7 шагов на двух схемах`);
+    if (p === "investors") assert.equal((page.match(/class="gb-b"/g) ?? []).length, 7, `${path}: не семь стеклянных блоков`);
+    if (p === "partners") assert.equal((page.match(/class="gl-r"/g) ?? []).length, 5, `${path}: не пять маршрутов на глобусе`);
+    if (p === "about") assert.ok(page.includes('id="needs"'), `${path}: нет «Что нужно от CHECHFARM»`);
     if (["", "partners", "investors", "contacts"].includes(p)) assert.match(page, /data-lead="(partner|investor)"/, `${path}: нет формы обращения`);
     if (p === "panel") {
       for (const v of ["dash", "leads", "news", "products", "seo", "log", "team"]) assert.match(page, new RegExp(`V\\.${v}=function`), `${path}: нет раздела ${v}`);
@@ -2124,7 +2131,20 @@ test("CHECHFARM: 7 страниц и панель на ru, uz, en — услов
     }
   }
   const pub = "public/protos/chechfarm";
-  assert.ok(readdirSync(pub).reduce((s, f) => s + statSync(`${pub}/${f}`).size, 0) < 4_000_000, "картинки тяжелее 4 МБ");
+  assert.ok(readdirSync(pub).filter((f) => f !== "seq").reduce((s, f) => s + statSync(`${pub}/${f}`).size, 0) < 4_000_000, "картинки тяжелее 4 МБ");
+  /* Кадры сцены — только шифром, ключ в хранилище (lib/proto/promo SCENES). */
+  const seq = readdirSync(`${pub}/seq`);
+  assert.equal(seq.length, 48, "в сцене не 48 кадров");
+  assert.ok(seq.every((f) => /^f\d\d\.bin$/.test(f)), "кадры сцены лежат незашифрованными");
+  const { SCENES } = await import("@/lib/proto/promo");
+  assert.equal(SCENES.chechfarm, "SCENE_KEY_CHECHFARM");
+  /* Допы — за половину цены (владелец, 26.10.2026), основа — PROMO корпоративного сайта. */
+  const plan = await import("../scripts/protos/chechfarm/plan.mjs");
+  assert.equal(plan.BASE.promo, 1000);
+  assert.equal(plan.BASE.price, 2500);
+  assert.equal(plan.OFFER_HOURS, 48);
+  for (const a of plan.ADDONS) assert.equal(a.price, Math.round(a.h * plan.RATE * 0.5), `${a.id}: доп не за половину`);
+  for (const html of [site.html, site.pages.uz, site.pages.en]) for (const a of plan.ADDONS) assert.ok(html.includes(`data-k="${a.id}" data-p="${a.price}"`), `${a.id}: цены нет на странице`);
   const data = await import("../scripts/protos/chechfarm/data.mjs");
   assert.deepEqual(data.CHAIN.map((c: { ru: string[] }) => c.ru[0]), ["Здоровье", "Доверие", "Продукты", "Рынок", "Продажи", "Денежный поток", "Масштабирование"], "цепочка не как в ТЗ");
   const stamped = stampedBundle("chechfarm", SEED)!;

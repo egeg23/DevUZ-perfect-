@@ -77,7 +77,7 @@ export const keyOk = (key: string | null): key is string => typeof key === "stri
  * браузера, и человек с инструментами разработчика может их собрать. Защита —
  * от скачивания файлов с сервера и из репозитория.
  */
-export const SCENES: Record<string, string> = { samauto: "SCENE_KEY_SAMAUTO" };
+export const SCENES: Record<string, string> = { samauto: "SCENE_KEY_SAMAUTO", chechfarm: "SCENE_KEY_CHECHFARM" };
 
 /** Ключ сцены — 64 знака hex (32 байта). */
 export const sceneKeyOk = (key: string | null): key is string => typeof key === "string" && /^[0-9a-f]{64}$/i.test(key);
