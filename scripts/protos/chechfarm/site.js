@@ -25,8 +25,11 @@ requestAnimationFrame(function(){root.classList.add('go')});
 /* ── Шапка (правило владельца, 15.10.2026): при любой прокрутке прячется
    и возвращается через 3 секунды после последнего события прокрутки.
    Пока фокус с клавиатуры внутри шапки, она не прячется. ─────────────── */
-var top=$('#top'),IDLE=3000,idleT=0;
+/* Владелец, 27.10.2026: на компьютере шапка стоит всегда (как у Soffice),
+   на телефоне — общее правило, 3 секунды. */
+var top=$('#top'),IDLE=3000,idleT=0,DESK=null;try{DESK=matchMedia('(min-width: 1080px)')}catch(e){}
 function headIdle(){if(!top)return;clearTimeout(idleT);
+  if(DESK&&DESK.matches){top.classList.remove('hide');return}
   if(!top.contains(d.activeElement))top.classList.add('hide');
   idleT=setTimeout(function(){top.classList.remove('hide')},IDLE)}
 

@@ -2107,6 +2107,8 @@ test("CHECHFARM: 7 страниц и панель на ru, uz, en — услов
       const body = page.replace(/<section class="sec dark offer" id="cena"[\s\S]*?<\/section>/, "").replace(/"offer":\{[\s\S]*?\}\]/, "");
       assert.doesNotMatch(body, /href="tel:|wa\.me|\+998\s?\d|\d\s?(\$|сум|so‘m|UZS)/, `${path}: контакт или цена, которых нет в ТЗ`);
       assert.match(page, /\bIDLE=3000\b/, `${path}: шапка не по правилу 3 секунд`);
+      /* Владелец, 27.10.2026: на компьютере шапка стоит всегда. */
+      assert.ok(page.includes("matchMedia('(min-width: 1080px)')") && /DESK\.matches\)\{top\.classList\.remove\('hide'\);return\}/.test(page), `${path}: на компьютере шапка прячется`);
       assert.match(page, /classList\.add\('hide'\)[\s\S]*IDLE\)/, `${path}: шапка не прячется`);
       assert.ok(page.includes("'cf-leads-1'") && page.includes("'cf-panel-1'"), `${path}: сайт не связан с панелью`);
       assert.doesNotMatch(page, /scroll-behavior|preventDefault\(\);?\s*\}\s*,\s*\{\s*passive:\s*false/, `${path}: перехват прокрутки`);
