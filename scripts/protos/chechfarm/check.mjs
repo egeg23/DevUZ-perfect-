@@ -37,7 +37,8 @@ for (const w of [390, 768, 1440]) {
   // Шапка: прокрутили — спряталась, через 3 с вернулась.
   await pg.goto(`${BASE}/about`, { waitUntil: "load" });
   await pg.mouse.wheel(0, 800); await pg.waitForTimeout(400);
-  ok(await pg.$eval("#top", (e) => e.classList.contains("hide")), `${w}: шапка не прячется`);
+  /* На компьютере шапка стоит всегда (владелец, 27.10.2026), на телефоне прячется. */
+  ok((await pg.$eval("#top", (e) => e.classList.contains("hide"))) === (w < 1080), `${w}: шапка ведёт себя не по правилу`);
   await pg.waitForTimeout(3300);
   ok(!(await pg.$eval("#top", (e) => e.classList.contains("hide"))), `${w}: шапка не вернулась через 3 с`);
 
