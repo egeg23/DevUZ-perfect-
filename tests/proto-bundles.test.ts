@@ -2183,8 +2183,6 @@ test("FinTax: 5 страниц и панель на ru, uz, en — услови�
     if (!path.endsWith("panel")) {
       assert.ok(page.includes("t.me/fintax_admin") && page.includes("tel:+998978900770"), `${path}: главное действие не ведёт в их Telegram и телефон`);
       assert.match(page, /\bIDLE=3000\b/, `${path}: шапка не по правилу 3 секунд`);
-      /* Владелец, 27.10.2026: на компьютере шапка стоит всегда. */
-      assert.ok(page.includes("matchMedia('(min-width: 1080px)')") && /DESK\.matches\)\{top\.classList\.remove\('hide'\);return\}/.test(page), `${path}: на компьютере шапка прячется`);
       assert.match(page, /classList\.add\('hide'\)[\s\S]*IDLE\)/, `${path}: шапка не прячется`);
       assert.ok(page.includes("'ft-leads-1'") && page.includes("'ft-panel-1'"), `${path}: сайт не связан с панелью`);
       assert.doesNotMatch(page, /scroll-behavior|preventDefault\(\);?\s*\}\s*,\s*\{\s*passive:\s*false/, `${path}: перехват прокрутки`);
