@@ -1,4 +1,4 @@
-// Проверка макета CHECHFARM в Chromium. Сервер: SCENE_KEY=<64 hex> node serve.mjs (порт 4831).
+// Проверка макета CZECHFARM в Chromium. Сервер: SCENE_KEY=<64 hex> node serve.mjs (порт 4831).
 //   node scripts/protos/chechfarm/check.mjs
 // 1) все страницы ru, uz, en на 390, 768, 1440: без ошибок, без прокрутки
 //    вбок, шапка прячется при прокрутке и возвращается через 3 с;
@@ -17,11 +17,11 @@ const PAGES = ["", "about", "products", "partners", "investors", "news", "contac
 const LANGS = ["", "uz/", "en/"];
 let bad = 0;
 const ok = (c, m) => { if (!c) { bad++; console.log("✗", m); } };
-const b = await chromium.launch();
+const b = await chromium.launch({ args: ["--enable-webgl", "--ignore-gpu-blocklist", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"] });
 
 for (const w of [390, 768, 1440]) {
   const ctx = await b.newContext({ viewport: { width: w, height: w < 500 ? 844 : 900 } });
-  await ctx.addInitScript(() => { try { sessionStorage.setItem("dz-intro", "1"); } catch {} });
+  await ctx.addInitScript(() => { try { sessionStorage.setItem("dz-intro", "1"); sessionStorage.setItem("cf-intro", "1"); } catch {} });
   const pg = await ctx.newPage();
   const errs = [];
   pg.on("pageerror", (e) => errs.push(e.message));
@@ -85,7 +85,7 @@ for (const w of [390, 768, 1440]) {
   await pg.fill('#pf [name="name"]', "Образец карточки"); await pg.fill('#pf [name="form"]', "таблетки");
   await pg.locator("#pf button[type=submit]").click();
   await pg.goto(`${BASE}/panel#seo`, { waitUntil: "load" });
-  await pg.fill('[data-seo="news"] [name="t"]', "Новости компании CHECHFARM");
+  await pg.fill('[data-seo="news"] [name="t"]', "Новости компании CZECHFARM");
   await pg.locator('[data-seo="news"] button').click();
 
   // Роли.
@@ -101,7 +101,7 @@ for (const w of [390, 768, 1440]) {
   ok((await pg.textContent("#track")).includes("Назначена встреча"), `${w}: статус из панели не виден на сайте`);
   await pg.goto(`${BASE}/news`, { waitUntil: "load" });
   ok((await pg.textContent("#news-l")).includes("Тестовая новость"), `${w}: новость из панели не на сайте`);
-  ok((await pg.title()) === "Новости компании CHECHFARM", `${w}: заголовок из панели не применился`);
+  ok((await pg.title()) === "Новости компании CZECHFARM", `${w}: заголовок из панели не применился`);
   await pg.locator("[data-nid]").first().click();
   ok(await pg.isVisible("#dlg"), `${w}: новость не открылась`);
   await pg.keyboard.press("Escape");
@@ -145,8 +145,32 @@ for (const w of [390, 768, 1440]) {
   ok((await pg.inputValue('#form [name="msg"]')).includes("Vitalix"), `${w}: заявка не заполнилась из пути бренда`);
   await pg.goto(`${BASE}/`, { waitUntil: "load" });
   await pg.locator("#vs").scrollIntoViewIfNeeded(); await pg.locator('.vs-sw [data-v="1"]').click();
-  ok((await pg.getAttribute("#vs", "data-on")) === "1", `${w}: «Сам или с CHECHFARM» не переключается`);
+  ok((await pg.getAttribute("#vs", "data-on")) === "1", `${w}: «Сам или с CZECHFARM» не переключается`);
   console.log(w, "путь пройден");
+  await ctx.close();
+}
+
+/* Заставка CZECHFARM alliance: доигрывает и отдаёт логотип шапке; «Пропустить» —
+   сразу к логотипу. Без видеокарты кадры медленные, поэтому ждём с запасом. */
+for (const w of [390, 1440]) {
+  const ctx = await b.newContext({ viewport: { width: w, height: w < 500 ? 844 : 900 } });
+  await ctx.addInitScript(() => { try { sessionStorage.setItem("dz-intro", "1"); } catch {} });
+  const pg = await ctx.newPage();
+  const errs = [];
+  pg.on("pageerror", (e) => errs.push(e.message));
+  for (const how of ["play", "skip"]) {
+    await pg.goto(`${BASE}/?intro=1`, { waitUntil: "domcontentloaded" });
+    const on = await pg.waitForFunction(() => window.cfiOn, null, { timeout: 20000 }).then(() => true, () => false);
+    ok(on, `${w}: заставка не началась`);
+    ok(await pg.evaluate(() => getComputedStyle(document.querySelector("#top .logo")).opacity === "0"), `${w}: логотип шапки виден во время заставки`);
+    if (how === "skip") await pg.click(".cfi-skip");
+    const gone = await pg.waitForFunction(() => !document.getElementById("cfi") && !document.querySelector(".cfi-fly"), null, { timeout: how === "skip" ? 8000 : 40000 }).then(() => true, () => false);
+    ok(gone, `${w} ${how}: заставка не ушла`);
+    ok(await pg.evaluate(() => !document.documentElement.classList.contains("cfi") && getComputedStyle(document.querySelector("#top .logo")).opacity === "1"), `${w} ${how}: логотип не встал в шапку`);
+  }
+  await pg.goto(`${BASE}/`, { waitUntil: "load" });
+  ok(await pg.evaluate(() => !document.getElementById("cfi")), `${w}: заставка второй раз за визит`);
+  ok(!errs.length, `${w}: ошибки заставки ${errs.join(" | ")}`);
   await ctx.close();
 }
 
@@ -155,6 +179,7 @@ const rm = await b.newContext({ viewport: { width: 390, height: 844 }, reducedMo
 const rp = await rm.newPage();
 await rp.goto(`${BASE}/`, { waitUntil: "load" });
 ok(await rp.$eval(".pl", (e) => getComputedStyle(e).opacity === "1"), "reduced motion: блоки не видны");
+ok(await rp.evaluate(() => !document.getElementById("cfi")), "reduced motion: заставка не снята");
 await b.close();
 console.log(bad ? `ПРОБЛЕМ: ${bad}` : "Всё прошло");
 process.exit(bad ? 1 : 0);

@@ -1,4 +1,4 @@
-/* CHECHFARM: сайт. Шкала шрифта 12 14 16 18 20 24 30 36 48 60 72, веса 400 и 700,
+/* CZECHFARM: сайт. Шкала шрифта 12 14 16 18 20 24 30 36 48 60 72, веса 400 и 700,
    радиус один (--r), тени из двух ступеней. Движение — только transform и opacity. */
 :root{--paper:#f5f3ee;--paper2:#ebe7de;--card:#fbfaf7;--ink:#0e1d1b;--ink2:#46524f;--ink3:#6c7774;--teal:#0b5a53;--teal2:#12857a;--mint:#d7ebe6;--deep:#071a18;--deep2:#0d2724;--gold:#b98a3a;--gold2:#e5c98f;--line:rgb(14 29 27 / .12);--lineD:rgb(229 244 240 / .14);--r:22px;--sh1:0 1px 2px rgb(14 29 27 / .06),0 8px 24px -12px rgb(14 29 27 / .18);--sh2:0 2px 4px rgb(14 29 27 / .06),0 30px 60px -30px rgb(14 29 27 / .38);--disp:"Literata",Georgia,serif;--txt:"Onest",system-ui,sans-serif;--w:1200px;--g:clamp(16px,4vw,40px)}
 *,*::before,*::after{box-sizing:border-box}
@@ -53,7 +53,7 @@ h1,h2,h3,h4,p{margin:0}
 /* Знак */
 .mk{width:36px;height:36px;flex:none}
 .mk .a{fill:var(--teal)}.mk .b{fill:var(--gold)}.mk .c{fill:#fff}
-.word{font:700 20px/1 var(--disp);letter-spacing:.08em}
+.word{display:grid;gap:4px;font:700 20px/1 var(--disp);letter-spacing:.08em}.word b{display:block;font:inherit}.word small{display:flex;justify-content:space-between;font:700 7.5px/1 var(--txt);letter-spacing:0;color:var(--gold)}.word small i{font-style:normal}.foot .word small{color:var(--gold2)}
 
 /* Шапка: прячется при прокрутке, возвращается через 3 с после остановки */
 .top{position:fixed;inset:0 0 auto;z-index:40;padding:12px var(--g) 0;transition:transform .45s cubic-bezier(.2,.8,.2,1),opacity .45s}

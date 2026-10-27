@@ -6,7 +6,7 @@ import { makeBlocks, SCENE_FRAMES } from "./blocks.mjs";
 import { makeLaunch } from "./launch.mjs";
 
 /*
- * Макет корпоративного сайта CHECHFARM (фармацевтическая компания) по ТЗ
+ * Макет корпоративного сайта CZECHFARM (фармацевтическая компания) по ТЗ
  * заказчика, 26.10.2026. Семь страниц на трёх языках (ru главный, uz
  * латиницей, en: у компании международные производители и инвесторы) и
  * панель по эталону greenwell.
@@ -80,7 +80,7 @@ const ICON = {
 /* Знак: концепт до логотипа компании. Капсула из двух половин (здоровье и
    ценность) и лист в просвете. */
 const MARK = `<svg class="mk" viewBox="0 0 40 40" aria-hidden="true" focusable="false"><g transform="rotate(-38 20 20)"><path class="a" d="M20 8h-4.5a8 8 0 0 0 0 16H20Z" transform="translate(0 4)"/><path class="b" d="M20 8h4.5a8 8 0 0 1 0 16H20Z" transform="translate(0 4)"/></g><path class="c" d="M20 14c3 2.5 3.4 6.8.6 11.5-3.3-3-3.8-7.6-.6-11.5Z"/></svg>`;
-const LOGO = (l) => `<a class="logo" href="${href(l)}" aria-label="CHECHFARM">${MARK}<span class="word">CHECHFARM</span></a>`;
+const LOGO = (l) => `<a class="logo" href="${href(l)}" aria-label="CZECHFARM alliance">${MARK}<span class="word"><b>CZECHFARM</b><small aria-hidden="true">${[..."ALLIANCE"].map((c) => `<i>${c}</i>`).join("")}</small></span></a>`;
 
 const NAV = [
   ["about", ["О компании", "Kompaniya haqida", "About"]],
@@ -109,7 +109,7 @@ ${LOGO(l)}
 <button type="button" class="ic-btn" data-close aria-label="${t("Закрыть", "Yopish", "Close")}">${ICON.close}</button>
 <nav class="mn-list" aria-label="${t("Разделы", "Bo‘limlar", "Sections")}"><a href="${href(l)}"><small>00</small>${t("Главная", "Bosh sahifa", "Home")}</a>${NAV.map(([id, n], i) => `<a href="${href(l, id)}"><small>${pad(i + 1)}</small>${n[LANGS.indexOf(l)]}</a>`).join("")}</nav>
 ${lang}
-<a class="btn btn-gold" href="${href(l, "contacts")}#form">${ICON.send}<span>${t("Связаться с CHECHFARM", "CHECHFARM bilan bog‘lanish", "Contact CHECHFARM")}</span></a>
+<a class="btn btn-gold" href="${href(l, "contacts")}#form">${ICON.send}<span>${t("Связаться с CZECHFARM", "CZECHFARM bilan bog‘lanish", "Contact CZECHFARM")}</span></a>
 </div>`;
 }
 
@@ -121,7 +121,7 @@ function footHtml(l) {
 <div><b>${t("Разделы", "Bo‘limlar", "Sections")}</b><ul>${NAV.map(([id, n]) => `<li><a href="${href(l, id)}">${n[LANGS.indexOf(l)]}</a></li>`).join("")}</ul></div>
 <div><b>${t("Связь", "Aloqa", "Contact")}</b><ul><li>${t("Телефон, почта и адрес появятся после согласования с компанией", "Telefon, pochta va manzil kompaniya bilan kelishilgach chiqadi", "Phone, email and address will appear once the company confirms them")}</li><li><a href="${href(l, "contacts")}#form">${t("Написать в компанию", "Kompaniyaga yozish", "Write to the company")}</a></li><li><a href="${href(l, "panel")}">${t("Вход для сотрудников", "Xodimlar uchun kirish", "Staff sign-in")}</a></li></ul></div>
 </div>
-<div class="rights"><p>${t("Это макет DevUz Studio: так может выглядеть сайт CHECHFARM. Тексты собраны по техническому заданию компании. Названий препаратов, производителей, цифр, адресов и контактов на макете нет: их даёт и утверждает компания. Знак: концепт до получения логотипа. Продукты и новости с пометкой «демо» добавлены из демо-панели.", "Bu DevUz Studio maketi: CHECHFARM sayti shunday ko‘rinishi mumkin. Matnlar kompaniyaning texnik topshirig‘i asosida. Maketda dori nomlari, ishlab chiqaruvchilar, raqamlar, manzil va kontaktlar yo‘q: ularni kompaniya beradi va tasdiqlaydi. Belgi: logotip olingunga qadar konsept. «Demo» belgili mahsulot va yangiliklar demo-paneldan qo‘shilgan.", "A DevUz Studio mockup of how the CHECHFARM website could look. Texts follow the company’s brief. There are no product names, manufacturers, figures, addresses or contacts: the company provides and approves them. The mark is a concept until we receive the logo. Products and news marked “demo” come from the demo panel.")}</p>
+<div class="rights"><p>${t("Это макет DevUz Studio: так может выглядеть сайт CZECHFARM. Тексты собраны по техническому заданию компании. Названий препаратов, производителей, цифр, адресов и контактов на макете нет: их даёт и утверждает компания. Знак: концепт до получения логотипа. Продукты и новости с пометкой «демо» добавлены из демо-панели.", "Bu DevUz Studio maketi: CZECHFARM sayti shunday ko‘rinishi mumkin. Matnlar kompaniyaning texnik topshirig‘i asosida. Maketda dori nomlari, ishlab chiqaruvchilar, raqamlar, manzil va kontaktlar yo‘q: ularni kompaniya beradi va tasdiqlaydi. Belgi: logotip olingunga qadar konsept. «Demo» belgili mahsulot va yangiliklar demo-paneldan qo‘shilgan.", "A DevUz Studio mockup of how the CZECHFARM website could look. Texts follow the company’s brief. There are no product names, manufacturers, figures, addresses or contacts: the company provides and approves them. The mark is a concept until we receive the logo. Products and news marked “demo” come from the demo panel.")}</p>
 <p>${t("Макет принадлежит DevUz Studio и используется только по договору.", "Maket DevUz Studio’ga tegishli va faqat shartnoma asosida ishlatiladi.", "The mockup belongs to DevUz Studio and may be used only under contract.")} <a href="${TERMS(l)}">${t("Условия использования макета", "Maketdan foydalanish shartlari", "Mockup terms of use")}</a></p></div>
 </div></footer>`;
 }
@@ -189,7 +189,7 @@ function fl(l, name, label, o = {}) {
 const agree = (l) => `<label class="agree"><input type="checkbox" name="agree" required><span>${T(l)("Согласен на обработку моих данных, чтобы компания ответила на обращение. Текст согласия утверждает компания.", "Kompaniya murojaatimga javob berishi uchun ma’lumotlarim qayta ishlanishiga roziman. Rozilik matnini kompaniya tasdiqlaydi.", "I agree to my data being processed so the company can reply. The consent text is approved by the company.")}</span></label>`;
 function sentBox(l) {
   const t = T(l);
-  return `<div class="sent" hidden tabindex="-1"><span class="chip">${ICON.check}${t("Отправлено", "Yuborildi", "Sent")}</span><h3>${t("Обращение", "Murojaat", "Request")} <span data-no></span> ${t("принято", "qabul qilindi", "received")}</h3><p>${t("Ответит команда CHECHFARM. Статус обращения виден на странице «Контакты».", "CHECHFARM jamoasi javob beradi. Murojaat holati «Aloqa» sahifasida ko‘rinadi.", "The CHECHFARM team will reply. You can see the status on the Contacts page.")}</p><p class="note">${t("Это макет: обращение пришло в демо-панель компании, она открыта в этом же браузере.", "Bu maket: murojaat kompaniyaning demo-paneliga keldi, u shu brauzerda ochiladi.", "This is a mockup: the request went to the company’s demo panel, open in this same browser.")}</p><button type="button" class="btn btn-line" data-again>${t("Написать ещё", "Yana yozish", "Write again")}</button></div>`;
+  return `<div class="sent" hidden tabindex="-1"><span class="chip">${ICON.check}${t("Отправлено", "Yuborildi", "Sent")}</span><h3>${t("Обращение", "Murojaat", "Request")} <span data-no></span> ${t("принято", "qabul qilindi", "received")}</h3><p>${t("Ответит команда CZECHFARM. Статус обращения виден на странице «Контакты».", "CZECHFARM jamoasi javob beradi. Murojaat holati «Aloqa» sahifasida ko‘rinadi.", "The CZECHFARM team will reply. You can see the status on the Contacts page.")}</p><p class="note">${t("Это макет: обращение пришло в демо-панель компании, она открыта в этом же браузере.", "Bu maket: murojaat kompaniyaning demo-paneliga keldi, u shu brauzerda ochiladi.", "This is a mockup: the request went to the company’s demo panel, open in this same browser.")}</p><button type="button" class="btn btn-line" data-again>${t("Написать ещё", "Yana yozish", "Write again")}</button></div>`;
 }
 const submit = (l, s) => `<button type="submit" class="btn btn-pri">${ICON.send}<span>${s}</span></button>`;
 function contactForm(l, title) {
@@ -207,14 +207,14 @@ ${agree(l)}${submit(l, t("Отправить", "Yuborish", "Send"))}</form>${sen
 function pageHead(l, p, h1, lead, o = {}) {
   const t = T(l);
   return `<section class="ph${o.dark ? " dark" : ""}">${o.img ? `<div class="ph-img" aria-hidden="true"><img src="${IMG}/${o.img}-2000.webp" srcset="${IMG}/${o.img}-1100.webp 1100w, ${IMG}/${o.img}-2000.webp 2000w" sizes="100vw" alt="" fetchpriority="high"></div>` : ""}<div class="wrap">
-<p class="crumbs"><a href="${href(l)}">CHECHFARM</a> / ${navName(p, l)}</p>
+<p class="crumbs"><a href="${href(l)}">CZECHFARM</a> / ${navName(p, l)}</p>
 <h1 class="rise">${h1}</h1><p class="lead rise" style="--d:150ms">${lead}</p>${o.act ? `<div class="hero-act rise" style="--d:260ms;margin-top:28px">${o.act}</div>` : ""}</div></section>`;
 }
 
 /* ── Блоки ─────────────────────────────────────────────────────────── */
 function missionBlock(l) {
   const t = T(l);
-  const text = t("Высшая цель CHECHFARM: улучшать здоровье и качество жизни людей через доступ к современным решениям.", "CHECHFARM oliy maqsadi: zamonaviy yechimlardan foydalanish imkoni orqali odamlarning salomatligi va hayot sifatini yaxshilash.", "CHECHFARM’s highest purpose is to improve people’s health and quality of life through access to modern solutions.");
+  const text = t("Высшая цель CZECHFARM: улучшать здоровье и качество жизни людей через доступ к современным решениям.", "CZECHFARM oliy maqsadi: zamonaviy yechimlardan foydalanish imkoni orqali odamlarning salomatligi va hayot sifatini yaxshilash.", "CZECHFARM’s highest purpose is to improve people’s health and quality of life through access to modern solutions.");
   const keys = t(["здоровье", "качество", "жизни", "доступ"], ["salomatligi", "hayot", "sifatini", "foydalanish"], ["health", "quality", "life", "access"]);
   const words = text.split(" ").map((w) => `<span class="wd${keys.some((k) => w.toLowerCase().startsWith(k)) ? " k" : ""}">${w}</span>`).join(" ");
   return `<section class="sec mission" id="mission"><div class="wrap"><div class="sec-h"><p class="kicker">${t("Миссия", "Missiya", "Mission")}</p></div><p class="big">${words}</p></div></section>`;
@@ -247,14 +247,14 @@ function ctaEnd(l) {
 function home(l) {
   const t = T(l);
   const hero = PB.heroScene(l, `<div class="hero-in"><div style="display:grid;gap:24px">
-<p class="kicker rise">CHECHFARM · Health. Trust. Value.</p>
+<p class="kicker rise">CZECHFARM · Health. Trust. Value.</p>
 <h1 aria-label="${t("Ваш фарм-бренд на рынке Узбекистана", "Farm-brendingiz O‘zbekiston bozorida", "Your pharma brand in the Uzbek market")}"><span class="w"><span>${t("Ваш фарм-бренд", "Farm-brendingiz", "Your pharma brand")}</span></span><span class="w"><span>${t("на рынке", "O‘zbekiston", "in the Uzbek")}</span></span><span class="w"><span>${t("Узбекистана.", "bozorida.", "market.")}</span></span></h1>
-<p class="lead rise" style="--d:380ms">${t("CHECHFARM запускает фарм-бренды под ключ для тех, кто выходит на рынок Узбекистана: бренд, маркетинг и точки сбыта уже налажены.", "CHECHFARM O‘zbekiston bozoriga chiqayotganlar uchun farm-brendlarni kalit topshirish asosida ishga tushiradi: brend, marketing va sotuv nuqtalari allaqachon yo‘lga qo‘yilgan.", "CHECHFARM launches pharma brands turnkey for companies entering Uzbekistan: brand, marketing and points of sale are already in place.")}</p>
+<p class="lead rise" style="--d:380ms">${t("CZECHFARM запускает фарм-бренды под ключ для тех, кто выходит на рынок Узбекистана: бренд, маркетинг и точки сбыта уже налажены.", "CZECHFARM O‘zbekiston bozoriga chiqayotganlar uchun farm-brendlarni kalit topshirish asosida ishga tushiradi: brend, marketing va sotuv nuqtalari allaqachon yo‘lga qo‘yilgan.", "CZECHFARM launches pharma brands turnkey for companies entering Uzbekistan: brand, marketing and points of sale are already in place.")}</p>
 <div class="hero-act rise" style="--d:500ms"><a class="btn btn-pri" id="hero-cta" href="${href(l, "partners")}"><span>${t("Запустить бренд", "Brendni ishga tushirish", "Launch a brand")}</span>${ICON.arrow}</a><a class="link" href="#launch">${t("Пройти путь бренда", "Brend yo‘lini ko‘rish", "Walk the brand’s path")}${ICON.arrow}</a></div></div>
 <div class="hero-card glass rise" id="hc" style="--d:650ms"><div class="hc-row" role="group" aria-label="${t("Формула бренда", "Brend formulasi", "Brand formula")}">${PILLARS.map((p, i) => `<button type="button" aria-pressed="${i ? "false" : "true"}">${p.word}</button>`).join("")}</div><p class="hc-txt" aria-live="polite">${L3(PILLARS[0], l)[1]}</p></div>
 </div>`);
   return [hero, LB.launchBlock(l), LB.compareBlock(l), missionBlock(l), pillarsBlock(l), chainBlock(l, {
-    k: t("Как работает модель CHECHFARM", "CHECHFARM modeli qanday ishlaydi", "How the CHECHFARM model works"),
+    k: t("Как работает модель CZECHFARM", "CZECHFARM modeli qanday ishlaydi", "How the CZECHFARM model works"),
     h: t("Улучшение здоровья <b>создаёт стоимость</b>", "Salomatlikni yaxshilash <b>qiymat yaratadi</b>", "Better health <b>creates value</b>"),
     p: t("Семь шагов от здоровья человека до роста компании. Импульс идёт по цепочке сам; нажмите на шаг, чтобы прочитать о нём.", "Inson salomatligidan kompaniya o‘sishigacha yetti qadam. Impuls zanjir bo‘ylab o‘zi yuradi; qadam haqida o‘qish uchun uni bosing.", "Seven steps from a person’s health to the company’s growth. The pulse runs on its own; tap a step to read about it."),
   }), PB.audienceSwitch(l), portfolioTeaser(l), ctaEnd(l), PB.priceBlock(l)].join("\n");
@@ -262,9 +262,9 @@ function home(l) {
 
 function about(l) {
   const t = T(l);
-  return [pageHead(l, "about", t("Здоровье и качество жизни: <b>с этого всё начинается</b>", "Salomatlik va hayot sifati: <b>hammasi shundan boshlanadi</b>", "Health and quality of life: <b>where it all begins</b>"), t("CHECHFARM связывает людей с современными решениями для здоровья. Ниже: цель, принципы и модель компании.", "CHECHFARM odamlarni salomatlik uchun zamonaviy yechimlar bilan bog‘laydi. Quyida: maqsad, tamoyillar va kompaniya modeli.", "CHECHFARM connects people with modern health solutions. Below: the company’s purpose, principles and model."), { act: `<a class="btn btn-pri" href="${href(l, "contacts")}#form">${t("Связаться", "Bog‘lanish", "Get in touch")}${ICON.arrow}</a>` }),
+  return [pageHead(l, "about", t("Здоровье и качество жизни: <b>с этого всё начинается</b>", "Salomatlik va hayot sifati: <b>hammasi shundan boshlanadi</b>", "Health and quality of life: <b>where it all begins</b>"), t("CZECHFARM связывает людей с современными решениями для здоровья. Ниже: цель, принципы и модель компании.", "CZECHFARM odamlarni salomatlik uchun zamonaviy yechimlar bilan bog‘laydi. Quyida: maqsad, tamoyillar va kompaniya modeli.", "CZECHFARM connects people with modern health solutions. Below: the company’s purpose, principles and model."), { act: `<a class="btn btn-pri" href="${href(l, "contacts")}#form">${t("Связаться", "Bog‘lanish", "Get in touch")}${ICON.arrow}</a>` }),
   `<section class="sec" id="purpose"><div class="wrap split"><div class="sec-h mv mv-left" style="margin:0"><p class="kicker">${t("Цель и миссия", "Maqsad va missiya", "Purpose and mission")}</p><h2 class="h2">${t("Доступ к современным решениям <b>для здоровья</b>", "Salomatlik uchun <b>zamonaviy yechimlardan</b> foydalanish", "Access to modern <b>health solutions</b>")}</h2></div>
-<div class="mv mv-right" style="display:grid;gap:20px"><p class="lead">${t("Высшая цель компании: улучшать здоровье и качество жизни людей. Работа CHECHFARM связана с этим напрямую: компания приводит на рынок современные решения и делает их доступными для пациентов, врачей и аптек.", "Kompaniyaning oliy maqsadi: odamlarning salomatligi va hayot sifatini yaxshilash. CHECHFARM ishi bunga bevosita bog‘liq: kompaniya bozorga zamonaviy yechimlarni olib keladi va ularni bemorlar, shifokorlar va dorixonalar uchun ochiq qiladi.", "The company’s highest purpose is to improve people’s health and quality of life. CHECHFARM’s work ties straight into that: it brings modern solutions to the market and makes them available to patients, doctors and pharmacies.")}</p>
+<div class="mv mv-right" style="display:grid;gap:20px"><p class="lead">${t("Высшая цель компании: улучшать здоровье и качество жизни людей. Работа CZECHFARM связана с этим напрямую: компания приводит на рынок современные решения и делает их доступными для пациентов, врачей и аптек.", "Kompaniyaning oliy maqsadi: odamlarning salomatligi va hayot sifatini yaxshilash. CZECHFARM ishi bunga bevosita bog‘liq: kompaniya bozorga zamonaviy yechimlarni olib keladi va ularni bemorlar, shifokorlar va dorixonalar uchun ochiq qiladi.", "The company’s highest purpose is to improve people’s health and quality of life. CZECHFARM’s work ties straight into that: it brings modern solutions to the market and makes them available to patients, doctors and pharmacies.")}</p>
 <img src="${IMG}/flask-1200.webp" srcset="${IMG}/flask-700.webp 700w, ${IMG}/flask-1200.webp 1200w" sizes="(min-width: 960px) 40vw, 100vw" alt="${t("Стеклянная колба с ростком в воде", "Suvdagi novdali shisha kolba", "A glass flask with a cutting in water")}" loading="lazy" width="1200" height="1490" style="border-radius:var(--r);box-shadow:var(--sh2)"></div></div></section>`,
   pillarsBlock(l),
   chainBlock(l, {
@@ -292,17 +292,17 @@ function products(l) {
 
 function partners(l) {
   const t = T(l);
-  return [pageHead(l, "partners", t("Запуск фарм-бренда в Узбекистане <b>под ключ</b>", "Farm-brendni O‘zbekistonda <b>kalit topshirish</b> asosida ishga tushirish", "A <b>turnkey</b> pharma brand launch in Uzbekistan"), t("Ваш препарат здесь пока не знают. У CHECHFARM уже налажено всё, что нужно для выхода на рынок: бренд, маркетинг и точки сбыта.", "Doringizni bu yerda hali bilishmaydi. CHECHFARMda bozorga chiqish uchun kerak bo‘lgan hamma narsa yo‘lga qo‘yilgan: brend, marketing va sotuv nuqtalari.", "Nobody here knows your product yet. CHECHFARM already has everything a market entry needs: brand, marketing and points of sale."), { dark: true, img: "globe", act: `<a class="btn btn-gold" href="#form">${t("Обсудить запуск", "Ishga tushirishni muhokama qilish", "Discuss the launch")}${ICON.arrow}</a>` }),
+  return [pageHead(l, "partners", t("Запуск фарм-бренда в Узбекистане <b>под ключ</b>", "Farm-brendni O‘zbekistonda <b>kalit topshirish</b> asosida ishga tushirish", "A <b>turnkey</b> pharma brand launch in Uzbekistan"), t("Ваш препарат здесь пока не знают. У CZECHFARM уже налажено всё, что нужно для выхода на рынок: бренд, маркетинг и точки сбыта.", "Doringizni bu yerda hali bilishmaydi. CZECHFARMda bozorga chiqish uchun kerak bo‘lgan hamma narsa yo‘lga qo‘yilgan: brend, marketing va sotuv nuqtalari.", "Nobody here knows your product yet. CZECHFARM already has everything a market entry needs: brand, marketing and points of sale."), { dark: true, img: "globe", act: `<a class="btn btn-gold" href="#form">${t("Обсудить запуск", "Ishga tushirishni muhokama qilish", "Discuss the launch")}${ICON.arrow}</a>` }),
   `<section class="sec" id="role"><div class="wrap split"><div class="sec-h mv mv-left" style="margin:0"><p class="kicker">${t("Что входит в «под ключ»", "«Kalit topshirish»ga nima kiradi", "What turnkey includes")}</p><h2 class="h2">${t("Полный комплект: <b>сбыт, бренд, маркетинг</b>", "To‘liq to‘plam: <b>sotuv, brend, marketing</b>", "The full set: <b>sales, brand, marketing</b>")}</h2></div>
 <ul class="ticks mv mv-right">${[
     t("Бренд под местный рынок: имя, упаковка и понятная информация для врачей, аптек и пациентов.", "Mahalliy bozorga mos brend: nom, qadoq va shifokorlar, dorixonalar, bemorlar uchun tushunarli ma’lumot.", "A brand for the local market: name, packaging and clear information for doctors, pharmacies and patients."),
     t("Маркетинг: о бренде узнают те, кто его выбирает и назначает.", "Marketing: brend haqida uni tanlaydigan va tavsiya qiladiganlar bilib oladi.", "Marketing: the people who choose and recommend the product learn the brand."),
-    t("Точки сбыта: у CHECHFARM они уже налажены, искать их самому не нужно.", "Sotuv nuqtalari: CHECHFARMda ular allaqachon yo‘lga qo‘yilgan, o‘zingiz qidirishingiz shart emas.", "Points of sale: CHECHFARM already has them in place, so you do not need to find them yourself."),
+    t("Точки сбыта: у CZECHFARM они уже налажены, искать их самому не нужно.", "Sotuv nuqtalari: CZECHFARMda ular allaqachon yo‘lga qo‘yilgan, o‘zingiz qidirishingiz shart emas.", "Points of sale: CZECHFARM already has them in place, so you do not need to find them yourself."),
   ].map((x) => `<li>${ICON.check}<span>${x}</span></li>`).join("")}</ul></div></section>`,
   PB.globeBlock(l),
   `<section class="sec dark" id="steps"><div class="wrap"><div class="sec-h mv mv-up"><p class="kicker">${t("Как идёт запуск", "Ishga tushirish qanday o‘tadi", "How a launch goes")}</p><h2 class="h2">${t("Пять шагов <b>от заявки до запуска</b>", "Arizadan ishga tushirishgacha <b>besh qadam</b>", "Five steps <b>from request to launch</b>")}</h2></div>
 <ol class="steps">${PARTNER_STEPS.map((s, i) => `<li class="glass-d mv mv-up" style="--d:${i * 90}ms"><h3>${L3(s, l)[0]}</h3><p>${L3(s, l)[1]}</p></li>`).join("")}</ol></div></section>`,
-  `<section class="sec mint" id="form"><div class="wrap split"><div class="sec-h mv mv-left" style="margin:0"><p class="kicker">${t("Заявка на запуск", "Ishga tushirish arizasi", "Launch request")}</p><h2 class="h2">${t("Расскажите, <b>что запускаем</b>", "<b>Nimani ishga tushiramiz</b>, aytib bering", "Tell us <b>what we are launching</b>")}</h2><p class="lead">${t("Название и страну из «Пути вашего бренда» мы уже подставили. Заявка приходит команде запусков CHECHFARM.", "«Brendingiz yo‘li»dagi nom va mamlakatni allaqachon qo‘ydik. Ariza CHECHFARM ishga tushirish jamoasiga keladi.", "We have already filled in the name and country from “Your brand’s path”. The request goes to the CHECHFARM launch team.")}</p></div>
+  `<section class="sec mint" id="form"><div class="wrap split"><div class="sec-h mv mv-left" style="margin:0"><p class="kicker">${t("Заявка на запуск", "Ishga tushirish arizasi", "Launch request")}</p><h2 class="h2">${t("Расскажите, <b>что запускаем</b>", "<b>Nimani ishga tushiramiz</b>, aytib bering", "Tell us <b>what we are launching</b>")}</h2><p class="lead">${t("Название и страну из «Пути вашего бренда» мы уже подставили. Заявка приходит команде запусков CZECHFARM.", "«Brendingiz yo‘li»dagi nom va mamlakatni allaqachon qo‘ydik. Ariza CZECHFARM ishga tushirish jamoasiga keladi.", "We have already filled in the name and country from “Your brand’s path”. The request goes to the CZECHFARM launch team.")}</p></div>
 <div class="mv mv-right"><div class="form-wrap"><form class="form" data-lead="partner" novalidate><h3>${t("Заявка производителя", "Ishlab chiqaruvchi arizasi", "Manufacturer request")}</h3>
 <div class="row2">${fl(l, "org", t("Компания", "Kompaniya", "Company"), { req: true, auto: "organization" })}${fl(l, "country", t("Страна", "Mamlakat", "Country"), { req: true, auto: "country-name" })}</div>
 <div class="row2">${fl(l, "name", t("Контактное лицо", "Mas’ul shaxs", "Contact person"), { req: true, auto: "name" })}${fl(l, "email", t("Почта", "Pochta", "Email"), { req: true, type: "email", auto: "email", mode: "email" })}</div>
@@ -313,7 +313,7 @@ ${agree(l)}${submit(l, t("Отправить заявку", "Arizani yuborish", 
 
 function investors(l) {
   const t = T(l);
-  return [pageHead(l, "investors", t("Фармацевтическая платформа, <b>где здоровье создаёт стоимость</b>", "Salomatlik <b>qiymat yaratadigan</b> farmatsevtika platformasi", "A pharmaceutical platform <b>where health creates value</b>"), t("Инвестиционное позиционирование CHECHFARM: улучшение здоровья создаёт устойчивую стоимость.", "CHECHFARM investitsiya pozitsiyasi: salomatlikni yaxshilash barqaror qiymat yaratadi.", "CHECHFARM’s investment positioning: improving health creates sustainable value."), { dark: true, img: "steps", act: `<a class="btn btn-gold" href="#form">${t("Запросить материалы", "Materiallarni so‘rash", "Request materials")}${ICON.arrow}</a>` }),
+  return [pageHead(l, "investors", t("Фармацевтическая платформа, <b>где здоровье создаёт стоимость</b>", "Salomatlik <b>qiymat yaratadigan</b> farmatsevtika platformasi", "A pharmaceutical platform <b>where health creates value</b>"), t("Инвестиционное позиционирование CZECHFARM: улучшение здоровья создаёт устойчивую стоимость.", "CZECHFARM investitsiya pozitsiyasi: salomatlikni yaxshilash barqaror qiymat yaratadi.", "CZECHFARM’s investment positioning: improving health creates sustainable value."), { dark: true, img: "steps", act: `<a class="btn btn-gold" href="#form">${t("Запросить материалы", "Materiallarni so‘rash", "Request materials")}${ICON.arrow}</a>` }),
   `<section class="sec" id="thesis"><div class="wrap"><p class="kicker mv mv-up">${t("Почему это работает", "Nega bu ishlaydi", "Why it works")}</p><p class="quote mv mv-up" style="margin-top:16px;color:var(--ink)">${t("Когда продукт <b style=\"color:var(--teal)\">помогает людям</b>, ему доверяют. Доверие даёт повторный спрос, а повторный спрос <b style=\"color:var(--teal)\">даёт стоимость</b>.", "Mahsulot <b style=\"color:var(--teal)\">odamlarga yordam bersa</b>, unga ishonishadi. Ishonch takroriy talab beradi, takroriy talab esa <b style=\"color:var(--teal)\">qiymat yaratadi</b>.", "When a product <b style=\"color:var(--teal)\">helps people</b>, they trust it. Trust brings repeat demand, and repeat demand <b style=\"color:var(--teal)\">creates value</b>.")}</p></div></section>`,
   chainBlock(l, {
     k: t("Логика роста стоимости", "Qiymat o‘sish mantig‘i", "How value grows"),
@@ -335,14 +335,14 @@ function news(l) {
   const t = T(l);
   return [pageHead(l, "news", t("Новости <b>компании</b>", "Kompaniya <b>yangiliklari</b>", "Company <b>news</b>"), t("Заголовок, дата, изображение и текст. Новости публикует администратор в панели.", "Sarlavha, sana, rasm va matn. Yangiliklarni administrator panelda e’lon qiladi.", "Headline, date, image and text. An administrator publishes news in the panel.")),
   `<section class="sec" style="padding-top:24px"><div class="wrap"><div class="news" id="news-l" aria-live="polite"></div>
-<div class="empty" id="news-empty" style="margin-top:24px"><span class="chip">${t("Пока пусто", "Hozircha bo‘sh", "Nothing yet")}</span><p>${t("Здесь будут новости CHECHFARM. Первую публикует администратор в панели, и она появляется на сайте сама.", "Bu yerda CHECHFARM yangiliklari bo‘ladi. Birinchisini administrator panelda e’lon qiladi va u saytda o‘zi chiqadi.", "CHECHFARM news will appear here. An administrator publishes the first one in the panel and it shows up on the site by itself.")}</p><a class="link" href="${href(l, "panel")}#news">${t("Опубликовать в панели", "Panelda e’lon qilish", "Publish in the panel")}${ICON.arrow}</a></div></div></section>`].join("\n");
+<div class="empty" id="news-empty" style="margin-top:24px"><span class="chip">${t("Пока пусто", "Hozircha bo‘sh", "Nothing yet")}</span><p>${t("Здесь будут новости CZECHFARM. Первую публикует администратор в панели, и она появляется на сайте сама.", "Bu yerda CZECHFARM yangiliklari bo‘ladi. Birinchisini administrator panelda e’lon qiladi va u saytda o‘zi chiqadi.", "CZECHFARM news will appear here. An administrator publishes the first one in the panel and it shows up on the site by itself.")}</p><a class="link" href="${href(l, "panel")}#news">${t("Опубликовать в панели", "Panelda e’lon qilish", "Publish in the panel")}${ICON.arrow}</a></div></div></section>`].join("\n");
 }
 
 function contacts(l) {
   const t = T(l);
   const ct = (ic, b, s) => `<div class="ct"><span class="i">${ICON[ic]}</span><span><b>${b}</b><span class="note">${s}</span></span></div>`;
   const later = t("после согласования с компанией", "kompaniya bilan kelishilgach", "once the company confirms");
-  return [pageHead(l, "contacts", t("Связаться <b>с CHECHFARM</b>", "<b>CHECHFARM</b> bilan bog‘lanish", "Contact <b>CHECHFARM</b>"), t("Одна форма для партнёров, аптек, врачей и инвесторов. Обращение попадает к нужному человеку.", "Hamkorlar, dorixonalar, shifokorlar va investorlar uchun bitta shakl. Murojaat kerakli odamga yetadi.", "One form for partners, pharmacies, doctors and investors. Your message reaches the right person.")),
+  return [pageHead(l, "contacts", t("Связаться <b>с CZECHFARM</b>", "<b>CZECHFARM</b> bilan bog‘lanish", "Contact <b>CZECHFARM</b>"), t("Одна форма для партнёров, аптек, врачей и инвесторов. Обращение попадает к нужному человеку.", "Hamkorlar, dorixonalar, shifokorlar va investorlar uchun bitta shakl. Murojaat kerakli odamga yetadi.", "One form for partners, pharmacies, doctors and investors. Your message reaches the right person.")),
   `<section class="sec" style="padding-top:24px" id="form"><div class="wrap split">
 <div style="display:grid;gap:24px"><div class="cts mv mv-left">${ct("phone", t("Телефон", "Telefon", "Phone"), later)}${ct("mail", t("Почта", "Pochta", "Email"), later)}${ct("pin", t("Адрес офиса", "Ofis manzili", "Office address"), later)}${ct("globe", t("Соцсети", "Ijtimoiy tarmoqlar", "Social media"), later)}</div>
 <div class="track" id="track" hidden><p class="kicker">${t("Мои обращения", "Murojaatlarim", "My requests")}</p><div class="track-l"></div><p class="note">${t("Статус ставит компания в своей панели.", "Holatni kompaniya o‘z panelida qo‘yadi.", "The company sets the status in its panel.")}</p></div>
@@ -353,15 +353,15 @@ function contacts(l) {
 
 const BUILD = { "": home, about, products, partners, investors, news, contacts };
 const TITLES = {
-  "": ["CHECHFARM: Health. Trust. Value. Фармацевтическая компания", "CHECHFARM: Health. Trust. Value. Farmatsevtika kompaniyasi", "CHECHFARM: Health. Trust. Value. Pharmaceutical company"],
-  about: ["О компании CHECHFARM: миссия, принципы, модель", "CHECHFARM haqida: missiya, tamoyillar, model", "About CHECHFARM: mission, principles, model"],
-  products: ["Портфель продуктов CHECHFARM", "CHECHFARM mahsulotlar portfeli", "CHECHFARM product portfolio"],
-  partners: ["Партнёрам: CHECHFARM для международных производителей", "Hamkorlarga: xalqaro ishlab chiqaruvchilar uchun CHECHFARM", "Partners: CHECHFARM for international manufacturers"],
-  investors: ["Инвесторам: CHECHFARM, где здоровье создаёт стоимость", "Investorlarga: salomatlik qiymat yaratadigan CHECHFARM", "Investors: CHECHFARM, where health creates value"],
-  news: ["Новости CHECHFARM", "CHECHFARM yangiliklari", "CHECHFARM news"],
-  contacts: ["Контакты CHECHFARM", "CHECHFARM bilan aloqa", "Contact CHECHFARM"],
+  "": ["CZECHFARM: Health. Trust. Value. Фармацевтическая компания", "CZECHFARM: Health. Trust. Value. Farmatsevtika kompaniyasi", "CZECHFARM: Health. Trust. Value. Pharmaceutical company"],
+  about: ["О компании CZECHFARM: миссия, принципы, модель", "CZECHFARM haqida: missiya, tamoyillar, model", "About CZECHFARM: mission, principles, model"],
+  products: ["Портфель продуктов CZECHFARM", "CZECHFARM mahsulotlar portfeli", "CZECHFARM product portfolio"],
+  partners: ["Партнёрам: CZECHFARM для международных производителей", "Hamkorlarga: xalqaro ishlab chiqaruvchilar uchun CZECHFARM", "Partners: CZECHFARM for international manufacturers"],
+  investors: ["Инвесторам: CZECHFARM, где здоровье создаёт стоимость", "Investorlarga: salomatlik qiymat yaratadigan CZECHFARM", "Investors: CZECHFARM, where health creates value"],
+  news: ["Новости CZECHFARM", "CZECHFARM yangiliklari", "CZECHFARM news"],
+  contacts: ["Контакты CZECHFARM", "CZECHFARM bilan aloqa", "Contact CZECHFARM"],
 };
-const DESC = ["CHECHFARM улучшает здоровье и качество жизни людей через доступ к современным решениям. Партнёрам, аптекам, врачам и инвесторам.", "CHECHFARM zamonaviy yechimlar orqali odamlarning salomatligi va hayot sifatini yaxshilaydi. Hamkorlar, dorixonalar, shifokorlar va investorlar uchun.", "CHECHFARM improves people’s health and quality of life through access to modern solutions. For partners, pharmacies, doctors and investors."];
+const DESC = ["CZECHFARM улучшает здоровье и качество жизни людей через доступ к современным решениям. Партнёрам, аптекам, врачам и инвесторам.", "CZECHFARM zamonaviy yechimlar orqali odamlarning salomatligi va hayot sifatini yaxshilaydi. Hamkorlar, dorixonalar, shifokorlar va investorlar uchun.", "CZECHFARM improves people’s health and quality of life through access to modern solutions. For partners, pharmacies, doctors and investors."];
 
 /* ── Данные для скрипта ────────────────────────────────────────────── */
 function K(l, p) {
@@ -405,7 +405,7 @@ function K(l, p) {
 }
 
 function ld(l, p) {
-  const org = { "@type": "Organization", name: "CHECHFARM", slogan: "Health. Trust. Value.", description: DESC[LANGS.indexOf(l)] };
+  const org = { "@type": "Organization", name: "CZECHFARM", slogan: "Health. Trust. Value.", description: DESC[LANGS.indexOf(l)] };
   return JSON.stringify({ "@context": "https://schema.org", "@graph": [org, { "@type": "WebPage", name: TITLES[p][LANGS.indexOf(l)], inLanguage: l }] }).replace(/</g, "\\u003c");
 }
 
@@ -438,13 +438,14 @@ ${LANGS.filter((x) => x !== l).map((x) => `<link rel="alternate" hreflang="${x}"
 </head>
 <body data-lang="${l}" data-page="${p || "home"}">
 ${dz}
+${isHome ? introHtml(l) : ""}
 <a class="skip" href="#main">${t("К содержанию", "Asosiy qismga", "Skip to content")}</a>
 ${headerHtml(l, p)}
 <main id="main">
 ${BUILD[p](l)}
 </main>
 ${footHtml(l)}
-<div class="dock glass" id="dock"><a class="btn btn-pri" href="${href(l, "contacts")}#form">${ICON.send}<span>${t("Связаться с CHECHFARM", "CHECHFARM bilan bog‘lanish", "Contact CHECHFARM")}</span></a></div>
+<div class="dock glass" id="dock"><a class="btn btn-pri" href="${href(l, "contacts")}#form">${ICON.send}<span>${t("Связаться с CZECHFARM", "CZECHFARM bilan bog‘lanish", "Contact CZECHFARM")}</span></a></div>
 <div class="dlg" id="dlg" role="dialog" aria-modal="true" aria-label="${t("Подробно", "Batafsil", "Details")}" hidden><div class="dlg-in"><button type="button" class="ic-btn dlg-x" aria-label="${t("Закрыть", "Yopish", "Close")}">${ICON.close}</button><div class="dlg-b" style="display:grid;gap:18px"></div></div></div>
 <p class="toast" id="toast" role="status" hidden></p>
 <script type="application/json" id="cf-data">${JSON.stringify(K(l, p)).replace(/</g, "\\u003c")}</script>
@@ -452,6 +453,33 @@ ${footHtml(l)}
 ${JS}</script>
 </body>
 </html>`;
+}
+
+/* Заставка CZECHFARM alliance: пролёт над буквами, логотип встаёт в шапку
+   (владелец, 27.10.2026). Код — intro/intro.js, собранный в intro3d.js. */
+const INTRO_CSS = `.cfi{position:fixed;inset:0;z-index:2147482000;background-color:#071a18;transition:background-color .8s ease}
+.cfi canvas{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:0;transition:opacity .7s}
+.cfi.on canvas{opacity:1}.cfi.out{background-color:rgb(7 26 24 / 0);pointer-events:none}.cfi.out canvas{opacity:0;transition-duration:.25s}
+.cfi-skip{position:absolute;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));min-height:44px;padding:8px 16px;border:1px solid rgb(229 244 240 / .24);border-radius:999px;font:500 12px/1 system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:rgb(229 244 240 / .78);background:rgb(7 26 24 / .4);cursor:pointer;transition:opacity .3s}
+.cfi.out .cfi-skip{opacity:0}
+html.cfi .top .logo{opacity:0}html.cfi .rise{opacity:0;transform:translateY(18px)}html.cfi .hs h1 .w>span{transform:translateY(105%)}
+.cfi-fly{position:fixed;z-index:2147482001;margin:0;pointer-events:none;color:#f1ece1;transition:opacity .25s,transform 1s cubic-bezier(.65,0,.35,1),color 1s}
+.cfi-fly.lnd{color:var(--ink)}`;
+const INTRO_JS = `(function(){var o=document.getElementById('cfi'),r=document.documentElement;if(!o)return;
+var force=/[?&]intro=1/.test(location.search),seen=false;try{seen=!!sessionStorage.getItem('cf-intro')}catch(e){}
+var ok=!r.classList.contains('rm')&&(force||!seen)&&!(navigator.connection&&navigator.connection.saveData);
+if(ok){try{var c=document.createElement('canvas'),g=c.getContext('webgl2')||c.getContext('webgl');ok=!!g;var x=g&&g.getExtension('WEBGL_lose_context');if(x)x.loseContext()}catch(e){ok=false}}
+if(!ok){o.parentNode.removeChild(o);return}
+r.classList.add('cfi');try{sessionStorage.setItem('cf-intro','1')}catch(e){}
+window.cfiOff=function(){r.classList.remove('cfi');o.classList.add('out');setTimeout(function(){if(o.parentNode)o.parentNode.removeChild(o)},900)};
+var last=Date.now();(function w(){if(window.cfiOn||!o.parentNode)return;if(document.getElementById('dzi'))last=Date.now();if(Date.now()-last>4000){window.cfiOff();return}setTimeout(w,200)})();
+})()`;
+function introHtml(l) {
+  const skip = { ru: "Пропустить", uz: "O‘tkazib yuborish", en: "Skip" }[l];
+  return `<div class="cfi" id="cfi" data-env="${IMG}/studio-2048.webp" role="presentation"><canvas></canvas><button type="button" class="cfi-skip">${skip}</button></div>
+<style>${INTRO_CSS}</style>
+<script>${INTRO_JS}</script>
+<script src="${IMG}/intro3d.js" defer></script>`;
 }
 
 /* ── Панель ─────────────────────────────────────────────────────────── */
@@ -504,8 +532,8 @@ function panelPage(l) {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>${t("Панель CHECHFARM · макет DevUz Studio", "CHECHFARM paneli · DevUz Studio maketi", "CHECHFARM panel · DevUz Studio mockup")}</title>
-<meta name="description" content="${t("Панель сайта CHECHFARM: обращения партнёров, аптек и инвесторов, новости, портфель продуктов, заголовки страниц, роли и история действий.", "CHECHFARM sayti paneli: hamkorlar, dorixonalar va investorlar murojaatlari, yangiliklar, mahsulotlar portfeli, sahifa sarlavhalari, rollar va harakatlar tarixi.", "CHECHFARM website panel: partner, pharmacy and investor requests, news, product portfolio, page titles, roles and action history.")}">
+<title>${t("Панель CZECHFARM · макет DevUz Studio", "CZECHFARM paneli · DevUz Studio maketi", "CZECHFARM panel · DevUz Studio mockup")}</title>
+<meta name="description" content="${t("Панель сайта CZECHFARM: обращения партнёров, аптек и инвесторов, новости, портфель продуктов, заголовки страниц, роли и история действий.", "CZECHFARM sayti paneli: hamkorlar, dorixonalar va investorlar murojaatlari, yangiliklar, mahsulotlar portfeli, sahifa sarlavhalari, rollar va harakatlar tarixi.", "CZECHFARM website panel: partner, pharmacy and investor requests, news, product portfolio, page titles, roles and action history.")}">
 <meta name="robots" content="noindex, nofollow, noarchive">
 <meta name="theme-color" content="#071a18">
 <link rel="icon" type="image/svg+xml" href="${IMG}/icon.svg">
@@ -520,7 +548,7 @@ ${sprite()}
 <div class="app">
 <div class="nav-back" data-navclose></div>
 <aside class="side-nav" aria-label="${pick("sections")}">
-<a class="brand" href="${href(l)}" aria-label="CHECHFARM">${MARK}<span><b>CHECHFARM</b><small>${pick("panelOf")}</small></span></a>
+<a class="brand" href="${href(l)}" aria-label="CZECHFARM">${MARK}<span><b>CZECHFARM</b><small>${pick("panelOf")}</small></span></a>
 <nav class="nav">${nav.map((k) => `<a href="#${k}"><svg class="ic" aria-hidden="true"><use href="#i-${k}"/></svg><span>${pick("n_" + k)}</span>${k === "leads" ? `<i data-cnt hidden>0</i>` : ""}</a>`).join("")}</nav>
 <div class="role"><label><span>${pick("viewAs")}</span><select id="role">${["owner", "head", "manager"].map((r) => `<option value="${r}">${pick("role_" + r)}</option>`).join("")}</select></label>
 <a class="to-site" href="${href(l)}"><svg class="ic" aria-hidden="true"><use href="#i-ext"/></svg><span>${pick("toSite")}</span></a></div>

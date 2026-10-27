@@ -1,4 +1,4 @@
-/* Панель CHECHFARM: по эталону greenwell. Сначала ПК, на телефоне меню в
+/* Панель CZECHFARM: по эталону greenwell. Сначала ПК, на телефоне меню в
    шторке, таблицы листаются внутри своей карточки. */
 :root{--bg:#f2f1ec;--card:#fff;--ink:#0e1d1b;--ink2:#46524f;--mut:#6c7774;--line:#e4e2da;--teal:#0b5a53;--teal2:#12857a;--mint:#d7ebe6;--deep:#071a18;--gold:#b98a3a;--gold2:#e5c98f;--red:#b4442f;--blue:#284a7a;--r:14px;--sh1:0 1px 2px rgb(14 29 27 / .06),0 2px 8px rgb(14 29 27 / .05);--sh3:0 24px 60px -20px rgb(14 29 27 / .35);--disp:"Literata",Georgia,serif;--txt:"Onest",system-ui,sans-serif}
 *,*::before,*::after{box-sizing:border-box}

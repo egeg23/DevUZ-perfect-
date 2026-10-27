@@ -1,13 +1,13 @@
 /*
- * Запуск фарм-бренда под ключ — главный смысл CHECHFARM. Со слов клиента
+ * Запуск фарм-бренда под ключ — главный смысл CZECHFARM. Со слов клиента
  * (переписка владельца DevUz, 26.10.2026): к ним приходит производитель,
- * например из Китая, его препарат в Узбекистане не знают, а у CHECHFARM
+ * например из Китая, его препарат в Узбекистане не знают, а у CZECHFARM
  * налажено всё — точки сбыта, бренд, маркетинг, полный комплект; проекты от
  * 10 000 000 $. Цифр сверх этого нет.
  *
  *   «Путь вашего бренда» (#launch): производитель вписывает название и страну,
  *   безымянная коробка проходит бренд → маркетинг → точки сбыта → под ключ;
- *   «Сам или с CHECHFARM» (#compare): два сценария одним переключателем.
+ *   «Сам или с CZECHFARM» (#compare): два сценария одним переключателем.
  * Поведение — launch.js, стили — launch.css.
  */
 const ORIGINS = {
@@ -20,13 +20,13 @@ const STAGES = [
   { ru: ["Сейчас", "Препарат есть, но в Узбекистане его не знают. Аптеки не берут то, чего не спрашивают."], uz: ["Hozir", "Dori bor, lekin O‘zbekistonda uni bilishmaydi. Dorixonalar so‘ralmaganini olmaydi."], en: ["Today", "The product exists, but nobody in Uzbekistan knows it. Pharmacies do not stock what nobody asks for."] },
   { ru: ["Бренд", "Бренд под местный рынок: имя, упаковка, понятная информация."], uz: ["Brend", "Mahalliy bozorga mos brend: nom, qadoq, tushunarli ma’lumot."], en: ["Brand", "A brand for the local market: name, packaging, clear information."] },
   { ru: ["Маркетинг", "О бренде узнают врачи, аптеки и пациенты."], uz: ["Marketing", "Brend haqida shifokorlar, dorixonalar va bemorlar bilib oladi."], en: ["Marketing", "Doctors, pharmacies and patients learn about the brand."] },
-  { ru: ["Точки сбыта", "Продукт встаёт на полки: сбыт у CHECHFARM уже налажен."], uz: ["Sotuv nuqtalari", "Mahsulot peshtaxtaga chiqadi: CHECHFARMda sotuv allaqachon yo‘lga qo‘yilgan."], en: ["Points of sale", "The product reaches the shelves: CHECHFARM already has sales in place."] },
+  { ru: ["Точки сбыта", "Продукт встаёт на полки: сбыт у CZECHFARM уже налажен."], uz: ["Sotuv nuqtalari", "Mahsulot peshtaxtaga chiqadi: CZECHFARMda sotuv allaqachon yo‘lga qo‘yilgan."], en: ["Points of sale", "The product reaches the shelves: CZECHFARM already has sales in place."] },
   { ru: ["Под ключ", "Бренд работает на рынке. Полный комплект: сбыт, бренд, маркетинг."], uz: ["Kalit topshirish", "Brend bozorda ishlaydi. To‘liq to‘plam: sotuv, brend, marketing."], en: ["Turnkey", "The brand is live on the market. The full set: sales, brand, marketing."] },
 ];
 
 const COMPARE = [
   { ru: ["Бренд", "В Узбекистане его не знают", "Бренд под местный рынок"], uz: ["Brend", "O‘zbekistonda uni bilishmaydi", "Mahalliy bozorga mos brend"], en: ["Brand", "Nobody in Uzbekistan knows it", "A brand built for the local market"] },
-  { ru: ["Маркетинг", "С нуля, своими силами", "Налажен у CHECHFARM"], uz: ["Marketing", "Noldan, o‘z kuchingiz bilan", "CHECHFARMda yo‘lga qo‘yilgan"], en: ["Marketing", "From scratch, on your own", "Already in place at CHECHFARM"] },
+  { ru: ["Маркетинг", "С нуля, своими силами", "Налажен у CZECHFARM"], uz: ["Marketing", "Noldan, o‘z kuchingiz bilan", "CZECHFARMda yo‘lga qo‘yilgan"], en: ["Marketing", "From scratch, on your own", "Already in place at CZECHFARM"] },
   { ru: ["Точки сбыта", "Искать самому, одну за другой", "Уже налажены"], uz: ["Sotuv nuqtalari", "O‘zingiz birma-bir qidirasiz", "Allaqachon yo‘lga qo‘yilgan"], en: ["Points of sale", "Find them yourself, one by one", "Already in place"] },
   { ru: ["Кто ведёт", "Вы из другой страны", "Команда на месте, полный комплект"], uz: ["Kim boshqaradi", "Siz boshqa mamlakatdan", "Joyidagi jamoa, to‘liq to‘plam"], en: ["Who runs it", "You, from another country", "A team on the ground, the full set"] },
 ];
@@ -73,10 +73,10 @@ ${SHELF.map(([x, y], i) => `<g class="mini" style="--i:${i}" transform="translat
   function compareBlock(l) {
     const t = T(l);
     return `<section class="sec dark cmp-sec" id="compare"><div class="wrap">
-<div class="sec-h mv mv-up"><p class="kicker">${t("Сам или с CHECHFARM", "O‘zingiz yoki CHECHFARM bilan", "On your own or with CHECHFARM")}</p><h2 class="h2">${t("Один и тот же препарат. <b>Два разных запуска</b>", "Bitta dori. <b>Ikki xil ishga tushirish</b>", "The same product. <b>Two different launches</b>")}</h2></div>
-<div class="vs mv mv-up" id="vs" data-on="0"><div class="vs-sw" role="group" aria-label="${t("Сценарий", "Ssenariy", "Scenario")}"><button type="button" data-v="0" aria-pressed="true">${t("Сам", "O‘zingiz", "On your own")}</button><button type="button" data-v="1" aria-pressed="false">${t("С CHECHFARM", "CHECHFARM bilan", "With CHECHFARM")}</button><i aria-hidden="true"></i></div>
+<div class="sec-h mv mv-up"><p class="kicker">${t("Сам или с CZECHFARM", "O‘zingiz yoki CZECHFARM bilan", "On your own or with CZECHFARM")}</p><h2 class="h2">${t("Один и тот же препарат. <b>Два разных запуска</b>", "Bitta dori. <b>Ikki xil ishga tushirish</b>", "The same product. <b>Two different launches</b>")}</h2></div>
+<div class="vs mv mv-up" id="vs" data-on="0"><div class="vs-sw" role="group" aria-label="${t("Сценарий", "Ssenariy", "Scenario")}"><button type="button" data-v="0" aria-pressed="true">${t("Сам", "O‘zingiz", "On your own")}</button><button type="button" data-v="1" aria-pressed="false">${t("С CZECHFARM", "CZECHFARM bilan", "With CZECHFARM")}</button><i aria-hidden="true"></i></div>
 <ul class="vs-l">${COMPARE.map((c, i) => `<li style="--i:${i}"><span class="vs-k">${c[l][0]}</span><span class="vs-v"><span class="vs-a">${ICON.close}${c[l][1]}</span><span class="vs-b">${ICON.check}${c[l][2]}</span></span></li>`).join("")}</ul>
-<a class="btn btn-gold vs-go" href="${href(l, "partners")}#form">${t("Запустить бренд с CHECHFARM", "Brendni CHECHFARM bilan ishga tushirish", "Launch a brand with CHECHFARM")}${ICON.arrow}</a></div>
+<a class="btn btn-gold vs-go" href="${href(l, "partners")}#form">${t("Запустить бренд с CZECHFARM", "Brendni CZECHFARM bilan ishga tushirish", "Launch a brand with CZECHFARM")}${ICON.arrow}</a></div>
 </div></section>`;
   }
 

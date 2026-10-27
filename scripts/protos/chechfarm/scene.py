@@ -1,4 +1,4 @@
-"""Сцена первого экрана CHECHFARM: ролик → 48 кадров WebP → шифр.
+"""Сцена первого экрана CZECHFARM: ролик → 48 кадров WebP → шифр.
 
 SCENE_KEY=<64 hex> python3 -I scene.py <ролик.mp4>
 
