@@ -1,5 +1,5 @@
 /*
- * Премиум-блоки CHECHFARM (владелец, 26.10.2026: «Выглядит как-то сильно
+ * Премиум-блоки CZECHFARM (владелец, 26.10.2026: «Выглядит как-то сильно
  * просто… Доделываем»): сцена первого экрана, стеклянные блоки цепочки,
  * глобус с маршрутами, главная под аудиторию, «что нужно от компании»,
  * стоимость с допами за половину цены. Разметка здесь, поведение — в
@@ -35,9 +35,9 @@ const AUD_POINTS = {
     en: ["A partnership request in two steps", "The request status shows on the site", "A company manager receives it"],
   },
   makers: {
-    ru: ["CHECHFARM как локальный партнёр", "Пять шагов от заявки до запуска", "Заявка производителя: компания, страна, продукты"],
-    uz: ["CHECHFARM mahalliy hamkor sifatida", "Arizadan ishga tushirishgacha besh qadam", "Ishlab chiqaruvchi arizasi: kompaniya, mamlakat, mahsulotlar"],
-    en: ["CHECHFARM as a local partner", "Five steps from request to launch", "A manufacturer request: company, country, products"],
+    ru: ["CZECHFARM как локальный партнёр", "Пять шагов от заявки до запуска", "Заявка производителя: компания, страна, продукты"],
+    uz: ["CZECHFARM mahalliy hamkor sifatida", "Arizadan ishga tushirishgacha besh qadam", "Ishlab chiqaruvchi arizasi: kompaniya, mamlakat, mahsulotlar"],
+    en: ["CZECHFARM as a local partner", "Five steps from request to launch", "A manufacturer request: company, country, products"],
   },
   investors: {
     ru: ["Здоровье создаёт устойчивую стоимость", "Цепочка роста в семи шагах", "Материалы и встреча по запросу"],
@@ -64,7 +64,7 @@ export function makeBlocks({ T, href, ICON, IMG, L3, CHAIN, pad, BASE_URL }) {
   /* ── Сцена первого экрана ──────────────────────────────────────────── */
   function heroScene(l, inner) {
     const t = T(l);
-    return `<section class="hs" id="hero" aria-label="CHECHFARM"><div class="hs-stick">
+    return `<section class="hs" id="hero" aria-label="CZECHFARM"><div class="hs-stick">
 <div class="hs-media" aria-hidden="true">
 <picture class="hs-a"><source media="(max-width: 899px) and (orientation: portrait)" srcset="${IMG}/hero-m-1080.webp"><img src="${IMG}/hero-2400.webp" srcset="${IMG}/hero-900.webp 900w, ${IMG}/hero-1400.webp 1400w, ${IMG}/hero-2400.webp 2400w" sizes="100vw" alt="" fetchpriority="high"></picture>
 <picture class="hs-b"><source media="(max-width: 899px) and (orientation: portrait)" srcset="${IMG}/open-m-1080.webp"><img src="${IMG}/open-2400.webp" srcset="${IMG}/open-1400.webp 1400w, ${IMG}/open-2400.webp 2400w" sizes="100vw" alt="" loading="lazy"></picture>
@@ -96,7 +96,7 @@ ${BLOCKS.map(([a, b, c, d], i) => `<button type="button" class="gb-b" style="lef
     return `<section class="sec dark gl-sec" id="globe"><div class="wrap">
 <div class="sec-h mv mv-up"><p class="kicker">${t("Маршрут партнёра", "Hamkor yo‘li", "A partner’s route")}</p><h2 class="h2">${t("От производителя <b>к местному рынку</b>", "Ishlab chiqaruvchidan <b>mahalliy bozorga</b>", "From manufacturer <b>to the local market</b>")}</h2><p class="lead">${t("Каждый маршрут на схеме: один шаг сотрудничества. Наведите или нажмите.", "Sxemadagi har bir yo‘l: hamkorlikning bir qadami. Ustiga olib boring yoki bosing.", "Each route on the diagram is one partnership step. Hover or tap.")}</p></div>
 <div class="gl mv mv-scale"><img src="${IMG}/globe-2000.webp" srcset="${IMG}/globe-1100.webp 1100w, ${IMG}/globe-2000.webp 2000w" sizes="(min-width: 1240px) 1160px, 100vw" alt="${t("Стеклянный глобус с линиями маршрутов", "Yo‘nalish chiziqlari bilan shisha globus", "A glass globe with route lines")}" loading="lazy" width="2000" height="1116">
-<svg class="gl-svg" viewBox="0 0 800 447" role="group" aria-label="${t("Шаги сотрудничества", "Hamkorlik qadamlari", "Partnership steps")}">${ROUTES.map((p, i) => `<g class="gl-r" tabindex="0" role="button" data-i="${i}" aria-label="${pad(i + 1)}. ${L3(PARTNER_STEPS[i], l)[0]}"><path class="gl-hit" d="${arc(p)}"/><path class="gl-p" d="${arc(p)}"/><circle class="gl-dot" r="3.5"/><circle class="gl-src" cx="${p[0]}" cy="${p[1]}" r="5"/></g>`).join("")}<g class="gl-pin" transform="translate(${PIN.join(" ")})"><circle r="14" class="gl-pulse"/><circle r="6"/></g><text class="gl-pt" x="${PIN[0] - 18}" y="${PIN[1] + 30}" text-anchor="end">CHECHFARM</text></svg></div>
+<svg class="gl-svg" viewBox="0 0 800 447" role="group" aria-label="${t("Шаги сотрудничества", "Hamkorlik qadamlari", "Partnership steps")}">${ROUTES.map((p, i) => `<g class="gl-r" tabindex="0" role="button" data-i="${i}" aria-label="${pad(i + 1)}. ${L3(PARTNER_STEPS[i], l)[0]}"><path class="gl-hit" d="${arc(p)}"/><path class="gl-p" d="${arc(p)}"/><circle class="gl-dot" r="3.5"/><circle class="gl-src" cx="${p[0]}" cy="${p[1]}" r="5"/></g>`).join("")}<g class="gl-pin" transform="translate(${PIN.join(" ")})"><circle r="14" class="gl-pulse"/><circle r="6"/></g><text class="gl-pt" x="${PIN[0] - 18}" y="${PIN[1] + 30}" text-anchor="end">CZECHFARM</text></svg></div>
 <div class="gl-card glass-d" aria-live="polite"><p class="no"></p><h3></h3><p class="ds"></p></div>
 </div></section>`;
   }
@@ -116,7 +116,7 @@ ${AUDIENCES.map((a, i) => `<div class="as-p${a.id === "investors" ? " inv" : ""}
   function needsBlock(l) {
     const t = T(l);
     return `<section class="sec" id="needs"><div class="wrap split">
-<div class="sec-h mv mv-left" style="margin:0"><p class="kicker">${t("Чтобы сайт вышел", "Sayt chiqishi uchun", "To launch the site")}</p><h2 class="h2">${t("Что нужно <b>от CHECHFARM</b>", "<b>CHECHFARM’dan</b> nima kerak", "What we need <b>from CHECHFARM</b>")}</h2><p class="lead">${t("Цифр, фактов и названий, которых нет в ТЗ, мы не придумываем: сайт фармацевтической компании говорит только проверенное. Восемь вещей, и макет становится сайтом.", "TTda yo‘q raqam, fakt va nomlarni o‘ylab topmaymiz: farmatsevtika kompaniyasi sayti faqat tekshirilganini aytadi. Sakkiz narsa va maket saytga aylanadi.", "We do not invent figures, facts or names that are not in the brief: a pharmaceutical company’s site says only what is checked. Eight things, and the mockup becomes a site.")}</p></div>
+<div class="sec-h mv mv-left" style="margin:0"><p class="kicker">${t("Чтобы сайт вышел", "Sayt chiqishi uchun", "To launch the site")}</p><h2 class="h2">${t("Что нужно <b>от CZECHFARM</b>", "<b>CZECHFARM’dan</b> nima kerak", "What we need <b>from CZECHFARM</b>")}</h2><p class="lead">${t("Цифр, фактов и названий, которых нет в ТЗ, мы не придумываем: сайт фармацевтической компании говорит только проверенное. Восемь вещей, и макет становится сайтом.", "TTda yo‘q raqam, fakt va nomlarni o‘ylab topmaymiz: farmatsevtika kompaniyasi sayti faqat tekshirilganini aytadi. Sakkiz narsa va maket saytga aylanadi.", "We do not invent figures, facts or names that are not in the brief: a pharmaceutical company’s site says only what is checked. Eight things, and the mockup becomes a site.")}</p></div>
 <ol class="needs">${NEEDS.map(([id, x], i) => `<li class="mv mv-up" style="--d:${(i % 4) * 70}ms"><span class="nd-n">${pad(i + 1)}</span><span><b>${x[l][0]}</b><small>${x[l][1]}</small></span></li>`).join("")}</ol>
 </div></section>`;
   }
@@ -147,7 +147,7 @@ ${ADDONS.map(row).join("")}
 
   function offerData(l) {
     const t = T(l);
-    return { items: ADDONS.map((a) => ({ id: a.id, t: a[l].t, p: a.price, f: a.full })), base: BASE.promo, baseName: BASE[l].t, hours: OFFER_HOURS, head: t("Сайт CHECHFARM, состав:", "CHECHFARM sayti, tarkibi:", "CHECHFARM website, scope:"), totalW: t("Итого", "Jami", "Total"), copied: t("Скопировано", "Nusxalandi", "Copied"), ended: t("Срок акции вышел, цены обычные", "Aksiya muddati tugadi, narxlar odatiy", "The offer has ended; regular prices apply") };
+    return { items: ADDONS.map((a) => ({ id: a.id, t: a[l].t, p: a.price, f: a.full })), base: BASE.promo, baseName: BASE[l].t, hours: OFFER_HOURS, head: t("Сайт CZECHFARM, состав:", "CZECHFARM sayti, tarkibi:", "CZECHFARM website, scope:"), totalW: t("Итого", "Jami", "Total"), copied: t("Скопировано", "Nusxalandi", "Copied"), ended: t("Срок акции вышел, цены обычные", "Aksiya muddati tugadi, narxlar odatiy", "The offer has ended; regular prices apply") };
   }
 
   return { heroScene, blocksStage, globeBlock, audienceSwitch, audCta, needsBlock, priceBlock, offerData, BASE_URL };

@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-/* launch: «Путь вашего бренда» и «Сам или с CHECHFARM». Прокрутку не трогает:
+/* launch: «Путь вашего бренда» и «Сам или с CZECHFARM». Прокрутку не трогает:
    этапы листаются кнопками и сами, пока сцена на экране. Название и страна
    живут в этой вкладке (cf-launch) и подставляются в заявку на «Партнёрам». */
 var d=document,W=window,root=d.documentElement,K=JSON.parse(d.getElementById('cf-data').textContent),L=K.launch;
@@ -39,13 +39,13 @@ if(ln){
 var pf=$('#form form[data-lead="partner"]');
 if(pf&&K.page==='partners'){var v=ssGet();if(v&&v.n){var m=$('[name="msg"]',pf),c=$('[name="country"]',pf);if(m&&!m.value)m.value=v.msg;if(c&&!c.value)c.value=v.o}}
 
-/* Сам или с CHECHFARM */
+/* Сам или с CZECHFARM */
 var vs=$('#vs');
 if(vs){
   var bs=$$('.vs-sw button',vs),vt=0,vAuto=!REDUCED;
   function vSet(on){vs.setAttribute('data-on',on?'1':'0');bs.forEach(function(b){b.setAttribute('aria-pressed',(+b.getAttribute('data-v'))===on?'true':'false')})}
   bs.forEach(function(b){b.addEventListener('click',function(){vAuto=false;vSet(+b.getAttribute('data-v'))})});
-  /* Показали «Сам» — через пару секунд сами переключаем на «С CHECHFARM». */
+  /* Показали «Сам» — через пару секунд сами переключаем на «С CZECHFARM». */
   if('IntersectionObserver' in W&&vAuto)new IntersectionObserver(function(es){if(es[0].isIntersecting&&vAuto&&!vt)vt=setTimeout(function(){if(vAuto)vSet(1)},1800)},{threshold:.5}).observe(vs);
 }
 })();

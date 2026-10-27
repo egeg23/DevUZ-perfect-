@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-/* panel: panel CHECHFARM po etalonu greenwell. Obrashcheniya s saita
+/* panel: panel CZECHFARM po etalonu greenwell. Obrashcheniya s saita
    (cf-leads-1) prihodyat pervoi strokoi; status, novosti, portfel i
    zagolovki stranic panel pishet v cf-panel-1, sait chitaet ih ottuda.
    Demo-cifry iz odnogo zerna: shodyatsya mezhdu ekranami. Roli: menedzher
@@ -72,7 +72,7 @@ function openLead(id){var o=leadById(id);if(!o)return;var m=$('#mdl');
   var hist=PS.log.filter(function(x){return x.ref===id});
   m.innerHTML='<div class="sheet" role="dialog" aria-modal="true" aria-label="'+h(o.id)+'"><div class="sheet-h"><div><span class="k-'+o.kind+'"><b>'+h(t('k_'+o.kind))+'</b></span><h1>'+h(o.id)+'</h1><p class="muted">'+h(when(o.ts))+(o.live?' · <span class="tag site">'+h(t('fromSite'))+'</span>':'')+'</p></div><button class="ib" data-x aria-label="'+h(t('close'))+'">'+ic('x')+'</button></div>'+
   '<div class="card"><b>'+h(o.name)+'</b><span class="muted">'+h(o.org)+(o.country?' · '+h(o.country):'')+'</span>'+(o.email||o.phone?'<p>'+h(t('contact'))+': '+h([o.email,o.phone].filter(Boolean).join(' · '))+'</p>':'')+(o.scale?'<p><b>'+h(t('scale'))+':</b> '+h(t('sc_'+o.scale))+'</p>':'')+(o.msg?'<p><b>'+h(t('msg'))+':</b> '+h(o.msg)+'</p>':'')+'<p class="sm muted">'+h(t('page'))+': '+h((G.pages.filter(function(p){return p.k===o.page})[0]||{n:o.page}).n)+'</p>'+
-  (o.email?'<a class="btn ln" href="mailto:'+h(o.email)+'?subject='+encodeURIComponent('CHECHFARM '+o.id)+'" data-reply>'+ic('mail')+h(t('reply'))+'</a>':'')+'</div>'+
+  (o.email?'<a class="btn ln" href="mailto:'+h(o.email)+'?subject='+encodeURIComponent('CZECHFARM '+o.id)+'" data-reply>'+ic('mail')+h(t('reply'))+'</a>':'')+'</div>'+
   '<div class="card"><h2>'+h(t('setSt'))+'</h2><div class="stbtns">'+ST.map(function(s){return '<button data-st="'+s+'" class="'+(o.st===s?'on':'')+'" aria-pressed="'+(o.st===s)+'">'+h(t('s_'+s))+'</button>'}).join('')+'</div><p class="sm muted">'+h(t('stNote'))+'</p></div>'+
   '<div class="card"><label class="lab">'+h(t('note'))+'<textarea class="inp" id="nt" placeholder="'+h(t('notePh'))+'">'+h(PS.notes[id]||'')+'</textarea></label><button class="btn" data-note>'+h(t('save'))+'</button></div>'+
   '<div class="card"><h2>'+h(t('hist'))+'</h2><ul class="tl"><li><b>'+h(dstr(o.ts)+' '+tstr(o.ts))+'</b><span>'+h(t('newLead'))+'</span></li>'+hist.slice().reverse().map(function(x){return '<li><b>'+h(dstr(x.ts)+' '+tstr(x.ts))+'</b><span>'+h(x.who)+' '+h(t(x.k))+'</span></li>'}).join('')+'</ul></div></div>';
