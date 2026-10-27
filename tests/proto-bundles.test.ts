@@ -377,7 +377,7 @@ test("Giftora: демо мини-приложения и панель опера
     assert.match(page, /id="closing" data-until="\d{4}-\d\d-\d\dT[\d:]+Z"/, `${path}: нет плашки о закрытии`);
     assert.match(page, /class="chip demo"/, `${path}: нет пометки «Демо»`);
     assert.ok(page.includes("gx-admin-1") && page.includes("/admin"), `${path}: приложение не читает настройки панели или нет входа в неё`);
-    for (const view of ["home", "box", "hub", "rocket", "dice", "upgrade", "pvp", "inv", "top", "tasks", "profile"]) {
+    for (const view of ["home", "box", "hub", "rocket", "dice", "upgrade", "pvp", "mines", "plinko", "towers", "wheel", "inv", "top", "tasks", "profile"]) {
       assert.ok(page.includes(`V.${view} = function`), `${path}: нет экрана ${view}`);
     }
     assert.match(page, /TelegramWebviewProxy/, `${path}: нет моста к Telegram`);
@@ -2080,7 +2080,7 @@ test("SamAuto: D-MAX из-под покрывала, разлёт, фара, п�
   assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
 });
 
-test("CHECHFARM: 7 страниц и панель на ru, uz, en — условия, noindex, видео DevUz, шапка 3 с, цепочка, формы в панель, только факты из ТЗ", async () => {
+test("CZECHFARM: 7 страниц и панель на ru, uz, en — условия, noindex, видео DevUz, шапка 3 с, цепочка, формы в панель, только факты из ТЗ", async () => {
   const { existsSync, readdirSync, statSync } = await import("node:fs");
   const site = bundlePages("chechfarm");
   assert.ok(site);
@@ -2107,6 +2107,8 @@ test("CHECHFARM: 7 страниц и панель на ru, uz, en — услов
       const body = page.replace(/<section class="sec dark offer" id="cena"[\s\S]*?<\/section>/, "").replace(/"offer":\{[\s\S]*?\}\]/, "");
       assert.doesNotMatch(body, /href="tel:|wa\.me|\+998\s?\d|\d\s?(\$|сум|so‘m|UZS)/, `${path}: контакт или цена, которых нет в ТЗ`);
       assert.match(page, /\bIDLE=3000\b/, `${path}: шапка не по правилу 3 секунд`);
+      /* Владелец, 27.10.2026: на компьютере шапка стоит всегда. */
+      assert.ok(page.includes("matchMedia('(min-width: 1080px)')") && /DESK\.matches\)\{top\.classList\.remove\('hide'\);return\}/.test(page), `${path}: на компьютере шапка прячется`);
       assert.match(page, /classList\.add\('hide'\)[\s\S]*IDLE\)/, `${path}: шапка не прячется`);
       assert.ok(page.includes("'cf-leads-1'") && page.includes("'cf-panel-1'"), `${path}: сайт не связан с панелью`);
       assert.doesNotMatch(page, /scroll-behavior|preventDefault\(\);?\s*\}\s*,\s*\{\s*passive:\s*false/, `${path}: перехват прокрутки`);
@@ -2118,14 +2120,19 @@ test("CHECHFARM: 7 страниц и панель на ru, uz, en — услов
       for (const id of ["hero", "launch", "compare", "mission", "formula", "model", "audience", "portfolio", "contact", "cena"]) assert.ok(page.includes(`id="${id}"`), `${path}: нет блока ${id}`);
       assert.ok(page.includes('class="hs-cv"') && page.includes("/promo/scene"), `${path}: нет сцены первого экрана`);
       assert.equal((page.match(/role="tab" id="as-t-/g) ?? []).length, 5, `${path}: не пять аудиторий`);
-    }
+      /* Заставка CZECHFARM alliance (владелец, 27.10.2026): после видео DevUz, логотип встаёт в шапку. */
+      assert.ok(page.indexOf('id="dzi"') < page.indexOf('id="cfi"') && page.includes('/protos/chechfarm/intro3d.js" defer'), `${path}: нет заставки после видео DevUz`);
+      assert.ok(page.includes("sessionStorage.setItem('cf-intro','1')") && page.includes("r.classList.contains('rm')"), `${path}: заставка не раз за визит или идёт при «меньше движения»`);
+    } else assert.ok(!page.includes('id="cfi"'), `${path}: заставка не на главной`);
+    if (!path.endsWith("panel")) assert.ok(page.includes('aria-label="CZECHFARM alliance"') && page.includes("<i>A</i><i>L</i><i>L</i><i>I</i><i>A</i><i>N</i><i>C</i><i>E</i>"), `${path}: в логотипе нет ALLIANCE`);
+    assert.doesNotMatch(page, /CHECHFARM/, `${path}: старое имя CHECHFARM на странице`);
     if (p === "" || p === "about" || p === "investors") assert.equal((page.match(/class="ch-n"/g) ?? []).length, 14, `${path}: в цепочке не 7 шагов на двух схемах`);
     if (p === "investors") assert.equal((page.match(/class="gb-b"/g) ?? []).length, 7, `${path}: не семь стеклянных блоков`);
     if (p === "partners") assert.equal((page.match(/class="gl-r"/g) ?? []).length, 5, `${path}: не пять маршрутов на глобусе`);
     /* Главный смысл со слов клиента (26.10.2026): запуск фарм-брендов под ключ. */
     if (p === "partners") assert.ok(page.includes('name="scale"'), `${path}: в заявке нет масштаба запуска`);
     if (p === "") assert.equal((page.match(/<button type="button" data-s="\d">/g) ?? []).length, 5, `${path}: в «Пути бренда» не пять этапов`);
-    if (p === "about") assert.ok(page.includes('id="needs"'), `${path}: нет «Что нужно от CHECHFARM»`);
+    if (p === "about") assert.ok(page.includes('id="needs"'), `${path}: нет «Что нужно от CZECHFARM»`);
     if (["", "partners", "investors", "contacts"].includes(p)) assert.match(page, /data-lead="(partner|investor)"/, `${path}: нет формы обращения`);
     if (p === "panel") {
       for (const v of ["dash", "leads", "news", "products", "seo", "log", "team"]) assert.match(page, new RegExp(`V\\.${v}=function`), `${path}: нет раздела ${v}`);
@@ -2135,6 +2142,9 @@ test("CHECHFARM: 7 страниц и панель на ru, uz, en — услов
   }
   const pub = "public/protos/chechfarm";
   assert.ok(readdirSync(pub).filter((f) => f !== "seq").reduce((s, f) => s + statSync(`${pub}/${f}`).size, 0) < 4_000_000, "картинки тяжелее 4 МБ");
+  /* Заставка: three.js собран в один файл, отражения — студия Higgsfield. */
+  assert.ok(statSync(`${pub}/intro3d.js`).size < 600_000, "заставка тяжелее 600 КБ");
+  assert.ok(existsSync(`${pub}/studio-2048.webp`), "нет студии для отражений заставки");
   /* Кадры сцены — только шифром, ключ в хранилище (lib/proto/promo SCENES). */
   const seq = readdirSync(`${pub}/seq`);
   assert.equal(seq.length, 48, "в сцене не 48 кадров");

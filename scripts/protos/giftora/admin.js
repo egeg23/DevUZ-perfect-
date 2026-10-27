@@ -25,7 +25,7 @@ var BOXN = { start: L('Стартовый', 'Starter'), sweet: L('Сладкий
 function defaults(){
   return {
     v: 1,
-    rtp: { box: 90, rocket: 96, dice: 96, upgrade: 92, pvp: 95 },
+    rtp: { box: 90, rocket: 96, dice: 96, upgrade: 92, pvp: 95, mines: 97, plinko: 97, towers: 97, wheel: 96 },
     promos: [
       { code: 'DEMO', type: 'box', box: 'luck', ton: 0, limit: 1000, used: 412, until: Date.now() + 20 * DAY, on: 1 },
       { code: 'FARM', type: 'box', box: 'farm', ton: 0, limit: 500, used: 133, until: Date.now() + 9 * DAY, on: 1 },
@@ -72,7 +72,7 @@ var DAYS = [];
   var g = game();
   if (g && g.dd) { var mine = g.dd[String(today0)] || 0; DAYS[89].dep += mine; DAYS[89].mine = mine; }
 })();
-var GAMES = [['box', L('Боксы', 'Boxes'), 0.38], ['rocket', 'Rocket', 0.27], ['pvp', 'PvP', 0.15], ['dice', 'Dice', 0.12], ['upgrade', 'Upgrade', 0.08]];
+var GAMES = [['box', L('Боксы', 'Boxes'), 0.26], ['rocket', 'Rocket', 0.2], ['mines', 'Mines', 0.13], ['plinko', 'Plinko', 0.1], ['pvp', 'PvP', 0.09], ['dice', 'Dice', 0.08], ['wheel', 'Wheel', 0.06], ['towers', 'Towers', 0.04], ['upgrade', 'Upgrade', 0.04]];
 
 /* ── Пользователи ── */
 var NAMES = ['Тимур', 'Alex', 'Nodir', 'Kate', 'Мадина', 'Rustam', 'Lena', 'Jasur', 'Max', 'Diyor', 'Sofia', 'Bek', 'Аня', 'Oleg', 'Kamila', 'Sardor', 'Mira', 'Igor', 'Zara', 'Den', 'Арман', 'Ivan', 'Dana', 'Erik'];
@@ -215,7 +215,11 @@ var RTPG = [
   ['rocket', 'Rocket', 90, 99, L('Чем ниже, тем раньше в среднем улетает ракета.', 'The lower it is, the earlier the rocket leaves on average.')],
   ['dice', 'Dice', 90, 99, L('Множитель = RTP / шанс. При 96% и шансе 50% выплата 1.92×.', 'Multiplier = RTP / chance. At 96% and 50% chance the payout is 1.92×.')],
   ['upgrade', 'Upgrade', 80, 97, L('Шанс улучшения = RTP × цена своего подарка / цена цели.', 'Upgrade chance = RTP × your gift price / target price.')],
-  ['pvp', 'PvP', 85, 99, L('Комиссия с банка: 100% минус RTP. При 95% берём 5%.', 'Pot fee: 100% minus RTP. At 95% we keep 5%.')]
+  ['pvp', 'PvP', 85, 99, L('Комиссия с банка: 100% минус RTP. При 95% берём 5%.', 'Pot fee: 100% minus RTP. At 95% we keep 5%.')],
+  ['mines', 'Mines', 85, 99, L('Множитель за клетку считается от RTP. Шанс на бомбу не меняется.', 'The per-cell multiplier is derived from RTP. The mine chance stays the same.')],
+  ['plinko', 'Plinko', 85, 99, L('Множители ячеек масштабируются так, чтобы средняя выплата равнялась RTP.', 'Slot multipliers are scaled so the average payout equals RTP.')],
+  ['towers', 'Towers', 85, 99, L('Множитель за этаж считается от RTP. Число клеток и бомб задаёт игрок.', 'The per-floor multiplier is derived from RTP. The player sets tiles and bombs.')],
+  ['wheel', 'Wheel', 85, 99, L('Множители секторов масштабируются так, чтобы средняя выплата равнялась RTP.', 'Segment multipliers are scaled so the average payout equals RTP.')]
 ];
 VIEW.rtp = function(){
   return head(L('RTP и шансы', 'RTP and odds'), L('Изменения сразу действуют в приложении на этом устройстве.', 'Changes apply right away in the app on this device.')) +

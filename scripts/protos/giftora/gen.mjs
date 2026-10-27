@@ -92,6 +92,10 @@ const I = {
   tag: `<path d="M3 12V4h8l10 10-8 8z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="7.5" cy="8.5" r="1.5" fill="currentColor"/>`,
   link: `<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>`,
   panel: `<rect x="3" y="4" width="18" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9 4v16M13 9h5M13 13h5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>`,
+  mines: `<circle cx="12" cy="13" r="7" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 6V2M12 2l3 2M12 2L9 4M19 13h3M2 13h3M12 20v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="10" cy="11" r="1.5" fill="currentColor"/>`,
+  plinko: `<circle cx="12" cy="3.5" r="1.4" fill="currentColor"/><g fill="currentColor"><circle cx="9" cy="9" r="1.1"/><circle cx="15" cy="9" r="1.1"/><circle cx="6" cy="14" r="1.1"/><circle cx="12" cy="14" r="1.1"/><circle cx="18" cy="14" r="1.1"/></g><path d="M4 19h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M8 19v2M12 19v2M16 19v2" stroke="currentColor" stroke-width="1.5"/>`,
+  towers: `<rect x="7" y="4" width="10" height="4" rx="1" fill="none" stroke="currentColor" stroke-width="1.7"/><rect x="7" y="10" width="10" height="4" rx="1" fill="none" stroke="currentColor" stroke-width="1.7"/><rect x="7" y="16" width="10" height="4" rx="1" fill="currentColor" opacity=".9"/>`,
+  wheel: `<circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6L5.6 18.4" stroke="currentColor" stroke-width="1.3"/><circle cx="12" cy="12" r="2" fill="currentColor"/>`,
 };
 const SPRITE = `<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>${Object.entries(GRAD)
   .map(([k, [a, b]]) => `<linearGradient id="q-${k}" x1="0" y1="0" x2=".4" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient>`)

@@ -1,6 +1,6 @@
 /*
- * CHECHFARM: всё, что макет говорит о компании, — только из ТЗ заказчика
- * (таблица CHECHFARM-1.xlsx, прислал владелец DevUz 26.10.2026): формула
+ * CZECHFARM: всё, что макет говорит о компании, — только из ТЗ заказчика
+ * (таблица CZECHFARM-1.xlsx, прислал владелец DevUz 26.10.2026): формула
  * бренда, миссия, модель создания стоимости, аудитории, инвестиционное
  * позиционирование. Препаратов, производителей, цифр, лет, филиалов,
  * адресов, телефонов в ТЗ нет — и в макете их нет: на их месте устройство
@@ -120,13 +120,13 @@ export const AUDIENCES = [
 
 /* Шаги сотрудничества с производителем: как идёт разговор, без обещаний услуг. */
 /* Шаги запуска бренда под ключ. Со слов клиента (переписка владельца DevUz,
-   26.10.2026): CHECHFARM запускает фарм-направления под ключ для тех, кто
+   26.10.2026): CZECHFARM запускает фарм-направления под ключ для тех, кто
    заходит на рынок: бренд, маркетинг, точки сбыта уже налажены. */
 export const PARTNER_STEPS = [
   { ru: ["Заявка", "Компания, страна, продукт и масштаб запуска. Минута времени."], uz: ["Ariza", "Kompaniya, mamlakat, mahsulot va ishga tushirish ko‘lami. Bir daqiqa."], en: ["Request", "Company, country, product and launch scale. One minute."] },
-  { ru: ["Знакомство", "Созвон с командой CHECHFARM: что за продукт и чего вы ждёте от рынка."], uz: ["Tanishuv", "CHECHFARM jamoasi bilan qo‘ng‘iroq: qanday mahsulot va bozordan nima kutasiz."], en: ["Introduction", "A call with the CHECHFARM team: what the product is and what you expect from the market."] },
+  { ru: ["Знакомство", "Созвон с командой CZECHFARM: что за продукт и чего вы ждёте от рынка."], uz: ["Tanishuv", "CZECHFARM jamoasi bilan qo‘ng‘iroq: qanday mahsulot va bozordan nima kutasiz."], en: ["Introduction", "A call with the CZECHFARM team: what the product is and what you expect from the market."] },
   { ru: ["Бренд под рынок", "Имя, упаковка и понятная информация для врачей, аптек и пациентов."], uz: ["Bozorga mos brend", "Nom, qadoq va shifokorlar, dorixonalar va bemorlar uchun tushunarli ma’lumot."], en: ["A brand for the market", "Name, packaging and clear information for doctors, pharmacies and patients."] },
-  { ru: ["Маркетинг и сбыт", "О бренде узнают, продукт встаёт в точки сбыта: у CHECHFARM это уже налажено."], uz: ["Marketing va sotuv", "Brend haqida bilishadi, mahsulot sotuv nuqtalariga chiqadi: CHECHFARMda bu allaqachon yo‘lga qo‘yilgan."], en: ["Marketing and sales", "People learn the brand and the product reaches points of sale: CHECHFARM already has this in place."] },
+  { ru: ["Маркетинг и сбыт", "О бренде узнают, продукт встаёт в точки сбыта: у CZECHFARM это уже налажено."], uz: ["Marketing va sotuv", "Brend haqida bilishadi, mahsulot sotuv nuqtalariga chiqadi: CZECHFARMda bu allaqachon yo‘lga qo‘yilgan."], en: ["Marketing and sales", "People learn the brand and the product reaches points of sale: CZECHFARM already has this in place."] },
   { ru: ["Запуск и масштаб", "Бренд работает на рынке, дальше растёт вместе с повторным спросом."], uz: ["Ishga tushirish va kengayish", "Brend bozorda ishlaydi, keyin takroriy talab bilan o‘sadi."], en: ["Launch and scale", "The brand is live on the market and grows with repeat demand."] },
 ];
 

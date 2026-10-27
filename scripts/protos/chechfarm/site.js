@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-/* site: сайт CHECHFARM. Прокрутку не перехватывает: всё, что связано с
+/* site: сайт CZECHFARM. Прокрутку не перехватывает: всё, что связано с
    прокруткой, только читает её и двигает transform или opacity. Связь с
    панелью — память браузера, как у greenwell: обращения пишет сайт
    (cf-leads-1), новости, портфель, статусы и заголовки страниц — панель
@@ -25,8 +25,11 @@ requestAnimationFrame(function(){root.classList.add('go')});
 /* ── Шапка (правило владельца, 15.10.2026): при любой прокрутке прячется
    и возвращается через 3 секунды после последнего события прокрутки.
    Пока фокус с клавиатуры внутри шапки, она не прячется. ─────────────── */
-var top=$('#top'),IDLE=3000,idleT=0;
+/* Владелец, 27.10.2026: на компьютере шапка стоит всегда (как у Soffice),
+   на телефоне — общее правило, 3 секунды. */
+var top=$('#top'),IDLE=3000,idleT=0,DESK=null;try{DESK=matchMedia('(min-width: 1080px)')}catch(e){}
 function headIdle(){if(!top)return;clearTimeout(idleT);
+  if(DESK&&DESK.matches){top.classList.remove('hide');return}
   if(!top.contains(d.activeElement))top.classList.add('hide');
   idleT=setTimeout(function(){top.classList.remove('hide')},IDLE)}
 

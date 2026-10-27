@@ -1,4 +1,4 @@
-/* Подписи панели CHECHFARM: [ru, uz, en]. gen.mjs падает, если подписи,
+/* Подписи панели CZECHFARM: [ru, uz, en]. gen.mjs падает, если подписи,
    которую зовёт panel.js, нет на трёх языках или в uz и en есть кириллица. */
 export const PANEL_UI = {
   sections: ["Разделы панели", "Panel bo‘limlari", "Panel sections"],

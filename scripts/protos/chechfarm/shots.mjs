@@ -12,7 +12,7 @@ const pages = (process.argv[3] || ",about,products,partners,investors,news,conta
 const b = await chromium.launch();
 for (const w of widths) {
   const ctx = await b.newContext({ viewport: { width: w, height: w < 500 ? 844 : 900 }, deviceScaleFactor: w < 500 ? 2 : 1 });
-  await ctx.addInitScript(() => { try { sessionStorage.setItem("dz-intro", "1"); } catch {} });
+  await ctx.addInitScript(() => { try { sessionStorage.setItem("dz-intro", "1"); sessionStorage.setItem("cf-intro", "1"); } catch {} });
   const pg = await ctx.newPage();
   const errs = [];
   pg.on("pageerror", (e) => errs.push(e.message));
