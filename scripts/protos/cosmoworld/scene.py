@@ -34,19 +34,31 @@ for f in os.listdir(OUT):
     os.remove(os.path.join(OUT, f))
 
 
-def seal(im, name, w, q):
+PACK = 24
+
+
+def webp(im, w, q):
     im = im.convert("RGB")
     im = im.resize((w, round(im.height * w / im.width)), Image.LANCZOS)
     with tempfile.NamedTemporaryFile(suffix=".webp") as t:
         im.save(t.name, "WEBP", quality=q, method=6)
-        data = open(t.name, "rb").read()
+        return open(t.name, "rb").read()
+
+
+def seal(data, name):
     nonce = os.urandom(12)
     open(os.path.join(OUT, name), "wb").write(nonce + AESGCM(KEY).encrypt(nonce, data, None))
 
 
 def clips(prefix, files, w, q):
-    """Кадры трёх роликов подряд, PER на ролик, стык не повторяется."""
-    n = 0
+    """Кадры трёх роликов подряд, PER на ролик, стык не повторяется.
+
+    Кадры уходят пачками по PACK (владелец, 28.10.2026, с телефона в
+    Telegram: сцена из 286 отдельных файлов не успевала загрузиться, он видел
+    только обложку). Пачка = 4 байта числа кадров, по 4 байта длины каждого,
+    потом сами WebP подряд; шифруется целиком. Сцена стартует с первой
+    пачкой, остальные догружает по ходу."""
+    frames = []
     with tempfile.TemporaryDirectory() as tmp:
         for c, f in enumerate(files):
             d = os.path.join(tmp, str(c))
@@ -54,9 +66,12 @@ def clips(prefix, files, w, q):
             subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", os.path.join(SRC, f), "-vsync", "0", f"{d}/%04d.png"], check=True)
             src = sorted(os.listdir(d))
             for i in range(0 if c == 0 else 1, PER):
-                seal(Image.open(os.path.join(d, src[round(i * (len(src) - 1) / (PER - 1))])), f"{prefix}{n:03d}.bin", w, q)
-                n += 1
-    return n
+                frames.append(webp(Image.open(os.path.join(d, src[round(i * (len(src) - 1) / (PER - 1))])), w, q))
+    for k in range(0, len(frames), PACK):
+        part = frames[k:k + PACK]
+        head = len(part).to_bytes(4, "little") + b"".join(len(x).to_bytes(4, "little") for x in part)
+        seal(head + b"".join(part), f"{prefix}{k // PACK:02d}.bin")
+    return len(frames)
 
 
 nd = clips("d", ["t1.mp4", "t2.mp4", "t3.mp4"], W_D, 74)
@@ -67,5 +82,5 @@ for name, f, w in (("hero-1600", "d1.png", 1600), ("hero-2400", "d1.png", 2400),
     im = Image.open(os.path.join(SRC, f)).convert("RGB")
     im.resize((w, round(im.height * w / im.width)), Image.LANCZOS).save(os.path.join(PUB, name + ".webp"), "WEBP", quality=80, method=6)
 
-json.dump({"d": nd, "p": np_}, open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "seq.json"), "w"))
+json.dump({"d": nd, "p": np_, "pack": PACK}, open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "seq.json"), "w"))
 print("кадров компьютеру", nd, "телефону", np_, file=sys.stderr)

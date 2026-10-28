@@ -53,6 +53,8 @@ if(sc){
   function draw(){var r=at(cur),g=r.g,t=r.t,f=frameOf(cur),i=Math.floor(f),k=f-i,z=1,fx=.5,fy=FY;
     for(var j=-2;j<=4;j++)want4(Math.max(0,Math.min(F-1,i+j)));
     if(g[2]==='z')z=1+(g[4]-1)*t;else if(g[5])z=g[5]-(g[5]-1)*sm(cl(t/.45));
+    /* Нужный кадр не пришёл — ближайший пришедший, а не первый. */
+    if(!raw[i]){for(var q=1;q<F;q++){if(raw[i-q]){i=i-q;k=0;break}if(raw[i+q]){i=i+q;k=0;break}}want4(i)}
     var A=bm[i]||nearest(i);if(!A)return;cx.globalAlpha=1;cover(A,1,z,fx,fy);var B=bm[i+1];if(B&&k>.02)cover(B,k,z,fx,fy);cx.globalAlpha=1}
   function capA(p,c,w){var x=Math.abs(p-c);return 1-sm((x-w)/.06)}
   /* Облака: видны над облаками и в нырке, уходят на складе, снова
@@ -83,20 +85,28 @@ if(sc){
     if(!W.crypto||!crypto.subtle||!W.createImageBitmap||(c&&c.saveData))done();
     else if(d.readyState==='complete')setTimeout(loadScene,300);else addEventListener('load',function(){setTimeout(loadScene,300)});
   }
-  /* Кадры: 12 байт nonce + AES-GCM; ключ — app/proto/[token]/promo/scene. */
+  /* Кадры пачками по K.scene.pack (12 байт nonce + AES-GCM; внутри: число
+     кадров, длины, WebP подряд); ключ — app/proto/[token]/promo/scene.
+     Сцена стартует с первой пачкой; вторая — конец сцены (ночная страна),
+     дальше качается пачка ближе всего к месту прокрутки, по две сразу; молчащая 25 с — заново, потом пропуск.
+     Счёт до 100% в углу, прокрутку не держит. */
   function loadScene(){
-    var got=0,ok=0;
-    function step(){got++;var k=got/F;nEl.textContent=Math.floor(k*100);bar.style.transform='scaleX('+k.toFixed(3)+')';
-      if(got===F){done();if(ok>=F*.9){ready=true;size();sc.classList.add('cv');cur=want=prog();drawn=-1;poke()}}}
+    var PK=K.scene.pack,NP=Math.ceil(F/PK),left=[],tries={},got=0,busy=0,key=null,i;
+    for(i=0;i<NP;i++)left.push(i);
+    function show(){nEl.textContent=Math.floor(got/NP*100);bar.style.transform='scaleX('+(got/NP).toFixed(3)+')';if(got>=NP)done()}
+    function start(){if(ready)return;ready=true;size();sc.classList.add('cv');drawn=-1;poke()}
+    var first=0;
+    function pick(){if(first){first--;return left.shift()}var f=frameOf(Math.max(0,cur))/PK,bi=0,bd=1e9;left.forEach(function(k,j){var dd=k+.5-f;dd=dd<0?-dd*1.6:dd;if(dd<bd){bd=dd;bi=j}});return left.splice(bi,1)[0]}
+    function unpack(k,buf){var v=new DataView(buf),n=v.getUint32(0,true),o=4+4*n;for(var j=0;j<n;j++){var len=v.getUint32(4+4*j,true);raw[k*PK+j]=buf.slice(o,o+len);o+=len}}
+    function next(){if(!left.length)return;var k=pick();busy++;
+      var ac=W.AbortController?new AbortController():null,tm=setTimeout(function(){if(ac)ac.abort()},25000);
+      fetch(K.img+'/seq/'+(DESK?'d':'p')+pad(k,2)+'.bin',ac?{signal:ac.signal}:{}).then(function(r){if(!r.ok)throw 0;return r.arrayBuffer()})
+      .then(function(buf){return crypto.subtle.decrypt({name:'AES-GCM',iv:new Uint8Array(buf,0,12)},key,new Uint8Array(buf,12))})
+      .then(function(x){clearTimeout(tm);unpack(k,x);got++;busy--;show();start();drawn=-1;poke();next()},
+        function(){clearTimeout(tm);busy--;tries[k]=(tries[k]||0)+1;if(tries[k]<3)left.push(k);else{got++;show()}next()})}
     fetch(K.base+'/promo/scene',{credentials:'same-origin'}).then(function(r){if(!r.ok)throw 0;return r.arrayBuffer()})
     .then(function(b){return crypto.subtle.importKey('raw',b,'AES-GCM',false,['decrypt'])})
-    .then(function(key){
-      var q=[],i;for(i=0;i<F;i++)q.push(i);
-      function next(){var j=q.shift();if(j==null)return;
-        fetch(K.img+'/seq/'+(DESK?'d':'p')+pad(j,3)+'.bin').then(function(r){if(!r.ok)throw 0;return r.arrayBuffer()})
-        .then(function(buf){return crypto.subtle.decrypt({name:'AES-GCM',iv:new Uint8Array(buf,0,12)},key,new Uint8Array(buf,12))})
-        .then(function(x){raw[j]=x;ok++;step();next()},function(){step();next()})}
-      for(i=0;i<6;i++)next()})
+    .then(function(k){key=k;left.splice(left.indexOf(NP-1),1);left.unshift(0);left.splice(1,0,NP-1);left=left.filter(function(v,j,a){return a.indexOf(v)===j});first=2;next();next()})
     .catch(done)}
   /* Папки над ночной страной плывут с разной скоростью (параллакс). */
   if(brd&&!REDUCED){var cells=$$('.gf-cell',brd),pr=0;

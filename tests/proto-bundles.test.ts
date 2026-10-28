@@ -2319,8 +2319,9 @@ test("Cosmo World: главная на ru, uz, en — условия, noindex, �
   /* Кадры сцены — только шифром, ключ в хранилище (lib/proto/promo SCENES). */
   const seq = JSON.parse(readFileSync("scripts/protos/cosmoworld/seq.json", "utf8"));
   const files = readdirSync("public/protos/cosmoworld/seq");
-  assert.equal(files.length, seq.d + seq.p, "кадров сцены не столько, сколько в seq.json");
-  assert.ok(files.every((f) => /^[dp]\d{3}\.bin$/.test(f)), "кадры сцены лежат незашифрованными");
+  /* Кадры пачками (scene.py): с телефона в Telegram 286 отдельных файлов не успевали прийти. */
+  assert.equal(files.length, Math.ceil(seq.d / seq.pack) + Math.ceil(seq.p / seq.pack), "пачек сцены не столько, сколько в seq.json");
+  assert.ok(files.every((f) => /^[dp]\d{2}\.bin$/.test(f)), "кадры сцены лежат незашифрованными");
   /* Владелец, 28.10.2026: «будто кадров анимации в скролле мало» — плотно, и телефону свои 9:16. */
   assert.ok(seq.d >= 250 && seq.p >= 250, "кадров пролёта меньше 250 компьютеру или телефону");
   const { SCENES } = await import("@/lib/proto/promo");

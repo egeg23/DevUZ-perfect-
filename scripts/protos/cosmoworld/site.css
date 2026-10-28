@@ -77,6 +77,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .sc-load i{display:block;width:140px;height:2px;background:rgb(255 255 255 / .18);overflow:hidden}
 .sc-load u{display:block;height:100%;background:var(--ice);transform:scaleX(0);transform-origin:left}
 .sc-load.ok{opacity:0}
+@media (max-width:1079px){.sc-load{bottom:calc(92px + env(safe-area-inset-bottom))}}
 .sc-hint{position:absolute;left:50%;bottom:24px;margin:0;transform:translateX(-50%);font:700 12px/1 var(--tx);letter-spacing:.16em;text-transform:uppercase;color:rgb(255 255 255 / .6);transition:opacity .4s}
 .sc-hint::after{content:"";display:block;width:1px;height:28px;margin:10px auto 0;background:linear-gradient(var(--ice),transparent);animation:drip 1.8s ease-in-out infinite;transform-origin:top}
 @keyframes drip{0%{transform:scaleY(0);opacity:1}70%{transform:scaleY(1);opacity:1}100%{transform:scaleY(1);opacity:0}}
