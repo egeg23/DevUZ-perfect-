@@ -331,7 +331,7 @@ function data(l, t) {
     img: IMG,
     wa: WA,
     sep: l === "en" ? "," : "\u00a0",
-    scene: { d: SEQ.d, p: SEQ.p },
+    scene: { d: SEQ.d, p: SEQ.p, pack: SEQ.pack },
     brands: BRANDS.map((b) => ({
       name: brandName(b, l),
       origin: ORIGIN[b.origin][LI[l]],
