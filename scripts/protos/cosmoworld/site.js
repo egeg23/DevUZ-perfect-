@@ -22,63 +22,63 @@ var ptSec=$('#partner');
 if(dock&&ptSec)inView(ptSec,function(v){dock.classList.toggle('off',v)},.05);
 
 /* ── Сцена: пролёт камеры по прокрутке ─────────────────────────────────
-   Компьютер: кадры трёх переходов (зашифрованы, ключ по ссылке макета).
-   Телефон: четыре ключевых кадра 9:16 сменяют друг друга с наездом.
-   Кадры качаются сжатыми; распакованных в памяти не больше MAXB. */
+   Кадры роликов (компьютеру 16:9, телефону 9:16) зашифрованы, ключ по
+   ссылке макета; около 16 кадров на секунду ролика, соседние смешиваются.
+   Ход: подлёт к подиуму → нырок сквозь облака на склад → пролёт по проходу
+   склада (наезд к точке схода) → подъём над страной. Поверх — облака в три
+   слоя с параллаксом, зерно, затемнение краёв. В конце страна темнеет, и
+   поверх неё поднимаются стеклянные папки брендов (#brands внутри сцены).
+   Прокрутку только читаем. Распакованных кадров не больше MAXB. */
 if(sc){
   var cv=$('.sc-cv',sc),cx=cv.getContext('2d'),poster=$('.sc-poster',sc),caps=$$('.sc-cap',sc),steps=$$('.sc-steps i',sc),load=$('.sc-load',sc),nEl=$('b',load),bar=$('u',load);
+  var run=$('.sc-run',sc),brd=$('.brd',sc),dark=$('.sc-dark',sc),clouds=$$('.cl',sc),capW=caps.map(function(c){return $$('.w>span',c)});
   var DESK=false;try{DESK=matchMedia('(min-width: 900px) and (orientation: landscape)').matches}catch(e){}
-  var F=DESK?K.scene.d:K.scene.m,raw=[],bm={},bmN=[],MAXB=12,ready=false,want=0,cur=0,raf=0,dpr=Math.min(W.devicePixelRatio||1,2);
-  /* Ход сцены по прокрутке: подлёт к подиуму, нырок сквозь облака на
-     склад, короткий пролёт по проходу склада (наезд к точке схода), подъём
-     над страной. Без остановок: внутри отрезка камера разгоняется и
-     тормозит плавно. Компьютер берёт кадры роликов, телефон — четыре кадра
-     9:16 с пролётом насквозь (камера влетает в кадр, из него выплывает
-     следующий). fx, fy — куда летит камера в кадре. */
-  var L=K.scene.d-1,Q=Math.round(L/3),Q2=Math.round(2*L/3);
-  var PLAN=DESK?[[0,.26,'c',0,Q],[.26,.5,'c',Q,Q2],[.5,.68,'z',Q2,1.6,.5,.42],[.68,1,'c',Q2,L,1.6]]
-    :[[0,.26,'x',0,1,.5,.62],[.26,.5,'x',1,2,.5,.92],[.5,.68,'z',2,1.9,.5,.37],[.68,1,'x',2,3,.5,.37,1.9]];
+  var F=DESK?K.scene.d:K.scene.p,raw=[],bm={},bmN=[],MAXB=14,ready=false,want=0,cur=-1,drawn=-1,raf=0,vis=true,dpr=Math.min(W.devicePixelRatio||1,2);
+  var L=F-1,Q=Math.round(L/3),Q2=Math.round(2*L/3),ZD=DESK?1.6:1.8,FY=DESK?.42:.38;
+  var PLAN=[[0,.24,'c',0,Q],[.24,.46,'c',Q,Q2],[.46,.62,'z',Q2,ZD,.5,FY],[.62,1,'c',Q2,L,ZD]];
   function ease(t){return .5*t+.5*sm(t)}
   function at(p){for(var i=0;i<PLAN.length;i++){var g=PLAN[i];if(p<=g[1]||i===PLAN.length-1)return {g:g,t:ease(cl((p-g[0])/(g[1]-g[0])))}}}
-  function prog(){var r=sc.getBoundingClientRect(),span=r.height-innerHeight;return span>0?cl(-r.top/span):0}
-  function size(){cv.width=Math.round(cv.clientWidth*dpr);cv.height=Math.round(cv.clientHeight*dpr)}
+  function prog(){var r=run.getBoundingClientRect();return r.height>0?cl((innerHeight-r.top)/r.height):0}
+  function darkness(){if(!brd)return 0;return cl((innerHeight-brd.getBoundingClientRect().top)/(innerHeight*.85))}
+  function size(){cv.width=Math.round(cv.clientWidth*dpr);cv.height=Math.round(cv.clientHeight*dpr);drawn=-1}
   function want4(i){if(bm[i]||bm[i]===0||!raw[i]||!W.createImageBitmap)return;bm[i]=0;
     createImageBitmap(new Blob([raw[i]],{type:'image/webp'})).then(function(im){bm[i]=im;bmN.push(i);
-      while(bmN.length>MAXB){var o=bmN.shift();if(Math.abs(o-cur)>3&&bm[o]&&bm[o].close){bm[o].close();delete bm[o]}else bmN.push(o)}
-      if(!raf)raf=requestAnimationFrame(loop)},function(){delete bm[i]})}
+      var f=frameOf(cur);while(bmN.length>MAXB){var o=bmN.shift();if(Math.abs(o-f)>4&&bm[o]&&bm[o].close){bm[o].close();delete bm[o]}else{bmN.push(o);break}}
+      drawn=-1},function(){delete bm[i]})}
   /* Кадр во весь экран с наездом z к точке (fx, fy) кадра. */
   function cover(im,a,z,fx,fy){var cw=cv.width,ch=cv.height,s0=Math.max(cw/im.width,ch/im.height),w0=im.width*s0,h0=im.height*s0,ox=(cw-w0)*.6,oy=(ch-h0)*.5;
     z=z||1;fx=fx==null?.5:fx;fy=fy==null?.5:fy;var px=ox+fx*w0,py=oy+fy*h0,w=w0*z,h=h0*z;cx.globalAlpha=a;cx.drawImage(im,px-fx*w,py-fy*h,w,h)}
   function nearest(i){for(var k=0;k<F;k++){if(bm[i-k])return bm[i-k];if(bm[i+k])return bm[i+k]}return null}
-  function frame(f,a,z,fx,fy){var i=Math.floor(f),t=f-i,A=bm[i]||nearest(i);if(!A)return;cover(A,a,z,fx,fy);var B=bm[i+1];if(B&&t>.02)cover(B,a*t,z,fx,fy)}
-  function draw(){var r=at(cur),g=r.g,t=r.t;cx.globalAlpha=1;
-    if(DESK){var f=g[2]==='z'?g[3]:g[3]+(g[4]-g[3])*t;
-      for(var k=-2;k<=3;k++)want4(Math.max(0,Math.min(F-1,Math.floor(f)+k)));
-      if(g[2]==='z')frame(f,1,1+(g[4]-1)*t,g[5],g[6]);
-      else if(g[5])frame(f,1,g[5]-(g[5]-1)*sm(cl(t/.45)),.5,.42);
-      else frame(f,1,1)}
-    else{for(var j=0;j<F;j++)want4(j);
-      if(g[2]==='z'){var M=bm[g[3]];if(M)cover(M,1,1+(g[4]-1)*t,g[5],g[6])}
-      else{var A=bm[g[3]],B=bm[g[4]],z0=g[7]||1;
-        if(A)cover(A,1,z0+(z0*.55)*t*t,g[5],g[6]);
-        var k2=sm((t-.32)/.55);if(B&&k2>0)cover(B,k2,1.28-.28*sm(t),.5,.5);
-        /* Нырок в облака и подъём из склада — сквозь облачную дымку. */
-        if(g[3]>=1){var fg=Math.sin(Math.PI*cl((t-.12)/.76));if(fg>0){cx.globalAlpha=fg*.5;cx.fillStyle='#aeb9c7';cx.fillRect(0,0,cv.width,cv.height)}}}}
-    cx.globalAlpha=1}
+  function frameOf(p){var r=at(Math.max(0,p)),g=r.g;return g[2]==='z'?g[3]:g[3]+(g[4]-g[3])*r.t}
+  function draw(){var r=at(cur),g=r.g,t=r.t,f=frameOf(cur),i=Math.floor(f),k=f-i,z=1,fx=.5,fy=FY;
+    for(var j=-2;j<=4;j++)want4(Math.max(0,Math.min(F-1,i+j)));
+    if(g[2]==='z')z=1+(g[4]-1)*t;else if(g[5])z=g[5]-(g[5]-1)*sm(cl(t/.45));
+    var A=bm[i]||nearest(i);if(!A)return;cx.globalAlpha=1;cover(A,1,z,fx,fy);var B=bm[i+1];if(B&&k>.02)cover(B,k,z,fx,fy);cx.globalAlpha=1}
   function capA(p,c,w){var x=Math.abs(p-c);return 1-sm((x-w)/.06)}
-  function paint(p){
-    var C=[[0,.07],[.26,.07],[.59,.08],[1,.07]];
-    caps.forEach(function(el,i){var a=i===0?1-sm((p-.07)/.06):i===3?sm((p-.88)/.06):capA(p,C[i][0],C[i][1]);
-      el.style.opacity=a.toFixed(3);el.style.transform='translateY('+((1-a)*24).toFixed(1)+'px)';el.classList.toggle('on',a>.5)});
-    steps.forEach(function(s,i){s.classList.toggle('on',p>=[0,.22,.5,.84][i])});
+  /* Облака: видны над облаками и в нырке, уходят на складе, снова
+     пролетают при подъёме. Каждый слой со своей скоростью. */
+  function cloudA(p){return Math.max(1-sm((p-.36)/.12),sm((p-.74)/.06)*(1-sm((p-.9)/.06)))}
+  function paint(p,now){
+    var dk=darkness(),ca=cloudA(p),H=innerHeight,Wd=innerWidth;
+    var C=[[0,.07],[.24,.07],[.54,.07],[1,.07]];
+    caps.forEach(function(el,i){var a=i===0?1-sm((p-.06)/.06):i===3?sm((p-.9)/.06):capA(p,C[i][0],C[i][1]);a*=1-cl(dk*2);
+      el.style.opacity=a.toFixed(3);el.classList.toggle('on',a>.5);
+      capW[i].forEach(function(w,j){var v=cl(a*1.7-j*.12);w.style.transform='translateY('+((1-sm(v))*112).toFixed(1)+'%)'})});
+    steps.forEach(function(s,i){s.classList.toggle('on',p>=[0,.2,.46,.86][i])});
+    clouds.forEach(function(c,i){var sp=[.55,1,1.7][i],y=(p<.6?-p:(.84-p)*1.6)*H*sp*.8,x=Math.sin(now/9000*sp+i*2.1)*Wd*.05,sc2=1+p*.35*sp;
+      c.style.opacity=(ca*[.75,.6,.9][i]).toFixed(3);c.style.transform='translate3d('+x.toFixed(1)+'px,'+y.toFixed(1)+'px,0) scale('+sc2.toFixed(3)+')'});
+    dark.style.opacity=(dk*.66).toFixed(3);load.style.opacity=dk>0?'0':'';
     if(!ready)poster.style.transform='scale('+(1+p*.08).toFixed(4)+')';
     sc.classList.toggle('moved',p>.02)}
-  function loop(){raf=0;var dl=want-cur;cur=Math.abs(dl)<.0005?want:cur+dl*.12;if(ready)draw();paint(cur);if(cur!==want)raf=requestAnimationFrame(loop)}
-  function poke(){want=prog();if(!raf)raf=requestAnimationFrame(loop)}
+  function loop(now){raf=0;var dl=want-cur;cur=cur<0||Math.abs(dl)<.0004?want:cur+dl*.12;
+    if(ready&&cur!==drawn){draw();drawn=cur}paint(cur,now||0);if(vis)raf=requestAnimationFrame(loop)}
+  function poke(){want=prog();if(!raf&&vis)raf=requestAnimationFrame(loop)}
   function done(){load.classList.add('ok')}
-  if(REDUCED){done();paint(0)}
+  if(REDUCED){done();want=cur=0;paint(0,0)}
   else{
-    addEventListener('scroll',poke,{passive:true});addEventListener('resize',function(){if(ready)size();poke()});poke();
+    addEventListener('scroll',poke,{passive:true});addEventListener('resize',function(){if(ready)size();poke()});
+    if('IntersectionObserver' in W)new IntersectionObserver(function(es){vis=es[0].isIntersecting;if(vis)poke()}).observe(sc);
+    poke();
     var c=navigator.connection;
     if(!W.crypto||!crypto.subtle||!W.createImageBitmap||(c&&c.saveData))done();
     else if(d.readyState==='complete')setTimeout(loadScene,300);else addEventListener('load',function(){setTimeout(loadScene,300)});
@@ -87,19 +87,52 @@ if(sc){
   function loadScene(){
     var got=0,ok=0;
     function step(){got++;var k=got/F;nEl.textContent=Math.floor(k*100);bar.style.transform='scaleX('+k.toFixed(3)+')';
-      if(got===F){done();if(ok>=F*.9){ready=true;size();sc.classList.add('cv');cur=want=prog();draw();paint(cur)}}}
+      if(got===F){done();if(ok>=F*.9){ready=true;size();sc.classList.add('cv');cur=want=prog();drawn=-1;poke()}}}
     fetch(K.base+'/promo/scene',{credentials:'same-origin'}).then(function(r){if(!r.ok)throw 0;return r.arrayBuffer()})
     .then(function(b){return crypto.subtle.importKey('raw',b,'AES-GCM',false,['decrypt'])})
     .then(function(key){
       var q=[],i;for(i=0;i<F;i++)q.push(i);
       function next(){var j=q.shift();if(j==null)return;
-        var name=DESK?'d'+pad(j,3):'m'+(j+1);
-        fetch(K.img+'/seq/'+name+'.bin').then(function(r){if(!r.ok)throw 0;return r.arrayBuffer()})
+        fetch(K.img+'/seq/'+(DESK?'d':'p')+pad(j,3)+'.bin').then(function(r){if(!r.ok)throw 0;return r.arrayBuffer()})
         .then(function(buf){return crypto.subtle.decrypt({name:'AES-GCM',iv:new Uint8Array(buf,0,12)},key,new Uint8Array(buf,12))})
         .then(function(x){raw[j]=x;ok++;step();next()},function(){step();next()})}
-      for(i=0;i<4;i++)next()})
+      for(i=0;i<6;i++)next()})
     .catch(done)}
+  /* Папки над ночной страной плывут с разной скоростью (параллакс). */
+  if(brd&&!REDUCED){var cells=$$('.gf-cell',brd),pr=0;
+    function par(){pr=0;var H=innerHeight;cells.forEach(function(c,i){var r=c.getBoundingClientRect();if(r.bottom<-200||r.top>H+200)return;var k=[.05,.13,.21][i%3],y=(r.top+r.height/2-H/2)*k;c.style.transform='translate3d(0,'+(-y).toFixed(1)+'px,0)'})}
+    addEventListener('scroll',function(){if(!pr)pr=requestAnimationFrame(par)},{passive:true});par()}
 }
+
+/* ── Лента фактов: едет сама, прокрутка разгоняет и разворачивает ───── */
+var vt=$('.velo-t');
+if(vt&&!REDUCED){var vx=0,vv=0,dir=-1,ly=scrollY,lt=0,vOn=false;
+  function vstep(now){if(!vOn)return;var dt=lt?Math.min(50,now-lt):16;lt=now;var dy=scrollY-ly;ly=scrollY;if(dy)dir=dy>0?-1:1;vv+=(Math.abs(dy)*.9-vv)*.1;
+    vx+=dir*(.6+vv*.25)*dt/16;var w=vt.scrollWidth/3;if(vx<=-w)vx+=w;if(vx>0)vx-=w;vt.style.transform='translate3d('+vx.toFixed(1)+'px,0,0)';requestAnimationFrame(vstep)}
+  inView(vt,function(v){vOn=v;lt=0;if(v)requestAnimationFrame(vstep)},0)}
+
+/* ── Заголовки разделов — словами из-под маски ─────────────────────── */
+$$('.sec-h .h2').forEach(function(h){var n=0;
+  (function walk(el){Array.prototype.slice.call(el.childNodes).forEach(function(nd){
+    if(nd.nodeType===3){var parts=nd.textContent.split(/(\s+)/),fr=d.createDocumentFragment();parts.forEach(function(w){if(!w)return;if(/^\s+$/.test(w)){fr.appendChild(d.createTextNode(w));return}var o=d.createElement('span');o.className='sw';var i=d.createElement('span');i.textContent=w;i.style.setProperty('--i',n++);o.appendChild(i);fr.appendChild(o)});nd.parentNode.replaceChild(fr,nd)}
+    else if(nd.nodeType===1)walk(nd)})})(h)});
+
+/* ── Текст о компании загорается словами по прокрутке ──────────────── */
+$$('[data-reveal]').forEach(function(p){var ws=p.textContent.split(/\s+/).filter(Boolean);p.textContent='';
+  var sp=ws.map(function(w,i){var s=d.createElement('span');s.className='rv-w';s.textContent=w;p.appendChild(s);if(i<ws.length-1)p.appendChild(d.createTextNode(' '));return s});
+  if(REDUCED)return;var rr=0;
+  function upd(){rr=0;var r=p.getBoundingClientRect(),k=cl((innerHeight*.85-r.top)/(r.height+innerHeight*.35));var n=Math.round(k*sp.length);sp.forEach(function(s,i){s.classList.toggle('on',i<n)})}
+  addEventListener('scroll',function(){if(!rr)rr=requestAnimationFrame(upd)},{passive:true});upd()});
+
+/* ── Фон склада плывёт медленнее страницы ──────────────────────────── */
+var whi=$('.wh-bg img');
+if(whi&&!REDUCED){var wr=0;function wpar(){wr=0;var r=whi.parentNode.parentNode.getBoundingClientRect(),k=(r.top+r.height/2-innerHeight/2)/innerHeight;whi.style.transform='translate3d(0,'+(k*-12).toFixed(2)+'%,0) scale(1.2)'}
+  addEventListener('scroll',function(){if(!wr)wr=requestAnimationFrame(wpar)},{passive:true});wpar()}
+
+/* ── Главная кнопка тянется за курсором ────────────────────────────── */
+try{if(!REDUCED&&matchMedia('(hover: hover) and (pointer: fine)').matches)$$('.btn-a').forEach(function(b){
+  b.addEventListener('pointermove',function(e){var r=b.getBoundingClientRect();b.style.transform='translate('+((e.clientX-r.left-r.width/2)*.25).toFixed(1)+'px,'+((e.clientY-r.top-r.height/2)*.35).toFixed(1)+'px)'});
+  b.addEventListener('pointerleave',function(){b.style.transform=''})})}catch(e){}
 
 /* ── Появление блоков ───────────────────────────────────────────────── */
 $$('.mv').forEach(function(el){if(REDUCED){el.classList.add('in');return}inView(el,function(v){if(v)el.classList.add('in')},.15)});

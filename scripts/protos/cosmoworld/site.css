@@ -50,7 +50,9 @@ button,input,select,textarea{font:inherit;color:inherit}
 @media (min-width:1080px){.nav{display:flex}.langs{margin-left:8px}.top .btn{display:inline-flex}}
 
 /* ── Сцена пролёта ───────────────────────────────────────────────────── */
-.sc{position:relative;height:520vh;background:var(--night);color:#fff}
+.sc{position:relative;background:var(--night);color:#fff}
+.sc-run{height:440vh}
+@media (max-width:899px),(orientation:portrait){.sc-run{height:400vh}}
 .sc-stick{position:sticky;top:0;height:100vh;height:100svh;overflow:hidden}
 .sc-media{position:absolute;inset:0}
 .sc-poster{position:absolute;inset:0;transform-origin:62% 55%}
@@ -300,10 +302,69 @@ button,input,select,textarea{font:inherit;color:inherit}
 .mv-zoom{transform:scale(.92)}
 .br-grid .mv{transition-delay:calc(var(--i,0) * 60ms)}
 
+
+/* Облака в несколько слоёв: дрейфуют и по прокрутке уходят с разной
+   скоростью (параллакс). Зерно плёнки и затемнение по краям. */
+.sc-cl{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.cl{position:absolute;left:-30%;width:160%;max-width:none;height:auto;opacity:0;will-change:transform,opacity}
+.cl1{bottom:-4%}
+.cl2{bottom:8%;width:190%;left:-45%}
+.cl3{bottom:-22%;width:230%;left:-65%}
+.sc-vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 75% 70% at 55% 50%,transparent 55%,rgb(0 0 0 / .55))}
+.sc-dark{position:absolute;inset:0;pointer-events:none;background:#02040a;opacity:0}
+.sc-grain{position:absolute;inset:-50%;pointer-events:none;opacity:.07;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");animation:grain .9s steps(6) infinite}
+@keyframes grain{0%{transform:translate(0,0)}20%{transform:translate(-4%,3%)}40%{transform:translate(3%,-5%)}60%{transform:translate(-6%,2%)}80%{transform:translate(5%,5%)}100%{transform:translate(0,0)}}
+.sc-cap .w{display:inline-block;overflow:hidden;vertical-align:top;padding-bottom:.1em;margin-bottom:-.1em}
+.sc-cap .w>span{display:inline-block;will-change:transform}
+
+/* Бренды поверх темнеющей страны: стекло на ночных огнях. */
+.brd{position:relative;z-index:2;color:#fff;padding:18vh 0 22vh}
+.brd .h2{color:#fff}
+.brd .lead{color:rgb(255 255 255 / .75)}
+.brd .kick{color:var(--ice)}
+.brd .chip{background:rgb(255 255 255 / .08);border-color:rgb(255 255 255 / .2);color:#fff;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.brd .chip[aria-pressed="true"]{background:#fff;border-color:#fff;color:var(--ink)}
+.brd .find{background:rgb(255 255 255 / .08);border-color:rgb(255 255 255 / .2);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.brd .find svg{color:rgb(255 255 255 / .7)}
+.brd .find input{color:#fff}
+.brd .find input::placeholder{color:rgb(255 255 255 / .55)}
+.brd .br-empty{color:rgb(255 255 255 / .7)}
+.brd .gf-back{background:radial-gradient(120% 90% at 30% 0%,rgb(120 180 255 / .5),rgb(29 91 176 / .34) 55%,rgb(11 42 92 / .5));-webkit-backdrop-filter:blur(6px) saturate(1.5);backdrop-filter:blur(6px) saturate(1.5)}
+.brd .gf-tint{background:linear-gradient(180deg,rgb(255 255 255 / .04) 0%,rgb(255 255 255 / .1) 45%,rgb(255 255 255 / .2) 100%)}
+.brd .gf-logo{background:#fff}
+.brd .gf-meta{color:rgb(255 255 255 / .72)}
+.brd .gf-meta b{color:#fff}
+.brd .gf-shadow{background:rgb(0 0 0 / .55)}
+.brd .gf-cell{will-change:transform}
+
+/* Лента фактов (Scroll Velocity) и бегущие строки сетей (Marquee). */
+.velo{overflow:hidden;padding:28px 0;border-block:1px solid var(--line);background:var(--wh)}
+.velo-t{display:flex;align-items:center;gap:36px;width:max-content;white-space:nowrap;will-change:transform;font:700 36px/1 var(--hd);color:var(--ink)}
+.velo-t i{font-style:normal;font-size:24px;color:var(--sky)}
+@media (min-width:900px){.velo-t{font-size:60px}}
+.mq{overflow:hidden;padding:6px 0}
+.mq-t{display:flex;gap:12px;width:max-content;animation:mq 48s linear infinite}
+.mq.rev .mq-t{animation-direction:reverse;animation-duration:56s}
+.mq span{padding:20px 30px;font:700 24px/1 var(--hd);white-space:nowrap}
+@keyframes mq{to{transform:translateX(-33.3333%)}}
+#where .wrap+.mq{margin-top:8px}
+
+/* Заголовки разделов выезжают словами из-под маски; текст о компании
+   загорается словами по прокрутке (Text Reveal). */
+.sw{display:inline-block;overflow:hidden;vertical-align:top;padding-bottom:.1em;margin-bottom:-.1em}
+.sw>span{display:inline-block;transform:translateY(105%);transition:transform .9s cubic-bezier(.2,.7,.2,1) calc(var(--i,0) * 45ms)}
+.in .sw>span,.sw.in>span{transform:none}
+.rv-w{opacity:.16;transition:opacity .35s}
+.rv-w.on{opacity:1}
+.wh-bg img{will-change:transform;transform:scale(1.2)}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
   .mv{opacity:1;transform:none}
-  .sc{height:auto}
+  .sc-run{display:none}
+  .cl,.sc-grain{display:none}
+  .sw>span{transform:none}
+  .rv-w{opacity:1}
+  .mq-t{animation:none}
   .sc-stick{position:relative;height:100svh}
   .sc-cap{opacity:1!important;transform:none!important}
   .sc-cap:not(.c0){display:none}

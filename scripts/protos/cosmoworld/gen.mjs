@@ -63,6 +63,8 @@ const regionName = (r, i, l) => {
   return n + (l === "ru" ? " область" : l === "uz" ? " viloyati" : " Region");
 };
 /* «3 000» → число и хвост для счётчика. */
+/* Заголовок по словам: каждое выезжает из-под маски по очереди. */
+const words = (txt) => txt.split(" ").map((w) => `<span class="w"><span>${w}</span></span>`).join(" ");
 const numOf = (v) => {
   const m = /^(\d[\d\s,]*\d|\d)(.*)$/.exec(v);
   return { n: Number(m[1].replace(/[\s,]/g, "")), s: m[2].replace(/^\s+/, "\u00a0") };
@@ -103,32 +105,36 @@ function scene(l, t) {
   return `<section class="sc" id="top" aria-label="Cosmo World"><div class="sc-stick">
 <div class="sc-media" aria-hidden="true">
 <picture class="sc-poster"><source media="(max-width: 899px), (orientation: portrait)" srcset="${IMG}/hero-m-1080.webp"><img src="${IMG}/hero-2400.webp" srcset="${IMG}/hero-1600.webp 1600w, ${IMG}/hero-2400.webp 2400w" sizes="100vw" alt="" fetchpriority="high"></picture>
-<canvas class="sc-cv"></canvas><span class="sc-veil"></span></div>
+<canvas class="sc-cv"></canvas>
+<div class="sc-cl"><img class="cl cl1" src="${IMG}/fx/cloud-1.webp" alt="" width="2400" height="900"><img class="cl cl2" src="${IMG}/fx/cloud-2.webp" alt="" width="2400" height="900"><img class="cl cl3" src="${IMG}/fx/cloud-3.webp" alt="" width="2000" height="700"></div>
+<span class="sc-veil"></span><span class="sc-vig"></span><span class="sc-dark"></span><span class="sc-grain"></span></div>
 <div class="sc-cap c0">
 <p class="kick">${t("Дистрибьютор косметики и бытовой химии", "Kosmetika va maishiy kimyo distribyutori", "Cosmetics and household care distributor")}</p>
-<h1>${esc(COMPANY.slogan[l])}</h1>
+<h1>${words(esc(COMPANY.slogan[l]))}</h1>
 <p>${esc(COMPANY.lead[l])}.</p>
 <div class="row"><a class="btn btn-a" href="#partner">${t("Стать партнёром", "Hamkor bo‘lish", "Become a partner")}${ICON.arrow}</a><a class="btn btn-g" href="#brands">${t("Каталоги брендов", "Brend kataloglari", "Brand catalogs")}</a></div>
 </div>
 <div class="sc-cap c1" aria-hidden="true">
 <p class="kick">${t("Бренды", "Brendlar", "Brands")}</p>
-<h2>${t("10 брендов из 10+ стран-партнёров", "10+ hamkor davlatdan 10 ta brend", "10 brands from 10+ partner countries")}</h2>
+<h2>${words(t("10 брендов из 10+ стран-партнёров", "10+ hamkor davlatdan 10 ta brend", "10 brands from 10+ partner countries"))}</h2>
 <p>${t("Арнест, Весна, MIXIT, Nefis, Parachute и другие: от уходовой косметики до средств для стирки.", "Arnest, Vesna, MIXIT, Nefis, Parachute va boshqalar: parvarish kosmetikasidan kir yuvish vositalarigacha.", "Arnest, Vesna, MIXIT, Nefis, Parachute and more: from skincare to laundry products.")}</p>
 </div>
 <div class="sc-cap c2" aria-hidden="true">
 <p class="kick">${t("Склад", "Ombor", "Warehouse")}</p>
-<h2>${t("Собственный автоматизированный склад", "O‘z avtomatlashtirilgan omborimiz", "Our own automated warehouse")}</h2>
+<h2>${words(t("Собственный автоматизированный склад", "O‘z avtomatlashtirilgan omborimiz", "Our own automated warehouse"))}</h2>
 <div class="big"><div><b>${NUMBERS[4][l === "ru" ? "v" : l === "uz" ? "vuz" : "ven"]}</b><span>${t("площадь склада", "ombor maydoni", "warehouse area")}</span></div><div><b>${l === "en" ? "3,000" : "3 000"}</b><span>${t("паллетомест", "palleta o‘rni", "pallet spaces")}</span></div></div>
 </div>
 <div class="sc-cap c3" aria-hidden="true">
 <p class="kick">${t("Покрытие", "Qamrov", "Coverage")}</p>
-<h2>${t("Работаем по всей территории Узбекистана", "O‘zbekistonning butun hududida ishlaymiz", "We operate all over Uzbekistan")}</h2>
+<h2>${words(t("Работаем по всей территории Узбекистана", "O‘zbekistonning butun hududida ishlaymiz", "We operate all over Uzbekistan"))}</h2>
 <div class="big"><div><b>14</b><span>${t("регионов", "hudud", "regions")}</span></div><div><b>${n(5).n}+</b><span>${t("сотрудников", "xodim", "employees")}</span></div></div>
 </div>
 <div class="sc-steps" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
 <div class="sc-load" aria-hidden="true"><b>0</b><i><u></u></i><span>${t("сцена загружается, %", "sahna yuklanmoqda, %", "scene loading, %")}</span></div>
 <p class="sc-hint" aria-hidden="true">${t("Листайте", "Aylantiring", "Scroll")}</p>
-</div></section>`;
+</div><div class="sc-run" aria-hidden="true"></div>
+${brands(l, t)}
+</section>`;
 }
 
 function about(l, t) {
@@ -136,7 +142,7 @@ function about(l, t) {
 <div class="ab-txt mv mv-left">
 <p class="kick">${t("О компании", "Kompaniya haqida", "About the company")}</p>
 <h2 class="h2">COSMO WORLD: <b>${t("дистрибьютор", "distribyutor", "a distributor")}</b> ${t("товаров для дома и личной гигиены", "uy va shaxsiy gigiyena mahsulotlari", "of household and personal care products")}</h2>
-<p class="lead">${t("Мы работаем с ведущими брендами, предлагая клиентам только качественные решения. Наш опыт и профессиональная команда позволяют нам эффективно решать задачи и предлагать лучшие товары для вашего бизнеса.", "Yetakchi brendlar bilan ishlaymiz va mijozlarga faqat sifatli yechimlarni taklif qilamiz. Tajribamiz va professional jamoamiz vazifalarni samarali hal qilish va biznesingiz uchun eng yaxshi mahsulotlarni taklif qilish imkonini beradi.", "We work with leading brands to offer our clients only high-quality solutions. Our experience and professional team let us solve tasks effectively and offer the best products for your business.")}</p>
+<p class="lead" data-reveal>${t("Мы работаем с ведущими брендами, предлагая клиентам только качественные решения. Наш опыт и профессиональная команда позволяют нам эффективно решать задачи и предлагать лучшие товары для вашего бизнеса.", "Yetakchi brendlar bilan ishlaymiz va mijozlarga faqat sifatli yechimlarni taklif qilamiz. Tajribamiz va professional jamoamiz vazifalarni samarali hal qilish va biznesingiz uchun eng yaxshi mahsulotlarni taklif qilish imkonini beradi.", "We work with leading brands to offer our clients only high-quality solutions. Our experience and professional team let us solve tasks effectively and offer the best products for your business.")}</p>
 </div>
 <ul class="nums">${NUMBERS.map((x, i) => {
     const v = l === "ru" ? x.v : l === "uz" ? x.vuz ?? x.v : x.ven ?? x.v;
@@ -183,7 +189,7 @@ ${piece("p-r", `0 0 ${pct(z)}`, `--fx:${(56 + ((h >> 5) % 16)).toFixed(0)}px;--f
 }
 
 function brands(l, t) {
-  return `<section class="sec" id="brands" style="padding-top:24px"><div class="wrap">
+  return `<section class="sec brd" id="brands"><div class="wrap">
 <div class="sec-h mv mv-up"><p class="kick">${t("Каталог", "Katalog", "Catalog")}</p><h2 class="h2">${t("Ассортимент, отвечающий <b>любым потребностям</b>", "Har qanday <b>ehtiyojga</b> javob beradigan assortiment", "A range for <b>any need</b>")}</h2><p class="lead"><span class="fd-ptr">${t("Наведите на папку бренда: товары выпадут. Нажмите: описание, каталог PDF и прайс в WhatsApp.", "Brend papkasiga kursorni olib boring: mahsulotlar tushib ketadi. Bosing: tavsif, PDF katalog va WhatsApp orqali narxlar.", "Hover a brand folder and the products fall out. Click for the description, PDF catalog and price list on WhatsApp.")}</span><span class="fd-tap">${t("Нажмите на папку бренда: товары выпадут. Нажмите ещё раз: описание, каталог PDF и прайс.", "Brend papkasini bosing: mahsulotlar tushib ketadi. Yana bosing: tavsif, PDF katalog va narxlar.", "Tap a brand folder and the products fall out. Tap again for the description, PDF catalog and price list.")}</span></p></div>
 <div class="br-tools">
 <div class="chips" role="group" aria-label="${t("Категория", "Toifa", "Category")}"><button type="button" class="chip" data-c="all" aria-pressed="true">${t("Все", "Hammasi", "All")}</button><button type="button" class="chip" data-c="cosmetics" aria-pressed="false">${t("Косметика и уход", "Kosmetika va parvarish", "Cosmetics and care")}</button><button type="button" class="chip" data-c="home" aria-pressed="false">${t("Бытовая химия", "Maishiy kimyo", "Household care")}</button></div>
@@ -238,10 +244,21 @@ ${MAP.regions.map((r, i) => `<g class="rg-g" tabindex="0" role="button" aria-lab
 </div></section>`;
 }
 
+/* Лента фактов: едет сама, прокрутка разгоняет и разворачивает её
+   (Scroll Velocity, 21st.dev). */
+function velo(l, t) {
+  const f = [t("10 лет на рынке", "Bozorda 10 yil", "10 years on the market"), t("10+ стран-партнёров", "10+ hamkor davlat", "10+ partner countries"), t("склад 2 000 м²", "2 000 m² ombor", "2,000 m² warehouse"), t("3 000 паллетомест", "3 000 palleta o‘rni", "3,000 pallet spaces"), t("14 регионов", "14 hudud", "14 regions"), t("150+ сотрудников", "150+ xodim", "150+ employees"), t("10 брендов", "10 ta brend", "10 brands")];
+  const row = f.map((x) => `<span>${x}</span><i aria-hidden="true">✦</i>`).join("");
+  return `<div class="velo" aria-label="${esc(f.join(", "))}"><div class="velo-t" aria-hidden="true">${row}${row}${row}</div></div>`;
+}
+
 function where(l, t) {
   return `<section class="sec" id="where" style="padding-top:24px"><div class="wrap">
 <div class="sec-h mv mv-up"><p class="kick">${t("Где купить", "Qayerdan sotib olish", "Where to buy")}</p><h2 class="h2">${t("Продукция наших партнёров доступна <b>в популярных торговых точках</b>", "Hamkorlarimiz mahsulotlari <b>mashhur savdo nuqtalarida</b>", "Our partners’ products are available <b>in popular retail chains</b>")}</h2></div>
-<ul class="stores">${STORES.map((s, i) => `<li class="ice mv mv-ice" style="--i:${i};transition-delay:${i * 50}ms">${esc(l !== "ru" && s === "Магнит Косметик" ? "Magnit Kosmetik" : s)}</li>`).join("")}</ul>
+<ul class="vh">${STORES.map((s) => `<li>${esc(l !== "ru" && s === "Магнит Косметик" ? "Magnit Kosmetik" : s)}</li>`).join("")}</ul>
+</div>
+${[0, 1].map((r) => { const names = (r ? [...STORES].reverse() : STORES).map((s) => esc(l !== "ru" && s === "Магнит Косметик" ? "Magnit Kosmetik" : s)); const row = names.map((x) => `<span class="ice">${x}</span>`).join(""); return `<div class="mq${r ? " rev" : ""}" aria-hidden="true"><div class="mq-t">${row}${row}${row}</div></div>`; }).join("")}
+<div class="wrap">
 </div></section>`;
 }
 
@@ -314,7 +331,7 @@ function data(l, t) {
     img: IMG,
     wa: WA,
     sep: l === "en" ? "," : "\u00a0",
-    scene: { d: SEQ.d, m: SEQ.m },
+    scene: { d: SEQ.d, p: SEQ.p },
     brands: BRANDS.map((b) => ({
       name: brandName(b, l),
       origin: ORIGIN[b.origin][LI[l]],
@@ -347,7 +364,7 @@ ${header(l, t)}
 <main>
 ${scene(l, t)}
 ${about(l, t)}
-${brands(l, t)}
+${velo(l, t)}
 ${sklad(l, t)}
 ${cover(l, t)}
 ${where(l, t)}
