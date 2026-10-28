@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Greenwell · DevUz Studio</title>
+<link rel="stylesheet" href="letterhead.css">
+<!--
+  Единое КП GreenWell (ООО «Inso Farm Deluxe»), 28.10.2026. Сжато из трёх
+  документов, которые уже ушли клиенту:
+  - КП по маркетингу от 20.10.2026 (SMM, таргет, Google, Telegram Ads);
+  - медиаплан и смета «5 000 банок в месяц» от 20.10.2026;
+  - «Логистика по Ташкенту» от 28.10.2026.
+  Короткая версия kp/greenwell.html (22.10.2026). Магазин, допы по
+  утверждённому перечню (2 650 $) и Seller AI: scripts/protos/greenwell/plan.mjs. Доллары по
+  курсу ЦБ на 20.10.2026: 12 044,72 сум. Поменялось там, поправьте и здесь.
+  PDF: node scripts/kp-pdf.mjs kp/greenwell-short.html kp/greenwell-short.pdf
+-->
+<style>
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2.5mm; margin: 3mm 0; }
+  .kpis div { border: 1px solid rgba(0, 0, 0, 0.25); border-radius: 2mm; padding: 2.5mm 3mm; font-size: 8.6pt; line-height: 1.35; }
+  .kpis b { display: block; font-size: 15pt; line-height: 1.15; margin-bottom: 1mm; }
+  .kpis div.on { border: 2px solid #000; }
+  .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2.5mm; margin: 2mm 0 3mm; }
+  .steps div { background: #f6f7f8; border-radius: 2mm; padding: 2.5mm 3mm; font-size: 8.8pt; line-height: 1.35; }
+  .steps b { display: block; font-size: 10pt; margin-bottom: 0.8mm; }
+  td.grp { background: #f6f7f8; font-weight: 600; }
+  tr.tot td { font-weight: 600; border-top: 2px solid #000; }
+  .bar { display: grid; grid-template-columns: 52mm 1fr 22mm; align-items: center; gap: 3mm; font-size: 9pt; margin: 1.2mm 0; }
+  .bar i { display: block; height: 4.2mm; background: #000; border-radius: 1mm; }
+  .bar i.lt { background: rgba(0, 0, 0, 0.3); }
+  .bar span:last-child { text-align: right; font-weight: 600; white-space: nowrap; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 3mm 6mm; font-size: 9pt; }
+  .two p { margin: 0; }
+  .addons td { padding: 1.1mm 2mm; }
+</style>
+</head>
+<body>
+
+<!-- 1. Коротко -->
+<section class="sheet">
+  <h1>GreenWell: свой магазин, маркетинг и доставка</h1>
+  <p class="subtitle">коммерческое предложение DevUz Studio, всё в одном документе</p>
+  <div class="place"><span>Кому: GreenWell · ООО «Inso Farm Deluxe»</span><span>г. Ташкент, 28 октября 2026 г.</span></div>
+
+  <h2>Главное</h2>
+  <p>Сейчас почти все продажи идут через Uzum. Ваши выгрузки за год: 9 094 заказа на 1 833,9 млн сум, и Uzum забрал из них <b>31,7%</b>: комиссия, реклама, доставка и склад. Это <b>63 908 сум с каждого заказа</b>. Предлагаем свой магазин, рекламу в него и дешёвую доставку через ваши аптеки. Uzum остаётся вторым каналом.</p>
+
+  <div class="kpis">
+    <div class="on"><b>5 000</b>банок в месяц к марту: Uzum ≈ 1 900, свой сайт ≈ 3 100</div>
+    <div><b>+23 685</b>сум остаётся с каждой банки на сайте: нет комиссии Uzum 19,3%</div>
+    <div><b>21,5 тыс.</b>сум доставка заказа с сайта против 46,6 тыс. у Uzum</div>
+    <div><b>≈ 1,3 мес.</b>окупается магазин по полной цене, по акции меньше месяца</div>
+  </div>
+
+  <h2>Из чего состоит предложение</h2>
+  <table>
+    <tr><th>Что</th><th>Зачем</th><th class="num">Цена</th></tr>
+    <tr><td><b>1. Интернет-магазин</b><br><span class="small muted">5-7 недель</span></td><td>Покупатель и его телефон остаются у вас, рядом нет дешёвых аналогов, повтор курса без рекламы.</td><td class="num"><b>1 000 $</b><br><span class="small muted">и допы 2 650 $</span></td></tr>
+    <tr><td><b>2. Маркетинг</b><br><span class="small muted">каждый месяц</span></td><td>SMM, таргет в Instagram и Facebook, Google, Telegram Ads. Реклама ведёт в ваш магазин.</td><td class="num"><b>40 млн сум</b><br><span class="small muted">в месяц, ≈ $3 324</span></td></tr>
+    <tr><td><b>3. Uzum</b><br><span class="small muted">каждый месяц</span></td><td>Ведение магазина на Uzum: ставки, акции, наборы, отзывы, остатки. Карточки 13 товаров.</td><td class="num"><b>6 млн сум</b><br><span class="small muted">в месяц, ≈ $498</span></td></tr>
+    <tr><td><b>4. Доставка</b><br><span class="small muted">с запуском сайта</span></td><td>Самовывоз из 150 аптек, свой курьер по Ташкенту, срочно Яндексом из ближайшей аптеки.</td><td class="num">в цене<br>магазина</td></tr>
+  </table>
+  <p class="small muted">Рекламный бюджет оплачивается площадкам отдельно: на 5 000 банок в месяц это ≈ 148,8 млн сум (16% выручки). Подробно на странице 4.</p>
+
+  <h2>Макет вашего магазина уже готов</h2>
+  <p><b>devuz.studio/proto/dKEqBEkGZoBE2VSAD7bjHtsJjOk3pubQkVQfnPjIGls</b> · магазин, оформление заказа, рассрочка, кабинет покупателя и панель владельца на русском и узбекском. Пароль пришлём в переписке.</p>
+</section>
+
+<!-- 2. Магазин -->
+<section class="sheet">
+  <h2 style="margin-top:6mm">1. Интернет-магазин: 1 000 $ вместо 4 900 $</h2>
+  <div class="two">
+    <p><b>Для покупателя.</b> Магазин под телефон на русском и узбекском, поиск и фильтры, отзывы, корзина с промокодом и баллами, адрес на карте и время доставки, оплата Click, Payme, Uzum Bank, рассрочка, статус заказа, кабинет.</p>
+    <p><b>Для вас.</b> Панель: заказы, отзывы, история менеджеров, прибыль по себестоимости, скорость доставки, остатки, посещаемость. Менеджер прибыль не видит.</p>
+  </div>
+
+  <h3>Допы по утверждённому перечню: 2 650 $</h3>
+  <table>
+    <tr><td><b>Подписка на курс</b>: банка заканчивается, следующая приходит сама, с оплатой с карты</td><td class="num">450 $</td></tr>
+    <tr><td><b>Telegram-бот магазина</b>: каталог, заказ и статус доставки в Telegram</td><td class="num">450 $</td></tr>
+    <tr><td><b>Связка с 1С или МойСклад</b>: остатки, цены и себестоимость приходят сами</td><td class="num">600 $</td></tr>
+    <tr><td><b>Выгрузка на Uzum Market</b>: товары, цены и остатки из панели, одна база на два канала</td><td class="num">400 $</td></tr>
+    <tr><td><b>Промокоды и акции из панели</b>: запускает менеджер, без программиста</td><td class="num">300 $</td></tr>
+    <tr><td><b>Самовывоз из аптек и мультисклад</b>: аптеки на карте, забрать сегодня рядом с домом</td><td class="num">450 $</td></tr>
+    <tr class="tot"><td>Сайт 1 000 $ и допы 2 650 $</td><td class="num">3 650 $</td></tr>
+  </table>
+  <p class="small muted">Срок 5-7 недель от оплаты и материалов. Хостинг и домен 5-15 $ в месяц по счёту провайдера. Остальные допы из макета (брошенная корзина, лояльность, приложение и другие) добавим по запросу.</p>
+
+  <h3>Seller AI: агенты ведут маркетплейсы</h3>
+  <p>Наши агенты сами меняют цены в пределах вашей маржи, отвечают на отзывы, создают поставки, правят карточки и ставки рекламы на Uzum, Wildberries, Яндекс Маркете и Amazon. Всё видно и решается в разделе «AI Seller» панели: каждое действие можно оставить на ваше одобрение.</p>
+  <table>
+    <tr><td><b>Код у вас</b>: один маркетплейс, оплата один раз; каждая следующая площадка отдельно</td><td class="num"><b>5 000 $</b></td></tr>
+    <tr><td><b>Подписка</b>: агенты работают на нашей стороне, без разовой оплаты</td><td class="num"><b>500 $ в месяц</b></td></tr>
+  </table>
+
+  <h3>Почему свой сайт выгоднее Uzum: одна банка за 190 000 сум</h3>
+  <table>
+    <tr><th></th><th class="num">Uzum</th><th class="num">Свой сайт</th></tr>
+    <tr><td>Комиссия площадки</td><td class="num">−36 670</td><td class="num">нет</td></tr>
+    <tr><td>Доставка, оплата картой, сборка</td><td class="num">−5 250</td><td class="num">−18 234</td></tr>
+    <tr class="tot"><td>Остаётся до рекламы</td><td class="num">148 080</td><td class="num">171 765 · <b>+23 685</b></td></tr>
+  </table>
+</section>
+
+<!-- 3. Маркетинг -->
+<section class="sheet">
+  <h2 style="margin-top:6mm">2. Маркетинг: курс, а не одна банка</h2>
+  <p>Рассказываем, что в банке и как принимать курс, и напоминаем о следующей банке: человек возвращается к вам, а не к соседней полке. Без обещаний вылечить: так реклама проходит модерацию Meta и Google с первого раза.</p>
+
+  <div class="steps">
+    <div><b>Забота о себе</b>Женщины 25-45: сон, нервы, кожа и волосы</div>
+    <div><b>Семья и 35+</b>Суставы, Q10, Омега-3, D3 на всю семью</div>
+    <div><b>Активные</b>Спорт и нагрузки: магний, цинк, омега</div>
+    <div><b>Покупатели с Uzum</b>2 520 оценок: возвращаем на повтор курса</div>
+  </div>
+
+  <h3>Стоимость работы</h3>
+  <table>
+    <tr><th>Услуга</th><th class="num">Первый месяц</th><th class="num">Со 2-го месяца</th></tr>
+    <tr><td><b>SMM</b>: Instagram, Facebook, Telegram. 8 рилс, 4 поста, 30 сторис в месяц, ru и uz</td><td class="num">35 856 000</td><td class="num">23 256 000</td></tr>
+    <tr><td><b>Таргет</b> в Facebook и Instagram</td><td class="num">9 000 000</td><td class="num">7 200 000</td></tr>
+    <tr><td><b>Google</b>: поиск, товарные объявления, профиль на карте</td><td class="num">9 135 000</td><td class="num">6 615 000</td></tr>
+    <tr><td><b>Telegram Ads</b>: каналы о здоровье, семье, спорте <span class="small muted">(по желанию, в план на стр. 4 не входит)</span></td><td class="num">4 410 000</td><td class="num">2 970 000</td></tr>
+    <tr class="tot"><td>Итого, сум <span class="small muted">(в первом месяце стратегия, стиль, медиапланы)</span></td><td class="num">58 401 000<br><span class="small muted">≈ $4 849</span></td><td class="num">40 041 000<br><span class="small muted">≈ $3 324</span></td></tr>
+  </table>
+
+  <h3>Скидки за предоплату</h3>
+  <table>
+    <tr><td>Первый месяц, 100% предоплата: <b>−15%</b></td><td class="num"><b>49 641 000 сум</b> · ≈ $4 121</td></tr>
+    <tr><td>3 месяца, 100% предоплата: <b>−30%</b>, экономия 41,5 млн сум</td><td class="num"><b>96 938 000 сум</b> · ≈ $8 048</td></tr>
+  </table>
+  <p class="small">Тот же состав у агентства полного цикла Ташкента стоит 153,9 млн сум за 3 месяца плюс НДС 12%. Мы дешевле на 10% по каждой строке.</p>
+
+  <h3>Первые три месяца</h3>
+  <div class="steps" style="grid-template-columns:repeat(3,1fr)">
+    <div><b>Месяц 1: знакомство</b>Стратегия, стиль, первые съёмки, запуск Google, таргета и Telegram Ads. Честная цена заказа по каждому каналу.</div>
+    <div><b>Месяц 2: курс</b>Рубрики о приёме и курсе, отзывы, ретаргет. Бюджет туда, где заказ дешевле.</div>
+    <div><b>Месяц 3: сезон</b>D3 и иммунитет к зиме, блогеры, итоги квартала и план на следующий.</div>
+  </div>
+
+  <h3>По запросу</h3>
+  <p class="small">Блогеры: 20% от бюджета, от $1 000 · Бартер: 270 000 сум за сторис, 540 000 за рилс · Фотосессия банок: от 4 365 000 сум · 3 видео-рилс сверх SMM: от 8 460 000 сум · SEO: 4 500 000 сум в месяц, от 3 месяцев.</p>
+</section>
+
+<!-- 4. Медиаплан -->
+<section class="sheet">
+  <h2 style="margin-top:6mm">3. План: 5 000 банок в месяц к марту</h2>
+  <p>Сейчас Uzum приносит ≈ 680 банок в месяц и даже в сезон даст не больше ≈ 1 870: по вашим товарам там стоят магазины с ценой в 1,5-4 раза ниже, а все первые места в поиске заняты рекламой. Поэтому 5 000 банок это Uzum плюс свой сайт.</p>
+
+  <table>
+    <tr><th></th><th class="num">Ноябрь</th><th class="num">Декабрь</th><th class="num">Январь</th><th class="num">Март</th></tr>
+    <tr><td>Банок в месяц</td><td class="num">1 200</td><td class="num">2 300</td><td class="num">3 500</td><td class="num"><b>5 000</b></td></tr>
+    <tr><td class="small">из них через свой сайт</td><td class="num small">делаем сайт</td><td class="num small">820</td><td class="num small">1 630</td><td class="num small">3 100</td></tr>
+    <tr><td>Выручка, млн сум</td><td class="num">228</td><td class="num">437</td><td class="num">665</td><td class="num">950</td></tr>
+    <tr><td>Реклама площадкам, млн сум</td><td class="num">14,9</td><td class="num">53,3</td><td class="num">93,3</td><td class="num">148,8</td></tr>
+    <tr><td>Весь маркетинг с работой, млн сум</td><td class="num">83,2</td><td class="num">106,3</td><td class="num">154,6</td><td class="num">221,2</td></tr>
+    <tr><td class="small">доля от выручки</td><td class="num small">37%</td><td class="num small">24%</td><td class="num small">23%</td><td class="num small">23%</td></tr>
+    <tr class="tot"><td>Остаётся у вас до себестоимости, млн сум</td><td class="num">94,5</td><td class="num">253,7</td><td class="num">402,3</td><td class="num">592,7</td></tr>
+  </table>
+  <p class="small muted">Весь маркетинг: реклама с НДС, наша работа, ведение Uzum и комиссия. Оценка по ставкам рынка на октябрь 2026, а не обещание объёма.</p>
+
+  <h3>Куда идут рекламные деньги в марте</h3>
+  <table>
+    <tr><th>Канал</th><th class="num">Реклама на банку</th><th class="num">Банок</th><th class="num">Бюджет, млн сум</th></tr>
+    <tr><td>Instagram и Facebook</td><td class="num">40 000</td><td class="num">1 450</td><td class="num">71</td></tr>
+    <tr><td>Блогеры с промокодом</td><td class="num">45 000</td><td class="num">860</td><td class="num">47,6</td></tr>
+    <tr><td>Поиск Google</td><td class="num">30 000</td><td class="num">360</td><td class="num">13,1</td></tr>
+    <tr><td>Uzum: Буст заказов и Буст в ТОП</td><td class="num">11 500-15 200</td><td class="num">950</td><td class="num">12,9</td></tr>
+    <tr><td>Повтор курса: бот и SMS</td><td class="num">6 000</td><td class="num">700</td><td class="num">4,2</td></tr>
+  </table>
+
+  <h3>Бесплатно и за неделю: до любой рекламы</h3>
+  <ul class="small">
+    <li><b>Названия карточек на Uzum по-русски и по-узбекски.</b> Цинк, Глюкозамин, Мультикомплекс, Q10 и «Ногти, волосы, кожа» названы латиницей, и по «цинк», «мультивитамины» их нет даже в первых 48.</li>
+    <li><b>Своё имя себе.</b> По запросу «greenwell» второе место занимает чужая реклама: дешёвый Буст по вашему имени.</li>
+    <li><b>Запас на складе Uzum на месяц.</b> Магния 262 банки, это меньше трёх недель продаж. Реклама на товар, которого нет, сгорает.</li>
+    <li><b>Наборы одной карточкой:</b> «2 банки Магния», «на зиму» (D3, Цинк, C), «подарок родителям» (Q10, Глюкозамин).</li>
+    <li><b>Ответ на каждый отзыв в течение суток.</b> 1 282 отзыва на магний против 408 у соседа за 90 000: это главный довод.</li>
+  </ul>
+</section>
+
+<!-- 5. Логистика -->
+<section class="sheet">
+  <h2 style="margin-top:6mm">4. Доставка: дешевле и надёжнее, через ваши аптеки</h2>
+  <p>Сайт запускаем с тремя способами получить заказ: <b>самовывоз из аптеки</b>, <b>свой курьер по Ташкенту</b> и <b>срочно Яндексом из ближайшей аптеки</b>. Аптека рядом с домом добавляет доверия: товар с аптечной полки, рядом фармацевт.</p>
+
+  <h3>Сколько стоит довести один заказ, тыс. сум</h3>
+  <div class="bar"><span>Uzum сейчас</span><i class="lt" style="width:70%"></i><span>46,6</span></div>
+  <div class="bar"><span>Сайт и BTS со склада</span><i class="lt" style="width:99%"></i><span>64-66</span></div>
+  <div class="bar"><span>Сайт и Яндекс со склада</span><i class="lt" style="width:72%"></i><span>33-48</span></div>
+  <div class="bar"><span>Сайт и свой курьер</span><i style="width:43%"></i><span>25-29</span></div>
+  <div class="bar"><span>Курьер из ближайшей аптеки</span><i style="width:50%"></i><span>23-33</span></div>
+  <div class="bar"><span>Самовывоз из аптеки</span><i style="width:12%"></i><span>8</span></div>
+  <p class="small muted">Доставка, сборка или плата аптеке за выдачу и оплата картой. У Uzum: комиссия, доставка и склад. Реклама не входит нигде.</p>
+
+  <h3>Сколько это в месяц</h3>
+  <table>
+    <tr><th>Как доставляем</th><th class="num">1 000 заказов</th><th class="num">2 500 заказов</th></tr>
+    <tr><td>Uzum: комиссия, доставка, склад</td><td class="num">46,6 млн</td><td class="num">116,4 млн</td></tr>
+    <tr><td>Сайт, всё Яндексом со склада</td><td class="num">40,5 млн</td><td class="num">101,2 млн</td></tr>
+    <tr><td>Сайт, всё своими курьерами</td><td class="num">27 млн</td><td class="num">67,5 млн</td></tr>
+    <tr class="tot"><td>Советуем: 30% самовывоз, 50% свой курьер, 20% срочно из аптеки</td><td class="num">21,5 млн</td><td class="num">53,8 млн</td></tr>
+  </table>
+  <p class="small">Своих курьеров нужно 1 на 1 000 заказов и 3 на 2 500. Курьер на машине в Ташкенте обходится компании ≈ 10,8 млн сум в месяц и делает 20-25 доставок в день.</p>
+
+  <h3>Как аптеки получают заказы</h3>
+  <p>Заказ с сайта приходит фармацевту в наш Telegram-бот: кнопки «Есть, отложил» и «Нет в наличии». Нет в наличии: заказ уходит в соседнюю аптеку. Работает с любой программой учёта, запуск 2-3 недели.</p>
+  <p class="small muted">Платит в аптеке: чек выбивает аптека. Платит на сайте: нужна своя онлайн-касса и договор с аптекой. Решить с бухгалтером до запуска. Цену Яндекса и плату аптеке мы оценили.</p>
+
+  <h3>План</h3>
+  <div class="steps" style="grid-template-columns:repeat(3,1fr)">
+    <div><b>Ноябрь</b>Договориться с 10-15 аптеками о выдаче. Запросить цены у Яндекса, Fargo, BTS, Uzum Tezkor.</div>
+    <div><b>Декабрь: запуск сайта</b>Самовывоз из пилотных аптек через бот, свой курьер, Яндекс для срочных. Оплата картой.</div>
+    <div><b>Январь-февраль</b>Смотрим, что выбирают. Больше 1 000 заказов: второй курьер, 50 аптек и больше.</div>
+  </div>
+</section>
+
+<!-- 6. Итог -->
+<section class="sheet">
+  <h2 style="margin-top:4mm">Итого</h2>
+  <table>
+    <tr><th>Разово</th><th class="num">Цена</th></tr>
+    <tr><td>Интернет-магазин по макету, 5-7 недель</td><td class="num"><b>1 000 $</b></td></tr>
+    <tr><td>Допы: подписка на курс, бот, 1С, выгрузка на Uzum, промокоды, самовывоз из аптек</td><td class="num"><b>2 650 $</b></td></tr>
+    <tr><td>Карточки Uzum: 13 товаров, инфографика и видео</td><td class="num">5 850 000 сум · ≈ $486</td></tr>
+    <tr><td class="grp" colspan="2">Каждый месяц</td></tr>
+    <tr><td>Маркетинг: SMM, таргет, Google, Telegram Ads</td><td class="num">40 041 000 сум · ≈ $3 324<br><span class="small muted">первый месяц 58 401 000</span></td></tr>
+    <tr><td>Ведение магазина на Uzum</td><td class="num">6 000 000 сум · ≈ $498</td></tr>
+    <tr><td>Seller AI, если выберете подписку</td><td class="num">500 $</td></tr>
+    <tr><td class="grp" colspan="2">Платится площадкам, не нам</td></tr>
+    <tr><td>Рекламный бюджет: от $500 в месяц на старт, на 5 000 банок ≈ 148,8 млн сум; комиссия 10%, блогеры 20%</td><td class="num">по факту</td></tr>
+  </table>
+
+  <h2>Условия</h2>
+  <ul class="small">
+    <li><b>Маркетинг:</b> первый месяц 50% в начале и 50% в конце, дальше 100% в начале месяца. Предоплата: −15% за месяц, −30% за 3 месяца, кроме бюджета и комиссии.</li>
+    <li><b>Магазин:</b> 50% на старт, 50% перед запуском. Права и код ваши после оплаты.</li>
+    <li>Цены без НДС, доллары по курсу ЦБ на 20.10.2026: 12 044,72 сум. Доступы остаются у вас, отчёт по рекламе каждую неделю.</li>
+  </ul>
+
+  <h2>Что нужно от вас</h2>
+  <div class="two small">
+    <p><b>Цифры:</b> себестоимость и маржа; расход на рекламу Uzum и продажи по товарам за сентябрь и октябрь; что за возвраты на Uzum (22,8%): не забрали или вернули.</p>
+    <p><b>Аптеки:</b> список 150 аптек с адресами и сетями; банки в них ваши или аптека их купила; согласны ли они на плату за выдачу.</p>
+    <p><b>Склад и доставка:</b> где склад, кто собирает заказы, сколько заказов из регионов.</p>
+    <p><b>Доступы:</b> роль в кабинете Uzum, Instagram, Telegram-канал, рекламные кабинеты, согласие на промокоды и наборы.</p>
+  </div>
+
+  <p style="margin-top:4mm"><b>Что дальше.</b> Напишите, с чего начинаем. Выставляем счёт, через неделю запускаем рекламу, через 5-7 недель магазин.</p>
+  <div class="note">Егор Максимов · Telegram: <b>t.me/Devuz_studio_bot</b> · <b>+998 90 912-05-78</b> · <b>+7 923 233-00-37</b><br><span class="small muted">Не публичная оферта: состав работ и цена фиксируются договором.</span></div>
+</section>
+
+<script src="letterhead.js"></script>
+</body>
+</html>
