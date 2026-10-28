@@ -2300,7 +2300,12 @@ test("Cosmo World: главная на ru, uz, en — условия, noindex, �
     assert.doesNotMatch(page.replace(/<script[\s\S]*?<\/script>/g, ""), /\d\s?(\$|сум|so‘m|UZS|USD)/, `${lang}: цена на странице`);
     assert.ok(page.includes("wa.me/998773507025") && page.includes("tel:+998773507025") && page.includes("info@cosmoworld.uz"), `${lang}: нет их контактов`);
     for (const n of data.NUMBERS) assert.ok(page.includes(n[lang === "ru" ? "v" : lang === "uz" ? "vuz" : "ven"] ?? n.v), `${lang}: нет цифры ${n.v}`);
-    assert.equal((page.match(/class="br ice/g) ?? []).length, 10, `${lang}: не десять брендов`);
+    /* Стеклянные папки брендов (владелец, 28.10.2026): логотип на стекле, товары выпадают. */
+    assert.equal((page.match(/class="gf" data-gf/g) ?? []).length, 10, `${lang}: не десять папок брендов`);
+    assert.equal((page.match(/class="gf-logo"/g) ?? []).length, 10, `${lang}: не у каждой папки логотип`);
+    assert.equal((page.match(/class="gf-pc p-[lmr]"/g) ?? []).length, 30, `${lang}: товары в папке не тремя частями`);
+    assert.ok(page.includes("if(FINE||g.hasAttribute('data-open'))openB("), `${lang}: на телефоне первое нажатие не роняет товары`);
+    for (const src of page.match(/\/protos\/cosmoworld\/(?:cut|logo)\/[\w.-]+\.(?:webp|png)/g) ?? []) assert.ok(existsSync("public" + src), `${lang}: нет файла ${src}`);
     assert.equal((page.match(/class="rg-g"/g) ?? []).length, 14, `${lang}: не 14 регионов на карте`);
     assert.equal((page.match(/role="tab" data-k=/g) ?? []).length, 3, `${lang}: не три вкладки заявки`);
   }
