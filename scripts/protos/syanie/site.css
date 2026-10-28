@@ -503,3 +503,7 @@ section:not(.story){padding:96px 0}
   *,*::before,*::after{animation:none!important;transition-duration:.01ms!important;transition-delay:0s!important}
   .js .rv{opacity:1;transform:none}
 }
+.my-st{position:fixed;z-index:45;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;align-items:center;gap:10px;max-width:calc(100% - 32px);padding:10px 16px;border-radius:999px;background:var(--ink2);color:var(--paper);border:1px solid var(--line-d);font:600 14px/1.25 var(--f-t);box-shadow:var(--sh2);cursor:pointer}
+.my-st i{width:8px;height:8px;border-radius:50%;background:var(--onyx);flex:none}
+.my-st[data-s="confirmed"] i,.my-st[data-s="came"] i{background:var(--frost)}.my-st[data-s="canceled"] i{background:#e07a6a}
+@media (min-width:1024px){.my-st{left:auto;right:24px;bottom:24px;transform:none}}

@@ -415,11 +415,19 @@ ${bookSheet()}
 </html>`;
 }
 
+const opt = (f) => (existsSync(DIR + f) ? read(f) : "");
 const out = { "": sitePage() };
+/* store.js — общее состояние сайта, чата и панели; chat.* — чат на сайте. */
 const parts = {
-  S: `<style>${min(read("site.css"))}</style>`,
-  J: `<script>\n${strip(read("site.js"))}</script>`,
+  S: `<style>${min(read("site.css") + opt("chat.css"))}</style>`,
+  J: `<script>\n${strip(read("store.js") + read("site.js") + opt("chat.js"))}</script>`,
 };
+/* Панель клиники (`panel`): panel.mjs отдаёт страницы и свои части. */
+if (existsSync(DIR + "panel.mjs")) {
+  const P = await import("./panel.mjs");
+  Object.assign(out, P.pages({ B, BRAND: B, IMG, TERMS, json, logo, ic }));
+  Object.assign(parts, P.parts({ read, opt, min, strip }));
+}
 const fill = (page) => Object.entries(parts).reduce((p, [n, part]) => p.split(`@@${n}@@`).join(part), page);
 
 for (const m of fill(out[""]).matchAll(/\/protos\/syanie\/[\w./-]+\.(?:webp|png|js|mp4)/g)) if (!existsSync(PUB + m[0])) console.warn("нет файла", m[0]);

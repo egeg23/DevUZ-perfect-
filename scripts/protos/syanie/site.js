@@ -220,6 +220,7 @@ if(qz){
   steps.forEach(function(s,i){$$('input',s).forEach(function(r){r.addEventListener('change',function(){setTimeout(function(){if(cur===i)show(i+1)},320)})})});
   back.onclick=function(){if(cur>0)show(cur-1)};
   if(nm)nm.addEventListener('input',upd);
+  go.addEventListener('click',function(){mine(SY.addLead({src:'quiz',name:nm&&nm.value.trim()||'',what:'Расчёт All-on-6: '+answers().map(function(a){return a[1]}).filter(Boolean).join(', '),when:''}))});
   $('#qz-f').addEventListener('submit',function(e){e.preventDefault()});
   show(0);
 }
@@ -239,7 +240,18 @@ if(sheet){
   sheet.addEventListener('click',function(e){if(e.target===sheet)closeSheet()});
   $$('.bk-g',sheet).forEach(function(g){$$('.chip',g).forEach(function(c){c.onclick=function(){$$('.chip',g).forEach(function(x){x.setAttribute('aria-pressed',String(x===c))});bkText()}})});
   bkText();
+  bkGo.addEventListener('click',function(){var dy=$('.chip[data-day][aria-pressed="true"]'),pt=$('.chip[data-part][aria-pressed="true"]');
+    mine(SY.addLead({src:'booking',name:'',what:'Бесплатная консультация All-on-6',when:((dy?dy.getAttribute('data-day'):'')+' '+(pt?pt.getAttribute('data-part'):'')).toLowerCase()}))});
 }
+
+/* ── Моя заявка: статус из панели клиники виден здесь ──────────────── */
+var ME='sy-me',stEl=null,ST={new:'принята, администратор скоро свяжется',confirmed:'подтверждена администратором',came:'вы были на приёме, спасибо',canceled:'отменена'};
+function mine(id){try{localStorage.setItem(ME,id)}catch(e){}myStatus()}
+function myStatus(){var id;try{id=localStorage.getItem(ME)}catch(e){}var l=id&&window.SY?SY.lead(id):null;
+  if(!l){if(stEl)stEl.hidden=true;return}
+  if(!stEl){stEl=d.createElement('button');stEl.type='button';stEl.className='my-st';stEl.setAttribute('aria-live','polite');stEl.onclick=function(){stEl.hidden=true};d.body.appendChild(stEl)}
+  stEl.hidden=false;stEl.setAttribute('data-s',l.status);stEl.innerHTML='<i></i><span></span>';stEl.lastChild.textContent='Ваша заявка '+ST[l.status]}
+d.addEventListener('sy:change',myStatus);myStatus();
 
 /* ── Вопросы: раскрытие с плавной высотой ─────────────────────────── */
 $$('.fq-q').forEach(function(b){b.onclick=function(){var it=b.closest('.fq-i'),open=!it.classList.contains('open');
