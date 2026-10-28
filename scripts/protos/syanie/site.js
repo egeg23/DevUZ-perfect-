@@ -41,17 +41,27 @@ function setFmt(){
   if(film&&!filmOn&&!filmDone){film.poster=film.getAttribute('data-p'+f)}
   shownF=-1;
 }
+/* Кадр готов, когда он уже раскодирован (decode): иначе браузер
+   раскодирует его при первом рисовании, прямо во время прокрутки, и сцена
+   дёргается. */
 function load(i){if(imgs[i])return;var im=new Image();im.decoding='async';imgs[i]=im;active++;
-  im.onload=function(){ready[i]=1;active--;if(Math.abs(i-st.f)<3||i===0)paint(true);pump()};
+  var ok=function(){ready[i]=1;active--;if(Math.abs(i-st.f)<3||i===0)paint(true);pump()};
+  im.onload=function(){if(im.decode)im.decode().then(ok,ok);else ok()};
   im.onerror=function(){active--;pump()};im.src=frameSrc(i)}
-/* Догружаем по очереди, ближние к текущему кадру первыми; шесть сразу. */
-var pumping=false;
-function pump(){if(!pumping)return;
+/* Догружаем по очереди, ближние к текущему кадру первыми; шесть сразу.
+   Пока идёт кино — по два, чтобы не отнимать у него сеть. */
+var pumping=false,soft=false;
+function pump(){if(!pumping&&!soft)return;var cap=pumping?6:2;
   if(queue.length>1){var c=Math.round(st.f);queue.sort(function(a,b){return Math.abs(a-c)-Math.abs(b-c)})}
-  while(active<6&&queue.length){var i=queue.shift();if(!imgs[i])load(i)}}
+  while(active<cap&&queue.length){var i=queue.shift();if(!imgs[i])load(i)}}
 function startPump(){if(pumping)return;pumping=true;pump()}
+function softPump(){if(soft||pumping)return;soft=true;pump()}
 
-function size(){if(!cv)return;dpr=Math.min(devicePixelRatio||1,2);cw=stage.clientWidth;chh=stage.clientHeight;cv.width=Math.round(cw*dpr);cv.height=Math.round(chh*dpr);shownF=-1;paint(true)}
+/* Холст не крупнее самих кадров (1280 и 720 точек по ширине): дальше
+   растягивает видеокарта, а не рисование каждого кадра заново. */
+var SRC={'16':[1280,720],'9':[720,1280]};
+function size(){if(!cv)return;cw=stage.clientWidth;chh=stage.clientHeight;var s=SRC[fmtK]||[cw,chh],sc=Math.max(s[0]/cw,s[1]/chh);
+  dpr=Math.min(devicePixelRatio||1,2,Math.max(1,sc));cv.width=Math.round(cw*dpr);cv.height=Math.round(chh*dpr);shownF=-1;paint(true)}
 function near(i){for(var k=0;k<N;k++){if(ready[i-k])return i-k;if(ready[i+k])return i+k}return -1}
 function cover(im,a){var iw=im.naturalWidth,ih=im.naturalHeight,s=Math.max(cv.width/iw,cv.height/ih),w=iw*s,h=ih*s;ctx.globalAlpha=a;ctx.drawImage(im,(cv.width-w)/2,(cv.height-h)/2,w,h)}
 function paint(force){
@@ -76,7 +86,7 @@ function render(){
   if(ctBars.length){var n=Math.min(6,Math.floor(seg(2,st.f)*6.6));ctBars.forEach(function(b,k){b.classList.toggle('on',k<n)});if(ctN)ctN.textContent=n}
 }
 
-function captions(){if(!film.duration)return;var k=film.currentTime/film.duration,on=-1;
+function captions(){if(!film.duration)return;var k=film.currentTime/film.duration;if(k>.5){softPump();ivLoad()}var on=-1;
   for(var i=0;i<caps.length;i++)if(k>=+caps[i].getAttribute('data-t'))on=i;
   if(k>.94)on=-1;
   caps.forEach(function(c,i){c.classList.toggle('on',i===on)})}
@@ -108,7 +118,7 @@ var ivEl=$('#iv'),ivOn=false,asmCv=$('#asm'),asmX=asmCv&&asmCv.getContext('2d'),
    чёрного фона). Золотой — тот же, тонированный под оникс. */
 var spImg=new Image(),spGold=null;
 function spriteGold(){if(spGold)return spGold;var c=d.createElement('canvas');c.width=spImg.naturalWidth;c.height=spImg.naturalHeight;var x=c.getContext('2d');
-  x.drawImage(spImg,0,0);x.globalCompositeOperation='multiply';x.fillStyle='#e8b571';x.fillRect(0,0,c.width,c.height);
+  x.drawImage(spImg,0,0);x.globalCompositeOperation='multiply';x.fillStyle='#f2c14e';x.fillRect(0,0,c.width,c.height);
   x.globalCompositeOperation='destination-in';x.drawImage(spImg,0,0);return spGold=c}
 function asmStop(){cancelAnimationFrame(asmRaf);asmRun=false;if(asmCv){asmCv.classList.add('out')}hero.classList.remove('asm')}
 /* Переход внахлёст: настоящий текст проявляется, пока последние импланты
@@ -117,8 +127,10 @@ function asmFinish(){if(!asmRun)return;asmRun=false;asmDone=true;hero.classList.
 /* Перед сборкой — видео: один имплант медленно уплывает, камера догоняет
    его и снимает макро, потом импланты разгоняются и уходят роем вглубь.
    Из этого роя в центре и вылетают импланты, которые садятся в буквы. */
+var ivLoaded=false;function ivLoad(){if(ivLoaded||!ivEl||!ivEl.src)return;ivLoaded=true;ivEl.preload='auto';try{ivEl.load()}catch(e){}}
 function implantShot(){
   if(!ivEl||!ivEl.src){assemble();return}
+  ivLoad();
   ivOn=true;hero.classList.add('asm','on');stage.classList.add('dark');
   var done=false,fin=function(){if(done)return;done=true;ivOn=false;ivEl.classList.remove('on');setTimeout(function(){try{ivEl.pause()}catch(e){}},900);assemble()};
   var t=setTimeout(fin,11000),seen=-1,still=0,w=setInterval(function(){if(done){clearInterval(w);return}if(ivEl.currentTime===seen){if((still+=250)>=(seen>0?1200:3500)){clearInterval(w);fin()}}else{seen=ivEl.currentTime;still=0}},250);
@@ -161,7 +173,9 @@ function initStory(){
   if(!story||CALM||!ctx)return;
   setFmt();size();
   film.src=film.getAttribute('data-v'+fmtK);
-  if(ivEl){ivEl.preload='auto';ivEl.src=ivEl.getAttribute('data-v'+fmtK)}
+  /* Ролик импланта грузится со второй половины кино, а не сразу: иначе он
+     отнимал сеть у кино и у кадров прокрутки. */
+  if(ivEl){ivEl.preload='none';ivEl.src=ivEl.getAttribute('data-v'+fmtK)}
   if(asmCv)spImg.src=asmCv.getAttribute('data-sprite');
   film.addEventListener('timeupdate',captions);
   film.addEventListener('ended',endFilm);

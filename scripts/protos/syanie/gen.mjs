@@ -90,7 +90,7 @@ function headTags(title, desc) {
 <title>${title}</title>
 <meta name="description" content="${esc(desc)}">
 <meta name="robots" content="noindex, nofollow, noarchive">
-<meta name="theme-color" content="#0d0e0f">
+<meta name="theme-color" content="#0e3b33">
 <link rel="icon" type="image/png" sizes="192x192" href="${IMG}/icon-192.png">
 <link rel="apple-touch-icon" href="${IMG}/apple-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -420,7 +420,7 @@ const out = { "": sitePage() };
 /* store.js — общее состояние сайта, чата и панели; chat.* — чат на сайте. */
 const parts = {
   S: `<style>${min(read("site.css") + opt("chat.css"))}</style>`,
-  J: `<script>\n${strip(read("store.js") + read("site.js") + opt("chat.js"))}</script>`,
+  J: `<script>\n${strip(read("store.js") + read("site.js") + read("gold.js") + opt("chat.js"))}</script>`,
 };
 /* Панель клиники (`panel`): panel.mjs отдаёт страницы и свои части. */
 if (existsSync(DIR + "panel.mjs")) {
