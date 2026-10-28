@@ -77,7 +77,15 @@ function setup(el){
   el.addEventListener('pointerdown',function(e){var q=pos(e);b.lx=q[0];b.ly=q[1];b.Lt=[q[0],q[1]-.35];splash(b,q[0],q[1],1.1,2.6);burst(b,q[0],q[1]);go()});
   if(window.IntersectionObserver)new IntersectionObserver(function(es){b.vis=es[0].isIntersecting;if(b.vis){size(b);go()}}).observe(el);else b.vis=true;
 }
-function size(b){var r=b.el.getBoundingClientRect(),w=Math.max(1,Math.round(r.width)),h=Math.max(1,Math.round(r.height));if(w===b.w&&h===b.h)return;
+/* Капсула под надписью — по ширине самой надписи (иконка и текст), чтобы
+   вокруг оставалось золото. Меряем заново, когда текст кнопки меняется. */
+function fit(b){var el=b.el,r=el.getBoundingClientRect(),L=1e9,Rr=-1e9,k,n,q;if(!r.width)return;
+  for(k=0;k<el.childNodes.length;k++){n=el.childNodes[k];if(n===b.cv)continue;
+    if(n.nodeType===1)q=n.getBoundingClientRect();else if(n.nodeType===3&&n.textContent.trim()){var rg=d.createRange();rg.selectNodeContents(n);q=rg.getBoundingClientRect()}else continue;
+    if(!q.width)continue;L=Math.min(L,q.left);Rr=Math.max(Rr,q.right)}
+  if(Rr<L)return;var pad=r.height>46?18:12,l=Math.max(5,L-r.left-pad),rr=Math.max(5,r.right-Rr-pad);
+  el.style.setProperty('--gl-l',l.toFixed(1)+'px');el.style.setProperty('--gl-r',rr.toFixed(1)+'px')}
+function size(b){fit(b);var r=b.el.getBoundingClientRect(),w=Math.max(1,Math.round(r.width)),h=Math.max(1,Math.round(r.height));if(w===b.w&&h===b.h)return;
   b.w=w;b.h=h;b.cv.width=Math.round(w*DPR);b.cv.height=Math.round(h*DPR);
   b.gw=clamp(Math.round(w/CELL),16,200);b.gh=clamp(Math.round(h/CELL),8,48);var n=b.gw*b.gh;b.c=new Float32Array(n);b.o=new Float32Array(n);b.px=new Uint8Array(n*4);
   var k=Math.round(clamp(w*h/260,14,64));b.p=[];for(var i=0;i<k;i++){var y=R(.25,.9);b.p.push({x:R(0,1),y:y,y0:y,vx:0,vy:0,r:R(.5,1.3),ph:R(0,6.3),g:0})}}
@@ -128,10 +136,11 @@ function loop(t){raf=0;if(d.hidden){lt=0;return}var dt=Math.min(50,lt?t-lt:16);l
     flakes(b,dt)}
   if(any)raf=requestAnimationFrame(loop);else lt=0}
 function go(){if(!raf)raf=requestAnimationFrame(loop)}
-function scan(){Array.prototype.forEach.call(d.querySelectorAll('.btn-onyx'),setup);go()}
+function scan(){Array.prototype.forEach.call(d.querySelectorAll('.btn-onyx'),setup);B.forEach(fit);go()}
 d.addEventListener('visibilitychange',function(){if(!d.hidden)go()});
 addEventListener('resize',function(){B.forEach(size)});
-if(window.MutationObserver)new MutationObserver(scan).observe(d.body,{childList:true,subtree:true});
+if(window.MutationObserver)new MutationObserver(scan).observe(d.body,{childList:true,subtree:true,characterData:true});
+if(d.fonts&&d.fonts.ready)d.fonts.ready.then(function(){B.forEach(fit)});
 if(gl)root.classList.add('gold-gl');
 scan();
 })();
