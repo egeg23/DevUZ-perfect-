@@ -146,14 +146,50 @@ function about(l, t) {
 </div></section>`;
 }
 
+/* Стеклянная папка бренда (Glass Folder Cards, kedhareswer, 21st.dev, MIT;
+   как «Папки бюро» у SIA): на стекле логотип бренда, внутри его товары без
+   фона (cut.py). Наведение или первое нажатие на телефоне: крышка
+   приоткрывается, левая и правая часть товаров выпадает вперёд, середина
+   остаётся в папке. Нажатие (на телефоне второе) открывает окно бренда. */
+const GF_BACK = "M0 56A22 22 0 0 1 22 34L146 34C170 34 172 0 198 0L318 0A22 22 0 0 1 340 22L340 250A22 22 0 0 1 318 272L22 272A22 22 0 0 1 0 250Z";
+const GF_FH = 198;
+const GF_FRONT = `M0 22A22 22 0 0 1 22 0L118 0C144 0 146 32 172 32L318 32A22 22 0 0 1 340 54L340 ${GF_FH - 22}A22 22 0 0 1 318 ${GF_FH}L22 ${GF_FH}A22 22 0 0 1 0 ${GF_FH - 22}Z`;
+const CUT = JSON.parse(readFileSync(DIR + "cut.json", "utf8"));
+function folder(b, i, l, t) {
+  const c = CUT[b.id], [a, z] = c.cut, H = Math.min(170, Math.round(280 * c.h / c.w)), PW = Math.round(H * c.w / c.h > 280 ? 280 : H * c.w / c.h);
+  const pct = (x) => (x * 100).toFixed(2) + "%";
+  const piece = (cls, clip, st) => `<span class="gf-pc ${cls}" style="${st}"><img src="${IMG}/cut/${b.id}.webp" alt="" loading="lazy" decoding="async" width="${c.w}" height="${c.h}" style="clip-path:inset(0 ${clip})"></span>`;
+  const h = [...b.id].reduce((s, ch) => (s * 31 + ch.charCodeAt(0)) >>> 0, 7);
+  const jr = (((h % 100) / 100) - 0.5) * 6;
+  const name = brandName(b, l);
+  return `<div class="gf" data-gf style="--d:${(i % 5) * 110}ms;--ph:${H}px;--pw:${PW}px">
+<div class="gf-stage"><div class="gf-tilt">
+<div class="gf-shadow" aria-hidden="true"></div>
+<div class="gf-back" style="clip-path:path('${GF_BACK}')" aria-hidden="true"><div class="gf-sheen"></div></div>
+<svg class="gf-rim gf-back-rim" viewBox="0 0 340 272" aria-hidden="true"><path d="${GF_BACK}"/></svg>
+<div class="gf-prod" aria-hidden="true">
+${piece("p-m", `${pct(1 - z)} 0 ${pct(a)}`, "")}
+${piece("p-l", `${pct(1 - a)} 0 0`, `--fx:-${(58 + (h % 16)).toFixed(0)}px;--fy:${118 + (h % 14)}px;--fr:${(-13 + jr).toFixed(1)}deg`)}
+${piece("p-r", `0 0 ${pct(z)}`, `--fx:${(56 + ((h >> 5) % 16)).toFixed(0)}px;--fy:${110 + ((h >> 3) % 14)}px;--fr:${(12 + jr).toFixed(1)}deg;--dl:.08s`)}
+</div>
+<div class="gf-front" style="clip-path:path('${GF_FRONT}')">
+<div class="gf-tint" aria-hidden="true"></div><div class="gf-spec" aria-hidden="true"></div>
+<svg class="gf-rim gf-front-rim" viewBox="0 0 340 ${GF_FH}" aria-hidden="true"><defs><linearGradient id="gfr${i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset=".35" stop-color="#fff" stop-opacity=".35"/><stop offset="1" stop-color="#fff" stop-opacity=".12"/></linearGradient></defs><path d="${GF_FRONT}" stroke="url(#gfr${i})"/></svg>
+<button type="button" class="gf-hit" data-i="${i}" aria-label="${esc(t(`Бренд ${name}: товары, каталог и прайс`, `${name} brendi: mahsulotlar, katalog va narxlar`, `${name}: products, catalog and price list`))}"></button>
+<div class="gf-label"><span class="gf-logo" role="img" aria-label="${esc(name)}" style="-webkit-mask-image:url(${IMG}/logo/${b.id}.png);mask-image:url(${IMG}/logo/${b.id}.png)"></span><span class="gf-meta"><b>${esc(name)}</b> · ${ORIGIN[b.origin][LI[l]]}</span></div>
+</div>
+</div></div>
+</div>`;
+}
+
 function brands(l, t) {
   return `<section class="sec" id="brands" style="padding-top:24px"><div class="wrap">
-<div class="sec-h mv mv-up"><p class="kick">${t("Каталог", "Katalog", "Catalog")}</p><h2 class="h2">${t("Ассортимент, отвечающий <b>любым потребностям</b>", "Har qanday <b>ehtiyojga</b> javob beradigan assortiment", "A range for <b>any need</b>")}</h2><p class="lead">${t("Нажмите на бренд: описание, каталог PDF и запрос прайса в WhatsApp.", "Brendni bosing: tavsif, PDF katalog va WhatsApp orqali narxlar so‘rovi.", "Tap a brand: description, PDF catalog and a price list request on WhatsApp.")}</p></div>
+<div class="sec-h mv mv-up"><p class="kick">${t("Каталог", "Katalog", "Catalog")}</p><h2 class="h2">${t("Ассортимент, отвечающий <b>любым потребностям</b>", "Har qanday <b>ehtiyojga</b> javob beradigan assortiment", "A range for <b>any need</b>")}</h2><p class="lead"><span class="fd-ptr">${t("Наведите на папку бренда: товары выпадут. Нажмите: описание, каталог PDF и прайс в WhatsApp.", "Brend papkasiga kursorni olib boring: mahsulotlar tushib ketadi. Bosing: tavsif, PDF katalog va WhatsApp orqali narxlar.", "Hover a brand folder and the products fall out. Click for the description, PDF catalog and price list on WhatsApp.")}</span><span class="fd-tap">${t("Нажмите на папку бренда: товары выпадут. Нажмите ещё раз: описание, каталог PDF и прайс.", "Brend papkasini bosing: mahsulotlar tushib ketadi. Yana bosing: tavsif, PDF katalog va narxlar.", "Tap a brand folder and the products fall out. Tap again for the description, PDF catalog and price list.")}</span></p></div>
 <div class="br-tools">
 <div class="chips" role="group" aria-label="${t("Категория", "Toifa", "Category")}"><button type="button" class="chip" data-c="all" aria-pressed="true">${t("Все", "Hammasi", "All")}</button><button type="button" class="chip" data-c="cosmetics" aria-pressed="false">${t("Косметика и уход", "Kosmetika va parvarish", "Cosmetics and care")}</button><button type="button" class="chip" data-c="home" aria-pressed="false">${t("Бытовая химия", "Maishiy kimyo", "Household care")}</button></div>
 <label class="find">${ICON.search}<span class="vh">${t("Найти бренд", "Brendni topish", "Find a brand")}</span><input id="br-q" type="search" placeholder="${t("Найти бренд", "Brendni topish", "Find a brand")}" autocomplete="off"></label>
 </div>
-<ul class="br-grid">${BRANDS.map((b, i) => `<li data-cat="${b.cat.join(" ")}" data-q="${esc((l === "ru" ? [b.name, b.latin ?? "", b.id] : [b.latin ?? b.name, b.id]).join(" ").toLowerCase())}"><button type="button" class="br ice mv mv-ice" style="--i:${i}" data-i="${i}"><span class="ph"><img src="${IMG}/br/${b.id}-720.webp" alt="${esc(t("Товары", "Mahsulotlar", "Products") + " " + brandName(b, l))}" loading="lazy" width="720" height="435"></span><span class="bt"><span class="nm">${esc(brandName(b, l))}</span><span class="or">${ORIGIN[b.origin][LI[l]]}</span><span class="go">${t("Каталог", "Katalog", "Catalog")}${ICON.arrow}</span></span></button></li>`).join("")}</ul>
+<ul class="br-grid fd-grid">${BRANDS.map((b, i) => `<li class="gf-cell" data-cat="${b.cat.join(" ")}" data-q="${esc((l === "ru" ? [b.name, b.latin ?? "", b.id] : [b.latin ?? b.name, b.id]).join(" ").toLowerCase())}">${folder(b, i, l, t)}</li>`).join("")}</ul>
 <p class="br-empty" hidden>${t("Такого бренда нет в портфеле. Напишите нам, что ищете.", "Bunday brend portfelda yo‘q. Nima izlayotganingizni yozing.", "This brand is not in the portfolio. Tell us what you are looking for.")}</p>
 </div>
 <div class="dlg" id="br-dlg" hidden role="dialog" aria-modal="true" aria-labelledby="br-h"><div class="dlg-b">

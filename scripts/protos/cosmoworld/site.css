@@ -69,7 +69,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .sc-cap .big{display:flex;gap:32px;margin-top:20px}
 .sc-cap .big b{display:block;font:700 48px/1 var(--hd);color:var(--ice)}
 .sc-cap .big span{font-size:14px;color:rgb(255 255 255 / .7)}
-@media (min-width:900px){.sc-cap h1,.sc-cap h2{font-size:60px}.sc-cap .big b{font-size:60px}}
+@media (min-width:900px){.sc-cap{max-width:760px}.sc-cap h1{font-size:60px}.sc-cap h2{font-size:48px}.sc-cap .big b{font-size:60px}}
 .sc-load{position:absolute;right:max(16px,(100% - 1200px)/2);bottom:24px;display:grid;gap:6px;justify-items:end;font:700 12px/1 var(--tx);letter-spacing:.14em;text-transform:uppercase;color:rgb(255 255 255 / .7);transition:opacity .5s}
 .sc-load b{font:700 30px/1 var(--hd);letter-spacing:0;color:#fff}
 .sc-load i{display:block;width:140px;height:2px;background:rgb(255 255 255 / .18);overflow:hidden}
@@ -108,22 +108,60 @@ button,input,select,textarea{font:inherit;color:inherit}
 .find{flex:1 1 220px;display:flex;align-items:center;gap:10px;min-height:48px;padding:0 16px;border-radius:999px;border:1px solid var(--line);background:var(--wh)}
 .find svg{width:18px;height:18px;flex:none;color:var(--ink2)}
 .find input{flex:1;min-width:0;border:0;background:transparent;font-size:16px;outline:0}
-.br-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:0;padding:0;list-style:none}
+.br-grid{margin:0;padding:0;list-style:none}
 .br-grid li[hidden]{display:none}
-.br{display:flex;flex-direction:column;width:100%;height:100%;padding:0;text-align:left;border:0;cursor:pointer;transition:transform .35s cubic-bezier(.2,.7,.2,1)}
-.br:hover{transform:translateY(-4px)}
-.br .ph{display:block;aspect-ratio:4/3;overflow:hidden;background:#3c79c9}
-.br .ph img{width:100%;height:100%;object-fit:cover;transform:scale(1.02);transition:transform .6s cubic-bezier(.2,.7,.2,1)}
-.br:hover .ph img{transform:scale(1.1)}
-.br .bt{display:flex;flex-direction:column;gap:4px;padding:14px 16px 16px;flex:1}
-.br .nm{font:700 20px/1.15 var(--hd);color:var(--ink);overflow-wrap:anywhere}
-.br .or{font-size:14px;color:var(--ink2)}
-.br .go{display:inline-flex;align-items:center;gap:6px;margin-top:auto;padding-top:8px;font:700 14px/1 var(--tx);color:var(--sky)}
-.br .go svg{width:16px;height:16px;transition:transform .2s}
-.br:hover .go svg{transform:translateX(4px)}
 .br-empty{padding:24px;color:var(--ink2)}
-@media (min-width:700px){.br-grid{grid-template-columns:repeat(3,1fr)}}
-@media (min-width:1080px){.br-grid{grid-template-columns:repeat(5,1fr)}}
+
+/* Стеклянные папки брендов (Glass Folder Cards, kedhareswer, 21st.dev, MIT;
+   как «Папки бюро» у SIA). Товары внутри без фона; наведение или первое
+   нажатие: левая и правая часть выпадают вперёд, середина остаётся. */
+.fd-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:40px 12px;justify-items:center;align-items:end;padding-top:40px}
+@media (min-width:720px){.fd-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:56px 24px}}
+@media (min-width:1180px){.fd-grid{grid-template-columns:repeat(5,minmax(0,1fr));gap:72px 20px}}
+.fd-ptr{display:none}@media (hover:hover) and (pointer:fine){.fd-ptr{display:inline}.fd-tap{display:none}}
+@media (max-width:719px){.gf{--fk:.4}}
+.gf-cell{position:relative;width:100%;min-width:0;display:flex;justify-content:center}
+.gf-cell:has(.gf[data-open]),.gf-cell:hover{z-index:3}
+.gf{--px:0;--py:0;--k:1;--hinge:0deg;--rise:0px;--spring:cubic-bezier(.34,1.36,.5,1);--ease:cubic-bezier(.2,.7,.2,1);position:relative;width:calc(340px * var(--k));height:calc(326px * var(--k));isolation:isolate;-webkit-tap-highlight-color:transparent}
+.gf-stage{position:absolute;left:0;top:0;width:340px;height:272px;transform-origin:0 0;transform:translateY(calc(54px * var(--k))) scale(var(--k))}
+.gf-tilt{position:absolute;inset:0;transform:perspective(1400px) rotateX(calc(var(--py) * -3deg)) rotateY(calc(var(--px) * 4deg));transition:transform .9s var(--ease)}
+.gf-shadow{position:absolute;left:18px;right:18px;bottom:-6px;height:60px;border-radius:40px;background:rgb(5 38 89 / .28);filter:blur(22px);transform:translateX(calc(var(--px) * -8px));transition:transform .9s var(--ease),opacity .9s var(--ease)}
+.gf-back{position:absolute;inset:0;overflow:hidden;background:radial-gradient(120% 90% at 30% 0%,#bfe0ff,#67adfc 55%,#2f6fc4)}
+.gf-sheen{position:absolute;inset:0;background:radial-gradient(1.2px 1.2px at 22% 30%,#fff,transparent),radial-gradient(1px 1px at 70% 18%,#fff,transparent),radial-gradient(1.4px 1.4px at 84% 46%,#fff,transparent),radial-gradient(1px 1px at 40% 60%,#fff,transparent),linear-gradient(180deg,rgb(255 255 255 / .28),rgb(255 255 255 / 0) 30%)}
+.gf-rim{position:absolute;left:0;top:0;max-width:none;overflow:visible;pointer-events:none;fill:none}
+.gf-back-rim{width:340px;height:272px}
+.gf-back-rim path{stroke:rgb(255 255 255 / .55);stroke-width:1}
+.gf-prod{position:absolute;left:calc(170px - var(--pw) / 2);width:var(--pw);top:calc(150px - var(--ph));height:var(--ph);pointer-events:none}
+.gf-pc{position:absolute;inset:0;z-index:5;transform-origin:50% 100%;transition:transform .5s var(--ease),z-index 0s .5s}
+.gf-pc img{position:absolute;inset:0;width:100%;height:100%;max-width:none;filter:drop-shadow(0 10px 14px rgb(5 38 89 / .28))}
+.p-m{transform:translateY(var(--rise))}
+.gf-front{position:absolute;left:0;top:74px;width:340px;height:198px;z-index:10;-webkit-backdrop-filter:blur(14px) saturate(1.4);backdrop-filter:blur(14px) saturate(1.4);transform-origin:50% 100%;transform:perspective(760px) rotateX(var(--hinge));transition:transform .8s var(--spring),opacity 1s var(--ease)}
+.gf-tint{position:absolute;inset:0;background:linear-gradient(180deg,rgb(255 255 255 / .2) 0%,rgb(255 255 255 / .55) 40%,rgb(245 251 255 / .94) 100%)}
+.gf-spec{position:absolute;inset:0;background:radial-gradient(260px 200px at calc(50% + var(--px) * 46%) calc(30% + var(--py) * 40%),rgb(255 255 255 / .55),rgb(255 255 255 / 0) 70%);mix-blend-mode:soft-light;pointer-events:none}
+.gf-front-rim{width:340px;height:198px}
+.gf-front-rim path{stroke-width:2.4}
+.gf-hit{position:absolute;inset:0;z-index:1;border:0;background:transparent;cursor:pointer}
+.gf-hit:focus-visible{outline:none}
+.gf-front:has(.gf-hit:focus-visible) .gf-front-rim path{stroke-width:5}
+.gf-label{position:absolute;z-index:2;left:24px;right:24px;bottom:22px;display:grid;gap:10px;justify-items:start;pointer-events:none}
+.gf-logo{display:block;width:150px;height:62px;background:var(--ink);-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-size:contain;mask-size:contain;-webkit-mask-position:left center;mask-position:left center}
+.gf-meta{font-size:14px;line-height:1.3;color:var(--ink2)}
+.gf-meta b{color:var(--ink)}
+/* Открытая папка (наведение мышью или первое нажатие) */
+.gf[data-open]{--hinge:-16deg;--rise:-22px}
+.gf[data-open] .p-l,.gf[data-open] .p-r{z-index:12;transform:translate(calc(var(--fx) * var(--fk,1)),var(--fy)) rotate(var(--fr)) scale(1.4);transition:transform .95s cubic-bezier(.3,-0.55,.55,1.15) var(--dl,0s),z-index 0s calc(var(--dl,0s) + .22s)}
+@media (hover:hover) and (pointer:fine){
+  .gf:hover{--hinge:-16deg;--rise:-22px}
+  .gf:hover .p-l,.gf:hover .p-r{z-index:12;transform:translate(calc(var(--fx) * var(--fk,1)),var(--fy)) rotate(var(--fr)) scale(1.4);transition:transform .95s cubic-bezier(.3,-0.55,.55,1.15) var(--dl,0s),z-index 0s calc(var(--dl,0s) + .22s)}
+}
+/* Появление: папка собирается по очереди, когда въезжает в экран. */
+.gf-back,.gf-back-rim{transition:translate 1s var(--ease) var(--d),opacity .9s var(--ease) var(--d)}
+.gf:not([data-in]) .gf-back,.gf:not([data-in]) .gf-back-rim{translate:0 22px;opacity:0}
+.gf:not([data-in]) .gf-prod{translate:0 -90px;opacity:0}
+.gf:not([data-in]) .gf-front{translate:0 46px;opacity:0}
+.gf:not([data-in]) .gf-shadow{opacity:0}
+.gf-prod{transition:translate .9s var(--ease) calc(var(--d) + .2s),opacity .9s var(--ease) calc(var(--d) + .2s)}
+.gf[data-in] .gf-front{transition:transform .8s var(--spring),translate 1s var(--ease) calc(var(--d) + .42s),opacity 1s var(--ease) calc(var(--d) + .42s)}
 
 /* Окно бренда */
 .dlg{position:fixed;inset:0;z-index:80;display:grid;place-items:end center;padding:0;background:rgb(5 7 11 / .55);opacity:0;pointer-events:none;transition:opacity .3s}
@@ -132,7 +170,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .dlg.open .dlg-b{transform:none}
 .dlg-x{float:right;width:44px;height:44px;border:0;border-radius:999px;background:var(--lt);cursor:pointer}
 .dlg-x svg{width:20px;height:20px;margin:auto}
-.dlg-ph{width:calc(100% + 40px);max-width:none;margin:-28px -20px 20px;aspect-ratio:1400/845;object-fit:cover;border-radius:var(--r) var(--r) 0 0}
+.dlg-ph{width:calc(100% + 40px);height:auto;max-width:none;margin:-28px -20px 20px;aspect-ratio:1400/845;object-fit:cover;border-radius:var(--r) var(--r) 0 0}
 .dlg-x{position:relative;z-index:1}
 .dlg h3{margin:0;font:700 36px/1.1 var(--hd)}
 .dlg .or{margin:8px 0 0;font-size:14px;color:var(--sky);font-weight:700;letter-spacing:.08em;text-transform:uppercase}
@@ -168,10 +206,10 @@ button,input,select,textarea{font:inherit;color:inherit}
 .rg-g.cur .rg-l{opacity:1}
 .rg-g:hover .rg-l,.rg-g:focus .rg-l{opacity:.85}
 .rg-g:focus{outline:none}
-.arc{fill:none;stroke:var(--ink);stroke-width:1.4;stroke-linecap:round;opacity:.0;transition:opacity .5s}
-.arc.on{opacity:.55}
+.arc{fill:none;stroke:var(--ink);stroke-width:1.6;stroke-linecap:round;opacity:0}
+.arc.on{opacity:.62}
 .arc.kg{stroke-dasharray:4 6}
-.dot{fill:var(--ink)}
+.dot{fill:var(--sky);stroke:#fff;stroke-width:1.5}
 .hub circle:first-child{fill:var(--ink)}
 .hub .rip{fill:none;stroke:var(--ink);stroke-width:1.5;transform-box:fill-box;transform-origin:center;animation:rip 2.4s ease-out infinite}
 @keyframes rip{0%{transform:scale(.4);opacity:.9}100%{transform:scale(2.6);opacity:0}}
