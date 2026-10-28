@@ -2296,6 +2296,10 @@ test("Cosmo World: главная на ru, uz, en — условия, noindex, �
     /* Сцена: кадры шифром, ключ по ссылке макета, счёт до 100%. */
     assert.ok(page.includes('class="sc-cv"') && page.includes("/promo/scene") && page.includes('class="sc-load"'), `${lang}: нет сцены первого экрана`);
     assert.equal((page.match(/class="sc-cap /g) ?? []).length, 4, `${lang}: не четыре подписи пролёта`);
+    /* Владелец, 28.10.2026: облака, параллакс, папки поверх темнеющей страны. */
+    assert.equal((page.match(/class="cl cl\d"/g) ?? []).length, 3, `${lang}: нет трёх слоёв облаков`);
+    assert.ok(page.indexOf('class="sc-run"') < page.indexOf('id="brands"') && page.indexOf('id="brands"') < page.indexOf('id="about"'), `${lang}: папки брендов не внутри сцены`);
+    assert.ok(page.includes('class="velo"') && (page.match(/class="mq( rev)?"/g) ?? []).length === 2 && page.includes("data-reveal"), `${lang}: нет ленты фактов, бегущих строк или текста по словам`);
     /* Цен нет: их нет и у них. Контакты — только их. */
     assert.doesNotMatch(page.replace(/<script[\s\S]*?<\/script>/g, ""), /\d\s?(\$|сум|so‘m|UZS|USD)/, `${lang}: цена на странице`);
     assert.ok(page.includes("wa.me/998773507025") && page.includes("tel:+998773507025") && page.includes("info@cosmoworld.uz"), `${lang}: нет их контактов`);
@@ -2315,9 +2319,10 @@ test("Cosmo World: главная на ru, uz, en — условия, noindex, �
   /* Кадры сцены — только шифром, ключ в хранилище (lib/proto/promo SCENES). */
   const seq = JSON.parse(readFileSync("scripts/protos/cosmoworld/seq.json", "utf8"));
   const files = readdirSync("public/protos/cosmoworld/seq");
-  assert.equal(files.length, seq.d + seq.m, "кадров сцены не столько, сколько в seq.json");
-  assert.ok(files.every((f) => /^(d\d{3}|m\d)\.bin$/.test(f)), "кадры сцены лежат незашифрованными");
-  assert.ok(seq.d >= 100, "компьютеру меньше ста кадров пролёта");
+  assert.equal(files.length, seq.d + seq.p, "кадров сцены не столько, сколько в seq.json");
+  assert.ok(files.every((f) => /^[dp]\d{3}\.bin$/.test(f)), "кадры сцены лежат незашифрованными");
+  /* Владелец, 28.10.2026: «будто кадров анимации в скролле мало» — плотно, и телефону свои 9:16. */
+  assert.ok(seq.d >= 250 && seq.p >= 250, "кадров пролёта меньше 250 компьютеру или телефону");
   const { SCENES } = await import("@/lib/proto/promo");
   assert.equal(SCENES.cosmoworld, "SCENE_KEY_COSMOWORLD");
   const stamped = stampedBundle("cosmoworld", SEED)!;

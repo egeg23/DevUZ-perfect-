@@ -5,12 +5,13 @@ SCENE_KEY=<64 hex> python3 -I scene.py <папка>
 В папке — исходники Higgsfield (docs/research/cosmoworld.md):
   t1.mp4 t2.mp4 t3.mp4  переходы Kling 3.0 pro, 6 с, 16:9 (подиум → ближе,
                         ближе → склад, склад → страна);
+  v1.mp4 v2.mp4 v3.mp4  те же переходы 9:16, Kling 3.0 std, — телефону;
   d1.png                ключевой кадр 1, 16:9, 4K — открытая обложка;
-  m1.png … m4.png       ключевые кадры 9:16, 4K — телефону.
+  m1.png                ключевой кадр 9:16, 4K — открытая обложка телефона.
 
-Компьютер листает кадры переходов (PER на ролик, стык не повторяется),
-телефон — четыре ключевых кадра со сменой и наездом (владелец, 28.10.2026:
-«Видео переходы не делай сильно замудрёными»; видео 9:16 не заказывали).
+Компьютер и телефон листают кадры своих роликов (PER на ролик, около 16 в
+секунду; владелец, 28.10.2026: «будто кадров анимации в скролле мало, ты же
+видео генерировал, возьми больше оттуда кадров»).
 Кадры лежат в public только шифром, как у SamAuto (samauto/seal.py):
 AES-256-GCM, файл = 12 байт nonce + шифр. Ключ — `SCENE_KEY_COSMOWORLD` в
 хранилище, макет получает его маршрутом app/proto/[token]/promo/scene.
@@ -21,8 +22,8 @@ import json, os, subprocess, sys, tempfile
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from PIL import Image
 
-PER = 40
-W_D, W_M = 1600, 1080
+PER = 96
+W_D, W_P = 1600, 720
 KEY = bytes.fromhex(os.environ["SCENE_KEY"])
 assert len(KEY) == 32, "ключ — 32 байта"
 SRC = sys.argv[1]
@@ -43,23 +44,28 @@ def seal(im, name, w, q):
     open(os.path.join(OUT, name), "wb").write(nonce + AESGCM(KEY).encrypt(nonce, data, None))
 
 
-n = 0
-with tempfile.TemporaryDirectory() as tmp:
-    for c in (1, 2, 3):
-        d = os.path.join(tmp, str(c))
-        os.makedirs(d)
-        subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", os.path.join(SRC, f"t{c}.mp4"), "-vsync", "0", f"{d}/%04d.png"], check=True)
-        src = sorted(os.listdir(d))
-        for i in range(0 if c == 1 else 1, PER):
-            seal(Image.open(os.path.join(d, src[round(i * (len(src) - 1) / (PER - 1))])), f"d{n:03d}.bin", W_D, 78)
-            n += 1
-for i in range(1, 5):
-    seal(Image.open(os.path.join(SRC, f"m{i}.png")), f"m{i}.bin", W_M, 80)
+def clips(prefix, files, w, q):
+    """Кадры трёх роликов подряд, PER на ролик, стык не повторяется."""
+    n = 0
+    with tempfile.TemporaryDirectory() as tmp:
+        for c, f in enumerate(files):
+            d = os.path.join(tmp, str(c))
+            os.makedirs(d)
+            subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", os.path.join(SRC, f), "-vsync", "0", f"{d}/%04d.png"], check=True)
+            src = sorted(os.listdir(d))
+            for i in range(0 if c == 0 else 1, PER):
+                seal(Image.open(os.path.join(d, src[round(i * (len(src) - 1) / (PER - 1))])), f"{prefix}{n:03d}.bin", w, q)
+                n += 1
+    return n
+
+
+nd = clips("d", ["t1.mp4", "t2.mp4", "t3.mp4"], W_D, 74)
+np_ = clips("p", ["v1.mp4", "v2.mp4", "v3.mp4"], W_P, 74)
 
 # Обложки — открыто: первый кадр до загрузки и при «меньше движения».
 for name, f, w in (("hero-1600", "d1.png", 1600), ("hero-2400", "d1.png", 2400), ("hero-m-1080", "m1.png", 1080), ("wh-1600", "d3.png", 1600)):
     im = Image.open(os.path.join(SRC, f)).convert("RGB")
     im.resize((w, round(im.height * w / im.width)), Image.LANCZOS).save(os.path.join(PUB, name + ".webp"), "WEBP", quality=80, method=6)
 
-json.dump({"d": n, "m": 4}, open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "seq.json"), "w"))
-print("кадров компьютеру", n, "телефону 4", file=sys.stderr)
+json.dump({"d": nd, "p": np_}, open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "seq.json"), "w"))
+print("кадров компьютеру", nd, "телефону", np_, file=sys.stderr)
