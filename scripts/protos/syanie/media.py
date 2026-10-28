@@ -33,13 +33,12 @@ os.makedirs(OUT, exist_ok=True)
 
 # Кино: 4 сцены по ~5 с; ускоряем, чтобы пролёт шёл ~16 с.
 FILM_SPEED = 1.25
-# Сцены прокрутки: каждый второй кадр видео 24 к/с, 1280 px на компьютере и
-# 720 px на телефоне (canvas смешивает соседние кадры). До 28.10.2026 на
-# компьютере был каждый третий: владелец заметил, что пролёт с кадра
-# «пациент в кресле» идёт не так плавно.
-STEP = {"16": 2, "9": 2}
+# Сцены прокрутки: каждый кадр видео 24 к/с, 1280 px на компьютере и 720 px
+# на телефоне (владелец, 28.10.2026: «плавность так и не добавилась между
+# кадрами» — был каждый второй, до того на компьютере каждый третий).
+STEP = {"16": 1, "9": 1}
 SIZES = {"16": (1280, 720), "9": (720, 1280)}
-QUALITY = 62
+QUALITY = 58
 
 
 def run(*a):
@@ -132,6 +131,17 @@ def main():
         n, seg = story("16")
         with open(os.path.join(HERE, "media.json"), "w") as f:
             json.dump({"s16": n, "s9": n, "seg16": seg, "seg9": seg, "screens": 8}, f)
+        return
+    if len(sys.argv) > 2 and sys.argv[2] == "story":
+        # Только кадры прокрутки, обе версии.
+        n16, seg16 = story("16")
+        n9, seg9 = story("9")
+        with open(os.path.join(HERE, "media.json")) as f:
+            meta = json.load(f)
+        meta.update({"s16": n16, "seg16": seg16, "s9": n9, "seg9": seg9})
+        with open(os.path.join(HERE, "media.json"), "w") as f:
+            json.dump(meta, f)
+        print(meta)
         return
     if len(sys.argv) > 2 and sys.argv[2] == "story16":
         # Только кадры прокрутки 16:9; вертикальные и остальное не трогаем.
