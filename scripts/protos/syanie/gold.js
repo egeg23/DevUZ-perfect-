@@ -20,9 +20,14 @@ try{hover=matchMedia('(hover: hover)').matches}catch(e){}
 function R(a,b){return a+Math.random()*(b-a)}
 function clamp(x,a,b){return x<a?a:x>b?b:x}
 
-/* ── WebGL: один контекст, кадр каждой кнопки копируется в её холст ── */
-var gc=d.createElement('canvas'),gl=null,prog,loc={},hTex,gTex,gReady=false,gw=0,gh=0;
-try{gl=gc.getContext('webgl',{alpha:false,antialias:false,premultipliedAlpha:false,preserveDrawingBuffer:false})}catch(e){}
+/* ── WebGL: у каждой видимой кнопки свой контекст ──────────────────
+   Раньше один общий контекст рисовал все кнопки и копировал картинку в
+   холст кнопки: копия из видеокарты останавливала страницу на каждом
+   кадре (аудит 28.10.2026: 4,9 с на пяти свайпах, пролёт дёргался).
+   Теперь золото рисуется прямо в холст кнопки; ушла с экрана — контекст
+   отпускаем, вернулась — заводим заново. */
+var HAS_GL=false;try{var t0=d.createElement('canvas');HAS_GL=!!(t0.getContext('webgl'));var lx=t0.getContext('webgl').getExtension('WEBGL_lose_context');if(lx)lx.loseContext()}catch(e){}
+var gImg=new Image(),gReady=false;gImg.onload=function(){gReady=true;B.forEach(function(b){if(b.g)texGold(b.g)})};if(HAS_GL)gImg.src=TEX;
 var VS='attribute vec2 p;varying vec2 v;void main(){v=p*.5+.5;gl_Position=vec4(p,0.,1.);}';
 var FS=['precision mediump float;varying vec2 v;uniform sampler2D H,G;uniform vec2 tx,res,L,off;uniform float t,ready;',
 'float h(vec2 q){return texture2D(H,q).r*2.-1.;}',
@@ -45,48 +50,50 @@ var FS=['precision mediump float;varying vec2 v;uniform sampler2D H,G;uniform ve
 ' c+=vec3(1.,.96,.84)*fl*1.5;',
 ' c*=.86+.22*(1.-cy*cy);',
 ' gl_FragColor=vec4(c,1.);}'].join('\n');
-function sh(type,src){var s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(s));return s}
-if(gl){try{
-  prog=gl.createProgram();gl.attachShader(prog,sh(gl.VERTEX_SHADER,VS));gl.attachShader(prog,sh(gl.FRAGMENT_SHADER,FS));gl.linkProgram(prog);
-  if(!gl.getProgramParameter(prog,gl.LINK_STATUS))throw new Error('link');gl.useProgram(prog);
-  var bf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,bf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
-  var pl=gl.getAttribLocation(prog,'p');gl.enableVertexAttribArray(pl);gl.vertexAttribPointer(pl,2,gl.FLOAT,false,0,0);
-  ['H','G','tx','res','L','off','t','ready'].forEach(function(n){loc[n]=gl.getUniformLocation(prog,n)});
-  gl.uniform1i(loc.H,0);gl.uniform1i(loc.G,1);
-  hTex=gl.createTexture();gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,hTex);
-  [gl.TEXTURE_WRAP_S,gl.TEXTURE_WRAP_T].forEach(function(w){gl.texParameteri(gl.TEXTURE_2D,w,gl.CLAMP_TO_EDGE)});
-  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
-  gTex=gl.createTexture();gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,gTex);
-  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array([204,150,50,255]));
-  var im=new Image();im.onload=function(){gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,gTex);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,im);
-    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.MIRRORED_REPEAT);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.MIRRORED_REPEAT);
-    gl.generateMipmap(gl.TEXTURE_2D);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);gReady=true};im.src=TEX;
-  gc.addEventListener('webglcontextlost',function(e){e.preventDefault();gl=null});
-}catch(e){gl=null}}
+function makeGL(cv){var gl=null;try{gl=cv.getContext('webgl',{alpha:false,antialias:false,premultipliedAlpha:false,preserveDrawingBuffer:false})}catch(e){}if(!gl)return null;
+  function sh(type,src){var s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(s));return s}
+  try{var g={gl:gl,loc:{}},prog=gl.createProgram();gl.attachShader(prog,sh(gl.VERTEX_SHADER,VS));gl.attachShader(prog,sh(gl.FRAGMENT_SHADER,FS));gl.linkProgram(prog);
+    if(!gl.getProgramParameter(prog,gl.LINK_STATUS))return null;gl.useProgram(prog);
+    var bf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,bf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+    var pl=gl.getAttribLocation(prog,'p');gl.enableVertexAttribArray(pl);gl.vertexAttribPointer(pl,2,gl.FLOAT,false,0,0);
+    ['H','G','tx','res','L','off','t','ready'].forEach(function(n){g.loc[n]=gl.getUniformLocation(prog,n)});
+    gl.uniform1i(g.loc.H,0);gl.uniform1i(g.loc.G,1);
+    g.hTex=gl.createTexture();gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,g.hTex);
+    [gl.TEXTURE_WRAP_S,gl.TEXTURE_WRAP_T].forEach(function(w){gl.texParameteri(gl.TEXTURE_2D,w,gl.CLAMP_TO_EDGE)});
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+    g.gTex=gl.createTexture();gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,g.gTex);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array([204,150,50,255]));
+    g.ready=false;if(gReady)texGold(g);return g}catch(e){return null}}
+function texGold(g){var gl=g.gl;gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,g.gTex);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,gImg);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.MIRRORED_REPEAT);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.MIRRORED_REPEAT);
+  gl.generateMipmap(gl.TEXTURE_2D);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);g.ready=true}
+function dropGL(b){if(!b.g)return;try{var x=b.g.gl.getExtension('WEBGL_lose_context');if(x)x.loseContext()}catch(e){}b.g=null;
+  var n=b.cv.cloneNode(false);b.el.replaceChild(n,b.cv);b.cv=n}
 
 /* ── Физика поверхности: волновое уравнение на сетке ─────────────────── */
 var B=[],raf=0;
 function setup(el){
-  if(el.__gold)return;var cv=d.createElement('canvas');cv.className='gl';cv.setAttribute('aria-hidden','true');el.insertBefore(cv,el.firstChild);
-  var b={el:el,cv:cv,x:cv.getContext('2d'),w:0,h:0,vis:false,drop:R(600,2200),L:[.3,.1],Lt:[.3,.1],off:[R(.06,.16),R(.1,.6)],p:[],lx:-1,ly:-1,lt:0};
+  if(el.__gold)return;var cv=d.createElement('canvas');cv.className='gl';cv.setAttribute('aria-hidden','true');
+  var sp=d.createElement('canvas');sp.className='gl gs';sp.setAttribute('aria-hidden','true');el.insertBefore(sp,el.firstChild);el.insertBefore(cv,sp);
+  var b={el:el,cv:cv,sp:sp,x:sp.getContext('2d'),g:null,w:0,h:0,vis:false,drop:R(600,2200),L:[.3,.1],Lt:[.3,.1],off:[R(.06,.16),R(.1,.6)],p:[],lx:-1,ly:-1,lt:0};
   el.__gold=b;el.classList.add('gold-live');size(b);B.push(b);
   function pos(e){var r=el.getBoundingClientRect();return[(e.clientX-r.left)/r.width,(e.clientY-r.top)/r.height]}
   el.addEventListener('pointermove',function(e){var q=pos(e);b.Lt=[q[0],q[1]-.35];if(e.pointerType==='mouse'||e.buttons)drag(b,q[0],q[1]);go()});
   el.addEventListener('pointerenter',function(e){var q=pos(e);b.lx=q[0];b.ly=q[1];splash(b,q[0],q[1],.35,2.2);go()});
   el.addEventListener('pointerleave',function(){b.lx=-1;b.Lt=[.3,.1]});
   el.addEventListener('pointerdown',function(e){var q=pos(e);b.lx=q[0];b.ly=q[1];b.Lt=[q[0],q[1]-.35];splash(b,q[0],q[1],1.1,2.6);burst(b,q[0],q[1]);go()});
-  if(window.IntersectionObserver)new IntersectionObserver(function(es){b.vis=es[0].isIntersecting;if(b.vis){size(b);go()}}).observe(el);else b.vis=true;
+  if(window.IntersectionObserver)new IntersectionObserver(function(es){b.vis=es[0].isIntersecting;if(b.vis){size(b);go()}else dropGL(b)}).observe(el);else b.vis=true;
 }
 /* Капсула под надписью — по ширине самой надписи (иконка и текст), чтобы
    вокруг оставалось золото. Меряем заново, когда текст кнопки меняется. */
-function fit(b){var el=b.el,r=el.getBoundingClientRect(),L=1e9,Rr=-1e9,k,n,q;if(!r.width)return;
-  for(k=0;k<el.childNodes.length;k++){n=el.childNodes[k];if(n===b.cv)continue;
+function fit(b){var el=b.el,r=el.getBoundingClientRect(),L=1e9,Rr=-1e9,k,n,q;b.fitted=false;if(!r.width)return;
+  for(k=0;k<el.childNodes.length;k++){n=el.childNodes[k];if(n===b.cv||n===b.sp)continue;
     if(n.nodeType===1)q=n.getBoundingClientRect();else if(n.nodeType===3&&n.textContent.trim()){var rg=d.createRange();rg.selectNodeContents(n);q=rg.getBoundingClientRect()}else continue;
     if(!q.width)continue;L=Math.min(L,q.left);Rr=Math.max(Rr,q.right)}
-  if(Rr<L)return;var pad=r.height>46?18:12,l=Math.max(5,L-r.left-pad),rr=Math.max(5,r.right-Rr-pad);
+  if(Rr<L)return;b.fitted=true;var pad=r.height>46?18:12,l=Math.max(5,L-r.left-pad),rr=Math.max(5,r.right-Rr-pad);
   el.style.setProperty('--gl-l',l.toFixed(1)+'px');el.style.setProperty('--gl-r',rr.toFixed(1)+'px')}
 function size(b){fit(b);var r=b.el.getBoundingClientRect(),w=Math.max(1,Math.round(r.width)),h=Math.max(1,Math.round(r.height));if(w===b.w&&h===b.h)return;
-  b.w=w;b.h=h;b.cv.width=Math.round(w*DPR);b.cv.height=Math.round(h*DPR);
+  b.w=w;b.h=h;b.cv.width=b.sp.width=Math.round(w*DPR);b.cv.height=b.sp.height=Math.round(h*DPR);
   b.gw=clamp(Math.round(w/CELL),16,200);b.gh=clamp(Math.round(h/CELL),8,48);var n=b.gw*b.gh;b.c=new Float32Array(n);b.o=new Float32Array(n);b.px=new Uint8Array(n*4);
   var k=Math.round(clamp(w*h/260,14,64));b.p=[];for(var i=0;i<k;i++){var y=R(.25,.9);b.p.push({x:R(0,1),y:y,y0:y,vx:0,vy:0,r:R(.5,1.3),ph:R(0,6.3),g:0})}}
 /* Капля: гауссова ямка в поверхности, дальше её разносит уравнение. */
@@ -118,29 +125,39 @@ function flakes(b,dt){var x=b.x,w=b.w,h=b.h;x.globalCompositeOperation='lighter'
     if(p.g>.25||tw>.9){x.globalAlpha=al*.8;x.fillRect(px-r*3.5,py-.35,r*7,.7);x.fillRect(px-.35,py-r*3.5,.7,r*7)}}
   x.globalAlpha=1;x.globalCompositeOperation='source-over'}
 function upload(b){var c=b.c,px=b.px;for(var i=0,n=c.length;i<n;i++){var v=clamp(c[i]*.5+.5,0,1)*255;px[i*4]=v;px[i*4+3]=255}
-  gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,hTex);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,b.gw,b.gh,0,gl.RGBA,gl.UNSIGNED_BYTE,px)}
-function drawGL(b,t){var W=b.cv.width,H=b.cv.height;if(gw<W||gh<H){gw=Math.max(gw,W);gh=Math.max(gh,H);gc.width=gw;gc.height=gh}
-  upload(b);gl.viewport(0,0,W,H);gl.uniform2f(loc.tx,1/b.gw,1/b.gh);gl.uniform2f(loc.res,b.w,b.h);gl.uniform2f(loc.L,b.L[0],b.L[1]);
-  gl.uniform2f(loc.off,b.off[0],b.off[1]);gl.uniform1f(loc.t,t/1000);gl.uniform1f(loc.ready,gReady?1:0);gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
-  b.x.setTransform(1,0,0,1,0,0);b.x.drawImage(gc,0,gh-H,W,H,0,0,W,H)}
+  var gl=b.g.gl;gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,b.g.hTex);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,b.gw,b.gh,0,gl.RGBA,gl.UNSIGNED_BYTE,px)}
+function drawGL(b,t){if(!b.g){b.g=makeGL(b.cv);if(!b.g)return false}var gl=b.g.gl,loc=b.g.loc;if(gl.isContextLost()){b.g=null;return false}
+  upload(b);gl.viewport(0,0,b.cv.width,b.cv.height);gl.uniform2f(loc.tx,1/b.gw,1/b.gh);gl.uniform2f(loc.res,b.w,b.h);gl.uniform2f(loc.L,b.L[0],b.L[1]);
+  gl.uniform2f(loc.off,b.off[0],b.off[1]);gl.uniform1f(loc.t,t/1000);gl.uniform1f(loc.ready,b.g.ready?1:0);gl.drawArrays(gl.TRIANGLE_STRIP,0,4);return true}
 /* Без WebGL: те же волны светлыми кольцами по золоту из CSS. */
 function draw2D(b){var x=b.x,W=b.gw,H=b.gh,c=b.c,sx=b.w/W,sy=b.h/H;x.setTransform(DPR,0,0,DPR,0,0);x.clearRect(0,0,b.w,b.h);
   for(var y=1;y<H-1;y++)for(var xx=1;xx<W-1;xx++){var s=c[y*W+xx+1]-c[y*W+xx-1]+c[(y+1)*W+xx]-c[(y-1)*W+xx];if(s>.04){x.fillStyle='rgba(255,246,214,'+Math.min(.5,s*.9)+')';x.fillRect(xx*sx,y*sy,sx,sy)}else if(s<-.04){x.fillStyle='rgba(120,70,0,'+Math.min(.35,-s*.6)+')';x.fillRect(xx*sx,y*sy,sx,sy)}}}
 var lt=0,acc=0;
-function loop(t){raf=0;if(d.hidden){lt=0;return}var dt=Math.min(50,lt?t-lt:16);lt=t;acc+=dt;var steps=0;while(acc>=12&&steps<5){acc-=12;steps++}var any=false;
-  for(var i=0;i<B.length;i++){var b=B[i];if(!b.vis||!b.el.isConnected||!b.c)continue;any=true;
+/* Пока листают или пролёт догоняет прокрутку, золото стоит: весь кадр
+   отдаём сцене. Отпустили — оживает. */
+var lastScroll=0;addEventListener('scroll',function(){lastScroll=performance.now()},{passive:true});
+function loop(t){raf=0;if(d.hidden){lt=0;return}
+  if(t-lastScroll<220||window.SY_BUSY){lt=0;raf=requestAnimationFrame(loop);return}var dt=Math.min(50,lt?t-lt:16);lt=t;acc+=dt;var steps=0;while(acc>=12&&steps<5){acc-=12;steps++}var any=false;
+  for(var i=0;i<B.length;i++){var b=B[i];if(!b.vis||!b.el.isConnected||!b.c)continue;any=true;if(!b.fitted)fit(b);
     if((b.drop-=dt)<0){b.drop=hover?R(2600,5200):R(1800,3600);splash(b,R(.08,.92),R(.25,.8),hover?.3:.5,R(1.8,2.6))}
     for(var s=0;s<steps;s++)sim(b);
     b.L[0]+=(b.Lt[0]-b.L[0])*.08;b.L[1]+=(b.Lt[1]-b.L[1])*.08;
-    if(gl){drawGL(b,t);b.x.setTransform(DPR,0,0,DPR,0,0)}else draw2D(b);
+    if(HAS_GL&&drawGL(b,t)){b.x.setTransform(DPR,0,0,DPR,0,0);b.x.clearRect(0,0,b.w,b.h)}else draw2D(b);
     flakes(b,dt)}
   if(any)raf=requestAnimationFrame(loop);else lt=0}
 function go(){if(!raf)raf=requestAnimationFrame(loop)}
 function scan(){Array.prototype.forEach.call(d.querySelectorAll('.btn-onyx'),setup);B.forEach(fit);go()}
 d.addEventListener('visibilitychange',function(){if(!d.hidden)go()});
 addEventListener('resize',function(){B.forEach(size)});
-if(window.MutationObserver)new MutationObserver(scan).observe(d.body,{childList:true,subtree:true,characterData:true});
+/* Новые кнопки — завести, у своих сменился текст — перемерить капсулу.
+   Остальные изменения страницы (счётчик в пролёте и т. п.) не трогаем:
+   перемер на каждое из них стоил пересчёта раскладки на каждом кадре. */
+if(window.MutationObserver)new MutationObserver(function(rs){var add=false,hit=[];
+  for(var i=0;i<rs.length;i++){var r=rs[i],t=r.target.nodeType===1?r.target:r.target.parentNode,g=t&&t.closest&&t.closest('.btn-onyx');
+    if(g&&g.__gold){if(hit.indexOf(g.__gold)<0)hit.push(g.__gold)}
+    else if(r.addedNodes.length)for(var k=0;k<r.addedNodes.length;k++){var n=r.addedNodes[k];if(n.nodeType===1&&(n.matches('.btn-onyx')||n.querySelector('.btn-onyx'))){add=true;break}}}
+  if(add)scan();hit.forEach(fit)}).observe(d.body,{childList:true,subtree:true,characterData:true});
 if(d.fonts&&d.fonts.ready)d.fonts.ready.then(function(){B.forEach(fit)});
-if(gl)root.classList.add('gold-gl');
+if(HAS_GL)root.classList.add('gold-gl');
 scan();
 })();
