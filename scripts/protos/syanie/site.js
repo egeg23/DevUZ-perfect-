@@ -37,7 +37,9 @@ function frameSrc(i){return K.img+'/s'+fmtK+'/'+(i<10?'00':i<100?'0':'')+i+'.web
 function setFmt(){
   var f=pick();if(f===fmtK)return;fmtK=f;
   N=K.frames['s'+f];SEG=K.frames['seg'+f].concat([N-1]);imgs=new Array(N);ready=new Array(N);queue=[];
-  load(0);for(var i=1;i<N;i++)queue.push(i);
+  /* Сначала редкие кадры по всей длине (каждый 16-й, 8-й, 4-й, 2-й),
+     потом остальные: как бы быстро ни листали, рядом всегда есть кадр. */
+  load(0);var seen={0:1};[16,8,4,2,1].forEach(function(k){for(var i=0;i<N;i+=k)if(!seen[i]){seen[i]=1;queue.push(i)}});if(!seen[N-1])queue.push(N-1);
   if(film&&!filmOn&&!filmDone){film.poster=film.getAttribute('data-p'+f)}
   shownF=-1;
 }
@@ -51,9 +53,12 @@ function load(i){if(imgs[i])return;var im=new Image();im.decoding='async';imgs[i
 /* Догружаем по очереди, ближние к текущему кадру первыми; шесть сразу.
    Пока идёт кино — по два, чтобы не отнимать у него сеть. */
 var pumping=false,soft=false;
-function pump(){if(!pumping&&!soft)return;var cap=pumping?6:2;
-  if(queue.length>1){var c=Math.round(st.f);queue.sort(function(a,b){return Math.abs(a-c)-Math.abs(b-c)})}
-  while(active<cap&&queue.length){var i=queue.shift();if(!imgs[i])load(i)}}
+function pump(){if(!pumping&&!soft)return;var cap=pumping?6:2,c=Math.round(st.f),k,j;
+  while(active<cap&&queue.length){
+    /* Кадры у текущего места — первыми, дальше по редкой сетке. */
+    j=-1;for(k=0;k<10;k++){if(c+k<N&&!imgs[c+k]){j=c+k;break}if(c-k>=0&&!imgs[c-k]){j=c-k;break}}
+    if(j<0){j=queue.shift();if(imgs[j])continue}
+    load(j)}}
 function startPump(){if(pumping)return;pumping=true;pump()}
 function softPump(){if(soft||pumping)return;soft=true;pump()}
 
@@ -76,7 +81,10 @@ function seg(k,f){var a=SEG[k],b=SEG[k+1];return clamp((f-a)/Math.max(1,b-a))}
 function render(){
   if(!N)return;var p=st.f/(N-1);paint(false);
   if(barEl)barEl.style.transform='scaleX('+p.toFixed(4)+')';
-  if(filmDone){hero.classList.toggle('on',p<.025||asmRun||ivOn);stage.classList.toggle('dark',p<.03||asmRun||ivOn)}
+  if(filmDone){var hOn=p<.025||asmRun||ivOn;hero.classList.toggle('on',hOn);stage.classList.toggle('dark',p<.03||asmRun||ivOn);
+    /* Нижняя «Записаться» не дублирует кнопку первого экрана (владелец,
+       28.10.2026: «2 кнопки?»): док выезжает, когда первый экран ушёл. */
+    if(dock)dock.classList.toggle('away',hOn)}
   stage.classList.toggle('lamp',st.f>SEG[0]&&st.f<SEG[2]);
   for(var j=0;j<chs.length;j++){var c=chs[j],e=c.el;if(!e)continue;
     var o=Math.min(clamp((p-c.a)/.03),clamp((c.b-p)/.03));
@@ -94,7 +102,7 @@ function endFilm(){if(filmDone)return;filmDone=true;filmOn=false;stage.classList
   caps.forEach(function(c){c.classList.remove('on')});paint(true);
   film.classList.add('off');setTimeout(function(){try{film.pause()}catch(e){}},700);
   var atTop=scrollY-story.offsetTop<innerHeight*.2;hero.classList.toggle('on',atTop);stage.classList.toggle('dark',atTop);
-  if(atTop&&!asmDone)implantShot();else asmDone=true;if(dock)dock.classList.remove('away');startPump()}
+  if(atTop&&!asmDone)implantShot();else asmDone=true;if(dock)dock.classList.toggle('away',atTop);startPump()}
 function playFilm(){
   if(film.error){endFilm();return}
   filmDone=false;filmOn=true;asmDone=false;asmStop();ivOn=false;if(ivEl){ivEl.classList.remove('on');try{ivEl.pause()}catch(e){}}stage.classList.remove('done','dark');stage.classList.add('playing');hero.classList.remove('on');film.classList.remove('off');
