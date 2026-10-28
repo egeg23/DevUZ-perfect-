@@ -37,6 +37,11 @@ async function open(w, h, init) {
   await p.waitForTimeout(1500);
   await p.evaluate(() => { const s = document.getElementById("skipf"); if (s) s.click(); });
   await p.waitForTimeout(900);
+  /* Первый экран со своей «Записаться на консультацию»: док и кнопка чата
+     спрятаны (владелец, 28.10.2026: «2 кнопки?»), выезжают при прокрутке. */
+  p.fabAtTop = await p.evaluate(() => document.getElementById("cx-fab").classList.contains("away"));
+  await p.evaluate(() => { const s = document.getElementById("story"); scrollTo(0, (s.offsetHeight - innerHeight) * 0.1); });
+  await p.waitForTimeout(2500);
   return { ctx, p, errs };
 }
 const overflow = (p) => p.evaluate(() => document.documentElement.scrollWidth - innerWidth);
@@ -45,6 +50,7 @@ const lastText = (p, sel) => p.evaluate((s) => { const a = document.querySelecto
 
 for (const [w, h] of [[390, 844], [768, 1024], [1440, 900]]) {
   const { ctx, p, errs } = await open(w, h);
+  check(p.fabAtTop, `@${w}: на первом экране кнопки чата нет`);
   const fabOn = await p.evaluate(() => { const f = document.getElementById("cx-fab"); const r = f.getBoundingClientRect(); return !f.classList.contains("away") && r.width >= 44 && getComputedStyle(f).visibility === "visible"; });
   check(fabOn, `@${w}: кнопка чата видна после кино`);
   if (w < 1024) {

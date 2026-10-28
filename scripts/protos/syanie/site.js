@@ -36,7 +36,7 @@ function pick(){return innerWidth/innerHeight<0.8?'9':'16'}
 function frameSrc(i){return K.img+'/s'+fmtK+'/'+(i<10?'00':i<100?'0':'')+i+'.webp'}
 function setFmt(){
   var f=pick();if(f===fmtK)return;fmtK=f;
-  N=K.frames['s'+f];SEG=K.frames['seg'+f].concat([N-1]);imgs=new Array(N);ready=new Array(N);queue=[];
+  bmClear();blobs=[];N=K.frames['s'+f];SEG=K.frames['seg'+f].concat([N-1]);imgs=new Array(N);ready=new Array(N);queue=[];
   /* Сначала редкие кадры по всей длине (каждый 16-й, 8-й, 4-й, 2-й),
      потом остальные: как бы быстро ни листали, рядом всегда есть кадр. */
   load(0);var seen={0:1};[16,8,4,2,1].forEach(function(k){for(var i=0;i<N;i+=k)if(!seen[i]){seen[i]=1;queue.push(i)}});if(!seen[N-1])queue.push(N-1);
@@ -46,7 +46,13 @@ function setFmt(){
 /* Кадр готов, когда он уже раскодирован (decode): иначе браузер
    раскодирует его при первом рисовании, прямо во время прокрутки, и сцена
    дёргается. */
-function load(i){if(imgs[i])return;var im=new Image();im.decoding='async';imgs[i]=im;active++;
+/* Где можно, кадр грузится файлом (blob) и раскодируется в фоне
+   (createImageBitmap из blob): из картинки браузер раскодирует его в
+   основном потоке, и прокрутка ждёт (аудит 28.10.2026). */
+var BLOB=!!(window.createImageBitmap&&window.fetch&&window.Blob),blobs=[];
+function load(i){if(imgs[i])return;active++;
+  if(BLOB){imgs[i]=1;fetch(frameSrc(i)).then(function(r){if(!r.ok)throw 0;return r.blob()}).then(function(b){blobs[i]=b;ready[i]=1;active--;if(Math.abs(i-st.f)<AHEAD)want(st.f);pump()},function(){active--;pump()});return}
+  var im=new Image();im.decoding='async';imgs[i]=im;
   var ok=function(){ready[i]=1;active--;if(Math.abs(i-st.f)<3||i===0)paint(true);pump()};
   im.onload=function(){if(im.decode)im.decode().then(ok,ok);else ok()};
   im.onerror=function(){active--;pump()};im.src=frameSrc(i)}
@@ -67,14 +73,17 @@ function softPump(){if(soft||pumping)return;soft=true;pump()}
 var SRC={'16':[1280,720],'9':[720,1280]};
 function size(){if(!cv)return;cw=stage.clientWidth;chh=stage.clientHeight;var s=SRC[fmtK]||[cw,chh],sc=Math.max(s[0]/cw,s[1]/chh);
   dpr=Math.min(devicePixelRatio||1,2,Math.max(1,sc));cv.width=Math.round(cw*dpr);cv.height=Math.round(chh*dpr);shownF=-1;paint(true)}
-function near(i){for(var k=0;k<N;k++){if(ready[i-k])return i-k;if(ready[i+k])return i+k}return -1}
-function cover(im,a){var iw=im.naturalWidth,ih=im.naturalHeight,s=Math.max(cv.width/iw,cv.height/ih),w=iw*s,h=ih*s;ctx.globalAlpha=a;ctx.drawImage(im,(cv.width-w)/2,(cv.height-h)/2,w,h)}
+function has(i){return BLOB?!!bm[i]:!!ready[i]}
+function pic(i){return BLOB?bm[i]:imgs[i]}
+function near(i){for(var k=0;k<N;k++){if(has(i-k))return i-k;if(has(i+k))return i+k}return -1}
+function cover(im,a){var iw=im.naturalWidth||im.width,ih=im.naturalHeight||im.height,s=Math.max(cv.width/iw,cv.height/ih),w=iw*s,h=ih*s;ctx.globalAlpha=a;ctx.drawImage(im,(cv.width-w)/2,(cv.height-h)/2,w,h)}
 function paint(force){
   if(!ctx||!N)return;var f=clamp(st.f,0,N-1);if(!force&&Math.abs(f-shownF)<.01)return;
   var i=Math.floor(f),t=f-i,b=near(i);if(b<0)return;shownF=f;
-  cover(imgs[b],1);
+  cover(pic(b),1);
   /* Между соседними кадрами — мягкая смесь: прокрутка не идёт ступеньками. */
-  if(b===i&&t>.04&&ready[i+1])cover(imgs[i+1],t);
+  if(b===i&&t>.04&&has(i+1))cover(pic(i+1),t);
+  want(f);
   ctx.globalAlpha=1;
 }
 /* Прокрутка задаёт, куда ехать, а кадры идут к этому месту как видео: не
@@ -84,11 +93,24 @@ function paint(force){
    плавности как в видео»). Сильно отстали (пролистали далеко) — догоняем
    быстрее, чтобы сцена не ехала по уже пустому экрану. */
 var aim=0,pRaf=0,pT=0,FPS=24;
+/* Пролёт на экране? Тогда золотым кнопкам ждать, пока он доиграет. */
+function onStage(){var y=scrollY,t=story.offsetTop;return y+innerHeight>t&&y<t+story.offsetHeight}
 function play(){if(!pRaf){pT=0;pRaf=requestAnimationFrame(tick)}}
-function tick(t){pRaf=0;var dt=pT?Math.min(.05,(t-pT)/1000):1/60;pT=t;var to=aim*(N-1),gap=to-st.f,a=Math.abs(gap);
-  if(a<.02){st.f=to;render();return}
+function tick(t){pRaf=0;window.SY_BUSY=onStage();var dt=pT?Math.min(.05,(t-pT)/1000):1/60;pT=t;var to=aim*(N-1),gap=to-st.f,a=Math.abs(gap);
+  if(a<.02){st.f=to;render();window.SY_BUSY=false;return}
   var v=FPS*(a>FPS*3?5:a>FPS*1.2?2.6:1.6),step=Math.min(a,v*dt,Math.max(a*.12,.05));
   st.f+=gap>0?step:-step;render();pRaf=requestAnimationFrame(tick)}
+/* Раскодированные кадры — окно вокруг текущего (ImageBitmap). Браузер
+   держит раскодированными не все 868 кадров и выбрасывает их, а потом
+   раскодирует кадр прямо при показе, на прокрутке (аудит 28.10.2026: по
+   7 мс на кадр и больше). Здесь кадры впереди раскодируются заранее, вне
+   основного потока, а дальние отпускаются, чтобы телефону хватало памяти. */
+var bm={},bmWait={},bmN=0,BACK=8,AHEAD=26;
+function bmClear(){for(var k in bm){try{bm[k].close()}catch(e){}}bm={};bmWait={}}
+function want(f){if(!BLOB)return;var c=Math.floor(f),k,i;
+  for(k in bm){i=+k;if(i<c-BACK*2||i>c+AHEAD*2){try{bm[k].close()}catch(e){}delete bm[k]}}
+  for(k=0;k<=AHEAD&&bmN<4;k++){[c+k,c-k].forEach(function(j){if(j<0||j>=N||bm[j]||bmWait[j]||!ready[j]||bmN>=4||(j<c&&c-j>BACK))return;
+    var src=blobs[j];bmWait[j]=1;bmN++;createImageBitmap(src).then(function(x){bmN--;delete bmWait[j];if(blobs[j]!==src||Math.abs(j-st.f)>AHEAD*2){x.close();return}bm[j]=x;if(Math.abs(j-st.f)<3||shownF<0)paint(true);want(st.f)},function(){bmN--;delete bmWait[j]})})}}
 function seg(k,f){var a=SEG[k],b=SEG[k+1];return clamp((f-a)/Math.max(1,b-a))}
 function render(){
   if(!N)return;var p=st.f/(N-1);paint(false);
