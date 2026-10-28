@@ -49,6 +49,7 @@ import semtravel from "@/content/proto-bundles/semtravel.json" with { type: "jso
 import samauto from "@/content/proto-bundles/samauto.json" with { type: "json" };
 import chechfarm from "@/content/proto-bundles/chechfarm.json" with { type: "json" };
 import fintax from "@/content/proto-bundles/fintax.json" with { type: "json" };
+import cosmoworld from "@/content/proto-bundles/cosmoworld.json" with { type: "json" };
 import { stampPages } from "@/lib/proto/stamp";
 
 type Bundle = { parts: Record<string, string>; pages: Record<string, string> };
@@ -89,6 +90,7 @@ const BUNDLES: Record<string, Bundle> = {
   samauto: samauto as Bundle,
   chechfarm: chechfarm as Bundle,
   fintax: fintax as Bundle,
+  cosmoworld: cosmoworld as Bundle,
 };
 
 /** Имена всех сборок — для проверок, которые идут по каждой (tests/proto-plain-text). */

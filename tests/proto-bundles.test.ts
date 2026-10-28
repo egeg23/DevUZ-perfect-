@@ -2266,3 +2266,56 @@ test("FinTax: 5 страниц и панель на ru, uz, en — услови�
   assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
   assert.notEqual(stamped.pages["en/prices"], site.pages["en/prices"], "отпечаток не поставился на внутренней странице");
 });
+
+test("Cosmo World: главная на ru, uz, en — условия, noindex, видео DevUz, шапка 3 с, сцена шифром, 10 брендов, 14 регионов, только факты с их сайта", async () => {
+  const { existsSync, readdirSync, readFileSync } = await import("node:fs");
+  const site = bundlePages("cosmoworld");
+  assert.ok(site);
+  const all: Record<string, string> = { "": site.html, ...site.pages };
+  assert.deepEqual(Object.keys(all).sort(), ["", "en", "uz"]);
+  const data = await import("../scripts/protos/cosmoworld/data.mjs");
+  for (const [path, page] of Object.entries(all)) {
+    const lang = path || "ru";
+    assert.doesNotMatch(page, /@@[A-Z]+@@/, `${lang}: метка сборки осталась в странице`);
+    assert.ok(page.includes(`<html lang="${lang}">`), `${lang}: язык страницы`);
+    assert.ok(page.includes(`https://devuz.studio/${lang}/mockup-terms`), `${lang}: нет условий на языке страницы`);
+    assert.match(page, /<meta name="robots" content="noindex/, `${lang}: нет noindex`);
+    assert.match(page, /prefers-reduced-motion/, `${lang}: анимацию нечем выключить`);
+    assert.doesNotMatch(page, /stamp|watermark|fingerprint|отпечат|seed|data-mark/i, `${lang}: слово, по которому находят отпечаток`);
+    assert.doesNotMatch(page, /proto-ai|proxyapi/i, `${lang}: макет не зовёт модель`);
+    assert.doesNotMatch(page, /href="#"/, `${lang}: ссылка в никуда`);
+    assert.doesNotMatch(page, /scroll-behavior|passive:\s*false/, `${lang}: перехват прокрутки`);
+    for (const img of page.match(/<img [^>]+>/g) ?? []) assert.match(img, /alt="/, `${lang}: картинка без alt`);
+    for (const src of page.match(/\/protos\/cosmoworld\/[\w./-]+\.(?:webp|png|svg)/g) ?? []) assert.ok(existsSync("public" + src), `${lang}: нет файла ${src}`);
+    if (lang !== "ru") assert.doesNotMatch(page.replace(/<script type="application\/json" id="cw-data">[\s\S]*?<\/script>/, ""), /[А-Яа-яЁё]/, `${lang}: кириллица на странице`);
+    if (lang !== "ru") assert.doesNotMatch(JSON.stringify(JSON.parse(/id="cw-data">([\s\S]*?)<\/script>/.exec(page)![1]).brands.map((b: { name: string; text: string }) => [b.name, b.text])), /[А-Яа-яЁё]/, `${lang}: кириллица в окне бренда`);
+    /* Видео DevUz первым, шапка прячется и возвращается через 3 с. */
+    assert.ok(page.indexOf('id="dzi"') > 0 && page.indexOf('id="dzi"') < page.indexOf('class="top"') && page.includes("dzVideo(b,close)"), `${lang}: нет видео DevUz первым`);
+    assert.match(page, /\bIDLE=3000\b/, `${lang}: шапка не по правилу 3 секунд`);
+    assert.match(page, /classList\.add\('hide'\)[\s\S]*IDLE\)/, `${lang}: шапка не прячется`);
+    /* Сцена: кадры шифром, ключ по ссылке макета, счёт до 100%. */
+    assert.ok(page.includes('class="sc-cv"') && page.includes("/promo/scene") && page.includes('class="sc-load"'), `${lang}: нет сцены первого экрана`);
+    assert.equal((page.match(/class="sc-cap /g) ?? []).length, 4, `${lang}: не четыре подписи пролёта`);
+    /* Цен нет: их нет и у них. Контакты — только их. */
+    assert.doesNotMatch(page.replace(/<script[\s\S]*?<\/script>/g, ""), /\d\s?(\$|сум|so‘m|UZS|USD)/, `${lang}: цена на странице`);
+    assert.ok(page.includes("wa.me/998773507025") && page.includes("tel:+998773507025") && page.includes("info@cosmoworld.uz"), `${lang}: нет их контактов`);
+    for (const n of data.NUMBERS) assert.ok(page.includes(n[lang === "ru" ? "v" : lang === "uz" ? "vuz" : "ven"] ?? n.v), `${lang}: нет цифры ${n.v}`);
+    assert.equal((page.match(/class="br ice/g) ?? []).length, 10, `${lang}: не десять брендов`);
+    assert.equal((page.match(/class="rg-g"/g) ?? []).length, 14, `${lang}: не 14 регионов на карте`);
+    assert.equal((page.match(/role="tab" data-k=/g) ?? []).length, 3, `${lang}: не три вкладки заявки`);
+  }
+  assert.deepEqual(data.BRANDS.map((b: { name: string }) => b.name), ["Арнест", "Весна", "Dr. Rashel Estelin", "Peros", "Forest Clean", "Bily", "Parachute", "Brandfree", "MIXIT", "Nefis"], "бренды не как на их сайте");
+  assert.deepEqual(data.NUMBERS.map((n: { v: string }) => n.v), ["10", "10+", "500 м²", "3 000", "2 000 м²", "150+"], "цифры не как на их сайте");
+  for (const b of data.BRANDS) assert.match(b.pdf, /^https:\/\/(docs|disk)\.yandex\.ru\//, `${b.name}: каталог не их ссылкой`);
+  /* Кадры сцены — только шифром, ключ в хранилище (lib/proto/promo SCENES). */
+  const seq = JSON.parse(readFileSync("scripts/protos/cosmoworld/seq.json", "utf8"));
+  const files = readdirSync("public/protos/cosmoworld/seq");
+  assert.equal(files.length, seq.d + seq.m, "кадров сцены не столько, сколько в seq.json");
+  assert.ok(files.every((f) => /^(d\d{3}|m\d)\.bin$/.test(f)), "кадры сцены лежат незашифрованными");
+  assert.ok(seq.d >= 100, "компьютеру меньше ста кадров пролёта");
+  const { SCENES } = await import("@/lib/proto/promo");
+  assert.equal(SCENES.cosmoworld, "SCENE_KEY_COSMOWORLD");
+  const stamped = stampedBundle("cosmoworld", SEED)!;
+  assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
+  assert.notEqual(stamped.pages.en, site.pages.en, "отпечаток не поставился на английской странице");
+});
