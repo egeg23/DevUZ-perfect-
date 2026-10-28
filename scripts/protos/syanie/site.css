@@ -50,6 +50,8 @@ section:not(.story){padding:96px 0}
   background:linear-gradient(115deg,#9a6812 0%,#e2a52f 14%,#ffe49c 27%,#d4992a 40%,#f8d266 55%,#b8811f 70%,#ffdb7c 84%,#a5731b 100%);background-size:280% 100%;
   box-shadow:inset 0 1px 0 rgb(255 248 220 / .65),inset 0 -3px 8px rgb(110 62 0 / .35),0 10px 26px -12px rgb(233 178 60 / .75);animation:liquid 10s ease-in-out infinite alternate}
 .btn-onyx>.gl{position:absolute;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none;border-radius:inherit;mix-blend-mode:screen}
+.gold-gl .btn-onyx>.gl{mix-blend-mode:normal}
+.gold-gl .btn-onyx{text-shadow:0 1px 0 rgb(255 240 200 / .6),0 0 10px rgb(255 226 150 / .35)}
 @keyframes liquid{0%{background-position:0% 50%}100%{background-position:100% 50%}}
 @media (prefers-reduced-motion:reduce){.btn-onyx{animation:none}}
 .btn-line{border:1px solid currentColor;color:inherit}
