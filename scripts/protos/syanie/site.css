@@ -511,3 +511,4 @@ section:not(.story){padding:96px 0}
 .my-st i{width:8px;height:8px;border-radius:50%;background:var(--onyx);flex:none}
 .my-st[data-s="confirmed"] i,.my-st[data-s="came"] i{background:var(--frost)}.my-st[data-s="canceled"] i{background:#e07a6a}
 @media (min-width:1024px){.my-st{left:auto;right:24px;bottom:24px;transform:none}}
+.kit-demo{margin:0 0 24px}

@@ -316,6 +316,7 @@ function offerBlock() {
   const row = (a) => `<label class="kit-row"><input type="checkbox" data-k="${a.id}" data-p="${a.price}"><span class="sw" aria-hidden="true"></span><span class="kit-t2"><b>${a.ru.t}${a.star ? `<em class="star">берут первым</em>` : ""}${a.new ? `<em class="nw-t">нет у клиник Томска</em>` : ""}</b><small>${a.ru.e}</small></span><span class="kit-pr">+${usd(a.price)}</span></label>`;
   return `<section class="offer" id="stoimost"><div class="wrap">
 ${head(`<span class="ours">Предложение DevUz Studio</span>`, "Стоимость", `Сайт клиники без допов: ${usd(BASE.promo)} вместо ${usd(BASE.price)}, если начинаем в течение 48 часов. Админка с записью и напоминаниями в Telegram, кино на первом экране, сцены по прокрутке и квиз идут допами: включайте тумблерами, итог пересчитается. Всё вместе: ${usd(ALL)}.`)}
+<p class="kit-demo"><a class="btn btn-line btn-sm" href="__PROTO_BASE__/panel">${ic("arrow")}<span>Открыть админку клиники: заявки, расписание, amoCRM</span></a></p>
 <div class="kit" id="konstruktor">
 <div class="kit-l">
 <div class="kit-base"><div><span class="kb-tag">Входит всегда</span><b>${BASE.ru.t}</b><p>${BASE.ru.d}</p><p class="kb-w">Срок: ${BASE.weeks[0]}-${BASE.weeks[1]} недель</p></div><div class="kb-p"><s>${usd(BASE.price)}</s><b>${usd(BASE.promo)}</b><small>48 часов</small></div></div>
@@ -401,7 +402,7 @@ ${[storyBlock(), vsBlock(), priceBlock(), quizBlock(), doctorsBlock(), trustBloc
 <div class="cols">
 <div>${logo("f-logo")}<p class="f-d">${B.what}. ${B.addr}. ${B.hours}.</p><ul class="f-c"><li>${ic("phone")}<a href="${tel}">${B.phone}</a></li><li>${ic("pin")}<a href="${B.route}">Маршрут в Яндекс Картах</a></li></ul></div>
 <div><b>DevUz Studio</b><ul><li><a href="https://devuz.studio">devuz.studio</a></li><li><a href="https://t.me/Devuz_studio_bot?start=syanie">Telegram</a></li></ul></div>
-<div><b>Данные макета</b><ul><li>Цены, врачи, гарантии, отзывы, адрес, часы, лицензия: ${B.site.replace("https://", "")}</li><li>Пролёт по клинике и сцены лечения сняты нейросетью по фото клиники</li><li>Квиз и запись открывают сообщение в клинику, ничего не уходит нам</li></ul></div>
+<div><b>Данные макета</b><ul><li>Цены, врачи, гарантии, отзывы, адрес, часы, лицензия: ${B.site.replace("https://", "")}</li><li>Пролёт по клинике и сцены лечения сняты нейросетью по фото клиники</li><li>Квиз и запись открывают сообщение в клинику, ничего не уходит нам</li><li><a href="__PROTO_BASE__/panel">Админка клиники (показ)</a></li></ul></div>
 </div>
 <div class="rights"><span>Это макет: так может выглядеть сайт «${B.name}». Сайт носит информационный характер и не является публичной офертой.</span><a href="${TERMS}">Условия использования макета</a></div>
 </div></footer>
