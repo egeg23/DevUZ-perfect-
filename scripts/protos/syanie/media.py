@@ -130,7 +130,7 @@ def main():
         film("16")
         n, seg = story("16")
         with open(os.path.join(HERE, "media.json"), "w") as f:
-            json.dump({"s16": n, "s9": n, "seg16": seg, "seg9": seg, "screens": 8}, f)
+            json.dump({"s16": n, "s9": n, "seg16": seg, "seg9": seg, "screens": 12}, f)
         return
     if len(sys.argv) > 2 and sys.argv[2] == "story":
         # Только кадры прокрутки, обе версии.
@@ -190,7 +190,7 @@ def main():
         d.ellipse((8 * s, 8 * s, 32 * s, 32 * s), outline=(201, 150, 90), width=max(2, round(1.4 * s)))
         d.rounded_rectangle((14 * s, 13 * s, 26 * s, 27 * s), radius=5 * s, fill=(239, 235, 229))
         im.save(os.path.join(OUT, name))
-    meta = {"s16": n16, "s9": n9, "seg16": seg16, "seg9": seg9, "screens": 8}
+    meta = {"s16": n16, "s9": n9, "seg16": seg16, "seg9": seg9, "screens": 12}
     with open(os.path.join(HERE, "media.json"), "w") as f:
         json.dump(meta, f)
     print(meta)

@@ -77,6 +77,18 @@ function paint(force){
   if(b===i&&t>.04&&ready[i+1])cover(imgs[i+1],t);
   ctx.globalAlpha=1;
 }
+/* Прокрутка задаёт, куда ехать, а кадры идут к этому месту как видео: не
+   быстрее 1,6 обычной скорости (24 кадра в секунду). Раньше кадр шёл
+   ровно за пальцем, и один свайп по телефону проматывал 5-10 секунд видео
+   за полсекунды: картинка прыгала через кадры (владелец, 28.10.2026: «нет
+   плавности как в видео»). Сильно отстали (пролистали далеко) — догоняем
+   быстрее, чтобы сцена не ехала по уже пустому экрану. */
+var aim=0,pRaf=0,pT=0,FPS=24;
+function play(){if(!pRaf){pT=0;pRaf=requestAnimationFrame(tick)}}
+function tick(t){pRaf=0;var dt=pT?Math.min(.05,(t-pT)/1000):1/60;pT=t;var to=aim*(N-1),gap=to-st.f,a=Math.abs(gap);
+  if(a<.02){st.f=to;render();return}
+  var v=FPS*(a>FPS*3?5:a>FPS*1.2?2.6:1.6),step=Math.min(a,v*dt,Math.max(a*.12,.05));
+  st.f+=gap>0?step:-step;render();pRaf=requestAnimationFrame(tick)}
 function seg(k,f){var a=SEG[k],b=SEG[k+1];return clamp((f-a)/Math.max(1,b-a))}
 function render(){
   if(!N)return;var p=st.f/(N-1);paint(false);
@@ -194,10 +206,10 @@ function initStory(){
   var waited=0,w=setInterval(function(){waited+=120;if(!d.getElementById('dzi')||waited>12000){clearInterval(w);if(scrollY>story.offsetTop+innerHeight*.3)endFilm();else playFilm()}},120);
   if(window.gsap&&window.ScrollTrigger){
     gsap.registerPlugin(ScrollTrigger);
-    gsap.to(st,{f:function(){return N-1},ease:'none',scrollTrigger:{trigger:story,start:'top top',end:'bottom bottom',scrub:.7,invalidateOnRefresh:true},onUpdate:render});
-  }else{
-    var lerp=function(){var r=story.getBoundingClientRect(),p=clamp(-r.top/Math.max(1,r.height-innerHeight));st.f+=(p*(N-1)-st.f)*.18;render();requestAnimationFrame(lerp)};lerp();
-  }
+    ScrollTrigger.config({ignoreMobileResize:true});
+    ScrollTrigger.create({trigger:story,start:'top top',end:'bottom bottom',invalidateOnRefresh:true,onUpdate:function(t){aim=t.progress;play()}});
+  }else addEventListener('scroll',function(){var r=story.getBoundingClientRect();aim=clamp(-r.top/Math.max(1,r.height-innerHeight));play()},{passive:true});
+  play();
   addEventListener('resize',function(){var f=fmtK;setFmt();if(f!==fmtK&&pumping){pumping=false;startPump()}size();render()});
   render();
 }
