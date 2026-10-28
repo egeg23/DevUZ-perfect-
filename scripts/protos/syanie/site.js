@@ -86,22 +86,15 @@ function paint(force){
   want(f);
   ctx.globalAlpha=1;
 }
-/* Прокрутка задаёт, куда ехать, а кадры идут к этому месту как видео: не
-   быстрее 1,6 обычной скорости (24 кадра в секунду). Раньше кадр шёл
-   ровно за пальцем, и один свайп по телефону проматывал 5-10 секунд видео
-   за полсекунды: картинка прыгала через кадры (владелец, 28.10.2026: «нет
-   плавности как в видео»). Сильно отстали (пролистали далеко) — догоняем
-   быстрее, чтобы сцена не ехала по уже пустому экрану. */
-var aim=0,pRaf=0,pT=0,FPS=24;
-/* Пролёт на экране? Тогда золотым кнопкам ждать, пока он доиграет. */
-function onStage(){var y=scrollY,t=story.offsetTop;return y+innerHeight>t&&y<t+story.offsetHeight}
-function play(){if(!pRaf){pT=0;pRaf=requestAnimationFrame(tick)}}
-function tick(t){pRaf=0;window.SY_BUSY=onStage();var dt=pT?Math.min(.05,(t-pT)/1000):1/60;pT=t;var to=aim*(N-1),gap=to-st.f,a=Math.abs(gap);
-  if(a<.02){st.f=to;render();window.SY_BUSY=false;return}
-  var v=FPS*(a>FPS*3?5:a>FPS*1.2?2.6:1.6),step=Math.min(a,v*dt,Math.max(a*.12,.05));
-  st.f+=gap>0?step:-step;render();pRaf=requestAnimationFrame(tick)}
+/* Кадр едет за прокруткой с мягким догоном (GSAP scrub .7), как в первой
+   версии макета: так пролёт выглядел видео (владелец, 28.10.2026: «раньше
+   было намного плавнее»). Ограничение скорости кадра ступенями давало
+   рывки на разгоне и торможении, его больше нет. Пока сцена едет, золотые
+   кнопки ждут (SY_BUSY). */
+var busyT=0;function busy(){window.SY_BUSY=true;clearTimeout(busyT);busyT=setTimeout(function(){window.SY_BUSY=false},900)}
+function onScene(){busy();render()}
 /* Раскодированные кадры — окно вокруг текущего (ImageBitmap). Браузер
-   держит раскодированными не все 868 кадров и выбрасывает их, а потом
+   держит раскодированными не все кадры и выбрасывает их, а потом
    раскодирует кадр прямо при показе, на прокрутке (аудит 28.10.2026: по
    7 мс на кадр и больше). Здесь кадры впереди раскодируются заранее, вне
    основного потока, а дальние отпускаются, чтобы телефону хватало памяти. */
@@ -165,7 +158,9 @@ function spriteGold(){if(spGold)return spGold;var c=d.createElement('canvas');c.
 function asmStop(){cancelAnimationFrame(asmRaf);asmRun=false;if(asmCv){asmCv.classList.add('out')}hero.classList.remove('asm')}
 /* Переход внахлёст: настоящий текст проявляется, пока последние импланты
    ещё долетают; слой с имплантами гаснет за то же время. */
-function asmFinish(){if(!asmRun)return;asmRun=false;asmDone=true;hero.classList.remove('asm');asmCv.classList.add('out');setTimeout(function(){cancelAnimationFrame(asmRaf);if(!asmRun)asmX.clearRect(0,0,asmCv.width,asmCv.height)},700);render()}
+function asmFinish(){if(!asmRun)return;asmRun=false;asmDone=true;hero.classList.remove('asm');asmCv.classList.add('out');setTimeout(function(){cancelAnimationFrame(asmRaf);if(!asmRun)asmCv.width=asmCv.height=0},700);render()}
+/* После заставки слои импланта не остаются над пролётом: холст отпускает
+   память (width 0), видео скрыто (visibility), сцена рисует только кадры. */
 /* Перед сборкой — видео: один имплант медленно уплывает, камера догоняет
    его и снимает макро, потом импланты разгоняются и уходят роем вглубь.
    Из этого роя в центре и вылетают импланты, которые садятся в буквы. */
@@ -229,9 +224,10 @@ function initStory(){
   if(window.gsap&&window.ScrollTrigger){
     gsap.registerPlugin(ScrollTrigger);
     ScrollTrigger.config({ignoreMobileResize:true});
-    ScrollTrigger.create({trigger:story,start:'top top',end:'bottom bottom',invalidateOnRefresh:true,onUpdate:function(t){aim=t.progress;play()}});
-  }else addEventListener('scroll',function(){var r=story.getBoundingClientRect();aim=clamp(-r.top/Math.max(1,r.height-innerHeight));play()},{passive:true});
-  play();
+    gsap.to(st,{f:function(){return N-1},ease:'none',scrollTrigger:{trigger:story,start:'top top',end:'bottom bottom',scrub:.7,invalidateOnRefresh:true,onRefresh:render},onUpdate:onScene});
+  }else{
+    var lerp=function(){var r=story.getBoundingClientRect(),p=clamp(-r.top/Math.max(1,r.height-innerHeight)),to=p*(N-1);if(Math.abs(to-st.f)>.01){st.f+=(to-st.f)*.18;onScene()}requestAnimationFrame(lerp)};lerp();
+  }
   addEventListener('resize',function(){var f=fmtK;setFmt();if(f!==fmtK&&pumping){pumping=false;startPump()}size();render()});
   render();
 }
@@ -242,7 +238,7 @@ addEventListener('scroll',function(){
   headIdle();
   var y=scrollY;
   if(filmOn&&!filmDone&&story&&y-story.offsetTop>40)endFilm();
-  if((asmRun||ivOn)&&story&&y-story.offsetTop>40){if(ivOn){ivOn=false;ivEl.classList.remove('on');try{ivEl.pause()}catch(e){}asmDone=true;hero.classList.remove('asm')}asmFinish()}
+  if((asmRun||ivOn)&&story&&y-story.offsetTop>40){if(ivOn){ivOn=false;ivEl.classList.remove('on');try{ivEl.pause()}catch(e){}asmDone=true;hero.classList.remove('asm')}asmFinish();render()}
   if(top)top.classList.toggle('solid',story?y>story.offsetTop+story.offsetHeight-80:y>40);
   lastY=y;
 },{passive:true});

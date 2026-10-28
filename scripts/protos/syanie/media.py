@@ -33,12 +33,13 @@ os.makedirs(OUT, exist_ok=True)
 
 # Кино: 4 сцены по ~5 с; ускоряем, чтобы пролёт шёл ~16 с.
 FILM_SPEED = 1.25
-# Сцены прокрутки: каждый кадр видео 24 к/с, 1280 px на компьютере и 720 px
-# на телефоне (владелец, 28.10.2026: «плавность так и не добавилась между
-# кадрами» — был каждый второй, до того на компьютере каждый третий).
-STEP = {"16": 1, "9": 1}
+# Сцены прокрутки: каждый второй кадр видео 24 к/с, 1280 px на компьютере и
+# 720 px на телефоне, на 8 экранов прокрутки. Каждый кадр на 12 экранах
+# (28.10.2026) телефон тянул хуже: вдвое больше файлов и раскодирования, а
+# пролёт стал рваным (владелец: «раньше было намного плавнее»).
+STEP = {"16": 2, "9": 2}
 SIZES = {"16": (1280, 720), "9": (720, 1280)}
-QUALITY = 58
+QUALITY = 62
 
 
 def run(*a):
@@ -130,7 +131,7 @@ def main():
         film("16")
         n, seg = story("16")
         with open(os.path.join(HERE, "media.json"), "w") as f:
-            json.dump({"s16": n, "s9": n, "seg16": seg, "seg9": seg, "screens": 12}, f)
+            json.dump({"s16": n, "s9": n, "seg16": seg, "seg9": seg, "screens": 8}, f)
         return
     if len(sys.argv) > 2 and sys.argv[2] == "story":
         # Только кадры прокрутки, обе версии.
@@ -190,7 +191,7 @@ def main():
         d.ellipse((8 * s, 8 * s, 32 * s, 32 * s), outline=(201, 150, 90), width=max(2, round(1.4 * s)))
         d.rounded_rectangle((14 * s, 13 * s, 26 * s, 27 * s), radius=5 * s, fill=(239, 235, 229))
         im.save(os.path.join(OUT, name))
-    meta = {"s16": n16, "s9": n9, "seg16": seg16, "seg9": seg9, "screens": 12}
+    meta = {"s16": n16, "s9": n9, "seg16": seg16, "seg9": seg9, "screens": 8}
     with open(os.path.join(HERE, "media.json"), "w") as f:
         json.dump(meta, f)
     print(meta)
