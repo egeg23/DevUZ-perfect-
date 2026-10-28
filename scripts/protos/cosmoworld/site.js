@@ -29,32 +29,51 @@ if(sc){
   var cv=$('.sc-cv',sc),cx=cv.getContext('2d'),poster=$('.sc-poster',sc),caps=$$('.sc-cap',sc),steps=$$('.sc-steps i',sc),load=$('.sc-load',sc),nEl=$('b',load),bar=$('u',load);
   var DESK=false;try{DESK=matchMedia('(min-width: 900px) and (orientation: landscape)').matches}catch(e){}
   var F=DESK?K.scene.d:K.scene.m,raw=[],bm={},bmN=[],MAXB=12,ready=false,want=0,cur=0,raf=0,dpr=Math.min(W.devicePixelRatio||1,2);
-  var SEG=(K.scene.d-1)/3,HOLD=.045;
-  /* Ключевые кадры — на 0, 1/3, 2/3 и 1: около них камера стоит, подписи читаются. */
-  function frameAt(p){if(!DESK)return p*3;var k=Math.min(2,Math.floor(p*3)),a=k/3+(k?HOLD:0),b=(k+1)/3-(k<2?HOLD:0);return (k+cl((p-a)/(b-a)))*SEG}
+  /* Ход сцены по прокрутке: подлёт к подиуму, нырок сквозь облака на
+     склад, короткий пролёт по проходу склада (наезд к точке схода), подъём
+     над страной. Без остановок: внутри отрезка камера разгоняется и
+     тормозит плавно. Компьютер берёт кадры роликов, телефон — четыре кадра
+     9:16 с пролётом насквозь (камера влетает в кадр, из него выплывает
+     следующий). fx, fy — куда летит камера в кадре. */
+  var L=K.scene.d-1,Q=Math.round(L/3),Q2=Math.round(2*L/3);
+  var PLAN=DESK?[[0,.26,'c',0,Q],[.26,.5,'c',Q,Q2],[.5,.68,'z',Q2,1.6,.5,.42],[.68,1,'c',Q2,L,1.6]]
+    :[[0,.26,'x',0,1,.5,.62],[.26,.5,'x',1,2,.5,.92],[.5,.68,'z',2,1.9,.5,.37],[.68,1,'x',2,3,.5,.37,1.9]];
+  function ease(t){return .5*t+.5*sm(t)}
+  function at(p){for(var i=0;i<PLAN.length;i++){var g=PLAN[i];if(p<=g[1]||i===PLAN.length-1)return {g:g,t:ease(cl((p-g[0])/(g[1]-g[0])))}}}
   function prog(){var r=sc.getBoundingClientRect(),span=r.height-innerHeight;return span>0?cl(-r.top/span):0}
   function size(){cv.width=Math.round(cv.clientWidth*dpr);cv.height=Math.round(cv.clientHeight*dpr)}
   function want4(i){if(bm[i]||bm[i]===0||!raw[i]||!W.createImageBitmap)return;bm[i]=0;
     createImageBitmap(new Blob([raw[i]],{type:'image/webp'})).then(function(im){bm[i]=im;bmN.push(i);
       while(bmN.length>MAXB){var o=bmN.shift();if(Math.abs(o-cur)>3&&bm[o]&&bm[o].close){bm[o].close();delete bm[o]}else bmN.push(o)}
       if(!raf)raf=requestAnimationFrame(loop)},function(){delete bm[i]})}
-  function cover(im,a,z){var cw=cv.width,ch=cv.height,s=Math.max(cw/im.width,ch/im.height)*(z||1),w=im.width*s,h=im.height*s;cx.globalAlpha=a;cx.drawImage(im,(cw-w)*.6,(ch-h)*.5,w,h)}
+  /* Кадр во весь экран с наездом z к точке (fx, fy) кадра. */
+  function cover(im,a,z,fx,fy){var cw=cv.width,ch=cv.height,s0=Math.max(cw/im.width,ch/im.height),w0=im.width*s0,h0=im.height*s0,ox=(cw-w0)*.6,oy=(ch-h0)*.5;
+    z=z||1;fx=fx==null?.5:fx;fy=fy==null?.5:fy;var px=ox+fx*w0,py=oy+fy*h0,w=w0*z,h=h0*z;cx.globalAlpha=a;cx.drawImage(im,px-fx*w,py-fy*h,w,h)}
   function nearest(i){for(var k=0;k<F;k++){if(bm[i-k])return bm[i-k];if(bm[i+k])return bm[i+k]}return null}
-  function draw(){var f=frameAt(cur),i=Math.floor(f),t=f-i;
-    for(var k=-2;k<=3;k++)want4(Math.max(0,Math.min(F-1,i+k)));
-    cx.globalAlpha=1;
-    if(DESK){var a=bm[i]||nearest(i);if(!a)return;cover(a,1);var b=bm[i+1];if(b&&t>.02)cover(b,t)}
-    else{var A=bm[i]||nearest(i);if(!A)return;cover(A,1,1+.06*t);var B=bm[Math.min(F-1,i+1)];if(B&&i+1<F){var k2=sm((t-.5)/.5);if(k2>0)cover(B,k2,1)}}
+  function frame(f,a,z,fx,fy){var i=Math.floor(f),t=f-i,A=bm[i]||nearest(i);if(!A)return;cover(A,a,z,fx,fy);var B=bm[i+1];if(B&&t>.02)cover(B,a*t,z,fx,fy)}
+  function draw(){var r=at(cur),g=r.g,t=r.t;cx.globalAlpha=1;
+    if(DESK){var f=g[2]==='z'?g[3]:g[3]+(g[4]-g[3])*t;
+      for(var k=-2;k<=3;k++)want4(Math.max(0,Math.min(F-1,Math.floor(f)+k)));
+      if(g[2]==='z')frame(f,1,1+(g[4]-1)*t,g[5],g[6]);
+      else if(g[5])frame(f,1,g[5]-(g[5]-1)*sm(cl(t/.45)),.5,.42);
+      else frame(f,1,1)}
+    else{for(var j=0;j<F;j++)want4(j);
+      if(g[2]==='z'){var M=bm[g[3]];if(M)cover(M,1,1+(g[4]-1)*t,g[5],g[6])}
+      else{var A=bm[g[3]],B=bm[g[4]],z0=g[7]||1;
+        if(A)cover(A,1,z0+(z0*.55)*t*t,g[5],g[6]);
+        var k2=sm((t-.32)/.55);if(B&&k2>0)cover(B,k2,1.28-.28*sm(t),.5,.5);
+        /* Нырок в облака и подъём из склада — сквозь облачную дымку. */
+        if(g[3]>=1){var fg=Math.sin(Math.PI*cl((t-.12)/.76));if(fg>0){cx.globalAlpha=fg*.5;cx.fillStyle='#aeb9c7';cx.fillRect(0,0,cv.width,cv.height)}}}}
     cx.globalAlpha=1}
   function capA(p,c,w){var x=Math.abs(p-c);return 1-sm((x-w)/.06)}
   function paint(p){
-    var C=[[0,.07],[1/3,.06],[2/3,.06],[1,.07]];
+    var C=[[0,.07],[.26,.07],[.59,.08],[1,.07]];
     caps.forEach(function(el,i){var a=i===0?1-sm((p-.07)/.06):i===3?sm((p-.88)/.06):capA(p,C[i][0],C[i][1]);
       el.style.opacity=a.toFixed(3);el.style.transform='translateY('+((1-a)*24).toFixed(1)+'px)';el.classList.toggle('on',a>.5)});
-    steps.forEach(function(s,i){s.classList.toggle('on',p>=i/3-.05)});
+    steps.forEach(function(s,i){s.classList.toggle('on',p>=[0,.22,.5,.84][i])});
     if(!ready)poster.style.transform='scale('+(1+p*.08).toFixed(4)+')';
     sc.classList.toggle('moved',p>.02)}
-  function loop(){raf=0;var dl=want-cur;cur=Math.abs(dl)<.0005?want:cur+dl*.18;if(ready)draw();paint(cur);if(cur!==want)raf=requestAnimationFrame(loop)}
+  function loop(){raf=0;var dl=want-cur;cur=Math.abs(dl)<.0005?want:cur+dl*.12;if(ready)draw();paint(cur);if(cur!==want)raf=requestAnimationFrame(loop)}
   function poke(){want=prog();if(!raf)raf=requestAnimationFrame(loop)}
   function done(){load.classList.add('ok')}
   if(REDUCED){done();paint(0)}
@@ -141,23 +160,38 @@ if(pl&&!REDUCED){var pv=false,pr=0,p0=0;var path=$('.path');
     pl.style.transform=wide?'translateX('+(k*L).toFixed(1)+'px)':'translateY('+(k*L).toFixed(1)+'px)';pr=requestAnimationFrame(pLoop)}
   inView(path,function(v){pv=v;if(v&&!pr)pr=requestAnimationFrame(pLoop)})}
 
-/* ── Карта: регионы загораются по очереди, дуги из Ташкента ────────── */
+/* ── Карта: когда видна, из Ташкента вылетают линии и летят во все
+   концы страны; светящаяся голова на конце, область загорается, когда
+   линия долетела; последняя — пунктир в Бишкек. Потом по дугам бегут
+   точки. Линия растёт пересчётом пути (часть кривой Безье), без CSS. ── */
 var map=$('.map');
 if(map){
-  var gs=$$('.rg-g',map),arcs=$$('.arc',map),dots=$$('.dot',map),card=$('.cov-card'),btns=$$('.rg-list button'),mVis=false,mr=0,m0=0,auto=!REDUCED,lit=0,litT=0;
+  var gs=$$('.rg-g',map),arcs=$$('.arc',map),dots=$$('.dot',map),card=$('.cov-card'),btns=$$('.rg-list button'),mVis=false,mr=0,m0=0,auto=!REDUCED,flown=false,landed=0;
+  var P=arcs.map(function(a){var n=a.getAttribute('d').match(/-?[\d.]+/g).map(Number);return n});
+  function part(n,t){var u=1-t,x=u*u*n[0]+2*u*t*n[2]+t*t*n[4],y=u*u*n[1]+2*u*t*n[3]+t*t*n[5];
+    return {d:'M'+n[0]+' '+n[1]+'Q'+(n[0]+(n[2]-n[0])*t).toFixed(1)+' '+(n[1]+(n[3]-n[1])*t).toFixed(1)+' '+x.toFixed(1)+' '+y.toFixed(1),x:x,y:y}}
   function setR(i){gs.forEach(function(g,j){g.classList.toggle('cur',j===i)});btns.forEach(function(b,j){b.setAttribute('aria-pressed',String(j===i))});
     var r=K.regions[i];$('.no',card).textContent=pad(i+1)+' / '+pad(gs.length);$('h3',card).textContent=r.name;$('a',card).href=wa(r.ask)}
   function pick(i){auto=false;setR(i)}
   gs.forEach(function(g,i){g.addEventListener('click',function(){pick(i)});g.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();pick(i)}})});
   btns.forEach(function(b,i){b.addEventListener('click',function(){pick(i)})});
-  function light(){if(lit>=gs.length){clearInterval(litT);return}gs[lit].classList.add('on');if(arcs[lit])arcs[lit].classList.add('on');lit++}
-  function mLoop(now){mr=0;if(!mVis)return;if(!m0)m0=now;
-    dots.forEach(function(dt,i){var a=arcs[i];if(!a||!a.classList.contains('on'))return;var L=a.getTotalLength(),k=((now-m0)/2800+i*.137)%1,pt=a.getPointAtLength(L*k);dt.setAttribute('transform','translate('+pt.x.toFixed(1)+' '+pt.y.toFixed(1)+')');dt.style.opacity=String((Math.sin(k*Math.PI)).toFixed(2))});
-    mr=requestAnimationFrame(mLoop)}
+  /* Порядок вылета — от ближних к дальним, Бишкек последним. */
+  var order=arcs.map(function(a,i){return i}).sort(function(a,b){if(arcs[a].classList.contains('kg'))return 1;if(arcs[b].classList.contains('kg'))return -1;var A=P[a],B=P[b];return Math.hypot(A[4]-A[0],A[5]-A[1])-Math.hypot(B[4]-B[0],B[5]-B[1])});
+  var start={};order.forEach(function(i,k){start[i]=k*140});
+  var FLY=900;
+  function fly(now){if(!m0)m0=now;var all=true;
+    arcs.forEach(function(a,i){var t=cl((now-m0-start[i])/FLY);if(t<1)all=false;if(t<=0)return;var e=1-Math.pow(1-t,3),q=part(P[i],e);a.setAttribute('d',q.d);a.classList.add('on');
+      var dt=dots[i];if(dt){dt.setAttribute('transform','translate('+q.x.toFixed(1)+' '+q.y.toFixed(1)+')');dt.style.opacity=t<1?'1':'0'}
+      if(t>=1&&!a.dataset.land){a.dataset.land='1';if(gs[i]&&!a.classList.contains('kg'))gs[i].classList.add('on');landed++}});
+    if(all){flown=true;m0=0;return run(now)}mr=requestAnimationFrame(fly)}
+  function run(now){mr=0;if(!mVis)return;if(!m0)m0=now;
+    dots.forEach(function(dt,i){var a=arcs[i];if(!a)return;var n=P[i],k=((now-m0)/2800+i*.137)%1,q=part(n,k);dt.setAttribute('transform','translate('+q.x.toFixed(1)+' '+q.y.toFixed(1)+')');dt.style.opacity=String((Math.sin(k*Math.PI)).toFixed(2))});
+    mr=requestAnimationFrame(run)}
   setR(13);
   if(REDUCED){gs.forEach(function(g){g.classList.add('on')});arcs.forEach(function(a){a.classList.add('on')})}
-  else inView(map,function(v){mVis=v;if(v){if(!litT&&lit<gs.length)litT=setInterval(light,180);if(!mr)mr=requestAnimationFrame(mLoop)}},.3);
-  var tick=0;setInterval(function(){if(!auto||!mVis||d.hidden||lit<gs.length)return;tick=(tick+1)%gs.length;setR(tick)},2600);
+  else{arcs.forEach(function(a){a.setAttribute('d','M'+P[0][0]+' '+P[0][1])});gs[13].classList.add('on');
+    inView(map,function(v){mVis=v;if(v&&!mr)mr=requestAnimationFrame(flown?run:fly)},.35)}
+  var tick=13;setInterval(function(){if(!auto||!mVis||d.hidden||!flown)return;tick=(tick+1)%gs.length;setR(tick)},2600);
 }
 
 /* ── Стать партнёром: вкладки и заявка готовым текстом ─────────────── */
