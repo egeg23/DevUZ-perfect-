@@ -33,10 +33,11 @@ os.makedirs(OUT, exist_ok=True)
 
 # Кино: 4 сцены по ~5 с; ускоряем, чтобы пролёт шёл ~16 с.
 FILM_SPEED = 1.25
-# Сцены прокрутки: каждый STEP-й кадр видео 24 к/с. Горизонтальная версия
-# легче: каждый третий кадр и 1280 px (canvas смешивает соседние кадры, так
-# что прокрутка не идёт ступеньками), вертикальная — каждый второй.
-STEP = {"16": 3, "9": 2}
+# Сцены прокрутки: каждый второй кадр видео 24 к/с, 1280 px на компьютере и
+# 720 px на телефоне (canvas смешивает соседние кадры). До 28.10.2026 на
+# компьютере был каждый третий: владелец заметил, что пролёт с кадра
+# «пациент в кресле» идёт не так плавно.
+STEP = {"16": 2, "9": 2}
 SIZES = {"16": (1280, 720), "9": (720, 1280)}
 QUALITY = 62
 
@@ -131,6 +132,16 @@ def main():
         n, seg = story("16")
         with open(os.path.join(HERE, "media.json"), "w") as f:
             json.dump({"s16": n, "s9": n, "seg16": seg, "seg9": seg, "screens": 8}, f)
+        return
+    if len(sys.argv) > 2 and sys.argv[2] == "story16":
+        # Только кадры прокрутки 16:9; вертикальные и остальное не трогаем.
+        n, seg = story("16")
+        with open(os.path.join(HERE, "media.json")) as f:
+            meta = json.load(f)
+        meta.update({"s16": n, "seg16": seg})
+        with open(os.path.join(HERE, "media.json"), "w") as f:
+            json.dump(meta, f)
+        print(meta)
         return
     if len(sys.argv) > 2 and sys.argv[2] == "imp":
         implant_shot("16")

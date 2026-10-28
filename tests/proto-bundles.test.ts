@@ -1794,7 +1794,7 @@ test("Сияние Севера: страница на русском — усл
   const site = bundlePages("syanie");
   assert.ok(site);
   const page = site.html;
-  assert.deepEqual(Object.keys(site.pages), [], "страница одна");
+  assert.deepEqual(Object.keys(site.pages), ["panel"], "сайт и панель клиники");
   assert.doesNotMatch(page, /@@[A-Z]+@@/, "метка сборки осталась");
   assert.ok(page.includes('<html lang="ru">'), "язык страницы");
   assert.ok(page.includes("https://devuz.studio/ru/mockup-terms"), "нет условий");
@@ -1835,6 +1835,48 @@ test("Сияние Севера: цены клиники — с их сайта,
   assert.match(html, /<s>250 000 ₽<\/s><b>100 000 ₽<\/b>/, "на макете 100 000 ₽ вместо 250 000 ₽ крупно");
   assert.doesNotMatch(html.replace(/<script[\s\S]*?<\/script>/g, ""), /\d \$/, "на макете остались доллары");
   for (const a of plan.ADDONS) assert.ok(html.includes(`data-k="${a.id}" data-p="${a.price}"`), `${a.id}: цена на странице`);
+});
+
+test("Сияние Севера: панель клиники — условия, noindex, общее состояние с сайтом, amoCRM через API v4, роли, без моделей и запросов в amo", () => {
+  const panel = bundlePages("syanie")!.pages.panel;
+  assert.ok(panel, "нет страницы panel");
+  assert.doesNotMatch(panel, /@@[A-Z]+@@/, "метка сборки осталась");
+  assert.ok(panel.includes('<html lang="ru">'), "язык страницы");
+  assert.ok(panel.includes("https://devuz.studio/ru/mockup-terms"), "нет условий");
+  assert.match(panel, /<meta name="robots" content="noindex/, "нет noindex");
+  assert.match(panel, /prefers-reduced-motion/, "анимацию нечем выключить");
+  assert.doesNotMatch(panel, /stamp|watermark|fingerprint|отпечат|seed|data-mark/i, "слово, по которому находят отпечаток");
+  assert.doesNotMatch(panel, /proto-ai|proxyapi/i, "панель не зовёт модель");
+  assert.doesNotMatch(panel, /href="#"/, "ссылка в никуда");
+  assert.ok(panel.includes("window.SY={"), "панель не видит общее состояние сайта (store.js)");
+  assert.ok(panel.includes('href="__PROTO_BASE__"'), "нет ссылки на сайт клиники");
+  assert.ok(panel.includes("демо-данные"), "нет пометки «демо-данные»");
+  for (const v of ["svodka", "zayavki", "raspisanie", "amo", "chaty", "napominaniya", "istoriya"]) assert.match(panel, new RegExp(`V\\.${v}=function`), `панель: нет раздела ${v}`);
+  for (const role of ["Главный врач", "Администратор"]) assert.ok(panel.includes(`>${role}</button>`), `нет роли ${role}`);
+  assert.ok(panel.includes("/api/v4/leads/complex") && panel.includes("field_code:'PHONE'"), "amoCRM: нет сделки с контактом одним запросом");
+  assert.ok(panel.includes("/leads/detail/"), "amoCRM: нет ссылки на сделку");
+  assert.ok(panel.includes("В макете запросы в amoCRM не уходят"), "amoCRM: нет честной пометки");
+  assert.doesNotMatch(panel, /fetch\(|XMLHttpRequest|sendBeacon/, "панель не ходит в сеть");
+  for (const p of ["179900", "259900"]) assert.ok(panel.includes(p), `цена ${p} не из data.mjs`);
+  assert.ok(panel.includes("Реутов") && panel.includes("Савин"), "врачи не из data.mjs");
+  assert.ok(panel.includes(":root{--ink:"), "панель без токенов цвета сайта");
+});
+
+test("Сияние Севера: чат на сайте — «ИИ-консультант» и «Менеджер в Telegram» для показа, ответы фактами клиники, без модели", async () => {
+  const { readFileSync } = await import("node:fs");
+  /* Владелец, 28.10.2026: «Чат на базе ИИ и второй вариант: чтобы человек писал на сайте, а менеджер отвечал через телеграм бота». */
+  const html = bundlePages("syanie")!.html;
+  for (const s of ["ИИ-консультант", "Менеджер в Telegram", "на сайте останется один", "Сияние Севера · заявки", "Так это видит администратор", "В макете ответы из вопросов клиники", "по сценарию (демо)", "ответим утром с 9:00"]) assert.ok(html.includes(s), `в чате нет «${s}»`);
+  const D = await import("../scripts/protos/syanie/data.mjs");
+  const data = JSON.parse(html.match(/<script type="application\/json" id="sy-site">([\s\S]*?)<\/script>/)![1]);
+  assert.equal(data.chat.faq.length, D.FAQ.length, "консультант отвечает вопросами клиники");
+  assert.deepEqual(data.chat.prices.map((p: { p: number }) => p.p), [179900, 259900], "цены в чате с их сайта");
+  assert.equal(data.chat.warn, D.BRAND.warn, "предупреждение о противопоказаниях");
+  const js = readFileSync("scripts/protos/syanie/chat.js", "utf8");
+  assert.doesNotMatch(js, /fetch\(|XMLHttpRequest|WebSocket|anthropic|openai|proxyapi/i, "чат в макете не зовёт модель и не ходит в сеть");
+  assert.match(js, /SY\.addChat\(\{mode:mode/, "переписка в общем состоянии с вариантом ai | tg");
+  assert.match(js, /src:'chat'/, "запись из чата — заявка src = chat");
+  assert.match(readFileSync("scripts/protos/syanie/chat.css", "utf8"), /\.cx-f input\{[^}]*font:400 16px/, "поле ввода 16 px: iPhone не увеличивает страницу");
 });
 
 test("Жигули Рестобар: ru и uz — условия, noindex, видео DevUz, кино по прокрутке, их буквы, 18+, шапка по правилу, uz без кириллицы", async () => {
