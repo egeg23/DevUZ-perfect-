@@ -31,12 +31,12 @@ var FS=['precision mediump float;varying vec2 v;uniform sampler2D H,G;uniform ve
 ' float hx=h(uv+vec2(tx.x,0.))-h(uv-vec2(tx.x,0.)),hy=h(uv+vec2(0.,tx.y))-h(uv-vec2(0.,tx.y));',
 /* Капсула: края кнопки загибаются, как у налитого золота. */
 ' float cy=(uv.y-.5)*2.;vec3 n=normalize(vec3(-hx*3.2,-hy*3.2+cy*.55,1.));',
-' vec2 tu=vec2(uv.x*a,uv.y)*.32+off+n.xy*.05+vec2(t*.006,t*.0017);',
-' vec3 b=texture2D(G,tu).rgb;b=mix(vec3(dot(b,vec3(.33))),b,1.25);b=pow(b,vec3(1.08))*1.12;',
+' vec2 tu=vec2(uv.x*.78,uv.y*1.56/a)+off+n.xy*.035+vec2(sin(t*.05),cos(t*.037))*.03;',
+' vec3 b=texture2D(G,tu).rgb;b=mix(b,b*vec3(1.,.95,.8),.35);b=pow(b,vec3(1.12))*.98;',
 ' b=mix(vec3(.80,.55,.16),b,ready);',
 ' vec3 V=vec3(0.,0.,1.),Ld=normalize(vec3((L-uv)*vec2(a,1.)*.9,.75)),Hh=normalize(Ld+V);',
 ' float df=max(dot(n,Ld),0.),sp=pow(max(dot(n,Hh),0.),70.),sk=smoothstep(.15,.95,n.y*.5+.5-cy*.18);',
-' vec3 c=b*(.62+.55*df)+vec3(1.,.92,.70)*sp*1.25+vec3(1.,.86,.55)*sk*.18;',
+' vec3 c=b*(.6+.5*df)+vec3(1.,.93,.74)*sp*.9+vec3(1.,.88,.6)*sk*.12;c=c/(1.+c*.35);c*=1.22;',
 /* Блёстки: в каждой ячейке своя чешуйка со своим наклоном. */
 ' vec2 px=uv*res/2.6+n.xy*6.;vec2 ci=floor(px);float k=hs(ci);',
 ' vec3 fn=normalize(n+vec3(hs(ci+3.1)-.5,hs(ci+7.7)-.5,0.)*1.3);',
@@ -68,7 +68,7 @@ if(gl){try{
 var B=[],raf=0;
 function setup(el){
   if(el.__gold)return;var cv=d.createElement('canvas');cv.className='gl';cv.setAttribute('aria-hidden','true');el.insertBefore(cv,el.firstChild);
-  var b={el:el,cv:cv,x:cv.getContext('2d'),w:0,h:0,vis:false,drop:R(600,2200),L:[.3,.1],Lt:[.3,.1],off:[R(0,3),R(0,3)],p:[],lx:-1,ly:-1,lt:0};
+  var b={el:el,cv:cv,x:cv.getContext('2d'),w:0,h:0,vis:false,drop:R(600,2200),L:[.3,.1],Lt:[.3,.1],off:[R(.06,.16),R(.1,.6)],p:[],lx:-1,ly:-1,lt:0};
   el.__gold=b;el.classList.add('gold-live');size(b);B.push(b);
   function pos(e){var r=el.getBoundingClientRect();return[(e.clientX-r.left)/r.width,(e.clientY-r.top)/r.height]}
   el.addEventListener('pointermove',function(e){var q=pos(e);b.Lt=[q[0],q[1]-.35];if(e.pointerType==='mouse'||e.buttons)drag(b,q[0],q[1]);go()});
