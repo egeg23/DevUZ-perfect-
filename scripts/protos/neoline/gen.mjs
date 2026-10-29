@@ -27,6 +27,7 @@ const IMG = "/protos/neoline";
 const strip = (s) => s.replace(/\/\*[\s\S]*?\*\//g, "");
 const CSS = strip(readFileSync(DIR + "site.css", "utf8")).replace(/\n\s*/g, "");
 const JS = strip(readFileSync(DIR + "site.js", "utf8")).replace(/\n\s*\n/g, "\n");
+const LAND_JS = strip(readFileSync(DIR + "land.js", "utf8")).replace(/\n\s*\n/g, "\n");
 const PANEL_JS = strip(readFileSync(DIR + "panel.js", "utf8")).replace(/\n\s*\n/g, "\n");
 const PANEL_CSS = strip(readFileSync(DIR + "panel.css", "utf8")).replace(/\n\s*/g, "");
 const BASE_URL = "__PROTO_BASE__";
@@ -50,6 +51,7 @@ const words = (txt) => txt.split(" ").map((w) => `<span class="w"><span>${w}</sp
 const I = (dd) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${dd}</svg>`;
 const ICON = {
   arrow: I('<path d="M5 12h14M13 6l6 6-6 6"/>'),
+  back: I('<path d="M19 12H5M11 6l-6 6 6 6"/>'),
   cart: I('<path d="M3 4h2l2.4 11h11L21 7H6.2"/><circle cx="9.5" cy="19.5" r="1.4"/><circle cx="17" cy="19.5" r="1.4"/>'),
   search: I('<circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/>'),
   close: I('<path d="M6 6l12 12M18 6 6 18"/>'),
@@ -70,7 +72,7 @@ const ICON = {
 };
 /* Знак Neoline: две половины «N» из их logo.svg (viewBox 5 8 69.5 47). */
 const MARK = `<svg class="mk" viewBox="5 8 69.5 47" aria-hidden="true" focusable="false"><path fill="currentColor" d="M58.6 8v11.9L46.8 31.7V19.9h-7.6L21.1 38H5.2l7.9-8 22-22z"/><path fill="currentColor" d="M21 54.9V43l11.8-11.8V43h7.7l18-18.1h16l-8 8-22 22z"/></svg>`;
-const LOGO = (l) => `<a class="logo" href="${href(l)}" aria-label="Neoline">${MARK}<span class="word">NEOLINE</span></a>`;
+const LOGO = (l, to = "site") => `<a class="logo" href="${href(l, to)}" aria-label="Neoline">${MARK}<span class="word">NEOLINE</span></a>`;
 
 const isHybrid = (p) => p.cat === "radar" && /видеорегистратор/i.test(p.text.ru.join(" "));
 const catName = (id, l) => CATS.find((c) => c.id === id)[l];
@@ -92,12 +94,12 @@ function head(l, t, title, desc) {
 }
 
 function header(l, t) {
-  const nav = [["radar", t("Радар в деле", "Radar ishda")], ["catalog", t("Каталог", "Katalog")], ["upd", t("Обновления", "Yangilanishlar")], ["service", t("Сервис", "Servis")], ["offer", t("Предложение", "Taklif")]];
-  return `<header class="top"><div class="top-in glass">
+  const nav = [["radar", t("Радар в деле", "Radar ishda")], ["catalog", t("Каталог", "Katalog")], ["upd", t("Обновления", "Yangilanishlar")], ["service", t("Сервис", "Servis")]];
+  return `<header class="top"><div class="mbar"><a href="${href(l)}">${ICON.back}<span>${t("Макет для Neoline", "Neoline uchun maket")}</span></a><a class="mb-adm" href="${href(l, "panel")}">${ICON.panel}<span>${t("Админка магазина", "Do‘kon admin paneli")}</span>${ICON.arrow}</a></div><div class="top-in glass">
 ${LOGO(l)}
-<nav class="nav" aria-label="${t("Разделы", "Bo‘limlar")}">${nav.map(([id, n]) => `<a href="#${id}"${id === "upd" ? ' data-addon="upd"' : ""}>${n}</a>`).join("")}</nav>
+<nav class="nav" aria-label="${t("Разделы", "Bo‘limlar")}">${nav.map(([id, n]) => `<a href="#${id}"${id === "upd" ? ' data-addon="upd"' : ""}>${n}</a>`).join("")}<a href="${href(l)}#offer">${t("Предложение", "Taklif")}</a></nav>
 <button type="button" class="mine" id="mine">${ICON.truck}<span>${t("Мой заказ", "Buyurtmam")}</span></button>
-<div class="langs">${LANGS.map((x) => `<a href="${href(x)}" hreflang="${x}" lang="${x}"${x === l ? ' aria-current="true"' : ""}>${x.toUpperCase()}</a>`).join("")}</div>
+<div class="langs">${LANGS.map((x) => `<a href="${href(x, "site")}" hreflang="${x}" lang="${x}"${x === l ? ' aria-current="true"' : ""}>${x.toUpperCase()}</a>`).join("")}</div>
 <button type="button" class="cartb" id="cartb" aria-label="${t("Корзина", "Savat")}">${ICON.cart}<i id="cartn"></i></button>
 </div></header>`;
 }
@@ -370,7 +372,7 @@ function footer(l, t) {
 /* Данные для site.js: товары, подписи, допы. */
 function data(l, t) {
   return {
-    l, base: BASE.promo, hours: OFFER_HOURS, gift: GIFT,
+    l, base: BASE.promo, hours: OFFER_HOURS, gift: GIFT, panel: href(l, "panel"),
     cats: Object.fromEntries(CATS.map((c) => [c.id, c[l]])),
     add: ADDONS.map((a) => ({ id: a.id, p: a.price, t: a[l].t })),
     p: CATALOG.map((p) => ({ id: p.id, c: p.cat, h: isHybrid(p) ? 1 : 0, n: p.name[l], p: p.price, o: p.old, s: p.stock ? 1 : 0, pop: p.pop ? 1 : 0, im: P(p.id).map((s) => s.n), tx: (p.text[l].length ? p.text[l] : p.text.ru).slice(0, 8), u: p.url[l] })),
@@ -399,7 +401,7 @@ function data(l, t) {
   };
 }
 
-function page(l) {
+function sitePage(l) {
   const t = T(l);
   const title = t("Neoline · официальный магазин радар-детекторов и видеорегистраторов в Узбекистане", "Neoline · O‘zbekistondagi radar detektorlari va videoregistratorlarning rasmiy do‘koni");
   const desc = t("Радар-детекторы X-COP, гибриды, видеорегистраторы, акустика Ultera и аксессуары Neoline с официальной гарантией. Бесплатная доставка 1-3 дня, рассрочка Uzum Nasiya.", "Rasmiy kafolatli X-COP radar detektorlari, gibridlar, videoregistratorlar, Ultera akustikasi va Neoline aksessuarlari. 1-3 kunda bepul yetkazib berish, Uzum Nasiya.");
@@ -408,8 +410,6 @@ function page(l) {
 <style>${CSS}</style>
 </head>
 <body>
-${dzIntroSolo(l)}
-${introHtml(l)}
 <a class="vh" href="#catalog">${t("К каталогу", "Katalogga o‘tish")}</a>
 ${header(l, t)}
 <main>
@@ -428,10 +428,9 @@ ${bot(l, t)}
 ${uzum(l, t)}
 ${seo(l, t)}
 ${admin(l, t)}
-${offer(l, t)}
 </main>
 ${footer(l, t)}
-<a class="cfgb glass" href="#offer">${t("Конструктор", "Konstruktor")}</a>
+<a class="cfgb glass" href="${href(l)}#offer">${t("Конструктор", "Konstruktor")}</a>
 <div class="cmpdock glass" id="cmpdock" data-addon="compare"><span id="cmpn"></span><a class="btn btn-a btn-s" href="#compare">${t("Смотреть", "Ko‘rish")}</a></div>
 <div class="dock" id="dock"><a class="btn btn-g" href="#catalog">${t("Каталог", "Katalog")}</a><button type="button" class="btn btn-a" data-buy="1000458">${ICON.cart}<span>X-COP 8900</span></button></div>
 <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="shh"><div class="sh" data-close></div><div class="box"><div class="bh"><b id="shh"></b><button type="button" class="x" data-close aria-label="${t("Закрыть", "Yopish")}">${ICON.close}</button></div><div class="bb" id="shb"></div><div class="bf" id="shf"></div></div></div>
@@ -439,6 +438,85 @@ ${footer(l, t)}
 <script type="application/json" id="nl-data">${JSON.stringify(data(l, t)).replace(/</g, "\\u003c")}</script>
 <script>
 ${JS}</script>
+</body>
+</html>`;
+}
+
+
+/* ── Первая страница: выбор «Сайт» или «Панель» и конструктор ─────────
+   Владелец, 29.10.2026: «как для Greenwell, там 1 страница это лендинг для
+   клиента, там он выбирает уже админку посмотреть или сайт». Видео DevUz и
+   залёт в бренд — здесь, логотип встаёт в шапку этой страницы. */
+function landPage(l) {
+  const t = T(l), p = byId(1000458);
+  const site = [
+    t("Залёт камеры в бренд и X-COP 8900 на первом экране", "Brendga kamera bilan uchib kirish va birinchi ekranda X-COP 8900"),
+    t("«Радар в деле»: прокрутка ведёт машину к камере", "«Radar ishda»: aylantirish mashinani kameraga olib boradi"),
+    t("31 товар с ценами neoline.uz, поиск и разделы", "neoline.uz narxlari bilan 31 ta mahsulot, qidiruv va bo‘limlar"),
+    t("Стенд 8900 пальцем, подарок Turbocam в корзине", "8900 stendi barmoq bilan, savatda Turbocam sovg‘a"),
+    t("Заказ, статус в «Мой заказ», сервис и поддержка", "Buyurtma, «Buyurtmam»da holat, servis va yordam"),
+  ];
+  const pan = [
+    t("Заказ с сайта первой строкой, статус виден покупателю", "Saytdan buyurtma birinchi qatorda, holati xaridorga ko‘rinadi"),
+    t("Выручка, путь покупателя, что продаётся и что заканчивается", "Tushum, xaridor yo‘li, nima sotiladi va nima tugayapti"),
+    t("Остатки, закупка и наценка по каждому товару", "Har bir mahsulot bo‘yicha qoldiq, xarid narxi va ustama"),
+    t("Версия базы камер по модели: сразу на сайте", "Model bo‘yicha kameralar bazasi versiyasi: darhol saytda"),
+    t("Роли: менеджер не видит прибыль, история действий", "Rollar: menejer foydani ko‘rmaydi, harakatlar tarixi"),
+  ];
+  const li = (a) => `<ul class="feat">${a.map((x) => `<li>${ICON.check}<span>${x}</span></li>`).join("")}</ul>`;
+  const steps = [
+    t("Откройте сайт и положите X-COP 8900 в корзину: Turbocam добавится сам.", "Saytni oching va X-COP 8900 ni savatga soling: Turbocam o‘zi qo‘shiladi."),
+    t("Оформите заказ: имя и телефон любые, это макет.", "Buyurtma bering: ism va telefon istalgan, bu maket."),
+    t("Откройте админку: заказ первой строкой. Смените статус, и сайт покажет его в «Мой заказ».", "Admin panelni oching: buyurtma birinchi qatorda. Holatni o‘zgartiring, sayt uni «Buyurtmam»da ko‘rsatadi."),
+  ];
+  const ld = { base: BASE.promo, hours: OFFER_HOURS, add: ADDONS.map((a) => ({ id: a.id, p: a.price, t: a[l].t })), t: { copied: t("Состав скопирован", "Tarkib nusxalandi"), tot: t("Итого", "Jami") } };
+  return `${head(l, t, t("Neoline · макет сайта и панели магазина · DevUz Studio", "Neoline · sayt va do‘kon paneli maketi · DevUz Studio"), t("Макет для Neoline: новый сайт официального магазина и панель для заказов, остатков и баз камер. Конструктор цены.", "Neoline uchun maket: rasmiy do‘konning yangi sayti va buyurtmalar, qoldiqlar va kameralar bazalari uchun panel. Narx konstruktori."))}
+<style>${CSS}</style>
+</head>
+<body>
+${dzIntroSolo(l)}
+${introHtml(l)}
+<header class="top"><div class="top-in glass">
+${LOGO(l, "")}
+<nav class="nav" aria-label="${t("Разделы", "Bo‘limlar")}"><a href="#choose">${t("Сайт или панель", "Sayt yoki panel")}</a><a href="#try">${t("Как проверить", "Qanday tekshirish")}</a><a href="#offer">${t("Стоимость", "Narxi")}</a></nav>
+<div class="langs">${LANGS.map((x) => `<a href="${href(x)}" hreflang="${x}" lang="${x}"${x === l ? ' aria-current="true"' : ""}>${x.toUpperCase()}</a>`).join("")}</div>
+<a class="btn btn-g btn-s adm" href="${href(l, "site")}">${t("Сайт", "Sayt")}</a>
+<a class="btn btn-a btn-s adm" href="${href(l, "panel")}">${ICON.panel}<span>${t("Админка", "Admin panel")}</span></a>
+</div></header>
+<main>
+<section class="land" id="choose"><div class="hero-bg" aria-hidden="true"><div class="grid"></div></div><div class="wrap">
+<p class="kick rise">${t("Макет DevUz Studio для Neoline", "Neoline uchun DevUz Studio maketi")}</p>
+<h1 class="rise">${t("Новый сайт Neoline и <em>панель магазина</em>", "Neoline’ning yangi sayti va <em>do‘kon paneli</em>")}</h1>
+<p class="lead rise">${t("Это работающий макет на ваших товарах и ценах с neoline.uz. Выберите, что посмотреть первым: сайт, каким его увидит покупатель, или админку, где вы ведёте заказы.", "Bu neoline.uz’dagi mahsulot va narxlaringizdagi ishlaydigan maket. Avval nimani ko‘rishni tanlang: xaridor ko‘radigan sayt yoki buyurtmalarni olib boradigan admin panel.")}</p>
+<div class="choices">
+<a class="choice rise" href="${href(l, "site")}"><span class="ch-k">${t("Для покупателя", "Xaridor uchun")}</span><b>${t("Сайт магазина", "Do‘kon sayti")}</b>
+<span class="ch-pic"><img src="${ph(P(p.id)[0].n, 1600)}" srcset="${ph(P(p.id)[0].n, 800)} 800w, ${ph(P(p.id)[0].n, 1600)} 1600w" sizes="(min-width: 900px) 40vw, 90vw" width="${P(p.id)[0].w}" height="${P(p.id)[0].h}" alt="Neoline X-COP 8900"></span>
+${li(site)}<span class="btn btn-g">${t("Открыть сайт", "Saytni ochish")}${ICON.arrow}</span></a>
+<a class="choice rise" href="${href(l, "panel")}"><span class="ch-k">${t("Для вас и менеджеров", "Siz va menejerlar uchun")}</span><b>${t("Админка магазина", "Do‘kon admin paneli")}</b>
+<span class="ch-pic ch-pn"><span class="browser"><span class="bh"><i></i><i></i><i></i></span><span class="bb"><span class="kpi"><small>${t("Выручка, 30 дней", "Tushum, 30 kun")}</small><b>124,6 ${t("млн", "mln")}</b></span><span class="kpi"><small>${t("Заказ с сайта", "Saytdan buyurtma")}</small><b>№1043</b></span><span class="kpi w"><small>${t("По дням · демо", "Kunlar bo‘yicha · demo")}</small><span class="spark" id="lspark"></span></span></span></span></span>
+${li(pan)}<span class="btn btn-a">${t("Открыть админку", "Admin panelni ochish")}${ICON.arrow}</span></a>
+</div>
+</div></section>
+<section class="sec" id="try"><div class="wrap">
+<p class="kick rise">${t("Как проверить за минуту", "Bir daqiqada qanday tekshirish")}</p>
+<h2 class="h2 rise">${t("Сайт и панель <b>связаны</b>", "Sayt va panel <b>bog‘langan</b>")}</h2>
+<ol class="ol">${steps.map((s) => `<li class="rise">${s}</li>`).join("")}</ol>
+<div class="hero-act rise"><a class="btn btn-a" href="${href(l, "site")}">${t("Начать с сайта", "Saytdan boshlash")}${ICON.arrow}</a></div>
+</div></section>
+${offer(l, t)}
+</main>
+<footer class="foot"><div class="wrap"><div class="fgrid">
+<div>${LOGO(l, "")}<p style="margin-top:16px">${esc(COMPANY.shop[l])}. ${t("Товары, цены, фото и тексты: neoline.uz. Заказы, остатки и выручка в панели: демо.", "Mahsulotlar, narxlar, suratlar va matnlar: neoline.uz. Paneldagi buyurtmalar, qoldiqlar va tushum: demo.")}</p></div>
+<div><h4>${t("Макет", "Maket")}</h4><a href="${href(l, "site")}">${t("Сайт магазина", "Do‘kon sayti")}</a><a href="${href(l, "panel")}">${t("Админка магазина", "Do‘kon admin paneli")}</a><a href="#offer">${t("Стоимость", "Narxi")}</a></div>
+<div><h4>DevUz Studio</h4><a href="https://devuz.studio" target="_blank" rel="noopener">devuz.studio</a><a href="${DEVUZ}" target="_blank" rel="noopener">Telegram</a></div>
+<div><h4>Neoline</h4><a href="tel:${COMPANY.tel}">${COMPANY.phone}</a><a href="https://t.me/${COMPANY.tg}" target="_blank" rel="noopener">@${COMPANY.tg}</a></div>
+</div>
+<div class="sm"><span>${t("Макет DevUz Studio. Пользуясь макетом, вы принимаете", "DevUz Studio maketi. Maketdan foydalanib, siz")} <a href="${TERMS(l)}" target="_blank" rel="noopener">${t("условия макета", "maket shartlarini qabul qilasiz")}</a>${t(".", "")}</span></div>
+</div></footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script type="application/json" id="nl-land">${JSON.stringify(ld).replace(/</g, "\\u003c")}</script>
+<script>
+${LAND_JS}</script>
 </body>
 </html>`;
 }
@@ -485,7 +563,7 @@ function panelPage(l) {
   const t = T(l);
   const ui = Object.fromEntries(Object.entries(PANEL_UI).map(([k, v]) => [k, v[l === "ru" ? 0 : 1]]));
   const pd = {
-    l, sum: l === "ru" ? "сум" : "so‘m", site: href(l), ui,
+    l, sum: l === "ru" ? "сум" : "so‘m", site: href(l, "site"), home: href(l), ui,
     cats: Object.fromEntries(CATS.map((c) => [c.id, c[l]])),
     p: CATALOG.map((p) => ({ id: p.id, c: p.cat, n: p.name[l], p: p.price, s: p.stock ? 1 : 0, im: P(p.id)[0]?.n ?? "", u: /Wi-Fi Hotspot/i.test(p.text.ru.join(" ")) ? "wifi" : /OTG/i.test(p.text.ru.join(" ")) ? "otg" : /Wi-Fi/i.test(p.text.ru.join(" ")) ? "app" : "" })),
   };
@@ -504,7 +582,8 @@ ${PANEL_JS}</script>
 
 const out = {};
 for (const l of LANGS) {
-  out[KEY[l]] = page(l);
+  out[KEY[l]] = landPage(l);
+  out[(KEY[l] ? KEY[l] + "/" : "") + "site"] = sitePage(l);
   out[(KEY[l] ? KEY[l] + "/" : "") + "panel"] = panelPage(l);
 }
 for (const [k, v] of Object.entries(out)) {
@@ -520,7 +599,7 @@ mkdirSync(DIR + "out", { recursive: true });
 writeFileSync(DIR + "out/pages.json", JSON.stringify(out));
 
 /* Сборка для сервера (lib/proto/bundles): стили и скрипты один раз. */
-const parts = { J: `<script>\n${JS}</script>`, C: `<style>${CSS}</style>`, PJ: `<script>\n${PANEL_JS}</script>` };
+const parts = { J: `<script>\n${JS}</script>`, C: `<style>${CSS}</style>`, PJ: `<script>\n${PANEL_JS}</script>`, LJ: `<script>\n${LAND_JS}</script>` };
 const pages = {};
 for (const [key, html] of Object.entries(out)) {
   let p = html;

@@ -5,7 +5,7 @@ import { execSync } from "node:child_process";
 const require = createRequire(execSync("npm root -g").toString().trim() + "/playwright/package.json");
 const { chromium } = require("playwright");
 const [out = "shots", ws = "390,768,1440,2560"] = process.argv.slice(2);
-const U = "http://localhost:4841/proto/" + "a".repeat(43) + "/";
+const R = "http://localhost:4841/proto/" + "a".repeat(43) + "/", U = R + "site";
 const proxy = process.env.HTTPS_PROXY ? { server: process.env.HTTPS_PROXY, bypass: "localhost,127.0.0.1" } : undefined;
 const b = await chromium.launch({ proxy, args: ["--ignore-certificate-errors"] });
 const errs = [];
@@ -17,19 +17,26 @@ for (const w of ws.split(",").map(Number)) {
   p.on("console", (m) => { if (m.type() === "error") errs.push(`${w}: ${m.text()}`); });
   p.on("pageerror", (e) => errs.push(`${w}: ${e.message}`));
   for (const tt of process.env.INTRO ? [0.8, 2, 3.4, 4.6, 5.6, 6.1] : []) {
-    await p.goto(U + `?intro=1&nlt=${tt}`, { waitUntil: "domcontentloaded", timeout: 60000 });
+    await p.goto(R + `?intro=1&nlt=${tt}`, { waitUntil: "domcontentloaded", timeout: 60000 });
     await p.evaluate(() => { const z = document.getElementById("dzi"); if (z) z.remove(); });
     await p.waitForFunction(() => window.nliFrame > 2 || !document.getElementById("nli"), null, { timeout: 15000 }).catch(() => {});
     await p.waitForTimeout(400);
     await p.screenshot({ path: `${out}/intro-${tt}-${w}.png` });
   }
+  await p.goto(R, { waitUntil: "domcontentloaded", timeout: 60000 });
+  await p.evaluate(() => { for (const id of ["dzi", "nli"]) { const z = document.getElementById(id); if (z) z.remove(); } document.documentElement.classList.remove("nli"); });
+  await p.waitForTimeout(1200);
+  await p.screenshot({ path: `${out}/land-${w}.png` });
+  await p.evaluate(() => document.getElementById("offer").scrollIntoView());
+  await p.waitForTimeout(600);
+  await p.screenshot({ path: `${out}/offer-${w}.png` });
   await p.goto(U, { waitUntil: "domcontentloaded", timeout: 60000 });
   await p.evaluate(() => { for (const id of ["dzi", "nli"]) { const z = document.getElementById(id); if (z) z.remove(); } document.documentElement.classList.remove("nli"); });
   await p.waitForTimeout(1500);
   await p.screenshot({ path: `${out}/hero-${w}.png` });
   const over = await p.evaluate(() => document.documentElement.scrollWidth - innerWidth);
   if (over > 0) errs.push(`${w}: прокрутка вбок на ${over}px`);
-  for (const id of (process.env.SEC || "radar,cats,stand,catalog,pick,upd,why,service,bot,offer").split(",")) {
+  for (const id of (process.env.SEC || "radar,cats,stand,catalog,pick,upd,why,service,bot,admin").split(",")) {
     await p.evaluate((id) => { const e = document.getElementById(id); if (!e) return; const y = e.getBoundingClientRect().top + scrollY + (id === "radar" ? e.offsetHeight * 0.3 : 0); scrollTo(0, y); }, id);
     await p.waitForTimeout(900);
     await p.evaluate(() => document.querySelector(".top").classList.remove("hide"));
@@ -43,10 +50,10 @@ for (const w of ws.split(",").map(Number)) {
   await p.waitForTimeout(900);
   await p.screenshot({ path: `${out}/cart-${w}.png` });
   const q = await ctx.newPage();
-  await q.goto(U + "panel", { waitUntil: "domcontentloaded", timeout: 60000 });
+  await q.goto(R + "panel", { waitUntil: "domcontentloaded", timeout: 60000 });
   await q.waitForTimeout(1200);
   await q.screenshot({ path: `${out}/panel-${w}.png` });
-  await q.goto(U + "panel#orders", { waitUntil: "domcontentloaded", timeout: 60000 });
+  await q.goto(R + "panel#orders", { waitUntil: "domcontentloaded", timeout: 60000 });
   await q.waitForTimeout(800);
   await q.screenshot({ path: `${out}/panel-orders-${w}.png` });
   await ctx.close();

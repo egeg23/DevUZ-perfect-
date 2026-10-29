@@ -33,7 +33,7 @@ var prev=demo.reduce(function(a,o){return a+o.sum},0)*.86;
 
 function shell(){var tabs=['sum','orders','goods','base','log'];
   $('#app').innerHTML='<header class="pn-top"><div class="pn-brand"><svg viewBox="5 8 69.5 47" aria-hidden="true"><path fill="currentColor" d="M58.6 8v11.9L46.8 31.7V19.9h-7.6L21.1 38H5.2l7.9-8 22-22z"/><path fill="currentColor" d="M21 54.9V43l11.8-11.8V43h7.7l18-18.1h16l-8 8-22 22z"/></svg><b>NEOLINE</b><span>'+t('title')+' · '+t('demo')+'</span></div>'+
-  '<label class="pn-role"><span>'+t('role')+'</span><select id="role"><option value="owner">'+t('role_owner')+'</option><option value="manager">'+t('role_manager')+'</option></select></label><a class="btn btn-g btn-s" href="'+D.site+'">'+t('site')+'</a></header>'+
+  '<label class="pn-role"><span>'+t('role')+'</span><select id="role"><option value="owner">'+t('role_owner')+'</option><option value="manager">'+t('role_manager')+'</option></select></label><a class="btn btn-g btn-s" href="'+D.home+'">'+t('home')+'</a><a class="btn btn-a btn-s" href="'+D.site+'">'+t('site')+'</a></header>'+
   '<nav class="pn-tabs">'+tabs.map(function(x){return'<a href="#'+x+'" data-v="'+x+'"'+(x===view?' aria-current="page"':'')+'>'+t('tab_'+x)+'</a>'}).join('')+'</nav><main class="pn-main" id="pv"></main>';
   $('#role').value=S.role;$('#role').addEventListener('change',function(e){S.role=e.target.value;log('l_role');render()});
   $$('.pn-tabs a').forEach(function(a){a.addEventListener('click',function(){view=a.getAttribute('data-v');open=null;$$('.pn-tabs a').forEach(function(x){x.toggleAttribute('aria-current',x===a)})})})}
