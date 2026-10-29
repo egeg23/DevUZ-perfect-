@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { record } from "@/lib/admin/audit";
 import {
-  ABSOLUTE_DAYS,
+  SESSION_MAX_AGE_SECONDS,
   SESSION_COOKIE,
   createSession,
   hashToken,
@@ -128,7 +128,7 @@ export async function GET(
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/admin",
-    maxAge: ABSOLUTE_DAYS * 24 * 3600,
+    maxAge: SESSION_MAX_AGE_SECONDS,
   });
   // Зеркало языка панели для <html lang> — см. lib/admin/i18n.ts.
   response.cookies.set(PANEL_LANG_COOKIE, staff.panel_locale, {

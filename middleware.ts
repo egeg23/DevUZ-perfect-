@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { NEXT_COOKIE, NEXT_TTL_SECONDS, SESSION_COOKIE, wantedPath } from "@/lib/admin/return-to";
+import { NEXT_COOKIE, NEXT_TTL_SECONDS, SESSION_COOKIE, SESSION_MAX_AGE_SECONDS, wantedPath } from "@/lib/admin/return-to";
 import { adLocale, defaultLocale, isAdClick, isLocale, locales, matchLocale } from "@/lib/i18n";
 import { REF_COOKIE, REF_COOKIE_OPTIONS, formatRef, parseRef } from "@/lib/partners/ref-cookie";
 
@@ -50,7 +50,20 @@ const SECTION_SET = new Set<string>(LOCALE_SECTIONS);
  */
 function admin(request: NextRequest, pathname: string) {
   const response = NextResponse.next();
-  if (request.cookies.get(SESSION_COOKIE)) return response;
+  const session = request.cookies.get(SESSION_COOKIE)?.value;
+  if (session) {
+    // Вход держится до «Выйти» (владелец, 29.10.2026): срок куки отсчитываем
+    // от последнего открытия панели, а не от входа. Годна ли сама сессия,
+    // решает база — здесь только не даём браузеру забыть куку раньше неё.
+    response.cookies.set(SESSION_COOKIE, session, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/admin",
+      maxAge: SESSION_MAX_AGE_SECONDS,
+    });
+    return response;
+  }
 
   const wanted = wantedPath(pathname);
   if (wanted) {

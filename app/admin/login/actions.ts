@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 
 import { record } from "@/lib/admin/audit";
 import {
-  ABSOLUTE_DAYS,
+  SESSION_MAX_AGE_SECONDS,
   SESSION_COOKIE,
   consumeLoginToken,
   createSession,
@@ -86,7 +86,7 @@ async function openSession(staff: Staff, ip: string, how: { via: "link" | "app_c
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/admin",
-    maxAge: ABSOLUTE_DAYS * 24 * 3600,
+    maxAge: SESSION_MAX_AGE_SECONDS,
   });
   // Зеркало языка панели для <html lang> — см. lib/admin/i18n.ts.
   jar.set(PANEL_LANG_COOKIE, staff.panel_locale, {

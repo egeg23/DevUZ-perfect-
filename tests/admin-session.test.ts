@@ -87,3 +87,19 @@ test("менять лид может владелец, руководитель 
   assert.equal(canEdit({ assigned_staff_id: null }, manager), false, "свободный лид");
   assert.equal(canEdit({ assigned_staff_id: null }, admin), true, "админ и здесь может");
 });
+
+test("вход держится до «Выйти»: кука живёт как сессия и продлевается при каждом заходе", async () => {
+  // Владелец, 29.10.2026: приложение на телефоне каждое утро просило код —
+  // сессия гасла через 12 часов тишины, кука через 7 дней от входа.
+  const { ABSOLUTE_DAYS, SLIDING_HOURS, SESSION_MAX_AGE_SECONDS } = await import("@/lib/admin/session");
+  assert.equal(SESSION_MAX_AGE_SECONDS, ABSOLUTE_DAYS * 24 * 3600, "кука не должна умирать раньше сессии");
+  assert.ok(SLIDING_HOURS >= 30 * 24, "ночь и выходные без панели не выбрасывают");
+  assert.ok(ABSOLUTE_DAYS >= 365, "раз в год, не раз в неделю");
+
+  const { readFileSync } = await import("node:fs");
+  const mw = readFileSync("middleware.ts", "utf8");
+  assert.match(mw, /cookies\.set\(SESSION_COOKIE, session,[\s\S]{0,200}maxAge: SESSION_MAX_AGE_SECONDS/, "middleware продлевает куку");
+  for (const file of ["app/admin/login/actions.ts", "app/admin/enter/[[...to]]/route.ts"]) {
+    assert.match(readFileSync(file, "utf8"), /maxAge: SESSION_MAX_AGE_SECONDS/, file);
+  }
+});
