@@ -185,7 +185,21 @@ export default async function LeadPage({
   // Чужой взятый лид менеджеру не показывается — ни списком, ни по прямой
   // ссылке: адрес лида легко переслать, и без этой проверки правило
   // держалось бы только на том, что ссылку никто не сохранил.
-  if (!canSeeLead(lead, staff)) notFound();
+  // Но и не голым 404: 29.10.2026 Дина держала открытым свободный лид,
+  // Эльдар взял его, и каждое её нажатие давало «страница не найдена» —
+  // для человека это сломанная панель. Кто взял, не говорим, как и бот.
+  if (!canSeeLead(lead, staff)) {
+    return (
+      <AdminShell staff={staff}>
+        <Link href="/admin" className="text-sm text-muted hover:text-text">
+          {t.back}
+        </Link>
+        <p className="mt-4 rounded-xl border border-gold/30 bg-gold/10 px-4 py-2.5 text-sm text-gold">
+          {t.takenByOther}
+        </p>
+      </AdminShell>
+    );
+  }
 
   const mine = canEdit(lead, staff);
   // Контакт и переписка свободного лида — только после «Взять себе», и

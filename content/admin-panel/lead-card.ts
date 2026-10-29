@@ -200,6 +200,12 @@ export const leadVoidDict = defineDict({
 /** Всё остальное на странице карточки — сверху вниз, как на экране. */
 export const leadCardDict = defineDict({
   back: { ru: "← к списку", uz: "← ro‘yxatga", pl: "← do listy" },
+  // Вместо голого 404, когда лид успел взять другой (Дина, 29.10.2026).
+  takenByOther: {
+    ru: "Этот лид уже взял другой сотрудник. Взятый лид открыт только тому, кто его ведёт, руководителю и владельцу. Свободные лиды ждут в списке.",
+    uz: "Bu lidni boshqa xodim allaqachon olgan. Olingan lid faqat uni yuritayotgan xodimga, rahbarga va egasiga ochiq. Bo‘sh lidlar ro‘yxatda kutmoqda.",
+    pl: "Tego leada przejęła już inna osoba. Przejęty lead jest otwarty tylko dla osoby, która go prowadzi, kierownika i właściciela. Wolne leady czekają na liście.",
+  },
 
   // ── Порядок в лидах (lib/admin/lead-tidy.ts) ──
   autoLost: {

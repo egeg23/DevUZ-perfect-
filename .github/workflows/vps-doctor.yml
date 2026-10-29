@@ -142,7 +142,10 @@ jobs:
 
             echo
             echo "════ Отставание от GitHub ════"
-            LOCAL="$(git rev-parse --short HEAD 2>/dev/null || echo '?')"
+            # Ровно 7 знаков, как у ls-remote ниже: --short бывает и 8
+            # («1b8a67f2» против «1b8a67f»), и осмотр кричал «отстал» зря.
+            LOCAL="$(git rev-parse HEAD 2>/dev/null | cut -c1-7)"
+            [ -n "$LOCAL" ] || LOCAL='?'
             REMOTE="$(git ls-remote origin "refs/heads/$BRANCH" 2>/dev/null | cut -c1-7)"
             [ -n "$REMOTE" ] || REMOTE="$(git ls-remote "$FALLBACK" "refs/heads/$BRANCH" 2>/dev/null | cut -c1-7)"
             echo "на сервере: $LOCAL, в GitHub: ${REMOTE:-неизвестно}"
@@ -178,6 +181,75 @@ jobs:
               echo "✗ приложение не отвечает на петлевом интерфейсе"
               TROUBLE=1
             fi
+
+            echo
+            echo "════ Сайт снаружи: 404, 502 и нагрузка ════"
+            # 29.10.2026 владелец: «панель то 404, то 502». Контейнер был
+            # «healthy», сторож молчал: ответ портило то, что между
+            # приложением и человеком. Здесь — что видит nginx. Только
+            # смотрим, в TROUBLE не идёт. Лог задачи открытый: адресов
+            # людей и ссылок с ключами (макеты, вход) в вывод не пускаем —
+            # коды, вид ошибки и путь, где куски с цифрами заменены на ***.
+            echo "сервер: $(uptime | sed 's/^.*up/up/')"
+            free -m | sed -n 1,3p
+            echo "ядер: $(nproc)"
+            docker stats --no-stream --format '{{.Name}}: CPU {{.CPUPerc}}, память {{.MemUsage}}' 2>/dev/null | head -8
+            ss -s 2>/dev/null | sed -n 1,2p
+            echo "nginx: $(grep -hE '^\s*(worker_processes|worker_connections|worker_rlimit_nofile)' /etc/nginx/nginx.conf 2>/dev/null | tr -s ' \t' ' ' | tr '\n' ' ')"
+            NG=/etc/nginx/sites-available/devuz.studio
+            grep -nE 'proxy_buffer|proxy_busy|large_client_header|proxy_read_timeout|proxy_connect_timeout|access_log|error_log|limit_req|limit_conn|keepalive|upstream' "$NG" 2>/dev/null | head -20 | sed 's/^/  /'
+            mask() {
+              sed -E 's#\?.*$##; s#(/proto|/enter|/p|/m|/s|/i|/invite|/sign|/pay)/[^/ ]+#\1/***#g; s#/[^/ ]*[0-9][^/ ]*#/***#g; s#/[^/ ]{20,}#/***#g'
+            }
+            ERRLOG="$(grep -m1 -oE 'error_log\s+[^ ;]+' "$NG" 2>/dev/null | awk '{print $2}')"
+            [ -n "$ERRLOG" ] || ERRLOG=/var/log/nginx/error.log
+            SINCE="$(date -d '-3 hours' '+%Y/%m/%d %H:%M:%S')"
+            echo "ошибки nginx за 3 часа ($ERRLOG), по виду и сайту:"
+            tail -n 200000 "$ERRLOG" 2>/dev/null | awk -v s="$SINCE" '($1" "$2) >= s' \
+              | sed -E 's/^[0-9\/]+ [0-9:]+ \[([a-z]+)\] [0-9#]+: (\*[0-9]+ )?/[\1] /' \
+              | sed -E 's/^(.*), client: [^,]*, server: ([^,]+).*$/\2 | \1/; s/, client: .*$//' \
+              | sed -E 's/[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+(:[0-9]+)?/IP/g; s/"[^"]*"/"…"/g' \
+              | cut -c1-170 | sort | uniq -c | sort -rn | head -15 | sed 's/^/  /'
+            ACCLOG="$(grep -m1 -oE 'access_log\s+[^ ;]+' "$NG" 2>/dev/null | awk '{print $2}')"
+            { [ -n "$ACCLOG" ] && [ "$ACCLOG" != off ]; } || ACCLOG=/var/log/nginx/access.log
+            HOURS="$(for h in 0 1 2 3; do LC_ALL=C date -d "-$h hours" '+%d/%b/%Y:%H'; done | paste -sd'|')"
+            ACC=/tmp/devuz-acc.txt
+            tail -n 400000 "$ACCLOG" 2>/dev/null | grep -E "\[($HOURS)" \
+              | awk -F'"' '{split($3,s," "); split($2,r," "); t=substr($1, index($1,"[")+13, 5); print s[1], r[2], t}' > "$ACC"
+            echo "ответы за 3-4 часа ($ACCLOG): всего $(wc -l < "$ACC"), по кодам:"
+            awk '{print $1}' "$ACC" | sort | uniq -c | sort -rn | head -10 | sed 's/^/  /'
+            for C in 502 504 500 404 499; do
+              N="$(awk -v c="$C" '$1==c' "$ACC" | wc -l)"
+              [ "$N" -gt 0 ] || continue
+              echo "  $C — где ($N):"
+              awk -v c="$C" '$1==c{print $2}' "$ACC" | mask | sort | uniq -c | sort -rn | head -12 | sed 's/^/    /'
+              echo "  $C — по минутам: $(awk -v c="$C" '$1==c{print $3}' "$ACC" | sort | uniq -c | sort -k2 | tail -12 | awk '{printf "%s×%s ", $2, $1}')"
+            done
+            rm -f "$ACC"
+            # Лог общий на все сайты сервера, а у панели свои адреса:
+            # /admin, /_next, /api. Здесь только они, за 12 часов, со
+            # временем (UTC), путём и откуда пришли (тоже без ключей).
+            H12="$(for h in $(seq 0 12); do LC_ALL=C date -d "-$h hours" '+%d/%b/%Y:%H'; done | paste -sd'|')"
+            PAN=/tmp/devuz-panel.txt
+            cat "$ACCLOG.1" "$ACCLOG" 2>/dev/null | grep -E "\[($H12)" \
+              | awk -F'"' '{split($3,s," "); split($2,r," "); t=substr($1, index($1,"[")+1, 17); sub(/^https?:\/\/[^\/]*/,"",$4); print s[1], r[2], t, ($4==""||$4=="-")?"-":$4}' \
+              | awk '$2 ~ /^\/(admin|_next|api\/(admin|health))/' > "$PAN"
+            echo "панель за 12 часов: всего $(wc -l < "$PAN"), по кодам: $(awk '{print $1}' "$PAN" | sort | uniq -c | sort -rn | awk '{printf "%s×%s ", $2, $1}')"
+            echo "  не 2xx/3xx, по времени (UTC · код · путь · откуда):"
+            awk '$1 !~ /^[23]/' "$PAN" | while read -r c p t ref; do
+              echo "    ${t#*:} · $c · $(printf '%s' "$p" | mask) · $(printf '%s' "$ref" | mask)"
+            done | tail -40
+            rm -f "$PAN"
+            echo "ошибки nginx по devuz.studio за сутки (UTC):"
+            SINCE24="$(date -d '-24 hours' '+%Y/%m/%d %H:%M:%S')"
+            cat "$ERRLOG.1" "$ERRLOG" 2>/dev/null | awk -v s="$SINCE24" '($1" "$2) >= s' | grep -E 'server: (www\.)?devuz\.studio' \
+              | sed -E 's/^[0-9\/]+ ([0-9:]+) \[([a-z]+)\] [0-9#]+: (\*[0-9]+ )?(.*), client: .*request: "[A-Z]+ ([^ ]*) .*$/\1 [\2] \4 · \5/' \
+              | while read -r tm rest; do echo "  $tm $(printf '%s' "$rest" | mask | cut -c1-170)"; done | tail -25
+            echo "приложение за 12 часов — ошибки Next.js по виду:"
+            docker compose logs --since 12h --no-color 2>/dev/null \
+              | grep -E "⨯|Error:|Unhandled|ECONNRESET|ETIMEDOUT|Timeout|digest" \
+              | sed -E 's/^[^|]*\| //; s/[0-9a-f]{8}-[0-9a-f-]{27}/<id>/g; s/\+?[0-9][0-9 ()-]{7,}[0-9]/<num>/g; s/@[A-Za-z0-9_]{3,}/@<ник>/g' \
+              | cut -c1-170 | sort | uniq -c | sort -rn | head -15 | sed 's/^/  /'
 
             echo
             echo "════ Модель с хоста — тем же путём, что у скаута ════"
