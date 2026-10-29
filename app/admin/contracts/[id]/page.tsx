@@ -13,7 +13,19 @@ import {
 } from "@/content/admin-panel/contracts";
 import { PANEL_INTL, pick } from "@/lib/admin/i18n";
 import { helpAnchor } from "@/lib/admin/help";
-import { DEADLINE_EXAMPLE, ESTIMATE_ROWS_EXAMPLE, signatureVisible } from "@/lib/admin/contracts";
+import {
+  DEADLINE_EXAMPLE,
+  ESTIMATE_ROWS_EXAMPLE,
+  problemParam,
+  problemsBeforeApproval,
+  signatureVisible,
+} from "@/lib/admin/contracts";
+import { ContractCompose } from "@/components/admin/contract-compose";
+import { RequisitesPaste } from "@/components/admin/requisites-paste";
+import { SubmitButton } from "@/components/admin/submit-button";
+import { contractComposeDict } from "@/content/admin-panel/contract-compose";
+import { projectCardDict } from "@/content/admin-panel/projects";
+import { EXTRA_ROWS, planChoices } from "@/lib/admin/mockup-plan";
 import { sellerBank } from "@/lib/store/requisites";
 import { invoicesFor } from "@/lib/admin/invoice-store";
 import { canIssue, invoiceState, stageAmountUsd } from "@/lib/admin/invoices";
@@ -22,6 +34,7 @@ import { contractById } from "@/lib/admin/contract-store";
 import { approvesContract } from "@/lib/admin/contracts";
 import {
   cancelContract,
+  composeContract,
   confirmContract,
   issueInvoiceAction,
   issueLinkAction,
@@ -30,6 +43,7 @@ import {
   confirmInvoicePaymentAction,
   unmarkInvoicePaidAction,
   returnContract,
+  saveClientDetails,
   saveDeadline,
   sendToOwner,
   uploadEstimate,
@@ -66,6 +80,8 @@ export default async function ContractPage({
     signed?: string;
     link?: string;
     paid?: string;
+    existed?: string;
+    composed?: string;
   }>;
 }) {
   const staff = await requireSection("/admin/contracts");
@@ -74,6 +90,8 @@ export default async function ContractPage({
   const badge = pick(contractBadgeDict, locale);
   const errors = pick(contractErrorDict, locale);
   const hints = pick(estimateHintDict, locale);
+  const tc = pick(contractComposeDict, locale);
+  const tp = pick(projectCardDict, locale);
   const { id } = await params;
   const contract = await contractById(id);
   if (!contract) notFound();
@@ -87,7 +105,17 @@ export default async function ContractPage({
   const seller = sellerBank();
   const invoices = await invoicesFor(contract.id);
   const issuedStages = invoices.map((invoice) => invoice.stage_index);
-  const { error, detail, hint, sent, signed: justSigned, link, paid } = await searchParams;
+  const { error, detail, hint, sent, signed: justSigned, link, paid, existed, composed } = await searchParams;
+  // Чего не хватает до подписи — видно сразу, а не после нажатия.
+  const missing =
+    contract.status === "draft"
+      ? problemsBeforeApproval({
+          ...contract,
+          estimateItems: contract.estimate_items,
+          deadlineText: contract.deadline_text,
+          seller,
+        })
+      : [];
   const canApprove = approvesContract(staff.role);
 
   /** Что сказать после «Оплачен» — у владельца и у сотрудника исход разный. */
@@ -140,12 +168,9 @@ export default async function ContractPage({
         {contract.status === "draft" ? (
           <form action={sendToOwner}>
             <input type="hidden" name="id" value={contract.id} />
-            <button
-              type="submit"
-              className="rounded-xl bg-black px-4 py-2 text-sm font-semibold text-white"
-            >
+            <SubmitButton pendingLabel={tc.sending} base="rounded-xl px-4 py-2 text-sm font-semibold">
               {t.sendToOwner}
-            </button>
+            </SubmitButton>
           </form>
         ) : null}
 
@@ -207,6 +232,29 @@ export default async function ContractPage({
           </form>
         ) : null}
       </div>
+
+      {contract.status === "draft" ? (
+        <div className="no-print mx-auto mb-4 max-w-[210mm] px-[20mm] text-sm">
+          {missing.length ? (
+            <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-amber-900">
+              <p className="font-semibold">{tc.missing}</p>
+              <ul className="mt-1 list-disc pl-5">
+                {missing.map((p) => (
+                  <li key={p.code}>{problemsText(problemParam([p]), locale, "")}</li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <p className="text-green-800">{tc.ready}</p>
+          )}
+        </div>
+      ) : null}
+      {existed ? (
+        <p className="no-print mx-auto mb-4 max-w-[210mm] px-[20mm] text-sm text-black/70">{tc.existed}</p>
+      ) : null}
+      {composed ? (
+        <p className="no-print mx-auto mb-4 max-w-[210mm] px-[20mm] text-sm text-green-800">{tc.composed}</p>
+      ) : null}
 
       {/* ── Счета на оплату ──────────────────────────────────────────── */}
       {contract.status === "approved" || contract.status === "signed" ? (
@@ -331,6 +379,66 @@ export default async function ContractPage({
       ) : null}
 
       {/* Смета и срок — только у черновика: дальше документ заморожен. */}
+      {contract.status === "draft" ? (
+        <div className="no-print mx-auto mb-6 max-w-[210mm] space-y-3 px-[20mm]">
+          {/* «Состав из макета» — смета, сумма, предмет и срок кнопкой. */}
+          <details open={!contract.estimate_items.length} className="rounded-xl border border-black/15 px-4 py-3 text-sm">
+            <summary className="cursor-pointer font-semibold">
+              {tc.title}{" "}
+              <HelpHint topic={helpAnchor("/admin/contracts", "compose")} />
+            </summary>
+            <p className="mt-1 text-xs text-black/60">{tc.note}</p>
+            <form action={composeContract} className="mt-2 space-y-2">
+              <input type="hidden" name="id" value={contract.id} />
+              <ContractCompose plans={planChoices()} rows={EXTRA_ROWS} light />
+              <SubmitButton base="rounded-lg px-3 py-1.5 text-sm" tone="quiet">
+                {tc.apply}
+              </SubmitButton>
+            </form>
+          </details>
+
+          {/* Реквизиты заказчика — правятся в черновике, вставкой или руками. */}
+          <details open={missing.some((p) => p.field.startsWith("client_"))} className="rounded-xl border border-black/15 px-4 py-3 text-sm">
+            <summary className="cursor-pointer font-semibold">{tc.client}</summary>
+            <form action={saveClientDetails} className="mt-2 grid gap-2 sm:grid-cols-2">
+              <input type="hidden" name="id" value={contract.id} />
+              <div className="sm:col-span-2">
+                <RequisitesPaste light />
+              </div>
+              {(
+                [
+                  ["client_name", tp.clientName, contract.client_name],
+                  ["client_details", tp.clientDetails, contract.client_details],
+                  ["client_tax_id", tp.clientTaxId, contract.client_tax_id],
+                  ["client_bank_name", tp.clientBank, contract.client_bank_name],
+                  ["client_account", tp.clientAccount, contract.client_account],
+                  ["client_mfo", tp.clientMfo, contract.client_mfo],
+                ] as const
+              ).map(([name, label, value]) => (
+                <label
+                  key={name}
+                  className={`text-xs text-black/60 ${name === "client_name" || name === "client_details" ? "sm:col-span-2" : ""}`}
+                >
+                  {label}
+                  <input
+                    type="text"
+                    name={name}
+                    defaultValue={value ?? ""}
+                    className="mt-1 w-full rounded-lg border border-black/20 px-2 py-1 text-sm text-black"
+                  />
+                </label>
+              ))}
+              <div className="sm:col-span-2">
+                <SubmitButton base="rounded-lg px-3 py-1.5 text-sm" tone="quiet">
+                  {tc.saveClient}
+                </SubmitButton>
+              </div>
+            </form>
+          </details>
+        </div>
+      ) : null}
+
+      {/* Смета и срок файлом — тоже только у черновика. */}
       {contract.status === "draft" ? (
         <div className="no-print mx-auto mb-6 max-w-[210mm] space-y-3 px-[20mm]">
           <form action={uploadEstimate} className="flex flex-wrap items-center gap-2">
