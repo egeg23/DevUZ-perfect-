@@ -2445,14 +2445,20 @@ test("AutoPepe: wybór, strona i panel po polsku — warunki, noindex, wideo Dev
   assert.notEqual(stamped.pages.site, site.pages.site, "отпечаток не поставился");
 });
 
-test("AutoPepe: strona 1 000 $ zamiast 2 500 $, dodatki razem 2 000 $, z dodatkami nie więcej niż 3 000 $", async () => {
+test("AutoPepe: ceny w złotych — strona 3 900 zł zamiast 9 900 zł, dodatki −60% od rynku polskiego, razem nie więcej niż 3 000 $", async () => {
   const plan = await import("../scripts/protos/autopepe/plan.mjs");
-  assert.equal(plan.BASE.promo, 1000);
-  assert.equal(plan.BASE.price, 2500);
-  const adds = plan.ADDONS.reduce((s: number, a: { price: number }) => s + a.price, 0);
-  assert.ok(adds <= 2000, "допы дороже 2 000 $");
-  assert.ok(plan.ALL <= 3000, "сайт с допами дороже 3 000 $");
-  for (const a of plan.ADDONS) assert.ok(a.t && a.e && a.who, `${a.id}: нет текста`);
+  assert.equal(plan.CUR, "zł");
+  assert.equal(plan.BASE.promo, 3900);
+  assert.equal(plan.BASE.price, 9900);
+  for (const a of plan.ADDONS) {
+    assert.ok(a.t && a.e && a.who && a.market > 0, `${a.id}: нет текста или цены рынка`);
+    assert.equal(a.price, Math.round(a.market * 0.4 / 10) * 10, `${a.id}: не −60% от рынка`);
+  }
+  assert.ok(!plan.ADDONS.some((a: { id: string }) => a.id === "lang"), "сайт только по-польски: допа с другими языками нет");
+  /* 1 000 $ и 3 000 $ по курсу NBP за октябрь 2026 (3,88 zł). */
+  assert.ok(plan.BASE.promo / 3.88 <= 1010, "сайт дороже 1 000 $");
+  assert.ok(plan.ALL / 3.88 <= 3000, "сайт с допами дороже 3 000 $");
   const site = bundlePages("autopepe")!;
-  assert.ok(site.html.includes("2 500 $") && site.html.includes("1 000 $"), "на первой странице не та цена");
+  assert.ok(site.html.includes("9\u00a0900\u00a0zł") && site.html.includes("3\u00a0900\u00a0zł"), "на первой странице не та цена");
+  for (const page of [site.html, ...Object.values(site.pages)]) assert.doesNotMatch(page, /[А-Яа-яЁёІіЇїЄєҐґ]/, "на странице кириллица, а сайт только по-польски");
 });

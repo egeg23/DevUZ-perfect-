@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dzIntroSolo } from "../../../lib/proto/dz-video.mjs";
 import { COMPANY, SERVICES, PRICES, HOOKS, CAR, DAMAGE, PACKS, EXTRAS, PARTS } from "./data.mjs";
-import { BASE, ADDONS, OFFER_HOURS, ALL } from "./plan.mjs";
+import { BASE, ADDONS, OFFER_HOURS, ALL, OFF } from "./plan.mjs";
 import { PANEL_UI } from "./panel-ui.mjs";
 
 /*
@@ -41,7 +41,6 @@ const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replac
 const href = (p = "") => BASE_URL + "/" + p;
 const fmt = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, "\u00a0");
 const zl = (n) => `${fmt(n)}\u00a0zł`;
-const usd = (n) => `${fmt(n)}\u00a0$`;
 const words = (txt) => txt.split(" ").map((w) => `<span class="w"><span>${w}</span></span>`).join(" ");
 const SMS = (body) => `sms:${COMPANY.tel}?&body=${encodeURIComponent(body)}`;
 
@@ -302,20 +301,6 @@ function sms() {
 </div></section>`;
 }
 
-function lang() {
-  const v = {
-    pl: ["Wgniecenia i rysy znikają. Lakier zostaje fabryczny.", "Od 1990 roku naprawiamy karoserie w Warszawie."],
-    uk: ["Вм'ятини й подряпини зникають. Лак лишається заводським.", "З 1990 року ремонтуємо кузови у Варшаві."],
-    en: ["Dents and scratches disappear. The paint stays factory.", "Repairing car bodies in Warsaw since 1990."],
-  };
-  return `<section class="sec sx" id="lang" data-addon="lang"><div class="wrap">
-<p class="kick rise">Wersja ukraińska i angielska</p><h2 class="h2 rise">Klient czyta <b>w swoim języku</b></h2>
-<div class="lng" role="group" aria-label="Język">${Object.keys(v).map((k, i) => `<button type="button" data-lng="${k}" aria-pressed="${i ? "false" : "true"}">${k.toUpperCase()}</button>`).join("")}</div>
-<div class="lngv glass" id="lngv" lang="pl"><b>${v.pl[0]}</b><p>${v.pl[1]}</p></div>
-<script type="application/json" id="lngd">${JSON.stringify(v)}</script>
-</div></section>`;
-}
-
 function seo() {
   const a = [
     ["Usuwanie wgnieceń bez lakierowania w Warszawie", "Kiedy się da, ile trwa i dlaczego auto nie traci na wartości."],
@@ -402,7 +387,6 @@ ${termin()}
 ${why()}
 ${flota()}
 ${sms()}
-${lang()}
 ${seo()}
 ${admin()}
 ${contact()}
@@ -423,15 +407,15 @@ function offer() {
   return `<section class="sec offer" id="offer"><div class="wrap">
 <p class="kick">Oferta DevUz Studio</p>
 <h2 class="h2">Strona <b>według tej makiety</b></h2>
-<p class="lead">Przez 48 godzin od pierwszego otwarcia makiety: strona za ${usd(BASE.promo)} zamiast ${usd(BASE.price)}. Dodatki włączasz przełącznikiem, a ich blok od razu pojawia się na stronie albo znika.</p>
+<p class="lead">Przez 48 godzin od pierwszego otwarcia makiety: strona za ${zl(BASE.promo)} zamiast ${zl(BASE.price)}. Dodatki są o ${Math.round(OFF * 100)}% tańsze niż u polskich agencji. Włączasz je przełącznikiem, a ich blok od razu pojawia się na stronie albo znika.</p>
 <div class="cst"><div>
-<div class="base"><div class="hd"><b>${esc(BASE.t)}</b><span class="pp"><s>${usd(BASE.price)}</s>${usd(BASE.promo)}</span></div><p>${esc(BASE.d)}</p></div>
-<div class="adds">${ADDONS.map((a) => `<label class="add"><input type="checkbox" data-add="${a.id}" checked><span class="sw" aria-hidden="true"></span><span><b>${esc(a.t)}</b>${a.star ? `<span class="star">biorą najczęściej</span>` : ""}<p>${esc(a.e)}</p><small>${esc(a.who)}</small></span><span class="ap">${usd(a.price)}</span></label>`).join("")}</div>
+<div class="base"><div class="hd"><b>${esc(BASE.t)}</b><span class="pp"><s>${zl(BASE.price)}</s>${zl(BASE.promo)}</span></div><p>${esc(BASE.d)}</p></div>
+<div class="adds">${ADDONS.map((a) => `<label class="add"><input type="checkbox" data-add="${a.id}" checked><span class="sw" aria-hidden="true"></span><span><b>${esc(a.t)}</b>${a.star ? `<span class="star">biorą najczęściej</span>` : ""}<p>${esc(a.e)}</p><small>${esc(a.who)}</small></span><span class="ap"><s>${zl(a.market)}</s>${zl(a.price)}<em>−${Math.round(OFF * 100)}%</em></span></label>`).join("")}</div>
 </div>
 <aside class="sum glass" aria-live="polite">
-<div class="row"><span>Strona</span><span>${usd(BASE.promo)}</span></div>
-<div class="row"><span>Dodatki <span id="addn"></span></span><span id="adds">0 $</span></div>
-<div class="tot"><span>Razem</span><b id="total">${usd(ALL)}</b></div>
+<div class="row"><span>Strona</span><span>${zl(BASE.promo)}</span></div>
+<div class="row"><span>Dodatki <span id="addn"></span></span><span id="adds">0 zł</span></div>
+<div class="tot"><span>Razem</span><b id="total">${zl(ALL)}</b></div>
 <p style="margin:16px 0 0;color:var(--mu);font-size:14px">Cena strony obowiązuje jeszcze:</p>
 <div class="timer" id="timer"><span><b id="th">48</b><small>godz.</small></span><span><b id="tm">00</b><small>min</small></span><span><b id="ts">00</b><small>sek.</small></span></div>
 <div class="ctrl"><button type="button" class="btn btn-g btn-s" id="allon">Wszystko</button><button type="button" class="btn btn-g btn-s" id="alloff">Tylko strona</button></div>
@@ -462,7 +446,7 @@ function landPage() {
     "Wyślij zgłoszenie z dowolnym numerem: to makieta.",
     "Otwórz panel: zgłoszenie jest na górze. Przyjmij auto i zmień etap, a strona pokaże go w „Status naprawy”.",
   ];
-  const ld = { base: BASE.promo, hours: OFFER_HOURS, add: ADDONS.map((a) => ({ id: a.id, p: a.price, t: a.t })), t: { copied: "Skład skopiowany", tot: "Razem" } };
+  const ld = { base: BASE.promo, hours: OFFER_HOURS, add: ADDONS.map((a) => ({ id: a.id, p: a.price, m: a.market, t: a.t })), t: { copied: "Skład skopiowany", tot: "Razem" } };
   return `${head("AutoPepe · makieta strony i panelu warsztatu · DevUz Studio", "Makieta dla AutoPepe: nowa strona warsztatu i panel do zgłoszeń, napraw i materiałów. Konstruktor ceny.")}
 <style>${CSS}</style>
 </head>
@@ -563,6 +547,7 @@ ${PANEL_JS}</script>
 const out = { "": landPage(), site: sitePage(), panel: panelPage() };
 for (const [k, v] of Object.entries(out)) {
   if (/[\u2014\u2013]/.test(v)) throw new Error(`${k || "(land)"}: długa kreska na stronie`);
+  if (/[А-Яа-яЁёІіЇїЄєҐґ]/.test(v)) throw new Error(`${k || "(land)"}: cyrylica na stronie, strona jest tylko po polsku`);
   if (/ - /.test(v.replace(/<script[\s\S]*?<\/script>/g, "").replace(/<style>[\s\S]*?<\/style>/g, ""))) throw new Error(`${k || "(land)"}: kreska ze spacjami`);
 }
 mkdirSync(DIR + "out", { recursive: true });

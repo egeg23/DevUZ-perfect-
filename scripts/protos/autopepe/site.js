@@ -144,8 +144,6 @@ var dd=$('#days');if(dd){dd.addEventListener('click',function(e){var b=e.target.
   $('#slots').addEventListener('click',function(e){var b=e.target.closest('[data-h]');if(!b||b.disabled)return;ssel=+b.getAttribute('data-h');slots()});
   $('#tgo').addEventListener('click',function(){var p=$('#tph').value.trim();if(p.replace(/\D/g,'').length<9){toast('Wpisz imię i telefon');return}var day=days[dsel],id=req({k:'termin',ph:p,day:day.toISOString().slice(0,10),h:ssel});var ok=$('#tok');ok.hidden=false;ok.textContent='Zarezerwowano: '+DN[day.getDay()]+' '+day.getDate()+'.'+String(day.getMonth()+1).padStart(2,'0')+', '+ssel+':00. Numer AP-'+id+'. Dzień wcześniej przypomnimy SMS-em.';ssel='';slots()});slots()}
 
-/* Język: podgląd wersji UA i EN. */
-var lg=$('#lngd');if(lg){var LG=JSON.parse(lg.textContent);$$('[data-lng]').forEach(function(b){b.addEventListener('click',function(){var k2=b.getAttribute('data-lng'),v=LG[k2];$$('[data-lng]').forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false')});var o=$('#lngv');o.setAttribute('lang',k2==='uk'?'uk':k2);o.innerHTML='<b>'+esc(v[0])+'</b><p>'+esc(v[1])+'</p>'})})}
 /* Flota: temat maila z liczbą aut. */
 var flm=$('#flm');if(flm){function fl(){flm.setAttribute('href','mailto:biuro@autopepe.pl?subject='+encodeURIComponent('Flota: '+($('#fl1').value||'firma')+', aut: '+($('#fl2').value||1)))}$('#fl1').addEventListener('input',fl);$('#fl2').addEventListener('input',fl)}
 

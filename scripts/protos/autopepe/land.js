@@ -7,7 +7,7 @@ var RM=w.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
 function get(k,def){try{var v=localStorage.getItem(k);return v?JSON.parse(v):def}catch(e){return def}}
 function put(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 function fmt(n){return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g,' ')}
-function money(n){return fmt(n)+' $'}
+function money(n){return fmt(n)+' zł'}
 var toastT=0;function toast(m){var t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('on')},2200)}
 /* Szapka: chowa się przy każdym przewinięciu, wraca 3 s po ostatnim zdarzeniu. */
 var top=$('.top'),IDLE=3000,idleT=0;

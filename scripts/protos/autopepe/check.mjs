@@ -44,7 +44,7 @@ for (const w of [390, 768, 1440]) for (const path of ["", "site", "panel", "pane
   await p.goto(U, { waitUntil: "domcontentloaded", timeout: 60000 });
   ok(await p.locator(".choice").count() === 2, "на первой странице нет выбора strona / panel");
   await p.locator('label.add:has([data-add="flota"])').click();
-  ok(/2\s?900/.test(await p.locator("#total").innerText()), "итог конструктора не пересчитался");
+  ok(/11\s?100\s?zł/.test(await p.locator("#total").innerText()), "итог конструктора не пересчитался");
   await p.click('.choice[href$="/site"]');
   await p.waitForURL(/\/site$/);
   ok(await p.locator("#flota.addon-off").count() === 1, "тумблер не убрал блок «dla firm» на сайте");

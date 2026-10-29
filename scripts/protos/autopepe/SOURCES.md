@@ -19,10 +19,12 @@
 - Заправка: cenauslug.pl, Warszawa — https://cenauslug.pl/motoryzacja/zaprawka-lakiernicza/warszawa; у AutoPepe от 200 zł → 200-300 zł.
 - Множитель класса машины (SUV ×1,25, dostawcze ×1,35) — только для лака и пакетов: больше площадь.
 
-## Цены студий (для «Стоимость»)
+## Наша цена (для «Oferta DevUz Studio»), в злотых
 
-- Сайт услуг с калькулятором и записью у варшавских студий — 8-15 тыс. zł; наш обычный — 2 500 $, по акции 1 000 $, допы вместе 2 000 $ (`plan.mjs`).
+- Курс NBP, октябрь 2026: 3,8762 (1.10) … 3,9247 (23.10) zł за доллар — tvp.info и comparic.pl, сводки таблиц NBP. Считаем по 3,9: 1 000 $ = 3 900 zł, 2 500 $ ≈ 9 900 zł.
+- Сайт фирмы в Польше: в среднем 6 000 zł (cenauslug.pl, 06.2026, https://cenauslug.pl/firma-i-biuro/stworzenie-firmowej-strony-internetowej-do-5-podstron), с интеграциями и своими функциями — больше 12 000 zł (Orange, https://www.orange.pl/poradnik-dla-firm/?p=12355), от 3 000 zł netto за простую (kb.pl).
+- Допы: цена рынка (`market` в `plan.mjs`) — наша оценка работы польской студии по этим ориентирам (отдельных цен на запись онлайн, панель и SMS в открытых прайсах нет); наша — 40% от неё (−60%, владелец, 29.10.2026). Вместе 11 500 zł ≈ 2 950 $.
 
 ## Конкуренты: что берут у сильных кузовных в Варшаве
 
-Wycena ze zdjęć (WhatsApp, форма), bezgotówkowo z OC, odbiór i dostarczenie auta, status naprawy, rezerwacja online, opinie Google. Из этого в макет — то, что у AutoPepe правда есть (OC, отгон машины), остальное — допами.
+Wycena ze zdjęć (WhatsApp, форма), bezgotówkowo z OC, odbiór i dostarczenie auta, status naprawy, rezerwacja online, opinie Google. Из этого в макет — то, что у AutoPepe правда есть (OC, отгон машины), остальное — допами. Версию на других языках не делаем: сайт только по-польски.
