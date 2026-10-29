@@ -193,7 +193,7 @@ jobs:
             echo "сервер: $(uptime | sed 's/^.*up/up/')"
             free -m | sed -n 1,3p
             echo "ядер: $(nproc)"
-            docker stats --no-stream --format '{{.Name}}: CPU {{.CPUPerc}}, память {{.MemUsage}}' 2>/dev/null | head -8
+            docker stats --no-stream --format '{{.Name}}: CPU {{.CPUPerc}}, память {{.MemUsage}}' 2>/dev/null | sort | head -30
             ss -s 2>/dev/null | sed -n 1,2p
             echo "nginx: $(grep -hE '^\s*(worker_processes|worker_connections|worker_rlimit_nofile)' /etc/nginx/nginx.conf 2>/dev/null | tr -s ' \t' ' ' | tr '\n' ' ')"
             NG=/etc/nginx/sites-available/devuz.studio
