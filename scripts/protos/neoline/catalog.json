@@ -1,0 +1,1131 @@
+[
+ {
+  "id": 1000458,
+  "slug": "neoline-x-cop-8900",
+  "sku": "8809101111101",
+  "cat": "radar",
+  "pop": true,
+  "name": {
+   "ru": "Neoline X-COP 8900",
+   "uz": "Neoline X-COP 8900"
+  },
+  "price": 2929000,
+  "old": 0,
+  "stock": true,
+  "url": {
+   "ru": "https://neoline.uz/ru/product/neoline-x-cop-8900-ru/",
+   "uz": "https://neoline.uz/product/neoline-x-cop-8900/"
+  },
+  "text": {
+   "ru": [
+    "Фирменная радарная платформа PRO III",
+    "Авто пресеты",
+    "Дисплей 2,4″",
+    "Новый интерфейс NEO UI",
+    "Поддержка Wi-Fi Hotspot обновления",
+    "GPS база радаров и камер всего Узбекистана"
+   ],
+   "uz": [
+    "Firma radar platformasi PRO III",
+    "Avto presetalr",
+    "2,4 dyuymli displey",
+    "Yangi NEO UI interfeysi",
+    "Wi-Fi Hotspot orqali yangilanishlarni qo‘llab-quvvatlash",
+    "Butun O‘zbekiston bo‘yicha radar va kameralar uchun GPS bazasi"
+   ]
+  },
+  "main": 2,
+  "imgs": 15
+ },
+ {
+  "id": 1000435,
+  "slug": "neoline-x-cop-7900",
+  "sku": "8809101111002",
+  "cat": "radar",
+  "pop": true,
+  "name": {
+   "ru": "Neoline X-COP 7900",
+   "uz": "Neoline X-COP 7900"
+  },
+  "price": 2559000,
+  "old": 0,
+  "stock": true,
+  "url": {
+   "ru": "https://neoline.uz/ru/product/neoline-x-cop-7900-ru/",
+   "uz": "https://neoline.uz/product/neoline-x-cop-7900/"
+  },
+  "text": {
+   "ru": [
+    "Фирменная радарная платформа PRO",
+    "Автопресеты",
+    "Дисплей 1,9″",
+    "Новый интерфейс NEO UI",
+    "Поддержка Wi-Fi Hotspot обновления",
+    "GPS база радаров и камер всего Узбекистана"
+   ],
+   "uz": [
+    "Firma radar platformasi PRO",
+    "Avto presetalar",
+    "1,9 dyuymli displey",
+    "Yangi NEO UI interfeysi",
+    "Wi-Fi Hotspot orqali yangilanishlarni qo‘llab-quvvatlash",
+    "Butun O‘zbekiston bo‘yicha radar va kameralar uchun GPS bazasi"
+   ]
+  },
+  "main": 2,
+  "imgs": 16
+ },
+ {
+  "id": 1000268,
+  "slug": "neoline-spectrum",
+  "sku": "8808901880002",
+  "cat": "radar",
+  "pop": true,
+  "name": {
+   "ru": "Neoline Spectrum",
+   "uz": "Neoline Spectrum"
+  },
+  "price": 3839000,
+  "old": 0,
+  "stock": true,
+  "url": {
+   "ru": "https://neoline.uz/ru/product/neoline-spectrum-ru/",
+   "uz": "https://neoline.uz/product/neoline-spectrum/"
+  },
+  "text": {
+   "ru": [
+    "Neoline SPECTRUM: флагманский видеорегистратор с 4K Ultra HD съемкой и встроенным радар-детектором нового поколения 2026 года.",
+    "Технология HDR чётко снимает детали при любом освещении и погоде.",
+    "Радарная платформа PRO с рупорной антенной, двойным LNA-усилителем и модулем MULTA обеспечивает максимальную дальность детектирования даже сложных маломощных радаров.",
+    "Функция АВТО ПРЕСЕТЫ автоматически адаптирует настройки под регион.",
+    "Гибрид оснащен 3″ IPS-дисплеем с сенсорным управлением.",
+    "Wi-Fi подключение позволяет управлять файлами и обновлять GPS-базу через смартфон.",
+    "Поддержка второй камеры, суперконденсатор и режим парковочной съемки обеспечивают круглосуточную защиту.",
+    "Произведено в Южной Корее."
+   ],
+   "uz": [
+    "Neoline SPECTRUM: 2026-yilgi yangi avlod flagman 4K Ultra HD videoregistrator-gibridi.",
+    "HDR texnologiyasi har qanday yorug‘lik va ob-havo sharoitida muhim detallarni aniq qayd etadi.",
+    "PRO radar platformasi, rupor antenna, ikki karra LNA kuchaytirgichi va MULTA moduli murakkab va kam quvvatli radarlarni ham maksimal masofada aniqlash imkonini beradi.",
+    "AVTO PRESETLAR sozlamalarni hududga moslashtiradi. 3″ IPS sensorli displey, Wi-Fi orqali smartfon bilan boshqarish va GPS-bazani yangilash imkoniyati mavjud.",
+    "Ikkinchi kamerani ulash, superkondensator va parkovka rejimi avtomobilni 24 soat davomida himoya qilishni ta’minlaydi.",
+    "Janubiy Koreyada ishlab chiqarilgan."
+   ]
+  },
+  "main": 1,
+  "imgs": 9
+ },
+ {
+  "id": 1000030,
+  "slug": "neoline-x-cop-7750s",
+  "sku": "8808900907755",
+  "cat": "radar",
+  "pop": false,
+  "name": {
+   "ru": "Neoline X-COP 7750s",
+   "uz": "Neoline X-COP 7750s"
+  },
+  "price": 1899000,
+  "old": 0,
+  "stock": true,
+  "url": {
+   "ru": "https://neoline.uz/ru/product/neoline-x-cop-7750s-ru/",
+   "uz": "https://neoline.uz/product/neoline-x-cop-7750s/"
+  },
+  "text": {
+   "ru": [
+    "Продвинутая радарная платформа PRO (LNA EXD 2.5, модуль MULTA, лазерный приемник, большой рупор + специальная линза)",
+    "Полная библиотека сигнатур",
+    "GPS база камер и радаров Узбекистана и всего мира",
+    "Направленный к водителю дисплей",
+    "Удобный интерфейс",
+    "Озвучка на узбекском и русском языках",
+    "OTG обновление ПО и базы GPS",
+    "Сделано в Южной Корее"
+   ],
+   "uz": [
+    "LNA EXD 2.5 moduli: ikkita signal kuchaytirgichi",
+    "Katta rupor + kattaroq linza",
+    "Aniqlash diapazoni 2.5 km gacha",
+    "Yo’l harakati nazorati kameralari haqida bildirishnoma (OT chizig’i, «orqada», to’xtashni taqiqlash, yo’l bo’yi, chorraha, zebra o’tish joyi, belgilar)",
+    "«Turbo» rejimini ma’lum tezlikdan avtomatik ravishda faollashtirish",
+    "Sukunat zonasi va xavfli zonani qo’shish",
+    "Yangilangan MULTA moduli",
+    "Signatura: Signatur kutubxonasiga kiritilgan politsiya radar signallarini aniqlash",
+    "O‘zbekistonning barcha politsiya radarlarini aniqlash: MultaRadar CD, Cordon PRO, Cordon BLACK, AutoCon, Skat, Lochin, Hikvision, Traffistar, Kaskad"
+   ]
+  },
+  "main": 1,
+  "imgs": 9
+ },
+ {
+  "id": 1000027,
+  "slug": "neoline-x-cop-7850s",
+  "sku": "8808900907854",
+  "cat": "radar",
+  "pop": false,
+  "name": {
+   "ru": "Neoline X-COP 7850s",
+   "uz": "Neoline X-COP 7850s Wi-Fi"
+  },
+  "price": 2160000,
+  "old": 0,
+  "stock": true,
+  "url": {
+   "ru": "https://neoline.uz/ru/product/neoline-x-cop-7850s-ru/",
+   "uz": "https://neoline.uz/product/neoline-x-cop-7850s/"
+  },
+  "text": {
+   "ru": [
+    "Продвинутая радарная платформа PRO (LNA EXD 2.5, модуль MULTA, лазерный приемник, большой рупор + специальная линза)",
+    "Wi-Fi Hotspot обновление прошивки и GPS-базы",
+    "Полная библиотека сигнатур",
+    "GPS база камер и радаров Узбекистана и всего мира",
+    "Направленный к водителю большой дисплей",
+    "Удобный интерфейс",
+    "Озвучка на узбекском и русском языках",
+    "Сделано в Южной Корее"
+   ],
+   "uz": [
+    "Sukunat zonasi va xavfli zonani qo’shish",
+    "Wi-Fi Hotspot dasturiy ta’minotini yangilash va GPS ma’lumotlar bazasi",
+    "Yangilangan Multa moduli",
+    "LNA EXD 2.5 moduli: ikkita signal kuchaytirgichi",
+    "Lazer detektori",
+    "O‘zbekistonning barcha politsiya radarlarini aniqlash: MultaRadar CD, Cordon PRO, Cordon BLACK, AutoCon, Skat, Lochin, Hikvision, Traffistar, Kaskad (Megacam) va boshqalar.",
+    "Aniqlash diapazoni 2.5 km gacha",
+    "Signatura: Signatur kutubxonasiga kiritilgan politsiya radar signallarini aniqlash",
+    "Yo’l harakati nazorati kameralari haqida bildirishnoma (OT chizig’i, «orqada», to’xtashni taqiqlash, yo’l bo’yi, chorraha, zebra o’tish joyi, belgilar)",
+    "«Turbo» rejimini ma’lum tezlikdan avtomatik ravishda faollashtirish"
+   ]
+  },
+  "main": 1,
+  "imgs": 8
+ },
+ {
+  "id": 999915,
+  "slug": "neoline-x-cop-s700",
+  "sku": "",
+  "cat": "radar",
+  "pop": false,
+  "name": {
+   "ru": "Neoline X-COP S700",
+   "uz": "Neoline X-COP S700"
+  },
+  "price": 3000000,
+  "old": 0,
+  "stock": true,
+  "url": {
+   "ru": "https://neoline.uz/ru/product/neoline-x-cop-s700/",
+   "uz": "https://neoline.uz/product/neoline-x-cop-s700/"
+  },
+  "text": {
+   "ru": [
+    "Скрытая установка",
+    "Модуль EXD 2.0: каскад усилителей сигнала",
+    "Полная библиотека сигнатур",
+    "Большой выносной рупор",
+    "GPS база камер и радаров всего мира: Узбекистан, Казахстан, Кыргызстан, Туркменистан, Таджикистан, Россия, Европа и др.",
+    "Выносной OLED дисплей",
+    "Фильтр Z-сигнатур",
+    "Внешняя GPS антенна",
+    "Сделано в Корее"
+   ],
+   "uz": [
+    "Yashirin o‘rnatish",
+    "EXD 2.0 moduli: signalni kuchaytiruvchi kaskad",
+    "To‘liq signaturalar kutubxonasi",
+    "Katta tashqi rupor",
+    "Butun dunyo bo‘yicha GPS kamera va radarlar bazasi: O‘zbekiston, Qozog‘iston, Qirg‘iziston, Turkmaniston, Tojikiston, Rossiya, Yevropa va boshqalar",
+    "Tashqi OLED displey",
+    "Z-signatura filtri",
+    "Tashqi GPS antennasi",
+    "Koreyada ishlab chiqarilgan"
+   ]
+  },
+  "main": 1,
+  "imgs": 9
+ },
+ {
+  "id": 999504,
+  "slug": "neoline-x-cop-roadmaster",
+  "sku": "",
+  "cat": "radar",
+  "pop": false,
+  "name": {
+   "ru": "Neoline X-COP RoadMaster",
+   "uz": "Neoline X-COP RoadMaster"
+  },
+  "price": 2645000,
+  "old": 0,
+  "stock": true,
+  "url": {
+   "ru": "https://neoline.uz/ru/product/neoline-x-cop-roadmaster-ru/",
+   "uz": "https://neoline.uz/product/neoline-x-cop-roadmaster/"
+  },
+  "text": {
+   "ru": [
+    "Видеорегистратор с сигнатурным радар-детектором Neoline X-COP ROADMASTER базируется на платформе PRO PATCH с двойным LNA-усилителем.",
+    "Обеспечивает максимальную дальнобойность и точность обнаружения даже самых сложных радаров.",
+    "Функция AВТО ПРЕСЕТЫ автоматически настраивает устройство под регион.",
+    "CMOS-сенсор GalaxyCore, светосильный объектив и CPL-фильтр позволяют вести запись в Full HD.",
+    "Функция NightVision улучшает качество картинки в темноте.",
+    "Информация о камерах отображается на большом сенсорном IPS-дисплее (3,5″).",
+    "Управлять файлами и загружать обновления прошивки и GPS-базы можно через Wi-Fi мобильное приложение Neoline Connect.",
+    "Быстрый запуск при перепадах температур обеспечивает суперконденсатор.",
+    "Сделано в Южной Корее."
+   ],
+   "uz": [
+    "Neoline X-COP ROADMASTER ikki tomonlama LNA kuchaytirgichiga ega PRO PATCH platformasiga asoslangan.",
+    "Bu eng murakkab radarlarni aniqlashda maksimal masofa va aniqlikni ta’minlaydi.",
+    "GalaxyCore CMOS sensori, yuqori yorug‘lik o‘tkazuvchan ob’ektiv va CPL filtri Full HD sifatida yozib olish imkonini beradi.",
+    "NightVision funksiyasi qorong‘i sharoitlarda tasvir sifatini yaxshilaydi.",
+    "Kameralar haqidagi ma’lumotlar katta sensorli IPS displeyda (3,5 dyuym) ko‘rsatiladi.",
+    "Fayllarni boshqarish va dasturiy ta’minot hamda GPS bazasini yangilash Wi-Fi orqali Neoline Connect mobil ilovasi yordamida amalga oshiriladi.",
+    "Harorat o‘zgarishida tez ishga tushishni superkondensator ta’minlaydi.",
+    "Janubiy Koreyada ishlab chiqarilgan."
+   ]
+  },
+  "main": 1,
+  "imgs": 9
+ },
+ {
+  "id": 999441,
+  "slug": "neoline-turbocam",
+  "sku": "",
+  "cat": "dvr",
+  "pop": true,
+  "name": {
+   "ru": "Neoline Turbocam",
+   "uz": "Neoline Turbocam"
+  },
+  "price": 489000,
+  "old": 0,
+  "stock": true,
+  "url": {
+   "ru": "https://neoline.uz/ru/product/neoline-turbocam-ru/",
+   "uz": "https://neoline.uz/product/neoline-turbocam/"
+  },
+  "text": {
+   "ru": [
+    "Крупный сенсорный IPS-экран 9,66″",
+    "Детальная съемка Full HD + Full HD",
+    "Панорамное видео без “мертвых зон″",
+    "Ассистент безопасной парковки задним ходом",
+    "Всепогодная задняя камера IP67",
+    "Датчик защиты видеороликов с ДТП"
+   ],
+   "uz": [
+    "9,66″ katta sensorli IPS-ekran",
+    "Full HD + Full HD formatida batafsil yozuv",
+    "«Ko‘r zonalar» panoramali video",
+    "Orqaga yurib parkovka qilish uchun xavfsizlik assistenti",
+    "Har qanday ob-havoga mos orqa kamera (IP67)",
+    "YTH paytida videolarni himoya qiluvchi datchik"
+   ]
+  },
+  "main": 1,
+  "imgs": 6
+ },
+ {
+  "id": 999219,
+  "slug": "neoline-x-cop-9700s-discount",
+  "sku": "8808864009700у",
+  "cat": "sale",
+  "pop": false,
+  "name": {
+   "ru": "Neoline X-COP 9700s, витринный образец",
+   "uz": "Neoline X-COP 9700s, vitrina namunasi"
+  },
+  "price": 1200000,
+  "old": 0,
+  "stock": true,
+  "url": {
+   "ru": "https://neoline.uz/ru/product/neoline-x-cop-9700s-discount-ru/",
+   "uz": "https://neoline.uz/product/neoline-x-cop-9700s-discount/"
+  },
+  "text": {
+   "ru": [
+    "NEOLINE X-COP 9700s: это сигнатурный гибрид (радар-детектор с видеорегистратором), разработанный корейскими специалистами специально для дорог Узбекистана.",
+    "Устройство оснащено модулем EXD 2.0 с каскадом усилителей сигнала и большой рупорной антенной, что обеспечивает максимальную дальность детектирования полицейских радаров и высокую защиту от помех. Благодаря полной библиотеке сигнатур 2023 года гибрид точно распознаёт типы радаров (включая маломощные модели вроде LOCHIN, SCAT, AUTOCON) и блокирует ложные сигналы.",
+    "Встроенный видеорегистратор снимает в Full HD на матрицу Sony с углом обзора 135°, а GPS-база с более чем 120 000 точек предупреждает о камерах и радарах по всему миру, с еженедельными обновлениями для Узбекистана. Дополнительные преимущества: управление жестами Motion Control, суперконденсатор для работы в экстремальных температурах, яркий дисплей и голосовые уведомления на русском и узбекском языках.",
+    "Комплектация:",
+    "Neoline X-COP 9700s",
+    "Крепление на 3М скотче с активным питанием Smart Click Plus",
+    "Кабель питания в автомобильную розетку (DC 12-24 В)"
+   ],
+   "uz": [
+    "NEOLINE X-COP 9700s: bu Oʻzbekiston yoʻllari uchun maxsus koreys mutaxassislari tomonidan ishlab chiqilgan signatura gibrid qurilmasi (radar-detektor va videoregistrator).",
+    "Qurilma signal kuchaytirgichlar kaskadi va katta rupor antennasi bilan jihozlangan EXD 2.0 moduliga ega boʻlib, bu politsiya radarlarini maksimal masofadan aniqlash va xalaqitlardan yuqori darajada himoyalanishni ta’minlaydi. 2023-yilgi toʻliq signaturalar kutubxonasi tufayli gibrid radar turlarini (shu jumladan LOCHIN, SCAT, AUTOCON kabi quvvati past modellar) aniq aniqlaydi va soxta signallarni bloklaydi.",
+    "Ichki videoregistrator Sony matritsasi asosida Full HD formatida 135° koʻrish burchagi bilan suratga oladi. 120 000 dan ortiq nuqtadan iborat GPS bazasi butun dunyo boʻylab kameralar va radarlar haqida ogohlantiradi, Oʻzbekiston uchun haftalik yangilanishlar bilan ta’minlanadi. Qoʻshimcha afzalliklar: Motion Control tizimi orqali harakatlar bilan boshqarish, ekstremal haroratlarda barqaror ishlash uchun superkondensator, yorqin displey va rus hamda oʻzbek tillarida ovozli bildirishnomalar.",
+    "To’plam tarkibi:",
+    "Neoline X-COP 9700s",
+    "Smart Click Plus faol quvvatlash tizimiga ega, 3M yopishqoq lentasida o’rnatiladigan moslama",
+    "Avtomobil rozetkasiga ulash uchun quvvat kabeli (DC 12-24 V)"
+   ]
+  },
+  "main": 1,
+  "imgs": 10
+ },
+ {
+  "id": 999211,
+  "slug": "neoline-x-cop-7800s-discount",
+  "sku": "8808640007800у",
+  "cat": "sale",
+  "pop": false,
+  "name": {
+   "ru": "Neoline X-COP 7800s, витринный образец",
+   "uz": "Neoline X-COP 7800s, vitrina namunasi"
+  },
+  "price": 1000000,
+  "old": 0,
+  "stock": false,
+  "url": {
+   "ru": "https://neoline.uz/ru/product/neoline-x-cop-7800s-discount-ru/",
+   "uz": "https://neoline.uz/product/neoline-x-cop-7800s-discount/"
+  },
+  "text": {
+   "ru": [
+    "NEOLINE X-COP 7800s: это сигнатурный радар-детектор корейского производства, разработанный специально для рынка Узбекистана. Главная особенность устройства: модуль EXD 2.0 с каскадом усилителей сигнала, обеспечивающий высокую дальность обнаружения полицейских радаров и защиту от помех.",
+    "Ключевые преимущества:",
+    "Полная библиотека сигнатур 2023 года позволяет распознавать конкретные типы радаров (Multaradar CD, Lochin, Scat, Hikvision, Cordon и др.) и блокировать ложные сигналы;",
+    "GPS-база с более чем 120 000 точек камер и радаров по Узбекистану, Казахстану, России и Европе с еженедельными обновлениями через OTG;",
+    "Большой рупор и направленный к водителю контрастный дисплей обеспечивают уверенное детектирование и удобство использования при любом освещении;",
+    "Поддержка голосовых оповещений на узбекском и русском языках, 8 уровней громкости и фильтр Z-сигнатур для отсеивания бытовых помех.",
+    "Устройство адаптировано под дорожные условия Узбекистана и сочетает максимальную дальнобойность с интеллектуальной защитой от ложных срабатываний."
+   ],
+   "uz": [
+    "NEOLINE X-COP 7800s: Koreyada ishlab chiqarilgan, aynan Oʻzbekiston bozori uchun moʻljallangan signaturali radar-detektor. Qurilmaning asosiy xususiyati: signal kuchaytirgichlar kaskadiga ega EXD 2.0 moduli boʻlib, u politsiya radarlarini uzoq masofadan aniqlash va xalaqitlardan ishonchli himoya qilishni ta’minlaydi.",
+    "Asosiy afzalliklari:",
+    "2023-yilgi toʻliq signaturalar kutubxonasi aniq radar turlarini (Multaradar CD, Lochin, Scat, Hikvision, Cordon va boshqalar) aniqlash hamda soxta signallarni bloklash imkonini beradi;",
+    "Oʻzbekiston, Qozogʻiston, Rossiya va Yevropa hududlarida 120 000 dan ortiq kamera va radar nuqtalarini oʻz ichiga olgan GPS-baza, OTG orqali haftalik yangilanishlar bilan ta’minlanadi;",
+    "Katta rupor va haydovchiga qaratilgan kontrastli displey ishonchli aniqlash hamda har qanday yoritish sharoitida qulay foydalanishni ta’minlaydi;",
+    "Oʻzbek va rus tillarida ovozli ogohlantirishlarni qoʻllab-quvvatlash, 8 ta ovoz balandligi darajasi va maishiy xalaqitlarni saralash uchun Z-signaturalar filtri.",
+    "Qurilma Oʻzbekiston yoʻl sharoitlariga moslashtirilgan boʻlib, maksimal aniqlash masofasi va soxta ishga tushishlardan aqlli himoyani oʻzida birlashtiradi."
+   ]
+  },
+  "main": 1,
+  "imgs": 8
+ },
+ {
+  "id": 999205,
+  "slug": "neoline-x-cop-8700s-discount",
+  "sku": "",
+  "cat": "sale",
+  "pop": false,
+  "name": {
+   "ru": "Neoline X-COP 8700s, витринный образец",
+   "uz": "Neoline X-COP 8700s, vitrina namunasi"
+  },
+  "price": 1400000,
+  "old": 0,
+  "stock": true,
+  "url": {
+   "ru": "https://neoline.uz/ru/product/neoline-x-cop-8700s-discount-ru/",
+   "uz": "https://neoline.uz/product/neoline-x-cop-8700s-discount/"
+  },
+  "text": {
+   "ru": [
+    "Neoline X-COP 8700s: это флагманский радар-детектор премиум-класса корейского производства с международной радарной платформой. Устройство оснащено дальнобойным модулем EXD Plus для обнаружения всех типов радаров (K, M, S, Ka, Laser), включая сложные комплексы MultaRadar CD/CT, и встроенной GPS/ГЛОНАСС-базой камер и радаров более чем 100 стран мира с еженедельными обновлениями.",
+    "Среди ключевых особенностей: фирменный фильтр Z-сигнатур для минимизации ложных срабатываний, технология Motion Control для отключения звука жестом руки, яркий 6-цветный OLED-дисплей с автояркостью, а также гибкие настройки режимов «Город»/«Трасса»/«Турбо». Радар-детектор поддерживает обновление прошивки через USB OTG без подключения к ПК, имеет мультиязычный интерфейс и поставляется с расширенным комплектом креплений для удобной установки в автомобиле."
+   ],
+   "uz": [
+    "Neoline X-COP 8700s: bu Koreyada ishlab chiqarilgan, xalqaro radar platformasiga ega boʻlgan premium sinfdagi flagman radar detektoridir. Qurilma barcha turdagi radarlarni (K, M, S, Ka, Laser), shu jumladan murakkab MultaRadar CD/CT komplekslarini aniqlash uchun moʻljallangan uzoq masofali EXD Plus moduli va 100 dan ortiq mamlakatlarning kameralari hamda radarlari maʼlumotlar bazasiga ega boʻlgan oʻrnatilgan GPS/GLONASS tizimi bilan jihozlangan; ushbu baza haftalik yangilanib boradi.",
+    "Asosiy xususiyatlari qatoriga quyidagilar kiradi: notoʻgʻri ishga tushishlarni minimallashtirish uchun firma Z-signatura filtri, qoʻl harakati bilan ovozni oʻchirish imkonini beruvchi Motion Control texnologiyasi, avtomatik yorugʻlik sozlamasiga ega yorqin 6 rangli OLED displey, shuningdek, «Shahar»/«Trassa»/«Turbo» rejimlarini moslashuvchan sozlash imkoniyatlari. Radar detektori kompyuterga ulamasdan, USB OTG orqali dasturiy taʼminotni (firmware) yangilashni qoʻllab-quvvatlaydi, koʻp tilli interfeysga ega va avtomobilda qulay oʻrnatish uchun kengaytirilgan krepleniylar toʻplami bilan taqdim etiladi."
+   ]
+  },
+  "main": 1,
+  "imgs": 8
+ },
+ {
+  "id": 819,
+  "slug": "neoline-x-cop-7800s",
+  "sku": "8808640007800",
+  "cat": "radar",
+  "pop": false,
+  "name": {
+   "ru": "Neoline X-COP 7800s",
+   "uz": "Neoline X-COP 7800s"
+  },
+  "price": 1200000,
+  "old": 2460000,
+  "stock": true,
+  "url": {
+   "ru": "https://neoline.uz/ru/product/neoline-x-cop-7800s-ru/",
+   "uz": "https://neoline.uz/product/neoline-x-cop-7800s/"
+  },
+  "text": {
+   "ru": [
+    "Модуль EXD 2.0 (каскадный сигнал)",
+    "Полная библиотека сигнатур 2023",
+    "Большой рупор",
+    "База GPS-камер и радаров всего мира: Узбекистан, Казахстан, Киргизия, Туркменистан, Таджикистан, Россия, Европа и другие.",
+    "Направленный к водителю дисплей",
+    "Удобный интерфейс",
+    "Озвучка на узбекском и русском языках",
+    "Фильтр Z-сигнатур",
+    "Обновление прошивки OTG и GPS-базы",
+    "Сделано в Корее"
+   ],
+   "uz": [
+    "EXD 2.0 moduli (Signal kuchaytirgichlari kaskadi)",
+    "2023-yil toʻliq signaturalar kutubxonasi",
+    "Katta rupor",
+    "Butun dunyo kamera va radarlari GPS bazasi: Oʻzbekiston, Qozogʻiston, Qirgʻiziston, Turkmaniston, Tojikiston, Rossiya, Yevropa va boshqa mamlakatlar",
+    "Haydovchiga qaratilgan displey",
+    "Qulay interfeys",
+    "Oʻzbek va rus tillarida ovozli axborot",
+    "Z-signaturalar filtri",
+    "OTG orqali firmware va GPS-bazasini yangilash",
+    "Koreyada ishlab chiqarilgan"
+   ]
+  },
+  "main": 1,
+  "imgs": 8
+ },
+ {
+  "id": 745,
+  "slug": "neoline-fixit-m3s",
+  "sku": "6905323009270",
+  "cat": "acc",
+  "pop": false,
+  "name": {
+   "ru": "Магнитное крепление Neoline Fixit M3S X-COP Edition",
+   "uz": "Magnit mahkamlash Neoline Fixit M3S X-COP Edition"
+  },
+  "price": 345900,
+  "old": 0,
+  "stock": true,
+  "url": {
+   "ru": "https://neoline.uz/ru/product/neoline-fixit-m3s/",
+   "uz": "https://neoline.uz/product/neoline-fixit-m3s-uz/"
+  },
+  "text": {
+   "ru": [
+    "Магнитное крепление Neoline Fixit M3S X-COP Edition на лобовое стекло автомобиля.",
+    "Подходит для радар-детектора серии Х-СОР 7800s Wi-Fi Black.",
+    "Простая инсталляция и прочная фиксация корпуса радар-детектора Х-СОР.",
+    "Возможность поворота корпуса радар-детектора.",
+    "Алюминиевый корпус."
+   ],
+   "uz": [
+    "Neoline Fixit M3S X-COP Edition magnit mahkamlash: avtomobilning old oynasiga.",
+    "X-COP 7800s Wi-Fi Black radar-detektori uchun mos. Oson o‘rnatiladi va X-COP radar-detektor korpusini ishonchli mahkamlaydi.",
+    "Korpusni burish imkoniyati mavjud. Alyuminiy korpus."
+   ]
+  },
+  "main": 1,
+  "imgs": 3
+ },
+ {
+  "id": 740,
+  "slug": "neoline-h90",
+  "sku": "8808531956016",
+  "cat": "acc",
+  "pop": false,
+  "name": {
+   "ru": "Крепление к лобовому стеклу на присоске X-COP H90 для гибридов",
+   "uz": "X-COP H90 gibridlari uchun old oynaga so‘rg‘ichli mahkamlash"
+  },
+  "price": 229900,
+  "old": 0,
+  "stock": true,
+  "url": {
+   "ru": "https://neoline.uz/ru/product/neoline-h90/",
+   "uz": "https://neoline.uz/product/neoline-h90-uz/"
+  },
+  "text": {
+   "ru": [
+    "Подходит для всех моделей гибридов, кроме 9500/9500s.",
+    "Крепление Smart Click к лобовому стеклу на присоске, без активного питания. Кабель питания нужно будет подключить непосредственно в устройство, а не в крепление."
+   ],
+   "uz": [
+    "Barcha gibrid modellarga mos, 9500/9500s bundan mustasno.",
+    "Smart Click mahkamlash: old oynaga so‘rg‘ich bilan, quvvat manbaisiz. Quvvat kabelini to‘g‘ridan-to‘g‘ri qurilmaga ulash kerak, mahkamlashga emas."
+   ]
+  },
+  "main": 1,
+  "imgs": 3
+ },
+ {
+  "id": 736,
+  "slug": "neoline-h91-3m-power",
+  "sku": "8808960051405",
+  "cat": "acc",
+  "pop": false,
+  "name": {
+   "ru": "Крепление к лобовому стеклу на 3M скотче с активной зарядкой H91 3M Power для гибридов",
+   "uz": "Old oynaga 3M skotch bilan, faol quvvat ta’minotiga ega H91 3M Power gibridlar uchun"
+  },
+  "price": 349900,
+  "old": 0,
+  "stock": true,
+  "url": {
+   "ru": "https://neoline.uz/ru/product/neoline-h91-3m-power/",
+   "uz": "https://neoline.uz/product/neoline-h91-3m-power-uz/"
+  },
+  "text": {
+   "ru": [
+    "Крепление к лобовому стеклу на 3М скотче с активной зарядкой."
+   ],
+   "uz": [
+    "Old oynaga 3M skotch bilan, faol quvvat ta’minotiga ega mahkamlash."
+   ]
+  },
+  "main": 1,
+  "imgs": 3
+ },
+ {
+  "id": 732,
+  "slug": "neoline-h90-3m",
+  "sku": "8808531955033",
+  "cat": "acc",
+  "pop": false,
+  "name": {
+   "ru": "Крепление к лобовому стеклу на 3M скотче X-COP H90 3M для гибридов",
+   "uz": "Old oynaga 3M skotch bilan mahkamlash X-COP H90 3M gibridlar uchun"
+  },
+  "price": 189900,
+  "old": 0,
+  "stock": true,
+  "url": {
+   "ru": "https://neoline.uz/ru/product/neoline-h90-3m/",
+   "uz": "https://neoline.uz/product/neoline-h90-3m-uz/"
+  },
+  "text": {
+   "ru": [
+    "Подходит для всех моделей гибридов, кроме 9500/9500s.",
+    "Крепление Smart Click к лобовому стеклу на 3M cкотче, без активного питания. Кабель питания нужно будет подключить непосредственно в устройство, а не в крепление.",
+    "Внимание: могут возникнуть сложности с установкой устройства в автомобилях с вертикальным расположением ветрового стекла."
+   ],
+   "uz": [
+    "Barcha gibrid modellariga mos, 9500/9500s bundan mustasno.",
+    "Smart Click mahkamlash: old oynaga 3M skotch bilan, quvvat manbaisiz. Quvvat kabelini to‘g‘ridan-to‘g‘ri qurilmaga ulash kerak, mahkamlashga emas.Diqqat: old oynasi vertikalroq joylashgan avtomobillarda qurilmani o‘rnatishda qiyinchiliklar yuzaga kelishi mumkin."
+   ]
+  },
+  "main": 1,
+  "imgs": 3
+ },
+ {
+  "id": 727,
+  "slug": "neoline-power-cord-hybrid",
+  "sku": "8808525560090",
+  "cat": "acc",
+  "pop": false,
+  "name": {
+   "ru": "Кабель питания для гибридов в автомобильную розетку Neoline Power Cord Hybrid",
+   "uz": "Gibridlar uchun avtomobil rozetkasiga ulanuvchi quvvat kabeli Neoline Power Cord Hybrid"
+  },
+  "price": 129900,
+  "old": 0,
+  "stock": true,
+  "url": {
+   "ru": "https://neoline.uz/ru/product/neoline-power-cord-hybrid/",
+   "uz": "https://neoline.uz/product/neoline-power-cord-hybrid-uz/"
+  },
+  "text": {
+   "ru": [
+    "Кабель питания в автомобильную розетку для гибридов серии Х-СОР 9ххх",
+    "Кабель питания 12/24В в автомобильную розетку. Подходит для всех гибридов Neoline. При подключении Гибрида Neoline в автомобильную розетку (прикуриватель) с помощью кабеля Neoline Power Cord Hybrid устройство автоматически включится при запуске двигателя. Имеет встроенный предохранитель. Длина кабеля 3 м."
+   ],
+   "uz": [
+    "X-COP 9xxx seriyali gibridlar uchun avtomobil rozetkasiga ulanuvchi quvvat kabeli.",
+    "12/24 V avtomobil rozetkasiga ulanuvchi quvvat kabeli. Barcha Neoline gibridlariga mos keladi. Neoline Power Cord Hybrid orqali gibridni avtomobil rozetkasiga (prikurivatel) ulaganda, dvigatel ishga tushishi bilan qurilma avtomatik tarzda yoqiladi. O‘rnatilgan sug‘urta mavjud. Kabel uzunligi: 3 m."
+   ]
+  },
+  "main": 1,
+  "imgs": 3
+ },
+ {
+  "id": 724,
+  "slug": "neoline-power-cord-radar",
+  "sku": "8808523754316",
+  "cat": "acc",
+  "pop": false,
+  "name": {
+   "ru": "Кабель питания в автомобильную розетку с кнопкой вкл/выкл Neoline Power Cord Radar",
+   "uz": "Avtomobil rozetkasiga ulanuvchi, yoqish/o‘chirish tugmasiga ega Neoline Power Cord Radar quvvat kabeli"
+  },
+  "price": 129900,
+  "old": 0,
+  "stock": true,
+  "url": {
+   "ru": "https://neoline.uz/ru/product/neoline-power-cord-radar/",
+   "uz": "https://neoline.uz/product/neoline-power-cord-radar-uz/"
+  },
+  "text": {
+   "ru": [
+    "Кабель питания в автомобильную розетку с кнопкой ВКЛ/ВЫКЛ",
+    "Для радар-детекторов серии Х-СОР:",
+    "7800s",
+    "7800s Wi-Fi Black",
+    "7700s Black",
+    "8800s Wi-Fi Black"
+   ],
+   "uz": [
+    "Avtomobil rozetkasiga ulanuvchi, yoqish/o‘chirish tugmasiga ega quvvat kabeli.",
+    "X-COP seriyadagi radar-detektorlar uchun:",
+    "7800s",
+    "7800s Wi-Fi Black",
+    "7700s Black",
+    "8800s Wi-Fi Black"
+   ]
+  },
+  "main": 1,
+  "imgs": 3
+ },
+ {
+  "id": 721,
+  "slug": "ultera-rs69",
+  "sku": "6901115767588",
+  "cat": "audio",
+  "pop": false,
+  "name": {
+   "ru": "Автомобильная акустика Neoline Ultera RS69",
+   "uz": "Akustik tizim Neoline Ultera RS69"
+  },
+  "price": 726000,
+  "old": 776000,
+  "stock": true,
+  "url": {
+   "ru": "https://neoline.uz/ru/product/ultera-rs69/",
+   "uz": "https://neoline.uz/product/ultera-rs69-uz/"
+  },
+  "text": {
+   "ru": [
+    "Акустическая система RS69 предназначена для замены штатной автомобильной акустики в автомобиле. Коаксиальная конструкция даёт сбалансированный звук во всём частотном диапазоне.",
+    "Коаксиальная акустическая система Ultera RS69 обладает диаметром динамика 6×9 дюймов. Овальная акустика предназначена для установки в акустическую полку или акустические короба закрытого типа."
+   ],
+   "uz": [
+    "RS69 akustik tizimi avtomobilning standart akustik tizimini almashtirish uchun mo’ljallangan. Koaksial konstruksiya butun chastota oralig’ida muvozanatlashtirilgan ovozni ta’minlaydi.",
+    "Ultera RS69 koaksial akustik tizimi 6×9 dyuym o’lchamdagi dinamikka ega. Oval shaklidagi ushbu akustika akustik tokchaga yoki yopiq turdagi akustik qutilarga o’rnatish uchun mo’ljallangan."
+   ]
+  },
+  "main": 1,
+  "imgs": 7
+ },
+ {
+  "id": 709,
+  "slug": "ultera-rs65c",
+  "sku": "6906734459258",
+  "cat": "audio",
+  "pop": false,
+  "name": {
+   "ru": "Автомобильная акустика Neoline Ultera RS65C",
+   "uz": "Akustik tizim Neoline Ultera RS65C"
+  },
+  "price": 908000,
+  "old": 0,
+  "stock": true,
+  "url": {
+   "ru": "https://neoline.uz/ru/product/ultera-rs65c/",
+   "uz": "https://neoline.uz/product/ultera-rs65c-uz/"
+  },
+  "text": {
+   "ru": [
+    "Акустическая система RS65C предназначена для замены штатной автомобильной акустики в автомобиле. Компонентная конструкция обеспечивает четкое разделение сигналов и повышает качество звука.",
+    "Компонентная акустическая система Ultera RS65C обладает диаметром мидбаса 6,5 дюймов и подходит для установки в переднюю дверь. Мидбас и твитер устанавливаются раздельно."
+   ],
+   "uz": [
+    "RS65C akustik tizimi avtomobildagi standart avtomobil akustikasini almashtirish uchun mo’ljallangan. Komponentli konstruktsiya signallarning aniq ajralishini ta’minlaydi va ovoz sifatini yaxshilaydi.",
+    "Ultera RS65C komponentli akustik tizimining midbas diametri 6,5 dyuym bo’lib, oldingi eshikka o’rnatish uchun mos keladi. Midbas va tviter alohida o’rnatiladi."
+   ]
+  },
+  "main": 1,
+  "imgs": 9
+ },
+ {
+  "id": 692,
+  "slug": "ultera-rs65",
+  "sku": "6907729831417",
+  "cat": "audio",
+  "pop": false,
+  "name": {
+   "ru": "Автомобильная акустика Neoline Ultera RS65",
+   "uz": "Akustik tizim Neoline Ultera RS65"
+  },
+  "price": 605000,
+  "old": 0,
+  "stock": true,
+  "url": {
+   "ru": "https://neoline.uz/ru/product/ultera-rs65/",
+   "uz": "https://neoline.uz/product/ultera-rs65-uz/"
+  },
+  "text": {
+   "ru": [
+    "Акустическая система RS65 предназначена для замены штатной автомобильной акустики в автомобиле. Коаксиальная конструкция даёт сбалансированный звук во всём частотном диапазоне.",
+    "Коаксиальная акустическая система Ultera RS65 обладает диаметром динамика 6,5 дюймов и подходит для установки в переднюю дверь."
+   ],
+   "uz": [
+    "RS65 akustik tizimi avtomobildagi standart akustikani almashtirish uchun mo’ljallangan. Koaksial konstruktsiya butun chastota diapazonida muvozanatli ovozni ta’minlaydi.",
+    "Ultera RS65 koaksial akustik tizimi 6,5 dyuym diametrli dinamikka ega va oldingi eshikka o’rnatish uchun mos keladi."
+   ]
+  },
+  "main": 1,
+  "imgs": 7
+ },
+ {
+  "id": 680,
+  "slug": "ultera-rs52",
+  "sku": "6903857521640",
+  "cat": "audio",
+  "pop": false,
+  "name": {
+   "ru": "Автомобильная акустика Neoline Ultera RS52",
+   "uz": "Akustik tizim Neoline Ultera RS52"
+  },
+  "price": 484000,
+  "old": 0,
+  "stock": true,
+  "url": {
+   "ru": "https://neoline.uz/ru/product/ultera-rs52/",
+   "uz": "https://neoline.uz/product/ultera-rs52-uz/"
+  },
+  "text": {
+   "ru": [
+    "Акустическая система RS52 предназначена для замены штатной автомобильной акустики в автомобиле. Коаксиальная конструкция даёт сбалансированный звук во всём частотном диапазоне.",
+    "Динамики обладают диаметром 5,25″, что позволяет устанавливать динамики в штатной компоновке на большинстве моделей легковых автомобилей."
+   ],
+   "uz": [
+    "RS52 akustik tizimi avtomobildagi standart akustikani almashtirish uchun mo’ljallangan. Koaksial konstruktsiya butun chastota diapazonida muvozanatli ovozni ta’minlaydi.",
+    "Dinamiklar 5,25 dyuym diametrga ega bo’lib, bu ularni ko’pchilik yengil avtomobillar modellari uchun standart o’rnatish joylariga o’rnatish imkonini beradi."
+   ]
+  },
+  "main": 1,
+  "imgs": 7
+ },
+ {
+  "id": 667,
+  "slug": "neoline-dela-x",
+  "sku": "6909581200011",
+  "cat": "acc",
+  "pop": false,
+  "name": {
+   "ru": "Компрессор автомобильный Neoline Dela-X",
+   "uz": "Avtomobil kompressori DELA-X"
+  },
+  "price": 569000,
+  "old": 0,
+  "stock": true,
+  "url": {
+   "ru": "https://neoline.uz/ru/product/neoline-dela-x-ru/",
+   "uz": "https://neoline.uz/product/neoline-dela-x/"
+  },
+  "text": {
+   "ru": [],
+   "uz": []
+  },
+  "main": 1,
+  "imgs": 5
+ },
+ {
+  "id": 652,
+  "slug": "neoline-dela-s",
+  "sku": "6902564507312",
+  "cat": "acc",
+  "pop": false,
+  "name": {
+   "ru": "Компрессор автомобильный Neoline Dela-S",
+   "uz": "Avtomobil kompressori DELA-S"
+  },
+  "price": 319000,
+  "old": 0,
+  "stock": true,
+  "url": {
+   "ru": "https://neoline.uz/ru/product/neoline-dela-s-ru/",
+   "uz": "https://neoline.uz/product/neoline-dela-s/"
+  },
+  "text": {
+   "ru": [],
+   "uz": []
+  },
+  "main": 1,
+  "imgs": 3
+ },
+ {
+  "id": 642,
+  "slug": "neoline-wowcam-wi-fi",
+  "sku": "6901007300084",
+  "cat": "dvr",
+  "pop": false,
+  "name": {
+   "ru": "Neoline WowCam Wi-Fi",
+   "uz": "Neoline WowCam Wi-Fi"
+  },
+  "price": 572000,
+  "old": 0,
+  "stock": true,
+  "url": {
+   "ru": "https://neoline.uz/ru/product/neoline-wowcam-wi-fi-ru/",
+   "uz": "https://neoline.uz/product/neoline-wowcam-wi-fi/"
+  },
+  "text": {
+   "ru": [
+    "Максимально компактный и незаметный",
+    "Реальная Full HD съемка днем и ночью",
+    "Wi-Fi-модуль для управления видеофайлами и настройками",
+    "Установка на вертикальном стекле в коммерческом автотранспорте",
+    "Поддержка режима парковочной съемки",
+    "Жаро- и морозостойкий суперконденсатор"
+   ],
+   "uz": [
+    "Juda ixcham va ko‘zga tashlanmaydigan korpus",
+    "Kunduzi ham, kechasi ham haqiqiy Full HD sifatida suratga olish",
+    "Videofayllar va sozlamalarni boshqarish uchun Wi-Fi moduli",
+    "Tijorat avtotransportida vertikal oynaga o‘rnatish imkoniyati",
+    "Avtoturargoh rejimini qo‘llab-quvvatlash",
+    "Issiq va sovuqqa chidamli superkondensator"
+   ]
+  },
+  "main": 1,
+  "imgs": 10
+ },
+ {
+  "id": 613,
+  "slug": "neoline-flash-2k-wi-fi-dual",
+  "sku": "6909000018906",
+  "cat": "dvr",
+  "pop": false,
+  "name": {
+   "ru": "Neoline Flash 2K Wi-Fi Dual",
+   "uz": "Neoline Flash 2K Wi-Fi Dual"
+  },
+  "price": 953000,
+  "old": 0,
+  "stock": false,
+  "url": {
+   "ru": "https://neoline.uz/ru/product/neoline-flash-2k-wi-fi-dual-ru/",
+   "uz": "https://neoline.uz/product/neoline-flash-2k-wi-fi-dual/"
+  },
+  "text": {
+   "ru": [
+    "Сверх-детальная съемка 2К HDR QUAD HD + Full HD",
+    "Передняя и задняя камера для лучшего контроля событий на дороге",
+    "Wi-Fi-модуль для управления видеофайлами и настройками",
+    "Компактный и незаметный корпус",
+    "Поддержка режима панорамной парковочной съемки",
+    "Новый стандарт надежности записи и хранения видео"
+   ],
+   "uz": [
+    "2K HDR QUAD HD + Full HD juda yuqori aniqlikdagi suratga olish",
+    "Yo‘l hodisalarini yaxshiroq nazorat qilish uchun oldingi va orqa kamera",
+    "Videofayllar va sozlamalarni boshqarish uchun Wi-Fi moduli",
+    "Kichik va ko‘zga tashlanmaydigan korpus",
+    "Panoramali avtoturargoh rejimini qo‘llab-quvvatlash",
+    "Videoni yozish va saqlashning yangi ishonchlilik standarti"
+   ]
+  },
+  "main": 1,
+  "imgs": 11
+ },
+ {
+  "id": 584,
+  "slug": "neoline-smartway",
+  "sku": "6909006100100",
+  "cat": "dvr",
+  "pop": false,
+  "name": {
+   "ru": "Neoline SmartWay",
+   "uz": "Neoline SmartWay"
+  },
+  "price": 1399000,
+  "old": 0,
+  "stock": true,
+  "url": {
+   "ru": "https://neoline.uz/ru/product/neoline-smartway/",
+   "uz": "https://neoline.uz/product/neoline-smartway-uz/"
+  },
+  "text": {
+   "ru": [
+    "Двухканальный видеорегистратор Neoline SMARTWAY снимает видео в высоком разрешении 4K, обеспечивая сверхчеткое и контрастное изображение при любом освещении.",
+    "Синхронизация с Android Auto, Apple CarPlay и Screen Mirror позволяет пользоваться навигацией, мессенджерами и дублировать экран смартфона на большой сенсорный IPS-дисплей (6,25″).",
+    "Поддержка Wi-Fi 2.4 & 5.0 и Bluetooth 5.0 обеспечивают моментальное подключение к смартфону.",
+    "В комплекте 2 крепления, видеорегистратор можно установить в любое удобное место.",
+    "Задняя камера с защитой IP67, при включении задней передачи возможно вывести изображение с камеры на экран SMARTWAY."
+   ],
+   "uz": [
+    "Neoline SMARTWAY videoregistratori 4K aniqlikda yuqori sifatli va kontrastli tasvirni taqdim etadi: har qanday yorug’lik sharoitida ham.",
+    "Android Auto, Apple CarPlay va Screen Mirror funksiyalari orqali navigatsiya, messenjerlar va smartfon ekranini 6 dyuymli katta sensorli IPS-displeyda namoyish qilish imkonini beradi.",
+    "Wi-Fi 2.4 & 5.0 GHz va Bluetooth 5.0 texnologiyalari tezkor va barqaror ulanishni ta’minlaydi.",
+    "Komplektda ikkita o’rnatish moslama bor, bu esa videoregistratorni istalgan joyga qulay o’rnatish imkonini beradi.",
+    "IP67 himoyasiga ega orqa kamera orqa vites yoqilganda ekran orqali tasvirni ko’rsatadi."
+   ]
+  },
+  "main": 1,
+  "imgs": 10
+ },
+ {
+  "id": 528,
+  "slug": "neoline-patrolscan-x1",
+  "sku": "8809001920001",
+  "cat": "radar",
+  "pop": false,
+  "name": {
+   "ru": "Neoline PatrolScan X1",
+   "uz": "Neoline PatrolScan X1"
+  },
+  "price": 3810000,
+  "old": 6020000,
+  "stock": true,
+  "url": {
+   "ru": "https://neoline.uz/ru/product/neoline-patrolscan-x1-ru/",
+   "uz": "https://neoline.uz/product/neoline-patrolscan-x1/"
+  },
+  "text": {
+   "ru": [
+    "Впервые в мире сигнатурное детектирование неуловимого полицейского радара EKIN PATROL и его аналогов.",
+    "Радарная платформа LNA EXD-W (детектирование частоты 77 ГГц)",
+    "GPS-база камер и радаров Узбекистана и всего мира: Казахстан, Кыргызстан, Туркменистан, Таджикистан, Россия, Европа и другие страны.",
+    "Крупный и контрастный OLED-дисплей",
+    "Удобный интерфейс",
+    "Голосовые подсказки на узбекском, русском и английском языках",
+    "OTG-USB обновление прошивки и GPS-базы",
+    "Расширенная комплектация",
+    "Сделано в Южной Корее"
+   ],
+   "uz": [
+    "Dunyoda birinchi marta qo’lga olinmaydigan EKIN PATROL politsiya radarini va uning analoglarini signatura bilan aniqlash.",
+    "Lna exd-W radar platformasi (77 GHz chastotani aniqlash)",
+    "O’zbekiston va butun dunyo kameralari va radarlarining GPS bazasi: Qozog’iston, Qirg’iziston, Turkmaniston, Tojikiston, Rossiya, Evropa va boshqa mamlakatlar.",
+    "Katta va kontrastli OLED displey",
+    "Qulay interfeys",
+    "O’zbek, rus va ingliz tillarida ovozli ko’rsatmalar",
+    "OTG-USB proshivka va GPS bazasini yangilash",
+    "Kengaytirilgan uskunalar",
+    "Janubiy Koreyada ishlab chiqarilgan"
+   ]
+  },
+  "main": 1,
+  "imgs": 8
+ },
+ {
+  "id": 513,
+  "slug": "neoline-x-cop-7700s-black",
+  "sku": "8809102007700",
+  "cat": "radar",
+  "pop": false,
+  "name": {
+   "ru": "Neoline X-COP 7700s Black",
+   "uz": "Neoline X-COP 7700s Black"
+  },
+  "price": 1494000,
+  "old": 2250000,
+  "stock": true,
+  "url": {
+   "ru": "https://neoline.uz/ru/product/neoline-x-cop-7700s-black-ru/",
+   "uz": "https://neoline.uz/product/neoline-x-cop-7700s-black/"
+  },
+  "text": {
+   "ru": [
+    "Продвинутая радарная платформа PRO (LNA EXD 2.5, модуль MULTA, большой рупор + специальная линза)",
+    "Полная библиотека сигнатур 2024",
+    "GPS база камер и радаров Узбекистана и всего мира",
+    "Направленный к водителю дисплей",
+    "Удобный интерфейс",
+    "Озвучка на узбекском и русском языках",
+    "OTG обновление ПО и базы GPS",
+    "Сделано в Южной Корее"
+   ],
+   "uz": [
+    "LNA EXD 2.5 moduli: ikkita signal kuchaytirgichi",
+    "Katta rupor + kattaroq linza",
+    "Aniqlash diapazoni 2.5 km gacha",
+    "Yo’l harakati nazorati kameralari haqida bildirishnoma (OT chizig’i, «orqada», to’xtashni taqiqlash, yo’l bo’yi, chorraha, zebra o’tish joyi, belgilar)",
+    "«Turbo» rejimini ma’lum tezlikdan avtomatik ravishda faollashtirish",
+    "Sukunat zonasi va xavfli zonani qo’shish",
+    "Yangilangan MULTA moduli",
+    "Signatura: Signatur kutubxonasiga kiritilgan politsiya radar signallarini aniqlash",
+    "O‘zbekistonning barcha politsiya radarlarini aniqlash: MultaRadar CD, Cordon PRO, Cordon BLACK, AutoCon, Skat, Lochin, Hikvision, Traffistar, Kaskad"
+   ]
+  },
+  "main": 1,
+  "imgs": 9
+ },
+ {
+  "id": 497,
+  "slug": "neoline-x-cop-7800s-wi-fi-black",
+  "sku": "8809101007800",
+  "cat": "radar",
+  "pop": false,
+  "name": {
+   "ru": "Neoline X-COP 7800s Wi-Fi Black",
+   "uz": "Neoline X-COP 7800s Wi-Fi Black"
+  },
+  "price": 1736000,
+  "old": 2460000,
+  "stock": true,
+  "url": {
+   "ru": "https://neoline.uz/ru/product/neoline-x-cop-7800s-wi-fi-black/",
+   "uz": "https://neoline.uz/product/neoline-x-cop-7800s-wi-fi-black/"
+  },
+  "text": {
+   "ru": [
+    "Продвинутая радарная платформа PRO (LNA EXD 2.5, модуль MULTA, большой рупор + специальная линза)",
+    "Wi-Fi Hotspot обновление прошивки и GPS-базы",
+    "Полная библиотека сигнатур 2024",
+    "GPS база камер и радаров Узбекистана и всего мира",
+    "Направленный к водителю большой дисплей",
+    "Удобный интерфейс",
+    "Озвучка на узбекском и русском языках",
+    "Сделано в Южной Корее"
+   ],
+   "uz": [
+    "Sukunat zonasi va xavfli zonani qo’shish",
+    "Wi-Fi Hotspot dasturiy ta’minotini yangilash va GPS ma’lumotlar bazasi",
+    "Yangilangan Multa moduli",
+    "LNA EXD 2.5 moduli: ikkita signal kuchaytirgichi",
+    "O‘zbekistonning barcha politsiya radarlarini aniqlash: MultaRadar CD, Cordon PRO, Cordon BLACK, AutoCon, Skat, Lochin, Hikvision, Traffistar, Kaskad (Megacam) va boshqalar.",
+    "Aniqlash diapazoni 2.5 km gacha",
+    "Signatura: Signatur kutubxonasiga kiritilgan politsiya radar signallarini aniqlash",
+    "Yo’l harakati nazorati kameralari haqida bildirishnoma (OT chizig’i, «orqada», to’xtashni taqiqlash, yo’l bo’yi, chorraha, zebra o’tish joyi, belgilar)",
+    "«Turbo» rejimini ma’lum tezlikdan avtomatik ravishda faollashtirish"
+   ]
+  },
+  "main": 1,
+  "imgs": 8
+ },
+ {
+  "id": 479,
+  "slug": "neoline-x-cop-8800s-wi-fi-black",
+  "sku": "8809306008800",
+  "cat": "radar",
+  "pop": false,
+  "name": {
+   "ru": "Neoline X-COP 8800s Wi-Fi Black",
+   "uz": "Neoline X-COP 8800s Wi-Fi Black"
+  },
+  "price": 2785000,
+  "old": 3013000,
+  "stock": true,
+  "url": {
+   "ru": "https://neoline.uz/ru/product/neoline-x-cop-8800s-wi-fi-black-ru/",
+   "uz": "https://neoline.uz/product/neoline-x-cop-8800s-wi-fi-black/"
+  },
+  "text": {
+   "ru": [
+    "Обновленный модуль MULTA",
+    "Сигнатура: детектирование сигналов полицейских радаров, внесенных в библиотеку сигнатур",
+    "Цветной OLED дисплей (6 цветов)",
+    "Модуль LNA EXD 2.5: двойной усилитель сигнала",
+    "Оповещение о камерах контроля ПДД (полоса ОТ, «в спину», запрет остановки, обочина, перекресток, зебра, разметка)",
+    "Лазерный приемник с усилителем",
+    "Дальность обнаружения до 2,5 км",
+    "Добавление зоны тишины и опасной зоны",
+    "Детектирование всех полицейских радаров Узбекистана: MultaRadar CD, Cordon PRO, Cordon BLACK, AutoCon, Скат, Lochin, Hikvision, Traffistar, Kaskad (Megacam) и др."
+   ],
+   "uz": [
+    "Yangilangan MULTA moduli",
+    "Signatur: signatur kutubxonasiga kiritilgan politsiya radar signallarini aniqlash",
+    "Rangli OLED displey (6 rang)",
+    "LNA EXD 2.5 moduli: ikkita signal kuchaytirgichi",
+    "Yo’l harakati nazorati kameralari haqida bildirishnoma (OT chizig’i, «orqada», to’xtashni taqiqlash, yo’l bo’yi, chorraha, zebra o’tish joyi, belgilar)",
+    "Kuchaytirgichli lazer qabul qilgich",
+    "Aniqlash diapazoni 2,5 km gacha",
+    "Sukunat zonasi va xavfli zonani qo’shish",
+    "O‘zbekistonning barcha politsiya radarlarini aniqlash: MultaRadar CD, Cordon PRO, Cordon BLACK, AutoCon, Skat, Lochin, Hikvision, Traffistar, Kaskad (Megacam) va boshqalar"
+   ]
+  },
+  "main": 1,
+  "imgs": 12
+ }
+]
