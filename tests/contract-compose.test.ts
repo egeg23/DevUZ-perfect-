@@ -168,5 +168,5 @@ test("модели нет ни в составе, ни в разборе рек�
 
 test("форма выбора не тянет весь состав макетов в браузер", () => {
   const client = read("components/admin/contract-compose.tsx");
-  assert.doesNotMatch(client, /from "@\/lib\/admin\/mockup-plan"|mockup-plans\.json/);
+  assert.doesNotMatch(client, /from "@\/(lib\/admin\/mockup-plan|content\/mockup-plans\.json)"/);
 });
