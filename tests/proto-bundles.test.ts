@@ -2398,3 +2398,67 @@ test("Neoline: сайт 1 000 $ вместо 4 900 $, все допы вмест
   const site = bundlePages("neoline")!;
   assert.ok(site.html.includes("4 900 $") && site.html.includes("1 000 $"), "на первой странице не та цена магазина");
 });
+
+test("AutoPepe: wybór, strona i panel po polsku — warunki, noindex, wideo DevUz i wjazd w znak, szapka 3 s, usługi i ceny z autopepe.pl, bez długich kresek", async () => {
+  const { existsSync } = await import("node:fs");
+  const site = bundlePages("autopepe");
+  assert.ok(site);
+  const all: Record<string, string> = { "": site.html, ...site.pages };
+  assert.deepEqual(Object.keys(all).sort(), ["", "panel", "site"]);
+  const data = await import("../scripts/protos/autopepe/data.mjs");
+  const plan = await import("../scripts/protos/autopepe/plan.mjs");
+  for (const [path, page] of Object.entries(all)) {
+    const kind = path || "land";
+    assert.doesNotMatch(page, /@@[A-Z]+@@/, `${kind}: метка сборки осталась`);
+    assert.ok(page.includes('<html lang="pl">'), `${kind}: язык страницы`);
+    assert.ok(page.includes("https://devuz.studio/pl/mockup-terms"), `${kind}: нет условий на польском`);
+    assert.match(page, /<meta name="robots" content="noindex/, `${kind}: нет noindex`);
+    assert.match(page, /prefers-reduced-motion/, `${kind}: анимацию нечем выключить`);
+    assert.doesNotMatch(page, /stamp|watermark|fingerprint|отпечат|seed|data-mark/i, `${kind}: слово, по которому находят отпечаток`);
+    assert.doesNotMatch(page, /proto-ai|proxyapi|higgsfield|firecrawl/i, `${kind}: макет зовёт модель или чужие сервисы`);
+    assert.doesNotMatch(page, /href="#"/, `${kind}: ссылка в никуда`);
+    assert.doesNotMatch(page, /scroll-behavior|passive:\s*false/, `${kind}: перехват прокрутки`);
+    assert.doesNotMatch(page, /[—–]/, `${kind}: длинное тире`);
+    for (const img of page.match(/<img [^>]+>/g) ?? []) assert.match(img, /alt="/, `${kind}: картинка без alt`);
+    for (const src of page.match(/\/protos\/autopepe\/[\w./-]+\.(?:webp|png|svg|js)/g) ?? []) assert.ok(existsSync("public" + src), `${kind}: нет файла ${src}`);
+    for (const id of (page.match(/href="#([\w-]+)"/g) ?? []).map((h) => h.slice(7, -1))) assert.ok(page.includes(`id="${id}"`), `${kind}: ссылка на #${id}, а блока нет`);
+    if (kind === "panel") continue;
+    assert.match(page, /\bIDLE=3000\b/, `${kind}: шапка не по правилу 3 секунд`);
+    assert.match(page, /classList\.add\('hide'\)[\s\S]*IDLE\)/, `${kind}: шапка не прячется`);
+    assert.ok(page.includes("Lak.make") && page.includes("gl_FragColor"), `${kind}: нет живого лака (WebGL)`);
+    if (kind === "land") {
+      assert.ok(page.indexOf('id="dzi"') > 0 && page.indexOf('id="dzi"') < page.indexOf('id="api"') && page.indexOf('id="api"') < page.indexOf('class="top"'), "нет видео DevUz и залёта первыми");
+      assert.ok(page.includes('/protos/autopepe/intro3d.js" defer'), "нет заставки");
+      assert.equal((page.match(/class="choice rise"/g) ?? []).length, 2, "не два выбора, сайт и панель");
+      for (const a of plan.ADDONS) assert.ok(page.includes(`data-add="${a.id}"`), `нет тумблера ${a.id}`);
+      continue;
+    }
+    assert.ok(page.includes(`tel:${data.COMPANY.tel}`) && page.includes(data.COMPANY.mail) && page.includes("Lebiodowa 19"), "нет их контактов");
+    for (const s of data.SERVICES) assert.ok(page.includes(s.t), `нет услуги ${s.t}`);
+    for (const [n, p] of data.PRICES as [string, number][]) assert.ok(page.includes(n) && page.includes(`od ${p} zł`), `нет цены ${n}`);
+    for (const id of ["lustro", "uslugi", "przedpo", "wycena", "oc", "kontakt", "car"]) assert.ok(page.includes(`id="${id}"`), `нет блока #${id}`);
+    assert.equal((page.match(/data-part="/g) ?? []).length, data.PARTS.length, "схема машины не на все элементы");
+    assert.ok(page.includes('class="velo"') && page.includes("data-par=") && page.includes("data-cmp"), "нет бегущей строки, параллакса или «przed i po»");
+    for (const a of plan.ADDONS) assert.ok(page.includes(`data-addon="${a.id}"`), `тумблер ${a.id} не ведёт к блоку на сайте`);
+  }
+  const stamped = stampedBundle("autopepe", SEED)!;
+  assert.notEqual(stamped.pages.site, site.pages.site, "отпечаток не поставился");
+});
+
+test("AutoPepe: ceny w złotych — strona 3 900 zł zamiast 9 900 zł, dodatki −60% od rynku polskiego, razem nie więcej niż 3 000 $", async () => {
+  const plan = await import("../scripts/protos/autopepe/plan.mjs");
+  assert.equal(plan.CUR, "zł");
+  assert.equal(plan.BASE.promo, 3900);
+  assert.equal(plan.BASE.price, 9900);
+  for (const a of plan.ADDONS) {
+    assert.ok(a.t && a.e && a.who && a.market > 0, `${a.id}: нет текста или цены рынка`);
+    assert.equal(a.price, Math.round(a.market * 0.4 / 10) * 10, `${a.id}: не −60% от рынка`);
+  }
+  assert.ok(!plan.ADDONS.some((a: { id: string }) => a.id === "lang"), "сайт только по-польски: допа с другими языками нет");
+  /* 1 000 $ и 3 000 $ по курсу NBP за октябрь 2026 (3,88 zł). */
+  assert.ok(plan.BASE.promo / 3.88 <= 1010, "сайт дороже 1 000 $");
+  assert.ok(plan.ALL / 3.88 <= 3000, "сайт с допами дороже 3 000 $");
+  const site = bundlePages("autopepe")!;
+  assert.ok(site.html.includes("9\u00a0900\u00a0zł") && site.html.includes("3\u00a0900\u00a0zł"), "на первой странице не та цена");
+  for (const page of [site.html, ...Object.values(site.pages)]) assert.doesNotMatch(page, /[А-Яа-яЁёІіЇїЄєҐґ]/, "на странице кириллица, а сайт только по-польски");
+});
