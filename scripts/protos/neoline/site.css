@@ -58,7 +58,7 @@ button{cursor:pointer}
 .mine.on{display:inline-flex}
 @media (min-width:1080px){.nav{display:flex}.langs{margin-left:8px}}
 /* Первый экран. */
-.hero{position:relative;min-height:100svh;display:flex;align-items:center;overflow:hidden;padding:112px 0 64px;isolation:isolate}
+.hero{position:relative;min-height:100svh;display:flex;align-items:center;overflow:hidden;padding:150px 0 64px;isolation:isolate}
 .hero-bg{position:absolute;inset:0;z-index:-1;pointer-events:none}
 .hero-bg .grid{position:absolute;left:-10%;right:-10%;bottom:-20%;height:70%;background-image:linear-gradient(var(--ln) 1px,transparent 1px),linear-gradient(90deg,var(--ln) 1px,transparent 1px);background-size:64px 64px;transform:perspective(600px) rotateX(62deg);transform-origin:50% 100%;-webkit-mask:linear-gradient(to top,#000,transparent 85%);mask:linear-gradient(to top,#000,transparent 85%)}
 .radar{position:absolute;width:min(1400px,170vw);aspect-ratio:1;left:50%;top:50%;transform:translate(-30%,-50%)}
@@ -408,3 +408,31 @@ details.acc .ol{padding:0 20px 20px;margin:0}
 .pop.on{opacity:1;transform:none}
 html.nli .top .logo{opacity:0}html.nli .hero h1 .w>span{transform:translateY(105%)}html.nli .hero .rise{opacity:0;transform:translateY(28px)}
 @media (prefers-reduced-motion: reduce){*,*::before,*::after{animation:none!important;transition:none!important}.rise,.tilt,.pop{opacity:1;transform:none}.hero h1 .w>span{transform:none!important}.road{height:auto}.road-st{position:relative;height:auto;padding:64px 0}.cap{position:relative;opacity:1;transform:none;margin-bottom:24px}.caps{min-height:0}.sx{transform:none!important;opacity:1!important}[data-reveal] .rw{opacity:1}}
+
+/* Первая страница: выбор сайта или панели. */
+.land{position:relative;padding:120px 0 64px;overflow:hidden;isolation:isolate}
+.land h1{margin:0;font:700 36px/1.08 var(--hd);letter-spacing:-.03em;max-width:900px}
+.land h1 em{font-style:normal;color:var(--ac2)}
+@media (min-width:768px){.land h1{font-size:60px}}
+.choices{display:grid;gap:16px;margin-top:48px}
+@media (min-width:900px){.choices{grid-template-columns:1fr 1fr;gap:24px}}
+.choice{position:relative;display:flex;flex-direction:column;gap:12px;padding:24px;border-radius:28px;background:linear-gradient(160deg,var(--s2),var(--s1));border:1px solid var(--ln2);text-decoration:none;color:var(--tx);overflow:hidden;transition:transform .4s cubic-bezier(.2,.8,.2,1),border-color .3s}
+.choice::before{content:"";position:absolute;inset:0;background:radial-gradient(420px circle at var(--gx,50%) var(--gy,0%),rgb(0 171 235 / .16),transparent 60%);pointer-events:none}
+.choice:hover{transform:translateY(-4px);border-color:var(--ac)}
+.choice b{font:700 24px/1.2 var(--hd)}
+@media (min-width:768px){.choice{padding:32px}.choice b{font-size:30px}}
+.ch-k{font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--ac2)}
+.ch-pic{display:grid;place-items:center;aspect-ratio:16/9;margin:8px 0;border-radius:20px;background:radial-gradient(70% 60% at 50% 60%,#13253500,#132535);padding:4%}
+.ch-pic img{max-height:100%;object-fit:contain;filter:drop-shadow(0 24px 28px rgb(0 0 0 / .65));transition:transform .6s cubic-bezier(.2,.8,.2,1)}
+.choice:hover .ch-pic img{transform:scale(1.04) rotate(-1deg)}
+.ch-pn .browser{display:block;width:100%}.ch-pn .bb{display:grid}.ch-pn .kpi,.ch-pn .spark{display:block}.ch-pn .spark{display:flex}
+.choice .feat{margin:0}.choice .feat li{background:rgb(0 0 0 / .18)}
+.choice .btn{align-self:flex-start;margin-top:auto}
+.top .adm{flex:none}
+@media (max-width:640px){.top .btn-g.adm{display:none}.top .adm{padding:8px 14px}.top-in{gap:8px}}
+@media (max-width:400px){.top .logo .word{font-size:16px}}
+.mbar{display:flex;justify-content:space-between;align-items:center;gap:12px;max-width:var(--max);width:calc(100% - 24px);margin:8px auto 0;font-size:12px;font-weight:700}
+.mbar a{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:4px 12px;border-radius:999px;text-decoration:none;color:var(--tx2);background:rgb(0 0 0 / .45);border:1px solid var(--ln)}
+.mbar a svg{width:16px;height:16px}
+.mbar .mb-adm{background:var(--ac);border-color:var(--ac);color:var(--on)}
+.top-in{margin-top:8px}

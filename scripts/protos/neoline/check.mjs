@@ -1,5 +1,5 @@
 // Проверка макета Chromium'ом: node check.mjs (нужен запущенный serve.mjs).
-// Обе страницы и панель на 390, 768, 1440 и 2560 без ошибок консоли и
+// Выбор, сайт и панель на 390, 768, 1440 и 2560 без ошибок консоли и
 // прокрутки вбок; полный цикл: X-COP 8900 в корзину → подарок Turbocam →
 // заказ → он первой строкой в панели → статус «Передан курьеру» и новая база
 // камер из панели → «Мой заказ» и «Обновления» на сайте; тумблер конструктора
@@ -22,7 +22,7 @@ function watch(p, tag) {
   p.on("console", (m) => { if (m.type() === "error" && !/fonts\.g/.test(m.text())) bad.push(`${tag}: ${m.text()}`); });
   p.on("pageerror", (e) => bad.push(`${tag}: ${e.message}`));
 }
-for (const w of [390, 768, 1440, 2560]) for (const path of ["", "uz/", "panel", "uz/panel"]) {
+for (const w of [390, 768, 1440, 2560]) for (const path of ["", "uz/", "site", "uz/site", "panel", "uz/panel"]) {
   const ctx = await ctxOf(w), p = await ctx.newPage(), tag = `${w} /${path}`;
   watch(p, tag);
   await p.goto(U + path, { waitUntil: "domcontentloaded", timeout: 60000 });
@@ -41,6 +41,14 @@ for (const w of [390, 768, 1440, 2560]) for (const path of ["", "uz/", "panel", 
   const ctx = await ctxOf(390), p = await ctx.newPage();
   watch(p, "цикл");
   await p.goto(U, { waitUntil: "domcontentloaded", timeout: 60000 });
+  ok(await p.locator(".choice").count() === 2, "на первой странице нет выбора сайт / админка");
+  ok(await p.locator('.top a[href$="/panel"]').count() === 1, "нет кнопки админки в шапке первой страницы");
+  await p.locator('label.add:has([data-add="bot"])').click();
+  ok(/2\s?750/.test(await p.locator("#total").innerText()), "итог не пересчитался");
+  await p.click('.choice[href$="/site"]');
+  await p.waitForURL(/\/site$/);
+  ok(await p.locator("#bot.addon-off").count() === 1, "тумблер на первой странице не убрал блок бота на сайте");
+  ok(await p.locator('.top a.mb-adm[href$="/panel"]').count() === 1, "нет кнопки админки в шапке сайта");
   await p.click('.hero [data-buy="1000458"]');
   await p.waitForSelector("#sheet.in");
   ok(await p.locator("#shb .li.gift").count() === 1, "нет подарка Turbocam в корзине");
@@ -69,11 +77,6 @@ for (const w of [390, 768, 1440, 2560]) for (const path of ["", "uz/", "panel", 
   await p.click("#sheet .x");
   await p.fill("#uq", "8900"); await p.waitForTimeout(200);
   ok(/v10\.29/.test(await p.locator("#ures").innerText()), "база камер из панели не дошла до сайта");
-  /* Тумблер конструктора убирает блок. */
-  await p.evaluate(() => document.getElementById("offer").scrollIntoView());
-  await p.locator('label.add:has([data-add="bot"])').click();
-  ok(await p.locator("#bot.addon-off").count() === 1, "тумблер не убрал блок бота");
-  ok(/3\s?650/.test(await p.locator("#total").innerText()), "итог не пересчитался");
   await ctx.close();
 }
 /* Без движения: сцена и блоки видны сразу. */
@@ -82,8 +85,10 @@ for (const w of [390, 768, 1440, 2560]) for (const path of ["", "uz/", "panel", 
   watch(p, "reduced");
   await p.goto(U, { waitUntil: "domcontentloaded" });
   await p.waitForTimeout(500);
-  ok(await p.evaluate(() => getComputedStyle(document.querySelector(".cap")).opacity) === "1", "без движения подписи сцены не видны");
   ok(!(await p.locator("#nli").count()), "заставка при «меньше движения»");
+  await p.goto(U + "site", { waitUntil: "domcontentloaded" });
+  await p.waitForTimeout(500);
+  ok(await p.evaluate(() => getComputedStyle(document.querySelector(".cap")).opacity) === "1", "без движения подписи сцены не видны");
   await ctx.close();
 }
 await b.close();

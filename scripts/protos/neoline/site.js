@@ -136,7 +136,7 @@ function status(id){var s=get('nl-panel-1',{}).st||{};return s[id]||0}
 function track(id){mode='ok';var o=(get('nl-orders-1',[]).filter(function(x){return x.id===id})[0]);if(!o)return;var st=status(id);
   if(!sheet.classList.contains('on'))open('ok',T.order+' №'+id);else $('#shh').textContent=T.order+' №'+id;
   $('#shb').innerHTML='<div class="okv"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg></div><b style="font:700 20px/1.3 var(--hd)">'+T.ok+'</b><p style="color:var(--tx2)">'+T.okp+' <a href="tel:+998948887943">+998 (94) 88879-43</a></p><ul class="track">'+T.st.map(function(x,i){return'<li'+(i<=st?' class="done"':'')+'>'+x+'</li>'}).join('')+'</ul></div>';
-  $('#shf').innerHTML=addOn('admin')?'<a class="btn btn-g" style="width:100%" href="'+location.pathname.replace(/\/$/,'')+'/panel">'+T.panel+'</a>':'';
+  $('#shf').innerHTML=addOn('admin')?'<a class="btn btn-g" style="width:100%" href="'+D.panel+'">'+T.panel+'</a>':'';
   mine()}
 function mine(){var o=get('nl-orders-1',[])[0],m=$('#mine');if(!o){m.classList.remove('on');return}m.classList.add('on');m.querySelector('span').textContent=T.mine+' · '+T.st[status(o.id)];m.onclick=function(){track(o.id)}}
 addEventListener('storage',function(e){if(e.key==='nl-panel-1'){mine();if(mode==='ok'&&sheet.classList.contains('on')){var o=get('nl-orders-1',[])[0];if(o)track(o.id)}upd()}});
@@ -198,20 +198,8 @@ var tgp=$('#tgp');if(tgp){var ms=$$('.msg',tgp),shown=false;var o2=io?new Inters
 /* Остатки из 1С: время обновления (демо). */
 var et=$('#erpt');if(et){var dt=new Date(Date.now()-7*6e4);et.textContent=T.erp+' '+('0'+dt.getHours()).slice(-2)+':'+('0'+dt.getMinutes()).slice(-2)}
 
-/* Конструктор: тумблер включает и выключает настоящий блок на странице. */
-var cfg=get('nl-cfg-1',{}),boxes=$$('[data-add]');
-function money(n){return fmt(n)+' $'}
-function cfgApply(){var s=0,n=0;boxes.forEach(function(b){var id=b.getAttribute('data-add');b.checked=cfg[id]!==false;if(b.checked){var a=D.add.filter(function(x){return x.id===id})[0];s+=a.p;n++}
-    $$('[data-addon="'+id+'"]').forEach(function(el){el.classList.toggle('addon-off',!b.checked)})});
-  $('#adds').textContent=money(s);$('#addn').textContent=n?'('+n+')':'';$('#total').textContent=money(D.base+s);put('nl-cfg-1',cfg);frame()}
-boxes.forEach(function(b){b.addEventListener('change',function(){cfg[b.getAttribute('data-add')]=b.checked;cfgApply()})});
-$('#allon').addEventListener('click',function(){cfg={};cfgApply()});
-$('#alloff').addEventListener('click',function(){boxes.forEach(function(b){cfg[b.getAttribute('data-add')]=false});cfgApply()});
-$('#copy').addEventListener('click',function(){var txt=[$('.base b').textContent+': '+money(D.base)];D.add.forEach(function(a){if(cfg[a.id]!==false)txt.push(a.t+': '+money(a.p))});txt.push($('#total').textContent);
-  var done=function(){toast(T.copied)};if(navigator.clipboard)navigator.clipboard.writeText(txt.join('\n')).then(done,done);else done()});
+/* Допы из конструктора (он на первой странице, nl-cfg-1): выключенный доп — его блока нет. */
+function cfgApply(){var cfg=get('nl-cfg-1',{});D.add.forEach(function(a){$$('[data-addon="'+a.id+'"]').forEach(function(el){el.classList.toggle('addon-off',cfg[a.id]===false)})});frame()}
+addEventListener('storage',function(e){if(e.key==='nl-cfg-1')cfgApply()});
 cfgApply();
-/* 48 часов с первого открытия макета на этом устройстве. */
-var t0=get('nl-offer-1',0);if(!t0){t0=Date.now();put('nl-offer-1',t0)}
-(function clock(){var left=Math.max(0,t0+D.hours*36e5-Date.now()),h=Math.floor(left/36e5),m=Math.floor(left%36e5/6e4),s=Math.floor(left%6e4/1e3);
-  $('#th').textContent=h;$('#tm').textContent=('0'+m).slice(-2);$('#ts').textContent=('0'+s).slice(-2);if(left>0)setTimeout(clock,1000)})();
 })();
