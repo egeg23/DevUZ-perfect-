@@ -1,0 +1,23 @@
+// Podpisy panelu warsztatu AutoPepe (po polsku). gen.mjs przerywa budowę,
+// jeśli panel.js woła podpis, którego tu nie ma (wzorzec Greenwell: ui.mjs).
+export const PANEL_UI = {
+  title: "Panel warsztatu", demo: "dane demonstracyjne", site: "Na stronę", home: "Do wyboru",
+  role: "Patrz jako", role_owner: "Właściciel", role_desk: "Recepcja",
+  tab_sum: "Pulpit", tab_orders: "Zlecenia", tab_cal: "Kalendarz", tab_mat: "Materiały", tab_log: "Historia",
+  k_rev: "Przychód, 30 dni", k_cars: "Auta w naprawie", k_avg: "Średnia naprawa", k_margin: "Marża", k_oc: "Udział OC bezgotówkowo",
+  vs: "do poprzednich 30 dni", chart: "Przychód dzień po dniu", chart_site: "zgłoszenie ze strony tej makiety",
+  funnel: "Droga klienta, 30 dni", f_visit: "Weszli na stronę", f_calc: "Policzyli naprawę", f_req: "Wysłali zgłoszenie", f_car: "Przywieźli auto",
+  top: "Najczęstsze naprawy", low: "Kończy się", pcs: "szt.", left: "zostało", order: "zamówić",
+  r_new: "ze strony", r_none: "Wyślij wycenę, szkodę z OC albo termin na stronie makiety: zgłoszenie pojawi się tutaj na górze.",
+  r_foto: "Wycena ze zdjęć", r_oc: "Szkoda z OC", r_termin: "Termin oględzin", r_accept: "Przyjmij auto", r_accepted: "Auto przyjęte, numer zlecenia",
+  r_parts: "Zaznaczone na schemacie", r_range: "Z kalkulatora", r_ins: "Ubezpieczyciel", r_claim: "Numer szkody", r_reg: "Rejestracja", r_docs: "Dokumenty odhaczone", r_when: "Termin",
+  o_no: "Nr", o_when: "Kiedy", o_car: "Auto", o_job: "Naprawa", o_sum: "Kwota", o_pay: "Rozliczenie", o_st: "Etap",
+  o_hint: "Zmień etap: klient od razu zobaczy go na stronie w „Status naprawy”.", o_back: "Wszystkie zlecenia", o_cost: "Koszt materiałów i robocizny",
+  o_note: "Notatka", o_save: "Zapisz notatkę", o_phone: "Telefon", pay_oc: "OC bezgotówkowo", pay_cash: "Klient płaci",
+  st_0: "Przyjęte", st_1: "Blacharka", st_2: "Lakiernia", st_3: "Polerowanie", st_4: "Gotowe do odbioru",
+  c_hint: "Wolne i zajęte godziny oględzin. Termin zarezerwowany na stronie od razu zajmuje godzinę tutaj i znika ze strony.",
+  c_free: "wolne", c_busy: "zajęte", c_site: "ze strony",
+  m_name: "Materiał", m_stock: "Stan", m_min: "Minimum", m_cost: "Cena zakupu", m_hint: "Stan materiałów lakierni. Recepcja widzi stan, ale nie ceny zakupu.",
+  l_none: "Na razie brak działań.", l_st: "zmienił etap naprawy", l_note: "dodał notatkę", l_acc: "przyjął auto ze zgłoszenia", l_role: "wszedł do panelu",
+  hidden: "Recepcja tego nie widzi", tys: "tys. zł", zl: "zł", today: "dziś", ago_d: "dni temu",
+};

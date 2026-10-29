@@ -51,6 +51,7 @@ import chechfarm from "@/content/proto-bundles/chechfarm.json" with { type: "jso
 import fintax from "@/content/proto-bundles/fintax.json" with { type: "json" };
 import cosmoworld from "@/content/proto-bundles/cosmoworld.json" with { type: "json" };
 import neoline from "@/content/proto-bundles/neoline.json" with { type: "json" };
+import autopepe from "@/content/proto-bundles/autopepe.json" with { type: "json" };
 import { stampPages } from "@/lib/proto/stamp";
 
 type Bundle = { parts: Record<string, string>; pages: Record<string, string> };
@@ -93,6 +94,7 @@ const BUNDLES: Record<string, Bundle> = {
   fintax: fintax as Bundle,
   cosmoworld: cosmoworld as Bundle,
   neoline: neoline as Bundle,
+  autopepe: autopepe as Bundle,
 };
 
 /** Имена всех сборок — для проверок, которые идут по каждой (tests/proto-plain-text). */
