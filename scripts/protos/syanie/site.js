@@ -93,10 +93,7 @@ function paint(force){
 /* Кадр едет за прокруткой с мягким догоном (GSAP scrub .7), как в первой
    версии макета: так пролёт выглядел видео (владелец, 28.10.2026: «раньше
    было намного плавнее»). Ограничение скорости кадра ступенями давало
-   рывки на разгоне и торможении, его больше нет. Пока сцена едет, золотые
-   кнопки ждут (SY_BUSY). */
-var busyT=0;function busy(){window.SY_BUSY=true;clearTimeout(busyT);busyT=setTimeout(function(){window.SY_BUSY=false},900)}
-function onScene(){busy();render()}
+   рывки на разгоне и торможении, его больше нет. */
 /* Раскодированные кадры — окно вокруг текущего (ImageBitmap). Браузер
    держит раскодированными не все кадры и выбрасывает их, а потом
    раскодирует кадр прямо при показе, на прокрутке (аудит 28.10.2026: по
@@ -180,8 +177,10 @@ var ivEl=$('#iv'),ivOn=false,asmCv=$('#asm'),asmX=asmCv&&asmCv.getContext('2d'),
    чёрного фона). Золотой — тот же, тонированный под оникс. */
 var spImg=new Image(),spGold=null;
 function spriteGold(){if(spGold)return spGold;var c=d.createElement('canvas');c.width=spImg.naturalWidth;c.height=spImg.naturalHeight;var x=c.getContext('2d');
-  x.drawImage(spImg,0,0);x.globalCompositeOperation='multiply';x.fillStyle='#f2c14e';x.fillRect(0,0,c.width,c.height);
+  x.drawImage(spImg,0,0);x.globalCompositeOperation='multiply';x.fillStyle=getComputedStyle(root).getPropertyValue('--onyx').trim()||'#e9b23c';x.fillRect(0,0,c.width,c.height);
   x.globalCompositeOperation='destination-in';x.drawImage(spImg,0,0);return spGold=c}
+/* Другая палитра — импланты «за один день» другого цвета. */
+addEventListener('sy:pal',function(){spGold=null});
 function asmStop(){cancelAnimationFrame(asmRaf);asmRun=false;if(asmCv){asmCv.classList.add('out')}hero.classList.remove('asm')}
 /* Переход внахлёст: настоящий текст проявляется, пока последние импланты
    ещё долетают; слой с имплантами гаснет за то же время. */
@@ -251,9 +250,9 @@ function initStory(){
   if(window.gsap&&window.ScrollTrigger){
     gsap.registerPlugin(ScrollTrigger);
     ScrollTrigger.config({ignoreMobileResize:true});
-    gsap.to(st,{f:function(){return N-1},ease:'none',scrollTrigger:{trigger:story,start:'top top',end:'bottom bottom',scrub:.7,invalidateOnRefresh:true,onRefresh:render},onUpdate:onScene});
+    gsap.to(st,{f:function(){return N-1},ease:'none',scrollTrigger:{trigger:story,start:'top top',end:'bottom bottom',scrub:.7,invalidateOnRefresh:true,onRefresh:render},onUpdate:render});
   }else{
-    var lerp=function(){var r=story.getBoundingClientRect(),p=clamp(-r.top/Math.max(1,r.height-innerHeight)),to=p*(N-1);if(Math.abs(to-st.f)>.01){st.f+=(to-st.f)*.18;onScene()}requestAnimationFrame(lerp)};lerp();
+    var lerp=function(){var r=story.getBoundingClientRect(),p=clamp(-r.top/Math.max(1,r.height-innerHeight)),to=p*(N-1);if(Math.abs(to-st.f)>.01){st.f+=(to-st.f)*.18;render()}requestAnimationFrame(lerp)};lerp();
   }
   addEventListener('resize',function(){var f=fmtK;setFmt();if(f!==fmtK&&pumping){pumping=false;startPump()}size();render()});
   render();
