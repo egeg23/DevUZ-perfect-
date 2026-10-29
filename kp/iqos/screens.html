@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<title>Экраны для КП IQOS</title>
+<!--
+  Экраны будущего бота и страницы помощи для КП kp/iqos.html. Нарисованы
+  руками, без генераций. Снимок: node kp/iqos/shoot.mjs (каждый .shot —
+  отдельный PNG с плотностью 3x). Только сервис: ни одной картинки курения,
+  ни акций, проверка 21+ и предупреждение на каждом экране бота.
+-->
+<link rel="stylesheet" href="../fonts.css">
+<style>
+  :root { --ink:#34303d; --cream:#fffdfb; --teal:#00a7a8; --line:#e4e0dc; --mute:#7a7581; --tg:#e7ecef; --me:#e1f6d6; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 30px; background: #ccc; font-family: Inter, system-ui, sans-serif; color: var(--ink); display: flex; flex-wrap: wrap; gap: 30px; align-items: flex-start; }
+  .shot { background: #fff; overflow: hidden; }
+
+  /* ── Телефон с Telegram ─────────────────────────────────────────── */
+  .phone { width: 360px; height: 740px; border-radius: 34px; border: 9px solid #1d1b22; position: relative; background: var(--tg); display: flex; flex-direction: column; }
+  .tg-top { background: #fff; padding: 14px 14px 10px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #dde3e7; }
+  .tg-top .back { font-size: 20px; color: #3a8fd9; }
+  .ava { width: 38px; height: 38px; border-radius: 50%; background: var(--ink); color: #6ee0e0; display: grid; place-items: center; font-weight: 600; font-size: 11px; letter-spacing: .04em; }
+  .tg-top b { display: block; font-size: 14.5px; }
+  .tg-top small { color: var(--mute); font-size: 12px; }
+  .chat { flex: 1; padding: 12px 10px 6px; display: flex; flex-direction: column; justify-content: flex-end; gap: 7px; overflow: hidden; font-size: 13.4px; line-height: 1.42; }
+  .m { max-width: 84%; padding: 7px 10px 6px; border-radius: 14px; background: #fff; box-shadow: 0 1px 1px rgba(0,0,0,.08); }
+  .m.me { align-self: flex-end; background: var(--me); border-bottom-right-radius: 4px; }
+  .m.bot { align-self: flex-start; border-bottom-left-radius: 4px; }
+  .m .t { display: block; text-align: right; font-size: 10.5px; color: #8a959c; margin-top: 2px; }
+  .m p { margin: 0 0 5px; } .m p:last-of-type { margin-bottom: 0; }
+  .m ol { margin: 2px 0 4px; padding-left: 18px; } .m li { margin-bottom: 3px; }
+  .kb { align-self: flex-start; width: 84%; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: -3px; }
+  .kb.one { grid-template-columns: 1fr; }
+  .kb span { background: rgba(255,255,255,.85); border-radius: 9px; padding: 7px 6px; text-align: center; font-size: 12.3px; font-weight: 500; color: #2f6fa8; box-shadow: 0 1px 1px rgba(0,0,0,.06); }
+  .sys { align-self: center; background: rgba(0,0,0,.18); color: #fff; font-size: 11.5px; padding: 3px 10px; border-radius: 10px; }
+  .warn { font-size: 10.5px; color: var(--mute); border-top: 1px solid #dde3e7; background: #fff; padding: 6px 12px; text-align: center; line-height: 1.35; }
+  .input { background: #fff; padding: 10px 12px 14px; display: flex; gap: 8px; align-items: center; color: #9aa4aa; font-size: 13.5px; }
+  .input .f { flex: 1; } .input .clip { font-size: 17px; }
+  .menu { background: #f4f6f7; padding: 6px; display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+  .menu span { background: #fff; border-radius: 8px; padding: 9px 4px; text-align: center; font-size: 12.3px; font-weight: 500; }
+  .tag { display: inline-block; font-size: 10.5px; font-weight: 600; letter-spacing: .03em; color: var(--teal); text-transform: uppercase; margin-bottom: 3px; }
+  .store { border-top: 1px solid #eee; padding-top: 5px; margin-top: 5px; }
+  .store:first-of-type { border-top: 0; margin-top: 0; padding-top: 0; }
+  .store b { font-size: 13px; } .store small { display: block; color: var(--mute); font-size: 11.6px; line-height: 1.35; }
+  .ok { color: #1f8a4c; font-weight: 600; }
+
+  /* ── Страница помощи на компьютере ──────────────────────────────── */
+  .desk { width: 1280px; height: 800px; background: var(--cream); display: flex; flex-direction: column; border: 1px solid #bbb; }
+  .bar { height: 34px; background: #ece9e6; display: flex; align-items: center; gap: 7px; padding: 0 14px; }
+  .bar i { width: 11px; height: 11px; border-radius: 50%; background: #d4cfca; }
+  .bar .url { margin-left: 18px; background: #fff; border-radius: 6px; padding: 4px 14px; font-size: 12.5px; color: #6b6672; width: 420px; }
+  .nav { height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 48px; border-bottom: 1px solid var(--line); background: #fff; }
+  .logo { font-weight: 600; letter-spacing: .32em; font-size: 20px; }
+  .nav nav { display: flex; gap: 28px; font-size: 14px; } .nav nav .on { font-weight: 600; border-bottom: 2px solid var(--ink); padding-bottom: 4px; }
+  .nav .lang { font-size: 13px; color: var(--mute); }
+  .hero { padding: 46px 48px 26px; display: grid; grid-template-columns: 1.35fr 1fr; gap: 40px; }
+  .hero h1 { font-size: 38px; line-height: 1.15; margin: 0 0 10px; font-weight: 600; letter-spacing: -.01em; }
+  .hero p { margin: 0 0 22px; color: #5d5866; font-size: 16px; }
+  .search { display: flex; align-items: center; gap: 12px; background: #fff; border: 1.5px solid var(--ink); border-radius: 40px; padding: 15px 22px; font-size: 16px; color: #8d8894; }
+  .search .go { margin-left: auto; background: var(--ink); color: #fff; border-radius: 30px; padding: 9px 20px; font-size: 14px; font-weight: 500; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .chips span { border: 1px solid var(--line); background: #fff; border-radius: 20px; padding: 7px 14px; font-size: 13.5px; }
+  .side { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 22px 24px; }
+  .side h3 { margin: 0 0 12px; font-size: 16px; }
+  .ch { display: flex; gap: 12px; align-items: center; padding: 11px 0; border-top: 1px solid #f0ece8; font-size: 14px; }
+  .ch:first-of-type { border-top: 0; }
+  .ch .ic { width: 36px; height: 36px; border-radius: 10px; background: #f3f0ed; display: grid; place-items: center; font-size: 17px; }
+  .ch small { display: block; color: var(--mute); font-size: 12.5px; }
+  .ch .st { margin-left: auto; font-size: 12px; font-weight: 600; color: #1f8a4c; }
+  .tiles { padding: 4px 48px 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .tile { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 20px 20px 18px; }
+  .tile .ic { font-size: 22px; margin-bottom: 10px; }
+  .tile b { display: block; font-size: 15.5px; margin-bottom: 6px; }
+  .tile p { margin: 0 0 12px; font-size: 13.4px; color: #5d5866; line-height: 1.45; }
+  .tile .a { font-size: 13px; font-weight: 600; }
+  .legal { margin: auto 48px 0; padding: 14px 0 16px; border-top: 1px solid var(--line); font-size: 11.5px; color: var(--mute); display: flex; justify-content: space-between; }
+
+  /* ── Помощник «Не работает» на телефоне ─────────────────────────── */
+  .web { background: var(--cream); }
+  .wtop { height: 54px; background: #fff; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
+  .wtop .logo { font-size: 15px; letter-spacing: .3em; }
+  .wbody { padding: 18px 16px; flex: 1; display: flex; flex-direction: column; }
+  .steps { display: flex; gap: 5px; margin-bottom: 14px; } .steps i { flex: 1; height: 4px; border-radius: 2px; background: var(--line); } .steps i.on { background: var(--ink); }
+  .wbody h2 { font-size: 21px; margin: 0 0 4px; line-height: 1.25; }
+  .wbody .sub { color: var(--mute); font-size: 13px; margin: 0 0 14px; }
+  .opt { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 13px 14px; font-size: 14px; margin-bottom: 8px; display: flex; justify-content: space-between; }
+  .opt.sel { border: 2px solid var(--ink); font-weight: 600; }
+  .ans { background: #fff; border-radius: 14px; border: 1px solid var(--line); padding: 14px; font-size: 13.4px; line-height: 1.5; margin-top: 6px; }
+  .ans ol { margin: 6px 0 4px; padding-left: 18px; }
+  .ans .src { font-size: 11.5px; color: var(--mute); }
+  .btn { display: block; text-align: center; border-radius: 30px; padding: 12px; font-size: 14px; font-weight: 600; margin-top: 10px; }
+  .btn.dark { background: var(--ink); color: #fff; } .btn.light { border: 1.5px solid var(--ink); }
+
+  /* ── Панель операторов ──────────────────────────────────────────── */
+  .panel { width: 1280px; height: 800px; display: grid; grid-template-columns: 220px 330px 1fr; background: #f6f5f3; border: 1px solid #bbb; font-size: 13.5px; }
+  .pside { background: var(--ink); color: #e9e6ee; padding: 20px 16px; }
+  .pside .logo { font-size: 15px; letter-spacing: .28em; color: #fff; margin-bottom: 4px; }
+  .pside small { color: #a9a3b3; font-size: 11.5px; }
+  .pside ul { list-style: none; padding: 0; margin: 22px 0 0; }
+  .pside li { padding: 9px 10px; border-radius: 8px; margin-bottom: 2px; display: flex; justify-content: space-between; }
+  .pside li.on { background: rgba(255,255,255,.12); font-weight: 600; }
+  .pside li em { font-style: normal; background: #00a7a8; color: #fff; border-radius: 10px; padding: 0 7px; font-size: 11.5px; }
+  .plist { background: #fff; border-right: 1px solid var(--line); overflow: hidden; }
+  .plist h4 { margin: 0; padding: 16px 16px 10px; font-size: 15px; }
+  .pfil { display: flex; gap: 6px; padding: 0 16px 10px; font-size: 12px; } .pfil span { background: #f1eeeb; border-radius: 12px; padding: 4px 10px; } .pfil span.on { background: var(--ink); color: #fff; }
+  .row { padding: 11px 16px; border-top: 1px solid #f0ece8; } .row.on { background: #f3f8f8; border-left: 3px solid var(--teal); }
+  .row b { font-size: 13.5px; } .row .r { float: right; font-size: 11.5px; color: var(--mute); }
+  .row p { margin: 3px 0 4px; color: #5d5866; font-size: 12.6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lab { display: inline-block; font-size: 10.8px; font-weight: 600; border-radius: 6px; padding: 1px 7px; margin-right: 4px; }
+  .lab.w { background: #fff1db; color: #9a5b00; } .lab.b { background: #e6f5ef; color: #1f7a48; } .lab.s { background: #e9f0fb; color: #2d5fa6; }
+  .pchat { display: flex; flex-direction: column; }
+  .phead { background: #fff; padding: 14px 22px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
+  .phead b { font-size: 15px; } .phead small { color: var(--mute); display: block; font-size: 12px; }
+  .phead .act span { border: 1px solid var(--line); border-radius: 8px; padding: 6px 11px; margin-left: 6px; font-size: 12.5px; }
+  .phead .act span.d { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .pmsgs { flex: 1; padding: 18px 22px; display: flex; flex-direction: column; gap: 9px; }
+  .pm { max-width: 66%; padding: 9px 12px; border-radius: 12px; background: #fff; border: 1px solid var(--line); line-height: 1.45; }
+  .pm.c { align-self: flex-start; } .pm.bo { align-self: flex-end; background: #eef6f6; border-color: #cfe7e7; } .pm.op { align-self: flex-end; background: var(--ink); color: #fff; border-color: var(--ink); }
+  .pm small { display: block; font-size: 11px; color: var(--mute); margin-bottom: 3px; } .pm.op small { color: #c9c4d1; }
+  .card { margin: 0 22px 12px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; font-size: 12.5px; }
+  .card small { display: block; color: var(--mute); font-size: 11px; }
+  .preply { background: #fff; border-top: 1px solid var(--line); padding: 12px 22px; display: flex; gap: 10px; align-items: center; color: #9a95a0; }
+  .preply .f { flex: 1; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+  .preply .s { background: var(--ink); color: #fff; border-radius: 10px; padding: 10px 16px; font-weight: 600; }
+  .demo { position: absolute; left: 16px; bottom: 14px; font-size: 11px; color: #8e889a; }
+</style>
+</head>
+<body>
+
+<!-- 1. Бот: вход, проверка 21+ и меню -->
+<div class="shot phone" id="bot-start">
+  <div class="tg-top"><span class="back">‹</span><div class="ava">IQOS</div><div><b>IQOS Uzbekistan</b><small>бот</small></div></div>
+  <div class="chat">
+    <div class="sys">Сегодня</div>
+    <div class="m bot"><p>Здравствуйте! Это служба поддержки IQOS в Узбекистане.</p><p>Бот только для совершеннолетних. Подтвердите, пожалуйста, что вам исполнился 21 год.</p><span class="t">19:02</span></div>
+    <div class="kb"><span>Да, мне 21+</span><span>Нет</span></div>
+    <div class="m me">Да, мне 21+<span class="t">19:02</span></div>
+    <div class="m bot"><p>Спасибо. Выберите кнопку внизу или напишите вопрос своими словами, по-русски или по-узбекски.</p><span class="t">19:02</span></div>
+    <div class="m me">ilumam zaryadlanmayapti<span class="t">19:03</span></div>
+    <div class="m bot"><span class="tag">Автоответ</span><p>Tushundim, qurilma quvvat olmayapti. Qaysi qurilma: ILUMA i, i ONE yoki i PRIME?</p><span class="t">19:03</span></div>
+  </div>
+  <div class="menu"><span>📍 Где купить</span><span>🔧 Не работает</span><span>🛡 Гарантия и замена</span><span>📦 Статус заявки</span><span>📅 Записаться в сервис</span><span>👤 Оператор</span></div>
+  <div class="warn">Продукт не является безвредным и содержит никотин. Только для лиц 21+.</div>
+</div>
+
+<!-- 2. Бот: автоответ «не заряжается» и запись в сервис -->
+<div class="shot phone" id="bot-fix">
+  <div class="tg-top"><span class="back">‹</span><div class="ava">IQOS</div><div><b>IQOS Uzbekistan</b><small>бот</small></div></div>
+  <div class="chat">
+    <div class="m me">не заряжается<span class="t">14:20</span></div>
+    <div class="m bot"><span class="tag">Автоответ</span><p>Давайте проверим по шагам, это 2 минуты:</p><ol><li>Подключите кабель и блок из комплекта.</li><li>Не горит индикатор? Перезагрузите по шагам «Самодиагностики».</li></ol><span class="t">14:20</span></div>
+    <div class="kb"><span>Помогло</span><span>Не помогло</span></div>
+    <div class="m me">Не помогло<span class="t">14:24</span></div>
+    <div class="m bot"><p>Понял, устройство нужно показать мастеру. Если гарантия действует, заменят на месте. Ближайший сервис:</p>
+      <div class="store"><b>ТЦ Next</b><small>ул. Бабура, 6 · 10:00-22:00 · 0,8 км<br>диагностика, замена устройства</small></div>
+      <span class="t">14:24</span></div>
+    <div class="kb"><span>Сегодня 17:30</span><span>Завтра 11:00</span></div>
+    <div class="m me">Сегодня 17:30<span class="t">14:25</span></div>
+    <div class="m bot"><p class="ok">Записали: ТЦ Next, сегодня в 17:30.</p><p>Заявка R-10482. За час до визита напомним.</p><span class="t">14:25</span></div>
+  </div>
+  <div class="input"><span class="clip">📎</span><span class="f">Сообщение</span><span>🎤</span></div>
+  <div class="warn">Продукт не является безвредным и содержит никотин. Только для лиц 21+.</div>
+</div>
+
+<!-- 3. Бот: статус заявки и передача оператору -->
+<div class="shot phone" id="bot-human">
+  <div class="tg-top"><span class="back">‹</span><div class="ava">IQOS</div><div><b>IQOS Uzbekistan</b><small>бот</small></div></div>
+  <div class="chat">
+    <div class="m me">📦 Статус заявки<span class="t">11:05</span></div>
+    <div class="m bot"><span class="tag">Автоответ</span><p><b>Заявка R-10482</b>, замена по гарантии</p><p>✓ Устройство принято, ТЦ Next<br>✓ Замена одобрена<br>● Готово к выдаче до 5 ноября</p><span class="t">11:05</span></div>
+    <div class="m me">а можно забрать в другом месте? я на Чиланзаре<span class="t">11:06</span></div>
+    <div class="m bot"><p>Это решает сервис. Соединяю с оператором: вы вторым в очереди, около 3 минут. Переписку он уже видит.</p><span class="t">11:06</span></div>
+    <div class="sys">Оператор Дильноза подключилась</div>
+    <div class="m bot"><p>Здравствуйте! Да, перенесём выдачу в точку на Чиланзаре, завтра после 12:00. Номер заявки тот же.</p><span class="t">11:09</span></div>
+        <div class="m bot" style="font-size:12.4px;color:#5d5866"><p>Ночью, с 22:00 до 10:00, операторов нет: бот примет вопрос, и утром вам ответят первым.</p><span class="t">11:09</span></div>
+  </div>
+  <div class="input"><span class="clip">📎</span><span class="f">Сообщение</span><span>🎤</span></div>
+  <div class="warn">Продукт не является безвредным и содержит никотин. Только для лиц 21+.</div>
+</div>
+
+<!-- 4. Сайт: страница помощи на компьютере -->
+<div class="shot desk" id="site-help">
+  <div class="bar"><i></i><i></i><i></i><span class="url">uz.iqos.com/ru/pomoshch</span></div>
+  <div class="nav"><span class="logo">IQOS</span><nav><span>Устройства</span><span>Где купить</span><span class="on">Помощь</span><span>Сервисы</span></nav><span class="lang">RU · UZ</span></div>
+  <div class="hero">
+    <div>
+      <h1>Что случилось с устройством?</h1>
+      <p>Напишите своими словами. Ответ из инструкций IQOS придёт сразу, без звонка и очереди.</p>
+      <div class="search">🔍 <span>Например: «мигает и не нагревает»</span><span class="go">Найти ответ</span></div>
+      <div class="chips"><span>Не заряжается</span><span>Не нагревает</span><span>Гарантия и замена</span><span>Обновить устройство</span><span>Где ближайший сервис</span><span>Статус заявки</span></div>
+    </div>
+    <div class="side">
+      <h3>Нужен человек?</h3>
+      <div class="ch"><span class="ic">✈️</span><div>Написать в Telegram<small>ответ за 3-5 минут</small></div><span class="st">● онлайн</span></div>
+      <div class="ch"><span class="ic">☎️</span><div>Позвонить 1137<small>ежедневно 10:00-22:00</small></div></div>
+      <div class="ch"><span class="ic">📅</span><div>Записаться в сервис<small>выбрать точку и время</small></div></div>
+      <div class="ch"><span class="ic">✉️</span><div>Оставить заявку<small>имя и телефон, без почты</small></div></div>
+    </div>
+  </div>
+  <div class="tiles">
+    <div class="tile"><div class="ic">🔧</div><b>Не работает</b><p>Проверка по шагам за 2 минуты. Не помогло: запись в сервис в одно нажатие.</p><span class="a">Начать проверку →</span></div>
+    <div class="tile"><div class="ic">🛡</div><b>Гарантия и замена</b><p>Сколько действует, что взять с собой, где меняют на месте.</p><span class="a">Узнать →</span></div>
+    <div class="tile"><div class="ic">📍</div><b>Сервисные точки</b><p>Ближайшие к вам, с часами работы и тем, что там делают.</p><span class="a">Показать на карте →</span></div>
+    <div class="tile"><div class="ic">📦</div><b>Статус заявки</b><p>Номер заявки или телефон, и вы видите, где устройство.</p><span class="a">Проверить →</span></div>
+  </div>
+  <div class="legal"><span>Продукт не является безвредным и содержит никотин, вызывающий зависимость. Только для лиц, достигших 21 года.</span><span>Эскиз DevUz Studio</span></div>
+</div>
+
+<!-- 5. Сайт: помощник «Не работает» на телефоне -->
+<div class="shot phone web" id="site-wizard">
+  <div class="wtop"><span>☰</span><span class="logo">IQOS</span><span style="font-size:12px;color:#7a7581">RU · UZ</span></div>
+  <div class="wbody">
+    <div class="steps"><i class="on"></i><i class="on"></i><i class="on"></i></div>
+    <h2>Что происходит с устройством?</h2>
+    <p class="sub">Шаг 3 из 3 · ILUMA i ONE</p>
+    <div class="opt">Не заряжается <span>›</span></div>
+    <div class="opt sel">Не нагревает <span>✓</span></div>
+    <div class="opt">Странный запах или вкус <span>›</span></div>
+    <div class="ans"><b>Попробуйте так:</b><ol><li>Проверьте, что устройство заряжено.</li><li>Почистите его по инструкции.</li><li>Перезагрузите по шагам из раздела «Самодиагностика».</li></ol><span class="src">Ответ из инструкций IQOS для ILUMA i ONE</span></div>
+    <span class="btn dark">Помогло</span>
+    <span class="btn light">Не помогло, записаться в сервис</span>
+    <p style="margin:auto 0 0;font-size:10.5px;color:#7a7581;text-align:center;line-height:1.35">Продукт не является безвредным и содержит никотин. Только для лиц 21+.</p>
+  </div>
+</div>
+
+<!-- 6. Панель операторов -->
+<div class="shot panel" id="panel" style="position:relative">
+  <div class="pside"><div class="logo">IQOS</div><small>поддержка · панель</small>
+    <ul><li class="on">Разговоры <em>7</em></li><li>Заявки в сервис</li><li>Ответы бота</li><li>Без ответа <em>3</em></li><li>Отчёт за неделю</li><li>Операторы</li></ul></div>
+  <div class="plist"><h4>Разговоры</h4>
+    <div class="pfil"><span class="on">Ждут человека · 2</span><span>Бот ведёт · 5</span><span>Все</span></div>
+    <div class="row on"><b>Азиз Р.</b><span class="r">2 мин</span><p>а можно забрать в другом месте? я на Чиланзаре</p><span class="lab w">ждёт оператора</span><span class="lab s">R-10482</span></div>
+    <div class="row"><b>Malika T.</b><span class="r">4 мин</span><p>garantiya qancha muddatga?</p><span class="lab w">ждёт оператора</span></div>
+    <div class="row"><b>Тимур</b><span class="r">6 мин</span><p>где ближайший сервис на Юнусабаде</p><span class="lab b">бот ответил</span></div>
+    <div class="row"><b>Нодира</b><span class="r">11 мин</span><p>как обновить устройство</p><span class="lab b">бот ответил</span></div>
+    <div class="row"><b>Sardor</b><span class="r">18 мин</span><p>servisga yozildim, rahmat</p><span class="lab b">записан в сервис</span></div>
+    <div class="row"><b>Ольга</b><span class="r">25 мин</span><p>не нагревает после чистки</p><span class="lab b">бот ответил</span></div>
+  </div>
+  <div class="pchat">
+    <div class="phead"><div><b>Азиз Р.</b><small>Telegram · 21+ подтверждено · по-русски</small></div><div class="act"><span>Вернуть боту</span><span class="d">Взять разговор</span></div></div>
+    <div class="card"><div><small>Заявка</small>R-10482</div><div><small>Что</small>замена по гарантии</div><div><small>Точка</small>ТЦ Next</div><div><small>Статус</small>готово к выдаче</div></div>
+    <div class="pmsgs">
+      <div class="pm c"><small>Клиент · 11:05</small>📦 Статус заявки</div>
+      <div class="pm bo"><small>Бот · 11:05</small>Заявка R-10482: устройство принято, замена одобрена, готово к выдаче до 5 ноября.</div>
+      <div class="pm c"><small>Клиент · 11:06</small>а можно забрать в другом месте? я на Чиланзаре</div>
+      <div class="pm bo"><small>Бот · 11:06</small>Это решает сервис. Соединяю с оператором, вы в очереди вторым.</div>
+      <div class="pm op"><small>Дильноза · 11:09</small>Здравствуйте! Да, перенесём выдачу в точку на Чиланзаре, завтра после 12:00.</div>
+    </div>
+    <div class="preply"><span class="f">Ответить клиенту…</span><span>Готовые ответы</span><span class="s">Отправить</span></div>
+  </div>
+  <span class="demo">демо-данные</span>
+</div>
+
+</body>
+</html>
