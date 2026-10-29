@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { CompileScene } from "@/components/hero/compile-scene";
 import { CalculatorSection } from "@/components/sections/calculator";
 import { CasesSection } from "@/components/sections/cases";
+import { ClientsSection } from "@/components/sections/clients";
 import { ContactSection } from "@/components/sections/contact";
 import { DevuzShowcase } from "@/components/sections/devuz-showcase";
 import { FaqSection } from "@/components/sections/faq";
@@ -51,6 +52,7 @@ export default async function HomePage({
   return (
     <>
       <CompileScene locale={locale} dict={dict} />
+      <ClientsSection dict={dict} />
       <ProtoReel locale={locale} proto={cases.find((c) => c.slug === "samauto")?.prototype} />
       <ScaleSection locale={locale} />
       <StudioFilm locale={locale} />
