@@ -2,6 +2,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import * as D from "./data.mjs";
 import { BASE, ADDONS, ALL, OFFER_HOURS, CUR } from "./plan.mjs";
 import { dzIntroSolo } from "../../../lib/proto/dz-video.mjs";
+import { PALETTES, paletteCss, swatch } from "./palettes.mjs";
 
 /*
  * Макет сайта стоматологии «Сияние Севера» (Томск, ул. Белинского, 63), одна
@@ -376,6 +377,15 @@ function siteData() {
   };
 }
 
+/* Переключатель палитр: тумблеры, одна палитра включена (palettes.mjs). */
+function palBlock() {
+  const row = (p) => `<li><button type="button" class="pal-o" role="radio" aria-checked="false" data-p="${p.id}"><span class="pal-sw" aria-hidden="true">${swatch(p).map((c) => `<i style="background:${c}"></i>`).join("")}</span><span class="pal-t"><b>${p.id}. ${p.name}</b><small>${p.note}</small></span><span class="sw" aria-hidden="true"></span></button></li>`;
+  return `<button type="button" class="pal-fab" id="pal-fab" aria-controls="pal" aria-expanded="false" aria-label="Цвет сайта: выбрать палитру"><span class="pal-dots" aria-hidden="true"><i></i><i></i><i></i><i></i></span></button>
+<div class="pal" id="pal" role="dialog" aria-label="Цвет сайта"><div class="pal-h"><b>Цвет сайта</b><button type="button" class="pal-x" aria-label="Закрыть">${ic("x")}</button></div>
+<p class="pal-n">Пять палитр на выбор и та, с которой начинали. Включите любую: сайт перекрасится сразу.</p>
+<ul class="pal-l" role="radiogroup" aria-label="Палитра">${PALETTES.map(row).join("")}</ul></div>`;
+}
+
 function sitePage() {
   const nav = [["#all-on-6", "All-on-6"], ["#ceny", "Цены"], ["#vrachi", "Врачи"], ["#voprosy", "Вопросы"], ["#kontakty", "Контакты"]];
   return `<!doctype html>
@@ -384,7 +394,7 @@ function sitePage() {
 ${headTags("Все зубы на 6 имплантатах за 1 день · «Сияние Севера», Томск · макет DevUz Studio", "Все зубы на 6 имплантатах за один день в Томске: All-on-6 в центре имплантации «Сияние Севера», ул. Белинского, 63. Цены, рассрочка 0%, врачи, гарантии, расчёт за минуту.")}
 <link rel="preload" as="image" href="${IMG}/film-9.webp" media="(max-aspect-ratio: 4/5)">
 <link rel="preload" as="image" href="${IMG}/film-16.webp" media="(min-aspect-ratio: 4/5)">
-<script>(function(){var r=document.documentElement;r.classList.add('js');var calm=false;try{if(matchMedia('(prefers-reduced-motion: reduce)').matches)calm=true}catch(e){}try{var c=navigator.connection;if(c&&c.saveData)calm=true}catch(e){}if(calm)r.classList.add('calm')})()</script>
+<script>(function(){var r=document.documentElement;r.classList.add('js');var calm=false;try{if(matchMedia('(prefers-reduced-motion: reduce)').matches)calm=true}catch(e){}try{var c=navigator.connection;if(c&&c.saveData)calm=true}catch(e){}if(calm)r.classList.add('calm');try{var m=location.search.match(/[?&]pal=([1-6])/),v=m?m[1]:localStorage.getItem('sy-pal');if(m)localStorage.setItem('sy-pal',v);if(v&&/^[1-6]$/.test(v)&&v!=='4')r.setAttribute('data-pal',v)}catch(e){}})()</script>
 <script type="application/ld+json">${json(ld())}</script>
 @@S@@
 </head>
@@ -410,6 +420,7 @@ ${[storyBlock(), vsBlock(), priceBlock(), quizBlock(), doctorsBlock(), trustBloc
 <div class="rights"><span>Это макет: так может выглядеть сайт «${B.name}». Сайт носит информационный характер и не является публичной офертой.</span><a href="${TERMS}">Условия использования макета</a></div>
 </div></footer>
 <div class="dock" id="dock"><a class="btn btn-onyx" href="#zapis" data-book>${ic("msg")}<span>Записаться</span></a><a class="btn btn-call" href="${tel}" aria-label="Позвонить в клинику">${ic("phone")}</a></div>
+${palBlock()}
 ${bookSheet()}
 <script type="application/json" id="sy-site">${json(siteData())}</script>
 <script src="${IMG}/gsap.min.js"></script>
@@ -423,14 +434,16 @@ const opt = (f) => (existsSync(DIR + f) ? read(f) : "");
 const out = { "": sitePage() };
 /* store.js — общее состояние сайта, чата и панели; chat.* — чат на сайте. */
 const parts = {
-  S: `<style>${min(read("site.css") + opt("chat.css"))}</style>`,
-  J: `<script>\n${strip(read("store.js") + read("site.js") + read("gold.js") + opt("chat.js"))}</script>`,
+  S: `<style>${min(read("site.css") + opt("chat.css") + read("pal.css") + paletteCss())}</style>`,
+  J: `<script>\n${strip(read("store.js") + read("site.js") + opt("chat.js") + read("pal.js"))}</script>`,
 };
 /* Панель клиники (`panel`): panel.mjs отдаёт страницы и свои части. */
 if (existsSync(DIR + "panel.mjs")) {
   const P = await import("./panel.mjs");
   Object.assign(out, P.pages({ B, BRAND: B, IMG, TERMS, json, logo, ic }));
   Object.assign(parts, P.parts({ read, opt, min, strip }));
+  /* Панель — в той же палитре, что выбрана на сайте (тот же localStorage). */
+  parts.PS = `<script>try{var v=localStorage.getItem('sy-pal');if(v&&/^[1-6]$/.test(v)&&v!=='4')document.documentElement.setAttribute('data-pal',v)}catch(e){}</script>\n` + parts.PS.replace("</style>", min(paletteCss()) + "</style>");
 }
 const fill = (page) => Object.entries(parts).reduce((p, [n, part]) => p.split(`@@${n}@@`).join(part), page);
 

@@ -117,6 +117,34 @@ for (const [w, h] of [[390, 844], [768, 1024], [1440, 900]]) {
   await ctx.close();
 }
 
+// Палитры тумблерами (владелец, 29.10.2026): включается одна, сайт
+// перекрашивается сразу, выбор помнится, ?pal=3 открывает сразу в палитре.
+for (const [w, h] of [[390, 844], [1440, 900]]) {
+  const { p, ctx, errs } = await open(w, h, { skipIntro: true });
+  await p.waitForTimeout(1200);
+  const ink = () => p.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--ink").trim());
+  const before = await ink();
+  await p.click("#pal-fab"); await p.waitForTimeout(400);
+  const n = await p.locator(".pal-o").count();
+  if (n === 6 && (await p.locator('.pal-o[data-p="4"]').getAttribute("aria-checked")) === "true") ok(`@${w}: палитр 6, включена «Изумруд и золото»`); else fail(`@${w}: палитры ${n}`);
+  await p.click('.pal-o[data-p="3"]'); await p.waitForTimeout(300);
+  const after = await ink(), on = await p.$$eval(".pal-o", (os) => os.filter((o) => o.getAttribute("aria-checked") === "true").map((o) => o.dataset.p));
+  if (before === "#0e3b33" && after === "#0f2547" && on.join() === "3") ok(`@${w}: тумблер «Морская свежесть» перекрасил сайт, включён один`); else fail(`@${w}: палитра ${before} → ${after}, включены ${on}`);
+  const btn = await p.evaluate(() => { const b = document.querySelector(".hero .btn-onyx") || document.querySelector(".btn-onyx"), cs = getComputedStyle(b); return { bg: cs.backgroundColor, img: cs.backgroundImage, anim: cs.animationName, gl: document.querySelectorAll(".btn-onyx canvas,.gold-live").length }; });
+  if (btn.bg === "rgb(255, 122, 89)" && btn.img === "none" && btn.anim === "none" && !btn.gl) ok(`@${w}: кнопки ровного цвета палитры, без эффектов`); else fail(`@${w}: кнопка ${JSON.stringify(btn)}`);
+  await p.keyboard.press("Escape"); await p.waitForTimeout(400);
+  if (!(await p.evaluate(() => document.getElementById("pal").classList.contains("open")))) ok(`@${w}: Escape закрывает список`); else fail(`@${w}: список не закрылся`);
+  await p.reload({ waitUntil: "load" }); await p.waitForTimeout(500);
+  if ((await ink()) === "#0f2547") ok(`@${w}: выбор палитры помнится после перезагрузки`); else fail(`@${w}: после перезагрузки ${await ink()}`);
+  await p.goto(B + "?pal=1", { waitUntil: "load" }); await p.waitForTimeout(500);
+  const light = await p.evaluate(() => ({ pal: document.documentElement.dataset.pal, vs: getComputedStyle(document.getElementById("all-on-6")).backgroundColor, story: getComputedStyle(document.getElementById("story")).backgroundColor }));
+  if (light.pal === "1" && light.vs === "rgb(230, 244, 241)" && light.story === "rgb(11, 43, 53)") ok(`@${w}: ?pal=1 — «Белая клиника»: блоки светлые, пролёт тёмный`); else fail(`@${w}: ?pal=1 ${JSON.stringify(light)}`);
+  const ov = await p.evaluate(() => document.documentElement.scrollWidth - innerWidth);
+  if (ov <= 0) ok(`@${w}: с переключателем вбок не едет`); else fail(`@${w}: вбок ${ov}px`);
+  if (errs.length) fail(`@${w}: ошибки ${errs.join(" | ")}`);
+  await ctx.close();
+}
+
 // Без движения
 {
   const { p, ctx } = await open(390, 844, { reduced: true });
