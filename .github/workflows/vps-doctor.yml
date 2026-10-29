@@ -240,6 +240,15 @@ jobs:
               echo "    ${t#*:} · $c · $(printf '%s' "$p" | mask) · $(printf '%s' "$ref" | mask)"
             done | tail -40
             rm -f "$PAN"
+            # Проекты и договоры — каждый заход за 12 часов, не только ошибки:
+            # 29.10.2026 «нет кнопки „на подпись“» — нужно видеть, открывали ли
+            # страницу договора вообще и чем она ответила.
+            echo "  проекты и договоры за 12 часов (UTC · код · метод · путь · откуда):"
+            cat "$ACCLOG.1" "$ACCLOG" 2>/dev/null | grep -E "\[($H12)" \
+              | awk -F'"' '{split($3,s," "); split($2,r," "); t=substr($1, index($1,"[")+1, 17); sub(/^https?:\/\/[^\/]*/,"",$4); print s[1], r[1], r[2], t, ($4==""||$4=="-")?"-":$4}' \
+              | awk '$3 ~ /^\/admin\/(contracts|projects)/' | while read -r c m p t ref; do
+                echo "${t#*:} · $c · $m · $(printf '%s' "$p" | mask) · $(printf '%s' "$ref" | mask)"
+              done | uniq -c | awk '{n=$1; $1=""; sub(/^ /,""); print "    " $0 (n>1 ? " ×" n : "")}' | tail -90
             echo "ошибки nginx по devuz.studio за сутки (UTC):"
             SINCE24="$(date -d '-24 hours' '+%Y/%m/%d %H:%M:%S')"
             cat "$ERRLOG.1" "$ERRLOG" 2>/dev/null | awk -v s="$SINCE24" '($1" "$2) >= s' | grep -E 'server: (www\.)?devuz\.studio' \
@@ -251,6 +260,18 @@ jobs:
               | sed -E 's/^[^|]*\| //; s/[0-9a-f]{8}-[0-9a-f-]{27}/<id>/g; s/\+?[0-9][0-9 ()-]{7,}[0-9]/<num>/g; s/@[A-Za-z0-9_]{3,}/@<ник>/g' \
               | cut -c1-170 | sort | uniq -c | sort -rn | head -15 | sed 's/^/  /'
 
+            echo
+            echo "════ Реквизиты студии для договоров и счетов ════"
+            # Только «задано / пусто»: значения в открытый лог не идут. Счёт —
+            # сверкой отпечатка с тем, что владелец прислал 29.10.2026.
+            for V in INVOICE_TAX_ID INVOICE_TAX_ID_KIND INVOICE_BANK_NAME INVOICE_BANK_ACCOUNT INVOICE_BANK_MFO; do
+              VAL="$(grep -m1 "^$V=" .env 2>/dev/null | cut -d= -f2- | sed -e "s/[\"' ]//g")"
+              if [ -n "$VAL" ]; then echo "  $V: задан в .env (главнее хранилища)"; else echo "  $V: в .env пусто, панель возьмёт из хранилища"; fi
+            done
+            ACC="$(grep -m1 '^INVOICE_BANK_ACCOUNT=' .env 2>/dev/null | cut -d= -f2- | sed -e "s/[\"' ]//g")"
+            if [ -n "$ACC" ]; then
+              [ "$(printf '%s' "$ACC" | sha256sum | cut -c1-16)" = "97d55086bf5edd46" ] && echo "  счёт в .env: тот же, что прислал владелец" || echo "  ✗ счёт в .env ДРУГОЙ, чем прислал владелец 29.10.2026"
+            fi
             echo
             echo "════ Модель с хоста — тем же путём, что у скаута ════"
             # Сайт ходит к модели из контейнера, скаут — с хоста и через
