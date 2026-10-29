@@ -261,6 +261,18 @@ jobs:
               | cut -c1-170 | sort | uniq -c | sort -rn | head -15 | sed 's/^/  /'
 
             echo
+            echo "════ Реквизиты студии для договоров и счетов ════"
+            # Только «задано / пусто»: значения в открытый лог не идут. Счёт —
+            # сверкой отпечатка с тем, что владелец прислал 29.10.2026.
+            for V in INVOICE_TAX_ID INVOICE_TAX_ID_KIND INVOICE_BANK_NAME INVOICE_BANK_ACCOUNT INVOICE_BANK_MFO; do
+              VAL="$(grep -m1 "^$V=" .env 2>/dev/null | cut -d= -f2- | sed -e "s/[\"' ]//g")"
+              if [ -n "$VAL" ]; then echo "  $V: задан в .env (главнее хранилища)"; else echo "  $V: в .env пусто, панель возьмёт из хранилища"; fi
+            done
+            ACC="$(grep -m1 '^INVOICE_BANK_ACCOUNT=' .env 2>/dev/null | cut -d= -f2- | sed -e "s/[\"' ]//g")"
+            if [ -n "$ACC" ]; then
+              [ "$(printf '%s' "$ACC" | sha256sum | cut -c1-16)" = "97d55086bf5edd46" ] && echo "  счёт в .env: тот же, что прислал владелец" || echo "  ✗ счёт в .env ДРУГОЙ, чем прислал владелец 29.10.2026"
+            fi
+            echo
             echo "════ Модель с хоста — тем же путём, что у скаута ════"
             # Сайт ходит к модели из контейнера, скаут — с хоста и через
             # прокси из .env. Это два разных пути, и 21 сентября разница
