@@ -16,6 +16,8 @@ on:
       - ".github/workflows/vps-security.yml"
       # Замена прокси: ручная, сама перезапускает что нужно.
       - ".github/workflows/vps-proxy.yml"
+      # Осмотр связи с сервером: ручной, только смотрит.
+      - ".github/workflows/vps-doctor.yml"
       - "scripts/voice-transcribe.py"
       # Ролик студии: сцена Blender и её рендер живут в Actions (scripts/blender).
       - ".github/workflows/blender-render.yml"
