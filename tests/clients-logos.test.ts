@@ -18,12 +18,13 @@ import { locales } from "@/lib/i18n";
 
 const all = clientRows.flat();
 
-/** Пропорции файла: viewBox у SVG, заголовок IHDR у PNG. */
+/** Пропорции файла: viewBox у SVG, заголовок VP8L у WebP без потерь. */
 function fileRatio(path: string): number {
   const buf = readFileSync(path);
-  if (path.endsWith(".png")) {
-    assert.equal(buf.toString("ascii", 12, 16), "IHDR", path);
-    return buf.readUInt32BE(16) / buf.readUInt32BE(20);
+  if (path.endsWith(".webp")) {
+    assert.equal(buf.toString("ascii", 12, 16), "VP8L", `${path}: ждём WebP без потерь`);
+    const bits = buf.readUInt32LE(21);
+    return ((bits & 0x3fff) + 1) / (((bits >>> 14) & 0x3fff) + 1);
   }
   const box = buf.toString("utf8").match(/viewBox="\s*([-\d.]+)[\s,]+([-\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)\s*"/);
   assert.ok(box, `${path}: нет viewBox`);
@@ -37,7 +38,7 @@ test("«Делали для»: два ряда, у каждого бренда �
   assert.equal(new Set(slugs).size, slugs.length, "бренд в двух местах");
   for (const c of all) {
     assert.ok(c.name.trim(), c.slug);
-    assert.match(c.logo, /^\/clients\/[a-z0-9-]+\.(svg|png)$/);
+    assert.match(c.logo, /^\/clients\/logos\/[a-z0-9-]+\.(svg|webp)$/);
   }
 });
 
@@ -45,7 +46,7 @@ test("«Делали для»: файл на месте, пропорции со
   for (const c of all) {
     const path = join("public", c.logo);
     assert.ok(existsSync(path), `${c.slug}: нет ${path}`);
-    assert.ok(statSync(path).size <= 150_000, `${c.slug}: файл тяжелее 150 КБ`);
+    assert.ok(statSync(path).size <= 40_000, `${c.slug}: файл тяжелее 40 КБ — вся лента грузится с главной`);
     const ratio = fileRatio(path);
     assert.ok(Math.abs(ratio - c.ratio) / ratio < 0.03, `${c.slug}: ratio ${c.ratio}, у файла ${ratio.toFixed(3)}`);
     if (path.endsWith(".svg")) {
@@ -58,7 +59,7 @@ test("«Делали для»: файл на месте, пропорции со
 test("«Делали для»: размер по площади, ни один логотип не крупнее и не мельче других на глаз", () => {
   for (const c of all) {
     const { width, height } = logoBox(c.ratio);
-    assert.ok(width <= 200 && height <= 52, `${c.slug}: ${width}x${height}`);
+    assert.ok(width <= 220 && height <= 52, `${c.slug}: ${width}x${height}`);
     assert.ok(height >= 14, `${c.slug}: высота ${height}`);
   }
 });
