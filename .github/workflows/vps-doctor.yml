@@ -226,6 +226,30 @@ jobs:
               echo "  $C — по минутам: $(awk -v c="$C" '$1==c{print $3}' "$ACC" | sort | uniq -c | sort -k2 | tail -12 | awk '{printf "%s×%s ", $2, $1}')"
             done
             rm -f "$ACC"
+            # Лог общий на все сайты сервера, а у панели свои адреса:
+            # /admin, /_next, /api. Здесь только они, за 12 часов, со
+            # временем (UTC), путём и откуда пришли (тоже без ключей).
+            H12="$(for h in $(seq 0 12); do LC_ALL=C date -d "-$h hours" '+%d/%b/%Y:%H'; done | paste -sd'|')"
+            PAN=/tmp/devuz-panel.txt
+            cat "$ACCLOG.1" "$ACCLOG" 2>/dev/null | grep -E "\[($H12)" \
+              | awk -F'"' '{split($3,s," "); split($2,r," "); t=substr($1, index($1,"[")+1, 17); sub(/^https?:\/\/[^\/]*/,"",$4); print s[1], r[2], t, ($4==""||$4=="-")?"-":$4}' \
+              | awk '$2 ~ /^\/(admin|_next|api\/(admin|health))/' > "$PAN"
+            echo "панель за 12 часов: всего $(wc -l < "$PAN"), по кодам: $(awk '{print $1}' "$PAN" | sort | uniq -c | sort -rn | awk '{printf "%s×%s ", $2, $1}')"
+            echo "  не 2xx/3xx, по времени (UTC · код · путь · откуда):"
+            awk '$1 !~ /^[23]/' "$PAN" | while read -r c p t ref; do
+              echo "    ${t#*:} · $c · $(printf '%s' "$p" | mask) · $(printf '%s' "$ref" | mask)"
+            done | tail -40
+            rm -f "$PAN"
+            echo "ошибки nginx по devuz.studio за сутки (UTC):"
+            SINCE24="$(date -d '-24 hours' '+%Y/%m/%d %H:%M:%S')"
+            cat "$ERRLOG.1" "$ERRLOG" 2>/dev/null | awk -v s="$SINCE24" '($1" "$2) >= s' | grep -E 'server: (www\.)?devuz\.studio' \
+              | sed -E 's/^[0-9\/]+ ([0-9:]+) \[([a-z]+)\] [0-9#]+: (\*[0-9]+ )?(.*), client: .*request: "[A-Z]+ ([^ ]*) .*$/\1 [\2] \4 · \5/' \
+              | while read -r tm rest; do echo "  $tm $(printf '%s' "$rest" | mask | cut -c1-170)"; done | tail -25
+            echo "приложение за 12 часов — ошибки Next.js по виду:"
+            docker compose logs --since 12h --no-color 2>/dev/null \
+              | grep -E "⨯|Error:|Unhandled|ECONNRESET|ETIMEDOUT|Timeout|digest" \
+              | sed -E 's/^[^|]*\| //; s/[0-9a-f]{8}-[0-9a-f-]{27}/<id>/g; s/\+?[0-9][0-9 ()-]{7,}[0-9]/<num>/g; s/@[A-Za-z0-9_]{3,}/@<ник>/g' \
+              | cut -c1-170 | sort | uniq -c | sort -rn | head -15 | sed 's/^/  /'
 
             echo
             echo "════ Модель с хоста — тем же путём, что у скаута ════"
