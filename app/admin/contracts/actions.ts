@@ -16,9 +16,12 @@ import {
 import {
   approveContract,
   createContract,
+  setComposition,
   updateDraft,
   voidContract,
 } from "@/lib/admin/contract-store";
+import { compose, extrasFrom, planById, type Composition } from "@/lib/admin/mockup-plan";
+import { detailsOf, parseRequisites } from "@/lib/admin/requisites-parse";
 import {
   attachEstimate,
   attachSignedScan,
@@ -63,29 +66,58 @@ function amountFrom(value: FormDataEntryValue | null): number {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
+/**
+ * «Состав из макета» из формы: макет, галочки допов, до трёх своих строк.
+ * Не выбран макет — null, договор готовится как раньше.
+ */
+function compositionFrom(formData: FormData): Composition | null {
+  const plan = planById(String(formData.get("plan") ?? ""));
+  if (!plan) return null;
+  const extras = extrasFrom(formData.getAll("extra_title").map(String), formData.getAll("extra_price").map(String));
+  return compose(plan, formData.getAll("addon").map(String), extras);
+}
+
+/**
+ * Поля заказчика: что человек вписал в поле, то и идёт; пустое поле
+ * берётся из «Вставить реквизиты» тем же разбором, что раскладывает текст
+ * в браузере (lib/admin/requisites-parse.ts). Пусто и там — пусто.
+ */
+function clientFrom(formData: FormData) {
+  const field = (name: string) => String(formData.get(name) ?? "").trim();
+  const parsed = parseRequisites(String(formData.get("requisites") ?? ""));
+  return {
+    clientName: field("client_name") || parsed.name,
+    clientDetails: field("client_details") || detailsOf(parsed),
+    clientTaxId: field("client_tax_id") || parsed.taxId,
+    clientBankName: field("client_bank_name") || parsed.bank,
+    clientAccount: field("client_account") || parsed.account,
+    clientMfo: field("client_mfo") || parsed.mfo,
+  };
+}
+
 export async function prepareContract(formData: FormData) {
   const staff = await requireStaff();
   const projectId = String(formData.get("project_id") ?? "");
+  const comp = compositionFrom(formData);
 
   const result = await createContract(
     {
       projectId,
       signedDate: String(formData.get("signed_date") ?? "").slice(0, 10),
-      clientName: String(formData.get("client_name") ?? ""),
-      clientDetails: String(formData.get("client_details") ?? ""),
-      clientTaxId: String(formData.get("client_tax_id") ?? ""),
-      clientBankName: String(formData.get("client_bank_name") ?? ""),
-      clientAccount: String(formData.get("client_account") ?? ""),
-      clientMfo: String(formData.get("client_mfo") ?? ""),
-      subject: String(formData.get("subject") ?? ""),
-      amountUsd: amountFrom(formData.get("amount")),
+      ...clientFrom(formData),
+      // Состав из макета главнее полей: сумма и предмет считаются из него.
+      subject: comp?.subject ?? String(formData.get("subject") ?? ""),
+      amountUsd: comp?.amountUsd ?? amountFrom(formData.get("amount")),
       stages: stagesFrom(formData),
+      estimateItems: comp?.items,
+      deadlineText: comp?.deadline ?? null,
     },
     staff,
   );
 
   revalidatePath(`/admin/projects/${projectId}`);
-  if (result.ok) redirect(`/admin/contracts/${result.id}`);
+  // Договор у проекта уже был — открываем его и говорим об этом.
+  if (result.ok) redirect(`/admin/contracts/${result.id}${result.existed ? "?existed=1" : ""}`);
   // Причину — в адрес кодами: карточка проекта покажет её над формой на
   // языке панели (content/admin-panel/contracts.ts).
   const detail = result.problems?.length ? `&detail=${encodeURIComponent(result.problems.join(","))}` : "";
@@ -113,6 +145,28 @@ export async function editContract(formData: FormData) {
     staff,
   );
 
+  revalidatePath(`/admin/contracts/${id}`);
+  redirect(result.ok ? `/admin/contracts/${id}` : `/admin/contracts/${id}?error=${result.why}`);
+}
+
+/** «Состав из макета» в черновике: смета, сумма, предмет и срок кнопкой. */
+export async function composeContract(formData: FormData) {
+  const staff = await requireStaff();
+  const id = String(formData.get("id") ?? "");
+  const comp = compositionFrom(formData);
+  const result = comp ? await setComposition(id, comp, staff) : { ok: false as const, why: "invalid" as const };
+  revalidatePath(`/admin/contracts/${id}`);
+  redirect(result.ok ? `/admin/contracts/${id}?composed=1` : `/admin/contracts/${id}?error=${result.why}`);
+}
+
+/**
+ * Реквизиты заказчика в черновике. Только поля заказчика: сумма, предмет и
+ * этапы не трогаются (updateDraft меняет то, что ему передали).
+ */
+export async function saveClientDetails(formData: FormData) {
+  const staff = await requireStaff();
+  const id = String(formData.get("id") ?? "");
+  const result = await updateDraft(id, clientFrom(formData), staff);
   revalidatePath(`/admin/contracts/${id}`);
   redirect(result.ok ? `/admin/contracts/${id}` : `/admin/contracts/${id}?error=${result.why}`);
 }

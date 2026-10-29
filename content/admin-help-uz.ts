@@ -1713,7 +1713,7 @@ export const uz: HelpCopy = {
               "**«Smeta»** — toifani va muddatni haftalarda tanlang, panel «kamida» (chegara), «ko‘pi bilan» va muddatni hisoblaydi. Chegara — bundan past summada loyiha o‘zini oqlamaydi; undan pastga faqat egasi tusha oladi.",
               "**«Pul»**: «Bitim turi» — «yangi mijoz» yoki «qo‘shimcha sotuv» (foizingiz shunga bog‘liq, [«Moliya»](/admin/finance) bo‘limiga qarang) va «Shartnoma summasi, $». Butun dollarda yozing, «$» va sentlarsiz, aks holda maydon tozalanadi. Loyiha bo‘yicha birorta to‘lov bo‘lmaguncha summani siz tahrirlaysiz; keyin — faqat egasi.",
               "Soliq va tannarxni shartnomadan keyin egasi yozadi. Mijoz to‘lovlarini ham egasi yozadi — va faqat shundan keyin hisoblanmalaringiz muzdan chiqadi. Shartnoma hisobi bo‘yicha to‘lov egasi uni tasdiqlaganda bu yerga o‘zi tushadi; ungacha «Mijoz to‘lovlari» blokida sariq qator turadi: «to‘lov hali tasdiqlanmagan».",
-              "**«Loyiha ma’lumotlari»** — nomi, mijoz, muddat, izohlar; ularni siz mas’ul sifatida tahrirlaysiz. **«Shartnoma»** — loyiha shartnomasiga havola va u hozir qayerda: qoralama, egasida imzoda, tasdiqlangan, imzolangan. Shartnoma yo‘q ekan — uni tayyorlash formasi; tayyorlanmasa, forma ustida nimani tuzatish kerakligi yoziladi. Batafsil — [shartnomalar](/admin/contracts).",
+              "**«Loyiha ma’lumotlari»** — nomi, mijoz, muddat, izohlar; ularni siz mas’ul sifatida tahrirlaysiz. **«Shartnoma»** — shartnoma kartochkasi: raqami, u hozir qayerda (qoralama, egasida imzoda, tasdiqlangan, imzolangan), summa, qoralamada — imzogacha nima yetishmasligi va «Shartnomani ochish». Shartnoma yo‘q ekan — [«Maketdan tarkib»](#contracts-compose) va «Rekvizitlarni qo‘yish» bilan forma; tayyorlanmasa, forma ustida nimani tuzatish kerakligi yoziladi. Batafsil — [shartnomalar](/admin/contracts).",
             ],
             head: [
               "Bloklar: «Bosqich», «Smeta», «Pul», «Loyiha ma’lumotlari», «Shartnoma». Siz istalgan loyiha kartochkasini ko‘rasiz; pulni — o‘z loyihalaringiz va jamoa loyihalari bo‘yicha.",
@@ -1951,9 +1951,18 @@ export const uz: HelpCopy = {
           id: "prepare",
           title: "Shartnoma tayyorlash",
           body: [
-            "[Loyihani](/admin/projects) oching → «Shartnoma» bloki. To‘ldiring: sana, summa, buyurtmachining to‘liq nomi, manzili va kontakti, STIR yoki JShShIR, bank, hisob raqami (20 raqam), MFO (5 raqam), shartnoma predmeti va bosqichlar. **Bosqichlar ulushlari yig‘indisi — roppa-rosa 100%**. **«Shartnomani tayyorlash»** tugmasini bosing.",
-            "Natijada DU-2026-07 ko‘rinishidagi raqamli qoralama chiqadi. Qoralamada imzo hujjatda jismonan yo‘q — uni chop etib, imzolangan deb ko‘rsatib bo‘lmaydi.",
-            "Smeta chegarasidan past summani tayyorlab bo‘lmaydi — buni faqat egasi hal qiladi. Bosgandan keyin hech narsa chiqmasa, maydonlarni tekshiring: panel hozircha qaysi biri noto‘g‘riligini yozmaydi.",
+            "[Loyihani](/admin/projects) oching → «Shartnoma» bloki. Tepada — [«Maketdan tarkib»](#contracts-compose): maketni tanlang, smeta, summa, predmet va muddat o‘zi qo‘yiladi. Buyurtmachi rekvizitlarini bitta matn bilan «Rekvizitlarni qo‘yish» maydoniga qo‘ying va «Maydonlarga taqsimlash» tugmasini bosing. Qolgani — sana va bosqichlar: **bosqichlar ulushlari yig‘indisi — roppa-rosa 100%**. **«Shartnomani tayyorlash»** tugmasini bosing — shartnoma tayyorlanayotganda tugma kulrang, ikkinchi bosish ketmaydi.",
+            "Natijada DU-2026-07 ko‘rinishidagi raqamli qoralama chiqadi. Loyihada shartnoma allaqachon bo‘lsa, «Shartnomani tayyorlash» uni ochadi, ikkinchisi paydo bo‘lmaydi. Qoralamada imzo hujjatda jismonan yo‘q — uni chop etib, imzolangan deb ko‘rsatib bo‘lmaydi.",
+            "Smeta chegarasidan past summani tayyorlab bo‘lmaydi — buni faqat egasi hal qiladi. Shartnomaga imzogacha nima yetishmasligi darhol ko‘rinadi: loyihadagi shartnoma kartochkasida va hujjat ustida, «Imzoga yuborish» yonida ro‘yxat bilan. Rekvizitlarni qoralamada to‘ldirish mumkin — «Buyurtmachi rekvizitlari» bloki, «Rekvizitlarni saqlash» tugmasi.",
+          ],
+        },
+        {
+          id: "compose",
+          title: "«Maketdan tarkib» va «Rekvizitlarni qo‘yish»",
+          body: [
+            "«Maketdan tarkib» — loyihadagi shartnoma formasida va qoralamada. Maketni tanlang: pastda asos va narxlari bilan qo‘shimchalar — mijoz maketdagi narx konstruktorida ko‘rganining aynan o‘zi. ★ belgili qo‘shimchalar darhol kiritilgan (maket shular uchun), keraksizini olib tashlang va mijoz olganini belgilang. Pastda — uchtagacha o‘z qatorlaringiz «nomi + narx»: narx 0 — bu sovg‘a, qator smetaga «(в подарок)» bilan tushadi. Jami shu yerda hisoblanadi.",
+            "«Shartnomani tayyorlash» bosilganda (qoralamada — «Shartnomaga qo‘yish») kod o‘zi smeta qatorlarini, shartnoma summasini, predmetni («… с дополнительными функциями: …») va maket rejasida bo‘lsa muddatni qo‘yadi — «до 5 недель с даты аванса»; siz yozib qo‘ygan muddat almashtirilmaydi. Bu yerda model yo‘q: narxlar maketdan shundayligicha olinadi. Maket ro‘yxatda bo‘lmasa — uning konstruktori boshqa shaklda yoki narxlari dollarda emas; unda smeta fayl bilan yoki qatorlar qo‘lda, avvalgidek.",
+            "«Rekvizitlarni qo‘yish» — mijoz yuborgan matnni qo‘ying va «Maydonlarga taqsimlash» tugmasini bosing. Kod nomini (MChJ «…», YaTT …), manzilni, STIR (9 raqam) yoki JShShIR (14), hisob raqamini (20 raqam, bo‘shliqlarni olib tashlaydi), MFO (5), bankni topadi; QQS to‘lovchi kodi, IFUT va direktorni «Buyurtmachining manzili va kontakti» maydoniga yozadi. Topilmagani — maydon bo‘sh, tugma ostida nimani qo‘lda yozish kerakligi yoziladi. Hech narsa taxmin qilinmaydi: maydonlarni ko‘z bilan tekshiring.",
           ],
         },
         {
@@ -1979,6 +1988,7 @@ export const uz: HelpCopy = {
               "Siz ham menejer qiladigan ishni qilasiz: smeta (Excel, CSV, matnli PDF yoki qo‘lda qatorlar — qatorlarsiz yuborib bo‘lmaydi), «Muddat», «Imzoga yuborish», «Imzolanganini yuklash», hisoblar va buyurtmachi uchun havola. Shartnomani faqat egasi tasdiqlaydi, qaytaradi va bekor qiladi — tasdiqlash uning imzosining o‘zi.",
             ],
             admin: [
+              "Loyiha kartochkasida imzoingizni kutayotgan shartnomada «Ochish va imzolash» tugmasi bor.",
               "Imzoga shartnoma sizga Telegramda keladi va «Bosh sahifa»dagi «E’tibor talab qiladi»da hamda [Shartnomalar](/admin/contracts) bo‘limida ko‘rinadi. Tugmalar: **«Tasdiqlash va imzolash»** yoki **«Qayta ishlashga qaytarish»**. Qaytarish — ishning oddiy qismi, xato emas.",
               "Tasdiqlash imzongizni qo‘yadi va **birinchi bosqichga darhol hisob chiqaradi**. Tasdiqlangan shartnomani bekor qilish — «Bekor qilish sababi» va «Bekor qilish»: shartnomalar o‘chirilmaydi, faqat belgilanadi. Tasdiqlangani tahrirlanmaydi — tuzatish kerak bo‘lsa, yangisi tayyorlanadi.",
               "Imzolar bilan skan yuklangandan keyin shartnoma ekranida imzongiz boshqa ko‘rinmaydi — u allaqachon skanda bor.",

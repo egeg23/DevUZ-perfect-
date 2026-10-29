@@ -13,7 +13,13 @@ import { HelpHint } from "@/components/admin/help-link";
 import { helpAnchor } from "@/lib/admin/help";
 import { when } from "@/components/admin/lead-table";
 import { contractStatusDict, problemsText } from "@/content/admin-panel/contracts";
-import { DEFAULT_CONTRACT_STAGES } from "@/lib/admin/contracts";
+import { DEFAULT_CONTRACT_STAGES, problemParam, problemsBeforeApproval } from "@/lib/admin/contracts";
+import { ContractCompose } from "@/components/admin/contract-compose";
+import { RequisitesPaste } from "@/components/admin/requisites-paste";
+import { SubmitButton } from "@/components/admin/submit-button";
+import { contractComposeDict } from "@/content/admin-panel/contract-compose";
+import { EXTRA_ROWS, planChoices } from "@/lib/admin/mockup-plan";
+import { sellerBank } from "@/lib/store/requisites";
 import {
   partnerVoidDict,
   projectCardDict,
@@ -92,6 +98,7 @@ export default async function ProjectPage({
   const staff = await requireSection("/admin/projects");
   const locale = staff.panel_locale;
   const t = pick(projectCardDict, locale);
+  const tc = pick(contractComposeDict, locale);
   const results = pick(projectResultDict, locale);
   const money = (usd: number | null) => formatMoney(usd, locale);
   const { id } = await params;
@@ -851,18 +858,73 @@ export default async function ProjectPage({
         ) : null}
 
         {activeContracts.length ? (
-          <ul className="mt-3 flex flex-col gap-1 text-sm">
-            {activeContracts.map((c) => (
-              <li key={c.id}>
-                <Link href={`/admin/contracts/${c.id}`} className="text-green hover:underline">
-                  № {c.number} — {labelOf(contractStatusDict, c.status, locale)}
-                </Link>
-              </li>
-            ))}
+          // Карточка договора, а не ссылка «№ … — черновик»: где он, чего
+          // не хватает до подписи и куда нажать. Чего не хватает — тем же
+          // problemsBeforeApproval, что держит кнопку «Отправить на подпись».
+          <ul className="mt-3 flex flex-col gap-3 text-sm">
+            {activeContracts.map((c) => {
+              const problems =
+                c.status === "draft"
+                  ? problemsBeforeApproval({
+                      ...c,
+                      estimateItems: c.estimate_items,
+                      deadlineText: c.deadline_text,
+                      seller: sellerBank(),
+                    })
+                  : [];
+              const signNow = isAdmin && c.status === "pending";
+              return (
+                <li key={c.id} className="rounded-xl border border-line bg-surface-2 px-4 py-3">
+                  <p className="font-semibold text-text">{tc.number(c.number)}</p>
+                  <p className="mt-0.5 text-muted">{labelOf(contractStatusDict, c.status, locale)}</p>
+                  {c.amount_usd > 0 ? (
+                    <p className="mt-0.5 text-muted">{tc.amount(money(c.amount_usd))}</p>
+                  ) : null}
+                  {c.status === "draft" ? (
+                    problems.length ? (
+                      <div className="mt-2 text-gold">
+                        <p className="text-xs">{tc.missing}</p>
+                        <ul className="mt-1 list-disc pl-5 text-xs">
+                          {problems.map((p) => (
+                            <li key={p.code}>{problemsText(problemParam([p]), locale, "")}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : (
+                      <p className="mt-2 text-xs text-green">{tc.ready}</p>
+                    )
+                  ) : null}
+                  <Link
+                    href={`/admin/contracts/${c.id}`}
+                    className={`mt-3 inline-block rounded-lg px-4 py-1.5 text-xs font-semibold ${
+                      signNow ? "bg-green/90 text-ink hover:bg-green" : "border border-line hover:border-green/40 hover:text-green"
+                    }`}
+                  >
+                    {signNow ? tc.openSign : tc.open}
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         ) : (
           <form action={prepareContract} className="mt-4 grid gap-3 sm:grid-cols-2">
             <input type="hidden" name="project_id" value={project.id} />
+            {/* Владелец, 29.10.2026: «чтобы сразу выбрали какие допы взяли из
+                макета». Смета, сумма, предмет и срок — из плана макета кодом. */}
+            <div className="sm:col-span-2 rounded-xl border border-line px-4 py-3">
+              <p className="flex items-center gap-2 text-xs font-semibold text-text">
+                {tc.title}
+                <HelpHint topic={helpAnchor("/admin/contracts", "compose")} />
+              </p>
+              <p className="mt-1 text-xs text-faint">{tc.note}</p>
+              <div className="mt-2">
+                <ContractCompose plans={planChoices()} rows={EXTRA_ROWS} />
+              </div>
+              <p className="mt-2 text-xs text-faint">{tc.fromPlan}</p>
+            </div>
+            <div className="sm:col-span-2">
+              <RequisitesPaste />
+            </div>
             <label className="text-xs text-muted">
               {t.contractDate}
               <input
@@ -880,7 +942,6 @@ export default async function ProjectPage({
                 name="amount"
                 min={1}
                 step="0.01"
-                required
                 defaultValue={project.amount_usd ?? undefined}
                 className="mt-1 w-full rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm text-text"
               />
@@ -890,7 +951,6 @@ export default async function ProjectPage({
               <input
                 type="text"
                 name="client_name"
-                required
                 defaultValue={project.client ?? ""}
                 className="mt-1 w-full rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm text-text"
               />
@@ -900,7 +960,6 @@ export default async function ProjectPage({
               <input
                 type="text"
                 name="client_details"
-                required
                 placeholder={t.clientDetailsPh}
                 className="mt-1 w-full rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm text-text"
               />
@@ -913,7 +972,6 @@ export default async function ProjectPage({
               <input
                 type="text"
                 name="client_tax_id"
-                required
                 inputMode="numeric"
                 placeholder="123456789"
                 className="mt-1 w-full rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm text-text"
@@ -924,7 +982,6 @@ export default async function ProjectPage({
               <input
                 type="text"
                 name="client_bank_name"
-                required
                 placeholder={t.clientBankPh}
                 className="mt-1 w-full rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm text-text"
               />
@@ -934,7 +991,6 @@ export default async function ProjectPage({
               <input
                 type="text"
                 name="client_account"
-                required
                 inputMode="numeric"
                 placeholder="20208000123456789012"
                 className="mt-1 w-full rounded-lg border border-line bg-surface-2 px-3 py-2 font-mono text-sm text-text"
@@ -945,7 +1001,6 @@ export default async function ProjectPage({
               <input
                 type="text"
                 name="client_mfo"
-                required
                 inputMode="numeric"
                 placeholder="00450"
                 className="mt-1 w-full rounded-lg border border-line bg-surface-2 px-3 py-2 font-mono text-sm text-text"
@@ -956,7 +1011,6 @@ export default async function ProjectPage({
               <input
                 type="text"
                 name="subject"
-                required
                 defaultValue={project.title}
                 className="mt-1 w-full rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm text-text"
               />
@@ -993,12 +1047,10 @@ export default async function ProjectPage({
             </fieldset>
 
             <div className="sm:col-span-2">
-              <button
-                type="submit"
-                className="rounded-lg border border-line bg-surface-2 px-4 py-1.5 text-xs transition hover:border-green/40 hover:text-green"
-              >
+              {/* Кнопка гаснет на время запроса: второе нажатие не уходит. */}
+              <SubmitButton pendingLabel={tc.preparing} base="rounded-lg px-4 py-1.5 text-xs" tone="quiet">
                 {t.prepare}
-              </button>
+              </SubmitButton>
             </div>
           </form>
         )}

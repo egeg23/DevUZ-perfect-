@@ -332,7 +332,7 @@ export const workSections: Record<string, HelpEntry> = {
             "**«Kosztorys»** — wybierz kategorię i termin w tygodniach, a panel policzy «nie mniej niż» (próg), «do» i termin. Próg to kwota, poniżej której projekt się nie zwraca; zejść niżej może tylko właściciel.",
             "**«Pieniądze»**: «Rodzaj transakcji» — «nowy klient» albo «dosprzedaż» (od tego zależy Twój procent, zob. [Finanse](/admin/finance)) i «Kwota z umowy, $». Wpisuj pełne dolary, bez «$» i centów, inaczej pole się wyczyści. Kwotę edytujesz Ty, dopóki w projekcie nie ma żadnej płatności; potem — tylko właściciel.",
             "Podatek i koszt wytworzenia wpisuje właściciel po podpisaniu umowy. Płatności klienta też zapisuje właściciel — i dopiero wtedy Twoje naliczenia się odmrażają. Wpłata z faktury do umowy trafia tu sama, gdy właściciel ją potwierdzi; do tego czasu w «Płatnościach klienta» wisi żółty wiersz «płatność nie jest jeszcze potwierdzona».",
-            "**«Dane projektu»** — nazwa, klient, termin, notatki; edytujesz je Ty jako osoba prowadząca. **«Umowa»** — link do umowy projektu i jej stan: szkic, u właściciela do podpisu, zatwierdzona, podpisana. Dopóki umowy nie ma, jest formularz do jej przygotowania; jeśli się nie przygotowała, nad formularzem jest napisane, co poprawić. Więcej — [umowy](/admin/contracts).",
+            "**«Dane projektu»** — nazwa, klient, termin, notatki; edytujesz je Ty jako osoba prowadząca. **«Umowa»** — karta umowy: numer, jej stan (szkic, u właściciela do podpisu, zatwierdzona, podpisana), kwota, przy szkicu — czego brakuje do podpisu, i «Otwórz umowę». Dopóki umowy nie ma, jest formularz ze [«Składem z makiety»](#contracts-compose) i «Wklej dane firmy»; jeśli umowa się nie przygotowała, nad formularzem jest napisane, co poprawić. Więcej — [umowy](/admin/contracts).",
           ],
           head: [
             "Bloki: «Etap», «Kosztorys», «Pieniądze», «Dane projektu», «Umowa». Widzisz kartę każdego projektu; pieniądze — w swoich projektach i projektach zespołu.",
@@ -570,9 +570,18 @@ export const workSections: Record<string, HelpEntry> = {
         id: "prepare",
         title: "Przygotuj umowę",
         body: [
-          "Otwórz [projekt](/admin/projects) → blok «Umowa». Wypełnij: datę, kwotę, pełną nazwę zamawiającego, adres i kontakt, INN lub PINFL, bank, numer rachunku (20 cyfr), MFO (5 cyfr), przedmiot umowy i etapy. **Udziały etapów muszą dać razem dokładnie 100%**. Kliknij **«Przygotuj umowę»**.",
-          "Powstanie szkic z numerem w rodzaju DU-2026-07. Szkic fizycznie nie ma podpisu w dokumencie — nie da się go wydrukować i przedstawić jako podpisanego.",
-          "Umowy z kwotą poniżej progu kosztorysu nie da się przygotować — o tym decyduje tylko właściciel. Jeśli po kliknięciu nic się nie pojawiło, sprawdź pola: panel na razie nie pisze, które z nich jest nie tak.",
+          "Otwórz [projekt](/admin/projects) → blok «Umowa». Na górze — [«Skład z makiety»](#contracts-compose): wybierz makietę, a kosztorys, kwota, przedmiot i termin wstawią się same. Dane zamawiającego wklej jednym tekstem w «Wklej dane firmy» i kliknij «Rozłóż na pola». Reszta — data i etapy: **udziały etapów muszą dać razem dokładnie 100%**. Kliknij **«Przygotuj umowę»** — dopóki umowa się przygotowuje, przycisk jest szary i drugie kliknięcie nie pójdzie.",
+          "Powstanie szkic z numerem w rodzaju DU-2026-07. Jeśli projekt ma już umowę, «Przygotuj umowę» ją otworzy i druga się nie pojawi. Szkic fizycznie nie ma podpisu w dokumencie — nie da się go wydrukować i przedstawić jako podpisanego.",
+          "Umowy z kwotą poniżej progu kosztorysu nie da się przygotować — o tym decyduje tylko właściciel. Czego umowie brakuje do podpisu, widać od razu: listą w karcie umowy w projekcie i nad dokumentem, obok «Wyślij do podpisu». Dane można uzupełnić w szkicu — blok «Dane zamawiającego», przycisk «Zapisz dane».",
+        ],
+      },
+      {
+        id: "compose",
+        title: "«Skład z makiety» i «Wklej dane firmy»",
+        body: [
+          "«Skład z makiety» — w formularzu umowy w projekcie i w szkicu. Wybierz makietę: pod nią podstawa i dodatki z cenami — dokładnie te, które klient widział w konfiguratorze ceny na makiecie. Dodatki z ★ są włączone od razu (to, dla czego jest makieta), odznacz zbędne i zaznacz, co klient wziął. Niżej — do trzech własnych wierszy „nazwa + cena”: cena 0 to prezent, wiersz trafi do kosztorysu jako «(в подарок)». Suma liczy się od razu.",
+          "Po «Przygotuj umowę» (w szkicu — «Wstaw do umowy») kod sam wstawia wiersze kosztorysu, kwotę umowy, przedmiot («… с дополнительными функциями: …») i termin, jeśli jest w planie makiety — «до 5 недель с даты аванса»; termin, który już wpisałeś, nie zostanie nadpisany. Nie ma tu modelu: ceny są brane z makiety tak, jak są. Makiety nie ma na liście — jej konfigurator ma inną formę albo ceny nie są w dolarach; wtedy kosztorys plikiem albo wierszami ręcznie, jak dotąd.",
+          "«Wklej dane firmy» — wklej tekst, tak jak przysłał go klient, i kliknij «Rozłóż na pola». Kod znajdzie nazwę (spółka «…», IP …), adres, INN (9 cyfr) lub PINFL (14), numer rachunku (20 cyfr, usunie spacje), MFO (5), bank; kod płatnika VAT, OKED i dyrektora dopisze w «Adres i kontakt zamawiającego». Czego nie znaleziono — pole jest puste, a pod przyciskiem jest napisane, co dopisać ręcznie. Nic nie jest zgadywane: sprawdź pola wzrokiem.",
         ],
       },
       {
@@ -598,6 +607,7 @@ export const workSections: Record<string, HelpEntry> = {
             "Robisz to samo co menedżer: kosztorys (Excel, CSV, PDF z tekstem albo wiersze ręcznie — bez wierszy nie da się wysłać), «Termin», «Wyślij do podpisu», «Wgraj podpisaną», faktury i link dla zamawiającego. Zatwierdza, zwraca i anuluje umowę tylko właściciel — zatwierdzenie to właśnie jego podpis.",
           ],
           admin: [
+            "W karcie projektu przy umowie, która czeka na Twój podpis, jest przycisk «Otwórz i podpisz».",
             "Umowa do podpisu przychodzi do Ciebie w Telegramie i jest widoczna w «Wymaga uwagi» na «Pulpit» i w sekcji [Umowy](/admin/contracts). Przyciski: **«Zatwierdź i podpisz»** albo **«Zwróć do poprawy»**. Zwrot to normalna część pracy, nie błąd.",
             "Zatwierdzenie składa Twój podpis i **od razu wystawia fakturę za pierwszy etap**. Anulowanie zatwierdzonej umowy — «Powód anulowania» i «Anuluj»: umowy się nie usuwa, tylko oznacza. Zatwierdzonej nie da się edytować — jeśli potrzebna jest zmiana, przygotowuje się nową.",
             "Po wgraniu skanu z podpisami Twojego podpisu nie widać już na ekranie umowy — jest już na skanie.",

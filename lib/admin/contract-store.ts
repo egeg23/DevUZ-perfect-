@@ -35,7 +35,7 @@ import { sellerBank } from "@/lib/store/requisites";
  * берёт из content/admin-panel/contracts.ts.
  */
 export type Result =
-  | { ok: true; id: string }
+  | { ok: true; id: string; existed?: boolean }
   | { ok: false; why: "forbidden" | "offline" | "invalid" | "notfound" | "locked"; problems?: string[] };
 
 /** Почему смета не разобралась — код, текст на странице (estimateHintDict). */
@@ -137,12 +137,21 @@ export async function createContract(
     subject: string;
     amountUsd: number;
     stages: ContractStage[];
+    /** «Состав из макета»: строки сметы и срок плана (lib/admin/mockup-plan.ts). */
+    estimateItems?: EstimateItem[];
+    deadlineText?: string | null;
   },
   staff: Staff,
 ): Promise<Result> {
   if (!preparesContract(staff.role)) return fail("forbidden");
   const db = serviceClient();
   if (!db) return fail("offline");
+
+  // У проекта уже есть действующий договор — открываем его, а не готовим
+  // второй. 29.10.2026 у CZECHFARM форма сработала дважды, и вышли два
+  // одинаковых черновика DU-2026-01 и DU-2026-02.
+  const existing = await activeContractOf(fields.projectId);
+  if (existing) return { ok: true, id: existing, existed: true };
 
   // Договор на сумму ниже порога сметы менеджер не готовит: порог — это
   // то, под чем проект не окупается, и договор — последнее место, где это
@@ -180,6 +189,10 @@ export async function createContract(
       subject: fields.subject.trim(),
       amount_usd: fields.amountUsd,
       stages: fields.stages,
+      ...(fields.estimateItems?.length
+        ? { estimate_items: fields.estimateItems, amount_usd: estimateTotal(fields.estimateItems) }
+        : {}),
+      ...(fields.deadlineText?.trim() ? { deadline_text: fields.deadlineText.trim().slice(0, 300) } : {}),
       status: "draft",
       prepared_by: staff.id,
       prepared_at: new Date().toISOString(),
@@ -188,7 +201,65 @@ export async function createContract(
     .maybeSingle();
 
   if (error || !data) return fail("invalid");
-  return { ok: true, id: String(data.id) };
+  const id = String(data.id);
+
+  // Два нажатия, прошедшие проверку одновременно, оба вставят строку.
+  // Остаётся самый ранний договор, свой лишний черновик удаляем сразу —
+  // он создан этим же запросом, его ещё никто не видел.
+  const first = await activeContractOf(fields.projectId);
+  if (first && first !== id) {
+    await db.from("contracts").delete().eq("id", id).eq("status", "draft");
+    return { ok: true, id: first, existed: true };
+  }
+  return { ok: true, id };
+}
+
+/**
+ * Действующий договор проекта — самый ранний не отменённый. Отменённый
+ * не мешает подготовить новый: ради этого и отменяют.
+ */
+export async function activeContractOf(projectId: string): Promise<string | null> {
+  const db = serviceClient();
+  if (!db || !projectId) return null;
+  const { data } = await db
+    .from("contracts")
+    .select("id")
+    .eq("project_id", projectId)
+    .neq("status", "void")
+    .order("created_at", { ascending: true })
+    .limit(1);
+  return data?.[0]?.id ? String(data[0].id) : null;
+}
+
+/**
+ * «Состав из макета» в черновике: строки сметы, сумма, предмет и срок
+ * одной записью. Файл сметы, если был, остаётся приложением.
+ */
+export async function setComposition(
+  id: string,
+  comp: { items: EstimateItem[]; subject: string; deadline: string | null },
+  staff: Staff,
+): Promise<Result> {
+  if (!preparesContract(staff.role)) return fail("forbidden");
+  if (comp.items.length === 0) return fail("invalid");
+  const current = await contractById(id);
+  if (!current) return fail("notfound");
+  if (!editable(current)) return fail("locked");
+
+  const db = serviceClient();
+  if (!db) return fail("offline");
+  const { error } = await db
+    .from("contracts")
+    .update({
+      estimate_items: comp.items,
+      amount_usd: estimateTotal(comp.items),
+      subject: comp.subject.trim(),
+      // Срок, который человек уже вписал, план не перебивает.
+      ...(comp.deadline && !current.deadline_text?.trim() ? { deadline_text: comp.deadline } : {}),
+    })
+    .eq("id", id)
+    .eq("status", "draft");
+  return error ? fail("invalid") : { ok: true, id };
 }
 
 export async function updateDraft(
