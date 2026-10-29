@@ -163,6 +163,8 @@ const ru = {
     kicker: "технологии",
     title: "На чём собираем",
   },
+  /** «Делали для»: бренды, которым делали сайт, макет или прототип (components/sections/clients.tsx). */
+  clients: { title: "Делали для" },
   faq: {
     kicker: "вопросы",
     title: "Отвечаем заранее",
@@ -605,6 +607,7 @@ const en: Dictionary = {
     ],
   },
   stack: { kicker: "technology", title: "What we build with" },
+  clients: { title: "Built for" },
   faq: {
     kicker: "questions",
     title: "Answered upfront",
@@ -1029,6 +1032,7 @@ const uz: Dictionary = {
     ],
   },
   stack: { kicker: "texnologiyalar", title: "Nima asosida quramiz" },
+  clients: { title: "Kimlar uchun qilganmiz" },
   faq: {
     kicker: "savollar",
     title: "Oldindan javob beramiz",
@@ -1453,6 +1457,7 @@ const zh: Dictionary = {
     ],
   },
   stack: { kicker: "技术", title: "我们的技术选型" },
+  clients: { title: "我们做过的品牌" },
   faq: {
     kicker: "常见问题",
     title: "先把话说清楚",
@@ -1886,6 +1891,7 @@ const uk: Dictionary = {
     kicker: "технології",
     title: "На чому збираємо",
   },
+  clients: { title: "Робили для" },
   faq: {
     kicker: "питання",
     title: "Відповідаємо заздалегідь",
@@ -2329,6 +2335,7 @@ const pl: Dictionary = {
     kicker: "technologie",
     title: "Na czym budujemy",
   },
+  clients: { title: "Robiliśmy dla" },
   faq: {
     kicker: "pytania",
     title: "Odpowiadamy z wyprzedzeniem",
