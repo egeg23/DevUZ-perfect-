@@ -4,6 +4,7 @@ export const PANEL_UI = {
   title: ["Панель магазина", "Do‘kon paneli"],
   demo: ["демо-данные", "demo ma’lumotlar"],
   site: ["На сайт", "Saytga"],
+  home: ["К выбору", "Tanlovga"],
   role: ["Смотреть как", "Kim sifatida"],
   role_owner: ["Владелец", "Egasi"],
   role_manager: ["Менеджер", "Menejer"],
