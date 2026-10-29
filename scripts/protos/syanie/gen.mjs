@@ -124,6 +124,7 @@ function storyBlock() {
   return `<section class="story" id="story" aria-label="Как проходит All-on-6" style="--steps:${MEDIA.screens}">
 <div class="stage" id="stage">
 <canvas id="cv" aria-hidden="true"></canvas>
+${existsSync(PUB + IMG + "/s9.mp4") ? `<video id="sv" class="sv" muted playsinline preload="none" disablepictureinpicture aria-hidden="true" data-v9="${IMG}/s9.mp4"></video>` : ""}
 <video id="film" class="film" muted playsinline preload="auto" disablepictureinpicture aria-hidden="true" poster="${IMG}/film-16.webp" data-p16="${IMG}/film-16.webp" data-p9="${IMG}/film-9.webp" data-v16="${IMG}/film-16.mp4" data-v9="${IMG}/film-9.mp4"></video>
 <div class="veil" aria-hidden="true"></div>
 <div class="shade" aria-hidden="true"></div>

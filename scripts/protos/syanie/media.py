@@ -109,6 +109,23 @@ def story(fmt):
     return n, seg
 
 
+def story_video():
+    """Телефону — сцена одним видео s9.mp4 (как у SamAuto): все кадры 24 к/с,
+    720×1280, H.264, ключевой каждый третий, без B-кадров. Прокрутка его
+    перематывает, iPhone делает это аппаратно; кадры WebP по одному на
+    быстром свайпе он не успевал распаковывать (владелец, 29.10.2026)."""
+    lst = os.path.join(tempfile.mkdtemp(), "l.txt")
+    with open(lst, "w") as f:
+        for i in range(1, 8):
+            f.write("file '%s'\n" % os.path.join(SRC, "v", f"s{i}.mp4"))
+    w, h = SIZES["9"]
+    run("ffmpeg", "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", lst,
+        "-vf", f"scale={w}:{h}:flags=lanczos", "-c:v", "libx264", "-preset", "slow", "-tune", "film",
+        "-crf", "25", "-g", "3", "-keyint_min", "1", "-bf", "0", "-pix_fmt", "yuv420p",
+        "-profile:v", "high", "-movflags", "+faststart", "-an", os.path.join(OUT, "s9.mp4"))
+    shutil.rmtree(os.path.dirname(lst))
+
+
 def still(src, name, size, q=72, crop=None):
     im = Image.open(src).convert("RGB")
     if crop:
@@ -131,12 +148,13 @@ def main():
         film("16")
         n, seg = story("16")
         with open(os.path.join(HERE, "media.json"), "w") as f:
-            json.dump({"s16": n, "s9": n, "seg16": seg, "seg9": seg, "screens": 8}, f)
+            json.dump({"s16": n, "s9": n, "seg16": seg, "seg9": seg, "screens": 11}, f)
         return
     if len(sys.argv) > 2 and sys.argv[2] == "story":
         # Только кадры прокрутки, обе версии.
         n16, seg16 = story("16")
         n9, seg9 = story("9")
+        story_video()
         with open(os.path.join(HERE, "media.json")) as f:
             meta = json.load(f)
         meta.update({"s16": n16, "seg16": seg16, "s9": n9, "seg9": seg9})
@@ -154,6 +172,9 @@ def main():
             json.dump(meta, f)
         print(meta)
         return
+    if len(sys.argv) > 2 and sys.argv[2] == "video9":
+        story_video()
+        return
     if len(sys.argv) > 2 and sys.argv[2] == "imp":
         implant_shot("16")
         implant_shot("9")
@@ -164,6 +185,7 @@ def main():
     implant_shot("9")
     n16, seg16 = story("16")
     n9, seg9 = story("9")
+    story_video()
     k = os.path.join(SRC, "k")
     pair(f"{k}/k6h.png", f"{k}/k6v.png", "calm-1")
     pair(f"{k}/k8h.png", f"{k}/k8v.png", "calm-2")
@@ -191,7 +213,7 @@ def main():
         d.ellipse((8 * s, 8 * s, 32 * s, 32 * s), outline=(201, 150, 90), width=max(2, round(1.4 * s)))
         d.rounded_rectangle((14 * s, 13 * s, 26 * s, 27 * s), radius=5 * s, fill=(239, 235, 229))
         im.save(os.path.join(OUT, name))
-    meta = {"s16": n16, "s9": n9, "seg16": seg16, "seg9": seg9, "screens": 8}
+    meta = {"s16": n16, "s9": n9, "seg16": seg16, "seg9": seg9, "screens": 11}
     with open(os.path.join(HERE, "media.json"), "w") as f:
         json.dump(meta, f)
     print(meta)

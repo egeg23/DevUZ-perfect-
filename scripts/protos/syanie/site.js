@@ -39,10 +39,13 @@ function setFmt(){
   bmClear();blobs=[];N=K.frames['s'+f];SEG=K.frames['seg'+f].concat([N-1]);imgs=new Array(N);ready=new Array(N);queue=[];
   /* Сначала редкие кадры по всей длине (каждый 16-й, 8-й, 4-й, 2-й),
      потом остальные: как бы быстро ни листали, рядом всегда есть кадр. */
-  load(0);var seen={0:1};[16,8,4,2,1].forEach(function(k){for(var i=0;i<N;i+=k)if(!seen[i]){seen[i]=1;queue.push(i)}});if(!seen[N-1])queue.push(N-1);
+  load(0);fill(vidFmt()?[16,8]:[16,8,4,2,1]);
   if(film&&!filmOn&&!filmDone){film.poster=film.getAttribute('data-p'+f)}
-  shownF=-1;
+  shownF=-1;vShow();
 }
+/* Телефону сцену играет видео (ниже), кадрам — только редкая сетка на
+   случай, пока видео не пришло. */
+function fill(ks){var seen={};queue.forEach(function(i){seen[i]=1});ks.forEach(function(k){for(var i=0;i<N;i+=k)if(!seen[i]&&!imgs[i]){seen[i]=1;queue.push(i)}});if(!imgs[N-1]&&!seen[N-1])queue.push(N-1)}
 /* Кадр готов, когда он уже раскодирован (decode): иначе браузер
    раскодирует его при первом рисовании, прямо во время прокрутки, и сцена
    дёргается. */
@@ -65,7 +68,7 @@ function pump(){if(!pumping&&!soft)return;var cap=pumping?6:2,c=Math.round(st.f)
     j=-1;for(k=0;k<10;k++){if(c+k<N&&!imgs[c+k]){j=c+k;break}if(c-k>=0&&!imgs[c-k]){j=c-k;break}}
     if(j<0){j=queue.shift();if(imgs[j])continue}
     load(j)}}
-function startPump(){if(pumping)return;pumping=true;pump()}
+function startPump(){if(pumping)return;pumping=true;if(fmtK==='9')vidLoad();pump()}
 function softPump(){if(soft||pumping)return;soft=true;pump()}
 
 /* Холст не крупнее самих кадров (1280 и 720 точек по ширине): дальше
@@ -79,6 +82,7 @@ function near(i){for(var k=0;k<N;k++){if(has(i-k))return i-k;if(has(i+k))return 
 function cover(im,a){var iw=im.naturalWidth||im.width,ih=im.naturalHeight||im.height,s=Math.max(cv.width/iw,cv.height/ih),w=iw*s,h=ih*s;ctx.globalAlpha=a;ctx.drawImage(im,(cv.width-w)/2,(cv.height-h)/2,w,h)}
 function paint(force){
   if(!ctx||!N)return;var f=clamp(st.f,0,N-1);if(!force&&Math.abs(f-shownF)<.01)return;
+  if(vOn){vSeek((Math.round(f/(N-1)*(VN-1))+.5)/VF);shownF=f;return}
   var i=Math.floor(f),t=f-i,b=near(i);if(b<0)return;shownF=f;
   cover(pic(b),1);
   /* Между соседними кадрами — мягкая смесь: прокрутка не идёт ступеньками. */
@@ -104,6 +108,29 @@ function want(f){if(!BLOB)return;var c=Math.floor(f),k,i;
   for(k in bm){i=+k;if(i<c-BACK*2||i>c+AHEAD*2){try{bm[k].close()}catch(e){}delete bm[k]}}
   for(k=0;k<=AHEAD&&bmN<4;k++){[c+k,c-k].forEach(function(j){if(j<0||j>=N||bm[j]||bmWait[j]||!ready[j]||bmN>=4||(j<c&&c-j>BACK))return;
     var src=blobs[j];bmWait[j]=1;bmN++;createImageBitmap(src).then(function(x){bmN--;delete bmWait[j];if(blobs[j]!==src||Math.abs(j-st.f)>AHEAD*2){x.close();return}bm[j]=x;if(Math.abs(j-st.f)<3||shownF<0)paint(true);want(st.f)},function(){bmN--;delete bmWait[j]})})}}
+/* Телефон, как у SamAuto: сцена — одно видео s9.mp4 (все 868 кадров, ключевой
+   каждый третий, без B-кадров), прокрутка его перематывает, iPhone делает
+   это аппаратно. Кадры по одному он на быстром свайпе не успевал
+   распаковывать, и пролёт лагал (владелец, 29.10.2026: «у samauto этот же
+   скролл выглядит дорого, а тут лагает»). Видео качается целиком в память,
+   пока идёт кино, и играет оттуда: перемотка не ждёт сеть. Следующая
+   перемотка — только после seeked, иначе Safari копит их и отстаёт. iOS
+   рисует перемотку после первого play(): он сразу и на паузу, в
+   энергосбережении — по первому касанию. Не пришло — кадры. */
+var sv=$('#sv'),VOK=!!(sv&&sv.canPlayType&&sv.canPlayType('video/mp4; codecs="avc1.640020"')!==''),vState=0,vOn=false,vWant=-1,VF=24,VN=868;
+function vidFmt(){return VOK&&fmtK==='9'&&vState>=0}
+function vShow(){var on=vState===2&&fmtK==='9';if(on===vOn)return;vOn=on;stage.classList.toggle('vid',on);shownF=-1;paint(true)}
+function vSeek(t){if(sv.seeking){vWant=t;return}vWant=-1;if(Math.abs(sv.currentTime-t)>.4/VF)sv.currentTime=t}
+function vFail(){if(vState<0)return;vState=-1;vOn=false;stage.classList.remove('vid');if(fmtK==='9'){fill([4,2,1]);pump()}}
+function vidLoad(){if(!VOK||vState)return;vState=1;
+  fetch(sv.getAttribute('data-v9')).then(function(r){if(!r.ok)throw 0;return r.blob()}).then(function(b){
+    sv.addEventListener('loadeddata',function(){if(vState<0)return;vState=2;VN=Math.max(2,Math.round(sv.duration*VF)||VN);
+      var prime=function(){try{var p=sv.play();if(p&&p.then)p.then(function(){sv.pause();shownF=-1;paint(true)},function(){})}catch(e){}};prime();
+      addEventListener('touchstart',function(){if(sv.paused&&sv.currentTime===0)prime()},{once:true,passive:true});
+      vShow()},{once:true});
+    sv.addEventListener('seeked',function(){if(vWant>=0)vSeek(vWant)});
+    sv.addEventListener('error',vFail,{once:true});
+    sv.preload='auto';sv.src=URL.createObjectURL(b);sv.load()},vFail)}
 function seg(k,f){var a=SEG[k],b=SEG[k+1];return clamp((f-a)/Math.max(1,b-a))}
 function render(){
   if(!N)return;var p=st.f/(N-1);paint(false);
