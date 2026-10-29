@@ -247,8 +247,8 @@ jobs:
             cat "$ACCLOG.1" "$ACCLOG" 2>/dev/null | grep -E "\[($H12)" \
               | awk -F'"' '{split($3,s," "); split($2,r," "); t=substr($1, index($1,"[")+1, 17); sub(/^https?:\/\/[^\/]*/,"",$4); print s[1], r[1], r[2], t, ($4==""||$4=="-")?"-":$4}' \
               | awk '$3 ~ /^\/admin\/(contracts|projects)/' | while read -r c m p t ref; do
-                echo "    ${t#*:} · $c · $m · $(printf '%s' "$p" | mask) · $(printf '%s' "$ref" | mask)"
-              done | tail -60
+                echo "${t#*:} · $c · $m · $(printf '%s' "$p" | mask) · $(printf '%s' "$ref" | mask)"
+              done | uniq -c | awk '{n=$1; $1=""; sub(/^ /,""); print "    " $0 (n>1 ? " ×" n : "")}' | tail -90
             echo "ошибки nginx по devuz.studio за сутки (UTC):"
             SINCE24="$(date -d '-24 hours' '+%Y/%m/%d %H:%M:%S')"
             cat "$ERRLOG.1" "$ERRLOG" 2>/dev/null | awk -v s="$SINCE24" '($1" "$2) >= s' | grep -E 'server: (www\.)?devuz\.studio' \
