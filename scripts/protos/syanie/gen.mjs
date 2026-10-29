@@ -90,7 +90,7 @@ function headTags(title, desc) {
 <title>${title}</title>
 <meta name="description" content="${esc(desc)}">
 <meta name="robots" content="noindex, nofollow, noarchive">
-<meta name="theme-color" content="#0d0e0f">
+<meta name="theme-color" content="#0e3b33">
 <link rel="icon" type="image/png" sizes="192x192" href="${IMG}/icon-192.png">
 <link rel="apple-touch-icon" href="${IMG}/apple-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -316,6 +316,7 @@ function offerBlock() {
   const row = (a) => `<label class="kit-row"><input type="checkbox" data-k="${a.id}" data-p="${a.price}"><span class="sw" aria-hidden="true"></span><span class="kit-t2"><b>${a.ru.t}${a.star ? `<em class="star">берут первым</em>` : ""}${a.new ? `<em class="nw-t">нет у клиник Томска</em>` : ""}</b><small>${a.ru.e}</small></span><span class="kit-pr">+${usd(a.price)}</span></label>`;
   return `<section class="offer" id="stoimost"><div class="wrap">
 ${head(`<span class="ours">Предложение DevUz Studio</span>`, "Стоимость", `Сайт клиники без допов: ${usd(BASE.promo)} вместо ${usd(BASE.price)}, если начинаем в течение 48 часов. Админка с записью и напоминаниями в Telegram, кино на первом экране, сцены по прокрутке и квиз идут допами: включайте тумблерами, итог пересчитается. Всё вместе: ${usd(ALL)}.`)}
+<p class="kit-demo"><a class="btn btn-line btn-sm" href="__PROTO_BASE__/panel">${ic("arrow")}<span>Открыть админку клиники: заявки, расписание, amoCRM</span></a></p>
 <div class="kit" id="konstruktor">
 <div class="kit-l">
 <div class="kit-base"><div><span class="kb-tag">Входит всегда</span><b>${BASE.ru.t}</b><p>${BASE.ru.d}</p><p class="kb-w">Срок: ${BASE.weeks[0]}-${BASE.weeks[1]} недель</p></div><div class="kb-p"><s>${usd(BASE.price)}</s><b>${usd(BASE.promo)}</b><small>48 часов</small></div></div>
@@ -368,6 +369,8 @@ function siteData() {
   return {
     img: IMG, frames: MEDIA, chapters: CH.map((c) => ({ id: c.id, a: c.a, b: c.b })), phone: B.phoneRaw, smsHi: SMS_HI,
     quiz: D.QUIZ.map((q) => q.q),
+    /* Чат на сайте (chat.js): отвечает только фактами клиники, без модели. */
+    chat: { faq: D.FAQ, prices: D.PRICES.map((p) => ({ t: p.t, d: p.d, p: p.price })), gifts: D.GIFTS, benefit: D.BENEFIT, guar: D.GUARANTEE.map((g) => g.t + ": " + g.d.toLowerCase()), docs: D.DOCTORS.map((x) => ({ n: x.name, r: x.role, f: x.facts[0] })), phone: B.phone, addr: B.addr, near: B.near, hours: B.hoursShort, parking: B.parking, open: B.open, close: B.close, warn: B.warn, perks: D.PERKS.map((x) => x.t + ": " + x.d.toLowerCase()) },
     offer: { cur: CUR, items: ADDONS.map((a) => ({ id: a.id, t: a.ru.t, p: a.price })), base: BASE.promo, baseName: BASE.ru.t, hours: OFFER_HOURS, head: "Сайт клиники «Сияние Севера», состав:", totalW: "Итого", copied: "Скопировано", ended: "Акция закончилась, цена обычная" },
   };
 }
@@ -401,7 +404,7 @@ ${[storyBlock(), vsBlock(), priceBlock(), quizBlock(), doctorsBlock(), trustBloc
 <div class="cols">
 <div>${logo("f-logo")}<p class="f-d">${B.what}. ${B.addr}. ${B.hours}.</p><ul class="f-c"><li>${ic("phone")}<a href="${tel}">${B.phone}</a></li><li>${ic("pin")}<a href="${B.route}">Маршрут в Яндекс Картах</a></li></ul></div>
 <div><b>DevUz Studio</b><ul><li><a href="https://devuz.studio">devuz.studio</a></li><li><a href="https://t.me/Devuz_studio_bot?start=syanie">Telegram</a></li></ul></div>
-<div><b>Данные макета</b><ul><li>Цены, врачи, гарантии, отзывы, адрес, часы, лицензия: ${B.site.replace("https://", "")}</li><li>Пролёт по клинике и сцены лечения сняты нейросетью по фото клиники</li><li>Квиз и запись открывают сообщение в клинику, ничего не уходит нам</li></ul></div>
+<div><b>Данные макета</b><ul><li>Цены, врачи, гарантии, отзывы, адрес, часы, лицензия: ${B.site.replace("https://", "")}</li><li>Пролёт по клинике и сцены лечения сняты нейросетью по фото клиники</li><li>Квиз и запись открывают сообщение в клинику, ничего не уходит нам</li><li><a href="__PROTO_BASE__/panel">Админка клиники (показ)</a></li></ul></div>
 </div>
 <div class="rights"><span>Это макет: так может выглядеть сайт «${B.name}». Сайт носит информационный характер и не является публичной офертой.</span><a href="${TERMS}">Условия использования макета</a></div>
 </div></footer>
@@ -415,11 +418,19 @@ ${bookSheet()}
 </html>`;
 }
 
+const opt = (f) => (existsSync(DIR + f) ? read(f) : "");
 const out = { "": sitePage() };
+/* store.js — общее состояние сайта, чата и панели; chat.* — чат на сайте. */
 const parts = {
-  S: `<style>${min(read("site.css"))}</style>`,
-  J: `<script>\n${strip(read("site.js"))}</script>`,
+  S: `<style>${min(read("site.css") + opt("chat.css"))}</style>`,
+  J: `<script>\n${strip(read("store.js") + read("site.js") + read("gold.js") + opt("chat.js"))}</script>`,
 };
+/* Панель клиники (`panel`): panel.mjs отдаёт страницы и свои части. */
+if (existsSync(DIR + "panel.mjs")) {
+  const P = await import("./panel.mjs");
+  Object.assign(out, P.pages({ B, BRAND: B, IMG, TERMS, json, logo, ic }));
+  Object.assign(parts, P.parts({ read, opt, min, strip }));
+}
 const fill = (page) => Object.entries(parts).reduce((p, [n, part]) => p.split(`@@${n}@@`).join(part), page);
 
 for (const m of fill(out[""]).matchAll(/\/protos\/syanie\/[\w./-]+\.(?:webp|png|js|mp4)/g)) if (!existsSync(PUB + m[0])) console.warn("нет файла", m[0]);

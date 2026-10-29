@@ -1794,7 +1794,7 @@ test("Сияние Севера: страница на русском — усл
   const site = bundlePages("syanie");
   assert.ok(site);
   const page = site.html;
-  assert.deepEqual(Object.keys(site.pages), [], "страница одна");
+  assert.deepEqual(Object.keys(site.pages), ["panel"], "сайт и панель клиники");
   assert.doesNotMatch(page, /@@[A-Z]+@@/, "метка сборки осталась");
   assert.ok(page.includes('<html lang="ru">'), "язык страницы");
   assert.ok(page.includes("https://devuz.studio/ru/mockup-terms"), "нет условий");
@@ -1835,6 +1835,48 @@ test("Сияние Севера: цены клиники — с их сайта,
   assert.match(html, /<s>250 000 ₽<\/s><b>100 000 ₽<\/b>/, "на макете 100 000 ₽ вместо 250 000 ₽ крупно");
   assert.doesNotMatch(html.replace(/<script[\s\S]*?<\/script>/g, ""), /\d \$/, "на макете остались доллары");
   for (const a of plan.ADDONS) assert.ok(html.includes(`data-k="${a.id}" data-p="${a.price}"`), `${a.id}: цена на странице`);
+});
+
+test("Сияние Севера: панель клиники — условия, noindex, общее состояние с сайтом, amoCRM через API v4, роли, без моделей и запросов в amo", () => {
+  const panel = bundlePages("syanie")!.pages.panel;
+  assert.ok(panel, "нет страницы panel");
+  assert.doesNotMatch(panel, /@@[A-Z]+@@/, "метка сборки осталась");
+  assert.ok(panel.includes('<html lang="ru">'), "язык страницы");
+  assert.ok(panel.includes("https://devuz.studio/ru/mockup-terms"), "нет условий");
+  assert.match(panel, /<meta name="robots" content="noindex/, "нет noindex");
+  assert.match(panel, /prefers-reduced-motion/, "анимацию нечем выключить");
+  assert.doesNotMatch(panel, /stamp|watermark|fingerprint|отпечат|seed|data-mark/i, "слово, по которому находят отпечаток");
+  assert.doesNotMatch(panel, /proto-ai|proxyapi/i, "панель не зовёт модель");
+  assert.doesNotMatch(panel, /href="#"/, "ссылка в никуда");
+  assert.ok(panel.includes("window.SY={"), "панель не видит общее состояние сайта (store.js)");
+  assert.ok(panel.includes('href="__PROTO_BASE__"'), "нет ссылки на сайт клиники");
+  assert.ok(panel.includes("демо-данные"), "нет пометки «демо-данные»");
+  for (const v of ["svodka", "zayavki", "raspisanie", "amo", "chaty", "napominaniya", "istoriya"]) assert.match(panel, new RegExp(`V\\.${v}=function`), `панель: нет раздела ${v}`);
+  for (const role of ["Главный врач", "Администратор"]) assert.ok(panel.includes(`>${role}</button>`), `нет роли ${role}`);
+  assert.ok(panel.includes("/api/v4/leads/complex") && panel.includes("field_code:'PHONE'"), "amoCRM: нет сделки с контактом одним запросом");
+  assert.ok(panel.includes("/leads/detail/"), "amoCRM: нет ссылки на сделку");
+  assert.ok(panel.includes("В макете запросы в amoCRM не уходят"), "amoCRM: нет честной пометки");
+  assert.doesNotMatch(panel, /fetch\(|XMLHttpRequest|sendBeacon/, "панель не ходит в сеть");
+  for (const p of ["179900", "259900"]) assert.ok(panel.includes(p), `цена ${p} не из data.mjs`);
+  assert.ok(panel.includes("Реутов") && panel.includes("Савин"), "врачи не из data.mjs");
+  assert.ok(panel.includes(":root{--ink:"), "панель без токенов цвета сайта");
+});
+
+test("Сияние Севера: чат на сайте — «ИИ-консультант» и «Менеджер в Telegram» для показа, ответы фактами клиники, без модели", async () => {
+  const { readFileSync } = await import("node:fs");
+  /* Владелец, 28.10.2026: «Чат на базе ИИ и второй вариант: чтобы человек писал на сайте, а менеджер отвечал через телеграм бота». */
+  const html = bundlePages("syanie")!.html;
+  for (const s of ["ИИ-консультант", "Менеджер в Telegram", "на сайте останется один", "Сияние Севера · заявки", "Так это видит администратор", "В макете ответы из вопросов клиники", "по сценарию (демо)", "ответим утром с 9:00"]) assert.ok(html.includes(s), `в чате нет «${s}»`);
+  const D = await import("../scripts/protos/syanie/data.mjs");
+  const data = JSON.parse(html.match(/<script type="application\/json" id="sy-site">([\s\S]*?)<\/script>/)![1]);
+  assert.equal(data.chat.faq.length, D.FAQ.length, "консультант отвечает вопросами клиники");
+  assert.deepEqual(data.chat.prices.map((p: { p: number }) => p.p), [179900, 259900], "цены в чате с их сайта");
+  assert.equal(data.chat.warn, D.BRAND.warn, "предупреждение о противопоказаниях");
+  const js = readFileSync("scripts/protos/syanie/chat.js", "utf8");
+  assert.doesNotMatch(js, /fetch\(|XMLHttpRequest|WebSocket|anthropic|openai|proxyapi/i, "чат в макете не зовёт модель и не ходит в сеть");
+  assert.match(js, /SY\.addChat\(\{mode:mode/, "переписка в общем состоянии с вариантом ai | tg");
+  assert.match(js, /src:'chat'/, "запись из чата — заявка src = chat");
+  assert.match(readFileSync("scripts/protos/syanie/chat.css", "utf8"), /\.cx-f input\{[^}]*font:400 16px/, "поле ввода 16 px: iPhone не увеличивает страницу");
 });
 
 test("Жигули Рестобар: ru и uz — условия, noindex, видео DevUz, кино по прокрутке, их буквы, 18+, шапка по правилу, uz без кириллицы", async () => {
@@ -2223,4 +2265,68 @@ test("FinTax: 5 страниц и панель на ru, uz, en — услови�
   const stamped = stampedBundle("fintax", SEED)!;
   assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
   assert.notEqual(stamped.pages["en/prices"], site.pages["en/prices"], "отпечаток не поставился на внутренней странице");
+});
+
+test("Cosmo World: главная на ru, uz, en — условия, noindex, видео DevUz, шапка 3 с, сцена шифром, 10 брендов, 14 регионов, только факты с их сайта", async () => {
+  const { existsSync, readdirSync, readFileSync } = await import("node:fs");
+  const site = bundlePages("cosmoworld");
+  assert.ok(site);
+  const all: Record<string, string> = { "": site.html, ...site.pages };
+  assert.deepEqual(Object.keys(all).sort(), ["", "en", "uz"]);
+  const data = await import("../scripts/protos/cosmoworld/data.mjs");
+  for (const [path, page] of Object.entries(all)) {
+    const lang = path || "ru";
+    assert.doesNotMatch(page, /@@[A-Z]+@@/, `${lang}: метка сборки осталась в странице`);
+    assert.ok(page.includes(`<html lang="${lang}">`), `${lang}: язык страницы`);
+    assert.ok(page.includes(`https://devuz.studio/${lang}/mockup-terms`), `${lang}: нет условий на языке страницы`);
+    assert.match(page, /<meta name="robots" content="noindex/, `${lang}: нет noindex`);
+    assert.match(page, /prefers-reduced-motion/, `${lang}: анимацию нечем выключить`);
+    assert.doesNotMatch(page, /stamp|watermark|fingerprint|отпечат|seed|data-mark/i, `${lang}: слово, по которому находят отпечаток`);
+    assert.doesNotMatch(page, /proto-ai|proxyapi/i, `${lang}: макет не зовёт модель`);
+    assert.doesNotMatch(page, /href="#"/, `${lang}: ссылка в никуда`);
+    assert.doesNotMatch(page, /scroll-behavior|passive:\s*false/, `${lang}: перехват прокрутки`);
+    for (const img of page.match(/<img [^>]+>/g) ?? []) assert.match(img, /alt="/, `${lang}: картинка без alt`);
+    for (const src of page.match(/\/protos\/cosmoworld\/[\w./-]+\.(?:webp|png|svg)/g) ?? []) assert.ok(existsSync("public" + src), `${lang}: нет файла ${src}`);
+    if (lang !== "ru") assert.doesNotMatch(page.replace(/<script type="application\/json" id="cw-data">[\s\S]*?<\/script>/, ""), /[А-Яа-яЁё]/, `${lang}: кириллица на странице`);
+    if (lang !== "ru") assert.doesNotMatch(JSON.stringify(JSON.parse(/id="cw-data">([\s\S]*?)<\/script>/.exec(page)![1]).brands.map((b: { name: string; text: string }) => [b.name, b.text])), /[А-Яа-яЁё]/, `${lang}: кириллица в окне бренда`);
+    /* Видео DevUz первым, шапка прячется и возвращается через 3 с. */
+    assert.ok(page.indexOf('id="dzi"') > 0 && page.indexOf('id="dzi"') < page.indexOf('class="top"') && page.includes("dzVideo(b,close)"), `${lang}: нет видео DevUz первым`);
+    assert.match(page, /\bIDLE=3000\b/, `${lang}: шапка не по правилу 3 секунд`);
+    assert.match(page, /classList\.add\('hide'\)[\s\S]*IDLE\)/, `${lang}: шапка не прячется`);
+    /* Сцена: кадры шифром, ключ по ссылке макета, счёт до 100%. */
+    assert.ok(page.includes('class="sc-cv"') && page.includes("/promo/scene") && page.includes('class="sc-load"'), `${lang}: нет сцены первого экрана`);
+    assert.equal((page.match(/class="sc-cap /g) ?? []).length, 4, `${lang}: не четыре подписи пролёта`);
+    /* Владелец, 28.10.2026: облака, параллакс, папки поверх темнеющей страны. */
+    assert.equal((page.match(/class="cl cl\d"/g) ?? []).length, 3, `${lang}: нет трёх слоёв облаков`);
+    assert.ok(page.indexOf('class="sc-run"') < page.indexOf('id="brands"') && page.indexOf('id="brands"') < page.indexOf('id="about"'), `${lang}: папки брендов не внутри сцены`);
+    assert.ok(page.includes('class="velo"') && (page.match(/class="mq( rev)?"/g) ?? []).length === 2 && page.includes("data-reveal"), `${lang}: нет ленты фактов, бегущих строк или текста по словам`);
+    /* Цен нет: их нет и у них. Контакты — только их. */
+    assert.doesNotMatch(page.replace(/<script[\s\S]*?<\/script>/g, ""), /\d\s?(\$|сум|so‘m|UZS|USD)/, `${lang}: цена на странице`);
+    assert.ok(page.includes("wa.me/998773507025") && page.includes("tel:+998773507025") && page.includes("info@cosmoworld.uz"), `${lang}: нет их контактов`);
+    for (const n of data.NUMBERS) assert.ok(page.includes(n[lang === "ru" ? "v" : lang === "uz" ? "vuz" : "ven"] ?? n.v), `${lang}: нет цифры ${n.v}`);
+    /* Стеклянные папки брендов (владелец, 28.10.2026): логотип на стекле, товары выпадают. */
+    assert.equal((page.match(/class="gf" data-gf/g) ?? []).length, 10, `${lang}: не десять папок брендов`);
+    assert.equal((page.match(/class="gf-logo"/g) ?? []).length, 10, `${lang}: не у каждой папки логотип`);
+    assert.equal((page.match(/class="gf-pc p-[lmr]"/g) ?? []).length, 30, `${lang}: товары в папке не тремя частями`);
+    assert.ok(page.includes("if(FINE||g.hasAttribute('data-open'))openB("), `${lang}: на телефоне первое нажатие не роняет товары`);
+    for (const src of page.match(/\/protos\/cosmoworld\/(?:cut|logo)\/[\w.-]+\.(?:webp|png)/g) ?? []) assert.ok(existsSync("public" + src), `${lang}: нет файла ${src}`);
+    assert.equal((page.match(/class="rg-g"/g) ?? []).length, 14, `${lang}: не 14 регионов на карте`);
+    assert.equal((page.match(/role="tab" data-k=/g) ?? []).length, 3, `${lang}: не три вкладки заявки`);
+  }
+  assert.deepEqual(data.BRANDS.map((b: { name: string }) => b.name), ["Арнест", "Весна", "Dr. Rashel Estelin", "Peros", "Forest Clean", "Bily", "Parachute", "Brandfree", "MIXIT", "Nefis"], "бренды не как на их сайте");
+  assert.deepEqual(data.NUMBERS.map((n: { v: string }) => n.v), ["10", "10+", "500 м²", "3 000", "2 000 м²", "150+"], "цифры не как на их сайте");
+  for (const b of data.BRANDS) assert.match(b.pdf, /^https:\/\/(docs|disk)\.yandex\.ru\//, `${b.name}: каталог не их ссылкой`);
+  /* Кадры сцены — только шифром, ключ в хранилище (lib/proto/promo SCENES). */
+  const seq = JSON.parse(readFileSync("scripts/protos/cosmoworld/seq.json", "utf8"));
+  const files = readdirSync("public/protos/cosmoworld/seq");
+  /* Кадры пачками (scene.py): с телефона в Telegram 286 отдельных файлов не успевали прийти. */
+  assert.equal(files.length, Math.ceil(seq.d / seq.pack) + Math.ceil(seq.p / seq.pack), "пачек сцены не столько, сколько в seq.json");
+  assert.ok(files.every((f) => /^[dp]\d{2}\.bin$/.test(f)), "кадры сцены лежат незашифрованными");
+  /* Владелец, 28.10.2026: «будто кадров анимации в скролле мало» — плотно, и телефону свои 9:16. */
+  assert.ok(seq.d >= 250 && seq.p >= 250, "кадров пролёта меньше 250 компьютеру или телефону");
+  const { SCENES } = await import("@/lib/proto/promo");
+  assert.equal(SCENES.cosmoworld, "SCENE_KEY_COSMOWORLD");
+  const stamped = stampedBundle("cosmoworld", SEED)!;
+  assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
+  assert.notEqual(stamped.pages.en, site.pages.en, "отпечаток не поставился на английской странице");
 });
