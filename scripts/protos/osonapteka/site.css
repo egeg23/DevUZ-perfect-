@@ -405,6 +405,40 @@ mark{background:#fff0a8;color:inherit;border-radius:3px}
 .add-block{position:relative}
 .add-block::after{content:attr(data-tag);position:absolute;top:16px;right:var(--pad);padding:4px 10px;border-radius:999px;background:var(--red);color:#fff;font-size:12px;font-weight:700}
 @media (max-width:767px){.add-block::after{position:static;display:inline-block;margin:0 var(--pad) 12px}}
+/* Допы второго захода: сетка блоков. */
+.mbs{display:grid;gap:16px;margin-top:32px}
+@media (min-width:900px){.mbs{grid-template-columns:repeat(4,1fr)}.mb.w2{grid-column:span 2}}
+@media (min-width:600px) and (max-width:899px){.mbs{grid-template-columns:1fr 1fr}.mb.w2{grid-column:span 2}}
+.mb{display:flex;flex-direction:column;gap:12px;padding:20px;border-radius:24px;background:var(--s1);border:1px solid var(--ln);min-width:0}
+.mb h3{margin:0;font:700 20px/1.25 var(--hd)}
+.mb>.kick{margin:0}
+.mb>p.mu{margin:0;font-size:14px}
+.mb .btn{align-self:flex-start;white-space:normal;text-align:left}
+.mb .chat{max-width:none;background:var(--bg2)}
+.drop{position:relative;display:grid;place-items:center;min-height:150px;border-radius:18px;border:2px dashed var(--ln2);background:var(--s2);cursor:pointer;text-align:center;overflow:hidden}
+.drop input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.drop span{display:grid;gap:4px;justify-items:center;padding:16px}
+.drop svg{width:32px;height:32px;color:var(--ac)}
+.drop img{max-height:220px;width:auto}
+.qchips{display:flex;flex-wrap:wrap;gap:6px}
+.qchips button{min-height:40px;padding:6px 12px;border-radius:999px;border:1px solid var(--ln2);background:#fff;font-size:14px;font-weight:700;color:var(--ac2)}
+.wrow{display:flex;justify-content:space-between;gap:8px;font-size:14px}
+.ut{width:100%;border-collapse:collapse;font-size:14px}
+.ut td{padding:8px 4px;border-bottom:1px solid var(--ln)}
+.ut td:last-child{text-align:right;white-space:nowrap}
+.kp4{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+@media (min-width:600px){.kp4{grid-template-columns:repeat(4,1fr)}}
+.kp4 span{padding:12px;border-radius:14px;background:var(--s2);border:1px solid var(--ln)}
+.kp4 small{display:block;font-size:12px;color:var(--mu)}
+.kp4 b{font:700 20px/1.2 var(--hd);color:var(--ac2)}
+.adb{display:grid;gap:12px}
+.adb input[type=range]{accent-color:var(--ac);width:100%}
+.adb .out{padding:12px 16px;border-radius:16px;background:var(--ac3);color:var(--ac2);font-weight:700}
+.pwa{display:flex;align-items:center;gap:12px;padding:12px;border-radius:18px;background:var(--s2)}
+.pwa .ico{display:grid;place-items:center;width:64px;height:64px;border-radius:16px;background:#fff;box-shadow:var(--sh2)}
+.pwa small{display:block}
+.unitp{display:block;margin-top:4px;font-size:14px;font-weight:700;color:var(--ok)}
+.an .unitp{font-size:12px}
 [data-addon].off{display:none!important}
 /* Подвал, плашки, тост. */
 .foot{padding:64px 0 120px;background:#0b1530;color:#c8d3e8}

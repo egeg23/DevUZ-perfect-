@@ -113,12 +113,12 @@ function analogs(p){var same=D.p.filter(function(x){return x.id!==p.id&&p.inn&&x
 function openP(id){var p=byId[id];if(!p)return;var a=analogs(p),phs=pharmacies(id,reg.d);
   var sec=Object.keys(p.sec||{}).map(function(k){return'<details><summary>'+esc(k)+'</summary><p>'+esc(p.sec[k])+'</p></details>'}).join('');
   var b='<div class="pd"><div class="pic"><img src="'+p.im+'" alt="'+esc(p.n)+'"></div>'+
-  '<div><span class="badge '+(p.rx?'b-rx':'b-otc')+'">'+(p.rx?T.rx:T.otc)+'</span><div class="h4" style="margin-top:8px">'+from(p.pr)+' <small class="mu" style="font:400 12px var(--bd)">'+T.fromAll+'</small></div></div>'+
+  '<div><span class="badge '+(p.rx?'b-rx':'b-otc')+'">'+(p.rx?T.rx:T.otc)+'</span><div class="h4" style="margin-top:8px">'+from(p.pr)+' <small class="mu" style="font:400 12px var(--bd)">'+T.fromAll+'</small></div>'+(p.cnt>1?'<div class="unitp" data-addon="unit">≈ '+sum(Math.round(p.pr/p.cnt))+' '+T.unit+'</div>':'')+'</div>'+
   '<dl class="dl">'+(p.inn?'<dt>'+T.inn+'</dt><dd>'+esc(p.inn)+'</dd>':'')+'<dt>'+T.form+'</dt><dd>'+esc(p.f)+'</dd><dt>'+T.brand+'</dt><dd>'+esc(p.b)+'</dd><dt>'+T.maker+'</dt><dd>'+esc(p.m)+'</dd><dt>'+T.atc+'</dt><dd>'+esc(p.atc)+(p.an?' · '+esc(p.an):'')+'</dd></dl>'+
   '<p class="note" style="margin:0">'+(p.rx?T.warnRx:T.warn)+'</p>'+
   '<div class="h4">'+T.near+' · '+esc(D.dist[reg.d])+'</div><p class="mu" style="margin:0;font-size:14px">'+T.nearHint+'</p><div class="ph-list">'+phs.map(function(x){return phRow(x,id)}).join('')+'</div>'+
-  '<div class="h4">'+T.analogs+'</div><p class="mu" style="margin:0;font-size:14px">'+(a.list.length?(a.kind==='inn'?T.analogsInn:T.analogsAtc):T.analogsNo)+'</p>'+(a.list.length?'<div class="an">'+a.list.map(function(x){return'<button type="button" data-open="'+x.id+'"><img src="'+x.im+'" alt=""><b>'+esc(x.s)+'</b><small class="mu">'+from(x.pr)+'</small></button>'}).join('')+'</div>':'')+
-  '<div class="h4">'+T.instr+'</div><div class="acc">'+(sec||'<p class="mu" style="font-size:14px">'+T.instrNone+'</p>')+'</div><a class="btn btn-g" href="'+p.u+'" target="_blank" rel="noopener">'+T.instrFull+'</a></div>';
+  '<div class="h4">'+T.analogs+'</div><p class="mu" style="margin:0;font-size:14px">'+(a.list.length?(a.kind==='inn'?T.analogsInn:T.analogsAtc):T.analogsNo)+'</p>'+(a.list.length?'<div class="an">'+a.list.map(function(x){return'<button type="button" data-open="'+x.id+'"><img src="'+x.im+'" alt=""><b>'+esc(x.s)+'</b><small class="mu">'+from(x.pr)+'</small>'+(x.cnt>1?'<small class="unitp" data-addon="unit">≈ '+sum(Math.round(x.pr/x.cnt))+' '+T.unit+'</small>':'')+'</button>'}).join('')+'</div>':'')+
+  '<div class="hero-act" style="margin:0"><button type="button" class="btn btn-g btn-s" data-notify="'+id+'" data-addon="notify">'+T.notify+'</button><button type="button" class="btn btn-g btn-s" data-watch="'+id+'" data-addon="watch">'+T.watch+'</button></div>'+'<div class="h4">'+T.instr+'</div><div class="acc">'+(sec||'<p class="mu" style="font-size:14px">'+T.instrNone+'</p>')+'</div><a class="btn btn-g" href="'+p.u+'" target="_blank" rel="noopener">'+T.instrFull+'</a></div>';
   openSheet(p.s,b,'<button type="button" class="btn btn-g" data-add="'+id+'">'+(inList(id)?T.inList:T.add)+'</button><button type="button" class="btn btn-a" data-scroll-ph>'+T.near+'</button>')}
 d.addEventListener('click',function(e){var o=e.target.closest('[data-open]');if(o&&!o.closest('.sug')){openP(+o.getAttribute('data-open'));return}
   var s=e.target.closest('[data-scroll-ph]');if(s){var l=$('.ph-list',sheet);if(l)l.scrollIntoView({block:'start'})}});
@@ -189,6 +189,16 @@ function tCalc(){var out=$('#tsum');if(!out)return;
     out.innerHTML=h+rowH(T.tp.sales,sum(bn*pc))+'<div class="tot"><span>'+T.tp.month+'<br><small class="mu">'+T.tp.first+'</small></span><b>'+sum(t)+'</b></div>'}}
 $$('#tarif input').forEach(function(i){i.addEventListener('input',tCalc);i.addEventListener('change',tCalc)});
 tCalc();
+
+/* ── Допы второго захода ─────────────────────────────────────────── */
+d.addEventListener('click',function(e){var n=e.target.closest('[data-notify]');if(n){var w=get('oa-watch-1',{});w['n'+n.getAttribute('data-notify')]=Date.now();put('oa-watch-1',w);toast(T.notified)}
+  var wt=e.target.closest('[data-watch]');if(wt){var w2=get('oa-watch-1',{}),r=$('#wr');w2['w'+wt.getAttribute('data-watch')]=r&&!wt.closest('.sheet')?+r.value:byId[+wt.getAttribute('data-watch')].pr;put('oa-watch-1',w2);toast(T.watched)}
+  var ak=e.target.closest('[data-ask]');if(ak){var c=$('#askc'),q=d.createElement('p'),a=d.createElement('p');q.className='me';q.textContent=ak.textContent;a.className='bt';a.textContent=T.ask[ak.getAttribute('data-ask')];c.appendChild(q);setTimeout(function(){c.appendChild(a)},RM?0:500)}});
+var wr=$('#wr');if(wr)wr.addEventListener('input',function(){$('#wv').textContent=sum(+wr.value)});
+var rxf=$('#rxf');if(rxf)rxf.addEventListener('change',function(){var f=rxf.files&&rxf.files[0];if(!f)return;var im=$('#rxi');im.src=URL.createObjectURL(f);im.hidden=false;$('#rxl').hidden=true;$('#rxgo').disabled=false});
+var rxg=$('#rxgo');if(rxg)rxg.addEventListener('click',function(){toast(T.rxSent)});
+function adCalc(){var o=$('#ado');if(!o)return;var w=+$('#adw').value,m=+($('input[name=adf]:checked')||{}).value;$('#adwv').textContent=w;o.innerHTML=T.adSum+': '+sum(Math.round(m*w/4/1000)*1000)+'<br><small>'+esc($('#adr').selectedOptions[0].textContent)+' · '+T.adHint+'</small>'}
+['#adw','#adr'].forEach(function(s){var e=$(s);if(e){e.addEventListener('input',adCalc);e.addEventListener('change',adCalc)}});$$('input[name=adf]').forEach(function(r){r.addEventListener('change',adCalc)});adCalc();
 
 /* ── Напоминания ──────────────────────────────────────────────────── */
 var rm=$('#rout');
