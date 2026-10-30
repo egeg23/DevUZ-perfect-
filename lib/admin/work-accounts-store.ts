@@ -386,6 +386,18 @@ export async function markFlood(id: string, why: string, now = Date.now()): Prom
     .eq("id", id);
 }
 
+/**
+ * Telegram заморозил аккаунт (account-ban.isFrozenError) — не сутки, а до
+ * обжалования: пауза, как кнопкой в «Аккаунтах». Переписка скаутом держится,
+ * первых писем нет; когда Telegram разморозит номер — «Возобновить» там же.
+ * Пометка начинается с кода ошибки: по ней свип зовёт аккаунт замороженным.
+ */
+export async function markFrozen(id: string, why: string): Promise<void> {
+  const db = serviceClient();
+  if (!db) return;
+  await db.from("tg_accounts").update({ status: "paused", flood_note: why.slice(0, 300) }).eq("id", id).eq("status", "active");
+}
+
 /** Сессию отозвали (вышли со всех устройств, номер заблокирован) — аккаунт больше не наш. */
 export async function markSessionDead(id: string, why: string): Promise<void> {
   const db = serviceClient();
