@@ -30,11 +30,19 @@ for (const w of ws.split(",").map(Number)) {
   await shot(p, `hero-${w}`);
   const over = await p.evaluate(() => document.documentElement.scrollWidth - innerWidth);
   if (over > 0) errs.push(`${w}: прокрутка вбок на ${over}px`);
-  for (const id of ["how", "search", "list", "map", "tarif", "remind", "bot", "pharm", "reviews"]) {
+  for (const id of ["how", "search", "list", "map", "tarif", "remind", "bot", "more", "reviews"]) {
     await p.evaluate((id) => { const e = document.getElementById(id); const y = e.getBoundingClientRect().top + scrollY + (id === "how" ? e.offsetHeight * 0.45 : 0); scrollTo(0, y); }, id);
     await p.waitForTimeout(1100);
     await shot(p, `${id}-${w}`);
   }
+  await p.goto(R + "/business", { waitUntil: "load" }); await p.waitForTimeout(1200);
+  await shot(p, `biz-hero-${w}`);
+  for (const id of ["prod", "join", "tarif", "more", "admin"]) {
+    await p.evaluate((id) => document.getElementById(id).scrollIntoView(), id);
+    await p.waitForTimeout(1000);
+    await shot(p, `biz-${id}-${w}`);
+  }
+  await p.goto(R + "/site", { waitUntil: "load" }); await p.waitForTimeout(800);
   await p.fill("#q", w < 700 ? "изо" : "декспант"); await p.evaluate(() => scrollTo(0, 0)); await p.focus("#q"); await p.waitForTimeout(500);
   await shot(p, `suggest-${w}`);
   await p.evaluate(() => document.querySelector('.card [data-open="16"]').click()); await p.waitForTimeout(900);
