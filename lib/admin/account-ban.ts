@@ -1,5 +1,7 @@
 import { WRITE_MYSELF_BUTTON } from "@/lib/admin/write-myself";
 
+export { FROZEN_ERRORS, isFrozenError } from "@/lib/admin/tg-frozen";
+
 /**
  * Ограничения рабочих аккаунтов Telegram: проверка каждый час и оповещение
  * всей команды.
@@ -18,6 +20,13 @@ import { WRITE_MYSELF_BUTTON } from "@/lib/admin/write-myself";
  * Здесь — чистая часть: разбор ответа @SpamBot, кому и что писать. База —
  * в account-ban-store, вопрос к @SpamBot — в скауте (scout/runner.mjs).
  */
+
+/**
+ * Сколько стоит главный аккаунт после заморозки. У дополнительного — пауза
+ * до «Возобновить» в «Аккаунтах», у главного кнопки нет: неделя, потом
+ * одна проба (компания при этом не теряется).
+ */
+export const FROZEN_MAIN_MS = 7 * 24 * 60 * 60_000;
 
 /** Как часто каждый аккаунт спрашивает @SpamBot. */
 export const BAN_CHECK_MS = 60 * 60_000;
@@ -87,7 +96,12 @@ export type Ban = {
   stuck: number;
   /** Чьи письма уходят только с него — им писать с личного или другого рабочего. */
   people: string[];
+  /** Заморожен Telegram (isFrozenError): с него не уходит ничего, снимается обжалованием. */
+  frozen?: boolean;
 };
+
+/** Срок дополнительного замороженного аккаунта: пауза без даты, до «Возобновить». */
+export const FROZEN_UNTIL = Number.MAX_SAFE_INTEGER;
 
 export type BanNotice = { kind: "new" | "longer" | "lifted"; key: string; text: string };
 
@@ -100,7 +114,26 @@ export function tashkentStamp(at: number): string {
   return `${pad(d.getUTCDate())}.${pad(d.getUTCMonth() + 1)} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
 }
 
+function frozenText(ban: Ban, esc: (s: string) => string): string {
+  const lines = [
+    `🧊 <b>Telegram заморозил рабочий аккаунт «${esc(ban.label)}».</b>`,
+    "",
+    "С замороженного номера не уходит ничего: ни «Здравствуйте» новым компаниям, ни ответы тем, кто уже написал. Компании из очереди не теряются, они ждут другой аккаунт.",
+  ];
+  if (ban.stuck) lines.push(`В очереди ждут ${ban.stuck} — уйти они могут только с него.`);
+  if (ban.people.length) lines.push(`Касается: ${ban.people.map(esc).join(", ")} — ваши письма уходят только с этого аккаунта.`);
+  lines.push(
+    "",
+    `<b>Что делать:</b> откройте этот аккаунт в приложении Telegram — вверху будет плашка о заморозке и кнопка обжалования. Пока он заморожен, пишите и отвечайте клиентам с личного аккаунта или с другого рабочего и нажимайте «Связался сам» в карточке касания или «${WRITE_MYSELF_BUTTON}» под карточкой в боте.`,
+    ban.until === FROZEN_UNTIL
+      ? "Когда Telegram разморозит номер, нажмите «Возобновить» у аккаунта в «Аккаунтах» — бот напишет, что он снова пишет."
+      : `Бот попробует писать с него снова ${tashkentStamp(ban.until)} по Ташкенту; разморозят раньше — скажите разработчику.`,
+  );
+  return lines.join("\n");
+}
+
 function banText(ban: Ban, longer: boolean, esc: (s: string) => string): string {
+  if (ban.frozen) return frozenText(ban, esc);
   const head = longer
     ? `⛔️ <b>Ограничение продлено: рабочий аккаунт «${esc(ban.label)}» — до ${tashkentStamp(ban.until)} по Ташкенту.</b>`
     : `⛔️ <b>Telegram ограничил рабочий аккаунт «${esc(ban.label)}» — до ${tashkentStamp(ban.until)} по Ташкенту.</b>`;
@@ -143,7 +176,9 @@ export function banNotices(input: {
     if (before === undefined) {
       notices.push({ kind: "new", key: ban.key, text: banText(ban, false, esc) });
       next[ban.key] = ban.until;
-    } else if (before <= now && ban.until > before) {
+    } else if (!ban.frozen && before <= now && ban.until > before) {
+      // Заморозку не «продлеваем» каждый день: о ней уже сказано, а
+      // обжалование — дело человека, а не таймера.
       notices.push({ kind: "longer", key: ban.key, text: banText(ban, true, esc) });
       next[ban.key] = ban.until;
     } else {

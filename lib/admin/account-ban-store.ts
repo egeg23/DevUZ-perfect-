@@ -1,4 +1,4 @@
-import { BAN_DEFAULT_MS, banKey, type BanVerdict } from "@/lib/admin/account-ban";
+import { BAN_DEFAULT_MS, FROZEN_MAIN_MS, banKey, isFrozenError, type BanVerdict } from "@/lib/admin/account-ban";
 import { MAIN_ACCOUNT } from "@/lib/admin/work-accounts";
 import { serviceClient } from "@/lib/supabase";
 
@@ -78,10 +78,13 @@ export async function recordBanCheck(account: string, verdict: BanVerdict | null
   await writeRow(db, account, { limited: verdict.limited, until: verdict.until, source: "spambot", text: full, checkedAt });
 }
 
-/** PEER_FLOOD / FLOOD_WAIT на отправке с главного — сутки без первых писем, как у остальных. */
+/**
+ * PEER_FLOOD / FLOOD_WAIT на отправке с главного — сутки без первых писем,
+ * как у остальных; заморозка — неделя (FROZEN_MAIN_MS).
+ */
 export async function markMainFlood(why: string, now = Date.now()): Promise<number> {
   const db = serviceClient();
-  const until = now + BAN_DEFAULT_MS;
+  const until = now + (isFrozenError(why) ? FROZEN_MAIN_MS : BAN_DEFAULT_MS);
   if (!db) return until;
   const row = await readRow(db, MAIN_ACCOUNT);
   const keep = row?.limited && row.until && row.until > until ? row.until : until;
@@ -101,6 +104,15 @@ export async function lastBanCheck(account: string): Promise<number | null> {
   if (!db) return null;
   const row = await readRow(db, account);
   return row?.checkedAt ? Date.parse(row.checkedAt) : null;
+}
+
+/** Ограничение главного для оповещения: до какого времени и заморозка ли это. */
+export async function mainBan(now = Date.now()): Promise<{ until: number; frozen: boolean } | null> {
+  const db = serviceClient();
+  if (!db) return null;
+  const row = await readRow(db, MAIN_ACCOUNT);
+  if (!row?.limited || !row.until || row.until <= now) return null;
+  return { until: row.until, frozen: row.source === "send" && isFrozenError(row.text ?? "") };
 }
 
 /** До какого времени ограничен главный аккаунт; null — не ограничен. */

@@ -1,5 +1,5 @@
-import { BAN_NOTIFIED_KEY, banNotices, type Ban } from "@/lib/admin/account-ban";
-import { MAIN_LABEL, mainLimitUntil } from "@/lib/admin/account-ban-store";
+import { BAN_NOTIFIED_KEY, FROZEN_UNTIL, banNotices, isFrozenError, type Ban } from "@/lib/admin/account-ban";
+import { MAIN_LABEL, mainBan } from "@/lib/admin/account-ban-store";
 import { assignments } from "@/lib/admin/outreach-queue";
 import { messageWindow } from "@/lib/admin/tasks";
 import { MAIN_ACCOUNT } from "@/lib/admin/work-accounts";
@@ -21,9 +21,9 @@ type Db = NonNullable<ReturnType<typeof serviceClient>>;
  * и, пока свободен хоть один аккаунт, не застрял.
  */
 async function loadBans(db: Db, now: number): Promise<{ bans: Ban[]; labels: Record<string, string> }> {
-  const [{ data: accounts }, mainUntil, assigned, { data: staff }, { data: queue }] = await Promise.all([
-    db.from("tg_accounts").select("id, label, status, flood_until"),
-    mainLimitUntil(now),
+  const [{ data: accounts }, main, assigned, { data: staff }, { data: queue }] = await Promise.all([
+    db.from("tg_accounts").select("id, label, status, flood_until, flood_note"),
+    mainBan(now),
     assignments(db),
     db.from("staff").select("id, display_name").eq("is_active", true),
     db.from("prospects").select("claimed_by").eq("status", "sending").limit(1000),
@@ -33,10 +33,18 @@ async function loadBans(db: Db, now: number): Promise<{ bans: Ban[]; labels: Rec
   for (const a of accounts ?? []) labels[String(a.id)] = String(a.label ?? "");
 
   const limited = new Map<string, number>();
-  if (mainUntil) limited.set(MAIN_ACCOUNT, mainUntil);
+  const frozen = new Set<string>();
+  if (main) limited.set(MAIN_ACCOUNT, main.until);
+  if (main?.frozen) frozen.add(MAIN_ACCOUNT);
   for (const a of accounts ?? []) {
     const until = a.flood_until ? Date.parse(String(a.flood_until)) : 0;
     if (a.status === "active" && until > now) limited.set(String(a.id), until);
+    // Заморожен — стоит на паузе до «Возобновить» (markFrozen): это тоже
+    // ограничение, о нём команда должна узнать, хотя срока у него нет.
+    if (a.status === "paused" && isFrozenError(String(a.flood_note ?? ""))) {
+      limited.set(String(a.id), FROZEN_UNTIL);
+      frozen.add(String(a.id));
+    }
   }
   const working = new Set([MAIN_ACCOUNT, ...(accounts ?? []).filter((a) => a.status === "active").map((a) => String(a.id))]);
   const canWrite = (key: string) => working.has(key) && !limited.has(key);
@@ -54,6 +62,7 @@ async function loadBans(db: Db, now: number): Promise<{ bans: Ban[]; labels: Rec
       until,
       stuck: (queue ?? []).filter((row) => row.claimed_by && ids.has(String(row.claimed_by))).length,
       people: stuckPeople.map((id) => names.get(id) as string).filter(Boolean),
+      frozen: frozen.has(key),
     };
   });
   return { bans, labels };

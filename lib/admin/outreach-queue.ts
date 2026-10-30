@@ -11,6 +11,7 @@ import {
 } from "@/lib/admin/outreach";
 import { DISPATCH_STALE_MS, MAIN_ACCOUNT, accountOf, mayTake } from "@/lib/admin/work-accounts";
 import { queueEtas, type Eta, type EtaAccount } from "@/lib/admin/queue-eta";
+import { isFrozenError } from "@/lib/admin/tg-frozen";
 import { mainLimitUntil } from "@/lib/admin/account-ban-store";
 import { HELLO_TEXT, helloFor, type HelloTexts } from "@/lib/admin/hello-first";
 import { helloTexts } from "@/lib/admin/hello-text-store";
@@ -540,6 +541,19 @@ export async function markFailed(
 ): Promise<{ stopped: boolean }> {
   const db = serviceClient();
   if (!db) return { stopped: false };
+
+  // Аккаунт заморожен — адресат ни при чём, и писать ему «не удалось» значит
+  // выбросить компанию из работы. Письмо ждёт другой аккаунт, а если писать
+  // некому — очередь снимается целиком, как ниже, вместе с этим письмом.
+  if (isFrozenError(why) && !options.othersAlive) {
+    const { data } = await db
+      .from("prospects")
+      .update({ status: "new", failure: `очередь остановлена: ${why.slice(0, 200)}`, dispatch_by: null, dispatch_at: null })
+      .eq("status", "sending")
+      .select("id");
+    console.error(`касания: ${why} — аккаунт заморожен, очередь снята: ${(data ?? []).length}`);
+    return { stopped: true };
+  }
 
   if (isStopError(why) && options.othersAlive) {
     await db

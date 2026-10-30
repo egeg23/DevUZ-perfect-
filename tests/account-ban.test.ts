@@ -2,7 +2,17 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
-import { BAN_CHECK_MS, banNotices, spamBotVerdict, tashkentStamp, type Ban } from "@/lib/admin/account-ban";
+import {
+  BAN_CHECK_MS,
+  FROZEN_MAIN_MS,
+  FROZEN_UNTIL,
+  banNotices,
+  isFrozenError,
+  spamBotVerdict,
+  tashkentStamp,
+  type Ban,
+} from "@/lib/admin/account-ban";
+import { isStopError } from "@/lib/admin/outreach";
 
 /**
  * Владелец, 07.10.2026: «Проводи проверку каждый час на предмет бана с
@@ -124,4 +134,51 @@ test("свип говорит всем активным, с 07:00 до 23:00, и
   assert.match(sweep, /\.from\("staff"\)\.select\("telegram_user_id"\)\.eq\("is_active", true\)/);
   assert.ok(sweep.indexOf("upsert({ key: BAN_NOTIFIED_KEY") < sweep.indexOf("sendMessage(chat, notice.text)"), "сначала запомнить, потом слать");
   assert.match(read("app/api/reminders/sweep/route.ts"), /await banSweep\(Date\.now\(\)\)/);
+});
+
+test("заморозка Telegram (FROZEN_METHOD_INVALID) — стоп-ошибка: аккаунт встаёт, компания остаётся в работе", () => {
+  assert.equal(isFrozenError("FROZEN_METHOD_INVALID"), true);
+  assert.equal(isFrozenError("400: FROZEN_PARTICIPANT_MISSING (caused by messages.SendMessage)"), true);
+  assert.equal(isFrozenError("PEER_FLOOD"), false);
+  assert.equal(isStopError("FROZEN_METHOD_INVALID"), true, "28–30.10 её не было в STOP_ERRORS — и 348 компаний выпали из работы");
+
+  // Компания при заморозке не помечается «не удалось»: письмо ждёт другой
+  // аккаунт, а писать некому — очередь снимается целиком в «новые».
+  const queue = readFileSync("lib/admin/outreach-queue.ts", "utf8");
+  const frozenBranch = queue.slice(queue.indexOf("if (isFrozenError(why) && !options.othersAlive)"));
+  assert.ok(queue.indexOf("if (isFrozenError(why) && !options.othersAlive)") < queue.indexOf('update({ status: "failed"'), "проверка заморозки — до «не удалось»");
+  assert.match(frozenBranch.slice(0, 600), /status: "new"/);
+
+  // Дополнительный аккаунт — на паузу до «Возобновить», главный — неделя.
+  const accounts = readFileSync("scout/accounts.mjs", "utf8");
+  assert.match(accounts, /isFrozenError\(reason\)[\s\S]{0,120}markFrozen\(account\.id, reason\)/);
+  assert.match(readFileSync("lib/admin/work-accounts-store.ts", "utf8"), /export async function markFrozen[\s\S]{0,300}status: "paused"/);
+  assert.match(readFileSync("lib/admin/account-ban-store.ts", "utf8"), /isFrozenError\(why\) \? FROZEN_MAIN_MS : BAN_DEFAULT_MS/);
+  assert.equal(FROZEN_MAIN_MS, 7 * 24 * 3600_000);
+});
+
+test("заморозка — одно сообщение всем: что делать и как вернуть аккаунт, без ежедневного «продлено»", () => {
+  const frozen: Ban = { key: "acc3", label: "Рабочий акк 3", until: FROZEN_UNTIL, stuck: 0, people: [], frozen: true };
+  const first = banNotices({ bans: [frozen], told: {}, labels: {}, now, esc });
+  assert.equal(first.notices.length, 1);
+  const text = first.notices[0].text;
+  assert.match(text, /Telegram заморозил рабочий аккаунт «Рабочий акк 3»/);
+  assert.match(text, /кнопка обжалования/);
+  assert.match(text, /«Возобновить» у аккаунта в «Аккаунтах»/);
+  assert.match(text, /Компании из очереди не теряются/);
+  assert.doesNotMatch(text, /до \d\d\.\d\d/, "у паузы до «Возобновить» нет даты");
+
+  // Главный заморожен на неделю: срок прошёл, а он снова заморожен — молчим.
+  const main: Ban = { key: "main", label: "Главный аккаунт", until: now + 7 * 24 * 3600_000, stuck: 0, people: [], frozen: true };
+  const told = banNotices({ bans: [main], told: {}, labels: {}, now, esc }).told;
+  const later = now + 8 * 24 * 3600_000;
+  assert.equal(banNotices({ bans: [{ ...main, until: later + 7 * 24 * 3600_000 }], told, labels: {}, now: later, esc }).notices.length, 0);
+  assert.match(banNotices({ bans: [main], told: {}, labels: {}, now, esc }).notices[0].text, /Бот попробует писать с него снова/);
+
+  // Аккаунт возобновили в «Аккаунтах» — «снова пишет», как после ограничения.
+  const lifted = banNotices({ bans: [], told: first.told, labels: { acc3: "Рабочий акк 3" }, now, esc });
+  assert.equal(lifted.notices[0].kind, "lifted");
+
+  const sweep = readFileSync("lib/admin/account-ban-sweep.ts", "utf8");
+  assert.match(sweep, /a\.status === "paused" && isFrozenError/);
 });

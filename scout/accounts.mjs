@@ -28,12 +28,14 @@ import {
   loginSession,
   logoutDone,
   markFlood,
+  markFrozen,
   markSeen,
   markSessionDead,
   needPassword,
   removedPending,
 } from "@/lib/admin/work-accounts-store";
 import { canSend, loginErrorOf } from "@/lib/admin/work-accounts";
+import { isFrozenError } from "@/lib/admin/tg-frozen";
 
 /** Как часто смотреть, не ввёл ли владелец номер, код или пароль. */
 const LOGIN_MS = 5_000;
@@ -205,6 +207,12 @@ export function startAccounts({ makeClient, StringSession, Api, apiId, apiHash, 
         // Пауза из панели или сутки после ограничения — первых писем нет.
         paused: () => !canSend({ status: entry.account.status, flood_until: entry.account.floodUntil }),
         onFlood: async (reason) => {
+          // Заморозка — до обжалования: пауза, снимает человек в «Аккаунтах».
+          if (isFrozenError(reason)) {
+            await markFrozen(account.id, reason);
+            entry.account = { ...entry.account, status: "paused" };
+            return;
+          }
           await markFlood(account.id, reason);
           entry.account = { ...entry.account, floodUntil: new Date(Date.now() + 24 * 3600_000).toISOString() };
         },

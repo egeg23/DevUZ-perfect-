@@ -4,6 +4,7 @@ import { seoReport } from "@/lib/audit/seo";
 import { cases } from "@/content/cases";
 import { nicheBrief, proofFor, referenceLine, type Proof } from "@/lib/audit/proof";
 import { forecast } from "@/lib/razbor/forecast";
+import { FROZEN_ERRORS } from "@/lib/admin/tg-frozen";
 
 /**
  * Касание: от находки на сайте до сообщения, которое отправит сотрудник.
@@ -85,7 +86,7 @@ export const MIN_GAP_MS = 8 * 60_000;
 export const MAX_GAP_MS = 20 * 60_000;
 
 /** Ошибки Telegram, после которых отправлять нельзя до конца суток. */
-export const STOP_ERRORS = ["PEER_FLOOD", "USER_PRIVACY_RESTRICTED", "FLOOD_WAIT", "USER_BANNED_IN_CHANNEL"];
+export const STOP_ERRORS = ["PEER_FLOOD", "USER_PRIVACY_RESTRICTED", "FLOOD_WAIT", "USER_BANNED_IN_CHANNEL", ...FROZEN_ERRORS];
 
 export function isStopError(message: string): boolean {
   const upper = message.toUpperCase();
