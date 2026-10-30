@@ -5,7 +5,9 @@ import { personSales } from "@/lib/admin/sales-stages";
 import { loadDeals } from "@/lib/admin/sales-stages-store";
 import {
   staffWeekText,
+  extraReportAt,
   weekRange,
+  weekRangeUntil,
   weekReportDue,
   weekReportKey,
   type StaffWeek,
@@ -24,10 +26,12 @@ import { serviceClient } from "@/lib/supabase";
  * выключает, как вечерний отчёт.
  */
 export async function sendStaffWeek(now: Date = new Date()): Promise<number> {
-  if (!weekReportDue(now)) return 0;
+  // Понедельник — прошлая неделя; разовый час владельца — эта неделя до него.
+  const extra = weekReportDue(now) ? null : extraReportAt(now);
+  if (!weekReportDue(now) && extra === null) return 0;
   const db = serviceClient();
   if (!db) return 0;
-  const range = weekRange(now);
+  const range = extra === null ? weekRange(now) : weekRangeUntil(extra);
   const key = weekReportKey(range);
   const [{ data: readers }, { data: done }] = await Promise.all([
     db.from("staff").select("id, telegram_user_id, notify_off").eq("is_active", true).in("role", ["admin", "head"]),
@@ -92,7 +96,7 @@ export async function loadStaffWeek(range: WeekRange, now: Date = new Date()): P
       ids.map(async (id) => ({
         id,
         touches: await count(id, "touched_at", range.from, range.to),
-        touchesPrev: await count(id, "touched_at", range.prevFrom, range.from),
+        touchesPrev: await count(id, "touched_at", range.prevFrom, range.prevTo),
         replied: await count(id, "replied_at", range.from, range.to),
       })),
     ),

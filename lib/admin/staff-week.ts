@@ -32,15 +32,42 @@ export function weekReportDue(now: Date): boolean {
   return tashkentDate(now).weekday === 1 && hour >= WEEK_REPORT_HOUR && hour < WEEK_REPORT_LATEST_HOUR;
 }
 
+/**
+ * Разовые отчёты сверх понедельника, по слову владельца, «ГГГГ-ММ-ДД ЧЧ:ММ»
+ * по Ташкенту: неделя с понедельника до этого часа, сравнение — с теми же
+ * днями и часами неделей раньше.
+ *
+ * Владелец, 30.10.2026: «Недельный отчет по сотрудникам сегодня отправляем
+ * в 15:00 по ташкенту мне и Александру».
+ */
+export const EXTRA_WEEK_REPORTS: readonly string[] = ["2026-10-30 15:00"];
+
+/** Сколько ждать разовый отчёт, если свип или сервер в его час молчали. */
+export const EXTRA_REPORT_WINDOW_MS = 4 * 3600_000;
+
+/** Час разового отчёта, который настал и ещё не прошёл (мс); null — нет такого. */
+export function extraReportAt(now: Date, slots: readonly string[] = EXTRA_WEEK_REPORTS): number | null {
+  for (const slot of slots) {
+    const m = slot.match(/^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})$/);
+    if (!m) continue;
+    const at = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]) - TASHKENT_OFFSET_MS;
+    if (now.getTime() >= at && now.getTime() < at + EXTRA_REPORT_WINDOW_MS) return at;
+  }
+  return null;
+}
+
 export type WeekRange = {
   /** Прошлая неделя, понедельник 00:00 — следующий понедельник 00:00 по Ташкенту. */
   from: number;
   to: number;
-  /** Неделя до неё — для сравнения. */
+  /** Неделя до неё — для сравнения: тот же отрезок, на семь дней раньше. */
   prevFrom: number;
-  /** Понедельник и воскресенье прошлой недели, «ГГГГ-ММ-ДД». */
+  prevTo: number;
+  /** Понедельник и последний день отчёта, «ГГГГ-ММ-ДД». */
   firstDay: string;
   lastDay: string;
+  /** Разовый отчёт посреди недели — до какого часа, «ЧЧ:ММ»; у понедельничного null. */
+  until: string | null;
 };
 
 export function weekRange(now: Date): WeekRange {
@@ -50,14 +77,32 @@ export function weekRange(now: Date): WeekRange {
     from,
     to,
     prevFrom: from - 7 * DAY_MS,
+    prevTo: from,
     firstDay: todayInTashkent(new Date(from)),
     lastDay: todayInTashkent(new Date(to - DAY_MS)),
+    until: null,
   };
 }
 
-/** Ключ отметки в team_news_sent — один на неделю. */
+/** Эта неделя с понедельника до часа разового отчёта. */
+export function weekRangeUntil(at: number): WeekRange {
+  const from = weekStartOf(new Date(at));
+  const clock = new Date(at + TASHKENT_OFFSET_MS);
+  const hm = (n: number) => String(n).padStart(2, "0");
+  return {
+    from,
+    to: at,
+    prevFrom: from - 7 * DAY_MS,
+    prevTo: at - 7 * DAY_MS,
+    firstDay: todayInTashkent(new Date(from)),
+    lastDay: todayInTashkent(new Date(at)),
+    until: `${hm(clock.getUTCHours())}:${hm(clock.getUTCMinutes())}`,
+  };
+}
+
+/** Ключ отметки в team_news_sent — один на неделю, у разового — свой. */
 export function weekReportKey(range: WeekRange): string {
-  return `staff-week:${range.firstDay}`;
+  return range.until ? `staff-week:${range.firstDay}:${range.lastDay}-${range.until}` : `staff-week:${range.firstDay}`;
 }
 
 export type StaffWeek = {
@@ -185,7 +230,7 @@ export function staffWeekText(range: WeekRange, people: readonly StaffWeek[]): s
   const sum = (f: (p: StaffWeek) => number) => sorted.reduce((s, p) => s + f(p), 0);
   const best = sorted.find((p) => p.touches > 0);
   const lines = [
-    `📅 <b>Сотрудники за неделю · ${day(range.firstDay)}–${day(range.lastDay)}</b>`,
+    `📅 <b>Сотрудники за неделю · ${day(range.firstDay)}–${day(range.lastDay)}${range.until ? `, до ${range.until}` : ""}</b>`,
     "",
     `✉️ ${sum((p) => p.touches)} касаний · 💬 ответили ${sum((p) => p.replied)} · 🎨 макетов ${sum((p) => p.mockups)} · 🎬 показов ${sum((p) => p.shown)} · ✅ оплат ${sum((p) => p.paid)}`,
     ...(best ? [`🏆 Больше всех касаний: ${best.name} — ${best.touches}`] : []),
@@ -202,7 +247,7 @@ export function staffWeekText(range: WeekRange, people: readonly StaffWeek[]): s
   if (advice.length) lines.push("", "💡 <b>Рекомендации</b>", ...advice.map((a) => `• ${a}`));
   lines.push(
     "",
-    `Неделя — с понедельника по воскресенье. Касания — все, кому человек написал; «ответили» — ответы на его касания. Показ — отметка «Показал макет», норма — ${SHOW_NORM} в неделю. Выводы — правилами по цифрам, без нейросети.`,
+    `${range.until ? `Неделя — с понедельника до ${range.until} ${day(range.lastDay)}; «неделей раньше» — те же дни и часы прошлой недели.` : "Неделя — с понедельника по воскресенье."} Касания — все, кому человек написал; «ответили» — ответы на его касания. Показ — отметка «Показал макет», норма — ${SHOW_NORM} в неделю. Выводы — правилами по цифрам, без нейросети.`,
   );
   return lines.join("\n");
 }
