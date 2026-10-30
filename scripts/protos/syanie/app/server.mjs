@@ -3,7 +3,8 @@
    (.github/workflows/syanie-app.yml), сервер клиники его только запускает. */
 import { createServer } from "node:http";
 import { gzipSync } from "node:zlib";
-import { createReadStream, existsSync, statSync, readFileSync } from "node:fs";
+import { createReadStream, existsSync, statSync, readFileSync, mkdirSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { extname, join, normalize, resolve, sep } from "node:path";
 import { openDb } from "./lib/db.mjs";
 import { makeCore, ROLES } from "./lib/core.mjs";
@@ -30,7 +31,7 @@ export function limiter() {
 
 class HttpError extends Error { constructor(code, msg) { super(msg); this.code = code; } }
 
-export function createApp({ core, siteDir, adminDir, setupCode = "", publicUrl = "", trustProxy = false, commit = "" }) {
+export function createApp({ core, siteDir, adminDir, uploadsDir = "", setupCode = "", publicUrl = "", trustProxy = false, commit = "" }) {
   const allow = limiter();
   const ipOf = (req) => (trustProxy && String(req.headers["x-forwarded-for"] || "").split(",")[0].trim()) || req.socket.remoteAddress || "?";
   const cookies = (req) => Object.fromEntries(String(req.headers.cookie || "").split(";").map((c) => c.trim().split("=")).filter((x) => x[0]).map(([k, ...v]) => [k, decodeURIComponent(v.join("="))]));
@@ -72,15 +73,36 @@ export function createApp({ core, siteDir, adminDir, setupCode = "", publicUrl =
     createReadStream(file).pipe(res); return true;
   }
 
-  /* Страницы сайта в образе не меняются: читаем один раз, адрес сайта
-     (__SITE_URL__ в canonical и og) ставим из PUBLIC_URL, сжатую копию держим рядом. */
-  const pages = new Map();
+  /* Страницы сайта: собранные с правками клиники (core.site.pages) или, без
+     сборщика, файлы из образа. Адрес сайта (__SITE_URL__ в canonical и og)
+     ставим из PUBLIC_URL, сжатую копию держим рядом до следующей правки. */
+  const LIVE = { "index.html": "index", "privacy.html": "privacy", "404.html": "notFound" };
+  let pages = new Map(), seen = 0;
   function page(name) {
+    const v = core.site?.on() ? core.site.version() : 0;
+    if (v !== seen) { pages = new Map(); seen = v; }
     if (!pages.has(name)) {
-      const f = join(siteDir, name), html = existsSync(f) ? readFileSync(f, "utf8").split("__SITE_URL__").join(publicUrl) : "";
+      const live = v ? core.site.pages() : null, f = join(siteDir, name);
+      const raw = live ? live[LIVE[name]] || "" : existsSync(f) ? readFileSync(f, "utf8") : "";
+      const html = raw.split("__SITE_URL__").join(publicUrl);
       pages.set(name, html && { html, gz: gzipSync(html) });
     }
     return pages.get(name);
+  }
+
+  /* Фото врачей из админки: JPG, PNG или WebP до 3 МБ, имя — хеш содержимого. */
+  function saveUpload(dataUrl) {
+    if (!uploadsDir) throw new HttpError(400, "Загрузка фото работает на сервере клиники");
+    const m = /^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/=]+)$/.exec(String(dataUrl || ""));
+    if (!m) throw new HttpError(400, "Нужно фото JPG, PNG или WebP");
+    const buf = Buffer.from(m[2], "base64");
+    if (buf.length > 3 * 1024 * 1024) throw new HttpError(400, "Фото больше 3 МБ: уменьшите его");
+    const ext = buf[0] === 0xff && buf[1] === 0xd8 ? "jpg" : buf.subarray(0, 4).toString("hex") === "89504e47" ? "png" : buf.subarray(0, 4).toString() === "RIFF" && buf.subarray(8, 12).toString() === "WEBP" ? "webp" : "";
+    if (!ext) throw new HttpError(400, "Это не фото JPG, PNG или WebP");
+    const name = createHash("sha256").update(buf).digest("hex").slice(0, 32) + "." + ext;
+    mkdirSync(uploadsDir, { recursive: true });
+    if (!existsSync(join(uploadsDir, name))) writeFileSync(join(uploadsDir, name), buf);
+    return "/uploads/" + name;
   }
   function sendPage(req, res, name, code = 200) {
     const pg = page(name);
@@ -114,6 +136,12 @@ export function createApp({ core, siteDir, adminDir, setupCode = "", publicUrl =
     if (M === "POST" && /^\/users\/\d+\/pass$/.test(path)) { owner(); const b = await body(req); core.users.setPass(id, b.pass, who); return { ok: true }; }
     if (M === "POST" && path === "/me/pass") { const b = await body(req); if (!core.auth.check(user.login, b.old)) throw new HttpError(400, "Текущий пароль не подошёл"); core.users.setPass(user.id, b.pass, who); return { ok: true, relogin: true }; }
     if (M === "GET" && path === "/log") return { log: core.log() };
+    /* Сайт: правку содержимого ведёт любой сотрудник (п. 5 техзадания), Метрику — главный врач. */
+    if (M === "GET" && path === "/site") return core.site.view();
+    if (M === "POST" && path === "/upload") { const b = await body(req, 5 * 1024 * 1024); return { url: saveUpload(b.data) }; }
+    if (M === "POST" && path === "/seo") { owner(); return { seo: core.site.setSeo(await body(req), who) }; }
+    const sk = /^\/site\/([a-z]+)(\/reset)?$/.exec(path);
+    if (M === "POST" && sk) { if (sk[2]) core.site.reset(sk[1], who); else core.site.save(sk[1], (await body(req, 256 * 1024)).value, who); return core.site.view(); }
     throw new HttpError(404, "Нет такого адреса");
   }
 
@@ -208,6 +236,7 @@ export function createApp({ core, siteDir, adminDir, setupCode = "", publicUrl =
       if (p === "/" || p === "/index.html") return sendPage(req, res, "index.html");
       if (p === "/privacy" || p === "/privacy/") return sendPage(req, res, "privacy.html");
       if (p.startsWith("/protos/")) return staticFile(req, res, siteDir, p, "public, max-age=604800") || send(res, 404, "Нет файла");
+      if (p.startsWith("/uploads/") && uploadsDir) return staticFile(req, res, uploadsDir, p.slice(9), "public, max-age=31536000, immutable") || send(res, 404, "Нет файла");
       return sendPage(req, res, "404.html", 404);
     } catch (e) {
       /* Наши ошибки написаны по-русски — их показываем; чужие (сеть, код) — нет. */
@@ -224,9 +253,16 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const env = process.env, dir = new URL(".", import.meta.url).pathname;
   const publicUrl = (env.PUBLIC_URL || (env.DOMAIN ? `https://${env.DOMAIN}` : "")).replace(/\/$/, "");
   const db = openDb(join(env.DATA_DIR || "/data", "syanie.db"));
-  const core = makeCore({ db, secret: env.APP_SECRET, publicUrl });
-  const handle = createApp({ core, siteDir: env.SITE_DIR || join(dir, "site"), adminDir: join(dir, "admin"), setupCode: env.SETUP_CODE || "", publicUrl, trustProxy: env.TRUST_PROXY === "1", commit: env.COMMIT || "" });
+  /* Сборщик сайта — gen.mjs макета в render/ образа: правки из админки сайт видит сразу. */
+  const siteDir = env.SITE_DIR || join(dir, "site"), renderDir = env.RENDER_DIR || join(dir, "render");
+  let renderer = null;
+  if (existsSync(join(renderDir, "gen.mjs"))) {
+    Object.assign(process.env, { SY_RENDER: "1", SY_PUB: process.env.SY_PUB || siteDir, SY_LIVE_DIR: process.env.SY_LIVE_DIR || siteDir + "/" });
+    try { renderer = await import(join(renderDir, "gen.mjs")); } catch (e) { console.error("сборщик сайта не загрузился, сайт из файлов:", e.message); }
+  }
+  const core = makeCore({ db, secret: env.APP_SECRET, publicUrl, renderer });
+  const handle = createApp({ core, siteDir, adminDir: join(dir, "admin"), uploadsDir: join(env.DATA_DIR || "/data", "uploads"), setupCode: env.SETUP_CODE || "", publicUrl, trustProxy: env.TRUST_PROXY === "1", commit: env.COMMIT || "" });
   const port = Number(env.PORT || 3000);
-  createServer(handle).listen(port, () => console.log(`Сияние Севера: порт ${port}, ${publicUrl || "без адреса"}${core.users.count() ? "" : ", ждёт первого входа по коду установки"}`));
+  createServer(handle).listen(port, () => console.log(`Сияние Севера: порт ${port}, ${publicUrl || "без адреса"}, сборщик сайта: ${renderer ? "да" : "нет"}${core.users.count() ? "" : ", ждёт первого входа по коду установки"}`));
   for (const s of ["SIGTERM", "SIGINT"]) process.on(s, () => { db.close(); process.exit(0); });
 }

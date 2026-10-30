@@ -17,9 +17,9 @@ function plural(n,a,b,c){var m=n%10,mm=n%100;return n+' '+(m===1&&mm!==11?a:m>=2
 var ST={new:'Новая',confirmed:'Подтверждена',came:'Пришёл',canceled:'Отменена'};
 var SRC={booking:'Запись с сайта',quiz:'Квиз',chat:'Чат сайта',tg:'Telegram-бот',wz:'Мессенджер'};
 var KIND={site:'Сайт',tg:'Telegram-бот',whatsapp:'WhatsApp',whatsgroup:'WhatsApp',instagram:'Instagram',telegram:'Telegram',telegroup:'Telegram',vk:'ВКонтакте',avito:'Авито',max:'MAX',maxgroup:'MAX',viber:'Viber'};
-var NAV=[['svodka','Сводка','home'],['zayavki','Заявки','list'],['soobshcheniya','Сообщения','chat'],['podklyucheniya','Подключения','plug'],['komanda','Команда','users'],['istoriya','История','clock']];
+var NAV=[['svodka','Сводка','home'],['zayavki','Заявки','list'],['soobshcheniya','Сообщения','chat'],['sayt','Сайт','globe'],['podklyucheniya','Подключения','plug'],['komanda','Команда','users'],['istoriya','История','clock']];
 var P='fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"';
-var ICONS={home:'<path d="M4 11 12 4l8 7v9H4z" '+P+'/>',list:'<path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01" '+P+'/>',chat:'<path d="M4 5h16v11H9l-5 4z" '+P+'/>',plug:'<path d="M9 3v5M15 3v5M6 8h12v3a6 6 0 0 1-12 0zM12 17v4" '+P+'/>',users:'<circle cx="9" cy="8" r="3.5" '+P+'/><path d="M2.5 20c.9-3.4 3.4-5 6.5-5s5.6 1.6 6.5 5M16 4.5a3.5 3.5 0 0 1 0 7M18 15c1.8.6 3 2.2 3.5 5" '+P+'/>',clock:'<circle cx="12" cy="12" r="8.5" '+P+'/><path d="M12 7.5V12l3 2" '+P+'/>',phone:'<path d="M5 4.5h3.5l1.5 4-2 1.3a10 10 0 0 0 6.2 6.2l1.3-2 4 1.5V19a1.5 1.5 0 0 1-1.6 1.5A15.5 15.5 0 0 1 3.5 6.1 1.5 1.5 0 0 1 5 4.5z" '+P+'/>',back:'<path d="M15 5l-7 7 7 7" '+P+'/>'};
+var ICONS={globe:'<circle cx="12" cy="12" r="8.5" '+P+'/><path d="M3.5 12h17M12 3.5c2.3 2.4 3.5 5.2 3.5 8.5s-1.2 6.1-3.5 8.5c-2.3-2.4-3.5-5.2-3.5-8.5s1.2-6.1 3.5-8.5z" '+P+'/>',home:'<path d="M4 11 12 4l8 7v9H4z" '+P+'/>',list:'<path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01" '+P+'/>',chat:'<path d="M4 5h16v11H9l-5 4z" '+P+'/>',plug:'<path d="M9 3v5M15 3v5M6 8h12v3a6 6 0 0 1-12 0zM12 17v4" '+P+'/>',users:'<circle cx="9" cy="8" r="3.5" '+P+'/><path d="M2.5 20c.9-3.4 3.4-5 6.5-5s5.6 1.6 6.5 5M16 4.5a3.5 3.5 0 0 1 0 7M18 15c1.8.6 3 2.2 3.5 5" '+P+'/>',clock:'<circle cx="12" cy="12" r="8.5" '+P+'/><path d="M12 7.5V12l3 2" '+P+'/>',phone:'<path d="M5 4.5h3.5l1.5 4-2 1.3a10 10 0 0 0 6.2 6.2l1.3-2 4 1.5V19a1.5 1.5 0 0 1-1.6 1.5A15.5 15.5 0 0 1 3.5 6.1 1.5 1.5 0 0 1 5 4.5z" '+P+'/>',back:'<path d="M15 5l-7 7 7 7" '+P+'/>'};
 function ic(k){return'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">'+(ICONS[k]||'')+'</svg>'}
 
 /* ── Запросы ─────────────────────────────────────────────────────── */
@@ -168,6 +168,15 @@ function drawConn(s){var box=$('#cz');if(!box)return;var ro=!owner();
     (ro?'':'<form id="f-wz" class="grid"><label class="f">Ключ API Wazzup<input name="key" type="password" autocomplete="off" placeholder="'+(s.wz.on?'сохранён, вставьте новый, чтобы заменить':'вставьте ключ')+'"></label>'+
       '<div class="hint">Где взять: личный кабинет Wazzup → «Интеграции» → «API» → скопировать ключ. Мессенджеры (WhatsApp, Instagram и др.) подключаются там же, в разделе «Каналы». Новый канал подтянется сам: нажмите «Обновить каналы».</div>'+
       '<div class="row"><button class="btn" type="submit">'+(s.wz.on?'Обновить каналы':'Подключить')+'</button>'+(s.wz.on?'<button type="button" class="btn danger" data-off="wz">Отключить</button>':'')+'</div></form>')+
+  '</section>'+
+  /* Метрика и поисковики (п. 7 техзадания) */
+  '<section class="cd cx"><div class="cx-h"><span class="dot'+(s.seo.metrika?' on':'')+'"></span><h2>Яндекс.Метрика и поиск</h2></div>'+
+    '<p class="state">'+(s.seo.metrika?'Метрика <b>'+h(s.seo.metrika)+'</b> считает посещения и записи.':'Метрика не подключена.')+(s.seo.yandex?' Вебмастер подтверждён.':'')+(s.seo.google?' Search Console подтверждена.':'')+'</p>'+
+    (ro?'':'<form id="f-seo" class="grid"><label class="f">Номер счётчика Метрики<input name="metrika" inputmode="numeric" autocomplete="off" placeholder="98765432" value="'+h(s.seo.metrika)+'"></label>'+
+      '<label class="f">Код Яндекс.Вебмастера<input name="yandex" autocomplete="off" placeholder="значение content из мета-тега" value="'+h(s.seo.yandex)+'"></label>'+
+      '<label class="f">Код Google Search Console<input name="google" autocomplete="off" placeholder="значение content из мета-тега" value="'+h(s.seo.google)+'"></label>'+
+      '<div class="hint">Метрика: metrika.yandex.ru → «Добавить счётчик» → адрес сайта → номер счётчика. Вебмастер: webmaster.yandex.ru → «Добавить сайт» → способ «Мета-тег», скопируйте только значение content. Search Console: search.google.com/search-console → «Префикс URL» → «Тег HTML», так же. Карта сайта для них: адрес сайта и /sitemap.xml.</div>'+
+      '<div class="row"><button class="btn" type="submit">Сохранить</button></div></form>')+
   '</section></div>';
   if(!s.publicUrl)box.insertAdjacentHTML('afterbegin','<div class="todo"><p>У сервера не задан адрес сайта (DOMAIN в .env): Telegram и Wazzup не смогут присылать сообщения.</p></div><br>');
   function form(id,name,read){var f=$('#'+id);if(!f)return;f.onsubmit=function(e){e.preventDefault();var b=$('button[type=submit]',f),v=read(f);
@@ -175,6 +184,7 @@ function drawConn(s){var box=$('#cz');if(!box)return;var ro=!owner();
   form('f-amo','amo',function(f){return{domain:f.domain.value.trim(),token:f.token.value.trim()}});
   form('f-tg','tg',function(f){return{token:f.token.value.trim()}});
   form('f-wz','wz',function(f){return{key:f.key.value.trim()}});
+  var fs=$('#f-seo');if(fs)fs.onsubmit=function(e){e.preventDefault();busy($('button[type=submit]',fs),api('/seo',{metrika:fs.metrika.value.trim(),yandex:fs.yandex.value.trim(),google:fs.google.value.trim()})).then(function(){toast('Сохранено, сайт обновлён');return api('/settings')}).then(drawConn)};
   $$('[data-off]',box).forEach(function(b){b.onclick=function(){if(!confirm('Отключить? Ключ удалится из админки.'))return;busy(b,api('/connect/'+b.getAttribute('data-off')+'/off',{})).then(drawConn)}});
   var tl=$('#tglink');if(tl)tl.onclick=function(){busy(tl,api('/tg/link',{})).then(function(r){window.open(r.url,'_blank','noopener');toast('Нажмите «Start» в Telegram')})};
   if(s.amo.on)amoOptions(s,ro)}
@@ -201,6 +211,48 @@ function drawTeam(r){var box=$('#tz');if(!box)return;
 /* ── История ─────────────────────────────────────────────────────── */
 VIEWS.istoriya=function(v){v.innerHTML=pg('История','Кто, что и когда сделал')+'<div class="cd" id="hz"><p class="hint">Загружаем…</p></div>';
   api('/log').then(function(r){$('#hz').innerHTML=r.log.length?'<table class="tbl"><tbody>'+r.log.map(function(x){return'<tr><td class="td-t">'+when(x.at)+'</td><td>'+h(x.who)+'</td><td>'+h(x.t)+'</td></tr>'}).join('')+'</tbody></table>':'<p class="empty">Пока пусто</p>'})};
+
+/* ── Сайт: правка содержимого без программиста ───────────────────── */
+var SITE=null,SG='contacts',SV=null,SOPEN=false;
+VIEWS.sayt=function(v){v.innerHTML=pg('Сайт','Цены, услуги, акции, врачи, вопросы, отзывы и тексты. Сохранили: сайт обновился сразу.','<a class="btn ghost sm" href="/" target="_blank" rel="noopener">Открыть сайт</a>')+'<div class="split" id="sz"><p class="hint">Загружаем…</p></div>';
+  api('/site').then(function(r){SITE=r;drawSite()}).catch(function(e){$('#sz').innerHTML='<div class="cd"><p class="empty">'+h(e.message)+'</p></div>'})};
+function cur(key){return SITE.edits[key]!==undefined?SITE.edits[key]:SITE.defaults[key]}
+function clone(x){return JSON.parse(JSON.stringify(x))}
+function drawSite(){var box=$('#sz');if(!box||!SITE)return;box.classList.toggle('open',SOPEN);
+  box.innerHTML='<div class="list"><div class="items">'+SITE.groups.map(function(g){return'<a class="it" href="#sayt" data-g="'+g.key+'"'+(g.key===SG?' aria-current="true"':'')+'><span class="t"><span>'+h(g.title)+'</span>'+(SITE.edits[g.key]!==undefined?'<small>изменено</small>':'')+'</span></a>'}).join('')+'</div></div><div class="det-w" id="se"></div>';
+  $$('[data-g]',box).forEach(function(a){a.onclick=function(e){e.preventDefault();SG=a.getAttribute('data-g');SV=null;SOPEN=true;drawSite();scrollTo(0,0)}});
+  var g=SITE.groups.filter(function(x){return x.key===SG})[0];if(!SV)SV=clone(SG==='texts'?(SITE.edits.texts||{}):cur(SG));drawGroup(g)}
+function inp(f,val,path){var id='s-'+path.replace(/\W/g,'-'),ph=f.hint?' placeholder="'+h(f.hint)+'"':'';
+  if(f.type==='bool')return'<label class="f fb"><input type="checkbox" data-p="'+path+'"'+(val?' checked':'')+'> '+h(f.label)+'</label>';
+  if(f.type==='image')return'<div class="f"><span>'+h(f.label)+'</span><div class="row">'+(val?'<img class="s-img" src="'+(val.charAt(0)==='/'?h(val):'/protos/syanie/'+h(val)+'.webp')+'" alt="">':'<span class="hint">нет фото</span>')+'<label class="btn ghost sm">Загрузить<input type="file" accept="image/jpeg,image/png,image/webp" data-up="'+path+'" hidden></label>'+(val?'<button type="button" class="btn ghost sm" data-clr="'+path+'">Убрать</button>':'')+'</div></div>';
+  if(f.type==='area'||f.type==='lines')return'<label class="f">'+h(f.label)+'<textarea data-p="'+path+'" maxlength="'+f.max+'"'+ph+'>'+h(val)+'</textarea></label>';
+  return'<label class="f">'+h(f.label)+'<input data-p="'+path+'"'+(f.type==='int'?' inputmode="numeric"':'')+' value="'+h(val)+'"'+(f.max?' maxlength="'+f.max+'"':'')+ph+'></label>'}
+function getP(path){return path.split('.').reduce(function(o,k){return o==null?o:o[k]},SV)}
+function setP(path,val){var ks=path.split('.'),o=SV;for(var i=0;i<ks.length-1;i++)o=o[ks[i]];o[ks[ks.length-1]]=val}
+function drawGroup(g){var box=$('#se');if(!box)return;var html='<div class="cd det"><a class="btn ghost sm back" href="#sayt" id="s-back">'+ic('back')+'К разделам</a><h2>'+h(g.title)+'</h2>'+(g.hint?'<p class="hint">'+h(g.hint)+'</p>':'');
+  if(g.kind==='object')html+='<div class="fgrid fgrid-w">'+g.fields.map(function(f){return inp(f,SV[f.k],f.k)}).join('')+'</div>';
+  else if(g.kind==='texts')html+=Object.keys(SITE.texts).map(function(k){var d=SITE.defaults.texts[k]||{},t=SV[k]||(SV[k]={});
+    return'<details class="s-tx"'+(k==='hero'?' open':'')+'><summary>'+h(SITE.texts[k])+'</summary><div class="fgrid fgrid-w">'+['kick','h'].concat(k==='hero'?['em']:[]).concat(['p']).map(function(p){
+      return'<label class="f">'+({kick:'Подзаголовок',h:'Заголовок',em:'Выделенная часть заголовка',p:'Абзац'})[p]+(p==='p'?'<textarea data-p="'+k+'.'+p+'" placeholder="'+h(d[p]||'')+'">'+h(t[p]||'')+'</textarea>':'<input data-p="'+k+'.'+p+'" placeholder="'+h(d[p]||'')+'" value="'+h(t[p]||'')+'">')+'</label>'}).join('')+'</div></details>'}).join('');
+  else{var list=g.head?SV.items:SV,pre=g.head?'items.':'';
+    if(g.head)html+='<div class="fgrid">'+g.head.map(function(f){return inp(f,SV[f.k],f.k)}).join('')+'</div>';
+    html+=list.map(function(it,i){return'<div class="s-row"><div class="s-rh"><b>'+(i+1)+'</b><span class="row"><button type="button" class="btn ghost sm" data-up-i="'+i+'"'+(i?'':' disabled')+'>Выше</button><button type="button" class="btn ghost sm" data-del="'+i+'">Удалить</button></span></div><div class="fgrid fgrid-w">'+g.fields.map(function(f){return inp(f,it[f.k],pre+i+'.'+f.k)}).join('')+'</div></div>'}).join('')||'<p class="hint">Пока пусто.</p>';
+    if(list.length<g.max)html+='<button type="button" class="btn ghost" id="s-add">Добавить</button>'}
+  html+='<p class="err" id="s-err"></p><div class="row"><button type="button" class="btn" id="s-save">Сохранить</button>'+(SITE.edits[g.key]!==undefined?'<button type="button" class="btn ghost" id="s-reset">Вернуть как было</button>':'')+'</div></div>';
+  box.innerHTML=html;
+  $$('[data-p]',box).forEach(function(el){el.addEventListener(el.type==='checkbox'?'change':'input',function(){var p=el.getAttribute('data-p');
+    if(g.kind==='texts'){var ks=p.split('.');SV[ks[0]]=SV[ks[0]]||{};SV[ks[0]][ks[1]]=el.value;return}
+    setP(p,el.type==='checkbox'?el.checked:el.value)})});
+  var list2=g.kind==='list'?(g.head?SV.items:SV):null;
+  $$('[data-del]',box).forEach(function(b){b.onclick=function(){list2.splice(+b.getAttribute('data-del'),1);drawGroup(g)}});
+  $$('[data-up-i]',box).forEach(function(b){b.onclick=function(){var i=+b.getAttribute('data-up-i'),x=list2[i];list2[i]=list2[i-1];list2[i-1]=x;drawGroup(g)}});
+  var add=$('#s-add');if(add)add.onclick=function(){var o={};g.fields.forEach(function(f){o[f.k]=f.type==='bool'?false:f.type==='int'?0:''});list2.push(o);drawGroup(g)};
+  $$('[data-clr]',box).forEach(function(b){b.onclick=function(){setP(b.getAttribute('data-clr'),'');drawGroup(g)}});
+  $$('[data-up]',box).forEach(function(el){el.onchange=function(){var file=el.files[0];if(!file)return;if(file.size>3*1024*1024){toast('Фото больше 3 МБ: уменьшите его');return}
+    var rd=new FileReader();rd.onload=function(){api('/upload',{data:rd.result}).then(function(r){setP(el.getAttribute('data-up'),r.url);drawGroup(g);toast('Фото загружено, сохраните раздел')},function(e){toast(e.message)})};rd.readAsDataURL(file)}});
+  $('#s-back').onclick=function(e){e.preventDefault();SOPEN=false;$('#sz').classList.remove('open')};
+  $('#s-save').onclick=function(){var b=this;$('#s-err').textContent='';busy(b,api('/site/'+g.key,{value:SV})).then(function(r){SITE=r;SV=null;drawSite();toast('Сохранено, сайт обновлён')},function(e){$('#s-err').textContent=e.message})};
+  var rs=$('#s-reset');if(rs)rs.onclick=function(){if(!confirm('Вернуть раздел «'+g.title+'» как было при запуске сайта?'))return;busy(rs,api('/site/'+g.key+'/reset',{})).then(function(r){SITE=r;SV=null;drawSite();toast('Вернули как было')})}}
 
 d.addEventListener('visibilitychange',function(){if(!d.hidden&&ME)tick()});
 boot();

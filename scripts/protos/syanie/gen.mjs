@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
-import * as D from "./data.mjs";
+import * as DATA from "./data.mjs";
 import { BASE, ADDONS, ALL, OFFER_HOURS, CUR } from "./plan.mjs";
-import { dzIntroSolo } from "../../../lib/proto/dz-video.mjs";
+import { pathToFileURL } from "node:url";
 
 /*
  * Макет сайта стоматологии «Сияние Севера» (Томск, ул. Белинского, 63), одна
@@ -25,13 +25,20 @@ const DIR = new URL(".", import.meta.url).pathname;
 /* SY_PROD=1 — рабочий сайт клиники для её сервера (app/site, README в app):
    без видео DevUz, без разбора и предложения DevUz, без условий макета;
    запись и квиз уходят на сервер клиники с телефоном, чат — администратору. */
-const PROD = process.env.SY_PROD === "1";
+let PROD = process.env.SY_PROD === "1";
+/* Рабочий сайт на сервере клиники собирается из этого же файла: server.mjs
+   зовёт renderLive(правки из админки) и подменяет данные data.mjs на время
+   сборки. Видео DevUz там не нужно, и lib/ в образ не едет. */
+const IS_MAIN = !!process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+const RENDER_ONLY = process.env.SY_RENDER === "1";
+const { dzIntroSolo } = PROD || RENDER_ONLY ? { dzIntroSolo: () => "" } : await import("../../../lib/proto/dz-video.mjs");
+let D = DATA, B = DATA.BRAND, TX = {}, LIVE = {};
 const strip = (s) => s.replace(/\/\*[\s\S]*?\*\//g, "");
 const min = (s) => strip(s).replace(/\n\s*/g, "");
 const IMG = "/protos/syanie";
-const PUB = new URL("../../../public", import.meta.url).pathname;
+const PUB = process.env.SY_PUB || new URL("../../../public", import.meta.url).pathname;
+const LIVE_DIR = process.env.SY_LIVE_DIR || new URL("./app/site/", import.meta.url).pathname;
 const BASEP = "__PROTO_BASE__";
-const B = D.BRAND;
 const TERMS = "https://devuz.studio/ru/mockup-terms";
 const FONTS = "https://fonts.googleapis.com/css2?family=Noto+Serif+Display:ital,wght@0,400;1,400&family=Geologica:wght@400;700&display=swap";
 const read = (f) => readFileSync(DIR + f, "utf8");
@@ -72,10 +79,12 @@ const I = {
   play: `<path d="M8 5.5v13l10-6.5z" ${S}/>`,
   replay: `<path d="M4 12a8 8 0 1 0 2.4-5.7M4 4.5v4h4" ${S}/>`,
   tg: `<path d="M21 4 3 11l6 2 2 6 3-4 5 4z" ${S}/><path d="m9 13 9-7" ${S}/>`,
+  wa: `<path d="M4.5 19.5 5.6 16A8 8 0 1 1 8.4 18.6z" ${S}/><path d="M9.2 8.6c.3 2.9 2.4 5.2 5.4 5.9l1.2-1.3-1.8-1-1 .8c-1-.4-1.9-1.3-2.4-2.4l.8-1-1-1.8z" ${S}/>`,
   spark: `<path d="M12 3.5c.8 4.2 2.3 5.7 6.5 6.5-4.2.8-5.7 2.3-6.5 6.5-.8-4.2-2.3-5.7-6.5-6.5 4.2-.8 5.7-2.3 6.5-6.5z" ${S}/>`,
   copy: `<rect x="8" y="8" width="12" height="12" rx="2" ${S}/><path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8" ${S}/>`,
 };
 const sprite = () => `<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>${Object.entries(I)
+  .filter(([k]) => PROD || k !== "wa")
   .map(([k, v]) => `<symbol id="i-${k}" viewBox="0 0 24 24" stroke="currentColor">${v}</symbol>`)
   .join("")}</defs></svg>`;
 const ic = (k, c = "") => `<svg class="ic${c ? " " + c : ""}" aria-hidden="true"><use href="#i-${k}"/></svg>`;
@@ -84,7 +93,13 @@ const ic = (k, c = "") => `<svg class="ic${c ? " " + c : ""}" aria-hidden="true"
 const MARK = `<svg class="mk" viewBox="0 0 40 40" aria-hidden="true"><path d="M13.6 9.5c-3.4 0-5.3 2.7-5.3 6.5 0 4.6 2.1 6.8 3 10.9.8 3.8 1.5 6.6 3.4 6.6 2.2 0 2-6.6 5.4-6.6s3.2 6.6 5.4 6.6c1.9 0 2.6-2.8 3.4-6.6.9-4.1 3-6.3 3-10.9 0-3.8-1.9-6.5-5.3-6.5-2.7 0-3.9 1.5-6.5 1.5s-3.8-1.5-6.5-1.5z" fill="currentColor"/><path d="M5 26.5C3.2 17 9.5 6.5 21 5.2" fill="none" stroke="var(--onyx)" stroke-width="1.6" stroke-linecap="round"/><path d="M31.5 5.5l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9z" fill="var(--onyx)"/></svg>`;
 const logo = (cls = "") => `<span class="lg ${cls}">${MARK}<span class="lg-t"><b>Сияние Севера</b><small>центр имплантации</small></span></span>`;
 
-const tel = `tel:${B.phoneRaw}`;
+let tel = `tel:${B.phoneRaw}`;
+/* Кнопки WhatsApp и Telegram (п. 4 техзадания договора): номер и ник клиника
+   вписывает в админке; пусто — кнопки нет. В макете их нет. */
+const msgLinks = () => [
+  B.whatsapp && [`https://wa.me/${String(B.whatsapp).replace(/\D/g, "")}`, "WhatsApp", "wa"],
+  B.telegram && [`https://t.me/${String(B.telegram).replace(/^@|^https?:\/\/t\.me\//, "")}`, "Telegram", "tg"],
+].filter(Boolean);
 const sms = (body) => `sms:${B.phoneRaw}?&body=${encodeURIComponent(body)}`;
 const SMS_HI = "Здравствуйте! Хочу записаться на бесплатную консультацию по All-on-6.";
 const CONSENT = `Отправляя, вы соглашаетесь на обработку имени и телефона для записи: <a href="/privacy">как мы храним данные</a>.`;
@@ -106,9 +121,22 @@ ${PROD && path ? `<meta name="robots" content="index, follow">
 <link rel="apple-touch-icon" href="${IMG}/apple-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="${FONTS}">`;
+<link rel="stylesheet" href="${FONTS}">${PROD ? seoTags() : ""}`;
+}
+/* Яндекс.Метрика и коды подтверждения Вебмастера и Search Console
+   (п. 7 техзадания): номер счётчика и коды вписывают в админке. */
+function seoTags() {
+  const s = LIVE.seo || {}, out = [];
+  if (s.yandex) out.push(`<meta name="yandex-verification" content="${s.yandex}">`);
+  if (s.google) out.push(`<meta name="google-site-verification" content="${s.google}">`);
+  if (s.metrika) out.push(`<script>(function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};m[i].l=1*new Date();k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})(window,document,"script","https://mc.yandex.ru/metrika/tag.js","ym");ym(${s.metrika},"init",{clickmap:true,trackLinks:true,accurateTrackBounce:true,webvisor:false});</script><noscript><div><img src="https://mc.yandex.ru/watch/${s.metrika}" style="position:absolute;left:-9999px" alt=""></div></noscript>`);
+  return out.length ? "\n" + out.join("\n") : "";
 }
 
+/* Текст раздела: правка из админки (уже экранирована) главнее текста по умолчанию. */
+const tx = (key, kick, h, p = "", cls = "") => { SEEN[key] = { kick, h, p }; const t = TX[key] || {}; return head(t.kick ?? kick, t.h ?? h, t.p ?? p, cls); };
+/* Тексты по умолчанию, как их увидел последний рендер: админка показывает их рядом с правкой. */
+const SEEN = {};
 const head = (kick, h, p = "", cls = "") => `<div class="sh ${cls}"><span class="kick">${kick}</span><h2>${h}</h2>${p ? `<p>${p}</p>` : ""}</div>`;
 const pic = (name, alt, w, h, cls = "", eager = false) => `<img class="${cls}" src="${IMG}/${name}.webp" alt="${esc(alt)}" width="${w}" height="${h}"${eager ? "" : ' loading="lazy" decoding="async"'}>`;
 
@@ -116,7 +144,7 @@ const pic = (name, alt, w, h, cls = "", eager = false) => `<img class="${cls}" s
 /* Главы поверх кадров: [от, до] — доли всей сцены (кадр 0 = конец кино).
    Сцен семь, каждая — седьмая часть: пациент, растворение, импланты, к руке,
    за рукой, к протезу, посадка. */
-const CH = [
+const CHS = [
   { id: "c1", a: 0.06, b: 0.2, kick: "Главная услуга клиники", h: `All-on-6`, p: "Все зубы на шести имплантатах. За один день, без искусственной десны.", cls: "ch-big" },
   { id: "c2", a: 0.21, b: 0.3, kick: "Шаг 1 · план", h: "Сначала КТ челюсти", p: "Врач видит кость в объёме и до операции решает, куда встанет каждый имплант. КТ для вас бесплатно." },
   { id: "c3", a: 0.3, b: 0.44, kick: "Шаг 2 · шесть опор", h: `${D.IMPLANT.adj[0].toUpperCase() + D.IMPLANT.adj.slice(1)} импланты встают по плану`, p: "Шесть опор вместо четырёх: протез держится крепче, жевать можно жёсткое мясо, яблоки, орехи.", count: true },
@@ -124,7 +152,12 @@ const CH = [
   { id: "c5", a: 0.8, b: 1.01, kick: "Шаг 4 · протез", h: "Новые зубы в тот же день", p: "Протез делает своя лаборатория: без искусственной десны, с точной посадкой. Не натирает и не меняет дикцию.", cta: true },
 ];
 
+const words = (s) => String(s).trim().split(/\s+/).map((w) => `<span class="w">${w}</span>`).join(" ");
+
 function storyBlock() {
+  SEEN.hero = { kick: `${B.what} · ${B.city}`, h: "Все зубы на 6 имплантатах", em: "за один день", p: `Методика All-on-6, ${IMPL}, свой зубной техник. Листайте: покажем, как это происходит, шаг за шагом.` };
+  for (const c of CHS) SEEN["ch-" + c.id] = { kick: c.kick, h: c.h, p: c.p };
+  const CH = CHS.map((c) => ({ ...c, ...(TX["ch-" + c.id] || {}) }));
   const ch = CH.map((c) => `<div class="ch ${c.cls || ""}" id="${c.id}" data-a="${c.a}" data-b="${c.b}"><span class="kick">${c.kick}</span><${c.cls === "ch-big" ? "p class=\"ch-h ch-h-xl\"" : "p class=\"ch-h\""}>${c.h}</p><p class="ch-p">${c.p}</p>${c.count ? `<div class="ch-ct" aria-hidden="true">${[1, 2, 3, 4, 5, 6].map((i) => `<i data-i="${i}"></i>`).join("")}<b><span id="ct-n">0</span> из 6</b></div>` : ""}${c.cta ? `<a class="btn btn-onyx" href="#kviz">${ic("arrow")}<span>Посчитать стоимость</span></a>` : ""}</div>`).join("");
   const calm = [
     ["calm-1", "Пациент в кресле под лампой стоматолога", CH[0]],
@@ -144,9 +177,9 @@ ${existsSync(PUB + IMG + "/imp-16.mp4") ? `<video id="iv" class="iv" muted plays
 <div class="glow" aria-hidden="true"></div>
 <div class="cap" id="cap" aria-hidden="true"><span data-t="0">Томск, ${B.street}</span><span data-t="0.42">Центр имплантации и протезирования</span><span data-t="0.74">Кабинет имплантолога</span></div>
 <div class="hero" id="hero">
-<span class="kick">${B.what} · ${B.city}</span>
-<h1 id="h1"><span class="w">Все</span> <span class="w">зубы</span> <span class="w">на</span> <span class="w">6</span> <span class="w">имплантатах</span> <em><span class="w">за</span> <span class="w">один</span> <span class="w">день</span></em></h1>
-<p class="lead">Методика All-on-6, ${IMPL}, свой зубной техник. Листайте: покажем, как это происходит, шаг за шагом.</p>
+<span class="kick">${TX.hero?.kick ?? `${B.what} · ${B.city}`}</span>
+<h1 id="h1">${words(TX.hero?.h ?? "Все зубы на 6 имплантатах")} <em>${words(TX.hero?.em ?? "за один день")}</em></h1>
+<p class="lead">${TX.hero?.p ?? `Методика All-on-6, ${IMPL}, свой зубной техник. Листайте: покажем, как это происходит, шаг за шагом.`}</p>
 <div class="hero-b"><a class="btn btn-onyx" href="#zapis" data-book>${ic("msg")}<span>Записаться на консультацию</span></a><a class="btn btn-ghost" href="${tel}">${ic("phone")}<span>${B.phone}</span></a></div>
 <span class="cue" aria-hidden="true">${ic("down")}<span>Листайте</span></span>
 </div>
@@ -167,7 +200,7 @@ function vsBlock() {
     return pts.map((a, i) => { const r = (a * Math.PI) / 180, x = 160 + Math.sin(r) * 118, y = 168 - Math.cos(r) * 118; return `<g class="pt" style="--i:${i}"><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="11"/><path d="M${x.toFixed(1)} ${(y + 13).toFixed(1)}v18" /></g>`; }).join("");
   };
   return `<section class="vs" id="all-on-6" data-tone="ink"><div class="wrap">
-${head("Методика", "All-on-6 или All-on-4", "Обе методики ставят все зубы сразу на импланты. Разница в том, на скольких опорах держится протез. Сравнение по словам клиники.")}
+${tx("vs", "Методика", "All-on-6 или All-on-4", "Обе методики ставят все зубы сразу на импланты. Разница в том, на скольких опорах держится протез. Сравнение по словам клиники.")}
 <div class="vs-grid">
 <div class="vs-art rv">
 <div class="vs-tg" role="tablist" aria-label="Методика"><button type="button" role="tab" aria-selected="true" data-n="6">All-on-6</button><button type="button" role="tab" aria-selected="false" data-n="4">All-on-4</button></div>
@@ -193,12 +226,12 @@ function priceBlock() {
   return `<section class="price" id="ceny">
 <picture class="price-bg" aria-hidden="true"><source media="(max-aspect-ratio: 4/5)" srcset="${IMG}/bg-onyx-9.webp"><img src="${IMG}/bg-onyx-16.webp" alt="" width="1600" height="900" loading="lazy" decoding="async"></picture>
 <div class="wrap">
-${head("Цены", "Сколько стоит All-on-6", "Цена на сайте клиники. Точную сумму назовёт главный врач после КТ, а КТ сейчас бесплатно.")}
+${tx("price", "Цены", "Сколько стоит All-on-6", "Цена на сайте клиники. Точную сумму назовёт главный врач после КТ, а КТ сейчас бесплатно.")}
 <div class="pr-grid">
 ${D.PRICES.map((p, i) => `<article class="pr rv${p.star ? " pr-star" : ""}" style="--d:${i * 90}ms"><span class="kick">${p.star ? "Чаще выбирают" : "Методика"}</span><h3>${p.t}</h3><p>${p.d}</p><b class="pr-n" data-n="${p.price}">${rub(p.price)}</b><a class="btn ${p.star ? "btn-onyx" : "btn-line"}" href="#kviz">${ic("arrow")}<span>Рассчитать свой случай</span></a></article>`).join("")}
 <article class="pr pr-gift rv" style="--d:180ms"><span class="kick">Подарки к лечению</span><h3>Выгода ${rub(D.BENEFIT)}</h3><ul class="gf">${D.GIFTS.map(gift).join("")}</ul><p class="pr-inst">${ic("card")}<span><b>Рассрочка 0%</b> от клиники, без первого взноса</span></p></article>
 </div>
-<p class="warn warn-in" role="note">${B.warn.toUpperCase()}</p>
+${(D.SERVICES || []).length ? `<div class="sv-list rv"><h3>Услуги и цены</h3><ul>${D.SERVICES.map((x) => `<li><span>${x.t}</span><b>${x.p}</b></li>`).join("")}</ul></div>\n` : ""}<p class="warn warn-in" role="note">${B.warn.toUpperCase()}</p>
 </div></section>`;
 }
 
@@ -206,7 +239,7 @@ ${D.PRICES.map((p, i) => `<article class="pr rv${p.star ? " pr-star" : ""}" styl
 function quizBlock() {
   const steps = D.QUIZ.map((s, i) => `<fieldset class="qz-s${i ? "" : " on"}" data-s="${i}"><legend><span class="qz-k">Вопрос ${i + 1} из ${D.QUIZ.length}</span>${s.q}</legend><div class="qz-a">${s.a.map((a, j) => `<label class="qz-o"><input type="radio" name="q${i}" value="${esc(a)}"${j === 0 && false ? " checked" : ""}><span>${a}</span>${ic("check")}</label>`).join("")}</div></fieldset>`).join("");
   return `<section class="quiz" id="kviz" data-tone="ink"><div class="wrap">
-${head("Расчёт за минуту", "Посчитайте свой случай", "Четыре вопроса, как на консультации. Ответы уйдут в клинику сообщением, главный врач перезвонит с планом лечения.")}
+${tx("quiz", "Расчёт за минуту", "Посчитайте свой случай", "Четыре вопроса, как на консультации. Ответы уйдут в клинику сообщением, главный врач перезвонит с планом лечения.")}
 <div class="qz rv" id="qz">
 <div class="qz-bar" aria-hidden="true"><i id="qz-bar"></i></div>
 <form class="qz-f" id="qz-f" novalidate>
@@ -230,11 +263,14 @@ ${PROD ? `<label class="qz-in"><span>Телефон</span><input type="tel" id="
 }
 
 /* ── Врачи ────────────────────────────────────────────────────────── */
+/* Фото врача: своё из макета, загруженное в админке (/uploads/) или буквы имени. */
+const docPic = (d) => !d.img ? `<span class="dr-noph" aria-hidden="true">${String(d.name).split(/\s+/).slice(0, 2).map((w) => w[0]).join("")}</span>`
+  : d.img.startsWith("/uploads/") ? `<img src="${d.img}" alt="${esc(d.name)}" width="900" height="900" loading="lazy" decoding="async">` : pic(d.img, d.name, 900, 900);
 function doctorsBlock() {
   return `<section class="docs" id="vrachi"><div class="wrap">
-${head("Врачи", "Кто будет вас лечить", "Имплантологи и ортопеды с опытом более 10 000 операций. Имплантация: основная специализация клиники.")}
+${tx("docs", "Врачи", "Кто будет вас лечить", "Имплантологи и ортопеды с опытом более 10 000 операций. Имплантация: основная специализация клиники.")}
 <div class="dr-grid">
-${D.DOCTORS.map((d, i) => `<article class="dr rv" style="--d:${i * 120}ms"><div class="dr-ph">${pic(d.img, d.name, 900, 900)}</div><div class="dr-t"><span class="kick">${d.role}</span><h3>${d.name}</h3><ul>${d.facts.map((f) => `<li>${f}</li>`).join("")}</ul><p class="dr-q">«${d.quote}»</p></div></article>`).join("")}
+${D.DOCTORS.map((d, i) => `<article class="dr rv" style="--d:${i * 120}ms"><div class="dr-ph">${docPic(d)}</div><div class="dr-t"><span class="kick">${d.role}</span><h3>${d.name}</h3><ul>${d.facts.map((f) => `<li>${f}</li>`).join("")}</ul><p class="dr-q">«${d.quote}»</p></div></article>`).join("")}
 </div>
 </div></section>`;
 }
@@ -244,12 +280,12 @@ function trustBlock() {
   const tic = ["wave", "drop", "moon", "lab"];
   return `<section class="trust" id="garantii" data-tone="ink"><div class="wrap">
 <div class="tr-nums">${D.TRUST.map((t, i) => `<div class="tn rv" style="--d:${i * 80}ms"><b>${t.n}</b><span>${t.t}</span></div>`).join("")}</div>
-${head("Гарантии", "Тройная гарантия в договоре", "На каждый этап имплантации. Так написано в договоре, который вы подписываете до операции.")}
+${tx("trust", "Гарантии", "Тройная гарантия в договоре", "На каждый этап имплантации. Так написано в договоре, который вы подписываете до операции.")}
 <div class="gu-grid">
 <picture class="gu-ph rv" aria-hidden="true"><source media="(max-aspect-ratio: 4/5)" srcset="${IMG}/bg-titan-9.webp"><img src="${IMG}/bg-titan-16.webp" alt="" width="1600" height="900" loading="lazy" decoding="async"></picture>
 <ol class="gu">${D.GUARANTEE.map((g, i) => `<li class="rv" style="--d:${i * 90}ms">${ic("shield")}<b>${g.t}</b><span>${g.d}</span></li>`).join("")}</ol>
 </div>
-${head("Как проходит операция", "Без боли и стресса", "", "sh-sm")}
+${tx("tech", "Как проходит операция", "Без боли и стресса", "", "sh-sm")}
 <div class="te-grid">${D.TECH.map((t, i) => `<article class="te rv" style="--d:${i * 80}ms">${ic(tic[i])}<h3>${t.t}</h3><p>${t.d}</p></article>`).join("")}</div>
 <figure class="lab rv"><picture><source media="(max-aspect-ratio: 4/5)" srcset="${IMG}/bg-lab-9.webp"><img src="${IMG}/bg-lab-16.webp" alt="Зубной техник в лаборатории клиники собирает протез" width="1600" height="900" loading="lazy" decoding="async"></picture><figcaption><span class="kick">Своя лаборатория</span><b>Протез делают в клинике, а не на стороне</b><span>Усиленный протез из премиальных материалов, без искусственной десны. Гарантия на протез на 2 года больше, чем предписано Минздравом.</span></figcaption></figure>
 </div></section>`;
@@ -259,7 +295,7 @@ ${head("Как проходит операция", "Без боли и стре�
 function perksBlock() {
   const pic2 = ["car", "user", "doc", "card"];
   return `<section class="perks" id="privilegii"><div class="wrap">
-${head("Сервис", "Что клиника берёт на себя")}
+${tx("perks", "Сервис", "Что клиника берёт на себя")}
 <div class="pk-grid">${D.PERKS.map((p, i) => `<article class="pk rv" style="--d:${i * 80}ms">${ic(pic2[i])}<b>${p.t}</b><span>${p.d}</span></article>`).join("")}</div>
 </div></section>`;
 }
@@ -267,7 +303,7 @@ ${head("Сервис", "Что клиника берёт на себя")}
 /* ── Отзывы ───────────────────────────────────────────────────────── */
 function reviewsBlock() {
   return `<section class="rev" id="otzyvy"><div class="wrap">
-<div class="rv-top">${head("Отзывы", "Что пишут пациенты")}<div class="rv-rate rv"><b>${D.RATING.value}</b><span>на ${D.RATING.where}</span><small>${D.RATING.count} отзывов на народных порталах · ${D.RATING.rec}% рекомендуют клинику родным</small></div></div>
+<div class="rv-top">${tx("reviews", "Отзывы", "Что пишут пациенты")}<div class="rv-rate rv"><b>${D.RATING.value}</b><span>на ${D.RATING.where}</span><small>${D.RATING.count} отзывов на народных порталах · ${D.RATING.rec}% рекомендуют клинику родным</small></div></div>
 </div>
 <div class="rv-row" tabindex="0" aria-label="Отзывы пациентов, листаются вбок">${D.REVIEWS.map((r, i) => `<blockquote class="rq rv" style="--d:${(i % 4) * 70}ms"><span class="rq-st" aria-label="5 из 5">${"★".repeat(5)}</span><p>${r.t}</p><footer><b>${r.who}</b><span>${r.when} · ${r.src}</span></footer></blockquote>`).join("")}</div>
 </section>`;
@@ -277,7 +313,7 @@ function reviewsBlock() {
 function roomsBlock() {
   const ph = [["p-rec", "Ресепшен клиники «Сияние Севера» с названием на стене", 520, 712], ["p-cor", "Коридор клиники со световыми линиями", 520, 712], ["p-cab", "Кабинет имплантолога", 520, 712], ["p-cab2", "Кабинет с монитором для снимков", 520, 712], ["p-xray", "Врач показывает пациенту снимок на экране", 1000, 1000]];
   return `<section class="rooms" id="klinika" data-tone="ink"><div class="wrap">
-${head("Клиника", `Белинского, 63`, `${B.near}. ${B.parking}.`)}
+${tx("rooms", "Клиника", `Белинского, 63`, `${B.near}. ${B.parking}.`)}
 <div class="rm-grid">${ph.map(([n, alt, w, h], i) => `<figure class="rm rm-${i} rv" style="--d:${i * 70}ms">${pic(n, alt, w, h)}</figure>`).join("")}</div>
 ${PROD ? "" : `<p class="src">Фото с сайта клиники.</p>`}
 </div></section>`;
@@ -302,7 +338,7 @@ ${head(`<span class="ours">Разбор DevUz Studio</span>`, "Чего нет �
 /* ── Вопросы ──────────────────────────────────────────────────────── */
 function faqBlock() {
   return `<section class="faq" id="voprosy"><div class="wrap">
-<div class="fq-l">${head("Вопросы", "Что спрашивают про All-on-6", "Вопросы, которые пациенты задают в поиске. Ответы по фактам клиники; всё, что зависит от вашей челюсти, врач скажет после КТ.")}<a class="btn btn-line" href="${tel}">${ic("phone")}<span>Спросить врача</span></a></div>
+<div class="fq-l">${tx("faq", "Вопросы", "Что спрашивают про All-on-6", "Вопросы, которые пациенты задают в поиске. Ответы по фактам клиники; всё, что зависит от вашей челюсти, врач скажет после КТ.")}<a class="btn btn-line" href="${tel}">${ic("phone")}<span>Спросить врача</span></a></div>
 <div class="fq" id="fq">${D.FAQ.map((f, i) => `<div class="fq-i rv" style="--d:${(i % 4) * 50}ms"><h3><button type="button" class="fq-q" aria-expanded="false" aria-controls="fq-${i}" id="fq-b${i}"><span>${f.q}</span><i class="fq-x" aria-hidden="true"></i></button></h3><div class="fq-a" id="fq-${i}" role="region" aria-labelledby="fq-b${i}"><div><p>${f.a}</p></div></div></div>`).join("")}</div>
 </div></section>`;
 }
@@ -312,13 +348,13 @@ function contactsBlock() {
   return `<section class="cont" id="kontakty" data-tone="ink">
 <picture class="cont-bg" aria-hidden="true"><source media="(max-aspect-ratio: 4/5)" srcset="${IMG}/bg-street-9.webp"><img src="${IMG}/bg-street-16.webp" alt="" width="1600" height="900" loading="lazy" decoding="async"></picture>
 <div class="wrap">
-${head("Ждём на консультации", "Как доехать", `${B.near}.`)}
+${tx("contacts", "Ждём на консультации", "Как доехать", `${B.near}.`)}
 <div class="ct-grid">
 <div class="ct rv"><ul>
 <li>${ic("pin")}<span><b>${B.addr}</b><a href="${B.route}">Построить маршрут в Яндекс Картах</a></span></li>
 <li>${ic("clock")}<span><b>${B.hours}</b>без выходных</span></li>
 <li>${ic("park")}<span><b>Своя парковка</b>свободные места есть всегда</span></li>
-<li>${ic("phone")}<span><b><a href="${tel}">${B.phone}</a></b>звонок в одно нажатие</span></li>
+<li>${ic("phone")}<span><b><a href="${tel}">${B.phone}</a></b>звонок в одно нажатие</span></li>${msgLinks().map(([u, n, k]) => `\n<li>${ic(k)}<span><b><a href="${u}" rel="noopener">${n}</a></b>написать в мессенджер</span></li>`).join("")}
 </ul>
 <div class="ct-b"><a class="btn btn-onyx" href="#zapis" data-book>${ic("msg")}<span>Записаться</span></a><a class="btn btn-line" href="${B.map}">${ic("pin")}<span>Открыть карту</span></a></div></div>
 <div class="ct-plan rv"><span class="kick">Уже были у других врачей?</span><b>План лечения от главного врача</b><p>Ортопед, который специализируется на All-on-6, посмотрит ваши снимки и скажет, что можно сделать.</p><a class="btn btn-line" ${PROD ? `href="#zapis" data-book` : `href="${sms("Здравствуйте! Уже был(а) на приёме в другой клинике, хочу получить план лечения от главного врача.")}"`}>${ic("msg")}<span>Получить план</span></a></div>
@@ -355,13 +391,17 @@ ${ADDONS.map(row).join("")}
 }
 
 /* ── Запись в два нажатия: шторка ─────────────────────────────────── */
+/* Услуги для записи: консультация, варианты All-on-6 и перечень клиники из админки. */
+const services = () => [...new Set(["Консультация и КТ", ...D.PRICES.map((p) => `All-on-6: ${p.t.replace(/^Методика All-on-6$/, "методика").toLowerCase()}`), ...(D.SERVICES || []).map((x) => x.t)])].slice(0, 12);
 function bookSheet() {
   const days = ["Сегодня", "Завтра", "На этой неделе"], parts = ["Утром", "Днём", "Вечером"];
   return `<div class="sheet" id="zapis" role="dialog" aria-modal="true" aria-labelledby="bk-h" hidden>
 <div class="sh-in">
 <button type="button" class="sh-x" data-close aria-label="Закрыть">${ic("x")}</button>
 <span class="kick">Бесплатная консультация</span>
-<p class="bk-h" id="bk-h">Когда вам удобно?</p>
+${PROD ? `<p class="bk-l">Услуга</p>
+<div class="bk-g" role="radiogroup" aria-label="Услуга">${services().map((t, i) => `<button type="button" class="chip" data-svc="${t}" aria-pressed="${i === 0}">${t}</button>`).join("")}</div>
+<p class="bk-h bk-h2" id="bk-h">Когда вам удобно?</p>` : `<p class="bk-h" id="bk-h">Когда вам удобно?</p>`}
 <div class="bk-g" role="radiogroup" aria-label="День">${days.map((d, i) => `<button type="button" class="chip" data-day="${d}" aria-pressed="${i === 1}">${d}</button>`).join("")}</div>
 <div class="bk-g" role="radiogroup" aria-label="Время">${parts.map((d, i) => `<button type="button" class="chip" data-part="${d}" aria-pressed="${i === 2}">${d}</button>`).join("")}</div>
 ${PROD ? `<div class="bk-f"><label class="qz-in"><span>Имя</span><input type="text" id="bk-name" autocomplete="given-name" placeholder="Как к вам обращаться"></label><label class="qz-in"><span>Телефон</span><input type="tel" id="bk-phone" autocomplete="tel" inputmode="tel" placeholder="+7 900 000-00-00" required></label></div>
@@ -386,7 +426,7 @@ function ld() {
 
 function siteData() {
   return {
-    img: IMG, frames: MEDIA, chapters: CH.map((c) => ({ id: c.id, a: c.a, b: c.b })), phone: B.phoneRaw, smsHi: SMS_HI,
+    img: IMG, frames: MEDIA, chapters: CHS.map((c) => ({ id: c.id, a: c.a, b: c.b })), phone: B.phoneRaw, smsHi: SMS_HI,
     quiz: D.QUIZ.map((q) => q.q),
     /* Чат на сайте (chat.js): отвечает только фактами клиники, без модели. */
     chat: { faq: D.FAQ, prices: D.PRICES.map((p) => ({ t: p.t, d: p.d, p: p.price })), gifts: D.GIFTS, benefit: D.BENEFIT, guar: D.GUARANTEE.map((g) => g.t + ": " + g.d.toLowerCase()), docs: D.DOCTORS.map((x) => ({ n: x.name, r: x.role, f: x.facts[0] })), phone: B.phone, addr: B.addr, near: B.near, hours: B.hoursShort, parking: B.parking, open: B.open, close: B.close, warn: B.warn, perks: D.PERKS.map((x) => x.t + ": " + x.d.toLowerCase()) },
@@ -422,7 +462,7 @@ ${(PROD ? [storyBlock(), vsBlock(), priceBlock(), quizBlock(), doctorsBlock(), t
 <div class="warn-band" role="note"><div class="wrap"><p class="warn">${B.warn.toUpperCase()}</p><p class="lic">${B.legal} · ${B.license}</p></div></div>
 <footer class="foot"><div class="wrap">
 <div class="cols">
-<div>${logo("f-logo")}<p class="f-d">${B.what}. ${B.addr}. ${B.hours}.</p><ul class="f-c"><li>${ic("phone")}<a href="${tel}">${B.phone}</a></li><li>${ic("pin")}<a href="${B.route}">Маршрут в Яндекс Картах</a></li></ul></div>
+<div>${logo("f-logo")}<p class="f-d">${B.what}. ${B.addr}. ${B.hours}.</p><ul class="f-c"><li>${ic("phone")}<a href="${tel}">${B.phone}</a></li><li>${ic("pin")}<a href="${B.route}">Маршрут в Яндекс Картах</a></li>${msgLinks().map(([u, n, k]) => `<li>${ic(k)}<a href="${u}" rel="noopener">${n}</a></li>`).join("")}</ul></div>
 ${PROD ? "" : `<div><b>DevUz Studio</b><ul><li><a href="https://devuz.studio">devuz.studio</a></li><li><a href="https://t.me/Devuz_studio_bot?start=syanie">Telegram</a></li></ul></div>
 <div><b>Данные макета</b><ul><li>Цены, врачи, гарантии, отзывы, адрес, часы, лицензия: ${B.site.replace("https://", "")}</li><li>Пролёт по клинике и сцены лечения сняты нейросетью по фото клиники</li><li>Квиз и запись открывают сообщение в клинику, ничего не уходит нам</li><li><a href="__PROTO_BASE__/panel">Админка клиники (показ)</a></li></ul></div>`}
 </div>
@@ -472,26 +512,51 @@ function privacyPage() {
 <h2>Как отозвать согласие и удалить данные</h2>
 <p>Позвоните по номеру <a href="${tel}">${B.phone}</a> или напишите в чат на сайте. Данные удалим в течение 30 дней и сообщим об этом.</p>
 <h2>Что сайт хранит у вас в браузере</h2>
-<p>Номер вашей заявки, чтобы показать её статус, и ключ чата, чтобы показать ответ администратора. Счётчиков посещаемости и рекламных меток на сайте нет.</p>
+<p>Номер вашей заявки, чтобы показать её статус, и ключ чата, чтобы показать ответ администратора.${LIVE.seo?.metrika ? " На сайте работает Яндекс Метрика (ООО «ЯНДЕКС»): она обезличенно считает посещения и действия на страницах и хранит свои cookie в браузере. Отключить её можно в настройках браузера, запретив cookie." : " Счётчиков посещаемости и рекламных меток на сайте нет."}</p>
 <p><a href="/">На главную</a></p>`);
 }
 
 const opt = (f) => (existsSync(DIR + f) ? read(f) : "");
-if (PROD) {
-  /* Рабочий сайт: свои store и чат вместо демо; панель макета не нужна,
-     админка клиники лежит в app/admin. */
-  const APP = DIR + "app/";
-  const S = `<style>${min(read("site.css") + read("chat.css") + read("app/site/live.css"))}</style>`;
-  const J = `<script>\n${strip(read("app/site/store-live.js") + read("site.js") + read("app/site/live-chat.js"))}</script>`;
-  const page = sitePage().split("@@S@@").join(S).split("@@J@@").join(J);
-  for (const bad of ["__PROTO_BASE__", "mockup-terms", "devuz", "DevUz", "макет", "dz-intro", "noindex"]) if (page.includes(bad)) throw new Error(`на рабочем сайте осталось «${bad}»`);
-  mkdirSync(APP + "site", { recursive: true });
-  writeFileSync(APP + "site/index.html", page);
-  writeFileSync(APP + "site/privacy.html", privacyPage());
-  writeFileSync(APP + "site/404.html", plainPage(`Страница не найдена · «${B.name}»`, "Такой страницы нет.", null, `<h1>Такой страницы нет</h1><p>Возможно, ссылка устарела. Всё о клинике и запись на консультацию: <a href="/">на главной</a>, или позвоните: <a href="${tel}">${B.phone}</a>.</p>`));
-  console.log("рабочий сайт:", page.length, "знаков →", APP + "site/");
-  process.exit(0);
+const readLive = (f) => readFileSync(LIVE_DIR + f, "utf8");
+
+/* Рабочий сайт: свои store и чат вместо демо; панель макета не нужна,
+   админка клиники лежит в app/admin. */
+function livePages() {
+  const S = `<style>${min(read("site.css") + read("chat.css") + readLive("live.css"))}</style>`;
+  const J = `<script>\n${strip(readLive("store-live.js") + read("site.js") + readLive("live-chat.js"))}</script>`;
+  return {
+    index: sitePage().split("@@S@@").join(S).split("@@J@@").join(J),
+    privacy: privacyPage(),
+    notFound: plainPage(`Страница не найдена · «${B.name}»`, "Такой страницы нет.", null, `<h1>Такой страницы нет</h1><p>Возможно, ссылка устарела. Всё о клинике и запись на консультацию: <a href="/">на главной</a>, или позвоните: <a href="${tel}">${B.phone}</a>.</p>`),
+  };
 }
+
+/**
+ * Рабочий сайт с правками из админки клиники. over — то, что отдаёт
+ * siteOverrides (app/lib/site-content.mjs): brand, data (списки data.mjs),
+ * texts; все строки там уже экранированы. live.seo — Метрика и коды.
+ */
+export function renderLive(over = {}, live = {}) {
+  const keep = [PROD, D, B, TX, LIVE, tel];
+  PROD = true; LIVE = live; TX = over.texts || {};
+  D = { ...DATA, ...(over.data || {}) }; B = { ...DATA.BRAND, ...(over.brand || {}) }; tel = `tel:${B.phoneRaw}`;
+  try { return livePages(); } finally { [PROD, D, B, TX, LIVE, tel] = keep; }
+}
+export const DEFAULTS = DATA;
+/** Тексты разделов по умолчанию: { ключ: { kick, h, p } }. */
+export function textDefaults() { renderLive({}); return JSON.parse(JSON.stringify(SEEN)); }
+
+if (IS_MAIN && PROD) {
+  const APP = DIR + "app/", pg = livePages();
+  for (const bad of ["__PROTO_BASE__", "mockup-terms", "devuz", "DevUz", "макет", "dz-intro", "noindex"]) if (pg.index.includes(bad)) throw new Error(`на рабочем сайте осталось «${bad}»`);
+  mkdirSync(APP + "site", { recursive: true });
+  writeFileSync(APP + "site/index.html", pg.index);
+  writeFileSync(APP + "site/privacy.html", pg.privacy);
+  writeFileSync(APP + "site/404.html", pg.notFound);
+  console.log("рабочий сайт:", pg.index.length, "знаков →", APP + "site/");
+}
+
+if (IS_MAIN && !PROD) {
 const out = { "": sitePage() };
 /* store.js — общее состояние сайта, чата и панели; chat.* — чат на сайте. */
 const parts = {
@@ -512,3 +577,4 @@ writeFileSync(DIR + "out/pages.json", JSON.stringify(Object.fromEntries(Object.e
 const bundleDir = new URL("../../../content/proto-bundles/", import.meta.url).pathname;
 writeFileSync(bundleDir + "syanie.json", JSON.stringify({ parts, pages: out }));
 for (const [k, v] of Object.entries(out)) console.log((k || "(ru)").padEnd(8), fill(v).length);
+}

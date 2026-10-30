@@ -152,3 +152,5 @@ label.f{display:grid;gap:6px;font-size:13px;color:var(--mute)}
 @media (min-width:901px){.mob-out{display:none}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 .cx-a{text-decoration:none;color:inherit}.row-sb{justify-content:space-between}.fgrid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}.fgrid-w{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}.td-t{white-space:nowrap;color:var(--mute)}
+.fb{flex-direction:row;align-items:center;gap:8px;display:flex}.fb input{width:auto;min-height:0}.s-row{border:1px solid var(--line);border-radius:12px;padding:12px;display:grid;gap:10px}.s-rh{display:flex;justify-content:space-between;align-items:center}.s-img{width:64px;height:64px;object-fit:cover;border-radius:10px}.s-tx{border:1px solid var(--line);border-radius:12px;padding:10px 12px}.s-tx summary{font-weight:600;cursor:pointer}.s-tx[open] summary{margin-bottom:10px}
+.s-row .fgrid-w{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
