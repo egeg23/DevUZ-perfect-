@@ -13,3 +13,14 @@ button.bk-go[disabled],#qz-sms[disabled]{opacity:.6;cursor:wait}
 .cx-fail{cursor:pointer}
 .cx-fail .cx-tick{color:var(--onyx2)}
 .cx-foot a{color:inherit}
+/* Услуги и цены по перечню клиники (раздел «Сайт» в админке). */
+.sv-list{margin-top:24px;padding:20px 24px;border-radius:20px;background:rgb(var(--ink-rgb) / .55);border:1px solid var(--line-d)}
+.sv-list h3{margin:0 0 8px;font:400 24px/1.2 var(--f-d)}
+.sv-list ul{list-style:none;margin:0;padding:0}
+.sv-list li{display:flex;justify-content:space-between;gap:16px;padding:10px 0;border-top:1px solid var(--line-d)}
+.sv-list li b{white-space:nowrap;color:var(--onyx2)}
+/* Врач без фото: буквы имени. */
+.dr-noph{display:grid;place-items:center;width:100%;height:100%;font:400 64px/1 var(--f-d);color:var(--onyx2)}
+/* Выбор услуги в записи. */
+.bk-l{margin:0;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute-d)}
+.bk-h2{font-size:24px}

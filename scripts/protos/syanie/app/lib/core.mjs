@@ -5,6 +5,7 @@ import { sealer, hashPass, checkPass, token, sha } from "./crypt.mjs";
 import { amoClient, amoBase } from "./amo.mjs";
 import { tgClient, tgMessage } from "./tg.mjs";
 import { wzClient, wzMessages, WZ_KINDS } from "./wazzup.mjs";
+import { GROUPS, TEXT_KEYS, defaultsOf, normalize, siteOverrides } from "./site-content.mjs";
 
 export const STATUS = { new: "Новая", confirmed: "Подтверждена", came: "Пришёл", canceled: "Отменена" };
 export const ROLES = { owner: "Главный врач", admin: "Администратор" };
@@ -20,7 +21,7 @@ export const cleanPhone = (s) => {
 };
 const cut = (s, n) => String(s == null ? "" : s).replace(/[\u0000-\u0008\u000b-\u001f]/g, "").trim().slice(0, n);
 
-export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = () => Date.now() }) {
+export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = () => Date.now(), renderer = null }) {
   const box = sealer(secret);
 
   /* ── Настройки и журнал ─────────────────────────────────────────── */
@@ -94,6 +95,7 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
       amo: { on: !!(getS("amo.domain") && getS("amo.token")), domain: getS("amo.domain"), base: amoBase(getS("amo.domain")), account: getS("amo.account"), pipeline: getS("amo.pipeline"), status: getS("amo.status"), auto: getS("amo.auto") === "1", hasToken: !!getS("amo.token") },
       tg: { on: !!getS("tg.token"), bot: getS("tg.bot"), staff: db.all("select t.chat_id, u.name from tg_staff t join users u on u.id = t.user_id").map((r) => r.name) },
       wz: { on: !!getS("wz.key"), channels: wzCh },
+      seo: { metrika: getS("seo.metrika"), yandex: getS("seo.yandex"), google: getS("seo.google") },
       publicUrl,
     };
   }
@@ -119,7 +121,7 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
       const c = tgClient(String(tk).trim(), fetchImpl), me = await c.me();
       const hook = token(24);
       if (publicUrl) await c.setHook(`${publicUrl}/api/tg/hook`, hook);
-      setS("tg.token", String(tk).trim()); setS("tg.bot", me.username || ""); setS("tg.secret", hook);
+      setS("tg.token", String(tk).trim()); setS("tg.bot", me.username || ""); setS("tg.secret", hook); site.changed();
       note(by, `Подключил Telegram-бота @${me.username}`);
       return { bot: me.username };
     },
@@ -135,7 +137,7 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
     },
     async off(name, by) {
       if (name === "amo") ["amo.domain", "amo.token", "amo.account", "amo.pipeline", "amo.status", "amo.auto"].forEach((k) => setS(k, ""));
-      else if (name === "tg") { try { await tg().dropHook(); } catch { /* токен мог уже не работать */ } ["tg.token", "tg.bot", "tg.secret"].forEach((k) => setS(k, "")); db.run("delete from tg_staff"); }
+      else if (name === "tg") { try { await tg().dropHook(); } catch { /* токен мог уже не работать */ } ["tg.token", "tg.bot", "tg.secret"].forEach((k) => setS(k, "")); db.run("delete from tg_staff"); site.changed(); }
       else if (name === "wz") ["wz.key", "wz.secret", "wz.channels"].forEach((k) => setS(k, ""));
       else throw new Error("Нет такого подключения");
       note(by, `Отключил ${{ amo: "amoCRM", tg: "Telegram-бота", wz: "Wazzup" }[name]}`);
@@ -305,6 +307,60 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
     }
   }
 
+  /* ── Содержимое сайта: правка из админки (п. 5 техзадания) ──────── */
+  /* renderer — gen.mjs макета (renderLive, DEFAULTS, textDefaults): страницу
+     собирает тот же код, что в GitHub, с правками клиники из базы. */
+  const site = (() => {
+    let defaults = null, cache = null, version = 1;
+    const def = () => defaults || (defaults = renderer ? defaultsOf(renderer.DEFAULTS, renderer.textDefaults()) : null);
+    const edits = () => { try { return JSON.parse(getS("site.edits") || "{}"); } catch { return {}; } };
+    const seo = () => ({ metrika: getS("seo.metrika"), yandex: getS("seo.yandex"), google: getS("seo.google") });
+    const title = (key) => GROUPS.find((g) => g.key === key)?.title || key;
+    return {
+      on: () => !!renderer,
+      version: () => version,
+      changed() { cache = null; version++; },
+      view() {
+        if (!renderer) throw new Error("Правка сайта работает на сервере клиники");
+        return { groups: GROUPS, texts: TEXT_KEYS, defaults: def(), edits: edits(), seo: seo() };
+      },
+      save(key, value, by) {
+        if (!renderer) throw new Error("Правка сайта работает на сервере клиники");
+        const clean = normalize(key, value), all = edits();
+        all[key] = clean;
+        const pages = renderer.renderLive(siteOverrides(all, def(), { tgBot: getS("tg.bot") }), { seo: seo() });
+        if (!pages.index.includes("</html>")) throw new Error("Сайт не собрался с этой правкой");
+        setS("site.edits", JSON.stringify(all));
+        site.changed();
+        note(by, `Изменил на сайте: «${title(key)}»`);
+        return clean;
+      },
+      reset(key, by) {
+        const all = edits(); delete all[key];
+        setS("site.edits", JSON.stringify(all)); site.changed();
+        note(by, `Вернул как было на сайте: «${title(key)}»`);
+      },
+      setSeo({ metrika = "", yandex = "", google = "" }, by) {
+        metrika = String(metrika).trim(); yandex = String(yandex).trim(); google = String(google).trim();
+        if (metrika && !/^\d{5,12}$/.test(metrika)) throw new Error("Номер счётчика Метрики: только цифры, например 98765432");
+        for (const [n, v] of [["Яндекс.Вебмастера", yandex], ["Search Console", google]]) if (v && !/^[\w-]{6,100}$/.test(v)) throw new Error(`Код ${n}: только значение content из мета-тега, без кавычек`);
+        setS("seo.metrika", metrika); setS("seo.yandex", yandex); setS("seo.google", google);
+        site.changed();
+        note(by, "Поменял Метрику и коды поисковиков");
+        return seo();
+      },
+      /* Страницы сайта с правками; null — renderer нет (страницы из файлов). */
+      pages() {
+        if (!renderer) return null;
+        if (!cache) {
+          try { cache = renderer.renderLive(siteOverrides(edits(), def(), { tgBot: getS("tg.bot") }), { seo: seo() }); }
+          catch (e) { console.error("сайт не собрался с правками, показываю без них:", e.message); cache = renderer.renderLive({}, { seo: seo() }); }
+        }
+        return cache;
+      },
+    };
+  })();
+
   /* ── Сводка ─────────────────────────────────────────────────────── */
   function summary() {
     const t = now(), w = 7 * 864e5;
@@ -322,7 +378,7 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
   }
 
   return {
-    users, auth, leads, inbox, siteChat, connect, settingsView, summary,
+    users, auth, leads, inbox, siteChat, connect, settingsView, summary, site,
     tgUpdate, wzHook, getS, setS, note,
     log: (limit = 200) => db.all("select at, who, t from log order by id desc limit ?", limit),
     tgSecret: () => getS("tg.secret"), wzSecret: () => getS("wz.secret"),

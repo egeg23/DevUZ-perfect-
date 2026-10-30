@@ -321,7 +321,8 @@ if(sheet){
   bkGo.addEventListener('click',function(e){var dy=$('.chip[data-day][aria-pressed="true"]'),pt=$('.chip[data-part][aria-pressed="true"]'),
     when=((dy?dy.getAttribute('data-day'):'')+' '+(pt?pt.getAttribute('data-part'):'')).toLowerCase();
     if(!K.live){mine(SY.addLead({src:'booking',name:'',what:'Бесплатная консультация All-on-6',when:when}));return}
-    e.preventDefault();liveSend(bkGo,$('#bk-err'),{src:'booking',name:$('#bk-name').value.trim(),phone:$('#bk-phone').value,what:'Бесплатная консультация All-on-6',wish:when},function(){
+    var sv=$('.chip[data-svc][aria-pressed="true"]');
+    e.preventDefault();liveSend(bkGo,$('#bk-err'),{src:'booking',name:$('#bk-name').value.trim(),phone:$('#bk-phone').value,what:sv?sv.getAttribute('data-svc'):'Бесплатная консультация All-on-6',wish:when},function(){
       $('.sh-in',sheet).insertAdjacentHTML('beforeend','<p class="lv-ok" role="status">Заявка у администратора. Перезвоним, чтобы подтвердить время: '+when+'.</p>');bkGo.hidden=true})});
 }
 

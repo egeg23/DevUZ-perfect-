@@ -67,16 +67,21 @@ jobs:
           SY_PROD=1 node scripts/protos/syanie/gen.mjs
           mkdir -p scripts/protos/syanie/app/site/protos
           cp -r public/protos/syanie scripts/protos/syanie/app/site/protos/
+          # Сборщик сайта для правок из админки: тот же gen.mjs с данными макета.
+          mkdir -p scripts/protos/syanie/app/render
+          (cd scripts/protos/syanie && cp gen.mjs data.mjs plan.mjs site.css site.js chat.css media.json app/render/)
           du -sh scripts/protos/syanie/app/site
       - name: Сервер отдаёт сайт и админку
         working-directory: scripts/protos/syanie/app
         run: |
-          DATA_DIR="$RUNNER_TEMP/sy" APP_SECRET=ci-secret-not-for-prod COMMIT=ci PORT=3999 node server.mjs &
+          DATA_DIR="$RUNNER_TEMP/sy" APP_SECRET=ci-secret-not-for-prod COMMIT=ci PORT=3999 node server.mjs > "$RUNNER_TEMP/sy.log" 2>&1 &
           for i in $(seq 1 20); do curl -fsS http://127.0.0.1:3999/api/health && break; sleep 0.5; done
           curl -fsS http://127.0.0.1:3999/ | grep -q "Сияние Севера"
           curl -fsS http://127.0.0.1:3999/admin | grep -q "/admin/app.js"
           curl -fsS -o /dev/null http://127.0.0.1:3999/protos/syanie/film-16.webp
           curl -fsS http://127.0.0.1:3999/api/admin/state | grep -q '"setup":true'
+          # Правки из админки собирает gen.mjs в render/: без него сайт молча стал бы файлами.
+          grep -q "сборщик сайта: да" "$RUNNER_TEMP/sy.log" || { cat "$RUNNER_TEMP/sy.log"; exit 1; }
           kill %1
       - name: Метка образа HTTPS
         id: tag

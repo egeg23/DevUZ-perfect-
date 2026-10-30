@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { createServer, type Server } from "node:http";
 import { test } from "node:test";
 
@@ -46,14 +48,17 @@ function fakeNet() {
   return { calls, fetchImpl };
 }
 
-async function boot(publicUrl = "https://syanie.test") {
+async function boot(publicUrl = "https://syanie.test", opts: { live?: boolean } = {}) {
   const { openDb } = await load("lib/db.mjs");
   const { makeCore } = await load("lib/core.mjs");
   const { createApp } = await load("server.mjs");
   const net = fakeNet();
   const db = openDb(":memory:");
-  const core = makeCore({ db, secret: "test-secret-0123456789", publicUrl, fetchImpl: net.fetchImpl });
-  const handle = createApp({ core, siteDir: new URL("site/", APP).pathname, adminDir: new URL("admin/", APP).pathname, setupCode: "setup-42", publicUrl, commit: "abc" });
+  /* live: сайт собирает gen.mjs макета с правками из админки, как на сервере клиники. */
+  const renderer = opts.live ? await import(new URL("../gen.mjs", APP).href) : null;
+  const uploadsDir = opts.live ? mkdtempSync(join(tmpdir(), "sy-up-")) : "";
+  const core = makeCore({ db, secret: "test-secret-0123456789", publicUrl, fetchImpl: net.fetchImpl, renderer });
+  const handle = createApp({ core, siteDir: new URL("site/", APP).pathname, adminDir: new URL("admin/", APP).pathname, uploadsDir, setupCode: "setup-42", publicUrl, commit: "abc" });
   const server: Server = createServer(handle);
   await new Promise<void>((r) => server.listen(0, "127.0.0.1", r));
   const port = (server.address() as { port: number }).port;
@@ -225,6 +230,73 @@ test("сияние на сервере клиники: Instagram, Telegram и ч
     /* Заявка из переписки: телефон не нужен, переписка привязана. */
     const lead = (await a.adminPost(`/inbox/${ig.id}/lead`, {})).json.lead;
     assert.equal(a.db.get("select conv_id from leads where id = ?", lead).conv_id, ig.id);
+  } finally { await a.close(); }
+});
+
+test("сияние на сервере клиники: клиника сама правит цены, услуги, врачей, акции и тексты, сайт обновляется сразу", async () => {
+  const a = await boot("https://syanie.test", { live: true });
+  try {
+    await a.adminPost("/setup", { code: "setup-42", login: "glavvrach", name: "Евгений", pass: "длинный-пароль" });
+    await a.adminPost("/users", { login: "admin1", name: "Мария", role: "admin", pass: "пароль-марии" });
+    const page = async () => (await a.call("/")).text;
+    assert.match(await page(), /179 900/);
+    assert.match(await page(), /data-svc="Консультация и КТ"/, "в записи нет выбора услуги");
+    assert.doesNotMatch(await page(), /wa\.me|https:\/\/t\.me\//, "кнопки мессенджеров без номера");
+
+    /* Администратор, не главный врач, правит содержимое: так в техзадании. */
+    a.setCookie("");
+    await a.adminPost("/login", { login: "admin1", pass: "пароль-марии" });
+    const view = (await a.call("/api/admin/site")).json;
+    assert.equal(view.defaults.prices[0].price, 179900);
+    const prices = view.defaults.prices.map((p: any, i: number) => (i ? p : { ...p, price: 199900 }));
+    assert.equal((await a.adminPost("/site/prices", { value: prices })).status, 200);
+    assert.match(await page(), /199 900/);
+    await a.adminPost("/site/services", { value: [{ t: "Чистка зубов", p: "от 4 500 ₽" }] });
+    assert.match(await page(), /Чистка зубов<\/span><b>от 4 500 ₽/);
+    assert.match(await page(), /data-svc="Чистка зубов"/, "услуги нет в записи");
+    await a.adminPost("/site/texts", { value: { price: { h: "Цены на лечение" } } });
+    assert.match(await page(), /Цены на лечение/);
+    const faq = [{ q: "<script>alert(1)</script>", a: "Ответ & ещё" }];
+    await a.adminPost("/site/faq", { value: faq });
+    const html = await page();
+    assert.ok(!html.includes("<script>alert(1)</script>") && html.includes("&lt;script&gt;alert(1)"), "правка не экранирована");
+    const bad = await a.adminPost("/site/contacts", { value: { ...view.defaults.contacts, phone: "12" } });
+    assert.equal(bad.status, 400);
+    assert.match(bad.json.error, /Телефон/);
+    await a.adminPost("/site/contacts", { value: { ...view.defaults.contacts, whatsapp: "+7 900 123-45-67" } });
+    assert.match(await page(), /https:\/\/wa\.me\/79001234567/);
+    assert.equal((await a.adminPost("/seo", { metrika: "98765432" })).status, 403, "Метрику меняет только главный врач");
+
+    /* Фото врача: только картинка, имя — хеш, отдаётся сайтом. */
+    const png = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+    const up = (await a.adminPost("/upload", { data: png })).json.url as string;
+    assert.match(up, /^\/uploads\/[a-f0-9]{32}\.png$/);
+    const img = await a.call(up);
+    assert.equal(img.status, 200);
+    assert.equal(img.headers.get("content-type"), "image/png");
+    assert.equal((await a.adminPost("/upload", { data: "data:image/png;base64," + Buffer.from("<svg/>").toString("base64") })).status, 400);
+    const doctors = view.defaults.doctors.map((d: any, i: number) => (i ? d : { ...d, img: up }));
+    await a.adminPost("/site/doctors", { value: doctors });
+    assert.ok((await page()).includes(`src="${up}"`), "фото врача не на сайте");
+
+    /* Вернуть как было; журнал помнит, кто правил. */
+    await a.adminPost("/site/prices/reset", {});
+    assert.match(await page(), /179 900/);
+    assert.ok(a.db.all("select t from log").some((r: any) => /Изменил на сайте: «Цены All-on-6»/.test(r.t)));
+
+    /* Главный врач: Метрика, Вебмастер, Telegram-бот клиники. */
+    a.setCookie("");
+    await a.adminPost("/login", { login: "glavvrach", pass: "длинный-пароль" });
+    assert.equal((await a.adminPost("/seo", { metrika: "abc" })).status, 400);
+    await a.adminPost("/seo", { metrika: "98765432", yandex: "a1b2c3d4e5", google: "G-code_123" });
+    const seo = await page();
+    assert.match(seo, /mc\.yandex\.ru\/metrika\/tag\.js/);
+    assert.match(seo, /ym\(98765432,"init"/);
+    assert.match(seo, /<meta name="yandex-verification" content="a1b2c3d4e5">/);
+    assert.match(seo, /<meta name="google-site-verification" content="G-code_123">/);
+    assert.match((await a.call("/privacy")).text, /Яндекс Метрика/, "политика молчит о Метрике");
+    await a.adminPost("/connect/tg", { token: "123456:" + "A".repeat(35) });
+    assert.match(await page(), /https:\/\/t\.me\/syanie_bot/, "кнопка Telegram не ведёт на бота клиники");
   } finally { await a.close(); }
 });
 
