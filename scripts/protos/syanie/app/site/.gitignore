@@ -1,0 +1,4 @@
+# Страницы собирает SY_PROD=1 node gen.mjs (в GitHub и в тестах), кадры —
+# копия public/protos/syanie: в git их нет.
+*.html
+protos

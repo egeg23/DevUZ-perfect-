@@ -32,6 +32,9 @@ on:
       - ".claude/skills/**"
       # Панель SIA на Strapi ставится на сервер бюро, не на наш (scripts/protos/sia/strapi).
       - "scripts/protos/sia/strapi/**"
+      # Сайт клиники «Сияние Севера» живёт на её сервере (syanie-app.yml).
+      - "scripts/protos/syanie/app/**"
+      - ".github/workflows/syanie-app.yml"
   # Тот же набор проверок на pull request. Без этого PR мержится вслепую:
   # сборка и тесты прогонялись только после слияния, то есть на боевой ветке,
   # и сломанный код обнаруживался там, где чинить его дороже всего.

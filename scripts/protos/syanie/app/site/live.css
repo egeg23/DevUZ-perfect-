@@ -1,0 +1,15 @@
+/* Рабочий сайт клиники: поля телефона в записи и квизе, ответ после
+   отправки, чат с администратором. Цвета — токены site.css. */
+.lv-hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+.lv-err{margin:0;min-height:0;font-size:14px;color:var(--onyx2)}
+.lv-err:empty{display:none}
+.lv-ok{margin:8px 0 0;padding:14px 16px;border-radius:var(--r);border:1px solid var(--frost);background:rgb(var(--frost-rgb) / .08);color:var(--paper);font-size:15px;line-height:1.45}
+.bk-f{display:grid;gap:0}
+.bk-f .qz-in{margin-bottom:12px}
+.qz-in input:focus-visible{outline:2px solid var(--onyx);outline-offset:2px}
+.qz-note a{color:inherit;text-decoration:underline}
+button.bk-go[disabled],#qz-sms[disabled]{opacity:.6;cursor:wait}
+.cx-m .cx-tick::before{content:""}
+.cx-fail{cursor:pointer}
+.cx-fail .cx-tick{color:var(--onyx2)}
+.cx-foot a{color:inherit}
