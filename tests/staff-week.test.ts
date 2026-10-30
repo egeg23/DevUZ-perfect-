@@ -10,11 +10,14 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
 import {
+  EXTRA_WEEK_REPORTS,
+  extraReportAt,
   staffWeekText,
   touchDrop,
   weekAdvice,
   weekMark,
   weekRange,
+  weekRangeUntil,
   weekReportDue,
   weekReportKey,
   type StaffWeek,
@@ -54,6 +57,38 @@ test("по понедельникам с 10:00 до 19:00 по Ташкенту,
   assert.equal(range.to - range.from, 7 * 24 * 3600_000);
   assert.equal(range.from - range.prevFrom, 7 * 24 * 3600_000);
   assert.equal(weekReportKey(range), "staff-week:2026-10-19");
+});
+
+test("разовый отчёт владельца: 30.10 в 15:00 — эта неделя до 15:00, сравнение с теми же часами неделей раньше", () => {
+  assert.ok(EXTRA_WEEK_REPORTS.includes("2026-10-30 15:00"));
+  assert.equal(extraReportAt(tk("2026-10-30T14:59:00")), null, "до 15:00 — рано");
+  const at = extraReportAt(tk("2026-10-30T15:00:00"));
+  assert.equal(at, tk("2026-10-30T15:00:00").getTime());
+  assert.equal(extraReportAt(tk("2026-10-30T18:59:00")), at, "свип молчал — ещё можно");
+  assert.equal(extraReportAt(tk("2026-10-30T19:00:00")), null);
+  assert.equal(extraReportAt(tk("2026-11-06T15:00:00")), null, "следующая пятница — нет, разовый");
+
+  const range = weekRangeUntil(at!);
+  assert.equal(range.from, tk("2026-10-26T00:00:00").getTime(), "с понедельника");
+  assert.equal(range.to, at);
+  assert.equal(range.prevTo - range.prevFrom, range.to - range.from, "прошлая неделя — тот же отрезок");
+  assert.equal(range.prevFrom, tk("2026-10-19T00:00:00").getTime());
+  assert.equal(range.until, "15:00");
+  assert.equal(weekReportKey(range), "staff-week:2026-10-26:2026-10-30-15:00");
+  assert.notEqual(weekReportKey(range), weekReportKey(weekRange(tk("2026-11-02T10:00:00"))), "понедельничный придёт своим ключом");
+  const text = staffWeekText(range, [person()]);
+  assert.match(text, /26\.10–30\.10, до 15:00/);
+  assert.match(text, /те же дни и часы прошлой недели/);
+
+  const monday = weekRange(tk("2026-10-26T10:00:00"));
+  assert.equal(monday.prevTo, monday.from);
+  assert.equal(monday.until, null);
+});
+
+test("отчёт ждёт и разовый час владельца, понедельник — главнее", () => {
+  const store = read("lib/admin/staff-week-store.ts");
+  assert.match(store, /extraReportAt\(now\)/);
+  assert.match(store, /range\.prevFrom, range\.prevTo/);
 });
 
 test("рекомендации — правилами: молчал, просел, макеты без показа, норма", () => {
