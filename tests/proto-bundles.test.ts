@@ -2481,3 +2481,83 @@ test("AutoPepe: ceny w złotych — strona 3 900 zł zamiast 9 900 zł, dodatki 
   assert.ok(site.html.includes("9\u00a0900\u00a0zł") && site.html.includes("3\u00a0900\u00a0zł"), "на первой странице не та цена");
   for (const page of [site.html, ...Object.values(site.pages)]) assert.doesNotMatch(page, /[А-Яа-яЁёІіЇїЄєҐґ]/, "на странице кириллица, а сайт только по-польски");
 });
+
+test("Oson Apteka: выбор, сайт и панель на ru и uz — условия, noindex, видео DevUz и залёт в бренд, шапка 3 с, лекарства и цены с их сайта, uz без кириллицы", async () => {
+  const { existsSync, readdirSync } = await import("node:fs");
+  const { SCENES } = await import("@/lib/proto/promo");
+  const site = bundlePages("osonapteka");
+  assert.ok(site);
+  const all: Record<string, string> = { "": site.html, ...site.pages };
+  assert.deepEqual(Object.keys(all).sort(), ["", "panel", "site", "uz", "uz/panel", "uz/site"]);
+  const data = await import("../scripts/protos/osonapteka/data.mjs");
+  const plan = await import("../scripts/protos/osonapteka/plan.mjs");
+  for (const [path, page] of Object.entries(all)) {
+    const lang = path.startsWith("uz") ? "uz" : "ru";
+    const kind = path.replace(/^uz\/?/, "") || "land";
+    assert.doesNotMatch(page, /@@[A-Z]+@@/, `${path}: метка сборки осталась в странице`);
+    assert.ok(page.includes(`<html lang="${lang}">`), `${path}: язык страницы`);
+    assert.ok(page.includes(`https://devuz.studio/${lang}/mockup-terms`), `${path}: нет условий на языке страницы`);
+    assert.match(page, /<meta name="robots" content="noindex/, `${path}: нет noindex`);
+    assert.match(page, /prefers-reduced-motion/, `${path}: анимацию нечем выключить`);
+    assert.doesNotMatch(page, /stamp|watermark|fingerprint|отпечат|seed|data-mark/i, `${path}: слово, по которому находят отпечаток`);
+    assert.doesNotMatch(page, /proto-ai|proxyapi|higgsfield\.ai|firecrawl/i, `${path}: макет не зовёт модель и чужие сервисы`);
+    assert.doesNotMatch(page, /href="#"/, `${path}: ссылка в никуда`);
+    assert.doesNotMatch(page, /scroll-behavior|passive:\s*false/, `${path}: перехват прокрутки`);
+    assert.doesNotMatch(page.replace(/<script[\s\S]*?<\/script>/g, ""), /[—–]/, `${path}: длинное тире`);
+    for (const img of page.match(/<img [^>]+>/g) ?? []) assert.match(img, /alt="/, `${path}: картинка без alt`);
+    for (const src of page.match(/\/protos\/osonapteka\/[\w./-]+\.(?:webp|png|svg|js)/g) ?? []) assert.ok(existsSync("public" + src), `${path}: нет файла ${src}`);
+    for (const id of (page.match(/href="#([\w-]+)"/g) ?? []).map((h) => h.slice(7, -1))) assert.ok(page.includes(`id="${id}"`), `${path}: ссылка на #${id}, а блока нет`);
+    if (lang === "uz") assert.doesNotMatch(page.replace(/<script[\s\S]*?<\/script>/g, "").replace(/<style>[\s\S]*?<\/style>/g, ""), /[А-Яа-яЁё]/, `${path}: кириллица на узбекской странице`);
+    if (kind === "panel") continue;
+    assert.match(page, /\bIDLE=3000\b/, `${path}: шапка не по правилу 3 секунд`);
+    assert.match(page, /classList\.add\('hide'\)[\s\S]*IDLE\)/, `${path}: шапка не прячется`);
+    assert.match(page.slice(page.indexOf('class="top"'), page.indexOf("</header>")), new RegExp(`href="__PROTO_BASE__${lang === "uz" ? "/uz" : ""}/panel"`), `${path}: нет кнопки админки в шапке`);
+    if (kind === "land") {
+      /* Видео DevUz первым, сразу за ним — залёт камерой в бренд (кадры шифром). */
+      assert.ok(page.indexOf('id="dzi"') > 0 && page.indexOf('id="dzi"') < page.indexOf('id="fly"'), `${path}: нет видео DevUz перед залётом`);
+      assert.ok(page.includes("/promo/scene") && page.includes("AES-GCM"), `${path}: кадры залёта не по ключу`);
+      assert.equal((page.match(/class="choice rise"/g) ?? []).length, 2, `${path}: не два выбора, сайт и админка`);
+      for (const a of plan.ADDONS) assert.ok(page.includes(`data-add="${a.id}"`), `${path}: нет тумблера ${a.id}`);
+      continue;
+    }
+    assert.ok(page.includes(`tel:${data.COMPANY.tel}`) && page.includes(`t.me/${data.COMPANY.bot}`), `${path}: нет их контактов`);
+    for (const p of data.CATALOG) {
+      assert.ok(page.includes(`data-id="${p.id}"`), `${path}: нет лекарства ${p.name.ru}`);
+      assert.ok(page.includes(String(p.price).replace(/\B(?=(\d{3})+(?!\d))/g, " ")), `${path}: нет цены ${p.name.ru}`);
+    }
+    for (const id of ["search", "how", "list", "map", "tarif", "remind", "bot", "cab", "erp", "pharm", "reviews", "admin"]) assert.ok(page.includes(`id="${id}"`), `${path}: нет блока #${id}`);
+    assert.ok(page.includes("проконсультируйтесь с врачом") || page.includes("shifokor bilan maslahatlashing"), `${path}: нет напоминания про врача`);
+    assert.doesNotMatch(page, /вылечит|лучшее средство|davolaydi/i, `${path}: обещание лечения`);
+    assert.ok(page.includes('class="velo"') && page.includes("data-par="), `${path}: нет бегущей строки или параллакса`);
+    for (const a of plan.ADDONS) assert.ok(page.includes(`data-addon="${a.id}"`), `${path}: тумблер ${a.id} не ведёт к блоку на сайте`);
+  }
+  /* Кадры Higgsfield — только шифром, открыт лишь первый кадр-постер. */
+  assert.equal(SCENES.osonapteka, "SCENE_KEY_OSONAPTEKA");
+  for (const set of ["d", "m"]) {
+    const files = readdirSync(`public/protos/osonapteka/seq/${set}`);
+    assert.equal(files.length, 60, `${set}: не 60 кадров`);
+    assert.ok(files.every((f) => f.endsWith(".bin")), `${set}: кадр лежит открытым`);
+  }
+  assert.deepEqual(readdirSync("public/protos/osonapteka").filter((f) => /\.(mp4|png|jpe?g)$/.test(f)), [], "открытый ролик или кадр в public");
+  const stamped = stampedBundle("osonapteka", SEED)!;
+  assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
+  assert.notEqual(stamped.pages["uz/site"], site.pages["uz/site"], "отпечаток не поставился на узбекском сайте");
+});
+
+test("Oson Apteka: сайт 1 000 $ вместо 4 900 $, допы вместе 2 000 $, с сайтом не больше 3 000 $; тарифы по середине рынка", async () => {
+  const plan = await import("../scripts/protos/osonapteka/plan.mjs");
+  const tf = await import("../scripts/protos/osonapteka/tariffs.mjs");
+  assert.equal(plan.BASE.promo, 1000);
+  assert.equal(plan.BASE.price, 4900);
+  assert.ok(plan.ADDONS.reduce((s: number, a: { price: number }) => s + a.price, 0) <= 2000, "допы дороже 2 000 $");
+  assert.ok(plan.ALL <= 3000, "сайт с допами дороже 3 000 $");
+  for (const id of ["bron", "admin", "erp", "deliv", "pay", "bot", "remind"]) assert.ok(plan.ADDONS.some((a: { id: string }) => a.id === id), `нет допа ${id}`);
+  for (const a of plan.ADDONS) for (const l of ["ru", "uz"] as const) assert.ok(a[l].t && a[l].e && a[l].who, `${a.id}: нет текста на ${l}`);
+  for (const a of plan.ADDONS) assert.doesNotMatch(a.uz.t + a.uz.e + a.uz.who, /[А-Яа-яЁё]/, `${a.id}: кириллица в узбекском`);
+  /* Бронь бесплатна, ближняя доставка — рядом с PharmaClick (от 8 000 сум), комиссия брони как у tabletki.ua (2%). */
+  assert.equal(tf.BUYER.bron, 0);
+  assert.ok(tf.BUYER.zones[0].price >= 8000 && tf.BUYER.zones[0].price <= 12000);
+  assert.equal(tf.PHARMACY.opts.find((o: { id: string }) => o.id === "bron")?.fee, 2);
+  const site = bundlePages("osonapteka")!;
+  assert.ok(site.html.includes("4 900 $") && site.html.includes("1 000 $"), "на первой странице не та цена");
+});
