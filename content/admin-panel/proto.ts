@@ -242,15 +242,23 @@ export const protoDict = defineDict({
     pl: "Sprawdź stronę pod kątem naszej makiety",
   },
   checkIntro: {
-    ru: "Вставьте адрес чужого сайта: панель прочитает его стили и сверит со скрытыми отпечатками всех наших прототипов. Отпечаток на странице не виден и переживает копирование через F12 и переписывание нейросетью.",
-    uz: "Begona sayt manzilini kiriting: panel uning uslublarini o‘qiydi va barcha prototiplarimizning yashirin izlari bilan solishtiradi. Iz sahifada ko‘rinmaydi va F12 orqali nusxalash hamda neyrotarmoq bilan qayta yozishdan keyin ham saqlanadi.",
-    pl: "Wklej adres cudzej strony: panel odczyta jej style i porówna je z ukrytymi odciskami wszystkich naszych prototypów. Odcisku nie widać na stronie i przetrwa kopiowanie przez F12 oraz przepisanie przez sieć neuronową.",
+    ru: "Вставьте адрес чужого сайта: панель прочитает его стили, скрипты и текст и сверит со скрытыми отпечатками всех наших прототипов: числа оформления, числа скриптов и слова-ловушки из демо-данных. Отпечаток на странице не виден и переживает копирование через F12 и переписывание нейросетью.",
+    uz: "Begona sayt manzilini kiriting: panel uning uslublari, skriptlari va matnini o‘qiydi va barcha prototiplarimizning yashirin izlari bilan solishtiradi: bezak raqamlari, skript raqamlari va demo-ma’lumotlardagi tuzoq so‘zlar. Iz sahifada ko‘rinmaydi va F12 orqali nusxalash hamda neyrotarmoq bilan qayta yozishdan keyin ham saqlanadi.",
+    pl: "Wklej adres cudzej strony: panel odczyta jej style, skrypty i tekst i porówna je z ukrytymi odciskami wszystkich naszych prototypów: liczbami wyglądu, liczbami skryptów i słowami-pułapkami z danych demo. Odcisku nie widać na stronie i przetrwa kopiowanie przez F12 oraz przepisanie przez sieć neuronową.",
   },
   checkButton: { ru: "Проверить", uz: "Tekshirish", pl: "Sprawdź" },
   checkStats: {
-    ru: (files: number, values: number) => `Прочитано файлов стилей: ${files}, значений оформления: ${values}.`,
-    uz: (files: number, values: number) => `O‘qilgan uslub fayllari: ${files}, bezak qiymatlari: ${values}.`,
-    pl: (files: number, values: number) => `Odczytano plików stylów: ${files}, wartości wyglądu: ${values}.`,
+    ru: (files: number, values: number, scripts = 0) =>
+      `Прочитано файлов стилей: ${files}, скриптов: ${scripts}, значений оформления: ${values}.`,
+    uz: (files: number, values: number, scripts = 0) =>
+      `O‘qilgan uslub fayllari: ${files}, skriptlar: ${scripts}, bezak qiymatlari: ${values}.`,
+    pl: (files: number, values: number, scripts = 0) =>
+      `Odczytano plików stylów: ${files}, skryptów: ${scripts}, wartości wyglądu: ${values}.`,
+  },
+  checkTraps: {
+    ru: (words: string) => `слова-ловушки из демо-данных: ${words}`,
+    uz: (words: string) => `demo-ma’lumotlardagi tuzoq so‘zlar: ${words}`,
+    pl: (words: string) => `słowa-pułapki z danych demo: ${words}`,
   },
   checkNone: {
     ru: "Отпечатков наших прототипов не нашлось.",

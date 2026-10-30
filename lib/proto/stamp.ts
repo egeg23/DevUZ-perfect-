@@ -62,6 +62,72 @@ const round = (value: number, digits: number) => Number(value.toFixed(digits));
 /** «0.183» без лишних нулей и с ведущим нулём — как число и сравнивается. */
 const num = (value: number) => String(Number(value.toFixed(4)));
 
+/* ── Ловушки и числа скриптов ──────────────────────────────────────────── */
+
+/**
+ * Ловушка — выдуманное слово в демо-данных макета, как «несуществующая
+ * улица» на картах: название демо-аптеки, магазина, улицы. В сборке пишется
+ * `[[t:N]]` (N — номер, 0, 1, 2…), при показе на его месте встаёт слово,
+ * своё у каждого клиента: «Ойдинсой», на узбекской странице «Oydinsoy».
+ * Настоящему сайту клиента взяться ему неоткуда — нашлось у него, значит
+ * текст и данные взяты из нашего макета. Два разных слова — уже не случай.
+ */
+const TRAP = /\[\[t:(\d{1,3})\]\]/g;
+
+const TRAP_HEAD: readonly (readonly [string, string])[] = [
+  ["Шифо", "Shifo"], ["Дармон", "Darmon"], ["Ойдин", "Oydin"], ["Зарин", "Zarin"],
+  ["Мехр", "Mehr"], ["Олтин", "Oltin"], ["Гулшан", "Gulshan"], ["Нурли", "Nurli"],
+  ["Сихат", "Sihat"], ["Бахор", "Bahor"], ["Камол", "Kamol"], ["Ипак", "Ipak"],
+  ["Чинор", "Chinor"], ["Лола", "Lola"], ["Сарой", "Saroy"], ["Ровон", "Rovon"],
+  ["Сулув", "Suluv"], ["Тиник", "Tinik"], ["Ширин", "Shirin"], ["Наво", "Navo"],
+  ["Дилкаш", "Dilkash"], ["Офтоб", "Oftob"], ["Зумрад", "Zumrad"], ["Гавхар", "Gavhar"],
+];
+const TRAP_TAIL: readonly (readonly [string, string])[] = [
+  ["сой", "soy"], ["зор", "zor"], ["тепа", "tepa"], ["кент", "kent"],
+  ["дала", "dala"], ["нур", "nur"], ["гул", "gul"], ["бек", "bek"],
+  ["тош", "tosh"], ["ёр", "yor"], ["дон", "don"], ["вой", "voy"],
+  ["сан", "san"], ["ой", "oy"], ["бахт", "baxt"], ["кул", "kul"],
+];
+
+/** Слово ловушки N: перестановка всех пар по зерну — у одного клиента слова не повторяются. */
+export function trapWord(seed: string, n: number): [string, string] {
+  const total = TRAP_HEAD.length * TRAP_TAIL.length;
+  const next = stream(`${seed}:trap`);
+  const order = Array.from({ length: total }, (_, i) => i);
+  for (let i = total - 1; i > 0; i -= 1) {
+    const j = Math.floor(next() * (i + 1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  const pair = order[n % total];
+  const head = TRAP_HEAD[Math.floor(pair / TRAP_TAIL.length)];
+  const tail = TRAP_TAIL[pair % TRAP_TAIL.length];
+  return [head[0] + tail[0], head[1] + tail[1]];
+}
+
+/**
+ * Число скрипта, которое можно чуть сдвинуть: в сборке пишется `/*~*\/0.08`
+ * (сила пружины, порог появления, доля прокрутки — не цена и не процент,
+ * который видит человек). При показе комментарий уходит, а к числу
+ * прибавляются десятитысячные — своё у каждого клиента. Переписавший наш
+ * скрипт переносит и их.
+ */
+const JS_MARK = /\/\*~\*\/(\d*\.\d+|\d+)(?![\d.])/g;
+
+function jsShift(value: number, next: () => number): number {
+  // 11–49 десятитысячных, не кратно десяти: у числа всегда четыре знака.
+  let k = 11 + Math.floor(next() * 39);
+  if (k % 10 === 0) k += 1;
+  return Number((value + k / 10000).toFixed(4));
+}
+
+/** Сборка без зерна (локальный показ): ловушки — первыми словами, метки чисел убраны. */
+export function plainTraps(html: string): string {
+  const k = /<html[^>]*\blang=["']?uz/i.test(html) ? 1 : 0;
+  return html
+    .replace(TRAP, (_all, n: string) => TRAP_HEAD[Number(n) % TRAP_HEAD.length][k] + TRAP_TAIL[0][k])
+    .replace(JS_MARK, "$1");
+}
+
 /**
  * Поставить отпечаток в страницу. Возвращает страницу и признаки, по которым
  * её потом узнать.
@@ -133,8 +199,24 @@ export function stampHtml(html: string, seed: string): { html: string; stamp: St
     return out;
   };
 
-  const stamped = html.replace(/<style([^>]*)>([\s\S]*?)<\/style>/gi, (_all, attrs: string, css: string) => {
+  let stamped = html.replace(/<style([^>]*)>([\s\S]*?)<\/style>/gi, (_all, attrs: string, css: string) => {
     return `<style${attrs}>${stampCss(css)}</style>`;
+  });
+
+  // Ловушки и числа скриптов — своими потоками из того же зерна: поток
+  // стилей выше не сдвигается, и у макетов, записанных до ловушек, признаки
+  // стилей в базе остаются верными.
+  const uz = /<html[^>]*\blang=["']?uz/i.test(html);
+  stamped = stamped.replace(TRAP, (_all, n: string) => {
+    const [ru, lat] = trapWord(seed, Number(n));
+    signals.push(`text:${ru}`, `text:${lat}`);
+    return uz ? lat : ru;
+  });
+  const nextJs = stream(`${seed}:js`);
+  stamped = stamped.replace(JS_MARK, (_all, raw: string) => {
+    const value = jsShift(Number(raw), nextJs);
+    signals.push(`js:${num(value)}`);
+    return num(value);
   });
 
   return { html: stamped, stamp: { v: STAMP_VERSION, seed, signals: [...new Set(signals)] } };

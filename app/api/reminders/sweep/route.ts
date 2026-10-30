@@ -17,6 +17,7 @@ import { runSilence } from "@/lib/admin/silence-store";
 import { sendStaffReport } from "@/lib/admin/staff-report-store";
 import { sendHelperStats } from "@/lib/admin/helper-stats-store";
 import { sendStaffWeek } from "@/lib/admin/staff-week-store";
+import { runTraceMonth } from "@/lib/proto/trace-month-store";
 import { sendNightReplies } from "@/lib/admin/night-replies-store";
 import { sendNightInbox } from "@/lib/qualify/bot-inbox-store";
 import { sendClientOutbox } from "@/lib/admin/client-outbox";
@@ -382,6 +383,12 @@ async function sweep(): Promise<Response> {
   // сотрудникам с рекомендациями (lib/admin/staff-week-store).
   after(async () => {
     await sendStaffWeek(new Date()).catch((error) => console.error("сотрудники за неделю:", error));
+  });
+  // Раз в месяц — сайты клиентов, которым делали макет: нет ли там нашего
+  // (lib/proto/trace-month-store). По три сайта за проход, отчёт —
+  // владельцу и руководителю.
+  after(async () => {
+    await runTraceMonth(new Date()).catch((error) => console.error("сайты клиентов за месяц:", error));
   });
   // Колокольчик в шапке (lib/admin/bell-store): строки старше 30 дней — из
   // базы, не чаще раза в час (pruneBell помнит, когда чистил).

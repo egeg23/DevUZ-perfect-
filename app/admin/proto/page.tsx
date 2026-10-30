@@ -113,7 +113,7 @@ export default async function ProtoPage({
           traced.ok ? (
             <div className="mt-4 space-y-3 text-sm">
               <p className="text-xs text-faint">
-                {traced.url} · {t.checkStats(traced.cssFiles, traced.signals)}
+                {traced.url} · {t.checkStats(traced.cssFiles, traced.signals, traced.jsFiles)}
               </p>
               {traced.hits.length ? (
                 <>
@@ -127,6 +127,9 @@ export default async function ProtoPage({
                         {hit.name} · {hit.source} · {protoWhen(hit.created_at, locale)}
                       </p>
                       <p className="mt-1 text-xs text-muted">{t.checkMatch(hit.match.matched, hit.match.total)}</p>
+                      {hit.match.traps.length ? (
+                        <p className="mt-1 text-xs text-muted">{t.checkTraps(hit.match.traps.join(", "))}</p>
+                      ) : null}
                       {traced.attributed === hit.id ? <p className="mt-1 text-xs text-text">{t.checkClient}</p> : null}
                       {hit.views.length ? (
                         <p className="mt-1 text-xs text-faint">
