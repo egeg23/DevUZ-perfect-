@@ -1,0 +1,151 @@
+# Рабочий сайт стоматологии «Сияние Севера» — на сервере клиники, не на нашем
+# (владелец, 30.10.2026: «мы готовы размещать сайт у них на сервере… автодеплоем
+# через гит»). Сайт, админка (вход, заявки, сообщения из всех мессенджеров в
+# одном окне, ключи amoCRM, Telegram-бота и Wazzup) и вебхуки — один образ.
+#
+# Правило «Сервер не собирает сайт» то же, что у нас: страницы собирает
+# GitHub (SY_PROD=1 node gen.mjs), образы кладёт в ghcr.io, сервер клиники их
+# только скачивает и запускает (scripts/protos/syanie/app/deploy/remote.sh).
+#
+# Выкатка идёт, только когда заведена переменная репозитория SYANIE_DOMAIN и
+# секреты SYANIE_HOST, SYANIE_USER, SYANIE_SSH_KEY (порт — SYANIE_PORT, код
+# первого входа — SYANIE_SETUP_CODE). Как их получить у клиники —
+# scripts/protos/syanie/app/README.md. Репозиторий открытый: журнал задачи
+# видят все, поэтому ключи и код установки в него не печатаются.
+name: "Сайт Сияние Севера: сервер клиники"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/protos/syanie/**"
+      - "public/protos/syanie/**"
+      - "lib/proto/dz-video.mjs"
+      - ".github/workflows/syanie-app.yml"
+  # На pull request — та же сборка без отправки образов и без выкатки.
+  pull_request:
+    branches: [main]
+    paths:
+      - "scripts/protos/syanie/**"
+      - "public/protos/syanie/**"
+      - ".github/workflows/syanie-app.yml"
+  workflow_dispatch:
+    inputs:
+      front:
+        description: "HTTPS: auto — Caddy, если 80/443 свободны, иначе nginx клиники"
+        type: choice
+        options: [auto, caddy, nginx, none]
+        default: auto
+
+permissions:
+  contents: read
+
+concurrency:
+  group: syanie-app
+  cancel-in-progress: false
+
+env:
+  APP: ghcr.io/${{ github.repository_owner }}/syanie-app
+  CADDY: ghcr.io/${{ github.repository_owner }}/syanie-caddy
+
+jobs:
+  build:
+    name: Сборка сайта и образов
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      caddy: ${{ steps.tag.outputs.caddy }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Страницы рабочего сайта
+        run: |
+          SY_PROD=1 node scripts/protos/syanie/gen.mjs
+          mkdir -p scripts/protos/syanie/app/site/protos
+          cp -r public/protos/syanie scripts/protos/syanie/app/site/protos/
+          du -sh scripts/protos/syanie/app/site
+      - name: Сервер отдаёт сайт и админку
+        working-directory: scripts/protos/syanie/app
+        run: |
+          DATA_DIR="$RUNNER_TEMP/sy" APP_SECRET=ci-secret-not-for-prod COMMIT=ci PORT=3999 node server.mjs &
+          for i in $(seq 1 20); do curl -fsS http://127.0.0.1:3999/api/health && break; sleep 0.5; done
+          curl -fsS http://127.0.0.1:3999/ | grep -q "Сияние Севера"
+          curl -fsS http://127.0.0.1:3999/admin | grep -q "/admin/app.js"
+          curl -fsS -o /dev/null http://127.0.0.1:3999/protos/syanie/film-16.webp
+          curl -fsS http://127.0.0.1:3999/api/admin/state | grep -q '"setup":true'
+          kill %1
+      - name: Метка образа HTTPS
+        id: tag
+        run: echo "caddy=c-${{ hashFiles('scripts/protos/syanie/app/deploy/Caddyfile', 'scripts/protos/syanie/app/deploy/Caddy.Dockerfile') }}" | cut -c1-30 >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Образ сайта
+        uses: docker/build-push-action@v6
+        with:
+          context: scripts/protos/syanie/app
+          push: ${{ github.ref == 'refs/heads/main' }}
+          tags: |
+            ${{ env.APP }}:${{ github.sha }}
+            ${{ env.APP }}:main
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          cache-from: type=gha,scope=syanie-app
+          cache-to: type=gha,mode=max,scope=syanie-app
+      - name: Образ HTTPS (Caddy)
+        uses: docker/build-push-action@v6
+        with:
+          context: scripts/protos/syanie/app/deploy
+          file: scripts/protos/syanie/app/deploy/Caddy.Dockerfile
+          push: ${{ github.ref == 'refs/heads/main' }}
+          tags: ${{ env.CADDY }}:${{ steps.tag.outputs.caddy }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+
+  deploy:
+    name: Запуск на сервере клиники
+    needs: build
+    if: ${{ github.ref == 'refs/heads/main' && vars.SYANIE_DOMAIN != '' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts/protos/syanie/app/deploy
+      - name: Скрипт выкатки
+        id: script
+        run: echo "b64=$(base64 -w0 scripts/protos/syanie/app/deploy/remote.sh)" >> "$GITHUB_OUTPUT"
+      - name: Запуск по SSH
+        uses: appleboy/ssh-action@v1
+        env:
+          SY_SCRIPT: ${{ steps.script.outputs.b64 }}
+          SY_APP: ${{ env.APP }}:${{ github.sha }}
+          SY_CADDY: ${{ env.CADDY }}:${{ needs.build.outputs.caddy }}
+          SY_DOMAIN: ${{ vars.SYANIE_DOMAIN }}
+          SY_COMMIT: ${{ github.sha }}
+          SY_SETUP: ${{ secrets.SYANIE_SETUP_CODE }}
+          SY_FRONT: ${{ inputs.front || 'auto' }}
+          GH_TOKEN: ${{ github.token }}
+          GH_ACTOR: ${{ github.actor }}
+        with:
+          host: ${{ secrets.SYANIE_HOST }}
+          username: ${{ secrets.SYANIE_USER }}
+          key: ${{ secrets.SYANIE_SSH_KEY }}
+          port: ${{ secrets.SYANIE_PORT || 22 }}
+          envs: SY_SCRIPT,SY_APP,SY_CADDY,SY_DOMAIN,SY_COMMIT,SY_SETUP,SY_FRONT,GH_TOKEN,GH_ACTOR
+          command_timeout: 25m
+          script: |
+            set -euo pipefail
+            F="$(mktemp)"; trap 'rm -f "$F"' EXIT
+            printf '%s' "$SY_SCRIPT" | base64 -d > "$F"
+            bash "$F"

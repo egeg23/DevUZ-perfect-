@@ -290,6 +290,7 @@ test("выкатку не запускает то, что сайт не чита
     "scripts/rea/**",
     ".claude/skills/**",
     "scripts/protos/sia/strapi/**",
+    "scripts/protos/syanie/app/**",
   ]) {
     assert.ok(ignored.includes(path), `нет ${path}`);
   }

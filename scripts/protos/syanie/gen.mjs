@@ -22,6 +22,10 @@ import { dzIntroSolo } from "../../../lib/proto/dz-video.mjs";
  */
 
 const DIR = new URL(".", import.meta.url).pathname;
+/* SY_PROD=1 — рабочий сайт клиники для её сервера (app/site, README в app):
+   без видео DevUz, без разбора и предложения DevUz, без условий макета;
+   запись и квиз уходят на сервер клиники с телефоном, чат — администратору. */
+const PROD = process.env.SY_PROD === "1";
 const strip = (s) => s.replace(/\/\*[\s\S]*?\*\//g, "");
 const min = (s) => strip(s).replace(/\n\s*/g, "");
 const IMG = "/protos/syanie";
@@ -83,13 +87,20 @@ const logo = (cls = "") => `<span class="lg ${cls}">${MARK}<span class="lg-t"><b
 const tel = `tel:${B.phoneRaw}`;
 const sms = (body) => `sms:${B.phoneRaw}?&body=${encodeURIComponent(body)}`;
 const SMS_HI = "Здравствуйте! Хочу записаться на бесплатную консультацию по All-on-6.";
+const CONSENT = `Отправляя, вы соглашаетесь на обработку имени и телефона для записи: <a href="/privacy">как мы храним данные</a>.`;
 
-function headTags(title, desc) {
+function headTags(title, desc, path = "/") {
   return `<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>${title}</title>
 <meta name="description" content="${esc(desc)}">
-<meta name="robots" content="noindex, nofollow, noarchive">
+${PROD && path ? `<meta name="robots" content="index, follow">
+<link rel="canonical" href="__SITE_URL__${path}">
+<meta property="og:type" content="website">
+<meta property="og:url" content="__SITE_URL__${path}">
+<meta property="og:title" content="${esc(title)}">
+<meta property="og:description" content="${esc(desc)}">
+<meta property="og:image" content="__SITE_URL__${IMG}/film-16.webp">` : `<meta name="robots" content="noindex, nofollow, noarchive">`}
 <meta name="theme-color" content="#1e2b33">
 <link rel="icon" type="image/png" sizes="192x192" href="${IMG}/icon-192.png">
 <link rel="apple-touch-icon" href="${IMG}/apple-180.png">
@@ -206,8 +217,11 @@ ${steps}
 <ul class="qz-sum" id="qz-sum"></ul>
 <p class="qz-p">Ориентир по цене клиники: от <b>${rub(D.PRICES[0].price)}</b>, «под ключ» с протезом <b>${rub(D.PRICES[1].price)}</b>. Подарки: КТ и удаление зубов бесплатно, персональная скидка ${rub(80000)}.</p>
 <label class="qz-in"><span>Как к вам обращаться</span><input type="text" id="qz-name" autocomplete="given-name" placeholder="Имя"></label>
-<div class="qz-go"><a class="btn btn-onyx" id="qz-sms" href="${sms(SMS_HI)}">${ic("msg")}<span>Отправить расчёт в клинику</span></a><a class="btn btn-line" href="${tel}">${ic("phone")}<span>Позвонить</span></a></div>
-<p class="qz-note">Сообщение откроется у вас в телефоне с готовым текстом, отправляете вы сами. На рабочем сайте расчёт придёт администратору в CRM и мессенджер.</p>
+${PROD ? `<label class="qz-in"><span>Телефон</span><input type="tel" id="qz-phone" autocomplete="tel" inputmode="tel" placeholder="+7 900 000-00-00" required></label>
+<p class="lv-err" id="qz-err" role="alert"></p>
+<div class="qz-go"><button type="button" class="btn btn-onyx" id="qz-sms">${ic("msg")}<span>Отправить расчёт в клинику</span></button><a class="btn btn-line" href="${tel}">${ic("phone")}<span>Позвонить</span></a></div>
+<p class="qz-note">${CONSENT}</p>` : `<div class="qz-go"><a class="btn btn-onyx" id="qz-sms" href="${sms(SMS_HI)}">${ic("msg")}<span>Отправить расчёт в клинику</span></a><a class="btn btn-line" href="${tel}">${ic("phone")}<span>Позвонить</span></a></div>
+<p class="qz-note">Сообщение откроется у вас в телефоне с готовым текстом, отправляете вы сами. На рабочем сайте расчёт придёт администратору в CRM и мессенджер.</p>`}
 </div>
 <div class="qz-nav"><button type="button" class="btn btn-ghost" id="qz-back" disabled>Назад</button><span class="qz-hint" id="qz-hint">Выберите ответ</span></div>
 </form>
@@ -265,7 +279,7 @@ function roomsBlock() {
   return `<section class="rooms" id="klinika" data-tone="ink"><div class="wrap">
 ${head("Клиника", `Белинского, 63`, `${B.near}. ${B.parking}.`)}
 <div class="rm-grid">${ph.map(([n, alt, w, h], i) => `<figure class="rm rm-${i} rv" style="--d:${i * 70}ms">${pic(n, alt, w, h)}</figure>`).join("")}</div>
-<p class="src">Фото с сайта клиники.</p>
+${PROD ? "" : `<p class="src">Фото с сайта клиники.</p>`}
 </div></section>`;
 }
 
@@ -307,7 +321,7 @@ ${head("Ждём на консультации", "Как доехать", `${B.n
 <li>${ic("phone")}<span><b><a href="${tel}">${B.phone}</a></b>звонок в одно нажатие</span></li>
 </ul>
 <div class="ct-b"><a class="btn btn-onyx" href="#zapis" data-book>${ic("msg")}<span>Записаться</span></a><a class="btn btn-line" href="${B.map}">${ic("pin")}<span>Открыть карту</span></a></div></div>
-<div class="ct-plan rv"><span class="kick">Уже были у других врачей?</span><b>План лечения от главного врача</b><p>Ортопед, который специализируется на All-on-6, посмотрит ваши снимки и скажет, что можно сделать.</p><a class="btn btn-line" href="${sms("Здравствуйте! Уже был(а) на приёме в другой клинике, хочу получить план лечения от главного врача.")}">${ic("msg")}<span>Получить план</span></a></div>
+<div class="ct-plan rv"><span class="kick">Уже были у других врачей?</span><b>План лечения от главного врача</b><p>Ортопед, который специализируется на All-on-6, посмотрит ваши снимки и скажет, что можно сделать.</p><a class="btn btn-line" ${PROD ? `href="#zapis" data-book` : `href="${sms("Здравствуйте! Уже был(а) на приёме в другой клинике, хочу получить план лечения от главного врача.")}"`}>${ic("msg")}<span>Получить план</span></a></div>
 </div>
 </div></section>`;
 }
@@ -350,9 +364,13 @@ function bookSheet() {
 <p class="bk-h" id="bk-h">Когда вам удобно?</p>
 <div class="bk-g" role="radiogroup" aria-label="День">${days.map((d, i) => `<button type="button" class="chip" data-day="${d}" aria-pressed="${i === 1}">${d}</button>`).join("")}</div>
 <div class="bk-g" role="radiogroup" aria-label="Время">${parts.map((d, i) => `<button type="button" class="chip" data-part="${d}" aria-pressed="${i === 2}">${d}</button>`).join("")}</div>
-<a class="btn btn-onyx bk-go" id="bk-go" href="${sms(SMS_HI)}">${ic("msg")}<span>Записаться: завтра вечером</span></a>
+${PROD ? `<div class="bk-f"><label class="qz-in"><span>Имя</span><input type="text" id="bk-name" autocomplete="given-name" placeholder="Как к вам обращаться"></label><label class="qz-in"><span>Телефон</span><input type="tel" id="bk-phone" autocomplete="tel" inputmode="tel" placeholder="+7 900 000-00-00" required></label></div>
+<p class="lv-err" id="bk-err" role="alert"></p>
+<button type="button" class="btn btn-onyx bk-go" id="bk-go">${ic("msg")}<span>Записаться: завтра вечером</span></button>
 <a class="btn btn-line" href="${tel}">${ic("phone")}<span>Или позвоните: ${B.phone}</span></a>
-<p class="qz-note">Сообщение откроется с готовым текстом, отправляете вы. Клиника работает ${B.hoursShort}.</p>
+<p class="qz-note">Администратор перезвонит и подтвердит время. Клиника работает ${B.hoursShort}. ${CONSENT}</p>` : `<a class="btn btn-onyx bk-go" id="bk-go" href="${sms(SMS_HI)}">${ic("msg")}<span>Записаться: завтра вечером</span></a>
+<a class="btn btn-line" href="${tel}">${ic("phone")}<span>Или позвоните: ${B.phone}</span></a>
+<p class="qz-note">Сообщение откроется с готовым текстом, отправляете вы. Клиника работает ${B.hoursShort}.</p>`}
 </div></div>`;
 }
 
@@ -372,7 +390,8 @@ function siteData() {
     quiz: D.QUIZ.map((q) => q.q),
     /* Чат на сайте (chat.js): отвечает только фактами клиники, без модели. */
     chat: { faq: D.FAQ, prices: D.PRICES.map((p) => ({ t: p.t, d: p.d, p: p.price })), gifts: D.GIFTS, benefit: D.BENEFIT, guar: D.GUARANTEE.map((g) => g.t + ": " + g.d.toLowerCase()), docs: D.DOCTORS.map((x) => ({ n: x.name, r: x.role, f: x.facts[0] })), phone: B.phone, addr: B.addr, near: B.near, hours: B.hoursShort, parking: B.parking, open: B.open, close: B.close, warn: B.warn, perks: D.PERKS.map((x) => x.t + ": " + x.d.toLowerCase()) },
-    offer: { cur: CUR, items: ADDONS.map((a) => ({ id: a.id, t: a.ru.t, p: a.price })), base: BASE.promo, baseName: BASE.ru.t, hours: OFFER_HOURS, head: "Сайт клиники «Сияние Севера», состав:", totalW: "Итого", copied: "Скопировано", ended: "Акция закончилась, цена обычная" },
+    ...(PROD ? { live: true } : {}),
+    offer: PROD ? undefined : { cur: CUR, items: ADDONS.map((a) => ({ id: a.id, t: a.ru.t, p: a.price })), base: BASE.promo, baseName: BASE.ru.t, hours: OFFER_HOURS, head: "Сайт клиники «Сияние Севера», состав:", totalW: "Итого", copied: "Скопировано", ended: "Акция закончилась, цена обычная" },
   };
 }
 
@@ -381,7 +400,7 @@ function sitePage() {
   return `<!doctype html>
 <html lang="ru">
 <head>
-${headTags("Все зубы на 6 имплантатах за 1 день · «Сияние Севера», Томск · макет DevUz Studio", "Все зубы на 6 имплантатах за один день в Томске: All-on-6 в центре имплантации «Сияние Севера», ул. Белинского, 63. Цены, рассрочка 0%, врачи, гарантии, расчёт за минуту.")}
+${headTags(`Все зубы на 6 имплантатах за 1 день · «Сияние Севера», Томск${PROD ? "" : " · макет DevUz Studio"}`, "Все зубы на 6 имплантатах за один день в Томске: All-on-6 в центре имплантации «Сияние Севера», ул. Белинского, 63. Цены, рассрочка 0%, врачи, гарантии, расчёт за минуту.")}
 <link rel="preload" as="image" href="${IMG}/film-9.webp" media="(max-aspect-ratio: 4/5)">
 <link rel="preload" as="image" href="${IMG}/film-16.webp" media="(min-aspect-ratio: 4/5)">
 <script>(function(){var r=document.documentElement;r.classList.add('js');var calm=false;try{if(matchMedia('(prefers-reduced-motion: reduce)').matches)calm=true}catch(e){}try{var c=navigator.connection;if(c&&c.saveData)calm=true}catch(e){}if(calm)r.classList.add('calm');})()</script>
@@ -389,28 +408,28 @@ ${headTags("Все зубы на 6 имплантатах за 1 день · «�
 @@S@@
 </head>
 <body class="site">
-${dzIntroSolo("ru")}
+${PROD ? "" : dzIntroSolo("ru")}
 ${sprite()}
 <a class="skip" href="#main">К содержанию</a>
 <header class="top" id="top"><div class="wrap">
-<a class="logo" href="${BASEP}" aria-label="${B.name}, на главную">${logo()}</a>
+<a class="logo" href="${PROD ? "/" : BASEP}" aria-label="${B.name}, на главную">${logo()}</a>
 <nav class="nav" aria-label="Разделы">${nav.map(([u, n]) => `<a href="${u}">${n}</a>`).join("")}</nav>
 <div class="top-r"><a class="top-ph" href="${tel}">${ic("phone")}<span>${B.phone}</span></a><a class="btn btn-sm btn-onyx" href="#zapis" data-book>Записаться</a></div>
 </div></header>
 <main id="main">
-${[storyBlock(), vsBlock(), priceBlock(), quizBlock(), doctorsBlock(), trustBlock(), perksBlock(), reviewsBlock(), roomsBlock(), nowBlock(), bestBlock(), faqBlock(), contactsBlock(), offerBlock()].join("\n")}
+${(PROD ? [storyBlock(), vsBlock(), priceBlock(), quizBlock(), doctorsBlock(), trustBlock(), perksBlock(), reviewsBlock(), roomsBlock(), faqBlock(), contactsBlock()] : [storyBlock(), vsBlock(), priceBlock(), quizBlock(), doctorsBlock(), trustBlock(), perksBlock(), reviewsBlock(), roomsBlock(), nowBlock(), bestBlock(), faqBlock(), contactsBlock(), offerBlock()]).join("\n")}
 </main>
 <div class="warn-band" role="note"><div class="wrap"><p class="warn">${B.warn.toUpperCase()}</p><p class="lic">${B.legal} · ${B.license}</p></div></div>
 <footer class="foot"><div class="wrap">
 <div class="cols">
 <div>${logo("f-logo")}<p class="f-d">${B.what}. ${B.addr}. ${B.hours}.</p><ul class="f-c"><li>${ic("phone")}<a href="${tel}">${B.phone}</a></li><li>${ic("pin")}<a href="${B.route}">Маршрут в Яндекс Картах</a></li></ul></div>
-<div><b>DevUz Studio</b><ul><li><a href="https://devuz.studio">devuz.studio</a></li><li><a href="https://t.me/Devuz_studio_bot?start=syanie">Telegram</a></li></ul></div>
-<div><b>Данные макета</b><ul><li>Цены, врачи, гарантии, отзывы, адрес, часы, лицензия: ${B.site.replace("https://", "")}</li><li>Пролёт по клинике и сцены лечения сняты нейросетью по фото клиники</li><li>Квиз и запись открывают сообщение в клинику, ничего не уходит нам</li><li><a href="__PROTO_BASE__/panel">Админка клиники (показ)</a></li></ul></div>
+${PROD ? "" : `<div><b>DevUz Studio</b><ul><li><a href="https://devuz.studio">devuz.studio</a></li><li><a href="https://t.me/Devuz_studio_bot?start=syanie">Telegram</a></li></ul></div>
+<div><b>Данные макета</b><ul><li>Цены, врачи, гарантии, отзывы, адрес, часы, лицензия: ${B.site.replace("https://", "")}</li><li>Пролёт по клинике и сцены лечения сняты нейросетью по фото клиники</li><li>Квиз и запись открывают сообщение в клинику, ничего не уходит нам</li><li><a href="__PROTO_BASE__/panel">Админка клиники (показ)</a></li></ul></div>`}
 </div>
-<div class="rights"><span>Это макет: так может выглядеть сайт «${B.name}». Сайт носит информационный характер и не является публичной офертой.</span><a href="${TERMS}">Условия использования макета</a></div>
+${PROD ? `<div class="rights"><span>© ${new Date().getFullYear()} ${B.legal}. Сайт носит информационный характер и не является публичной офертой.</span><a href="/privacy">Обработка персональных данных</a></div>` : `<div class="rights"><span>Это макет: так может выглядеть сайт «${B.name}». Сайт носит информационный характер и не является публичной офертой.</span><a href="${TERMS}">Условия использования макета</a></div>`}
 </div></footer>
 <div class="dock" id="dock"><a class="btn btn-onyx" href="#zapis" data-book>${ic("msg")}<span>Записаться</span></a><a class="btn btn-call" href="${tel}" aria-label="Позвонить в клинику">${ic("phone")}</a></div>
-${bookSheet()}
+${bookSheet()}${PROD ? `\n<input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" class="lv-hp">` : ""}
 <script type="application/json" id="sy-site">${json(siteData())}</script>
 <script src="${IMG}/gsap.min.js"></script>
 <script src="${IMG}/ScrollTrigger.min.js"></script>
@@ -419,7 +438,60 @@ ${bookSheet()}
 </html>`;
 }
 
+/* ── Рабочий сайт: страница о персональных данных и 404 ────────────── */
+function plainPage(title, desc, path, body) {
+  const root = /:root\{[^}]*\}/.exec(read("site.css"))[0];
+  return `<!doctype html>
+<html lang="ru">
+<head>
+${headTags(title, desc, path)}
+<style>${root}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--text);font:17px/1.6 Geologica,system-ui,sans-serif}main{max-width:760px;margin:0 auto;padding:40px 16px 64px}h1{font:400 clamp(30px,6vw,44px)/1.1 "Noto Serif Display",Georgia,serif;margin:24px 0 8px}h2{font-size:19px;margin:32px 0 6px}p,li{color:var(--text)}small,.mu{color:var(--mute)}a{color:var(--acc-d)}.lg{display:inline-flex;align-items:center;gap:10px;color:var(--ink);text-decoration:none}.lg .mk{width:36px;height:36px}.lg-t b{display:block;font-size:17px}.lg-t small{font-size:12px}</style>
+</head>
+<body>
+<main>
+<a class="lg" href="/">${MARK}<span class="lg-t"><b>${B.name}</b><small>центр имплантации</small></span></a>
+${body}
+</main>
+</body>
+</html>`;
+}
+
+function privacyPage() {
+  return plainPage(`Обработка персональных данных · «${B.name}», Томск`, `Как ${B.legal} хранит имя и телефон из записи на сайте.`, "/privacy", `<h1>Обработка персональных данных</h1>
+<p class="mu">Действует с ${new Date().toISOString().slice(0, 10).split("-").reverse().join(".")}</p>
+<h2>Кто обрабатывает</h2>
+<p>${B.legal}, ${B.addr}. Телефон: <a href="${tel}">${B.phone}</a>. ${B.license}.</p>
+<h2>Какие данные</h2>
+<p>Имя и телефон, которые вы пишете в записи на консультацию или в расчёте, ответы расчёта, сообщения в чате сайта. Если вы пишете клинике в Telegram, WhatsApp, Instagram или другой мессенджер, клиника видит ваше имя в нём, номер или ник и переписку.</p>
+<h2>Зачем</h2>
+<p>Перезвонить, записать на консультацию, ответить на вопрос, вести запись на лечение. Рекламных рассылок по этим данным клиника не делает.</p>
+<h2>Где хранятся и кому передаются</h2>
+<p>На сервере клиники. Заявка попадает в CRM клиники (amoCRM), а уведомление о ней сотрудникам клиники в рабочий Telegram. Доступ есть только у сотрудников клиники с личным входом. Третьим лицам данные не продаются и не передаются.</p>
+<h2>Сколько хранятся</h2>
+<p>Пока это нужно для записи и лечения, или до того, как вы отзовёте согласие.</p>
+<h2>Как отозвать согласие и удалить данные</h2>
+<p>Позвоните по номеру <a href="${tel}">${B.phone}</a> или напишите в чат на сайте. Данные удалим в течение 30 дней и сообщим об этом.</p>
+<h2>Что сайт хранит у вас в браузере</h2>
+<p>Номер вашей заявки, чтобы показать её статус, и ключ чата, чтобы показать ответ администратора. Счётчиков посещаемости и рекламных меток на сайте нет.</p>
+<p><a href="/">На главную</a></p>`);
+}
+
 const opt = (f) => (existsSync(DIR + f) ? read(f) : "");
+if (PROD) {
+  /* Рабочий сайт: свои store и чат вместо демо; панель макета не нужна,
+     админка клиники лежит в app/admin. */
+  const APP = DIR + "app/";
+  const S = `<style>${min(read("site.css") + read("chat.css") + read("app/site/live.css"))}</style>`;
+  const J = `<script>\n${strip(read("app/site/store-live.js") + read("site.js") + read("app/site/live-chat.js"))}</script>`;
+  const page = sitePage().split("@@S@@").join(S).split("@@J@@").join(J);
+  for (const bad of ["__PROTO_BASE__", "mockup-terms", "devuz", "DevUz", "макет", "dz-intro", "noindex"]) if (page.includes(bad)) throw new Error(`на рабочем сайте осталось «${bad}»`);
+  mkdirSync(APP + "site", { recursive: true });
+  writeFileSync(APP + "site/index.html", page);
+  writeFileSync(APP + "site/privacy.html", privacyPage());
+  writeFileSync(APP + "site/404.html", plainPage(`Страница не найдена · «${B.name}»`, "Такой страницы нет.", null, `<h1>Такой страницы нет</h1><p>Возможно, ссылка устарела. Всё о клинике и запись на консультацию: <a href="/">на главной</a>, или позвоните: <a href="${tel}">${B.phone}</a>.</p>`));
+  console.log("рабочий сайт:", page.length, "знаков →", APP + "site/");
+  process.exit(0);
+}
 const out = { "": sitePage() };
 /* store.js — общее состояние сайта, чата и панели; chat.* — чат на сайте. */
 const parts = {

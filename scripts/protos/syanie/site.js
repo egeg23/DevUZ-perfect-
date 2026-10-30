@@ -296,7 +296,9 @@ if(qz){
   steps.forEach(function(s,i){$$('input',s).forEach(function(r){r.addEventListener('change',function(){setTimeout(function(){if(cur===i)show(i+1)},320)})})});
   back.onclick=function(){if(cur>0)show(cur-1)};
   if(nm)nm.addEventListener('input',upd);
-  go.addEventListener('click',function(){mine(SY.addLead({src:'quiz',name:nm&&nm.value.trim()||'',what:'Расчёт All-on-6: '+answers().map(function(a){return a[1]}).filter(Boolean).join(', '),when:''}))});
+  var qwhat=function(){return'Расчёт All-on-6: '+answers().map(function(a){return a[1]}).filter(Boolean).join(', ')};
+  if(K.live)go.addEventListener('click',function(e){e.preventDefault();liveSend(go,$('#qz-err'),{src:'quiz',name:nm&&nm.value.trim()||'',phone:$('#qz-phone').value,what:qwhat()},function(){$('.qz-go',qz).outerHTML='<p class="lv-ok" role="status">Расчёт у администратора. Главный врач перезвонит с планом лечения, обычно в течение часа (9:00-21:00).</p>'})});
+  else go.addEventListener('click',function(){mine(SY.addLead({src:'quiz',name:nm&&nm.value.trim()||'',what:qwhat(),when:''}))});
   $('#qz-f').addEventListener('submit',function(e){e.preventDefault()});
   show(0);
 }
@@ -316,13 +318,22 @@ if(sheet){
   sheet.addEventListener('click',function(e){if(e.target===sheet)closeSheet()});
   $$('.bk-g',sheet).forEach(function(g){$$('.chip',g).forEach(function(c){c.onclick=function(){$$('.chip',g).forEach(function(x){x.setAttribute('aria-pressed',String(x===c))});bkText()}})});
   bkText();
-  bkGo.addEventListener('click',function(){var dy=$('.chip[data-day][aria-pressed="true"]'),pt=$('.chip[data-part][aria-pressed="true"]');
-    mine(SY.addLead({src:'booking',name:'',what:'Бесплатная консультация All-on-6',when:((dy?dy.getAttribute('data-day'):'')+' '+(pt?pt.getAttribute('data-part'):'')).toLowerCase()}))});
+  bkGo.addEventListener('click',function(e){var dy=$('.chip[data-day][aria-pressed="true"]'),pt=$('.chip[data-part][aria-pressed="true"]'),
+    when=((dy?dy.getAttribute('data-day'):'')+' '+(pt?pt.getAttribute('data-part'):'')).toLowerCase();
+    if(!K.live){mine(SY.addLead({src:'booking',name:'',what:'Бесплатная консультация All-on-6',when:when}));return}
+    e.preventDefault();liveSend(bkGo,$('#bk-err'),{src:'booking',name:$('#bk-name').value.trim(),phone:$('#bk-phone').value,what:'Бесплатная консультация All-on-6',wish:when},function(){
+      $('.sh-in',sheet).insertAdjacentHTML('beforeend','<p class="lv-ok" role="status">Заявка у администратора. Перезвоним, чтобы подтвердить время: '+when+'.</p>');bkGo.hidden=true})});
 }
 
 /* ── Моя заявка: статус из панели клиники виден здесь ──────────────── */
 var ME='sy-me',stEl=null,ST={new:'принята, администратор скоро свяжется',confirmed:'подтверждена администратором',came:'вы были на приёме, спасибо',canceled:'отменена'};
-function mine(id){try{localStorage.setItem(ME,id)}catch(e){}myStatus()}
+function mine(id){if(!id)return;try{localStorage.setItem(ME,id)}catch(e){}myStatus()}
+/* Рабочий сайт: заявка уходит на сервер клиники (store-live.js). Телефон
+   нужен, чтобы администратор перезвонил; поле-ловушка website — от ботов. */
+function liveSend(btn,err,lead,done){var dg=String(lead.phone||'').replace(/\D/g,'');
+  if(dg.length<10){err.textContent='Укажите телефон: администратор перезвонит, чтобы подтвердить время';var f=$('input[type="tel"]',btn.closest('form,.sh-in'));if(f)f.focus();return}
+  var hp=$('input[name="website"]');lead.website=hp?hp.value:'';err.textContent='';btn.disabled=true;
+  SY.send(lead).then(function(id){btn.disabled=false;mine(id);done()},function(e){btn.disabled=false;err.textContent=e.message})}
 function myStatus(){var id;try{id=localStorage.getItem(ME)}catch(e){}var l=id&&window.SY?SY.lead(id):null;
   if(!l){if(stEl)stEl.hidden=true;return}
   if(!stEl){stEl=d.createElement('button');stEl.type='button';stEl.className='my-st';stEl.setAttribute('aria-live','polite');stEl.onclick=function(){stEl.hidden=true};d.body.appendChild(stEl)}
@@ -335,7 +346,7 @@ $$('.fq-q').forEach(function(b){b.onclick=function(){var it=b.closest('.fq-i'),o
   it.classList.toggle('open',open);b.setAttribute('aria-expanded',String(open))}});
 
 /* ── Конструктор цены и отсчёт 48 часов ───────────────────────────── */
-var rows=$$('#konstruktor input[data-k]'),sumEl=$('#kit-sum'),addEl=$('#kit-add'),nEl=$('#kit-cnt'),shown=K.offer.base,rq=0;
+var rows=$$('#konstruktor input[data-k]'),sumEl=$('#kit-sum'),addEl=$('#kit-add'),nEl=$('#kit-cnt'),shown=K.offer?K.offer.base:0,rq=0;
 function roll(to){cancelAnimationFrame(rq);var from=shown,t0=0;function s(t){if(!t0)t0=t;var k=clamp((t-t0)/500),e=1-Math.pow(1-k,3);shown=from+(to-from)*e;sumEl.textContent=fmt(shown)+' '+K.offer.cur;if(k<1)rq=requestAnimationFrame(s)}rq=requestAnimationFrame(s)}
 function kit(){var add=0,n=0;rows.forEach(function(r){if(r.checked){add+=+r.getAttribute('data-p');n++}});addEl.textContent=fmt(add)+' '+K.offer.cur;nEl.textContent=n;roll(K.offer.base+add)}
 rows.forEach(function(r){r.onchange=kit});

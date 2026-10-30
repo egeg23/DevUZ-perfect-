@@ -1,0 +1,14 @@
+# HTTPS для сайта клиники: Caddy сам получает и продлевает сертификат
+# Let's Encrypt на домен из DOMAIN (нужна запись A на этот сервер и
+# открытые 80 и 443). Сайт — контейнер syanie-app в сети syanie.
+{
+	admin off
+}
+
+{$DOMAIN} {
+	encode zstd gzip
+	header -Server
+	reverse_proxy syanie-app:3000 {
+		header_up X-Forwarded-For {remote_host}
+	}
+}
