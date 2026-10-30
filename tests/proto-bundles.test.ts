@@ -2544,13 +2544,14 @@ test("Oson Apteka: выбор, сайт и панель на ru и uz — усл
   assert.notEqual(stamped.pages["uz/site"], site.pages["uz/site"], "отпечаток не поставился на узбекском сайте");
 });
 
-test("Oson Apteka: сайт 1 000 $ вместо 4 900 $, допы вместе 2 000 $, с сайтом не больше 3 000 $; тарифы по середине рынка", async () => {
+test("Oson Apteka: сайт 1 000 $ вместо 4 900 $, допы вместе 3 000 $, с сайтом не больше 4 000 $; тарифы по середине рынка", async () => {
   const plan = await import("../scripts/protos/osonapteka/plan.mjs");
   const tf = await import("../scripts/protos/osonapteka/tariffs.mjs");
   assert.equal(plan.BASE.promo, 1000);
   assert.equal(plan.BASE.price, 4900);
-  assert.ok(plan.ADDONS.reduce((s: number, a: { price: number }) => s + a.price, 0) <= 2000, "допы дороже 2 000 $");
-  assert.ok(plan.ALL <= 3000, "сайт с допами дороже 3 000 $");
+  /* Владелец, 30.10.2026: «Давай допы не на 2000, а на 3000$». */
+  assert.equal(plan.ADDONS.reduce((s: number, a: { price: number }) => s + a.price, 0), 3000, "допы не 3 000 $");
+  assert.ok(plan.ALL <= 4000, "сайт с допами дороже 4 000 $");
   for (const id of ["bron", "admin", "erp", "deliv", "pay", "bot", "remind"]) assert.ok(plan.ADDONS.some((a: { id: string }) => a.id === id), `нет допа ${id}`);
   for (const a of plan.ADDONS) for (const l of ["ru", "uz"] as const) assert.ok(a[l].t && a[l].e && a[l].who, `${a.id}: нет текста на ${l}`);
   for (const a of plan.ADDONS) assert.doesNotMatch(a.uz.t + a.uz.e + a.uz.who, /[А-Яа-яЁё]/, `${a.id}: кириллица в узбекском`);
