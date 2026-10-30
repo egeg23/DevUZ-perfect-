@@ -273,6 +273,40 @@ function addonBlocks(l, t) {
 </div></section>`;
 }
 
+/* Второй заход допов (владелец, 30.10.2026: «добавь еще допы, блоки»). Каждый
+   блок — свой data-addon, тумблер на первой странице его прячет. */
+function moreBlocks(l, t) {
+  const tag = t("Доп", "Qo‘shimcha");
+  const unit = (p) => Math.round(p.price / p.cnt);
+  const iz10 = P(16), iz20 = P(18), kan = P(8), sor = P(9);
+  const top = PHARMACY.opts.find((o) => o.id === "top").price, ban = PHARMACY.opts.find((o) => o.id === "banner").price;
+  const card = (id, kick, h, p, body, cls = "") => `<div class="mb ${cls}" id="${id}" data-addon="${id === "ask" ? "pharmacist" : id === "rx" ? "rxphoto" : id}"><p class="kick"><i></i>${kick}</p><h3>${h}</h3><p class="mu">${p}</p>${body}</div>`;
+  return `<section class="sec add-block" id="more" data-tag="${tag}" style="background:var(--s2)"><div class="wrap">
+<p class="kick rise"><i></i>${t("Ещё возможности", "Yana imkoniyatlar")}</p>
+<h2 class="h2 rise">${t("То, чего нет <b>ни у одного справочника</b> в стране", "Mamlakatdagi <b>hech bir ma’lumotnomada</b> yo‘q narsalar")}</h2>
+<p class="lead rise">${t("Каждый блок включается в конструкторе отдельно. Всё работает на этой странице, данные в браузере.", "Har bir blok konstruktorda alohida yoqiladi. Hammasi shu sahifada ishlaydi, ma’lumotlar brauzerda.")}</p>
+<div class="mbs">
+${card("rx", t("Рецепт фото", "Retsept surati"), t("Сфотографируйте рецепт, аптека соберёт", "Retseptni suratga oling, dorixona yig‘adi"), t("Фармацевт сверяет рецепт и собирает заказ. Фото видит только выбранная аптека.", "Farmatsevt retseptni tekshiradi va buyurtmani yig‘adi. Suratni faqat tanlangan dorixona ko‘radi."),
+  `<label class="drop"><input type="file" id="rxf" accept="image/*"><span id="rxl">${ICON.doc}<b>${t("Выбрать фото рецепта", "Retsept suratini tanlash")}</b><small class="mu">${t("JPG или PNG, в макете никуда не уходит", "JPG yoki PNG, maketda hech qayerga ketmaydi")}</small></span><img id="rxi" alt="" hidden></label><button type="button" class="btn btn-a" id="rxgo" disabled>${t("Отправить в аптеку · демо", "Dorixonaga yuborish · demo")}</button>`, "w2 tilt")}
+${card("ask", t("Фармацевт", "Farmatsevt"), t("Спросить аптеку", "Dorixonadan so‘rash"), t("Отвечает фармацевт аптеки в рабочее время. Про лечение и замену: только врач.", "Ish vaqtida dorixona farmatsevti javob beradi. Davolash va almashtirish haqida: faqat shifokor."),
+  `<div class="chat on" id="askc"><p class="bt">${t("Здравствуйте! Чем помочь?", "Assalomu alaykum! Qanday yordam beray?")}</p></div><div class="qchips">${[["have", t("Есть сегодня?", "Bugun bormi?")], ["keep", t("Как хранить?", "Qanday saqlash?")], ["swap", t("Можно заменить?", "Almashtirsa bo‘ladimi?")]].map(([k, q]) => `<button type="button" data-ask="${k}">${q}</button>`).join("")}</div>`, "slide")}
+${card("notify", t("Нет в наличии", "Mavjud emas"), t("«Сообщить, когда появится»", "«Paydo bo‘lganda xabar berish»"), t("Telegram напишет, как только аптека района выгрузит остаток.", "Tuman dorixonasi qoldiqni yuklashi bilan Telegram yozadi."),
+  `<button type="button" class="btn btn-g" data-notify="${P(12).id}">${ICON.tg}<span>${esc(P(12).short[l])}: ${t("сообщить", "xabar berish")}</span></button>`, "pop")}
+${card("watch", t("Цена", "Narx"), t("Следить за ценой", "Narxni kuzatish"), t("Задайте цену: когда «от» по базе станет ниже, придёт сообщение.", "Narxni belgilang: bazadagi «dan» narxi pastlasa, xabar keladi."),
+  `<div class="wrow"><span>${esc(kan.short[l])}</span><b>${sum(kan.price, l)}</b></div><label class="rng" style="padding:0;border:0"><span class="mu" style="font-size:14px">${t("Сообщить, если ниже", "Pastroq bo‘lsa xabar berish")}: <b id="wv">${sum(Math.round(kan.price * 0.9 / 100) * 100, l)}</b></span><input type="range" id="wr" min="${Math.round(kan.price * 0.7 / 100) * 100}" max="${kan.price}" step="100" value="${Math.round(kan.price * 0.9 / 100) * 100}"></label><button type="button" class="btn btn-a" data-watch="${kan.id}">${t("Следить", "Kuzatish")}</button>`, "pop")}
+${card("unit", t("Цена за штуку", "Bitta dona narxi"), t("Что выгоднее в пересчёте на 1 шт.", "1 donaga nima foydaliroq"), t("Считаем по вашей цене «от» и числу в упаковке.", "«dan» narxingiz va qadoqdagi son bo‘yicha hisoblaymiz."),
+  `<table class="ut"><tbody>${[iz10, iz20, kan, sor].map((p) => `<tr><td>${esc(p.name[l].split(" ").slice(0, 3).join(" "))}</td><td>№${p.cnt}</td><td><b>${sum(unit(p), l)}</b></td></tr>`).join("")}</tbody></table>`, "tilt")}
+${card("cabph", t("Для аптек", "Dorixonalarga"), t("Кабинет аптеки", "Dorixona kabineti"), t("Аптека сама видит брони, просмотры, место в районе и счёт.", "Dorixona bronlar, ko‘rishlar, tumandagi o‘rni va hisobni o‘zi ko‘radi."),
+  `<div class="kp4">${[[t("Брони за неделю", "Haftalik bronlar"), "34"], [t("Выкуп", "Olib ketish"), "88%"], [t("Просмотры карточки", "Kartochka ko‘rishlari"), "1 240"], [t("Место в районе", "Tumandagi o‘rni"), "#3"]].map(([a, b]) => `<span><small>${a}</small><b>${b}</b></span>`).join("")}</div><p class="mu" style="font-size:12px;margin:8px 0 0">${t("Аптека 81 · демо", "Dorixona 81 · demo")}</p>`, "w2 pop")}
+${card("ads", t("Реклама", "Reklama"), t("Рекламный кабинет", "Reklama kabineti"), t("Район, формат и срок: цена сразу, оплата без менеджера.", "Tuman, format va muddat: narx darhol, menejersiz to‘lov."),
+  `<div class="adb"><label class="fld"><span>${t("Район", "Tuman")}</span><select id="adr">${DISTRICTS[l].map((d, i) => `<option value="${i}"${i === 8 ? " selected" : ""}>${esc(d)}</option>`).join("")}</select></label><div class="pays"><label><input type="radio" name="adf" value="${top}" checked> ${t("Топ района", "Tuman topi")}</label><label><input type="radio" name="adf" value="${ban}"> ${t("Баннер на главной", "Bosh sahifada banner")}</label></div><label class="fld"><span>${t("Недель", "Hafta")}: <b id="adwv">4</b></span><input type="range" id="adw" min="1" max="12" value="4"></label><div class="out" id="ado"></div></div>`, "w2 slide")}
+${card("pwa", t("Приложение", "Ilova"), t("Иконка на экране, без App Store", "App Store’siz ekranda belgi"), t("Список и брони открываются без сети, пуш о готовой брони.", "Ro‘yxat va bronlar internetsiz ochiladi, tayyor bron haqida push."),
+  `<div class="pwa"><span class="ico">${MARK.replace('style="height:34px;width:34px"', 'style="width:44px;height:44px"')}</span><span><b>Oson Apteka</b><small class="mu">${t("Добавить на экран «Домой»", "«Bosh ekran»ga qo‘shish")}</small></span></div>`, "pop")}
+${card("reports", t("Владельцу", "Egasiga"), t("Отчёт в Telegram каждое утро", "Har tong Telegramda hisobot"), t("Поиски, брони, выкуп и чего нет в наличии.", "Qidiruvlar, bronlar, olib ketish va nima yo‘q."),
+  `<div class="chat on"><p class="bt">📊 Oson Apteka · ${t("вчера · демо", "kecha · demo")}<br>${t("Поиски", "Qidiruvlar")}: 6 640 · ${t("брони", "bronlar")}: 82 · ${t("выкуп", "olib ketish")}: 86%<br>${t("Ищут, а нет рядом", "Qidiriladi, yaqinda yo‘q")}: ${esc(P(14).short[l])}, ${esc(P(12).short[l])}<br>${t("Не обновили остатки", "Qoldiqni yangilamadi")}: 5 ${t("аптек", "dorixona")}</p></div>`, "slide")}
+</div></div></section>`;
+}
+
 function pharm(l, t) {
   const F = FACTS[l];
   return `<section class="sec dark" id="pharm"><div class="wrap">
@@ -320,7 +354,7 @@ function footer(l, t) {
 function data(l, t) {
   return {
     l, panel: href(l, "panel"),
-    p: CATALOG.map((p) => ({ id: p.id, n: p.name[l], s: p.short[l], b: p.brand[l], m: p.maker[l], c: p.country[l], atc: p.atc, an: l === "ru" ? p.atcName : "", inn: p.inn ? p.inn[l] : "", f: p.form[l], k: p.kind, pr: p.price, rx: p.rx ? 1 : 0, im: ph(p), u: l === "ru" ? p.url : p.url.replace("osonapteka.uz/", "osonapteka.uz/uz/"), sec: l === "ru" ? p.sec : {} })),
+    p: CATALOG.map((p) => ({ id: p.id, cnt: p.cnt, n: p.name[l], s: p.short[l], b: p.brand[l], m: p.maker[l], c: p.country[l], atc: p.atc, an: l === "ru" ? p.atcName : "", inn: p.inn ? p.inn[l] : "", f: p.form[l], k: p.kind, pr: p.price, rx: p.rx ? 1 : 0, im: ph(p), u: l === "ru" ? p.url : p.url.replace("osonapteka.uz/", "osonapteka.uz/uz/"), sec: l === "ru" ? p.sec : {} })),
     dist: DISTRICTS[l], regs: REGIONS[l],
     tf: { b: BUYER, p: PHARMACY },
     add: ADDONS.map((a) => a.id),
@@ -351,6 +385,11 @@ function data(l, t) {
       tp: { base: t("Размещение", "Joylashtirish"), month: t("Аптека платит в месяц", "Dorixona oyiga to‘laydi"), first: t("первый месяц бесплатно", "birinchi oy bepul"), brons: t("брони", "bronlar"), sales: t("Продажи через бронь", "Bron orqali savdo") },
       rem: { at: t("Напомним в", "Eslatamiz:"), buy: t("Купить новую упаковку до", "Yangi qadoqni sotib olish:"), and: t("и", "va") },
       close: t("Закрыть", "Yopish"),
+      unit: t("за 1 шт.", "1 donasi"), notify: t("Сообщить о поступлении", "Kelganda xabar berish"), watch: t("Следить за ценой", "Narxni kuzatish"),
+      notified: t("Напишем в Telegram, когда появится · демо", "Paydo bo‘lganda Telegramga yozamiz · demo"), watched: t("Напишем, когда цена станет ниже · демо", "Narx pastlasa yozamiz · demo"),
+      rxSent: t("Рецепт ушёл в аптеку · демо: фото никуда не отправлено", "Retsept dorixonaga ketdi · demo: surat hech qayerga yuborilmadi"),
+      ask: { have: t("Посмотрите «Аптеки рядом» в карточке: там аптеки района, где лекарство есть сейчас, и время работы.", "Kartochkadagi «Yaqin dorixonalar»ni ko‘ring: u yerda dori hozir bor tuman dorixonalari va ish vaqti."), keep: t("Условия хранения есть в инструкции, раздел «Особые условия хранения». Уточню у аптеки, если нужно.", "Saqlash shartlari yo‘riqnomada, «Maxsus saqlash shartlari» bo‘limida. Kerak bo‘lsa dorixonadan aniqlayman."), swap: t("Замену назначает только врач. Аналоги с тем же веществом показаны в карточке, покажите их врачу.", "Almashtirishni faqat shifokor tayinlaydi. Xuddi shu moddali analoglar kartochkada, ularni shifokorga ko‘rsating.") },
+      adSum: t("К оплате", "To‘lov"), adHint: t("оплата Payme или Click, без менеджера", "Payme yoki Click orqali, menejersiz"),
     },
   };
 }
@@ -374,6 +413,7 @@ ${list(l, t)}
 ${map(l, t)}
 ${tarif(l, t)}
 ${addonBlocks(l, t)}
+${moreBlocks(l, t)}
 ${pharm(l, t)}
 ${reviews(l, t)}
 ${admin(l, t)}

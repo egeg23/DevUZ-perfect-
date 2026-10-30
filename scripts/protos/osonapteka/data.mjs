@@ -92,6 +92,8 @@ export const CATALOG = RAW.items.map((it, i) => {
     form: f[1],
     kind: f[2],
     price: Math.round(it.price),
+    /* Штук в упаковке — из их названия («№30»); у растворов №1 цены за штуку нет. */
+    cnt: Number((it.name.match(/№\s*(\d+)/) ?? [])[1] ?? 1),
     rx: it.rx,
     sec: Object.fromEntries(Object.entries(it.sec).map(([k, v]) => [k, plain(v)])),
   };

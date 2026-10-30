@@ -11,7 +11,9 @@
 // «Цены»). Допы — от ставок нашего калькулятора (content/calculator.ts),
 // сдвинутых к середине рыночной вилки. Владелец, 30.10.2026, после сдачи:
 // «Давай допы не на 2000, а на 3000$» — все допы вместе 3 000 $ (прежние
-// цены × 1,5), сайт с допами — 4 000 $ (держит tests/proto-bundles.test.ts).
+// цены × 1,5), сайт с допами — 4 000 $. Затем: «добавь еще допы… еще на 2-3
+// тысячи $» — ещё девять на 2 500 $: допы 5 500 $, всё вместе 6 500 $
+// (держит tests/proto-bundles.test.ts).
 
 export const BASE = {
   price: 4900,
@@ -58,6 +60,35 @@ export const ADDONS = [
   { id: "seo", price: 225,
     ru: { t: "Страницы «аптеки рядом» и 10 статей", e: "Страницы по 14 регионам и районам Ташкента под запросы «аптека рядом», «где купить», на двух языках", who: "у tabletki.ua страницы по городам" },
     uz: { t: "«Yaqin dorixonalar» sahifalari va 10 ta maqola", e: "14 hudud va Toshkent tumanlari bo‘yicha «yaqin dorixona», «qayerdan sotib olish» so‘rovlari uchun sahifalar, ikki tilda", who: "tabletki.ua’da shaharlar bo‘yicha sahifalar" } },
+  /* Второй заход, владелец, 30.10.2026: «добавь еще допы, блоки и тд, что было
+     еще на 2-3 тысячи $». Девять допов на 2 500 $, у каждого свой блок. */
+  { id: "rxphoto", price: 300,
+    ru: { t: "Рецепт фото: аптека соберёт по нему", e: "Покупатель фотографирует рецепт врача, выбирает аптеку, фармацевт проверяет и собирает заказ. Рецепт видит только эта аптека", who: "у справочников Узбекистана не нашли" },
+    uz: { t: "Retsept surati: dorixona shu bo‘yicha yig‘adi", e: "Xaridor shifokor retseptini suratga oladi, dorixonani tanlaydi, farmatsevt tekshiradi va buyurtmani yig‘adi. Retseptni faqat shu dorixona ko‘radi", who: "O‘zbekiston ma’lumotnomalarida topilmadi" } },
+  { id: "pharmacist", price: 350,
+    ru: { t: "Вопрос фармацевту аптеки", e: "Чат с аптекой из карточки: есть ли сегодня, как хранить, когда привезут. Про лечение и замену: только врач, это сказано в чате", who: "у OXYmed «связь с фармацевтом»" },
+    uz: { t: "Dorixona farmatsevtiga savol", e: "Kartochkadan dorixona bilan chat: bugun bormi, qanday saqlash, qachon keltiriladi. Davolash va almashtirish haqida: faqat shifokor, bu chatda aytilgan", who: "OXYmed’da «farmatsevt bilan aloqa»" } },
+  { id: "notify", price: 200,
+    ru: { t: "«Сообщить, когда появится»", e: "Нет в аптеках района: покупатель жмёт кнопку, и Telegram пишет ему, как только аптека выгрузит остаток", who: "у ArzonApteka «Нет нужного лекарства» без уведомления" },
+    uz: { t: "«Paydo bo‘lganda xabar berish»", e: "Tuman dorixonalarida yo‘q: xaridor tugmani bosadi, dorixona qoldiqni yuklashi bilan Telegram unga yozadi", who: "ArzonApteka’da xabarnomasiz «Kerakli dori yo‘q»" } },
+  { id: "watch", price: 250,
+    ru: { t: "Следить за ценой", e: "Покупатель задаёт цену, за которую готов купить. Когда «от» по базе опустится ниже, придёт сообщение со ссылкой на аптеку", who: "у tabletki.ua нет, у маркетплейсов есть" },
+    uz: { t: "Narxni kuzatish", e: "Xaridor qaysi narxda olishga tayyorligini belgilaydi. Bazadagi «dan» narxi pastga tushsa, dorixona havolasi bilan xabar keladi", who: "tabletki.ua’da yo‘q, marketpleyslarda bor" } },
+  { id: "unit", price: 150,
+    ru: { t: "Цена за таблетку", e: "У упаковок с разным числом таблеток видно, что выгоднее: цена за 1 штуку по их же цене «от» и числу в упаковке", who: "в аптеках Узбекистана не считают" },
+    uz: { t: "Bitta tabletka narxi", e: "Turli sondagi qadoqlarda nima foydaliroq ko‘rinadi: «dan» narxi va qadoqdagi son bo‘yicha 1 dona narxi", who: "O‘zbekiston dorixonalarida hisoblanmaydi" } },
+  { id: "cabph", price: 450, star: true,
+    ru: { t: "Кабинет аптеки на сайте", e: "Аптека сама видит свои брони, просмотры карточки, место в выдаче района, тариф и счёт. Меньше звонков в вашу поддержку", who: "есть у tabletki.ua для партнёров" },
+    uz: { t: "Saytda dorixona kabineti", e: "Dorixona o‘z bronlari, kartochka ko‘rishlari, tumandagi o‘rni, tarifi va hisobini o‘zi ko‘radi. Yordam xizmatingizga qo‘ng‘iroqlar kamayadi", who: "tabletki.ua’da hamkorlar uchun bor" } },
+  { id: "ads", price: 350,
+    ru: { t: "Рекламный кабинет: топ района и баннер", e: "Аптека или бренд выбирает район, срок и формат, видит цену и оплачивает сам, без менеджера. Баннер проходит модерацию в панели", who: "у ArzonApteka баннер по звонку" },
+    uz: { t: "Reklama kabineti: tuman topi va banner", e: "Dorixona yoki brend tuman, muddat va formatni tanlaydi, narxni ko‘radi va o‘zi to‘laydi, menejersiz. Banner paneldan moderatsiyadan o‘tadi", who: "ArzonApteka’da banner qo‘ng‘iroq orqali" } },
+  { id: "pwa", price: 250,
+    ru: { t: "Сайт как приложение", e: "Иконка на экране телефона без App Store, список и брони открываются и без сети, пуш о готовой брони", who: "у PharmaClick и OXYmed только магазины приложений" },
+    uz: { t: "Ilova kabi sayt", e: "App Store’siz telefon ekranida belgi, ro‘yxat va bronlar internetsiz ham ochiladi, tayyor bron haqida push", who: "PharmaClick va OXYmed’da faqat ilovalar do‘koni" } },
+  { id: "reports", price: 200,
+    ru: { t: "Отчёт владельцу в Telegram", e: "Каждое утро: поиски, брони, выкуп, что ищут и чего нет в наличии, какие аптеки не обновили остатки", who: "вы шлёте отчёты партнёрам, себе: нет" },
+    uz: { t: "Egasiga Telegramda hisobot", e: "Har tong: qidiruvlar, bronlar, olib ketish, nima qidiriladi va nima yo‘q, qaysi dorixonalar qoldiqni yangilamadi", who: "hamkorlarga hisobot yuborasiz, o‘zingizga: yo‘q" } },
 ];
 
 export const ALL = BASE.promo + ADDONS.reduce((s, a) => s + a.price, 0);
