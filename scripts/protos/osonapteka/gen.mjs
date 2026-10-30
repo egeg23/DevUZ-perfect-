@@ -98,14 +98,17 @@ function head(l, title, desc) {
 <link rel="stylesheet" href="${FONTS}">`;
 }
 
-function header(l, t) {
-  const nav = [["search", t("Поиск", "Qidiruv")], ["list", t("Список", "Ro‘yxat")], ["map", t("Аптеки", "Dorixonalar")], ["tarif", t("Тарифы", "Tariflar")], ["pharm", t("Для аптек", "Dorixonalarga")]];
+function header(l, t, kind = "site") {
+  const nav = kind === "site"
+    ? [["search", t("Лекарства", "Dorilar")], ["list", t("Список", "Ro‘yxat")], ["map", t("Аптеки рядом", "Yaqin dorixonalar")], ["tarif", t("Доставка", "Yetkazish")]]
+    : [["prod", t("Продукты", "Mahsulotlar")], ["join", t("Подключение", "Ulanish")], ["tarif", t("Тарифы", "Tariflar")], ["more", t("Кабинет и реклама", "Kabinet va reklama")]];
+  const other = kind === "site" ? [href(l, "business"), t("Для аптек", "Dorixonalarga")] : [href(l, "site"), t("Покупателям", "Xaridorlarga")];
   return `<header class="top"><div class="mbar"><a href="${href(l)}">${ICON.back}<span>${t("Макет для Oson Apteka", "Oson Apteka uchun maket")}</span></a><a class="mb-adm" href="${href(l, "panel")}">${ICON.panel}<span>${t("Админка", "Admin panel")}</span>${ICON.arrow}</a></div><div class="top-in glass">
-${LOGO(l)}
-<nav class="nav" aria-label="${t("Разделы", "Bo‘limlar")}">${nav.map(([id, n]) => `<a href="#${id}">${n}</a>`).join("")}</nav>
-<button type="button" class="mine" id="mine" data-addon="bron">${ICON.bag}<span>${t("Мои брони", "Bronlarim")}</span></button>
-<div class="langs">${LANGS.map((x) => `<a href="${href(x, "site")}" hreflang="${x}" lang="${x}"${x === l ? ' aria-current="true"' : ""}>${x.toUpperCase()}</a>`).join("")}</div>
-<button type="button" class="ib" id="listb" aria-label="${t("Мой список лекарств", "Dorilar ro‘yxatim")}">${ICON.list}<i id="listn"></i></button>
+${LOGO(l, kind)}
+<nav class="nav" aria-label="${t("Разделы", "Bo‘limlar")}">${nav.map(([id, n]) => `<a href="#${id}">${n}</a>`).join("")}<a class="nav-x" href="${other[0]}">${other[1]}</a></nav>
+${kind === "site" ? `<button type="button" class="mine" id="mine" data-addon="bron">${ICON.bag}<span>${t("Мои брони", "Bronlarim")}</span></button>` : ""}
+<div class="langs">${LANGS.map((x) => `<a href="${href(x, kind)}" hreflang="${x}" lang="${x}"${x === l ? ' aria-current="true"' : ""}>${x.toUpperCase()}</a>`).join("")}</div>
+${kind === "site" ? `<button type="button" class="ib" id="listb" aria-label="${t("Мой список лекарств", "Dorilar ro‘yxatim")}">${ICON.list}<i id="listn"></i></button>` : `<a class="btn btn-a btn-s" href="tel:${COMPANY.tel}">${ICON.phone}<span class="hide-s">${t("Подключить", "Ulash")}</span></a>`}
 </div></header>`;
 }
 
@@ -129,13 +132,13 @@ function hero(l, t) {
   return `<section class="hero" id="top" aria-label="Oson Apteka">
 <div class="hero-bg" aria-hidden="true"><div class="map" data-par="0.1">${heroMap()}</div><div class="ph" data-par="-0.06"><img src="${IMG}/poster-16-1920.webp" width="1920" height="1072" alt="" loading="lazy"></div></div>
 <div class="wrap"><div class="hero-in">
-<p class="kick rise"><i></i>${t("Справочная аптек Узбекистана", "O‘zbekiston dorixonalari ma’lumotnomasi")}</p>
-<h1>${words(t("Лекарство рядом и дешевле: <em>3500&nbsp;аптек</em> в одном поиске", "Dori yaqinda va arzonroq: <em>3500&nbsp;dorixona</em> bitta qidiruvda"))}</h1>
-<div class="sbox glass rise" id="sbox"><div class="sline">${ICON.search}<input id="q" type="search" autocomplete="off" enterkeyhint="search" placeholder="${t("Название или действующее вещество", "Nomi yoki ta’sir qiluvchi modda")}" aria-label="${t("Найти лекарство", "Dori topish")}" aria-controls="sug"><button type="button" class="btn btn-a" id="qgo">${ICON.search}<span>${t("Найти", "Topish")}</span></button></div>
+<h1>${words(t("Найдите лекарство <em>в&nbsp;аптеках рядом</em>", "Dorini <em>yaqin dorixonalardan</em> toping"))}</h1>
+<p class="hsub rise">${t("Цены и наличие во всех аптеках, бронь бесплатно", "Barcha dorixonalarda narx va mavjudlik, bron bepul")}</p>
+<div class="sbox glass rise" id="sbox"><div class="sline">${ICON.search}<input id="q" type="search" autocomplete="off" enterkeyhint="search" placeholder="${t("Лекарство или вещество", "Dori yoki modda")}" aria-label="${t("Найти лекарство", "Dori topish")}" aria-controls="sug"><button type="button" class="btn btn-a" id="qgo">${ICON.search}<span>${t("Найти", "Topish")}</span></button></div>
 <div class="sreg">${ICON.pin}<span>${t("Где искать:", "Qayerdan:")}</span><button type="button" id="regb" aria-haspopup="dialog"><span id="regn">${t("Ташкент", "Toshkent")}</span>${ICON.down}</button><span class="mu">${t("сначала ближе", "avval yaqinroq")}</span></div>
 <div class="sug" id="sug" role="listbox" aria-label="${t("Подсказки", "Maslahatlar")}"></div></div>
 <div class="chips rise" aria-label="${t("Часто ищут", "Ko‘p qidiriladi")}">${chips.map(([n, k]) => `<button type="button" data-q="${esc(k)}">${esc(n)}</button>`).join("")}</div>
-<div class="hstats rise"><div class="glass"><b>3500</b><span>${t("аптек подключены", "dorixona ulangan")}</span></div><div class="glass"><b>14</b><span>${t("регионов страны", "mamlakat hududi")}</span></div><div class="glass"><b>0&nbsp;${t("сум", "so‘m")}</b><span>${t("для покупателей", "xaridorlar uchun")}</span></div></div>
+<ul class="hfacts rise">${[t("3500 аптек", "3500 dorixona"), t("14 регионов", "14 hudud"), t("Бесплатно, без регистрации", "Bepul, ro‘yxatdan o‘tmasdan")].map((x) => `<li>${ICON.check}${x}</li>`).join("")}</ul>
 </div></div></section>`;
 }
 
@@ -179,8 +182,8 @@ ${p.inn ? `<div class="inn">${esc(p.inn[l])}</div>` : ""}
 function catalog(l, t) {
   return `<section class="sec" id="search"><div class="wrap">
 <p class="kick rise"><i></i>${t("Популярные лекарства", "Ommabop dorilar")}</p>
-<h2 class="h2 rise">${t("Цены «от» по всем аптекам, <b>как у вас на сайте</b>", "Barcha dorixonalar bo‘yicha «dan» narxlar, <b>saytingizdagidek</b>")}</h2>
-<p class="lead rise">${t("20 лекарств из вашего списка «Популярные товары» с ценой «от» на 30 октября. Нажмите на лекарство: инструкция, аналоги по действующему веществу и аптеки рядом.", "«Ommabop mahsulotlar» ro‘yxatingizdan 30 oktyabr holatiga «dan» narxi bilan 20 ta dori. Dorini bosing: yo‘riqnoma, ta’sir qiluvchi modda bo‘yicha analoglar va yaqin dorixonalar.")}</p>
+<h2 class="h2 rise">${t("Цены во всех аптеках, <b>от самой низкой</b>", "Barcha dorixonalarda narxlar, <b>eng pastidan</b>")}</h2>
+<p class="lead rise">${t("Рядом с лекарством самая низкая цена по аптекам страны. Нажмите на него: инструкция, аналоги с тем же веществом и аптеки рядом с вами.", "Dori yonida mamlakat dorixonalaridagi eng past narx. Uni bosing: yo‘riqnoma, xuddi shu moddali analoglar va yoningizdagi dorixonalar.")}</p>
 <div class="tabs" role="group" aria-label="${t("Отпуск", "Berilishi")}"><button type="button" data-rx="all" aria-pressed="true">${t("Все", "Hammasi")}</button><button type="button" data-rx="0" aria-pressed="false">${t("Без рецепта", "Retseptsiz")}</button><button type="button" data-rx="1" aria-pressed="false">${t("По рецепту", "Retsept bilan")}</button></div>
 <div class="tools"><div class="kinds">${Object.entries(FORM_KINDS).map(([k, v]) => `<button type="button" data-kind="${k}" aria-pressed="false">${v[l]}</button>`).join("")}</div>
 <label><span class="vh">${t("Порядок", "Tartib")}</span><select id="sort"><option value="pop">${t("Сначала популярные", "Avval ommabop")}</option><option value="cheap">${t("Сначала дешевле", "Avval arzonroq")}</option><option value="name">${t("По названию", "Nomi bo‘yicha")}</option></select></label><span class="found" id="found"></span></div>
@@ -193,7 +196,7 @@ function list(l, t) {
   return `<section class="sec" id="list" style="background:var(--s2)"><div class="wrap">
 <p class="kick rise"><i></i>${t("Несколько лекарств за один поиск", "Bir qidiruvda bir nechta dori")}</p>
 <h2 class="h2 rise">${t("Врач выписал три лекарства? <b>Одна аптека на всё</b>", "Shifokor uchta dori yozdimi? <b>Hammasi bitta dorixonada</b>")}</h2>
-<p class="lead rise">${t("Ваша функция одновременного поиска, сделанная списком: добавьте лекарства кнопкой «+», и справочник покажет аптеки, где есть всё сразу, ближе и дешевле.", "Bir vaqtda qidirish funksiyangiz, ro‘yxat ko‘rinishida: dorilarni «+» tugmasi bilan qo‘shing, ma’lumotnoma hammasi birdaniga bor, yaqinroq va arzonroq dorixonalarni ko‘rsatadi.")}</p>
+<p class="lead rise">${t("Добавьте лекарства кнопкой «+», и мы покажем аптеки, где есть всё сразу: ближе и дешевле. Не нужно ездить по трём адресам.", "Dorilarni «+» tugmasi bilan qo‘shing, hammasi birdaniga bor dorixonalarni ko‘rsatamiz: yaqinroq va arzonroq. Uchta manzilga borish shart emas.")}</p>
 <div class="lst"><div class="lbox tilt"><b>${t("Мой список", "Ro‘yxatim")}</b><div id="lrows"></div><div class="hero-act" style="margin-top:16px"><button type="button" class="btn btn-a" id="lgo">${ICON.search}<span>${t("Найти аптеки, где есть всё", "Hammasi bor dorixonalarni topish")}</span></button></div></div>
 <div class="cov" id="cov" aria-live="polite"></div></div>
 </div></section>`;
@@ -209,7 +212,7 @@ function map(l, t) {
   return `<section class="sec" id="map"><div class="wrap">
 <p class="kick rise"><i></i>${t("Аптеки рядом", "Yaqin dorixonalar")}</p>
 <h2 class="h2 rise">${t("Район, маршрут, <b>кто открыт сейчас</b>", "Tuman, yo‘nalish, <b>hozir kim ochiq</b>")}</h2>
-<p class="lead rise">${t("Выберите район Ташкента или регион: аптеки, где есть лекарство, со временем работы, телефоном и маршрутом. Сколько аптек в районе, покажет ваша база; на схеме демо.", "Toshkent tumani yoki hududni tanlang: dori bor dorixonalar, ish vaqti, telefon va yo‘nalish bilan. Tumanda nechta dorixona borligini bazangiz ko‘rsatadi; sxemada demo.")}</p>
+<p class="lead rise">${t("Выберите свой район: аптеки с лекарством, время работы, телефон и маршрут. Аптеки на схеме: демо.", "Tumaningizni tanlang: dori bor dorixonalar, ish vaqti, telefon va yo‘nalish. Sxemadagi dorixonalar: demo.")}</p>
 <div class="mapw"><div class="tmap tilt"><svg viewBox="20 10 460 320" role="group" aria-label="${t("Районы Ташкента", "Toshkent tumanlari")}">
 ${cells.map((c) => `<polygon class="dz" data-d="${c.i}" points="${hx(c.cx, c.cy, 52)}" fill="#fff" stroke="#c9d8f0" stroke-width="2"/>`).join("")}
 ${cells.map((c) => `<text x="${c.cx}" y="${c.cy + 4}" text-anchor="middle">${esc(D[c.i].length > 11 ? D[c.i].split(/[ -]/)[0] : D[c.i])}</text>`).join("")}
@@ -221,29 +224,30 @@ ${cells.map((c) => `<text x="${c.cx}" y="${c.cy + 4}" text-anchor="middle">${esc
 }
 
 /* Конструктор тарифов: покупателю и аптеке. Цены — tariffs.mjs. */
-function tarif(l, t) {
-  const z = BUYER.zones;
+function tarif(l, t, kind = "site") {
+  const z = BUYER.zones, b2c = kind === "site";
+  const top = b2c
+    ? [t("Бронь и доставка", "Bron va yetkazish"), t("Бронь бесплатно, <b>доставка по зонам</b>", "Bron bepul, <b>zonalar bo‘yicha yetkazish</b>"), t("Заберите сами из аптеки или закажите доставку. Цена видна до оформления, а с Oson Plus доставка бесплатна.", "Dorixonadan o‘zingiz oling yoki yetkazishni buyurtma qiling. Narx rasmiylashtirishdan oldin ko‘rinadi, Oson Plus bilan yetkazish bepul.")]
+    : [t("Тарифы для аптек", "Dorixonalar uchun tariflar"), t("Платите за размещение, <b>зарабатываете на бронях</b>", "Joylashtirish uchun to‘laysiz, <b>bronlardan topasiz</b>"), t("Включите нужное и подвиньте ползунки: сумма в месяц и продажи через бронь считаются сразу. Первый месяц бесплатно.", "Keraklisini yoqing va slayderlarni suring: oylik summa va bron orqali savdo darhol hisoblanadi. Birinchi oy bepul.")];
   return `<section class="sec" id="tarif" style="background:var(--s2)"><div class="wrap">
-<p class="kick rise"><i></i>${t("Конструктор тарифов", "Tariflar konstruktori")}</p>
-<h2 class="h2 rise">${t("Сколько это стоит <b>покупателю и аптеке</b>", "Bu <b>xaridor va dorixonaga</b> qanchaga tushadi")}</h2>
-<p class="lead rise">${t("Поиск для покупателя остаётся бесплатным, как сейчас. Платные: доставка и подписка у покупателя, размещение и продвижение у аптеки. Цены по середине рынка Узбекистана, это предложение для обсуждения.", "Xaridor uchun qidiruv hozirgidek bepul qoladi. Pullik: xaridorda yetkazish va obuna, dorixonada joylashtirish va reklama. Narxlar O‘zbekiston bozorining o‘rtasida, bu muhokama uchun taklif.")}</p>
-<div class="tabs" role="tablist" aria-label="${t("Для кого", "Kim uchun")}"><button type="button" role="tab" data-tf="b" aria-pressed="true" aria-selected="true">${t("Покупателю", "Xaridorga")}</button><button type="button" role="tab" data-tf="p" aria-pressed="false" aria-selected="false">${t("Аптеке", "Dorixonaga")}</button></div>
+<p class="kick rise"><i></i>${top[0]}</p>
+<h2 class="h2 rise">${top[1]}</h2>
+<p class="lead rise">${top[2]}</p>
 <div class="tf"><div>
-<div class="tfp on" id="tf-b">
+${b2c ? `<div class="tfp on" id="tf-b">
 <label class="opt"><input type="radio" name="get" value="bron" checked><span class="sw"></span><span class="ot"><b>${t("Бронь и самовывоз", "Bron va olib ketish")}</b><small>${t(`Аптека соберёт и держит ${BUYER.hold} часа`, `Dorixona yig‘adi va ${BUYER.hold} soat saqlaydi`)}</small></span><span class="op">${t("бесплатно", "bepul")}</span></label>
 ${z.map((x) => `<label class="opt" data-addon="deliv"><input type="radio" name="get" value="${x.id}" data-p="${x.price}"><span class="sw"></span><span class="ot"><b>${t("Доставка", "Yetkazish")}: ${esc(x[l])}</b><small>${t("курьер аптеки или такси, в день заказа", "dorixona kuryeri yoki taksi, buyurtma kuni")}</small></span><span class="op">${sum(x.price, l)}</span></label>`).join("")}
 <label class="opt" data-addon="deliv"><input type="checkbox" id="fast" data-p="${BUYER.fast}"><span class="sw"></span><span class="ot"><b>${t("Срочно, за 60 минут", "Tezkor, 60 daqiqada")}</b><small>${t("к цене доставки", "yetkazish narxiga")}</small></span><span class="op">+${sum(BUYER.fast, l)}</span></label>
 <label class="opt"><input type="checkbox" id="plus" data-p="${BUYER.plus.price}"><span class="sw"></span><span class="ot"><b>Oson Plus</b><small>${t(`Доставка бесплатно от ${fmt(BUYER.plus.free)} сум, напоминания о приёме, двойной кэшбэк за чек`, `${fmt(BUYER.plus.free)} so‘mdan bepul yetkazish, qabul eslatmalari, chek uchun ikki baravar keshbek`)}</small></span><span class="op">${sum(BUYER.plus.price, l)}<small>${t("в месяц", "oyiga")}</small></span></label>
 <div class="rng"><label for="ord"><span>${t("Заказов в месяц", "Oyiga buyurtmalar")}</span><b id="ordv">3</b></label><input type="range" id="ord" min="1" max="12" value="3"><label for="chk"><span>${t("Средняя покупка", "O‘rtacha xarid")}</span><b id="chkv"></b></label><input type="range" id="chk" min="50000" max="400000" step="10000" value="160000"></div>
-</div>
-<div class="tfp" id="tf-p">
+</div>` : `<div class="tfp on" id="tf-p">
 <label class="opt"><input type="checkbox" checked disabled><span class="sw"></span><span class="ot"><b>${esc(PHARMACY.base[l])}</b><small>${t("Остатки и цены из вашей программы, контакты, часы, маршрут. Первый месяц бесплатно", "Dasturingizdan qoldiq va narxlar, kontaktlar, ish vaqti, yo‘nalish. Birinchi oy bepul")}</small></span><span class="op">${sum(PHARMACY.base.price, l)}<small>${t("в месяц", "oyiga")}</small></span></label>
 ${PHARMACY.opts.map((o) => `<label class="opt"${o.id === "deliv" ? ' data-addon="deliv"' : o.id === "bron" ? ' data-addon="bron"' : ""}><input type="checkbox" data-o="${o.id}" ${o.id === "bron" ? "checked" : ""}><span class="sw"></span><span class="ot"><b>${esc(o[l])}</b><small>${o.per === "pct" ? t("с выкупленной брони", "olib ketilgan brondan") : o.per === "order" ? t("с доставленного заказа", "yetkazilgan buyurtmadan") : t("в месяц", "oyiga")}</small></span><span class="op">${o.per === "pct" ? o.fee + "%" : sum(o.price, l)}</span></label>`).join("")}
 <div class="rng"><label for="brn"><span>${t("Броней в месяц", "Oyiga bronlar")}</span><b id="brnv">120</b></label><input type="range" id="brn" min="10" max="600" step="10" value="120"><label for="pchk"><span>${t("Средний чек брони", "Bronning o‘rtacha cheki")}</span><b id="pchkv"></b></label><input type="range" id="pchk" min="30000" max="300000" step="10000" value="90000"></div>
-</div>
+</div>`}
 </div>
 <aside class="tsum glass" aria-live="polite"><div id="tsum"></div>
-<p>${t("Цены: предложение DevUz по открытым данным рынка (PharmaClick, ArzonApteka, tabletki.ua). Окончательные назначаете вы, в панели.", "Narxlar: bozorning ochiq ma’lumotlari bo‘yicha DevUz taklifi (PharmaClick, ArzonApteka, tabletki.ua). Yakuniysini siz panelda belgilaysiz.")}</p></aside></div>
+<p class="mnote">${t("В макете: цены по середине рынка (PharmaClick, ArzonApteka, tabletki.ua), меняются в панели.", "Maketda: bozor o‘rtasidagi narxlar (PharmaClick, ArzonApteka, tabletki.ua), paneldan o‘zgaradi.")}</p></aside></div>
 </div></section>`;
 }
 
@@ -252,7 +256,7 @@ function addonBlocks(l, t) {
   const rem = [P(8), P(17), P(9)];
   return `<section class="sec add-block" id="remind" data-addon="remind" data-tag="${tag}"><div class="wrap two">
 <div><p class="kick rise"><i></i>${t("Напоминания", "Eslatmalar")}</p><h2 class="h2 rise">${t("Принять вовремя, <b>купить заранее</b>", "O‘z vaqtida ichish, <b>oldindan sotib olish</b>")}</h2>
-<p class="lead rise">${t("Покупатель сам вносит время приёма по назначению врача. Справочник напомнит в Telegram и подскажет купить новую упаковку, пока старая не кончилась, в ближайшей аптеке.", "Xaridor shifokor tayinlovi bo‘yicha qabul vaqtini o‘zi kiritadi. Ma’lumotnoma Telegramda eslatadi va eskisi tugamasidan yangi qadoqni eng yaqin dorixonadan olishni maslahat beradi.")}</p></div>
+<p class="lead rise">${t("Внесите время приёма по назначению врача. Напомним в Telegram и подскажем купить новую упаковку в ближайшей аптеке, пока старая не кончилась.", "Shifokor tayinlovi bo‘yicha qabul vaqtini kiriting. Telegramda eslatamiz va eskisi tugamasidan yangi qadoqni eng yaqin dorixonadan olishni aytamiz.")}</p></div>
 <div class="rem slide"><label class="fld"><span>${t("Лекарство", "Dori")}</span><select id="rmed">${rem.map((p) => `<option value="${p.id}">${esc(p.short[l])}</option>`).join("")}</select></label>
 <div><b style="font-size:14px">${t("Когда принимать", "Qachon ichish")}</b><div class="times" style="margin-top:8px">${["08:00", "14:00", "20:00", "22:00"].map((x, i) => `<button type="button" data-tm="${x}" aria-pressed="${i === 0 || i === 2}">${x}</button>`).join("")}</div></div>
 <label class="fld"><span>${t("Дней по назначению", "Tayinlov bo‘yicha kunlar")}</span><input id="rdays" type="number" min="1" max="90" value="14" inputmode="numeric"></label>
@@ -260,69 +264,105 @@ function addonBlocks(l, t) {
 <section class="sec add-block" id="bot" data-addon="bot" data-tag="${tag}" style="background:var(--s2)"><div class="wrap two">
 <div class="chat" id="chat"><p class="me">${esc(P(6).short[l])}</p><p class="bt">${t(`${esc(P(6).short[l])}: от ${fmt(P(6).price)} сум. Рядом с вами 4 аптеки (демо). Забронировать?`, `${esc(P(6).short[l])}: ${fmt(P(6).price)} so‘mdan. Yoningizda 4 ta dorixona (demo). Bron qilamizmi?`)}</p><p class="kb"><span>${t("Забронировать", "Bron qilish")}</span><span>${t("Маршрут", "Yo‘nalish")}</span><span>${t("Аналоги", "Analoglar")}</span></p><p class="bt">${t("Бронь собрана ✓ Ждём до 20:00.", "Bron yig‘ildi ✓ 20:00 gacha kutamiz.")}</p></div>
 <div><p class="kick rise"><i></i>Telegram</p><h2 class="h2 rise">${t("@osonaptekabot: <b>бронь в один шаг</b>", "@osonaptekabot: <b>bir qadamda bron</b>")}</h2>
-<p class="lead rise">${t("Ваш бот уже ищет лекарства. Добавим бронь, статус «собрана» и напоминания, тем же движком, что сайт: одна база, одна панель.", "Botingiz allaqachon dori qidiradi. Bron, «yig‘ildi» holati va eslatmalarni qo‘shamiz, sayt bilan bir xil dvigatelda: bitta baza, bitta panel.")}</p>
+<p class="lead rise">${t("Ищите лекарства прямо в Telegram, бронируйте в один шаг и получайте сообщение, когда бронь собрана.", "Dorilarni to‘g‘ridan-to‘g‘ri Telegramda qidiring, bir qadamda bron qiling va bron yig‘ilganda xabar oling.")}</p>
 <div class="hero-act rise"><a class="btn btn-a" href="https://t.me/${COMPANY.bot}" target="_blank" rel="noopener">${ICON.tg}<span>@${COMPANY.bot}</span></a></div></div></div></section>
 <section class="sec add-block" id="cab" data-addon="cab" data-tag="${tag}"><div class="wrap two">
 <div><p class="kick rise"><i></i>${t("Кабинет", "Kabinet")}</p><h2 class="h2 rise">${t("Кэшбэк за чек <b>и на сайте</b>", "Chek uchun keshbek <b>saytda ham</b>")}</h2>
-<p class="lead rise">${t("Сейчас кэшбэк есть только в приложении. В кабинете на сайте: загрузить фото чека, увидеть начисление и перевести на карту, история броней и списки «Мама», «Ребёнок».", "Hozir keshbek faqat ilovada. Saytdagi kabinetda: chek suratini yuklash, hisoblanganini ko‘rish va kartaga o‘tkazish, bronlar tarixi va «Onam», «Bola» ro‘yxatlari.")}</p></div>
-<div class="phone tilt" aria-hidden="true" style="width:min(260px,64vw)"><div class="scr"><div class="v on"><div class="rc">${t("ЧЕК", "CHEK")} · 30.10.2026<br>${esc(P(19).short[l])} ... ${fmt(P(19).price)}<br>${t("ИТОГО", "JAMI")} ... ${fmt(P(19).price)}</div><div class="cb"><small>${t("Кэшбэк начислен", "Keshbek hisoblandi")}</small><b>${t("на карту", "kartaga")}</b></div></div></div></div></div></section>
-<section class="sec add-block" id="erp" data-addon="erp" data-tag="${tag}" style="background:var(--s2)"><div class="wrap">
+<p class="lead rise">${t("Загрузите фото чека, получите кэшбэк и переведите его на карту. Там же история броней и свои списки: «Мама», «Ребёнок».", "Chek suratini yuklang, keshbek oling va uni kartaga o‘tkazing. U yerda bronlar tarixi va o‘z ro‘yxatlaringiz: «Onam», «Bola».")}</p></div>
+<div class="phone tilt" aria-hidden="true" style="width:min(260px,64vw)"><div class="scr"><div class="v on"><div class="rc">${t("ЧЕК", "CHEK")} · 30.10.2026<br>${esc(P(19).short[l])} ... ${fmt(P(19).price)}<br>${t("ИТОГО", "JAMI")} ... ${fmt(P(19).price)}</div><div class="cb"><small>${t("Кэшбэк начислен", "Keshbek hisoblandi")}</small><b>${t("на карту", "kartaga")}</b></div></div></div></div></div></section>`;
+}
+
+/* Второй заход допов (владелец, 30.10.2026: «добавь еще допы, блоки»). Каждый
+   блок — свой data-addon, тумблер на первой странице его прячет. */
+function erp(l, t) {
+  const tag = t("Доп", "Qo‘shimcha");
+  return `<section class="sec add-block" id="erp" data-addon="erp" data-tag="${tag}" style="background:var(--s2)"><div class="wrap">
 <p class="kick rise"><i></i>FOM · ABU · 1C</p><h2 class="h2 rise">${t("Остатки <b>свежие у каждой аптеки</b>", "Har bir dorixonada <b>yangi qoldiqlar</b>")}</h2>
 <p class="lead rise">${t("Ваша программа на 5 МБ уже отправляет остатки из FOM, ABU и 1С. Новый сайт показывает у каждой аптеки, когда они обновились, а аптеки со старыми данными уходят вниз выдачи.", "5 MB lik dasturingiz FOM, ABU va 1C’dan qoldiqlarni allaqachon yuboradi. Yangi sayt har bir dorixonada qachon yangilanganini ko‘rsatadi, eski ma’lumotli dorixonalar esa natijalar pastiga tushadi.")}</p>
 <div class="cards3">${[[ICON.sync, t("Обновлено 4 мин назад", "4 daqiqa oldin yangilandi"), t("Метка у аптеки в выдаче", "Natijalarda dorixona belgisi")], [ICON.clock, t("Старше суток", "Bir kundan eski"), t("Аптека ниже, панель напоминает ей", "Dorixona pastroqda, panel unga eslatadi")], [ICON.store, t("Нет в наличии", "Mavjud emas"), t("Не показываем, чтобы человек не ехал зря", "Odam bekorga bormasligi uchun ko‘rsatmaymiz")], [ICON.chart, t("Свежесть по сети", "Tarmoq bo‘yicha yangilik"), t("Сводка в панели", "Paneldagi xulosa")]].map(([i, b, p]) => `<div class="fc pop">${i}<b>${b}</b><p>${p}</p></div>`).join("")}</div>
 </div></section>`;
 }
 
-/* Второй заход допов (владелец, 30.10.2026: «добавь еще допы, блоки»). Каждый
-   блок — свой data-addon, тумблер на первой странице его прячет. */
-function moreBlocks(l, t) {
+function moreBlocks(l, t, kind = "site") {
   const tag = t("Доп", "Qo‘shimcha");
   const unit = (p) => Math.round(p.price / p.cnt);
   const iz10 = P(16), iz20 = P(18), kan = P(8), sor = P(9);
   const top = PHARMACY.opts.find((o) => o.id === "top").price, ban = PHARMACY.opts.find((o) => o.id === "banner").price;
   const card = (id, kick, h, p, body, cls = "") => `<div class="mb ${cls}" id="${id}" data-addon="${id === "ask" ? "pharmacist" : id === "rx" ? "rxphoto" : id}"><p class="kick"><i></i>${kick}</p><h3>${h}</h3><p class="mu">${p}</p>${body}</div>`;
+  const B2B = ["cabph", "ads", "reports"], keep = (id) => (kind === "site") !== B2B.includes(id);
+  const add = (id, ...a) => (keep(id) ? card(id, ...a) : "");
+  const head = kind === "site"
+    ? `<p class="kick rise"><i></i>${t("Ещё удобнее", "Yanada qulay")}</p>\n<h2 class="h2 rise">${t("Рецепт фото, вопрос фармацевту, <b>цена за штуку</b>", "Retsept surati, farmatsevtga savol, <b>bitta dona narxi</b>")}</h2>\n<p class="lead rise">${t("Всё, что экономит поездку в аптеку и деньги.", "Dorixonaga borish va pulni tejaydigan hamma narsa.")}</p>`
+    : `<p class="kick rise"><i></i>${t("Кабинет и реклама", "Kabinet va reklama")}</p>\n<h2 class="h2 rise">${t("Аптека ведёт себя <b>сама</b>", "Dorixona o‘zini <b>o‘zi</b> boshqaradi")}</h2>\n<p class="lead rise">${t("Кабинет, реклама в своём районе и отчёт каждое утро, без звонков в поддержку.", "Kabinet, o‘z tumanida reklama va har tong hisobot, yordam xizmatiga qo‘ng‘iroqsiz.")}</p>`;
   return `<section class="sec add-block" id="more" data-tag="${tag}" style="background:var(--s2)"><div class="wrap">
-<p class="kick rise"><i></i>${t("Ещё возможности", "Yana imkoniyatlar")}</p>
-<h2 class="h2 rise">${t("То, чего нет <b>ни у одного справочника</b> в стране", "Mamlakatdagi <b>hech bir ma’lumotnomada</b> yo‘q narsalar")}</h2>
-<p class="lead rise">${t("Каждый блок включается в конструкторе отдельно. Всё работает на этой странице, данные в браузере.", "Har bir blok konstruktorda alohida yoqiladi. Hammasi shu sahifada ishlaydi, ma’lumotlar brauzerda.")}</p>
+${head}
 <div class="mbs">
-${card("rx", t("Рецепт фото", "Retsept surati"), t("Сфотографируйте рецепт, аптека соберёт", "Retseptni suratga oling, dorixona yig‘adi"), t("Фармацевт сверяет рецепт и собирает заказ. Фото видит только выбранная аптека.", "Farmatsevt retseptni tekshiradi va buyurtmani yig‘adi. Suratni faqat tanlangan dorixona ko‘radi."),
+${add("rx", t("Рецепт фото", "Retsept surati"), t("Сфотографируйте рецепт, аптека соберёт", "Retseptni suratga oling, dorixona yig‘adi"), t("Фармацевт сверяет рецепт и собирает заказ. Фото видит только выбранная аптека.", "Farmatsevt retseptni tekshiradi va buyurtmani yig‘adi. Suratni faqat tanlangan dorixona ko‘radi."),
   `<label class="drop"><input type="file" id="rxf" accept="image/*"><span id="rxl">${ICON.doc}<b>${t("Выбрать фото рецепта", "Retsept suratini tanlash")}</b><small class="mu">${t("JPG или PNG, в макете никуда не уходит", "JPG yoki PNG, maketda hech qayerga ketmaydi")}</small></span><img id="rxi" alt="" hidden></label><button type="button" class="btn btn-a" id="rxgo" disabled>${t("Отправить в аптеку · демо", "Dorixonaga yuborish · demo")}</button>`, "w2 tilt")}
-${card("ask", t("Фармацевт", "Farmatsevt"), t("Спросить аптеку", "Dorixonadan so‘rash"), t("Отвечает фармацевт аптеки в рабочее время. Про лечение и замену: только врач.", "Ish vaqtida dorixona farmatsevti javob beradi. Davolash va almashtirish haqida: faqat shifokor."),
+${add("ask", t("Фармацевт", "Farmatsevt"), t("Спросить аптеку", "Dorixonadan so‘rash"), t("Отвечает фармацевт аптеки в рабочее время. Про лечение и замену: только врач.", "Ish vaqtida dorixona farmatsevti javob beradi. Davolash va almashtirish haqida: faqat shifokor."),
   `<div class="chat on" id="askc"><p class="bt">${t("Здравствуйте! Чем помочь?", "Assalomu alaykum! Qanday yordam beray?")}</p></div><div class="qchips">${[["have", t("Есть сегодня?", "Bugun bormi?")], ["keep", t("Как хранить?", "Qanday saqlash?")], ["swap", t("Можно заменить?", "Almashtirsa bo‘ladimi?")]].map(([k, q]) => `<button type="button" data-ask="${k}">${q}</button>`).join("")}</div>`, "slide")}
-${card("notify", t("Нет в наличии", "Mavjud emas"), t("«Сообщить, когда появится»", "«Paydo bo‘lganda xabar berish»"), t("Telegram напишет, как только аптека района выгрузит остаток.", "Tuman dorixonasi qoldiqni yuklashi bilan Telegram yozadi."),
+${add("notify", t("Нет в наличии", "Mavjud emas"), t("«Сообщить, когда появится»", "«Paydo bo‘lganda xabar berish»"), t("Telegram напишет, как только аптека района выгрузит остаток.", "Tuman dorixonasi qoldiqni yuklashi bilan Telegram yozadi."),
   `<button type="button" class="btn btn-g" data-notify="${P(12).id}">${ICON.tg}<span>${esc(P(12).short[l])}: ${t("сообщить", "xabar berish")}</span></button>`, "pop")}
-${card("watch", t("Цена", "Narx"), t("Следить за ценой", "Narxni kuzatish"), t("Задайте цену: когда «от» по базе станет ниже, придёт сообщение.", "Narxni belgilang: bazadagi «dan» narxi pastlasa, xabar keladi."),
+${add("watch", t("Цена", "Narx"), t("Следить за ценой", "Narxni kuzatish"), t("Задайте цену: когда лекарство подешевеет, придёт сообщение.", "Narxni belgilang: dori arzonlashganda xabar keladi."),
   `<div class="wrow"><span>${esc(kan.short[l])}</span><b>${sum(kan.price, l)}</b></div><label class="rng" style="padding:0;border:0"><span class="mu" style="font-size:14px">${t("Сообщить, если ниже", "Pastroq bo‘lsa xabar berish")}: <b id="wv">${sum(Math.round(kan.price * 0.9 / 100) * 100, l)}</b></span><input type="range" id="wr" min="${Math.round(kan.price * 0.7 / 100) * 100}" max="${kan.price}" step="100" value="${Math.round(kan.price * 0.9 / 100) * 100}"></label><button type="button" class="btn btn-a" data-watch="${kan.id}">${t("Следить", "Kuzatish")}</button>`, "pop")}
-${card("unit", t("Цена за штуку", "Bitta dona narxi"), t("Что выгоднее в пересчёте на 1 шт.", "1 donaga nima foydaliroq"), t("Считаем по вашей цене «от» и числу в упаковке.", "«dan» narxingiz va qadoqdagi son bo‘yicha hisoblaymiz."),
+${add("unit", t("Цена за штуку", "Bitta dona narxi"), t("Что выгоднее в пересчёте на 1 шт.", "1 donaga nima foydaliroq"), t("Считаем по самой низкой цене и числу в упаковке.", "Eng past narx va qadoqdagi son bo‘yicha hisoblaymiz."),
   `<table class="ut"><tbody>${[iz10, iz20, kan, sor].map((p) => `<tr><td>${esc(p.name[l].split(" ").slice(0, 3).join(" "))}</td><td>№${p.cnt}</td><td><b>${sum(unit(p), l)}</b></td></tr>`).join("")}</tbody></table>`, "tilt")}
-${card("cabph", t("Для аптек", "Dorixonalarga"), t("Кабинет аптеки", "Dorixona kabineti"), t("Аптека сама видит брони, просмотры, место в районе и счёт.", "Dorixona bronlar, ko‘rishlar, tumandagi o‘rni va hisobni o‘zi ko‘radi."),
+${add("cabph", t("Для аптек", "Dorixonalarga"), t("Кабинет аптеки", "Dorixona kabineti"), t("Аптека сама видит брони, просмотры, место в районе и счёт.", "Dorixona bronlar, ko‘rishlar, tumandagi o‘rni va hisobni o‘zi ko‘radi."),
   `<div class="kp4">${[[t("Брони за неделю", "Haftalik bronlar"), "34"], [t("Выкуп", "Olib ketish"), "88%"], [t("Просмотры карточки", "Kartochka ko‘rishlari"), "1 240"], [t("Место в районе", "Tumandagi o‘rni"), "#3"]].map(([a, b]) => `<span><small>${a}</small><b>${b}</b></span>`).join("")}</div><p class="mu" style="font-size:12px;margin:8px 0 0">${t("Аптека 81 · демо", "Dorixona 81 · demo")}</p>`, "w2 pop")}
-${card("ads", t("Реклама", "Reklama"), t("Рекламный кабинет", "Reklama kabineti"), t("Район, формат и срок: цена сразу, оплата без менеджера.", "Tuman, format va muddat: narx darhol, menejersiz to‘lov."),
+${add("ads", t("Реклама", "Reklama"), t("Рекламный кабинет", "Reklama kabineti"), t("Район, формат и срок: цена сразу, оплата без менеджера.", "Tuman, format va muddat: narx darhol, menejersiz to‘lov."),
   `<div class="adb"><label class="fld"><span>${t("Район", "Tuman")}</span><select id="adr">${DISTRICTS[l].map((d, i) => `<option value="${i}"${i === 8 ? " selected" : ""}>${esc(d)}</option>`).join("")}</select></label><div class="pays"><label><input type="radio" name="adf" value="${top}" checked> ${t("Топ района", "Tuman topi")}</label><label><input type="radio" name="adf" value="${ban}"> ${t("Баннер на главной", "Bosh sahifada banner")}</label></div><label class="fld"><span>${t("Недель", "Hafta")}: <b id="adwv">4</b></span><input type="range" id="adw" min="1" max="12" value="4"></label><div class="out" id="ado"></div></div>`, "w2 slide")}
-${card("pwa", t("Приложение", "Ilova"), t("Иконка на экране, без App Store", "App Store’siz ekranda belgi"), t("Список и брони открываются без сети, пуш о готовой брони.", "Ro‘yxat va bronlar internetsiz ochiladi, tayyor bron haqida push."),
+${add("pwa", t("Приложение", "Ilova"), t("Иконка на экране, без App Store", "App Store’siz ekranda belgi"), t("Список и брони открываются без сети, пуш о готовой брони.", "Ro‘yxat va bronlar internetsiz ochiladi, tayyor bron haqida push."),
   `<div class="pwa"><span class="ico">${MARK.replace('style="height:34px;width:34px"', 'style="width:44px;height:44px"')}</span><span><b>Oson Apteka</b><small class="mu">${t("Добавить на экран «Домой»", "«Bosh ekran»ga qo‘shish")}</small></span></div>`, "pop")}
-${card("reports", t("Владельцу", "Egasiga"), t("Отчёт в Telegram каждое утро", "Har tong Telegramda hisobot"), t("Поиски, брони, выкуп и чего нет в наличии.", "Qidiruvlar, bronlar, olib ketish va nima yo‘q."),
+${add("reports", t("Владельцу", "Egasiga"), t("Отчёт в Telegram каждое утро", "Har tong Telegramda hisobot"), t("Поиски, брони, выкуп и чего нет в наличии.", "Qidiruvlar, bronlar, olib ketish va nima yo‘q."),
   `<div class="chat on"><p class="bt">📊 Oson Apteka · ${t("вчера · демо", "kecha · demo")}<br>${t("Поиски", "Qidiruvlar")}: 6 640 · ${t("брони", "bronlar")}: 82 · ${t("выкуп", "olib ketish")}: 86%<br>${t("Ищут, а нет рядом", "Qidiriladi, yaqinda yo‘q")}: ${esc(P(14).short[l])}, ${esc(P(12).short[l])}<br>${t("Не обновили остатки", "Qoldiqni yangilamadi")}: 5 ${t("аптек", "dorixona")}</p></div>`, "slide")}
 </div></div></section>`;
 }
 
-function pharm(l, t) {
+/* ── Раздел для аптек (B2B, как их osonapteka.uz/business) ──────────── */
+function bizHero(l, t) {
   const F = FACTS[l];
-  return `<section class="sec dark" id="pharm"><div class="wrap">
-<p class="kick rise"><i></i>${t("Для аптек", "Dorixonalarga")}</p>
-<h2 class="h2 rise">${t("Подключить аптеку: <b>5 минут и первый месяц бесплатно</b>", "Dorixonani ulash: <b>5 daqiqa va birinchi oy bepul</b>")}</h2>
-<p class="lead rise">${esc(F.pharmacies)} ${esc(F.install)}</p>
+  return `<section class="hero bhero" id="top" aria-label="${t("Oson Apteka для аптек", "Dorixonalar uchun Oson Apteka")}">
+<div class="hero-bg" aria-hidden="true"><div class="map" data-par="0.1">${heroMap()}</div><div class="ph" data-par="-0.06"><img src="${IMG}/poster-16-1920.webp" width="1920" height="1072" alt="" loading="lazy"></div></div>
+<div class="wrap"><div class="hero-in">
+<p class="kick rise"><i></i>${t("Для аптек и сетей", "Dorixonalar va tarmoqlar uchun")}</p>
+<h1>${words(t("Покупатели ищут лекарство. <em>Пусть находят вашу аптеку</em>", "Xaridorlar dori qidiradi. <em>Dorixonangizni topishsin</em>"))}</h1>
+<p class="hsub rise">${esc(F.pharmacies)}</p>
+<div class="hero-act rise"><a class="btn btn-a" href="tel:${COMPANY.tel}">${ICON.phone}<span>${t("Подключить аптеку", "Dorixonani ulash")}</span></a><a class="btn btn-g" href="#tarif">${t("Тарифы", "Tariflar")}</a></div>
+<ul class="hfacts rise">${[t("Первый месяц бесплатно", "Birinchi oy bepul"), t("Установка за 5 минут", "5 daqiqada o‘rnatish"), t("FOM, ABU, 1С", "FOM, ABU, 1C"), t("Поддержка 24/7", "24/7 yordam")].map((x) => `<li>${ICON.check}${x}</li>`).join("")}</ul>
+</div></div></section>`;
+}
+
+function prod(l, t) {
+  return `<section class="sec" id="prod"><div class="wrap">
+<p class="kick rise"><i></i>${t("Продукты", "Mahsulotlar")}</p>
+<h2 class="h2 rise">${t("Технологии на каждом этапе <b>работы аптеки</b>", "Dorixona ishining <b>har bir bosqichida</b> texnologiyalar")}</h2>
+<p class="lead rise">${t("Контроль продаж, рост прибыли и экономия времени: четыре продукта Oson Apteka.", "Savdo nazorati, foyda o‘sishi va vaqtni tejash: Oson Apteka’ning to‘rtta mahsuloti.")}</p>
 <div class="cards3">${PRODUCTS.map((p, i) => `<div class="fc pop" style="transition-delay:${i * 80}ms">${[ICON.search, ICON.chart, ICON.card, ICON.doc][i]}<b>${p.n}</b><p>${esc(p[l])}</p></div>`).join("")}</div>
+</div></section>`;
+}
+
+function join(l, t) {
+  const F = FACTS[l];
+  const steps = [
+    [t("Скачайте программу", "Dasturni yuklab oling"), t("5 МБ, на основной компьютер аптеки, где база.", "5 MB, bazasi bor asosiy dorixona kompyuteriga.")],
+    [t("Установите за 5 минут", "5 daqiqada o‘rnating"), t("Или специалисты установят сами, удалённо.", "Yoki mutaxassislar o‘zlari masofadan o‘rnatadi.")],
+    [t("Остатки уходят сами", "Qoldiqlar o‘zi ketadi"), t("Из FOM, ABU или 1С, без ручного ввода.", "FOM, ABU yoki 1C’dan, qo‘lda kiritmasdan.")],
+    [t("Покупатели приходят", "Xaridorlar keladi"), t("Находят вас по наличию, цене и расстоянию.", "Sizni mavjudlik, narx va masofa bo‘yicha topishadi.")],
+  ];
+  return `<section class="sec dark" id="join"><div class="wrap">
+<p class="kick rise"><i></i>${t("Подключение", "Ulanish")}</p>
+<h2 class="h2 rise">${t("Подключить аптеку: <b>5 минут и первый месяц бесплатно</b>", "Dorixonani ulash: <b>5 daqiqa va birinchi oy bepul</b>")}</h2>
+<p class="lead rise">${esc(F.install)}</p>
+<ol class="jsteps">${steps.map(([b, p], i) => `<li class="pop" style="transition-delay:${i * 90}ms"><i>${i + 1}</i><b>${b}</b><p>${p}</p></li>`).join("")}</ol>
 <div class="cards3">${[[ICON.sync, F.systems], [ICON.shield, F.itpark], [ICON.clock, F.support], [ICON.check, F.firstMonth]].map(([i, x]) => `<div class="fc rise">${i}<p style="margin:0;color:#e8eefb">${esc(x)}</p></div>`).join("")}</div>
-<div class="hero-act rise"><a class="btn btn-a" href="tel:${COMPANY.tel}">${ICON.phone}<span>${COMPANY.phone}</span></a><a class="btn btn-g" href="${COMPANY.business}" target="_blank" rel="noopener" style="background:transparent;color:#fff;border-color:#3a4f7d">${t("Раздел «Для аптек»", "«Dorixonalar uchun» bo‘limi")}</a></div>
+<div class="hero-act rise"><a class="btn btn-a" href="tel:${COMPANY.tel}">${ICON.phone}<span>${COMPANY.phone}</span></a></div>
 </div></section>`;
 }
 
 function reviews(l, t) {
   const rv = REVIEWS.filter((r) => l === "ru" || r.lang === "uz");
   return `<section class="sec" id="reviews"><div class="wrap">
-<p class="kick rise"><i></i>${t("Отзывы с вашего сайта", "Saytingizdagi sharhlar")}</p>
+<p class="kick rise"><i></i>${t("Отзывы", "Sharhlar")}</p>
 <h2 class="h2 rise">${t("Что пишут <b>пользователи</b>", "Foydalanuvchilar <b>nima deydi</b>")}</h2>
 <div class="rv">${rv.map((r, i) => `<figure class="${i % 2 ? "slide" : "rise"}"><blockquote${r.lang === "uz" && l === "ru" ? ' lang="uz"' : ""}>${esc(r.t)}</blockquote><figcaption><b>${esc(r.n)}</b> · ${r.d}</figcaption></figure>`).join("")}</div>
 <div class="appb rise"><a class="btn btn-a" href="${COMPANY.ios}" target="_blank" rel="noopener">App Store</a><a class="btn btn-a" href="${COMPANY.android}" target="_blank" rel="noopener">Google Play</a><a class="btn btn-g" href="https://t.me/${COMPANY.bot}" target="_blank" rel="noopener">${ICON.tg}<span>@${COMPANY.bot}</span></a></div>
@@ -332,17 +372,17 @@ function reviews(l, t) {
 function admin(l, t) {
   return `<section class="sec add-block" id="admin" data-addon="admin" data-tag="${t("Доп", "Qo‘shimcha")}" style="background:var(--s2)"><div class="wrap two">
 <div><p class="kick rise"><i></i>${t("Панель", "Panel")}</p><h2 class="h2 rise">${t("Брони и аптеки <b>в одной панели</b>", "Bronlar va dorixonalar <b>bitta panelda</b>")}</h2>
-<p class="lead rise">${t("Забронируйте что-нибудь на этой странице и откройте панель: бронь будет первой строкой. Смените статус на «Собрана», и здесь, в «Мои брони», он сменится сам.", "Shu sahifada biror narsani bron qiling va panelni oching: bron birinchi qatorda bo‘ladi. Holatni «Yig‘ildi»ga o‘zgartiring, bu yerda «Bronlarim»da o‘zi o‘zgaradi.")}</p>
+<p class="lead rise">${t("Брони покупателей приходят в панель первой строкой. Аптека ставит «Собрана», и покупатель сразу видит это на сайте в «Мои брони».", "Xaridorlar bronlari panelga birinchi qatorda keladi. Dorixona «Yig‘ildi» qo‘yadi, xaridor buni darhol saytda «Bronlarim»da ko‘radi.")}</p>
 <div class="hero-act rise"><a class="btn btn-a" href="${href(l, "panel")}">${ICON.panel}<span>${t("Открыть панель", "Panelni ochish")}</span></a></div></div>
 <div class="cards3" style="grid-template-columns:1fr 1fr">${[[t("Брони с сайта", "Saytdan bronlar"), t("первой строкой", "birinchi qatorda")], [t("Аптеки и тарифы", "Dorixonalar va tariflar"), t("свежесть остатков", "qoldiqlar yangiligi")], [t("Что ищут", "Nima qidirishadi"), t("и чего нет в наличии", "va nima mavjud emas")], [t("Роли и история", "Rollar va tarix"), t("менеджер не видит выручку", "menejer tushumni ko‘rmaydi")]].map(([b, p]) => `<div class="fc pop"><b>${b}</b><p>${p}</p></div>`).join("")}</div>
 </div></section>`;
 }
 
-function footer(l, t) {
+function footer(l, t, kind = "site") {
   return `<footer class="foot"><div class="wrap"><div class="fgrid">
-<div>${LOGO(l)}<p style="margin-top:16px;font-size:14px">${esc(FACTS[l].tagline)} ${esc(FACTS[l].free)}</p><a href="tel:${COMPANY.tel}" style="font:700 18px/1.3 var(--hd);color:#fff">${COMPANY.phone}</a></div>
-<div><h4>${t("Покупателям", "Xaridorlarga")}</h4><a href="#search">${t("Поиск лекарств", "Dori qidirish")}</a><a href="#list">${t("Список лекарств", "Dorilar ro‘yxati")}</a><a href="#map">${t("Аптеки рядом", "Yaqin dorixonalar")}</a><a href="#tarif">${t("Тарифы", "Tariflar")}</a></div>
-<div><h4>${t("Аптекам", "Dorixonalarga")}</h4><a href="#pharm">Oson Apteka · Oson Price</a><a href="#pharm">Oson Kassa · Oson Report</a><a href="${COMPANY.business}" target="_blank" rel="noopener">osonapteka.uz/business</a></div>
+<div>${LOGO(l, kind)}<p style="margin-top:16px;font-size:14px">${esc(FACTS[l].tagline)} ${esc(FACTS[l].free)}</p><a href="tel:${COMPANY.tel}" style="font:700 18px/1.3 var(--hd);color:#fff">${COMPANY.phone}</a></div>
+<div><h4>${t("Покупателям", "Xaridorlarga")}</h4><a href="${kind === "site" ? "" : href(l, "site")}#search">${t("Поиск лекарств", "Dori qidirish")}</a><a href="${kind === "site" ? "" : href(l, "site")}#list">${t("Список лекарств", "Dorilar ro‘yxati")}</a><a href="${kind === "site" ? "" : href(l, "site")}#map">${t("Аптеки рядом", "Yaqin dorixonalar")}</a><a href="${kind === "site" ? "" : href(l, "site")}#tarif">${t("Доставка", "Yetkazish")}</a></div>
+<div><h4>${t("Аптекам", "Dorixonalarga")}</h4><a href="${href(l, "business")}">${t("Подключить аптеку", "Dorixonani ulash")}</a><a href="${href(l, "business")}#tarif">${t("Тарифы для аптек", "Dorixonalar uchun tariflar")}</a><a href="${COMPANY.business}" target="_blank" rel="noopener">osonapteka.uz/business</a></div>
 <div><h4>${t("Мы на связи", "Aloqadamiz")}</h4><a href="https://t.me/${COMPANY.tg}" target="_blank" rel="noopener">Telegram</a><a href="https://instagram.com/${COMPANY.ig}" target="_blank" rel="noopener">Instagram</a><a href="https://facebook.com/${COMPANY.fb}" target="_blank" rel="noopener">Facebook</a></div>
 </div>
 <p class="warn-l">${t("Информация о лекарствах справочная и не заменяет консультацию врача. Рецептурные препараты отпускаются по рецепту. Аптеки, расстояния и статусы в макете: демо.", "Dorilar haqidagi ma’lumot ma’lumotnoma uchun va shifokor maslahatini almashtirmaydi. Retseptli dorilar retsept bilan beriladi. Maketdagi dorixonalar, masofalar va holatlar: demo.")}</p>
@@ -403,7 +443,7 @@ function sitePage(l) {
 </head>
 <body>
 <a class="vh" href="#search">${t("К поиску", "Qidiruvga o‘tish")}</a>
-${header(l, t)}
+${header(l, t, "site")}
 <main>
 ${hero(l, t)}
 ${velo(l)}
@@ -411,17 +451,46 @@ ${how(l, t)}
 ${catalog(l, t)}
 ${list(l, t)}
 ${map(l, t)}
-${tarif(l, t)}
+${tarif(l, t, "site")}
 ${addonBlocks(l, t)}
-${moreBlocks(l, t)}
-${pharm(l, t)}
+${moreBlocks(l, t, "site")}
 ${reviews(l, t)}
-${admin(l, t)}
 </main>
-${footer(l, t)}
+${footer(l, t, "site")}
 <a class="cfgb glass" href="${href(l)}#offer">${t("Конструктор", "Konstruktor")}</a>
 <div class="dock glass" id="dock"><a class="btn btn-a" href="#top">${ICON.search}<span>${t("Найти лекарство", "Dori topish")}</span></a><button type="button" class="btn btn-g" id="dockl">${ICON.list}<span>${t("Список", "Ro‘yxat")}</span></button></div>
 <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="shh"><div class="sh" data-close></div><div class="box"><div class="bh"><b id="shh"></b><button type="button" class="x" data-close aria-label="${t("Закрыть", "Yopish")}">${ICON.close}</button></div><div class="bb" id="shb"></div><div class="bf" id="shf"></div></div></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script type="application/json" id="oa-data">${JSON.stringify(data(l, t)).replace(/</g, "\\u003c")}</script>
+<script>
+${JS}</script>
+</body>
+</html>`;
+}
+
+
+/* ── Раздел для аптек: отдельная страница, как их /business ────────── */
+function businessPage(l) {
+  const t = T(l);
+  const title = t("Oson Apteka для аптек · подключение, тарифы, кабинет", "Dorixonalar uchun Oson Apteka · ulanish, tariflar, kabinet");
+  const desc = t("Подключите аптеку к справочнику Oson Apteka: 3500 аптек, первый месяц бесплатно, остатки из FOM, ABU и 1С, бронь, кабинет и реклама в своём районе.", "Dorixonani Oson Apteka ma’lumotnomasiga ulang: 3500 dorixona, birinchi oy bepul, FOM, ABU va 1C’dan qoldiqlar, bron, kabinet va o‘z tumaningizda reklama.");
+  return `${head(l, title, desc)}
+<style>${CSS}</style>
+</head>
+<body class="biz">
+<a class="vh" href="#tarif">${t("К тарифам", "Tariflarga o‘tish")}</a>
+${header(l, t, "business")}
+<main>
+${bizHero(l, t)}
+${prod(l, t)}
+${join(l, t)}
+${tarif(l, t, "business")}
+${erp(l, t)}
+${moreBlocks(l, t, "business")}
+${admin(l, t)}
+</main>
+${footer(l, t, "business")}
+<a class="cfgb glass" href="${href(l)}#offer">${t("Конструктор", "Konstruktor")}</a>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script type="application/json" id="oa-data">${JSON.stringify(data(l, t)).replace(/</g, "\\u003c")}</script>
 <script>
@@ -462,6 +531,13 @@ function landPage(l) {
     t("Бронь в аптеке и «Мои брони» со статусом из панели", "Dorixonada bron va paneldan holati bilan «Bronlarim»"),
     t("Конструктор тарифов для покупателя и аптеки", "Xaridor va dorixona uchun tariflar konstruktori"),
   ];
+  const biz = [
+    t("Отдельный раздел, как ваш /business: обращение к аптекам", "Alohida bo‘lim, /business kabi: dorixonalarga murojaat"),
+    t("Продукты Oson Apteka, Price, Kassa, Report", "Oson Apteka, Price, Kassa, Report mahsulotlari"),
+    t("Подключение в 4 шага, первый месяц бесплатно", "4 qadamda ulanish, birinchi oy bepul"),
+    t("Тарифы аптеки с расчётом продаж через бронь", "Bron orqali savdo hisobi bilan dorixona tariflari"),
+    t("Кабинет аптеки, рекламный кабинет, отчёт владельцу", "Dorixona kabineti, reklama kabineti, egasiga hisobot"),
+  ];
   const pan = [
     t("Бронь с сайта первой строкой, статус виден покупателю", "Saytdan bron birinchi qatorda, holati xaridorga ko‘rinadi"),
     t("Поиски, брони, выкуп и что ищут, а в наличии нет", "Qidiruvlar, bronlar, olib ketish va nima qidiriladi, lekin yo‘q"),
@@ -485,7 +561,7 @@ function landPage(l) {
 ${dzIntroSolo(l)}
 <header class="top"><div class="top-in glass">
 ${LOGO(l, "")}
-<nav class="nav" aria-label="${t("Разделы", "Bo‘limlar")}"><a href="#choose">${t("Сайт или панель", "Sayt yoki panel")}</a><a href="#try">${t("Как проверить", "Qanday tekshirish")}</a><a href="#offer">${t("Стоимость", "Narxi")}</a></nav>
+<nav class="nav" aria-label="${t("Разделы", "Bo‘limlar")}"><a href="#choose">${t("Что посмотреть", "Nimani ko‘rish")}</a><a href="#try">${t("Как проверить", "Qanday tekshirish")}</a><a href="#offer">${t("Стоимость", "Narxi")}</a></nav>
 <div class="langs">${LANGS.map((x) => `<a href="${href(x)}" hreflang="${x}" lang="${x}"${x === l ? ' aria-current="true"' : ""}>${x.toUpperCase()}</a>`).join("")}</div>
 <a class="btn btn-g btn-s adm" href="${href(l, "site")}">${t("Сайт", "Sayt")}</a>
 <a class="btn btn-a btn-s" href="${href(l, "panel")}">${ICON.panel}<span>${t("Админка", "Admin panel")}</span></a>
@@ -506,9 +582,12 @@ ${LOGO(l, "")}
 <h2 class="h2 rise">${t("Что посмотреть <b>первым</b>", "Avval <b>nimani ko‘rish</b>")}</h2>
 <p class="lead rise">${t("Это работающий макет на ваших лекарствах и ценах с osonapteka.uz. Сайт, каким его увидит покупатель, или панель, где команда ведёт брони и аптеки.", "Bu osonapteka.uz’dagi dorilar va narxlaringizdagi ishlaydigan maket. Xaridor ko‘radigan sayt yoki jamoa bronlar va dorixonalarni olib boradigan panel.")}</p>
 <div class="choices">
-<a class="choice rise" href="${href(l, "site")}"><span class="ch-k">${t("Для покупателя", "Xaridor uchun")}</span><b>${t("Сайт-справочник", "Ma’lumotnoma sayti")}</b>
+<a class="choice rise" href="${href(l, "site")}"><span class="ch-k">${t("Для покупателя", "Xaridor uchun")}</span><b>${t("Сайт для покупателей", "Xaridorlar uchun sayt")}</b>
 <span class="ch-pic"><img src="${IMG}/poster-16-1920.webp" width="1920" height="1072" alt="${t("Метка Oson Apteka", "Oson Apteka belgisi")}" loading="lazy"></span>
 ${li(site)}<span class="btn btn-g">${t("Открыть сайт", "Saytni ochish")}${ICON.arrow}</span></a>
+<a class="choice rise" href="${href(l, "business")}"><span class="ch-k">${t("Для аптек, B2B", "Dorixonalar uchun, B2B")}</span><b>${t("Раздел для аптек", "Dorixonalar bo‘limi")}</b>
+<span class="ch-pic ch-biz"><span class="browser"><span class="bh"><i></i><i></i><i></i></span><span class="bb"><span class="kpi w"><small>${t("Подключить аптеку", "Dorixonani ulash")}</small><b>${t("5 минут · 1-й месяц бесплатно", "5 daqiqa · 1-oy bepul")}</b></span><span class="kpi"><small>${t("Размещение", "Joylashtirish")}</small><b>290 000</b></span><span class="kpi"><small>${t("Бронь", "Bron")}</small><b>2%</b></span></span></span></span>
+${li(biz)}<span class="btn btn-g">${t("Открыть раздел", "Bo‘limni ochish")}${ICON.arrow}</span></a>
 <a class="choice rise" href="${href(l, "panel")}"><span class="ch-k">${t("Для вас и команды", "Siz va jamoa uchun")}</span><b>${t("Админка броней и аптек", "Bronlar va dorixonalar admin paneli")}</b>
 <span class="ch-pic"><span class="browser"><span class="bh"><i></i><i></i><i></i></span><span class="bb"><span class="kpi"><small>${t("Брони, 30 дней · демо", "Bronlar, 30 kun · demo")}</small><b>2 418</b></span><span class="kpi"><small>${t("Бронь с сайта", "Saytdan bron")}</small><b>№5001</b></span><span class="kpi w"><small>${t("Поиски по дням · демо", "Kunlar bo‘yicha qidiruv · demo")}</small><span class="spark" id="lspark"></span></span></span></span></span>
 ${li(pan)}<span class="btn btn-a">${t("Открыть админку", "Admin panelni ochish")}${ICON.arrow}</span></a>
@@ -524,7 +603,7 @@ ${offer(l, t)}
 </main>
 <footer class="foot"><div class="wrap"><div class="fgrid">
 <div>${LOGO(l, "")}<p style="margin-top:16px;font-size:14px">${t("Лекарства, цены «от», фото, инструкции, отзывы: osonapteka.uz. Аптеки, брони и цифры в панели: демо. Кадры залёта: Higgsfield, по вашему знаку.", "Dorilar, «dan» narxlar, suratlar, yo‘riqnomalar, sharhlar: osonapteka.uz. Paneldagi dorixonalar, bronlar va raqamlar: demo. Uchib kirish kadrlari: Higgsfield, belgingiz asosida.")}</p></div>
-<div><h4>${t("Макет", "Maket")}</h4><a href="${href(l, "site")}">${t("Сайт", "Sayt")}</a><a href="${href(l, "panel")}">${t("Админка", "Admin panel")}</a><a href="#offer">${t("Стоимость", "Narxi")}</a></div>
+<div><h4>${t("Макет", "Maket")}</h4><a href="${href(l, "site")}">${t("Сайт", "Sayt")}</a><a href="${href(l, "business")}">${t("Для аптек", "Dorixonalarga")}</a><a href="${href(l, "panel")}">${t("Админка", "Admin panel")}</a><a href="#offer">${t("Стоимость", "Narxi")}</a></div>
 <div><h4>DevUz Studio</h4><a href="https://devuz.studio" target="_blank" rel="noopener">devuz.studio</a><a href="${DEVUZ}" target="_blank" rel="noopener">Telegram</a></div>
 <div><h4>Oson Apteka</h4><a href="tel:${COMPANY.tel}">${COMPANY.phone}</a><a href="${COMPANY.site}" target="_blank" rel="noopener">osonapteka.uz</a></div>
 </div>
@@ -575,6 +654,7 @@ const out = {};
 for (const l of LANGS) {
   out[KEY[l]] = landPage(l);
   out[(KEY[l] ? KEY[l] + "/" : "") + "site"] = sitePage(l);
+  out[(KEY[l] ? KEY[l] + "/" : "") + "business"] = businessPage(l);
   out[(KEY[l] ? KEY[l] + "/" : "") + "panel"] = panelPage(l);
 }
 for (const [k, v] of Object.entries(out)) {

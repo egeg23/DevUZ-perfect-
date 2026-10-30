@@ -17,7 +17,7 @@ const skip = async (p) => p.evaluate(() => { document.getElementById("dzi")?.rem
 for (const w of [390, 768, 1440]) {
   const c = await b.newContext({ viewport: { width: w, height: 860 } });
   const p = await c.newPage(); watch(p);
-  for (const path of ["", "site", "panel", "uz", "uz/site", "uz/panel"]) {
+  for (const path of ["", "site", "business", "panel", "uz", "uz/site", "uz/business", "uz/panel"]) {
     await p.goto(`${B}/${path}`, { waitUntil: "load" }); await skip(p);
     await p.evaluate(async () => { for (let y = 0; y < document.body.scrollHeight; y += 700) { scrollTo(0, y); await new Promise((r) => setTimeout(r, 30)); } scrollTo(0, 0); });
     const ov = await p.evaluate(() => document.documentElement.scrollWidth - innerWidth);
@@ -54,7 +54,7 @@ await q.click('[data-s="1"]');
 await p.goto(`${B}/site`, { waitUntil: "load" });
 await p.click("#mine");
 assert.match(await p.textContent(".sheet .stl .cur"), /Собрана/);
-await p.click(".sheet [data-close]");
+await p.click(".sheet .x");
 /* Список: два лекарства → аптеки, где есть всё. */
 await p.evaluate(() => { document.querySelector('.card [data-add="6"]').click(); document.querySelector('.card [data-add="8"]').click(); });
 await p.click("#lgo");
@@ -62,18 +62,20 @@ assert.ok((await p.$$(".cv")).length >= 3, "нет аптек по списку"
 /* Тарифы: доставка по городу 3 раза = 45 000. */
 await p.evaluate(() => { document.querySelector('input[name=get][value=city]').click(); });
 assert.match(await p.textContent("#tsum"), /45 000/);
-await p.click('[data-tf="p"]');
-assert.match(await p.textContent("#tsum"), /290 000/);
+/* Раздел для аптек: тарифы аптеки и рекламный кабинет — на своей странице. */
+const bz = await c.newPage(); watch(bz);
+await bz.goto(`${B}/business`, { waitUntil: "load" });
+assert.match(await bz.textContent("#tsum"), /290 000/);
 /* Допы второго захода: рекламный кабинет считает по тарифу, фармацевт отвечает, цена за штуку в окне. */
-await p.evaluate(() => { document.getElementById("adw").value = "8"; document.getElementById("adw").dispatchEvent(new Event("input")); });
-assert.match(await p.textContent("#ado"), /700 000/);
+await bz.evaluate(() => { document.getElementById("adw").value = "8"; document.getElementById("adw").dispatchEvent(new Event("input")); });
+assert.match(await bz.textContent("#ado"), /700 000/);
 await p.evaluate(() => document.querySelector('[data-ask="swap"]').click());
 await p.waitForFunction(() => document.querySelectorAll("#askc .bt").length > 1);
 assert.match(await p.textContent("#askc"), /врач/);
 await p.evaluate(() => document.querySelector('.card [data-open="8"]').click());
 await p.waitForSelector(".sheet.on .unitp");
 assert.match(await p.textContent(".sheet .unitp"), /440/);
-await p.click(".sheet [data-close]");
+await p.click(".sheet .x");
 /* Роль менеджера прячет выручку. */
 await q.goto(`${B}/panel`, { waitUntil: "load" });
 await q.selectOption("#role", "manager");

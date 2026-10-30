@@ -112,7 +112,7 @@ em{font-style:normal;color:var(--ac)}
 .hs.moved .hs-hint{opacity:0}
 /* Выбор: сайт или админка. */
 .choices{display:grid;gap:16px;margin-top:48px}
-@media (min-width:900px){.choices{grid-template-columns:1fr 1fr;gap:24px}}
+@media (min-width:900px){.choices{grid-template-columns:1fr 1fr;gap:24px}}@media (min-width:1200px){.choices{grid-template-columns:repeat(3,1fr)}}
 .choice{position:relative;display:flex;flex-direction:column;gap:16px;padding:24px;border-radius:32px;background:var(--s1);border:1px solid var(--ln);box-shadow:var(--sh2);text-decoration:none;transition:transform .4s cubic-bezier(.2,.8,.2,1),box-shadow .4s}
 .choice:hover{transform:translateY(-4px);box-shadow:var(--sh3)}
 .choice>b{font:700 30px/1.1 var(--hd)}
@@ -154,16 +154,31 @@ em{font-style:normal;color:var(--ac)}
 .route{stroke-dasharray:10 14;animation:route 2.4s linear infinite}
 @keyframes route{to{stroke-dashoffset:-48}}
 .hero-in{width:100%;max-width:820px}
-.hero h1{margin:0;font:700 36px/1.06 var(--hd);letter-spacing:-.03em}
-@media (min-width:600px){.hero h1{font-size:48px}}
-@media (min-width:1280px){.hero h1{font-size:60px}}
-.sbox{position:relative;margin-top:32px;padding:8px;border-radius:28px;z-index:5}
+.hero h1{margin:0;font:700 30px/1.12 var(--hd);letter-spacing:-.02em}
+@media (min-width:600px){.hero h1{font-size:36px}}
+@media (min-width:1280px){.hero h1{font-size:48px}}
+.bhero h1{max-width:760px}
+.hsub{margin:12px 0 0;color:var(--tx2);font-size:18px}
+.hfacts{display:flex;flex-wrap:wrap;gap:8px 24px;list-style:none;margin:20px 0 0;padding:0;font-size:14px;color:var(--tx2)}
+.hfacts li{display:inline-flex;align-items:center;gap:6px}
+.hfacts svg{width:16px;height:16px;color:var(--ok);flex:none}
+.nav-x{margin-left:8px;border:1px solid var(--ln2);color:var(--ac2)!important}
+@media (max-width:420px){.hide-s{display:none}}
+.mnote{font-size:12px!important}
+.jsteps{counter-reset:j;list-style:none;margin:32px 0 0;padding:0;display:grid;gap:12px}
+@media (min-width:900px){.jsteps{grid-template-columns:repeat(4,1fr)}}
+.jsteps li{padding:20px;border-radius:24px;background:#16254a;border:1px solid #22345f}
+.jsteps i{display:grid;place-items:center;width:36px;height:36px;border-radius:12px;background:var(--ac);color:#fff;font:700 16px/1 var(--hd);font-style:normal;margin-bottom:12px}
+.jsteps b{display:block;font:700 18px/1.3 var(--hd)}
+.jsteps p{margin:6px 0 0;font-size:14px;color:#b9c6dd}
+.sbox{position:relative;margin-top:28px;padding:10px;border-radius:28px;z-index:5;border:2px solid rgb(56 115 211 / .55)!important;box-shadow:0 0 0 6px rgb(56 115 211 / .12),0 30px 70px -30px rgb(28 60 130 / .55)!important}
+.sbox:focus-within{border-color:var(--ac)!important;box-shadow:0 0 0 8px rgb(56 115 211 / .2),0 30px 70px -30px rgb(28 60 130 / .6)!important}
 .sline{display:flex;align-items:center;gap:8px}
 .sline>svg{width:24px;height:24px;flex:none;margin-left:12px;color:var(--ac)}
-.sline input{flex:1;min-width:0;min-height:56px;border:0;background:transparent;font-size:18px;outline:none}
+.sline input{flex:1;min-width:0;min-height:64px;border:0;background:transparent;font-size:20px;outline:none}
 .sline input::placeholder{color:var(--mu)}
-.sline .btn{min-height:52px}
-@media (max-width:599px){.sline .btn span{display:none}.sline .btn{padding:12px 16px}}
+.sline .btn{min-height:56px;padding:12px 28px;font-size:18px}
+@media (max-width:599px){.sline input{font-size:18px}.sline .btn span{display:none}.sline .btn{padding:12px 16px}}
 .sreg{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 12px 4px;font-size:14px;color:var(--mu)}
 .sreg>svg{width:16px;height:16px;color:var(--ac)}.sreg button{display:inline-flex;align-items:center;gap:4px;min-height:32px;padding:4px 12px;border-radius:999px;border:1px solid var(--ln2);background:var(--s1);font-weight:700;color:var(--tx)}
 .sreg button svg{width:14px;height:14px}

@@ -2479,13 +2479,13 @@ test("AutoPepe: ceny w złotych — strona 3 900 zł zamiast 9 900 zł, dodatki 
   for (const page of [site.html, ...Object.values(site.pages)]) assert.doesNotMatch(page, /[А-Яа-яЁёІіЇїЄєҐґ]/, "на странице кириллица, а сайт только по-польски");
 });
 
-test("Oson Apteka: выбор, сайт и панель на ru и uz — условия, noindex, видео DevUz и залёт в бренд, шапка 3 с, лекарства и цены с их сайта, uz без кириллицы", async () => {
+test("Oson Apteka: выбор, сайт покупателям, раздел для аптек и панель на ru и uz — условия, noindex, видео DevUz и залёт в бренд, шапка 3 с, лекарства и цены с их сайта, uz без кириллицы", async () => {
   const { existsSync, readdirSync } = await import("node:fs");
   const { SCENES } = await import("@/lib/proto/promo");
   const site = bundlePages("osonapteka");
   assert.ok(site);
   const all: Record<string, string> = { "": site.html, ...site.pages };
-  assert.deepEqual(Object.keys(all).sort(), ["", "panel", "site", "uz", "uz/panel", "uz/site"]);
+  assert.deepEqual(Object.keys(all).sort(), ["", "business", "panel", "site", "uz", "uz/business", "uz/panel", "uz/site"]);
   const data = await import("../scripts/protos/osonapteka/data.mjs");
   const plan = await import("../scripts/protos/osonapteka/plan.mjs");
   for (const [path, page] of Object.entries(all)) {
@@ -2513,21 +2513,32 @@ test("Oson Apteka: выбор, сайт и панель на ru и uz — усл
       /* Видео DevUz первым, сразу за ним — залёт камерой в бренд (кадры шифром). */
       assert.ok(page.indexOf('id="dzi"') > 0 && page.indexOf('id="dzi"') < page.indexOf('id="fly"'), `${path}: нет видео DevUz перед залётом`);
       assert.ok(page.includes("/promo/scene") && page.includes("AES-GCM"), `${path}: кадры залёта не по ключу`);
-      assert.equal((page.match(/class="choice rise"/g) ?? []).length, 2, `${path}: не два выбора, сайт и админка`);
+      assert.equal((page.match(/class="choice rise"/g) ?? []).length, 3, `${path}: не три выбора: сайт, раздел для аптек, админка`);
       for (const a of plan.ADDONS) assert.ok(page.includes(`data-add="${a.id}"`), `${path}: нет тумблера ${a.id}`);
       continue;
     }
-    assert.ok(page.includes(`tel:${data.COMPANY.tel}`) && page.includes(`t.me/${data.COMPANY.bot}`), `${path}: нет их контактов`);
+    assert.ok(page.includes(`tel:${data.COMPANY.tel}`), `${path}: нет их телефона`);
+    /* B2C и B2B разведены (заказчик, 30.10.2026): у каждой страницы свои блоки. */
+    if (kind === "business") {
+      for (const id of ["prod", "join", "tarif", "erp", "cabph", "ads", "reports", "admin"]) assert.ok(page.includes(`id="${id}"`), `${path}: нет блока #${id}`);
+      for (const id of ["search", "list", "rx", "tf-b"]) assert.ok(!page.includes(`id="${id}"`), `${path}: покупательский блок #${id} в разделе для аптек`);
+      continue;
+    }
+    for (const id of ["search", "list", "map", "tf-b"]) assert.ok(page.includes(`id="${id}"`), `${path}: нет блока #${id}`);
+    for (const id of ["prod", "join", "erp", "cabph", "ads", "reports", "tf-p"]) assert.ok(!page.includes(`id="${id}"`), `${path}: блок для аптек #${id} на сайте покупателя`);
+    assert.doesNotMatch(page.replace(/<script[\s\S]*?<\/script>/g, ""), /как у вас на сайте|Ваша функция|ваша база|Ваш бот|saytingizdagidek|funksiyangiz/, `${path}: обращение к аптеке на сайте покупателя`);
+    assert.ok(page.includes(`t.me/${data.COMPANY.bot}`), `${path}: нет их бота`);
     for (const p of data.CATALOG) {
       assert.ok(page.includes(`data-id="${p.id}"`), `${path}: нет лекарства ${p.name.ru}`);
       assert.ok(page.includes(String(p.price).replace(/\B(?=(\d{3})+(?!\d))/g, " ")), `${path}: нет цены ${p.name.ru}`);
     }
-    for (const id of ["search", "how", "list", "map", "tarif", "remind", "bot", "cab", "erp", "more", "rx", "ask", "ads", "pharm", "reviews", "admin"]) assert.ok(page.includes(`id="${id}"`), `${path}: нет блока #${id}`);
+    for (const id of ["how", "tarif", "remind", "bot", "cab", "more", "rx", "ask", "reviews"]) assert.ok(page.includes(`id="${id}"`), `${path}: нет блока #${id}`);
     assert.ok(page.includes("проконсультируйтесь с врачом") || page.includes("shifokor bilan maslahatlashing"), `${path}: нет напоминания про врача`);
     assert.doesNotMatch(page, /вылечит|лучшее средство|davolaydi/i, `${path}: обещание лечения`);
     assert.ok(page.includes('class="velo"') && page.includes("data-par="), `${path}: нет бегущей строки или параллакса`);
-    for (const a of plan.ADDONS) assert.ok(page.includes(`data-addon="${a.id}"`), `${path}: тумблер ${a.id} не ведёт к блоку на сайте`);
   }
+  /* Тумблер каждого допа ведёт к блоку на сайте покупателя или в разделе для аптек. */
+  for (const lang of ["", "uz/"]) for (const a of plan.ADDONS) assert.ok((all[lang + "site"] + all[lang + "business"]).includes(`data-addon="${a.id}"`), `${lang}: тумблер ${a.id} не ведёт к блоку`);
   /* Кадры Higgsfield — только шифром, открыт лишь первый кадр-постер. */
   assert.equal(SCENES.osonapteka, "SCENE_KEY_OSONAPTEKA");
   for (const set of ["d", "m"]) {

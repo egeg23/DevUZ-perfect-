@@ -169,6 +169,6 @@ export const PRODUCTS = [
 
 /* Хуки бегущей строки — их же преимущества (главная, «Для аптек»). */
 export const HOOKS = {
-  ru: ["Бесплатно для покупателей", "Поиск по действующему веществу", "Несколько лекарств за один поиск", "Сначала дешевле или ближе", "Маршрут до аптеки", "Кэшбэк за чек", "3500 аптек", "Поддержка 24/7", "Резидент IT Park", "Бот @osonaptekabot"],
-  uz: ["Xaridorlar uchun bepul", "Ta’sir qiluvchi modda bo‘yicha qidiruv", "Bir qidiruvda bir nechta dori", "Avval arzonroq yoki yaqinroq", "Dorixonagacha yo‘nalish", "Chek uchun keshbek", "3500 dorixona", "24/7 yordam", "IT Park rezidenti", "@osonaptekabot boti"],
+  ru: ["Бесплатно для покупателей", "Поиск по действующему веществу", "Несколько лекарств за один поиск", "Сначала дешевле или ближе", "Маршрут до аптеки", "Кэшбэк за чек", "3500 аптек", "Бронь бесплатно", "Аналоги по веществу", "Бот @osonaptekabot"],
+  uz: ["Xaridorlar uchun bepul", "Ta’sir qiluvchi modda bo‘yicha qidiruv", "Bir qidiruvda bir nechta dori", "Avval arzonroq yoki yaqinroq", "Dorixonagacha yo‘nalish", "Chek uchun keshbek", "3500 dorixona", "Bron bepul", "Modda bo‘yicha analoglar", "@osonaptekabot boti"],
 };
