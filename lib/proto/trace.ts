@@ -43,25 +43,56 @@ export function signalsOf(css: string): Set<string> {
   return out;
 }
 
-export type Match = { matched: number; total: number; hits: string[]; level: "strong" | "likely" | "none" };
+/** Числа скриптов с тремя-четырьмя знаками после точки — так их сдвигает отпечаток. */
+export function scriptSignalsOf(js: string): Set<string> {
+  const out = new Set<string>();
+  for (const m of js.matchAll(/(?<![\w.])(\d*\.\d{3,4})(?![\d])/g)) out.add(`js:${num(Number(m[1]))}`);
+  return out;
+}
+
+export type Match = {
+  matched: number;
+  total: number;
+  hits: string[];
+  /** Слова-ловушки из демо-данных, найденные в тексте сайта. */
+  traps: string[];
+  level: "strong" | "likely" | "none";
+};
 
 /**
  * Сколько признаков макета нашлось.
  *
- * «Точно наш» — от шести совпадений и не меньше половины набора: так
- * случайное совпадение исключено, а частичная переделка (сменили пару цветов)
- * всё равно ловится. «Похоже» — от трёх, если среди них есть цвет: длины
- * вроде 14.5px сами по себе не говорят ничего.
+ * Числа (стили и скрипты): «точно наш» — от шести совпадений и не меньше
+ * половины набора: так случайное совпадение исключено, а частичная переделка
+ * (сменили пару цветов) всё равно ловится. «Похоже» — от трёх, если среди них
+ * есть цвет или число скрипта: длины вроде 14.5px сами по себе не говорят
+ * ничего.
+ *
+ * Ловушки (`text:`) — выдуманные слова из демо-данных: два разных слова в
+ * тексте сайта — «точно наш», одно — «похоже». Русское и узбекское написание
+ * одного слова считаются одним.
  */
-export function matchStamp(stamp: Pick<Stamp, "signals">, found: ReadonlySet<string>): Match {
-  const hits = stamp.signals.filter((signal) => found.has(signal));
-  const total = stamp.signals.length;
-  const colors = hits.filter((hit) => hit.startsWith("color:")).length;
-  const level =
-    hits.length >= 6 && hits.length * 2 >= total
-      ? "strong"
-      : hits.length >= 3 && colors >= 1
-        ? "likely"
-        : "none";
-  return { matched: hits.length, total, hits, level };
+export function matchStamp(stamp: Pick<Stamp, "signals">, found: ReadonlySet<string>, text = ""): Match {
+  const numbers = stamp.signals.filter((signal) => !signal.startsWith("text:"));
+  const hits = numbers.filter((signal) => found.has(signal));
+  const total = numbers.length;
+  const strongish = hits.filter((hit) => hit.startsWith("color:") || hit.startsWith("js:")).length;
+  const traps = text
+    ? stamp.signals.filter((signal) => signal.startsWith("text:") && text.includes(signal.slice(5))).map((s) => s.slice(5))
+    : [];
+  const trapWords = new Set(traps.map(trapKey)).size;
+  const byNumbers =
+    total && hits.length >= 6 && hits.length * 2 >= total ? "strong" : hits.length >= 3 && strongish >= 1 ? "likely" : "none";
+  const level = trapWords >= 2 ? "strong" : trapWords === 1 && byNumbers === "none" ? "likely" : byNumbers;
+  return { matched: hits.length, total, hits, traps, level };
+}
+
+/** «Ойдинсой» и «Oydinsoy» — одно слово: сравниваем по латинице. */
+function trapKey(word: string): string {
+  const map: Record<string, string> = {
+    а: "a", б: "b", в: "v", г: "g", д: "d", е: "e", ё: "yo", ж: "j", з: "z", и: "i", й: "y", к: "k", л: "l",
+    м: "m", н: "n", о: "o", п: "p", р: "r", с: "s", т: "t", у: "u", ф: "f", х: "h", ц: "ts", ч: "ch", ш: "sh",
+    ъ: "", ы: "i", ь: "", э: "e", ю: "yu", я: "ya",
+  };
+  return [...word.toLowerCase()].map((c) => map[c] ?? c).join("").replace(/x/g, "h");
 }
