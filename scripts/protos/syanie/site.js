@@ -179,8 +179,6 @@ var spImg=new Image(),spGold=null;
 function spriteGold(){if(spGold)return spGold;var c=d.createElement('canvas');c.width=spImg.naturalWidth;c.height=spImg.naturalHeight;var x=c.getContext('2d');
   x.drawImage(spImg,0,0);x.globalCompositeOperation='multiply';x.fillStyle=getComputedStyle(root).getPropertyValue('--onyx').trim()||'#e9b23c';x.fillRect(0,0,c.width,c.height);
   x.globalCompositeOperation='destination-in';x.drawImage(spImg,0,0);return spGold=c}
-/* Другая палитра — импланты «за один день» другого цвета. */
-addEventListener('sy:pal',function(){spGold=null});
 function asmStop(){cancelAnimationFrame(asmRaf);asmRun=false;if(asmCv){asmCv.classList.add('out')}hero.classList.remove('asm')}
 /* Переход внахлёст: настоящий текст проявляется, пока последние импланты
    ещё долетают; слой с имплантами гаснет за то же время. */

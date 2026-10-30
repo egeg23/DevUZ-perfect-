@@ -1879,22 +1879,19 @@ test("Сияние Севера: чат на сайте — «ИИ-консул�
   assert.match(readFileSync("scripts/protos/syanie/chat.css", "utf8"), /\.cx-f input\{[^}]*font:400 16px/, "поле ввода 16 px: iPhone не увеличивает страницу");
 });
 
-test("Сияние Севера: палитры тумблерами на сайте и в панели, кнопки ровного цвета без эффектов", async () => {
+test("Сияние Севера: одна палитра «Тёплый янтарь», кнопки ровного цвета без эффектов", async () => {
   const { existsSync, readFileSync } = await import("node:fs");
-  /* Владелец, 29.10.2026: «Сделай прям на сайте переключения тумблерами по этим цветовым палитрам, кнопки верни и убери эффекты с них». */
+  /* Владелец, 29.10.2026: «кнопки верни и убери эффекты с них»; 30.10.2026: «Тёплый янтарь оставляем, остальные долой». */
   const { html, pages } = bundlePages("syanie")!;
-  const { PALETTES } = await import("../scripts/protos/syanie/palettes.mjs");
-  assert.equal(PALETTES.length, 6, "пять палитр из PDF и прежний графит");
-  for (const p of PALETTES) {
-    assert.ok(html.includes(`data-p="${p.id}"`) && html.includes(p.name), `в переключателе нет «${p.name}»`);
-    if (p.id !== "4") { assert.ok(html.includes(`:root[data-pal="${p.id}"]{`), `нет цветов палитры ${p.id}`); assert.ok(pages.panel.includes(`:root[data-pal="${p.id}"]{`), `панель без палитры ${p.id}`); }
-  }
-  assert.match(html, /role="radiogroup"/, "палитры — группа переключателей");
-  assert.match(html, /localStorage\.getItem\('sy-pal'\)/, "палитра ставится в <head> до отрисовки");
   const css = readFileSync("scripts/protos/syanie/site.css", "utf8");
-  assert.match(css, /\.btn-onyx\{background:var\(--onyx\);color:var\(--onyx-ink\)\}/, "кнопка — ровный цвет палитры");
+  const root = css.match(/:root\{[\s\S]*?\}/)![0];
+  for (const t of ["--ink:#1e2b33", "--paper:#fff8ec", "--onyx:#ffa928", "--onyx-rgb:255 169 40"]) assert.ok(root.includes(t), `нет ${t}`);
+  assert.ok(pages.panel.includes("--onyx:#ffa928"), "панель не в янтаре");
+  assert.doesNotMatch(html, /pal-fab|data-pal|sy-pal/, "переключатель палитр вернулся");
+  assert.ok(!existsSync("scripts/protos/syanie/palettes.mjs"), "palettes.mjs не нужен");
+  assert.match(css, /\.btn-onyx\{background:var\(--onyx\);color:var\(--onyx-ink\)\}/, "кнопка — ровный цвет");
   assert.doesNotMatch(css, /@keyframes liquid|gold-live|\.gl\{|backdrop-filter:blur\(2\.5px\)/, "эффекты кнопок вернулись");
-  assert.doesNotMatch(css.replace(/:root\{[\s\S]*?\}/, ""), /rgb\((14 59 51|247 244 234|19 71 62|233 178 60) /, "цвет мимо переменных: палитра его не поменяет");
+  assert.doesNotMatch(css.replace(root, ""), /#[0-9a-f]{6}\b(?<!#(7a4d4c|8f9499|9aa0a6|e07a6a))|rgb\(\d+ \d+ \d+ \/ [^)]*\)(?<!rgb\(0 0 0[^)]*\))/i, "цвет мимо переменных");
   assert.ok(!existsSync("scripts/protos/syanie/gold.js") && !html.includes("gold.webp"), "жидкое золото на кнопках убрано");
 });
 
