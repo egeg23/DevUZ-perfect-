@@ -2599,6 +2599,8 @@ test("CARGO PRO GROUP: выбор, сайт и панель на ru и uz — у
     if (lang === "uz") assert.doesNotMatch(page.replace(/<script[\s\S]*?<\/script>/g, "").replace(/<style>[\s\S]*?<\/style>/g, ""), /[А-Яа-яЁё]/, `${path}: кириллица на узбекской странице`);
     if (kind === "panel") {
       assert.ok(page.includes("D.disp") && page.includes(`/dispatch"`), `${path}: из админки нет ссылки в диспетчерскую`);
+      /* Разница админок видна и в обычной (владелец, 31.10.2026). */
+      assert.ok(page.includes('class="vs vs-mini"') && page.includes(lang === "ru" ? "Что умеет супер-админка" : "Super admin panel nimalar qila oladi"), `${path}: нет «Что умеет супер-админка»`);
       continue;
     }
     if (kind === "dispatch") {
@@ -2615,6 +2617,10 @@ test("CARGO PRO GROUP: выбор, сайт и панель на ru и uz — у
       assert.match(page, /\[\[t:[5-9]\]\]/, `${path}: нет слов-ловушек в отправителях сборного рейса`);
       assert.ok(page.includes(lang === "ru" ? "по прямой × коэффициент дорог, ориентир" : "to‘g‘ri chiziq × yo‘l koeffitsienti, taxminiy"), `${path}: расстояние не подписано как ориентир`);
       for (const d of lang === "ru" ? ["Чиланзар", "Юнусабад", "Мирзо-Улугбек", "Сергели"] : ["Chilonzor", "Yunusobod", "Mirzo Ulug‘bek", "Sergeli"]) assert.ok(page.includes(d), `${path}: нет района ${d}`);
+      /* Супер-админка (владелец, 31.10.2026): интеграции 1С, Битрикс24, Telegram, автопарк с документами, пакет для брокера, допы — бесплатно. */
+      for (const k of lang === "ru" ? ["Автопарк и водители", "Интеграции", "Пакет для таможенного брокера", "Битрикс24", "Книжка МДП (TIR) №", "Путевой лист", "Фото доставки", "Отчёт дня в Telegram"] : ["Avtopark va haydovchilar", "Integratsiyalar", "Bojxona brokeri uchun paket", "Bitrix24", "TIR daftarchasi №", "Yo‘l varaqasi", "Yetkazish surati", "Telegramda kun hisoboti"]) assert.ok(page.includes(k), `${path}: нет «${k}»`);
+      for (const k of ["vFleet", "vInt", "bkModal", "PL_UZ", "cp-fleet-1", "syncFleet", "onStatus(", "@media print"]) assert.ok(page.includes(k), `${path}: нет ${k}`);
+      assert.match(page, /\[\[t:1\d\]\]/, `${path}: нет новых слов-ловушек в получателях`);
       continue;
     }
     assert.match(page, /\bIDLE=3000\b/, `${path}: шапка не по правилу 3 секунд`);
@@ -2625,6 +2631,9 @@ test("CARGO PRO GROUP: выбор, сайт и панель на ru и uz — у
       assert.ok(page.includes("/promo/scene") && page.includes("AES-GCM"), `${path}: кадры залёта не по ключу`);
       assert.equal((page.match(/class="choice rise"/g) ?? []).length, 3, `${path}: не три выбора: сайт, админка, диспетчерская`);
       assert.ok(page.includes('data-mod="tms"') && page.includes('data-module="tms"'), `${path}: нет тумблера модуля «Диспетчерская»`);
+      /* «Обычная админка или супер-админка»: сравнение на первой странице. */
+      assert.ok(page.includes('id="vs"') && (page.match(/class="vs-f"/g) ?? []).length >= 6, `${path}: нет сравнения двух админок с бесплатными пунктами`);
+      assert.ok(page.includes(lang === "ru" ? "Обычная админка" : "Oddiy admin panel") && page.includes(lang === "ru" ? "Супер-админка" : "Super admin panel"), `${path}: админки не названы`);
       for (const a of plan.ADDONS) assert.ok(page.includes(`data-add="${a.id}"`), `${path}: нет тумблера ${a.id}`);
       continue;
     }
@@ -2676,6 +2685,9 @@ test("CARGO PRO GROUP: сайт 1 000 $ вместо 4 900 $, допы 2 000 $, 
   assert.equal(tms.market!.ru, "по рынку 8 000-20 000 $ в СНГ, 40 000-70 000 € в Европе");
   assert.doesNotMatch(tms.market!.uz + tms.uz.t + tms.uz.e + tms.uz.who, /[А-Яа-яЁё]/, "tms: кириллица в узбекском");
   assert.ok(tms.ru.who.includes("Lider Cargo") && tms.uz.who.includes("Lider Cargo"), "нет строки про Lider Cargo");
+  /* Интеграции и допы супер-админки — бесплатно (владелец, 31.10.2026: «это будет бесплатно»). */
+  for (const k of ["1С", "Битрикс24", "Telegram", "таможенного брокера", "Бесплатно"]) assert.ok(tms.ru.e.includes(k), `tms: в описании нет «${k}»`);
+  for (const k of ["1C", "Bitrix24", "Telegram", "bepul"]) assert.ok(tms.uz.e.includes(k), `tms: в узбекском описании нет «${k}»`);
   /* Сборные грузы — второй модуль за 3 000 $ (владелец, 31.10.2026: «Сборные грузы должны стоить дополнительно 3000$»), только с диспетчерской. */
   const ltl = plan.MODULES[1];
   assert.equal(ltl.id, "ltl");

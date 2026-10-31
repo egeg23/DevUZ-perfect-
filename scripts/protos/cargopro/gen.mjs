@@ -5,6 +5,7 @@ import { BASE, ADDONS, OFFER_HOURS, ALL, MODULES, ALL_MODULES, ALL_TMS } from ".
 import { LANES, EXTRA, FX, DIM } from "./tariffs.mjs";
 import { PANEL_UI } from "./panel-ui.mjs";
 import { DISPATCH_UI } from "./dispatch-ui.mjs";
+import { COMPARE } from "./super-ui.mjs";
 
 /*
  * Макет CARGO PRO GROUP (cargoprogroup.uz), 31.10.2026: международная
@@ -36,7 +37,8 @@ const JS = strip(readFileSync(DIR + "site.js", "utf8")).replace(/\n\s*\n/g, "\n"
 const LAND_JS = strip(readFileSync(DIR + "land.js", "utf8")).replace(/\n\s*\n/g, "\n");
 const PANEL_JS = strip(readFileSync(DIR + "panel.js", "utf8")).replace(/\n\s*\n/g, "\n");
 const PANEL_CSS = strip(readFileSync(DIR + "panel.css", "utf8")).replace(/\n\s*/g, "");
-const DISP_JS = strip(readFileSync(DIR + "dispatch.js", "utf8")).replace(/\n\s*\n/g, "\n");
+/* Супер-админка (super.js) вставляется в замыкание диспетчерской: автопарк, брокер, интеграции. */
+const DISP_JS = strip(readFileSync(DIR + "dispatch.js", "utf8").replace("/*@@SUPER@@*/", () => readFileSync(DIR + "super.js", "utf8"))).replace(/\n\s*\n/g, "\n");
 const DISP_CSS = strip(readFileSync(DIR + "dispatch.css", "utf8")).replace(/\n\s*/g, "");
 const BASE_URL = "__PROTO_BASE__";
 const TERMS = (l) => `https://devuz.studio/${l}/mockup-terms`;
@@ -422,22 +424,45 @@ function offer(l, t) {
 <div class="cst"><div>
 <div class="base"><div class="hd"><b>${esc(BASE[l].t)}</b><span class="pp"><s>${usd(BASE.price)}</s>${usd(BASE.promo)}</span></div><p>${esc(BASE[l].d)}</p></div>
 <div class="adds">${ADDONS.map((a) => `<label class="add"><input type="checkbox" data-add="${a.id}" checked><span class="sw" aria-hidden="true"></span><span><b>${esc(a[l].t)}</b>${a.star ? `<span class="star">${t("берут первым", "birinchi oladilar")}</span>` : ""}<p>${esc(a[l].e)}</p><small>${esc(a[l].who)}</small></span><span class="ap">${usd(a.price)}</span></label>`).join("")}</div>
-${MODULES.map((m) => `<div class="mod" id="mod-${m.id}"><p class="mod-k">${m.requires ? t("К диспетчерской", "Dispetcherlikka") : t("Отдельный модуль", "Alohida modul")}</p><label class="add"><input type="checkbox" data-mod="${m.id}"${m.requires ? ` data-req="${m.requires}"` : ""} checked><span class="sw" aria-hidden="true"></span><span><b>${esc(m[l].t)}</b>${m.market ? `<span class="star">${t("рыночная цена", "bozor narxi")}</span>` : ""}<p>${esc(m[l].e)}</p><small class="mod-go">${esc(m[l].who)}</small>${m.market ? `<small>${esc(m.market[l])}</small>` : ""}<a class="mod-a" href="${href(l, "dispatch")}${m.requires ? "#route" : ""}">${ICON.route}<span>${m.requires ? t("Открыть сборные грузы", "Yig‘ma yuklarni ochish") : t("Открыть диспетчерскую", "Dispetcherlikni ochish")}</span></a></span><span class="ap">${usd(m.price)}</span></label></div>`).join("")}
+${MODULES.map((m) => `<div class="mod" id="mod-${m.id}"><p class="mod-k">${m.requires ? t("К супер-админке", "Super admin panelga") : t("Отдельный модуль", "Alohida modul")}</p><label class="add"><input type="checkbox" data-mod="${m.id}"${m.requires ? ` data-req="${m.requires}"` : ""} checked><span class="sw" aria-hidden="true"></span><span><b>${esc(m[l].t)}</b>${m.market ? `<span class="star">${t("рыночная цена", "bozor narxi")}</span>` : ""}<p>${esc(m[l].e)}</p><small class="mod-go">${esc(m[l].who)}</small>${m.market ? `<small>${esc(m.market[l])}</small>` : ""}<a class="mod-a" href="${href(l, "dispatch")}${m.requires ? "#route" : ""}">${ICON.route}<span>${m.requires ? t("Открыть сборные грузы", "Yig‘ma yuklarni ochish") : t("Открыть диспетчерскую", "Dispetcherlikni ochish")}</span></a></span><span class="ap">${usd(m.price)}</span></label></div>`).join("")}
 </div>
 <aside class="sum glass" aria-live="polite">
 <div class="row"><span>${t("Сайт", "Sayt")}</span><span>${usd(BASE.promo)}</span></div>
 <div class="row"><span>${t("Допы", "Qo‘shimchalar")} <span id="addn"></span></span><span id="adds">0 $</span></div>
 <div class="tot"><span>${t("Сайт с допами", "Qo‘shimchalar bilan sayt")}</span><b id="total">${usd(ALL)}</b></div>
-<div class="row mrow" id="mrow"><span>${t("Диспетчерская", "Dispetcherlik")}</span><span id="mods">${usd(MODULES[0].price)}</span></div>
-<div class="tot tot2" id="mtot"><span>${t("С диспетчерской", "Dispetcherlik bilan")}</span><b id="withm">${usd(ALL_TMS)}</b></div>
+<div class="row mrow" id="mrow"><span>${t("Супер-админка", "Super admin panel")}</span><span id="mods">${usd(MODULES[0].price)}</span></div>
+<div class="tot tot2" id="mtot"><span>${t("С супер-админкой", "Super admin panel bilan")}</span><b id="withm">${usd(ALL_TMS)}</b></div>
 <div class="row mrow" id="lrow"><span>${t("Сборные грузы", "Yig‘ma yuklar")}</span><span id="lmods">${usd(MODULES.find((m) => m.id === "ltl").price)}</span></div>
-<div class="tot tot2" id="ltot"><span>${t("С диспетчерской и сборными грузами", "Dispetcherlik va yig‘ma yuklar bilan")}</span><b id="withl">${usd(ALL_MODULES)}</b></div>
+<div class="tot tot2" id="ltot"><span>${t("С супер-админкой и сборными грузами", "Super admin panel va yig‘ma yuklar bilan")}</span><b id="withl">${usd(ALL_MODULES)}</b></div>
 <p style="margin:16px 0 0;color:var(--mu);font-size:14px">${t("Цена сайта держится:", "Sayt narxi amal qiladi:")}</p>
 <div class="timer" id="timer"><span><b id="th">48</b><small>${t("часов", "soat")}</small></span><span><b id="tm">00</b><small>${t("минут", "daqiqa")}</small></span><span><b id="ts">00</b><small>${t("секунд", "soniya")}</small></span></div>
 <div class="ctrl"><button type="button" class="btn btn-g btn-s" id="allon">${t("Всё из макета", "Maketdagi hammasi")}</button><button type="button" class="btn btn-g btn-s" id="alloff">${t("Только сайт", "Faqat sayt")}</button></div>
 <button type="button" class="btn btn-g" id="copy">${ICON.copy}<span>${t("Скопировать состав", "Tarkibni nusxalash")}</span></button>
 <a class="btn btn-a" href="${DEVUZ}" target="_blank" rel="noopener">${ICON.tg}<span>${t("Обсудить с DevUz Studio", "DevUz Studio bilan muhokama qilish")}</span></a>
 </aside></div>
+</div></section>`;
+}
+
+/* Сравнение «Обычная админка или супер-админка» (владелец, 31.10.2026: «сделай так,
+   чтобы они увидели разницу супер админки и обычной»). На первой странице —
+   полностью, в обычной админке — коротко, со ссылкой в супер-админку. */
+function compare(l, t, mini) {
+  const i = l === "ru" ? 0 : 1;
+  const tms = MODULES.find((m) => m.id === "tms").price, ltl = MODULES.find((m) => m.id === "ltl").price;
+  const cell = (v) => v === 1 ? `<span class="vs-y">${ICON.check}<span class="vh">${t("есть", "bor")}</span></span>`
+    : v === "mod" ? `<span class="vs-m">+${usd(ltl)}</span>`
+    : v === "free" ? `<span class="vs-f">${ICON.check}<span>${t("бесплатно", "bepul")}</span></span>`
+    : `<span class="vs-n">${ICON.close}<span class="vh">${t("нет", "yo‘q")}</span></span>`;
+  const rows = (mini ? COMPARE.filter((r) => r[2] === 0) : COMPARE)
+    .map((r) => `<div class="vs-r${mini ? "" : " rise"}"><span class="vs-l">${esc(r[i])}</span>${cell(r[2])}${cell(r[3])}</div>`).join("");
+  const head = `<div class="vs-h"><span></span><div class="vs-c"><b>${t("Обычная админка", "Oddiy admin panel")}</b><small>${t(`в сайте за ${usd(ALL)}`, `${usd(ALL)} lik sayt ichida`)}</small></div><div class="vs-c vs-s glass"><b>${t("Супер-админка", "Super admin panel")}</b><small>${usd(tms)} · ${t(`сборные грузы +${usd(ltl)}`, `yig‘ma yuklar +${usd(ltl)}`)}</small></div></div>`;
+  if (mini) return `<section class="vs vs-mini" id="vs" aria-label="${t("Что умеет супер-админка", "Super admin panel nimalar qila oladi")}"><div class="vs-in"><h2>${t("Что умеет супер-админка", "Super admin panel nimalar qila oladi")}</h2><p class="pn-mu">${t("Здесь обычная админка: заявки, грузы, клиенты. Супер-админка добавляет машины, водителей, маршруты и связь с 1С, Битрикс24 и Telegram.", "Bu oddiy admin panel: arizalar, yuklar, mijozlar. Super admin panel mashinalar, haydovchilar, marshrutlar va 1C, Bitrix24, Telegram bilan bog‘lanishni qo‘shadi.")}</p><div class="vs-t">${head}${rows}</div><a class="btn btn-a" data-module="tms" href="${href(l, "dispatch")}">${t("Открыть супер-админку", "Super admin panelni ochish")}${ICON.arrow}</a></div></section>`;
+  return `<section class="sec vs" id="vs"><div class="wrap">
+<p class="kick rise"><i></i>${t("Две админки", "Ikki admin panel")}</p>
+<h2 class="h2 rise">${t("Обычная админка или <b>супер-админка</b>", "Oddiy admin panelmi yoki <b>super admin panel</b>mi")}</h2>
+<p class="lead rise">${t("Обычная ведёт заявки и грузы. Супер-админка управляет перевозкой: машины, водители, маршруты, документы для таможни и связь с вашими 1С, Битрикс24 и Telegram. Интеграции, автопарк, пакет для брокера и мелкие допы в ней бесплатно.", "Oddiy panel arizalar va yuklarni yuritadi. Super admin panel tashishni boshqaradi: mashinalar, haydovchilar, marshrutlar, bojxona hujjatlari va 1C, Bitrix24, Telegram bilan bog‘lanish. Integratsiyalar, avtopark, broker uchun paket va mayda qo‘shimchalar unda bepul.")}</p>
+<div class="vs-t">${head}${rows}</div>
+<div class="hero-act rise"><a class="btn btn-g" href="${href(l, "panel")}">${t("Обычная админка", "Oddiy admin panel")}${ICON.arrow}</a><a class="btn btn-a" data-module="tms" href="${href(l, "dispatch")}">${t("Супер-админка", "Super admin panel")}${ICON.arrow}</a></div>
 </div></section>`;
 }
 
@@ -462,6 +487,8 @@ function landPage(l) {
     t("Перегруз и не тот кузов горят красным", "Ortiqcha yuk va noto‘g‘ri kuzov qizil yonadi"),
     t("Водители на карте: в пути, простой, опоздание", "Xaritada haydovchilar: yo‘lda, to‘xtash, kechikish"),
     t("Статус рейса сразу у клиента на сайте", "Reys holati darhol mijozning saytida"),
+    t("Интеграции 1С, Битрикс24, Telegram: бесплатно", "1C, Bitrix24, Telegram integratsiyalari: bepul"),
+    t("Автопарк, водители и пакет для таможенного брокера", "Avtopark, haydovchilar va bojxona brokeri uchun paket"),
     t("Мы уже делали это для Lider Cargo", "Biz buni Lider Cargo uchun allaqachon qilganmiz"),
   ];
   const li = (a) => `<ul class="feat">${a.map((x) => `<li>${ICON.check}<span>${x}</span></li>`).join("")}</ul>`;
@@ -472,7 +499,7 @@ function landPage(l) {
     t("В диспетчерской нажмите «Распределить»: 14 грузов лягут по 12 машинам. Перенесите груз в чужой кузов, и машина загорится красным.", "Dispetcherlikda «Taqsimlash»ni bosing: 14 ta yuk 12 ta mashinaga tushadi. Yukni boshqa kuzovga ko‘chiring, mashina qizil yonadi."),
     t("Во вкладке «Сборные грузы и маршрут» нажмите «Собрать сборный рейс»: забор с нескольких адресов выстроится короче, чем по порядку заявок. Поменяйте адреса стрелками, и километры вырастут.", "«Yig‘ma yuklar va marshrut» bo‘limida «Yig‘ma reysni yig‘ish»ni bosing: bir nechta manzildan olib ketish arizalar tartibidan qisqaroq bo‘ladi. Manzillarni strelkalar bilan suring, kilometrlar oshadi."),
   ];
-  const ld = { base: BASE.promo, root: BASE_URL, hours: OFFER_HOURS, img: IMG, n: 60, add: ADDONS.map((a) => ({ id: a.id, p: a.price, t: a[l].t })), mod: MODULES.map((m) => ({ id: m.id, p: m.price, t: m[l].t, req: m.requires || null })), t: { copied: t("Состав скопирован", "Tarkib nusxalandi"), tot: t("Сайт с допами", "Qo‘shimchalar bilan sayt"), totm: t("С диспетчерской", "Dispetcherlik bilan"), totl: t("С диспетчерской и сборными грузами", "Dispetcherlik va yig‘ma yuklar bilan"), none: t("не выбрана", "tanlanmagan") } };
+  const ld = { base: BASE.promo, root: BASE_URL, hours: OFFER_HOURS, img: IMG, n: 60, add: ADDONS.map((a) => ({ id: a.id, p: a.price, t: a[l].t })), mod: MODULES.map((m) => ({ id: m.id, p: m.price, t: m[l].t, req: m.requires || null })), t: { copied: t("Состав скопирован", "Tarkib nusxalandi"), tot: t("Сайт с допами", "Qo‘shimchalar bilan sayt"), totm: t("С супер-админкой", "Super admin panel bilan"), totl: t("С супер-админкой и сборными грузами", "Super admin panel va yig‘ma yuklar bilan"), none: t("не выбрана", "tanlanmagan") } };
   return `${head(l, t("CARGO PRO GROUP · макет сайта и панели · DevUz Studio", "CARGO PRO GROUP · sayt va panel maketi · DevUz Studio"), t("Макет для CARGO PRO GROUP: новый сайт с расчётом доставки и панель заявок и грузов. Конструктор цены.", "CARGO PRO GROUP uchun maket: yetkazish hisobi bilan yangi sayt va arizalar va yuklar paneli. Narx konstruktori."))}
 <link rel="preload" as="image" href="${IMG}/poster-9.webp" media="(max-width: 899px)">
 <link rel="preload" as="image" href="${IMG}/poster-16-2880.webp" media="(min-width: 900px)">
@@ -482,7 +509,7 @@ function landPage(l) {
 ${dzIntroSolo(l)}
 <header class="top"><div class="top-in glass">
 ${LOGO(l, "")}
-<nav class="nav" aria-label="${t("Разделы", "Bo‘limlar")}"><a href="#choose">${t("Что посмотреть", "Nimani ko‘rish")}</a><a href="#try">${t("Как проверить", "Qanday tekshirish")}</a><a href="#offer">${t("Стоимость", "Narxi")}</a></nav>
+<nav class="nav" aria-label="${t("Разделы", "Bo‘limlar")}"><a href="#choose">${t("Что посмотреть", "Nimani ko‘rish")}</a><a href="#vs">${t("Две админки", "Ikki admin panel")}</a><a href="#try">${t("Как проверить", "Qanday tekshirish")}</a><a href="#offer">${t("Стоимость", "Narxi")}</a></nav>
 <div class="langs">${LANGS.map((x) => `<a href="${href(x)}" hreflang="${x}" lang="${x}"${x === l ? ' aria-current="true"' : ""}>${x.toUpperCase()}</a>`).join("")}</div>
 <a class="btn btn-g btn-s adm" href="${href(l, "site")}">${t("Сайт", "Sayt")}</a>
 <a class="btn btn-a btn-s" href="${href(l, "panel")}">${ICON.panel}<span>${t("Админка", "Admin panel")}</span></a>
@@ -506,14 +533,15 @@ ${LOGO(l, "")}
 <a class="choice rise" href="${href(l, "site")}"><span class="ch-k">${t("Для клиента", "Mijoz uchun")}</span><b>${t("Сайт с расчётом доставки", "Yetkazish hisobi bilan sayt")}</b>
 <span class="ch-pic"><img src="${IMG}/poster-16-1920.webp" width="1920" height="1080" alt="${t("Глобус CARGO PRO GROUP", "CARGO PRO GROUP globusi")}" loading="lazy"></span>
 ${li(site)}<span class="btn btn-g">${t("Открыть сайт", "Saytni ochish")}${ICON.arrow}</span></a>
-<a class="choice rise" href="${href(l, "panel")}"><span class="ch-k">${t("Для вас и команды", "Siz va jamoa uchun")}</span><b>${t("Админка заявок и грузов", "Arizalar va yuklar admin paneli")}</b>
+<a class="choice rise" href="${href(l, "panel")}"><span class="ch-k">${t("Для вас и команды", "Siz va jamoa uchun")}</span><b>${t("Обычная админка: заявки и грузы", "Oddiy admin panel: arizalar va yuklar")}</b>
 <span class="ch-pic"><span class="browser"><span class="bh"><i></i><i></i><i></i></span><span class="bb"><span class="kpi"><small>${t("Заявки, 30 дней · демо", "Arizalar, 30 kun · demo")}</small><b>186</b></span><span class="kpi"><small>${t("Грузов в пути · демо", "Yo‘ldagi yuklar · demo")}</small><b>41</b></span><span class="kpi w"><small>${t("Заявки по дням · демо", "Kunlar bo‘yicha arizalar · demo")}</small><span class="spark" id="lspark"></span></span></span></span></span>
-${li(pan)}<span class="btn btn-a">${t("Открыть админку", "Admin panelni ochish")}${ICON.arrow}</span></a>
-<a class="choice rise" data-module="tms" href="${href(l, "dispatch")}"><span class="ch-k">${t("Для диспетчеров · отдельный модуль", "Dispetcherlar uchun · alohida modul")}</span><b>${t("Диспетчерская: машины и водители", "Dispetcherlik: mashinalar va haydovchilar")}</b>
+${li(pan)}<span class="btn btn-a">${t("Открыть обычную админку", "Oddiy admin panelni ochish")}${ICON.arrow}</span></a>
+<a class="choice rise" data-module="tms" href="${href(l, "dispatch")}"><span class="ch-k">${t("Для диспетчеров · отдельный модуль", "Dispetcherlar uchun · alohida modul")}</span><b>${t("Супер-админка: диспетчерская, машины и водители", "Super admin panel: dispetcherlik, mashinalar va haydovchilar")}</b>
 <span class="ch-pic"><span class="browser"><span class="bb dmini"><svg viewBox="0 0 300 150" aria-hidden="true"><path d="M150 60 Q 110 40 60 110" fill="none" stroke="url(#gArcL)" stroke-width="3" stroke-dasharray="5 6"/><path d="M150 60 Q 210 30 260 80" fill="none" stroke="url(#gArcL)" stroke-width="3" stroke-dasharray="5 6"/><path d="M150 60 Q 190 90 200 140" fill="none" stroke="#e5352b" stroke-width="3" stroke-dasharray="5 6"/><circle cx="150" cy="60" r="8" fill="#f6c445"/><circle cx="95" cy="80" r="7" fill="#f08a24"/><circle cx="225" cy="60" r="7" fill="#3ccf8e"/><circle cx="196" cy="118" r="7" fill="#e5352b"/><defs><linearGradient id="gArcL" x1="0" x2="1"><stop offset="0" stop-color="#f6c445"/><stop offset="1" stop-color="#e5352b"/></linearGradient></defs></svg></span></span></span>
-${li(dsp)}<span class="ch-ltl" data-module="ltl">${ICON.check}<span>${t("Сборные грузы: забор с нескольких адресов по короткому маршруту", "Yig‘ma yuklar: bir nechta manzildan qisqa marshrut bo‘yicha olib ketish")}</span></span><span class="btn btn-g">${t("Открыть диспетчерскую", "Dispetcherlikni ochish")}${ICON.arrow}</span></a>
+${li(dsp)}<span class="ch-ltl" data-module="ltl">${ICON.check}<span>${t("Сборные грузы: забор с нескольких адресов по короткому маршруту", "Yig‘ma yuklar: bir nechta manzildan qisqa marshrut bo‘yicha olib ketish")}</span></span><span class="btn btn-g">${t("Открыть супер-админку", "Super admin panelni ochish")}${ICON.arrow}</span></a>
 </div>
 </div></section>
+${compare(l, t, false)}
 <section class="sec" id="try" style="background:var(--bg2)"><div class="wrap">
 <p class="kick rise"><i></i>${t("Как проверить за минуту", "Bir daqiqada qanday tekshirish")}</p>
 <h2 class="h2 rise">${t("Сайт и панель <b>связаны</b>", "Sayt va panel <b>bog‘langan</b>")}</h2>
@@ -524,7 +552,7 @@ ${offer(l, t)}
 </main>
 <footer class="foot"><div class="wrap"><div class="fgrid">
 <div>${LOGO(l, "")}<p style="margin-top:16px;font-size:14px">${t("Услуги, склады, партнёры, контакты: cargoprogroup.uz. Ставки калькулятора: середина рынка, предложение DevUz. Клиенты, грузы и цифры в панели: демо. Кадры залёта: Higgsfield, по вашему знаку.", "Xizmatlar, omborlar, hamkorlar, kontaktlar: cargoprogroup.uz. Kalkulyator stavkalari: bozor o‘rtasi, DevUz taklifi. Paneldagi mijozlar, yuklar va raqamlar: demo. Uchib kirish kadrlari: Higgsfield, belgingiz asosida.")}</p></div>
-<div><h4>${t("Макет", "Maket")}</h4><a href="${href(l, "site")}">${t("Сайт", "Sayt")}</a><a href="${href(l, "panel")}">${t("Админка", "Admin panel")}</a><a href="${href(l, "dispatch")}" data-module="tms">${t("Диспетчерская", "Dispetcherlik")}</a><a href="#offer">${t("Стоимость", "Narxi")}</a></div>
+<div><h4>${t("Макет", "Maket")}</h4><a href="${href(l, "site")}">${t("Сайт", "Sayt")}</a><a href="${href(l, "panel")}">${t("Обычная админка", "Oddiy admin panel")}</a><a href="${href(l, "dispatch")}" data-module="tms">${t("Супер-админка", "Super admin panel")}</a><a href="#offer">${t("Стоимость", "Narxi")}</a></div>
 <div><h4>DevUz Studio</h4><a href="https://devuz.studio" target="_blank" rel="noopener">devuz.studio</a><a href="${DEVUZ}" target="_blank" rel="noopener">Telegram</a></div>
 <div><h4>CARGO PRO GROUP</h4><a href="tel:${COMPANY.tel}">${COMPANY.phone}</a><a href="${COMPANY.site}" target="_blank" rel="noopener">cargoprogroup.uz</a></div>
 </div>
@@ -559,6 +587,7 @@ function panelPage(l) {
 </head>
 <body class="pn">
 <div id="app"></div>
+${compare(l, t, true)}
 <footer class="pn-foot">${t("Макет DevUz Studio, демо-данные. Пользуясь макетом, вы принимаете", "DevUz Studio maketi, demo ma’lumotlar. Maketdan foydalanib, siz")} <a href="${TERMS(l)}" target="_blank" rel="noopener">${t("условия макета", "maket shartlarini qabul qilasiz")}</a>${t(".", "")}</footer>
 <script type="application/json" id="pn-data">${JSON.stringify(pd).replace(/</g, "\\u003c")}</script>
 <script>
@@ -570,7 +599,7 @@ ${PANEL_JS}</script>
 /* ── Диспетчерская (отдельный модуль) ─────────────────────────────── */
 (function checkDispDict() {
   const keys = new Set([...DISP_JS.matchAll(/\bt\('([A-Za-z0-9_]+)'/g)].map((m) => m[1]));
-  for (const k of ["tab_", "s_", "b_", "ty_", "k_", "role_", "g_"]) keys.delete(k);
+  for (const k of ["tab_", "s_", "b_", "ty_", "k_", "role_", "g_", "bt_", "post_"]) keys.delete(k);
   for (const k of keys) {
     const v = DISPATCH_UI[k];
     if (!v || v.length !== 2 || v.some((x) => !x)) throw new Error(`dispatch: нет подписи «${k}» на двух языках`);

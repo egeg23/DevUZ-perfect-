@@ -8,6 +8,10 @@
 // руководителя показывает маржу, тумблер модуля прячет выбор. Сборные грузы:
 // рейс по весу, объёму и типу, оптимальный маршрут короче порядка заявок,
 // ручной порядок длиннее, попутный забор, модуль только с диспетчерской.
+// Супер-админка: сравнение двух админок на первой странице и в обычной,
+// госномер с ошибкой и без, новая машина в распределении, водитель с
+// истекающей медсправкой, пакет для брокера (чего нет, потом готов),
+// журнал обмена 1С, Битрикс24, Telegram после смены статуса, допы рейса.
 import { createRequire } from "node:module";
 import { execSync } from "node:child_process";
 const require = createRequire(execSync("npm root -g").toString().trim() + "/playwright/package.json");
@@ -23,7 +27,7 @@ const skip = async (p) => p.evaluate(() => { document.getElementById("dzi")?.rem
 for (const w of [390, 768, 1440]) {
   const c = await b.newContext({ viewport: { width: w, height: 860 } });
   const p = await c.newPage(); watch(p);
-  for (const path of ["", "site", "panel", "dispatch", "dispatch#map", "dispatch#trips", "dispatch#drivers", "dispatch#route", "uz", "uz/site", "uz/panel", "uz/dispatch", "uz/dispatch#map", "uz/dispatch#route"]) {
+  for (const path of ["", "site", "panel", "dispatch", "dispatch#map", "dispatch#trips", "dispatch#drivers", "dispatch#route", "dispatch#fleet", "dispatch#int", "uz", "uz/site", "uz/panel", "uz/dispatch", "uz/dispatch#map", "uz/dispatch#route", "uz/dispatch#fleet", "uz/dispatch#int"]) {
     await p.goto(`${B}/${path}`, { waitUntil: "load" }); await skip(p);
     await p.evaluate(async () => { for (let y = 0; y < document.body.scrollHeight; y += 700) { scrollTo(0, y); await new Promise((r) => setTimeout(r, 30)); } scrollTo(0, 0); });
     const ov = await p.evaluate(() => document.documentElement.scrollWidth - innerWidth);
@@ -147,6 +151,59 @@ assert.match(await dp.textContent(".dp-stops"), /S-10/);
 assert.match(await dp.getAttribute("#rsend", "href"), /^https:\/\/t\.me\/share/);
 await dp.selectOption("#role", "head");
 assert.ok(await dp.isVisible(".dp-cmp .dp-money"), "руководитель не видит деньги на топливо");
+/* Супер-админка: сравнение с обычной — на первой странице и в обычной админке. */
+await p.goto(`${B}/`, { waitUntil: "load" }); await skip(p);
+assert.ok((await p.$$eval("#vs .vs-r", (x) => x.length)) >= 12, "нет сравнения двух админок");
+assert.ok((await p.$$eval("#vs .vs-f", (x) => x.length)) >= 6, "в сравнении нет бесплатных пунктов");
+await q.goto(`${B}/panel`, { waitUntil: "load" });
+assert.ok(await q.isVisible(".vs-mini"), "в обычной админке нет «Что умеет супер-админка»");
+/* Автопарк: госномер с ошибкой, потом верный; машина сразу в распределении. */
+await dp.goto(`${B}/dispatch#fleet`, { waitUntil: "load" });
+await dp.selectOption("#role", "disp");
+await dp.click("#spat");
+const fill = async (k, v) => dp.fill(`#spf [name="${k}"]`, v);
+await fill("pl", "01 ABC 12"); await fill("mk", "MAN TGX 18.480"); await fill("vin", "WMA06XZZ7KM812345"); await fill("yr", "2019"); await fill("t", "20"); await fill("m3", "86"); await fill("tir", "XC 12345678");
+await dp.click('#spf [type="submit"]');
+assert.match(await dp.textContent("#spf .sp-bad"), /01 A 123 BC/, "кривой госномер прошёл");
+await fill("pl", "01 a 777 bc"); await dp.click('#spf [type="submit"]');
+assert.equal(await dp.$$eval("#spf", (x) => x.length), 0, "верный госномер не сохранился");
+assert.match(await dp.textContent(".sp-t"), /01 A 777 BC/);
+await dp.goto(`${B}/dispatch`, { waitUntil: "load" });
+assert.ok(await dp.$$eval(".dp-t", (ts) => ts.some((x) => /01 A 777 BC/.test(x.textContent))), "новой машины нет в распределении");
+/* Водитель с медсправкой на 10 дней: строка в «Сроках документов» жёлтая. */
+await dp.goto(`${B}/dispatch#fleet`, { waitUntil: "load" });
+await dp.click("#spad");
+const day = (n) => { const x = new Date(Date.now() + n * 864e5); return x.toISOString().slice(0, 10); };
+await dp.fill('#spf [name="lat"]', "TESTOV AZIZ"); await dp.fill('#spf [name="pass"]', "AB1234567"); await dp.fill('#spf [name="pinfl"]', "31234567890123"); await dp.fill('#spf [name="lic"]', "AF1234567");
+for (const [k, n] of [["bd", -11000], ["iss", -700], ["exp", 2000], ["licx", 900], ["med", 10]]) await dp.fill(`#spf [name="${k}"]`, day(n));
+await dp.click('#spf [type="submit"]');
+assert.equal(await dp.$$eval("#spf", (x) => x.length), 0, "водитель не сохранился");
+if (await dp.$("#spdocs")) await dp.click("#spdocs");
+assert.ok(await dp.$$eval(".sp-di", (x) => x.some((e) => /TESTOV/.test(e.textContent) && e.querySelector(".warn"))), "истекающая медсправка не жёлтая");
+/* Пакет для брокера: у CPG-24117 нет книжки МДП, у CPG-24109 дозаполняем и формируем. */
+await dp.goto(`${B}/dispatch#trips`, { waitUntil: "load" });
+await dp.click('[data-bk="CPG-24117"]');
+assert.match(await dp.textContent("#bkmiss"), /МДП/);
+assert.ok(await dp.$eval("#bkmake", (b) => b.disabled), "пакет формируется без данных");
+await dp.click("#spmx"); await dp.click('[data-bk="CPG-24109"]');
+for (let k = 0; k < 10 && (await dp.$$eval("#spm .sp-need", (x) => x.length)); k++) await dp.evaluate(() => { const e = document.querySelector("#spm .sp-need"); e.value = e.getAttribute("data-b") === "seal" ? "UZ-70481" : "1"; e.dispatchEvent(new Event("change")); });
+assert.ok(await dp.isVisible("#bkok"), "после заполнения всё ещё не хватает полей");
+await dp.click("#bkmake");
+assert.match(await dp.textContent("#sheet"), /CMR/);
+assert.match(await dp.getAttribute("#bktg", "href"), /^https:\/\/t\.me\/share/);
+await dp.click("#spmx");
+/* Простой: 50 часов — двое суток сверх нормы, 140 $. */
+await dp.fill('[data-idle="CPG-24109"]', "50");
+assert.match(await dp.textContent("#ids-CPG-24109"), /140 \$/);
+/* Интеграции: смена статуса пишет в журнал обмена Битрикс24, 1С и Telegram. */
+await dp.click('[data-tr="CPG-24095"][data-s="5"]');
+await dp.goto(`${B}/dispatch#int`, { waitUntil: "load" });
+const xl = await dp.textContent("#xlog");
+assert.match(xl, /Битрикс24: сделка #24095/); assert.match(xl, /1С: созданы реализация/); assert.match(xl, /Telegram: клиенту отправлен статус/);
+await dp.click('[data-itog="bx"]');
+assert.match(await dp.textContent(".sp-int:nth-child(2) .sp-st"), /не подключено/);
+await dp.evaluate(() => { localStorage.removeItem("cp-fleet-1"); });
+
 /* Конструктор: сборные грузы только вместе с диспетчерской, итоги 15 000 $ и 18 000 $. */
 await p.goto(`${B}/`, { waitUntil: "load" }); await skip(p);
 assert.match(await p.textContent("#withl"), /18 000/);
