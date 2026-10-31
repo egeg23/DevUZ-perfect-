@@ -5,7 +5,9 @@
 // тумблер конструктора убирает блок допа; роль менеджера; «меньше движения».
 // Диспетчерская: «Распределить» → полосы загрузки, ручной перенос в чужой
 // кузов горит красным, карточка водителя, статус рейса → сайт, роль
-// руководителя показывает маржу, тумблер модуля прячет выбор.
+// руководителя показывает маржу, тумблер модуля прячет выбор. Сборные грузы:
+// рейс по весу, объёму и типу, оптимальный маршрут короче порядка заявок,
+// ручной порядок длиннее, попутный забор, модуль только с диспетчерской.
 import { createRequire } from "node:module";
 import { execSync } from "node:child_process";
 const require = createRequire(execSync("npm root -g").toString().trim() + "/playwright/package.json");
@@ -21,7 +23,7 @@ const skip = async (p) => p.evaluate(() => { document.getElementById("dzi")?.rem
 for (const w of [390, 768, 1440]) {
   const c = await b.newContext({ viewport: { width: w, height: 860 } });
   const p = await c.newPage(); watch(p);
-  for (const path of ["", "site", "panel", "dispatch", "dispatch#map", "dispatch#trips", "dispatch#drivers", "uz", "uz/site", "uz/panel", "uz/dispatch", "uz/dispatch#map"]) {
+  for (const path of ["", "site", "panel", "dispatch", "dispatch#map", "dispatch#trips", "dispatch#drivers", "dispatch#route", "uz", "uz/site", "uz/panel", "uz/dispatch", "uz/dispatch#map", "uz/dispatch#route"]) {
     await p.goto(`${B}/${path}`, { waitUntil: "load" }); await skip(p);
     await p.evaluate(async () => { for (let y = 0; y < document.body.scrollHeight; y += 700) { scrollTo(0, y); await new Promise((r) => setTimeout(r, 30)); } scrollTo(0, 0); });
     const ov = await p.evaluate(() => document.documentElement.scrollWidth - innerWidth);
@@ -120,6 +122,46 @@ await dp.goto(`${B}/dispatch#drivers`, { waitUntil: "load" });
 await dp.click('[data-sort="price"]');
 const pr = await dp.$$eval(".dp-off .pr", (x) => x.map((e) => +e.textContent.replace(/\D/g, "")));
 assert.deepEqual(pr, [...pr].sort((a, b) => a - b), "по цене не по возрастанию");
+/* Сборные грузы: рейс собран по весу, объёму и типу, оптимальный маршрут короче порядка заявок. */
+await dp.goto(`${B}/dispatch#route`, { waitUntil: "load" });
+await dp.selectOption("#role", "disp");
+await dp.click("#rbuild");
+const kmOf = async (s) => +(await dp.textContent(`${s} b`)).replace(/[^\d,]/g, "").replace(",", ".");
+const naive = await kmOf(".dp-sb.n"), opt = await kmOf(".dp-sb.o");
+assert.ok(opt > 0 && opt < naive, `оптимальный ${opt} км не короче порядка заявок ${naive} км`);
+assert.ok(+(await dp.getAttribute("#rsave", "data-km")) > 0, "нет экономии километров");
+assert.match(await dp.textContent(".dp-rin"), /нельзя вместе с продуктами/);
+assert.match(await dp.textContent(".dp-rin"), /рефрижератор: отдельной машиной/);
+assert.equal(await dp.$$eval(".dp-cmp .dp-money", (x) => x.length), 0, "диспетчер видит деньги на топливо");
+/* Ручной порядок: километры растут, «Вернуть оптимальный» возвращает. */
+await dp.click('[data-dn="0"]');
+const mine = await kmOf(".dp-sb.m");
+assert.ok(mine > opt, `ручной порядок ${mine} км не длиннее оптимального ${opt} км`);
+await dp.click("#rback");
+assert.equal(await dp.$$eval(".dp-sb.m", (x) => x.length), 0, "оптимальный не вернулся");
+/* Попутный забор встаёт в самое дешёвое место и добавляет километры. */
+await dp.click("#radd");
+assert.match(await dp.textContent("#rins"), /\+\d/);
+assert.ok((await kmOf(".dp-sb.o")) > opt, "попутный забор не добавил километров");
+assert.match(await dp.textContent(".dp-stops"), /S-10/);
+assert.match(await dp.getAttribute("#rsend", "href"), /^https:\/\/t\.me\/share/);
+await dp.selectOption("#role", "head");
+assert.ok(await dp.isVisible(".dp-cmp .dp-money"), "руководитель не видит деньги на топливо");
+/* Конструктор: сборные грузы только вместе с диспетчерской, итоги 15 000 $ и 18 000 $. */
+await p.goto(`${B}/`, { waitUntil: "load" }); await skip(p);
+assert.match(await p.textContent("#withl"), /18 000/);
+await p.evaluate(() => { const i = document.querySelector('[data-mod="ltl"]'); i.checked = false; i.dispatchEvent(new Event("change")); });
+assert.ok(await p.$eval('[data-module="ltl"]', (e) => e.classList.contains("off")), "сборные выключены, а строка видна");
+await dp.goto(`${B}/dispatch`, { waitUntil: "load" });
+assert.equal(await dp.$$eval('.pn-tabs [data-v="route"]', (x) => x.length), 0, "сборные выключены, а вкладка есть");
+await p.evaluate(() => { const i = document.querySelector('[data-mod="tms"]'); i.checked = false; i.dispatchEvent(new Event("change")); });
+await p.evaluate(() => { const i = document.querySelector('[data-mod="ltl"]'); i.checked = true; i.dispatchEvent(new Event("change")); });
+assert.ok(await p.$eval('[data-mod="tms"]', (e) => e.checked), "сборные включены без диспетчерской");
+assert.match(await p.textContent("#withl"), /18 000/);
+await p.evaluate(() => { const i = document.querySelector('[data-mod="tms"]'); i.checked = false; i.dispatchEvent(new Event("change")); });
+assert.ok(!(await p.$eval('[data-mod="ltl"]', (e) => e.checked)), "диспетчерская выключена, а сборные нет");
+await p.evaluate(() => { localStorage.removeItem("cp-cfg-1"); });
+
 /* Тумблер модуля прячет выбор диспетчерской. */
 await p.goto(`${B}/`, { waitUntil: "load" }); await skip(p);
 assert.match(await p.textContent("#withm"), /15 000/);

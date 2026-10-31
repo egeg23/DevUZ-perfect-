@@ -2609,6 +2609,12 @@ test("CARGO PRO GROUP: выбор, сайт и панель на ru и uz — у
       assert.match(page, /\[\[t:\d\]\]/, `${path}: нет слов-ловушек в демо-водителях`);
       assert.match(page, /\/\*~\*\/\d*\.?\d+/, `${path}: нет числа с меткой`);
       assert.ok(page.includes(`"tel":"${data.COMPANY.tel}"`) && page.includes("tel:'+D.tel"), `${path}: нет их телефона`);
+      /* Сборные грузы и маршрут забора (владелец, 31.10.2026): рейс по весу, объёму и типу, оптимальный порядок, попутный забор. */
+      assert.ok(page.includes(lang === "ru" ? "Сборные грузы и маршрут" : "Yig‘ma yuklar va marshrut"), `${path}: нет вкладки «Сборные грузы и маршрут»`);
+      for (const k of ["vRoute", "optimize(", "insertCheap(", "hav(", "cp-cfg-1", "m_ltl", "t.me/share"]) assert.ok(page.includes(k), `${path}: нет ${k}`);
+      assert.match(page, /\[\[t:[5-9]\]\]/, `${path}: нет слов-ловушек в отправителях сборного рейса`);
+      assert.ok(page.includes(lang === "ru" ? "по прямой × коэффициент дорог, ориентир" : "to‘g‘ri chiziq × yo‘l koeffitsienti, taxminiy"), `${path}: расстояние не подписано как ориентир`);
+      for (const d of lang === "ru" ? ["Чиланзар", "Юнусабад", "Мирзо-Улугбек", "Сергели"] : ["Chilonzor", "Yunusobod", "Mirzo Ulug‘bek", "Sergeli"]) assert.ok(page.includes(d), `${path}: нет района ${d}`);
       continue;
     }
     assert.match(page, /\bIDLE=3000\b/, `${path}: шапка не по правилу 3 секунд`);
@@ -2663,18 +2669,30 @@ test("CARGO PRO GROUP: сайт 1 000 $ вместо 4 900 $, допы 2 000 $, 
   assert.ok(cn.rail!.c40 >= 4608 && cn.rail!.c40 <= 5632);
   assert.equal(tf.DIM.air, 167);
   /* Диспетчерская — отдельный модуль по рыночной цене (владелец, 31.10.2026: «За такое укажи рыночную стоимость»). */
-  assert.equal(plan.MODULES.length, 1);
+  assert.equal(plan.MODULES.length, 2);
   const tms = plan.MODULES[0];
   assert.equal(tms.id, "tms");
   assert.equal(tms.price, 12000);
-  assert.equal(tms.market.ru, "по рынку 8 000-20 000 $ в СНГ, 40 000-70 000 € в Европе");
-  assert.doesNotMatch(tms.market.uz + tms.uz.t + tms.uz.e + tms.uz.who, /[А-Яа-яЁё]/, "tms: кириллица в узбекском");
+  assert.equal(tms.market!.ru, "по рынку 8 000-20 000 $ в СНГ, 40 000-70 000 € в Европе");
+  assert.doesNotMatch(tms.market!.uz + tms.uz.t + tms.uz.e + tms.uz.who, /[А-Яа-яЁё]/, "tms: кириллица в узбекском");
   assert.ok(tms.ru.who.includes("Lider Cargo") && tms.uz.who.includes("Lider Cargo"), "нет строки про Lider Cargo");
-  assert.equal(plan.ALL_MODULES, 15000);
+  /* Сборные грузы — второй модуль за 3 000 $ (владелец, 31.10.2026: «Сборные грузы должны стоить дополнительно 3000$»), только с диспетчерской. */
+  const ltl = plan.MODULES[1];
+  assert.equal(ltl.id, "ltl");
+  assert.equal(ltl.price, 3000);
+  assert.equal(ltl.requires, "tms");
+  assert.match(ltl.ru.t, /Сборные грузы/);
+  assert.doesNotMatch(ltl.uz.t + ltl.uz.e + ltl.uz.who, /[А-Яа-яЁё]/, "ltl: кириллица в узбекском");
+  assert.equal(plan.ALL_TMS, 15000);
+  assert.equal(plan.ALL_MODULES, 18000);
   const site = bundlePages("cargopro")!;
   assert.ok(site.html.includes("4 900 $") && site.html.includes("1 000 $"), "на первой странице не та цена");
   assert.ok(site.html.includes("12 000 $") && site.html.includes("15 000 $") && site.html.includes("3 000 $"), "нет строк «Сайт с допами» и «С диспетчерской»");
-  assert.ok(site.pages.uz.includes(tms.market.uz), "на узбекской странице нет рыночной вилки");
+  for (const page of [site.html, site.pages.uz]) {
+    assert.ok(page.includes("15 000 $") && page.includes("18 000 $"), "нет итогов «С диспетчерской» и «С диспетчерской и сборными грузами»");
+    assert.ok(page.includes('data-mod="ltl" data-req="tms"') && page.includes('data-module="ltl"'), "нет тумблера модуля «Сборные грузы»");
+  }
+  assert.ok(site.pages.uz.includes(tms.market!.uz), "на узбекской странице нет рыночной вилки");
 });
 
 test("Optimal Prime: выбор, сайт и панель на ru и uz — условия, noindex, видео DevUz и залёт в бренд, шапка 3 с, услуги, тарифы и клиенты с их сайта, uz без кириллицы", async () => {

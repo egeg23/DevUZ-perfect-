@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dzIntroSolo } from "../../../lib/proto/dz-video.mjs";
 import { LANGS, COMPANY, SERVICES, CUSTOMS, FACTS, PARTNERS, HUBS, VELO } from "./data.mjs";
-import { BASE, ADDONS, OFFER_HOURS, ALL, MODULES, ALL_MODULES } from "./plan.mjs";
+import { BASE, ADDONS, OFFER_HOURS, ALL, MODULES, ALL_MODULES, ALL_TMS } from "./plan.mjs";
 import { LANES, EXTRA, FX, DIM } from "./tariffs.mjs";
 import { PANEL_UI } from "./panel-ui.mjs";
 import { DISPATCH_UI } from "./dispatch-ui.mjs";
@@ -422,14 +422,16 @@ function offer(l, t) {
 <div class="cst"><div>
 <div class="base"><div class="hd"><b>${esc(BASE[l].t)}</b><span class="pp"><s>${usd(BASE.price)}</s>${usd(BASE.promo)}</span></div><p>${esc(BASE[l].d)}</p></div>
 <div class="adds">${ADDONS.map((a) => `<label class="add"><input type="checkbox" data-add="${a.id}" checked><span class="sw" aria-hidden="true"></span><span><b>${esc(a[l].t)}</b>${a.star ? `<span class="star">${t("берут первым", "birinchi oladilar")}</span>` : ""}<p>${esc(a[l].e)}</p><small>${esc(a[l].who)}</small></span><span class="ap">${usd(a.price)}</span></label>`).join("")}</div>
-${MODULES.map((m) => `<div class="mod" id="mod-${m.id}"><p class="mod-k">${t("Отдельный модуль", "Alohida modul")}</p><label class="add"><input type="checkbox" data-mod="${m.id}" checked><span class="sw" aria-hidden="true"></span><span><b>${esc(m[l].t)}</b><span class="star">${t("рыночная цена", "bozor narxi")}</span><p>${esc(m[l].e)}</p><small class="mod-go">${esc(m[l].who)}</small><small>${esc(m.market[l])}</small><a class="mod-a" href="${href(l, "dispatch")}">${ICON.route}<span>${t("Открыть диспетчерскую", "Dispetcherlikni ochish")}</span></a></span><span class="ap">${usd(m.price)}</span></label></div>`).join("")}
+${MODULES.map((m) => `<div class="mod" id="mod-${m.id}"><p class="mod-k">${m.requires ? t("К диспетчерской", "Dispetcherlikka") : t("Отдельный модуль", "Alohida modul")}</p><label class="add"><input type="checkbox" data-mod="${m.id}"${m.requires ? ` data-req="${m.requires}"` : ""} checked><span class="sw" aria-hidden="true"></span><span><b>${esc(m[l].t)}</b>${m.market ? `<span class="star">${t("рыночная цена", "bozor narxi")}</span>` : ""}<p>${esc(m[l].e)}</p><small class="mod-go">${esc(m[l].who)}</small>${m.market ? `<small>${esc(m.market[l])}</small>` : ""}<a class="mod-a" href="${href(l, "dispatch")}${m.requires ? "#route" : ""}">${ICON.route}<span>${m.requires ? t("Открыть сборные грузы", "Yig‘ma yuklarni ochish") : t("Открыть диспетчерскую", "Dispetcherlikni ochish")}</span></a></span><span class="ap">${usd(m.price)}</span></label></div>`).join("")}
 </div>
 <aside class="sum glass" aria-live="polite">
 <div class="row"><span>${t("Сайт", "Sayt")}</span><span>${usd(BASE.promo)}</span></div>
 <div class="row"><span>${t("Допы", "Qo‘shimchalar")} <span id="addn"></span></span><span id="adds">0 $</span></div>
 <div class="tot"><span>${t("Сайт с допами", "Qo‘shimchalar bilan sayt")}</span><b id="total">${usd(ALL)}</b></div>
 <div class="row mrow" id="mrow"><span>${t("Диспетчерская", "Dispetcherlik")}</span><span id="mods">${usd(MODULES[0].price)}</span></div>
-<div class="tot tot2" id="mtot"><span>${t("С диспетчерской", "Dispetcherlik bilan")}</span><b id="withm">${usd(ALL_MODULES)}</b></div>
+<div class="tot tot2" id="mtot"><span>${t("С диспетчерской", "Dispetcherlik bilan")}</span><b id="withm">${usd(ALL_TMS)}</b></div>
+<div class="row mrow" id="lrow"><span>${t("Сборные грузы", "Yig‘ma yuklar")}</span><span id="lmods">${usd(MODULES.find((m) => m.id === "ltl").price)}</span></div>
+<div class="tot tot2" id="ltot"><span>${t("С диспетчерской и сборными грузами", "Dispetcherlik va yig‘ma yuklar bilan")}</span><b id="withl">${usd(ALL_MODULES)}</b></div>
 <p style="margin:16px 0 0;color:var(--mu);font-size:14px">${t("Цена сайта держится:", "Sayt narxi amal qiladi:")}</p>
 <div class="timer" id="timer"><span><b id="th">48</b><small>${t("часов", "soat")}</small></span><span><b id="tm">00</b><small>${t("минут", "daqiqa")}</small></span><span><b id="ts">00</b><small>${t("секунд", "soniya")}</small></span></div>
 <div class="ctrl"><button type="button" class="btn btn-g btn-s" id="allon">${t("Всё из макета", "Maketdagi hammasi")}</button><button type="button" class="btn btn-g btn-s" id="alloff">${t("Только сайт", "Faqat sayt")}</button></div>
@@ -468,8 +470,9 @@ function landPage(l) {
     t("Имя и телефон любые, это макет: заявка ляжет в панель.", "Ism va telefon istalgan, bu maket: ariza panelga tushadi."),
     t("В админке откройте заявку и поставьте «В пути». Сайт покажет это в «Мои заявки» и в отслеживании.", "Admin panelda arizani oching va «Yo‘lda» qo‘ying. Sayt buni «Arizalarim» va kuzatishda ko‘rsatadi."),
     t("В диспетчерской нажмите «Распределить»: 14 грузов лягут по 12 машинам. Перенесите груз в чужой кузов, и машина загорится красным.", "Dispetcherlikda «Taqsimlash»ni bosing: 14 ta yuk 12 ta mashinaga tushadi. Yukni boshqa kuzovga ko‘chiring, mashina qizil yonadi."),
+    t("Во вкладке «Сборные грузы и маршрут» нажмите «Собрать сборный рейс»: забор с нескольких адресов выстроится короче, чем по порядку заявок. Поменяйте адреса стрелками, и километры вырастут.", "«Yig‘ma yuklar va marshrut» bo‘limida «Yig‘ma reysni yig‘ish»ni bosing: bir nechta manzildan olib ketish arizalar tartibidan qisqaroq bo‘ladi. Manzillarni strelkalar bilan suring, kilometrlar oshadi."),
   ];
-  const ld = { base: BASE.promo, root: BASE_URL, hours: OFFER_HOURS, img: IMG, n: 60, add: ADDONS.map((a) => ({ id: a.id, p: a.price, t: a[l].t })), mod: MODULES.map((m) => ({ id: m.id, p: m.price, t: m[l].t })), t: { copied: t("Состав скопирован", "Tarkib nusxalandi"), tot: t("Сайт с допами", "Qo‘shimchalar bilan sayt"), totm: t("С диспетчерской", "Dispetcherlik bilan"), none: t("не выбрана", "tanlanmagan") } };
+  const ld = { base: BASE.promo, root: BASE_URL, hours: OFFER_HOURS, img: IMG, n: 60, add: ADDONS.map((a) => ({ id: a.id, p: a.price, t: a[l].t })), mod: MODULES.map((m) => ({ id: m.id, p: m.price, t: m[l].t, req: m.requires || null })), t: { copied: t("Состав скопирован", "Tarkib nusxalandi"), tot: t("Сайт с допами", "Qo‘shimchalar bilan sayt"), totm: t("С диспетчерской", "Dispetcherlik bilan"), totl: t("С диспетчерской и сборными грузами", "Dispetcherlik va yig‘ma yuklar bilan"), none: t("не выбрана", "tanlanmagan") } };
   return `${head(l, t("CARGO PRO GROUP · макет сайта и панели · DevUz Studio", "CARGO PRO GROUP · sayt va panel maketi · DevUz Studio"), t("Макет для CARGO PRO GROUP: новый сайт с расчётом доставки и панель заявок и грузов. Конструктор цены.", "CARGO PRO GROUP uchun maket: yetkazish hisobi bilan yangi sayt va arizalar va yuklar paneli. Narx konstruktori."))}
 <link rel="preload" as="image" href="${IMG}/poster-9.webp" media="(max-width: 899px)">
 <link rel="preload" as="image" href="${IMG}/poster-16-2880.webp" media="(min-width: 900px)">
@@ -508,7 +511,7 @@ ${li(site)}<span class="btn btn-g">${t("Открыть сайт", "Saytni ochish
 ${li(pan)}<span class="btn btn-a">${t("Открыть админку", "Admin panelni ochish")}${ICON.arrow}</span></a>
 <a class="choice rise" data-module="tms" href="${href(l, "dispatch")}"><span class="ch-k">${t("Для диспетчеров · отдельный модуль", "Dispetcherlar uchun · alohida modul")}</span><b>${t("Диспетчерская: машины и водители", "Dispetcherlik: mashinalar va haydovchilar")}</b>
 <span class="ch-pic"><span class="browser"><span class="bb dmini"><svg viewBox="0 0 300 150" aria-hidden="true"><path d="M150 60 Q 110 40 60 110" fill="none" stroke="url(#gArcL)" stroke-width="3" stroke-dasharray="5 6"/><path d="M150 60 Q 210 30 260 80" fill="none" stroke="url(#gArcL)" stroke-width="3" stroke-dasharray="5 6"/><path d="M150 60 Q 190 90 200 140" fill="none" stroke="#e5352b" stroke-width="3" stroke-dasharray="5 6"/><circle cx="150" cy="60" r="8" fill="#f6c445"/><circle cx="95" cy="80" r="7" fill="#f08a24"/><circle cx="225" cy="60" r="7" fill="#3ccf8e"/><circle cx="196" cy="118" r="7" fill="#e5352b"/><defs><linearGradient id="gArcL" x1="0" x2="1"><stop offset="0" stop-color="#f6c445"/><stop offset="1" stop-color="#e5352b"/></linearGradient></defs></svg></span></span></span>
-${li(dsp)}<span class="btn btn-g">${t("Открыть диспетчерскую", "Dispetcherlikni ochish")}${ICON.arrow}</span></a>
+${li(dsp)}<span class="ch-ltl" data-module="ltl">${ICON.check}<span>${t("Сборные грузы: забор с нескольких адресов по короткому маршруту", "Yig‘ma yuklar: bir nechta manzildan qisqa marshrut bo‘yicha olib ketish")}</span></span><span class="btn btn-g">${t("Открыть диспетчерскую", "Dispetcherlikni ochish")}${ICON.arrow}</span></a>
 </div>
 </div></section>
 <section class="sec" id="try" style="background:var(--bg2)"><div class="wrap">
@@ -567,7 +570,7 @@ ${PANEL_JS}</script>
 /* ── Диспетчерская (отдельный модуль) ─────────────────────────────── */
 (function checkDispDict() {
   const keys = new Set([...DISP_JS.matchAll(/\bt\('([A-Za-z0-9_]+)'/g)].map((m) => m[1]));
-  for (const k of ["tab_", "s_", "b_", "ty_", "k_", "role_"]) keys.delete(k);
+  for (const k of ["tab_", "s_", "b_", "ty_", "k_", "role_", "g_"]) keys.delete(k);
   for (const k of keys) {
     const v = DISPATCH_UI[k];
     if (!v || v.length !== 2 || v.some((x) => !x)) throw new Error(`dispatch: нет подписи «${k}» на двух языках`);
@@ -580,11 +583,18 @@ const CITY = {
   tas: ["Ташкент", "Toshkent"], sam: ["Самарканд", "Samarqand"], bux: ["Бухара", "Buxoro"], nav: ["Навои", "Navoiy"], fer: ["Фергана", "Farg‘ona"], and: ["Андижан", "Andijon"],
   nuk: ["Нукус", "Nukus"], ter: ["Термез", "Termiz"], alm: ["Алматы", "Almati"], bis: ["Бишкек", "Bishkek"],
 };
+/* Районы Ташкента для сборного рейса (адреса забора — демо). Старт — их офис в Яккасарайском районе. */
+const DIST = {
+  base: ["Старт: офис, Яккасарай", "Start: ofis, Yakkasaroy"], chi: ["Чиланзар", "Chilonzor"], yun: ["Юнусабад", "Yunusobod"], mu: ["Мирзо-Улугбек", "Mirzo Ulug‘bek"],
+  ser: ["Сергели", "Sergeli"], shy: ["Шайхантахур", "Shayxontohur"], uch: ["Учтепа", "Uchtepa"], bek: ["Бектемир", "Bektemir"], yas: ["Яшнабад", "Yashnobod"],
+  olm: ["Алмазар", "Olmazor"], mir: ["Мирабад", "Mirobod"], exit: ["Выезд на М-39, на Самарканд", "M-39 ga chiqish, Samarqandga"],
+};
 function dispatchPage(l) {
   const t = T(l), i = l === "ru" ? 0 : 1;
   const ui = Object.fromEntries(Object.entries(DISPATCH_UI).map(([k, v]) => [k, v[i]]));
   const dd = { l, ui, site: href(l, "site"), home: href(l), panel: href(l, "panel"), logo: IMG + "/logo.webp", tel: COMPANY.tel,
     city: Object.fromEntries(Object.entries(CITY).map(([k, v]) => [k, v[i]])),
+    dist: Object.fromEntries(Object.entries(DIST).map(([k, v]) => [k, v[i]])),
     gp: "https://play.google.com/store/apps/details?id=com.lbmgo.ftl.driver", as: "https://apps.apple.com/us/app/lbm-driver/id6762045849",
     trips: [["CPG-24117", 4, 0, 4160], ["CPG-24109", 3, 2, 4950], ["CPG-24095", 5, 1, 3245]] };
   return `${head(l, t("Диспетчерская CARGO PRO GROUP · демо", "CARGO PRO GROUP dispetcherligi · demo"), t("Диспетчерская CARGO PRO GROUP: распределение грузов по машинам по кузову, весу и объёму, водители на карте, рейсы со статусом для клиента, рейтинг водителей. Демо-данные.", "CARGO PRO GROUP dispetcherligi: yuklarni kuzov, og‘irlik va hajm bo‘yicha mashinalarga taqsimlash, xaritada haydovchilar, mijoz uchun holatli reyslar, haydovchilar reytingi. Demo ma’lumotlar."))}

@@ -67,5 +67,13 @@ export const MODULES = [
     market: { ru: "по рынку 8 000-20 000 $ в СНГ, 40 000-70 000 € в Европе", uz: "bozorda MDHda 8 000-20 000 $, Yevropada 40 000-70 000 €" },
     ru: { t: "Диспетчерская: распределение грузов по машинам и водители на карте", e: "Грузы сами раскладываются по машинам по типу кузова, весу и объёму, водители видны на карте с остановками и опозданиями, статус рейса сразу виден клиенту на сайте, выбор перевозчика по рейтингу и цене, документы водителей со сроками, роли и история", who: "Мы уже делали это для Lider Cargo: отслеживание водителя на карте, выбор водителя по рейтингу и цене, приложение водителя LBM Driver в App Store и Google Play" },
     uz: { t: "Dispetcherlik: yuklarni mashinalarga taqsimlash va xaritada haydovchilar", e: "Yuklar kuzov turi, og‘irlik va hajm bo‘yicha mashinalarga o‘zi taqsimlanadi, haydovchilar xaritada to‘xtash va kechikishlar bilan ko‘rinadi, reys holati mijozga saytda darhol ko‘rinadi, tashuvchini reyting va narx bo‘yicha tanlash, haydovchi hujjatlari muddatlari bilan, rollar va tarix", who: "Biz buni Lider Cargo uchun allaqachon qilganmiz: haydovchini xaritada kuzatish, haydovchini reyting va narx bo‘yicha tanlash, App Store va Google Play’da LBM Driver haydovchi ilovasi" } },
+  /* Владелец DevUz, 31.10.2026: «Давай еще в дорогую админку сделаем сборные грузы, последовательный забор с
+     нескольких адресов и правильная оптимизация забора груза из разных мест…», затем: «Сборные грузы должны
+     стоить дополнительно 3000$». Работает только внутри диспетчерской: requires. */
+  { id: "ltl", price: 3000, requires: "tms",
+    ru: { t: "Сборные грузы и оптимальный маршрут забора", e: "Мелкие заказы с разных адресов собираются в один рейс по весу, объёму и типу груза, порядок забора с нескольких адресов считается сам с учётом окон забора, видно, сколько километров, часов и дизеля экономит маршрут, попутный забор встаёт в самое дешёвое место, маршрут уходит водителю в Telegram", who: "Работает внутри диспетчерской: включается вместе с ней" },
+    uz: { t: "Yig‘ma yuklar va optimal olib ketish marshruti", e: "Turli manzillardan mayda buyurtmalar og‘irlik, hajm va yuk turi bo‘yicha bitta reysga yig‘iladi, bir nechta manzildan olib ketish tartibi oynalarni hisobga olib o‘zi hisoblanadi, marshrut qancha kilometr, soat va dizelni tejashi ko‘rinadi, yo‘ldosh olib ketish eng arzon joyga qo‘shiladi, marshrut haydovchiga Telegramda boradi", who: "Dispetcherlik ichida ishlaydi: u bilan birga yoqiladi" } },
 ];
+/* Сайт с допами и диспетчерской; со всеми модулями. */
+export const ALL_TMS = ALL + MODULES.find((m) => m.id === "tms").price;
 export const ALL_MODULES = ALL + MODULES.reduce((s, m) => s + m.price, 0);
