@@ -11,5 +11,6 @@ http.createServer((req,res)=>{
   const key=m?(m[2]||"").replace(/\/$/,""):null;
   if(!m||!(key in pages)){res.statusCode=404;res.end("404");return}
   res.setHeader("content-type","text/html; charset=utf-8");
-  res.end(pages[key].split("__PROTO_BASE__").join("/proto/"+m[1]));
+  // Ловушки и метки чисел на сайте заменяет отпечаток; здесь — просто слово.
+  res.end(pages[key].split("__PROTO_BASE__").join("/proto/"+m[1]).replace(/\[\[t:(\d+)\]\]/g,"Demo$1").replace(/\/\*~\*\//g,""));
 }).listen(4851,()=>console.log("ok"));

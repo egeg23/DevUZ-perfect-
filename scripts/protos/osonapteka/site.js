@@ -46,7 +46,7 @@ var velo=$$('.velo .row'),vx=[0,0],lastY=scrollY,speed=0,ticking=false;
 var how=$('.how'),stp=$$('.stp'),bars=$$('.how .prog b'),vs=$$('.scr .v',how||d),par=$$('[data-par]');
 function frame(){if(ticking)return;ticking=true;requestAnimationFrame(tick)}
 function tick(){ticking=false;var y=scrollY,vh=innerHeight;
-  speed=speed*.86+(y-lastY)*.14;lastY=y;
+  speed=speed* /*~*/.86+(y-lastY)* /*~*/.14;lastY=y;
   if(y<vh*1.5&&!RM)par.forEach(function(e){var k=+e.getAttribute('data-par');e.style.transform='translate3d(0,'+(y*k).toFixed(1)+'px,0)'});
   if(how&&!RM){var R=how.getBoundingClientRect();if(R.top<vh&&R.bottom>0){var p=cl(-R.top/(R.height-vh)),n=stp.length,st=Math.min(n-1,Math.floor(p*n)),lp=p*n-st;
     stp.forEach(function(c,i){c.classList.toggle('on',i===st)});vs.forEach(function(v,i){v.classList.toggle('on',i===st)});
@@ -92,10 +92,10 @@ function render(){if(!grid)return;var any=Object.keys(flt.kinds).some(function(k
 render();
 
 /* ── Демо-аптеки: из одного зерна, подписаны «демо» ───────────────── */
-var reg=get('oa-reg-1',{d:8});
+var reg=get('oa-reg-1',{d:8}),TN=['[[t:0]]','[[t:1]]','[[t:2]]','[[t:3]]','[[t:4]]','[[t:5]]'];
 function rnd(s0){var z=s0;return function(){z=(z*16807)%2147483647;return z/2147483647}}
 function pharmacies(pid,di){var r=rnd(1000+di*97+(pid||0)*13),n=3+Math.floor(r()*3),out=[];
-  for(var i=0;i<n;i++)out.push({id:di*10+i,n:T.apt+' '+(di*10+i+1)+' · '+T.demo,dist:Math.round((.3+i*.7+r()*.6)*10)/10,h:r()>.75?T.allday:T.open,upd:Math.ceil(r()*25),d:D.dist[di]});
+  for(var i=0;i<n;i++)out.push({id:di*10+i,n:(L==='ru'?T.apt+' «'+TN[(di*3+i)%TN.length]+'»':'«'+TN[(di*3+i)%TN.length]+'» '+T.apt.toLowerCase()+'si')+' · '+T.demo,dist:Math.round((.3+i*.7+r()*.6)*10)/10,h:r()>.75?T.allday:T.open,upd:Math.ceil(r()*25),d:D.dist[di]});
   return out}
 function phRow(x,pid){return'<div class="phr"><div><b>'+esc(x.n)+'</b><br><small>'+esc(x.d)+' · '+x.dist+' '+T.km+' · <span class="open">'+x.h+'</span></small><br><span class="sync" data-addon="erp">'+T.upd+' '+x.upd+' '+T.minAgo+'</span></div><div></div>'+
   '<div class="acts">'+(pid!=null?'<button type="button" class="btn btn-a" data-addon="bron" data-bron="'+pid+'" data-ph="'+x.id+'" data-phn="'+esc(x.n)+'">'+T.bron+'</button>':'')+'<a class="btn btn-g" href="https://yandex.uz/maps/?text='+encodeURIComponent((L==='ru'?'аптека ':'dorixona ')+x.d+' Toshkent')+'" target="_blank" rel="noopener">'+T.route+'</a></div></div>'}
