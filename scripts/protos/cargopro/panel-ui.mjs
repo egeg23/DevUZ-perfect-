@@ -5,6 +5,7 @@ export const PANEL_UI = {
   demo: ["демо-данные", "demo ma’lumotlar"],
   site: ["На сайт", "Saytga"],
   home: ["К выбору", "Tanlovga"],
+  disp: ["Диспетчерская", "Dispetcherlik"],
   role: ["Смотреть как", "Kim sifatida"],
   role_owner: ["Владелец", "Egasi"],
   role_manager: ["Менеджер", "Menejer"],

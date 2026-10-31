@@ -69,12 +69,18 @@ if(hs){
 
 /* ── Конструктор DevUz ─────────────────────────────────────────────── */
 var cfg=get('cp-cfg-1',{}),boxes=$$('[data-add]');
-function cfgApply(){var s=0,n=0;boxes.forEach(function(b){var id=b.getAttribute('data-add');b.checked=cfg[id]!==false;if(b.checked){var a=D.add.filter(function(x){return x.id===id})[0];s+=a.p;n++}});
-  $('#adds').textContent=money(s);$('#addn').textContent=n?'('+n+')':'';$('#total').textContent=money(D.base+s);put('cp-cfg-1',cfg)}
+var mods=$$('[data-mod]');
+function cfgApply(){var s=0,n=0,ms=0;boxes.forEach(function(b){var id=b.getAttribute('data-add');b.checked=cfg[id]!==false;if(b.checked){var a=D.add.filter(function(x){return x.id===id})[0];s+=a.p;n++}});
+  /* Otdelnyy modul: svoy tumbler, pryachet vybor i ssylki na nego na etoy stranitse. */
+  mods.forEach(function(b){var id=b.getAttribute('data-mod'),on=cfg['m_'+id]!==false;b.checked=on;if(on)ms+=D.mod.filter(function(x){return x.id===id})[0].p;
+    $$('[data-module="'+id+'"]').forEach(function(e){e.classList.toggle('off',!on)})});
+  $('#adds').textContent=money(s);$('#addn').textContent=n?'('+n+')':'';$('#total').textContent=money(D.base+s);
+  $('#mrow').classList.toggle('off',!ms);$('#mods').textContent=ms?money(ms):T.none;$('#withm').textContent=ms?money(D.base+s+ms):T.none;$('#mtot').classList.toggle('dim',!ms);put('cp-cfg-1',cfg)}
+mods.forEach(function(b){b.addEventListener('change',function(){cfg['m_'+b.getAttribute('data-mod')]=b.checked;cfgApply()})});
 boxes.forEach(function(b){b.addEventListener('change',function(){cfg[b.getAttribute('data-add')]=b.checked;cfgApply()})});
-$('#allon').addEventListener('click',function(){cfg={};cfgApply()});
+$('#allon').addEventListener('click',function(){var keep={};Object.keys(cfg).forEach(function(k){if(k.indexOf('m_')===0)keep[k]=cfg[k]});cfg=keep;cfgApply()});
 $('#alloff').addEventListener('click',function(){boxes.forEach(function(b){cfg[b.getAttribute('data-add')]=false});cfgApply()});
-$('#copy').addEventListener('click',function(){var txt=[$('.base b').textContent+': '+money(D.base)];D.add.forEach(function(a){if(cfg[a.id]!==false)txt.push(a.t+': '+money(a.p))});txt.push(T.tot+': '+$('#total').textContent);
+$('#copy').addEventListener('click',function(){var txt=[$('.base b').textContent+': '+money(D.base)];D.add.forEach(function(a){if(cfg[a.id]!==false)txt.push(a.t+': '+money(a.p))});txt.push(T.tot+': '+$('#total').textContent);D.mod.forEach(function(m){if(cfg['m_'+m.id]!==false){txt.push(m.t+': '+money(m.p));txt.push(T.totm+': '+$('#withm').textContent)}});
   var done=function(){toast(T.copied)};if(navigator.clipboard)navigator.clipboard.writeText(txt.join('\n')).then(done,done);else done()});
 cfgApply();
 /* 48 часов с первого открытия макета на этом устройстве. */

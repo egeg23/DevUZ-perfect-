@@ -1,9 +1,10 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dzIntroSolo } from "../../../lib/proto/dz-video.mjs";
 import { LANGS, COMPANY, SERVICES, CUSTOMS, FACTS, PARTNERS, HUBS, VELO } from "./data.mjs";
-import { BASE, ADDONS, OFFER_HOURS, ALL } from "./plan.mjs";
+import { BASE, ADDONS, OFFER_HOURS, ALL, MODULES, ALL_MODULES } from "./plan.mjs";
 import { LANES, EXTRA, FX, DIM } from "./tariffs.mjs";
 import { PANEL_UI } from "./panel-ui.mjs";
+import { DISPATCH_UI } from "./dispatch-ui.mjs";
 
 /*
  * Макет CARGO PRO GROUP (cargoprogroup.uz), 31.10.2026: международная
@@ -16,7 +17,9 @@ import { PANEL_UI } from "./panel-ui.mjs";
  *           по прокрутке, шесть услуг, конструктор тарифов (tariffs.mjs),
  *           отслеживание, таможня, склады, кабинет, бот, партнёры, вопросы,
  *           контакты;
- *   panel — панель заявок и грузов по эталону Greenwell.
+ *   panel — панель заявок и грузов по эталону Greenwell;
+ *   dispatch — диспетчерская (отдельный модуль, MODULES в plan.mjs):
+ *           распределение грузов по машинам, водители на карте, рейсы.
  *
  * Услуги, партнёры, склады, контакты — только с их сайта (data.mjs). Ставки
  * калькулятора — середина рынка и предложение DevUz, так и подписано. Клиенты,
@@ -33,6 +36,8 @@ const JS = strip(readFileSync(DIR + "site.js", "utf8")).replace(/\n\s*\n/g, "\n"
 const LAND_JS = strip(readFileSync(DIR + "land.js", "utf8")).replace(/\n\s*\n/g, "\n");
 const PANEL_JS = strip(readFileSync(DIR + "panel.js", "utf8")).replace(/\n\s*\n/g, "\n");
 const PANEL_CSS = strip(readFileSync(DIR + "panel.css", "utf8")).replace(/\n\s*/g, "");
+const DISP_JS = strip(readFileSync(DIR + "dispatch.js", "utf8")).replace(/\n\s*\n/g, "\n");
+const DISP_CSS = strip(readFileSync(DIR + "dispatch.css", "utf8")).replace(/\n\s*/g, "");
 const BASE_URL = "__PROTO_BASE__";
 const TERMS = (l) => `https://devuz.studio/${l}/mockup-terms`;
 const FONTS = "https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700&family=Onest:wght@400;700&display=swap";
@@ -57,6 +62,7 @@ const ICON = {
   mail: I('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>'),
   tg: I('<path d="M21 4 3 11l6 2 2 6 3-4 5 4Z"/><path d="m9 13 8-6"/>'),
   panel: I('<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 9v11"/>'),
+  route: I('<circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h7a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h7"/>'),
   copy: I('<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>'),
   pin: I('<path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/>'),
   clock: I('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'),
@@ -416,11 +422,14 @@ function offer(l, t) {
 <div class="cst"><div>
 <div class="base"><div class="hd"><b>${esc(BASE[l].t)}</b><span class="pp"><s>${usd(BASE.price)}</s>${usd(BASE.promo)}</span></div><p>${esc(BASE[l].d)}</p></div>
 <div class="adds">${ADDONS.map((a) => `<label class="add"><input type="checkbox" data-add="${a.id}" checked><span class="sw" aria-hidden="true"></span><span><b>${esc(a[l].t)}</b>${a.star ? `<span class="star">${t("берут первым", "birinchi oladilar")}</span>` : ""}<p>${esc(a[l].e)}</p><small>${esc(a[l].who)}</small></span><span class="ap">${usd(a.price)}</span></label>`).join("")}</div>
+${MODULES.map((m) => `<div class="mod" id="mod-${m.id}"><p class="mod-k">${t("Отдельный модуль", "Alohida modul")}</p><label class="add"><input type="checkbox" data-mod="${m.id}" checked><span class="sw" aria-hidden="true"></span><span><b>${esc(m[l].t)}</b><span class="star">${t("рыночная цена", "bozor narxi")}</span><p>${esc(m[l].e)}</p><small class="mod-go">${esc(m[l].who)}</small><small>${esc(m.market[l])}</small><a class="mod-a" href="${href(l, "dispatch")}">${ICON.route}<span>${t("Открыть диспетчерскую", "Dispetcherlikni ochish")}</span></a></span><span class="ap">${usd(m.price)}</span></label></div>`).join("")}
 </div>
 <aside class="sum glass" aria-live="polite">
 <div class="row"><span>${t("Сайт", "Sayt")}</span><span>${usd(BASE.promo)}</span></div>
 <div class="row"><span>${t("Допы", "Qo‘shimchalar")} <span id="addn"></span></span><span id="adds">0 $</span></div>
-<div class="tot"><span>${t("Итого", "Jami")}</span><b id="total">${usd(ALL)}</b></div>
+<div class="tot"><span>${t("Сайт с допами", "Qo‘shimchalar bilan sayt")}</span><b id="total">${usd(ALL)}</b></div>
+<div class="row mrow" id="mrow"><span>${t("Диспетчерская", "Dispetcherlik")}</span><span id="mods">${usd(MODULES[0].price)}</span></div>
+<div class="tot tot2" id="mtot"><span>${t("С диспетчерской", "Dispetcherlik bilan")}</span><b id="withm">${usd(ALL_MODULES)}</b></div>
 <p style="margin:16px 0 0;color:var(--mu);font-size:14px">${t("Цена сайта держится:", "Sayt narxi amal qiladi:")}</p>
 <div class="timer" id="timer"><span><b id="th">48</b><small>${t("часов", "soat")}</small></span><span><b id="tm">00</b><small>${t("минут", "daqiqa")}</small></span><span><b id="ts">00</b><small>${t("секунд", "soniya")}</small></span></div>
 <div class="ctrl"><button type="button" class="btn btn-g btn-s" id="allon">${t("Всё из макета", "Maketdagi hammasi")}</button><button type="button" class="btn btn-g btn-s" id="alloff">${t("Только сайт", "Faqat sayt")}</button></div>
@@ -446,13 +455,21 @@ function landPage(l) {
     t("Клиенты-компании и их грузы", "Mijoz kompaniyalar va ularning yuklari"),
     t("Роли: менеджер не видит маржу, история действий", "Rollar: menejer marjani ko‘rmaydi, harakatlar tarixi"),
   ];
+  const dsp = [
+    t("Грузы сами ложатся по машинам: кузов, вес, объём", "Yuklar mashinalarga o‘zi tushadi: kuzov, og‘irlik, hajm"),
+    t("Перегруз и не тот кузов горят красным", "Ortiqcha yuk va noto‘g‘ri kuzov qizil yonadi"),
+    t("Водители на карте: в пути, простой, опоздание", "Xaritada haydovchilar: yo‘lda, to‘xtash, kechikish"),
+    t("Статус рейса сразу у клиента на сайте", "Reys holati darhol mijozning saytida"),
+    t("Мы уже делали это для Cargo GO (LBM)", "Biz buni Cargo GO (LBM) uchun allaqachon qilganmiz"),
+  ];
   const li = (a) => `<ul class="feat">${a.map((x) => `<li>${ICON.check}<span>${x}</span></li>`).join("")}</ul>`;
   const steps = [
     t("Откройте сайт, выберите «Китай», «Авиа», подвиньте вес и нажмите «Отправить заявку».", "Saytni oching, «Xitoy», «Avia»ni tanlang, og‘irlikni suring va «Ariza yuborish»ni bosing."),
     t("Имя и телефон любые, это макет: заявка ляжет в панель.", "Ism va telefon istalgan, bu maket: ariza panelga tushadi."),
     t("В админке откройте заявку и поставьте «В пути». Сайт покажет это в «Мои заявки» и в отслеживании.", "Admin panelda arizani oching va «Yo‘lda» qo‘ying. Sayt buni «Arizalarim» va kuzatishda ko‘rsatadi."),
+    t("В диспетчерской нажмите «Распределить»: 14 грузов лягут по 12 машинам. Перенесите груз в чужой кузов, и машина загорится красным.", "Dispetcherlikda «Taqsimlash»ni bosing: 14 ta yuk 12 ta mashinaga tushadi. Yukni boshqa kuzovga ko‘chiring, mashina qizil yonadi."),
   ];
-  const ld = { base: BASE.promo, root: BASE_URL, hours: OFFER_HOURS, img: IMG, n: 60, add: ADDONS.map((a) => ({ id: a.id, p: a.price, t: a[l].t })), t: { copied: t("Состав скопирован", "Tarkib nusxalandi"), tot: t("Итого", "Jami") } };
+  const ld = { base: BASE.promo, root: BASE_URL, hours: OFFER_HOURS, img: IMG, n: 60, add: ADDONS.map((a) => ({ id: a.id, p: a.price, t: a[l].t })), mod: MODULES.map((m) => ({ id: m.id, p: m.price, t: m[l].t })), t: { copied: t("Состав скопирован", "Tarkib nusxalandi"), tot: t("Сайт с допами", "Qo‘shimchalar bilan sayt"), totm: t("С диспетчерской", "Dispetcherlik bilan"), none: t("не выбрана", "tanlanmagan") } };
   return `${head(l, t("CARGO PRO GROUP · макет сайта и панели · DevUz Studio", "CARGO PRO GROUP · sayt va panel maketi · DevUz Studio"), t("Макет для CARGO PRO GROUP: новый сайт с расчётом доставки и панель заявок и грузов. Конструктор цены.", "CARGO PRO GROUP uchun maket: yetkazish hisobi bilan yangi sayt va arizalar va yuklar paneli. Narx konstruktori."))}
 <link rel="preload" as="image" href="${IMG}/poster-9.webp" media="(max-width: 899px)">
 <link rel="preload" as="image" href="${IMG}/poster-16-2880.webp" media="(min-width: 900px)">
@@ -481,7 +498,7 @@ ${LOGO(l, "")}
 <section class="sec" id="choose"><div class="wrap">
 <p class="kick rise"><i></i>${t("Сайт и панель на ваших данных", "Ma’lumotlaringizdagi sayt va panel")}</p>
 <h2 class="h2 rise">${t("Что посмотреть <b>первым</b>", "Avval <b>nimani ko‘rish</b>")}</h2>
-<p class="lead rise">${t("Это работающий макет на ваших услугах, складах и партнёрах с cargoprogroup.uz. Сайт, каким его увидит клиент, или панель, где команда ведёт заявки и грузы.", "Bu cargoprogroup.uz’dagi xizmatlar, omborlar va hamkorlaringizdagi ishlaydigan maket. Mijoz ko‘radigan sayt yoki jamoa arizalar va yuklarni olib boradigan panel.")}</p>
+<p class="lead rise">${t("Это работающий макет на ваших услугах, складах и партнёрах с cargoprogroup.uz. Сайт, каким его увидит клиент, панель, где команда ведёт заявки и грузы, и диспетчерская, где грузы раскладываются по машинам, а водители видны на карте.", "Bu cargoprogroup.uz’dagi xizmatlar, omborlar va hamkorlaringizdagi ishlaydigan maket. Mijoz ko‘radigan sayt, jamoa arizalar va yuklarni olib boradigan panel va yuklar mashinalarga taqsimlanadigan, haydovchilar xaritada ko‘rinadigan dispetcherlik.")}</p>
 <div class="choices">
 <a class="choice rise" href="${href(l, "site")}"><span class="ch-k">${t("Для клиента", "Mijoz uchun")}</span><b>${t("Сайт с расчётом доставки", "Yetkazish hisobi bilan sayt")}</b>
 <span class="ch-pic"><img src="${IMG}/poster-16-1920.webp" width="1920" height="1080" alt="${t("Глобус CARGO PRO GROUP", "CARGO PRO GROUP globusi")}" loading="lazy"></span>
@@ -489,6 +506,9 @@ ${li(site)}<span class="btn btn-g">${t("Открыть сайт", "Saytni ochish
 <a class="choice rise" href="${href(l, "panel")}"><span class="ch-k">${t("Для вас и команды", "Siz va jamoa uchun")}</span><b>${t("Админка заявок и грузов", "Arizalar va yuklar admin paneli")}</b>
 <span class="ch-pic"><span class="browser"><span class="bh"><i></i><i></i><i></i></span><span class="bb"><span class="kpi"><small>${t("Заявки, 30 дней · демо", "Arizalar, 30 kun · demo")}</small><b>186</b></span><span class="kpi"><small>${t("Грузов в пути · демо", "Yo‘ldagi yuklar · demo")}</small><b>41</b></span><span class="kpi w"><small>${t("Заявки по дням · демо", "Kunlar bo‘yicha arizalar · demo")}</small><span class="spark" id="lspark"></span></span></span></span></span>
 ${li(pan)}<span class="btn btn-a">${t("Открыть админку", "Admin panelni ochish")}${ICON.arrow}</span></a>
+<a class="choice rise" data-module="tms" href="${href(l, "dispatch")}"><span class="ch-k">${t("Для диспетчеров · отдельный модуль", "Dispetcherlar uchun · alohida modul")}</span><b>${t("Диспетчерская: машины и водители", "Dispetcherlik: mashinalar va haydovchilar")}</b>
+<span class="ch-pic"><span class="browser"><span class="bb dmini"><svg viewBox="0 0 300 150" aria-hidden="true"><path d="M150 60 Q 110 40 60 110" fill="none" stroke="url(#gArcL)" stroke-width="3" stroke-dasharray="5 6"/><path d="M150 60 Q 210 30 260 80" fill="none" stroke="url(#gArcL)" stroke-width="3" stroke-dasharray="5 6"/><path d="M150 60 Q 190 90 200 140" fill="none" stroke="#e5352b" stroke-width="3" stroke-dasharray="5 6"/><circle cx="150" cy="60" r="8" fill="#f6c445"/><circle cx="95" cy="80" r="7" fill="#f08a24"/><circle cx="225" cy="60" r="7" fill="#3ccf8e"/><circle cx="196" cy="118" r="7" fill="#e5352b"/><defs><linearGradient id="gArcL" x1="0" x2="1"><stop offset="0" stop-color="#f6c445"/><stop offset="1" stop-color="#e5352b"/></linearGradient></defs></svg></span></span></span>
+${li(dsp)}<span class="btn btn-g">${t("Открыть диспетчерскую", "Dispetcherlikni ochish")}${ICON.arrow}</span></a>
 </div>
 </div></section>
 <section class="sec" id="try" style="background:var(--bg2)"><div class="wrap">
@@ -501,7 +521,7 @@ ${offer(l, t)}
 </main>
 <footer class="foot"><div class="wrap"><div class="fgrid">
 <div>${LOGO(l, "")}<p style="margin-top:16px;font-size:14px">${t("Услуги, склады, партнёры, контакты: cargoprogroup.uz. Ставки калькулятора: середина рынка, предложение DevUz. Клиенты, грузы и цифры в панели: демо. Кадры залёта: Higgsfield, по вашему знаку.", "Xizmatlar, omborlar, hamkorlar, kontaktlar: cargoprogroup.uz. Kalkulyator stavkalari: bozor o‘rtasi, DevUz taklifi. Paneldagi mijozlar, yuklar va raqamlar: demo. Uchib kirish kadrlari: Higgsfield, belgingiz asosida.")}</p></div>
-<div><h4>${t("Макет", "Maket")}</h4><a href="${href(l, "site")}">${t("Сайт", "Sayt")}</a><a href="${href(l, "panel")}">${t("Админка", "Admin panel")}</a><a href="#offer">${t("Стоимость", "Narxi")}</a></div>
+<div><h4>${t("Макет", "Maket")}</h4><a href="${href(l, "site")}">${t("Сайт", "Sayt")}</a><a href="${href(l, "panel")}">${t("Админка", "Admin panel")}</a><a href="${href(l, "dispatch")}" data-module="tms">${t("Диспетчерская", "Dispetcherlik")}</a><a href="#offer">${t("Стоимость", "Narxi")}</a></div>
 <div><h4>DevUz Studio</h4><a href="https://devuz.studio" target="_blank" rel="noopener">devuz.studio</a><a href="${DEVUZ}" target="_blank" rel="noopener">Telegram</a></div>
 <div><h4>CARGO PRO GROUP</h4><a href="tel:${COMPANY.tel}">${COMPANY.phone}</a><a href="${COMPANY.site}" target="_blank" rel="noopener">cargoprogroup.uz</a></div>
 </div>
@@ -530,7 +550,7 @@ ${LAND_JS}</script>
 function panelPage(l) {
   const t = T(l);
   const ui = Object.fromEntries(Object.entries(PANEL_UI).map(([k, v]) => [k, v[l === "ru" ? 0 : 1]]));
-  const pd = { l, site: href(l, "site"), home: href(l), ui, logo: IMG + "/logo.webp", lanes: LANES.map((x) => ({ id: x.id, n: x[l], air: x.air, auto: x.auto, rail: x.rail, sea: x.sea })) };
+  const pd = { l, site: href(l, "site"), home: href(l), disp: href(l, "dispatch"), ui, logo: IMG + "/logo.webp", lanes: LANES.map((x) => ({ id: x.id, n: x[l], air: x.air, auto: x.auto, rail: x.rail, sea: x.sea })) };
   return `${head(l, t("Панель CARGO PRO GROUP · демо", "CARGO PRO GROUP paneli · demo"), t("Панель CARGO PRO GROUP: заявки с сайта, грузы и статусы, клиенты, история и роли. Демо-данные.", "CARGO PRO GROUP paneli: saytdan arizalar, yuklar va holatlar, mijozlar, tarix va rollar. Demo ma’lumotlar."))}
 <style>${CSS}${PANEL_CSS}</style>
 </head>
@@ -544,11 +564,48 @@ ${PANEL_JS}</script>
 </html>`;
 }
 
+/* ── Диспетчерская (отдельный модуль) ─────────────────────────────── */
+(function checkDispDict() {
+  const keys = new Set([...DISP_JS.matchAll(/\bt\('([A-Za-z0-9_]+)'/g)].map((m) => m[1]));
+  for (const k of ["tab_", "s_", "b_", "ty_", "k_", "role_"]) keys.delete(k);
+  for (const k of keys) {
+    const v = DISPATCH_UI[k];
+    if (!v || v.length !== 2 || v.some((x) => !x)) throw new Error(`dispatch: нет подписи «${k}» на двух языках`);
+  }
+  for (const [k, v] of Object.entries(DISPATCH_UI)) if (/[А-Яа-яЁё]/.test(v[1])) throw new Error(`dispatch: кириллица в узбекской подписи «${k}»`);
+  if (/[А-Яа-яЁё]/.test(DISP_JS + DISP_CSS)) throw new Error("dispatch: кириллица в коде диспетчерской");
+})();
+
+const CITY = {
+  tas: ["Ташкент", "Toshkent"], sam: ["Самарканд", "Samarqand"], bux: ["Бухара", "Buxoro"], nav: ["Навои", "Navoiy"], fer: ["Фергана", "Farg‘ona"], and: ["Андижан", "Andijon"],
+  nuk: ["Нукус", "Nukus"], ter: ["Термез", "Termiz"], alm: ["Алматы", "Almati"], bis: ["Бишкек", "Bishkek"],
+};
+function dispatchPage(l) {
+  const t = T(l), i = l === "ru" ? 0 : 1;
+  const ui = Object.fromEntries(Object.entries(DISPATCH_UI).map(([k, v]) => [k, v[i]]));
+  const dd = { l, ui, site: href(l, "site"), home: href(l), panel: href(l, "panel"), logo: IMG + "/logo.webp", tel: COMPANY.tel,
+    city: Object.fromEntries(Object.entries(CITY).map(([k, v]) => [k, v[i]])),
+    gp: "https://play.google.com/store/apps/details?id=com.lbmgo.ftl.driver", as: "https://apps.apple.com/us/app/lbm-driver/id6762045849",
+    trips: [["CPG-24117", 4, 0, 4160], ["CPG-24109", 3, 2, 4950], ["CPG-24095", 5, 1, 3245]] };
+  return `${head(l, t("Диспетчерская CARGO PRO GROUP · демо", "CARGO PRO GROUP dispetcherligi · demo"), t("Диспетчерская CARGO PRO GROUP: распределение грузов по машинам по кузову, весу и объёму, водители на карте, рейсы со статусом для клиента, рейтинг водителей. Демо-данные.", "CARGO PRO GROUP dispetcherligi: yuklarni kuzov, og‘irlik va hajm bo‘yicha mashinalarga taqsimlash, xaritada haydovchilar, mijoz uchun holatli reyslar, haydovchilar reytingi. Demo ma’lumotlar."))}
+<style>${CSS}${PANEL_CSS}${DISP_CSS}</style>
+</head>
+<body class="pn dp">
+<div id="app"></div>
+<footer class="pn-foot">${t("Макет DevUz Studio, демо-данные: машины, водители, грузы и маршруты выдуманы. Пользуясь макетом, вы принимаете", "DevUz Studio maketi, demo ma’lumotlar: mashinalar, haydovchilar, yuklar va yo‘nalishlar o‘ylab topilgan. Maketdan foydalanib, siz")} <a href="${TERMS(l)}" target="_blank" rel="noopener">${t("условия макета", "maket shartlarini qabul qilasiz")}</a>${t(".", "")}</footer>
+<script type="application/json" id="dp-data">${JSON.stringify(dd).replace(/</g, "\\u003c")}</script>
+<script>
+${DISP_JS}</script>
+</body>
+</html>`;
+}
+
 const out = {};
 for (const l of LANGS) {
   out[KEY[l]] = landPage(l);
   out[(KEY[l] ? KEY[l] + "/" : "") + "site"] = sitePage(l);
   out[(KEY[l] ? KEY[l] + "/" : "") + "panel"] = panelPage(l);
+  out[(KEY[l] ? KEY[l] + "/" : "") + "dispatch"] = dispatchPage(l);
 }
 for (const [k, v] of Object.entries(out)) {
   const lang = k.startsWith("uz") ? "uz" : "ru";
@@ -563,7 +620,7 @@ mkdirSync(DIR + "out", { recursive: true });
 writeFileSync(DIR + "out/pages.json", JSON.stringify(out));
 
 /* Сборка для сервера (lib/proto/bundles): стили и скрипты один раз. */
-const parts = { J: `<script>\n${JS}</script>`, C: `<style>${CSS}</style>`, PJ: `<script>\n${PANEL_JS}</script>`, LJ: `<script>\n${LAND_JS}</script>` };
+const parts = { J: `<script>\n${JS}</script>`, C: `<style>${CSS}</style>`, PJ: `<script>\n${PANEL_JS}</script>`, LJ: `<script>\n${LAND_JS}</script>`, DJ: `<script>\n${DISP_JS}</script>` };
 const pages = {};
 for (const [key, html] of Object.entries(out)) {
   let p = html;
