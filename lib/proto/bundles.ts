@@ -53,6 +53,7 @@ import cosmoworld from "@/content/proto-bundles/cosmoworld.json" with { type: "j
 import neoline from "@/content/proto-bundles/neoline.json" with { type: "json" };
 import autopepe from "@/content/proto-bundles/autopepe.json" with { type: "json" };
 import osonapteka from "@/content/proto-bundles/osonapteka.json" with { type: "json" };
+import cargopro from "@/content/proto-bundles/cargopro.json" with { type: "json" };
 import optimalprime from "@/content/proto-bundles/optimalprime.json" with { type: "json" };
 import { stampPages } from "@/lib/proto/stamp";
 
@@ -98,6 +99,7 @@ const BUNDLES: Record<string, Bundle> = {
   neoline: neoline as Bundle,
   autopepe: autopepe as Bundle,
   osonapteka: osonapteka as Bundle,
+  cargopro: cargopro as Bundle,
   optimalprime: optimalprime as Bundle,
 };
 
