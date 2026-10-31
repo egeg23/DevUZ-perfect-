@@ -346,6 +346,183 @@ inp.addEventListener('input', () => {
 
 ---
 
+## Download Button «The Dot Does The Work» — скачать и загрузить с настоящим прогрессом, 31.10.2026
+
+Владелец: «Тут внизу тоже код, крутые анимации при загрузке файлов или
+документов. Они вроде должны отображать реальную скорость загрузки
+документа? У нас много где используется в админках». Образец —
+`docs/refs/download-dot-button.webp`.
+
+**Как выглядит.** Кнопка-капсула «Export». Нажали — капсула сжимается в
+круг. Контур кнопки сам становится полосой прогресса: по кругу бежит дуга
+и точка-бусина. Внутри круг заливается яркой «водой» с волной. Бусина
+тянет нижний край вниз, как груз на верёвке. В конце край пружинит,
+дважды качнувшись вверх, и кнопка снова раскрывается в капсулу «Open».
+
+**Код под роликом** (три файла, видно начало; дословно, что читается):
+
+```html
+<!-- The border is a PATH and the face is that same path's FILL: one svg under
+     the button, one over it, both handed the same `d`. So the bottom edge can
+     bend and take the fill with it. -->
+<span class="bead" data-state="idle">
+ <span class="bead__stage">
+  <svg class="bead__frame--fill"><path class="bead__face" /></svg>
+  <a class="bead__btn" href="..." download>
+   <span class="bead__well">
+    <svg class="bead__glyph" />
+    <span class="bead__water"><i class="bead__wave"></i></span>
+   </span>
+   <!-- both words, always laid out: the one NOT showing is the ruler for the one that is -->
+   <span class="..--start">Export</span>
+   <span class="..--done">Open</span>
+  </a>
+  <svg class="bead__frame--line">
+   <path class="bead__outline" /><circle class="bead__arc" /><circle class="bead__dot" />
+  </svg>
+ </span>
+</span>
+```
+
+```css
+/* The outline IS the progress bar. `d` is a rounded rect whose radius is pinned to
+   half the height, so at w == h it is a CIRCLE by construction - and the arc over
+   it shares that radius and centre. */
+@property --sagn{ syntax:'<number>'; /* NOT a length */ inherits:true; initial-value:0; }
+/* calc(1 - <length> * n) is invalid, and an invalid value inside a transform drops
+   the WHOLE transform, silently. */
+.bead__word--done{
+  transform: translate(-50%,-50%) translateY(calc(var(--sagn) * .58px))
+             scale(calc(1 - var(--sagn) * .0092));
+}
+/* Two rounded squares turning just under the surface ARE the waterline. */
+.bead__wave{ width:180%; aspect-ratio:1; border-radius:42%; animation:churn 5.4s linear infinite; }
+```
+
+```js
+// A rope with a weight on it is not a triangle: a raised cosine peaked at the bead,
+// times how far below the equator the point is - so the caps STRETCH.
+const bump = (t, u) => {
+  const s = t < u ? t/u : (1-t)/(1-u);
+  return .5 - .5 * Math.cos(Math.PI * s);
+};
+// The bead and the valley get the SAME u - a bead resting off the bottom of its own
+// dent reads as two unrelated animations.
+bx = cx + (SAG_U - .5) * w;
+by = yEdge + sag;
+// One damped spring, integrated: it rings twice and overshoots UPWARD on the way
+// back. That is the whole reason the end reads as an object and not as a fade.
+sagV += (-175 * sag - 10.5 * sagV) * dt;
+sag  += sagV * dt;
+// The arc moves only on bytes that landed, then a pacing floor, then monotonic.
+if (total) ratio = got / total;
+shown = Math.max(shown, Math.min(raw, el / minMs));
+```
+
+Приёмы, которые стоит знать и без этой кнопки:
+
+- **Контур — это путь, а не `border`.** У прямоугольника радиус закреплён
+  на половине высоты, поэтому при ширине, равной высоте, капсула сама
+  становится кругом, а дуга прогресса ложится ровно на неё.
+- **Волна — два скруглённых квадрата** (`border-radius:42%`), которые
+  вращаются чуть под поверхностью воды: их край и есть ватерлиния.
+- **Пружина в конце.** Это две строки (`sagV`, `sag`), и из-за неё
+  кнопка выглядит предметом, а не затуханием.
+- **`@property` числом, а не длиной.** `calc(1 - <длина> * n)` — ошибка, а
+  ошибка внутри `transform` молча выкидывает весь `transform`.
+
+**Показывает ли настоящую скорость — да, если подключить честно.** Строка
+`ratio = got / total` — это доля пришедших байтов от размера файла. Дуга
+двигается только на пришедших байтах, никогда не обгоняет их и не идёт
+назад. Для мелкого файла её держит «пол» по времени (`minMs`), чтобы она
+не мигнула за 30 мс. Но сама кнопка скорость не знает, ей её надо дать:
+
+- **Обычная ссылка `<a download>` прогресса не даёт.** Скачивает браузер,
+  странице он ничего не сообщает. Чтобы дуга шла по байтам, страница
+  качает файл сама: `fetch` и чтение по кускам, потом кнопка отдаёт
+  готовый файл.
+- **Нужен размер файла от сервера** (`Content-Length`). Если сервер шлёт
+  файл сжатым (`Content-Encoding: gzip`) или отдаёт по мере готовности,
+  размер неизвестен. Тогда честно — вода крутится без процентов, дуга не
+  делает вид, что знает.
+- **Загрузка на сервер** (фото врача, видео кружка, договор клиента) — через
+  `XMLHttpRequest.upload.onprogress`: у `fetch` прогресса отправки нет.
+  Дуга дошла до конца — файл ушёл, но сервер ещё может его обрабатывать
+  (сжать фото, разрезать видео): это отдельная фаза, «обрабатываем».
+- **Документ, который сервер собирает** (PDF договора, выгрузка), долго
+  готовится и быстро скачивается. Поэтому сначала фаза «готовим» без
+  процентов, потом байты. Иначе дуга стоит на нуле и прыгает в конец.
+
+Проверено в Chromium 31.10.2026: файл 3 МБ кусками — 23 шага, только
+вперёд, в конце 1; файл без размера — `null` (крутится без процентов);
+мгновенный файл с «полом» 700 мс — 0 → 0,5 → 1, назад не идёт.
+
+```js
+// Скачать с настоящим прогрессом. onProgress(доля 0..1 или null — размер неизвестен, байты)
+async function downloadWithProgress(url, onProgress) {
+  const res = await fetch(url, { credentials: 'same-origin' });
+  if (!res.ok || !res.body) throw new Error('HTTP ' + res.status);
+  const zipped = res.headers.get('Content-Encoding');            // сжатый: Content-Length — не те байты
+  const total = zipped ? 0 : Number(res.headers.get('Content-Length')) || 0;
+  const reader = res.body.getReader(), parts = [];
+  let got = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    parts.push(value); got += value.length;
+    onProgress(total ? Math.min(got / total, 1) : null, got);
+  }
+  return new Blob(parts, { type: res.headers.get('Content-Type') || 'application/octet-stream' });
+}
+
+// Загрузить на сервер с настоящим прогрессом отправки.
+function uploadWithProgress(url, file, onProgress) {
+  return new Promise((ok, fail) => {
+    const x = new XMLHttpRequest();
+    x.open('POST', url);
+    x.upload.onprogress = (e) => onProgress(e.lengthComputable ? e.loaded / e.total : null, e.loaded);
+    x.onload = () => (x.status < 300 ? ok(x.responseText) : fail(new Error('HTTP ' + x.status)));
+    x.onerror = () => fail(new Error('network'));
+    const fd = new FormData(); fd.append('file', file); x.send(fd);
+  });
+}
+
+// Показ: не впереди байтов, не назад, весь путь не быстрее minMs.
+function pacer(minMs = 700) {
+  const t0 = performance.now(); let shown = 0;
+  return (raw) => (shown = Math.max(shown, Math.min(raw, (performance.now() - t0) / minMs)));
+}
+```
+
+Готовый файл — `URL.createObjectURL(blob)` в ссылку с `download` и
+нажатие; «Открыть» — та же ссылка без `download`; ссылку освободить
+(`revokeObjectURL`), когда она больше не нужна.
+
+**Где брать.**
+
+- **Админки в макетах:** «Выгрузить CSV», счёт и накладная PDF, «Пакет для
+  брокера» (Cargo Pro), фото товара и документы при загрузке. Файлы там
+  собираются в браузере из демо-данных мгновенно — прогресс идёт по «полу»
+  `minMs`, это честно: обгонять нечего, файл уже готов.
+- **Настоящие админки** (сайт клиники «Сияние Севера», наша панель) — по
+  байтам: загрузка фото врача, видео кружка, скачивание договора и счёта.
+  Встраивать — отдельной правкой, по слову владельца.
+
+**Грабли.**
+
+- Состояния все: «ждёт», «готовим», «качаем N %», «готово → Открыть»,
+  «ошибка → Повторить», «отмена» (`AbortController`). Кнопка, у которой
+  есть только «успех», в жизни застревает.
+- `role="progressbar"`, `aria-valuenow`, без размера — без `aria-valuenow`;
+  «Готово» и «Ошибка» — вслух через `aria-live`.
+- `prefers-reduced-motion` — без пружины и волны: ровная дуга и заливка.
+- Цвет воды — фирменный цвет клиента, не лайм из ролика. Подписи —
+  словарём: «Выгрузить», «Открыть», «Повторить».
+- Большой файл (сотни МБ) целиком в памяти страницы не держать: там
+  обычная ссылка и прогресс браузера, без нашей кнопки.
+
+---
+
 ## MedAcademy, вариант B «Лаборатория» — 01.10.2026
 
 Владелец: «Вариант „Лаборатория“ просто ВАУ!!!! Запомни, какие цвета и скилы
