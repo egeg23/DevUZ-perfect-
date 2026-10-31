@@ -2651,3 +2651,86 @@ test("CARGO PRO GROUP: сайт 1 000 $ вместо 4 900 $, допы 2 000 $, 
   const site = bundlePages("cargopro")!;
   assert.ok(site.html.includes("4 900 $") && site.html.includes("1 000 $"), "на первой странице не та цена");
 });
+
+test("Optimal Prime: выбор, сайт и панель на ru и uz — условия, noindex, видео DevUz и залёт в бренд, шапка 3 с, услуги, тарифы и клиенты с их сайта, uz без кириллицы", async () => {
+  const { existsSync, readdirSync } = await import("node:fs");
+  const { SCENES } = await import("@/lib/proto/promo");
+  const site = bundlePages("optimalprime");
+  assert.ok(site);
+  const all: Record<string, string> = { "": site.html, ...site.pages };
+  assert.deepEqual(Object.keys(all).sort(), ["", "panel", "site", "uz", "uz/panel", "uz/site"]);
+  const data = await import("../scripts/protos/optimalprime/data.mjs");
+  const plan = await import("../scripts/protos/optimalprime/plan.mjs");
+  for (const [path, page] of Object.entries(all)) {
+    const lang = path.startsWith("uz") ? "uz" : "ru";
+    const kind = path.replace(/^uz\/?/, "") || "land";
+    assert.doesNotMatch(page, /@@[A-Z]+@@/, `${path}: метка сборки осталась в странице`);
+    assert.ok(page.includes(`<html lang="${lang}">`), `${path}: язык страницы`);
+    assert.ok(page.includes(`https://devuz.studio/${lang}/mockup-terms`), `${path}: нет условий на языке страницы`);
+    assert.match(page, /<meta name="robots" content="noindex/, `${path}: нет noindex`);
+    assert.match(page, /prefers-reduced-motion/, `${path}: анимацию нечем выключить`);
+    assert.doesNotMatch(page, /stamp|watermark|fingerprint|отпечат|seed|data-mark/i, `${path}: слово, по которому находят отпечаток`);
+    assert.doesNotMatch(page, /proto-ai|proxyapi|higgsfield\.ai|firecrawl/i, `${path}: макет не зовёт модель и чужие сервисы`);
+    assert.doesNotMatch(page, /href="#"/, `${path}: ссылка в никуда`);
+    assert.doesNotMatch(page, /scroll-behavior|passive:\s*false/, `${path}: перехват прокрутки`);
+    assert.doesNotMatch(page.replace(/<script[\s\S]*?<\/script>/g, ""), /[—–]/, `${path}: длинное тире`);
+    for (const img of page.match(/<img [^>]+>/g) ?? []) assert.match(img, /alt="/, `${path}: картинка без alt`);
+    for (const src of page.match(/\/protos\/optimalprime\/[\w./-]+\.(?:webp|png|svg|js)/g) ?? []) assert.ok(existsSync("public" + src), `${path}: нет файла ${src}`);
+    for (const id of (page.match(/href="#([\w-]+)"/g) ?? []).map((h) => h.slice(7, -1))) assert.ok(page.includes(`id="${id}"`), `${path}: ссылка на #${id}, а блока нет`);
+    const ids = page.replace(/<script[\s\S]*?<\/script>/g, "").match(/\bid="([\w-]+)"/g) ?? [];
+    assert.equal(new Set(ids).size, ids.length, `${path}: id повторяется`);
+    if (lang === "uz") assert.doesNotMatch(page.replace(/<script(?! type="application\/json")[\s\S]*?<\/script>/g, "").replace(/<style>[\s\S]*?<\/style>/g, ""), /[А-Яа-яЁё]/, `${path}: кириллица на узбекской странице`);
+    if (kind === "panel") continue;
+    assert.match(page, /\bIDLE=3000\b/, `${path}: шапка не по правилу 3 секунд`);
+    assert.match(page, /classList\.add\('hide'\)[\s\S]*IDLE\)/, `${path}: шапка не прячется`);
+    if (kind === "land") {
+      /* Видео DevUz первым, сразу за ним — залёт камерой в бренд (кадры шифром). */
+      assert.ok(page.indexOf('id="dzi"') > 0 && page.indexOf('id="dzi"') < page.indexOf('id="fly"'), `${path}: нет видео DevUz перед залётом`);
+      assert.ok(page.includes("/promo/scene") && page.includes("AES-GCM"), `${path}: кадры залёта не по ключу`);
+      assert.equal((page.match(/class="choice rise"/g) ?? []).length, 2, `${path}: не два выбора: сайт и админка`);
+      for (const a of plan.ADDONS) assert.ok(page.includes(`data-add="${a.id}"`), `${path}: нет тумблера ${a.id}`);
+      continue;
+    }
+    assert.match(page.slice(page.indexOf('class="top"'), page.indexOf("</header>")), new RegExp(`href="__PROTO_BASE__${lang === "uz" ? "/uz" : ""}/panel"`), `${path}: нет кнопки админки в шапке`);
+    assert.ok(page.includes(`tel:${data.COMPANY.tel}`) && page.includes(`t.me/${data.COMPANY.tg}`), `${path}: нет их телефона или Telegram`);
+    for (const s of data.SERVICES) for (const x of s[lang][1]) assert.ok(page.includes(x), `${path}: нет пункта услуги «${x}»`);
+    for (const c of lang === "ru" ? data.CLIENTS : data.CLIENTS_UZ) assert.ok(page.includes(c.replace(/&/g, "&amp;")), `${path}: нет клиента ${c}`);
+    for (const id of ["services", "secret", "why", "tarif", "industries", "how", "clients", "contact"]) assert.ok(page.includes(`id="${id}"`), `${path}: нет блока #${id}`);
+    for (const a of plan.ADDONS) assert.ok(page.includes(`data-addon="${a.id}"`), `${path}: тумблер ${a.id} не ведёт к блоку`);
+    assert.ok(page.includes('class="velo"') && page.includes("data-par=") && /class="[^"]*\bglass\b/.test(page), `${path}: нет бегущей строки, параллакса или стекла`);
+    assert.ok(page.includes("ориентировочно") || page.includes("taxminiy"), `${path}: нет их оговорки «цены ориентировочно»`);
+  }
+  /* Кадры Higgsfield — только шифром, открыты лишь постеры. */
+  assert.equal(SCENES.optimalprime, "SCENE_KEY_OPTIMALPRIME");
+  for (const set of ["d", "m"]) {
+    const files = readdirSync(`public/protos/optimalprime/seq/${set}`);
+    assert.equal(files.length, 60, `${set}: не 60 кадров`);
+    assert.ok(files.every((f) => f.endsWith(".bin")), `${set}: кадр лежит открытым`);
+  }
+  assert.deepEqual(readdirSync("public/protos/optimalprime").filter((f) => /\.(mp4|png|jpe?g)$/.test(f)), [], "открытый ролик или кадр в public");
+  const stamped = stampedBundle("optimalprime", SEED)!;
+  assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
+  assert.notEqual(stamped.pages["uz/site"], site.pages["uz/site"], "отпечаток не поставился на узбекском сайте");
+});
+
+test("Optimal Prime: сайт 1 000 $ вместо 3 900 $, допы 2 000 $, с сайтом 3 000 $; тарифы — их цены, пакеты сходятся", async () => {
+  const plan = await import("../scripts/protos/optimalprime/plan.mjs");
+  const tf = await import("../scripts/protos/optimalprime/tariffs.mjs");
+  assert.equal(plan.BASE.promo, 1000);
+  assert.equal(plan.BASE.price, 3900);
+  /* Владелец, 31.10.2026: «без допников 1000$, с допами не более 3000$». */
+  assert.equal(plan.ALL, 3000, "сайт с допами не 3 000 $");
+  for (const id of ["cab", "upload", "remind", "admin", "bot", "staff", "check", "kb"]) assert.ok(plan.ADDONS.some((a: { id: string }) => a.id === id), `нет допа ${id}`);
+  for (const a of plan.ADDONS) for (const l of ["ru", "uz"] as const) assert.ok(a[l].t && a[l].e && a[l].who, `${a.id}: нет текста на ${l}`);
+  for (const a of plan.ADDONS) assert.doesNotMatch(a.uz.t + a.uz.e + a.uz.who, /[А-Яа-яЁё]/, `${a.id}: кириллица в узбекском`);
+  /* Пакеты с optimal-prime.uz: Light 3 000 000, УСН 12 500 000, ОСН 15 500 000 сум в месяц. */
+  const want: Record<string, number> = { light: 3000000, usn: 12500000, osn: 15500000 };
+  for (const r of tf.REGIMES) assert.equal(tf.monthly(r.id, r.def), want[r.id], `${r.id}: не их цена пакета`);
+  /* Цена за единицу — та, что видна из их пакетов. */
+  assert.equal(tf.UNIT.bank, 2000000 / 40);
+  assert.equal(tf.UNIT.acc, 3500000 / 70);
+  assert.equal(tf.UNIT.emp, 2000000 / 10);
+  assert.equal(tf.UNIT.fx, 500000 / 4);
+  const site = bundlePages("optimalprime")!;
+  assert.ok(site.html.includes("3 900 $") && site.html.includes("1 000 $"), "на первой странице не та цена");
+});
