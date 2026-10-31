@@ -4,7 +4,8 @@
 // заявки», панель и диспетчерскую. Сообщает ошибки консоли и прокрутку вбок.
 // Третий аргумент «dispatch» — только снимки диспетчерской, «route» — только
 // сборных грузов и маршрута забора, «super» — только супер-админки
-// (сравнение, автопарк, пакет для брокера, интеграции, допы рейса).
+// (сравнение, автопарк, пакет для брокера, интеграции, допы рейса), «client» —
+// только клиентского раздела (вход, грузы, карта, бот).
 import { createRequire } from "node:module";
 import { execSync } from "node:child_process";
 import { mkdirSync } from "node:fs";
@@ -23,6 +24,22 @@ for (const w of ws.split(",").map(Number)) {
   const p = await ctx.newPage();
   p.on("console", (m) => { if (m.type() === "error" && !/fonts\.g/.test(m.text())) errs.push(`${w}: ${m.text()}`); });
   p.on("pageerror", (e) => errs.push(`${w}: ${e.message}`));
+  if (only === "client") {
+    /* Клиентский раздел: вход, «Мои грузы», карта, Telegram и статус из супер-админки. */
+    await p.goto(R + "/cabinet", { waitUntil: "load" }); await p.waitForTimeout(400);
+    await shot(p, `client-login-${w}`);
+    await p.click("#intg"); await p.waitForTimeout(600); await shot(p, `client-tg-ask-${w}`);
+    await p.click("#tgok"); await p.waitForTimeout(2800); await shot(p, `client-orders-${w}`);
+    await p.goto(R + "/cabinet#map", { waitUntil: "load" }); await p.waitForTimeout(2200); await shot(p, `client-map-${w}`);
+    await p.goto(R + "/cabinet#tg", { waitUntil: "load" }); await p.click('#cbv [data-link="CPG-24109"]'); await p.waitForTimeout(300);
+    for (const pg of ctx.pages()) if (pg !== p) await pg.close();
+    const sp = await ctx.newPage(); await sp.goto(R + "/dispatch#trips", { waitUntil: "load" }); await sp.click('[data-tr="CPG-24109"][data-s="4"]'); await sp.waitForTimeout(300); await sp.close();
+    await p.bringToFront(); await p.waitForTimeout(600); await shot(p, `client-bot-${w}`);
+    await p.goto(R + "/site", { waitUntil: "load" }); await p.evaluate(() => document.getElementById("cab").scrollIntoView()); await p.waitForTimeout(1200); await shot(p, `client-site-${w}`);
+    const cov = await p.evaluate(() => document.documentElement.scrollWidth - innerWidth);
+    if (cov > 0) errs.push(`${w}: кабинет, прокрутка вбок на ${cov}px`);
+    await ctx.close(); continue;
+  }
   if (only !== "dispatch" && only !== "route" && only !== "super") {
   await p.goto(R + "/", { waitUntil: "load" }); await p.evaluate(() => document.getElementById("dzi")?.remove()); await p.waitForTimeout(3500);
   for (const k of [0, 0.5, 1]) {

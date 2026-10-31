@@ -2577,7 +2577,7 @@ test("CARGO PRO GROUP: выбор, сайт и панель на ru и uz — у
   const site = bundlePages("cargopro");
   assert.ok(site);
   const all: Record<string, string> = { "": site.html, ...site.pages };
-  assert.deepEqual(Object.keys(all).sort(), ["", "dispatch", "panel", "site", "uz", "uz/dispatch", "uz/panel", "uz/site"]);
+  assert.deepEqual(Object.keys(all).sort(), ["", "cabinet", "dispatch", "panel", "site", "uz", "uz/cabinet", "uz/dispatch", "uz/panel", "uz/site"]);
   const data = await import("../scripts/protos/cargopro/data.mjs");
   const plan = await import("../scripts/protos/cargopro/plan.mjs");
   for (const [path, page] of Object.entries(all)) {
@@ -2625,6 +2625,16 @@ test("CARGO PRO GROUP: выбор, сайт и панель на ru и uz — у
     }
     assert.match(page, /\bIDLE=3000\b/, `${path}: шапка не по правилу 3 секунд`);
     assert.match(page, /classList\.add\('hide'\)[\s\S]*IDLE\)/, `${path}: шапка не прячется`);
+    if (kind === "cabinet") {
+      /* Клиентский раздел (владелец, 31.10.2026): вход через Telegram, грузы, водитель на карте, статусы в Telegram через бота. */
+      for (const k of ["cp-cab-1", "cp-panel-1", "#intg", "tgok", "getPointAtLength", "?start=order_", "addEventListener('storage'", "cfgOn()"]) assert.ok(page.includes(k), `${path}: нет ${k}`);
+      assert.ok(page.includes("https://t.me/cargoprogroup_bot") && page.includes(lang === "ru" ? "уточним при запуске" : "ishga tushirishda aniqlaymiz"), `${path}: имя бота не подписано как условное`);
+      for (const k of lang === "ru" ? ["Войти через Telegram", "Где водитель", "Получать статусы в Telegram", "Мои грузы"] : ["Telegram orqali kirish", "Haydovchi qayerda", "Holatlarni Telegramda olish", "Yuklarim"]) assert.ok(page.includes(k), `${path}: нет «${k}»`);
+      assert.match(page, /\[\[t:1[3-5]\]\]/, `${path}: нет слов-ловушек в клиенте и водителе`);
+      assert.match(page, /\/\*~\*\/\d*\.?\d+/, `${path}: нет числа с меткой`);
+      assert.ok(page.includes(`tel:${data.COMPANY.tel}`), `${path}: нет их телефона`);
+      continue;
+    }
     if (kind === "land") {
       /* Видео DevUz первым, сразу за ним — залёт камерой в бренд (кадры шифром). */
       assert.ok(page.indexOf('id="dzi"') > 0 && page.indexOf('id="dzi"') < page.indexOf('id="fly"'), `${path}: нет видео DevUz перед залётом`);
@@ -2643,6 +2653,7 @@ test("CARGO PRO GROUP: выбор, сайт и панель на ru и uz — у
     for (const p of data.PARTNERS) assert.ok(page.includes(p), `${path}: нет партнёра ${p}`);
     for (const s of data.SERVICES) assert.ok(page.includes(s[lang].t), `${path}: нет услуги ${s.ru.t}`);
     for (const id of ["routes", "services", "calc", "customs", "hubs", "partners", "faq", "contact"]) assert.ok(page.includes(`id="${id}"`), `${path}: нет блока #${id}`);
+    assert.ok(page.includes(`class="lk" data-addon="cab" href="__PROTO_BASE__${lang === "uz" ? "/uz" : ""}/cabinet"`), `${path}: в шапке нет «Личного кабинета»`);
     for (const a of plan.ADDONS) assert.ok(page.includes(`data-addon="${a.id}"`), `${path}: тумблер ${a.id} не ведёт к блоку`);
     assert.ok(page.includes("Ориентировочный расчёт") || page.includes("taxminiy hisob"), `${path}: расчёт не подписан как ориентир`);
     assert.ok(page.includes('class="velo"') && page.includes("data-par="), `${path}: нет бегущей строки или параллакса`);
@@ -2660,14 +2671,18 @@ test("CARGO PRO GROUP: выбор, сайт и панель на ru и uz — у
   assert.notEqual(stamped.pages["uz/site"], site.pages["uz/site"], "отпечаток не поставился на узбекском сайте");
 });
 
-test("CARGO PRO GROUP: сайт 1 000 $ вместо 4 900 $, допы 2 000 $, с допами 3 000 $; тарифы по середине рынка", async () => {
+test("CARGO PRO GROUP: сайт 1 000 $ вместо 4 900 $, допы 2 070 $ (клиентский раздел 470 $), с допами 3 070 $; тарифы по середине рынка", async () => {
   const plan = await import("../scripts/protos/cargopro/plan.mjs");
   const tf = await import("../scripts/protos/cargopro/tariffs.mjs");
   assert.equal(plan.BASE.promo, 1000);
   assert.equal(plan.BASE.price, 4900);
-  /* Владелец, 31.10.2026: «Стоимость для клиента без допников 1000$, с допами не более 3000$». */
-  assert.ok(plan.ALL <= 3000, "сайт с допами дороже 3 000 $");
-  assert.equal(plan.ADDONS.reduce((s: number, a: { price: number }) => s + a.price, 0), 2000, "допы не 2 000 $");
+  /* Владелец, 31.10.2026: «Стоимость для клиента без допников 1000$, с допами не более 3000$». Затем про клиентский
+     раздел: «Это входит в допы если этого нет, цену поставь 470$» — доп cab стал 470 $ вместо 400 $, допы 2 070 $. */
+  const cab = plan.ADDONS.find((a: { id: string }) => a.id === "cab")!;
+  assert.equal(cab.price, 470);
+  assert.match(cab.ru.t, /Клиентский раздел/);
+  assert.equal(plan.ADDONS.reduce((s: number, a: { price: number }) => s + a.price, 0), 2070, "допы не 2 070 $");
+  assert.equal(plan.ALL, 3070, "сайт с допами не 3 070 $");
   for (const id of ["admin", "track", "cab", "bot", "docs", "fx", "seo"]) assert.ok(plan.ADDONS.some((a: { id: string }) => a.id === id), `нет допа ${id}`);
   for (const a of plan.ADDONS) for (const l of ["ru", "uz"] as const) assert.ok(a[l].t && a[l].e && a[l].who, `${a.id}: нет текста на ${l}`);
   for (const a of plan.ADDONS) assert.doesNotMatch(a.uz.t + a.uz.e + a.uz.who, /[А-Яа-яЁё]/, `${a.id}: кириллица в узбекском`);
@@ -2695,13 +2710,14 @@ test("CARGO PRO GROUP: сайт 1 000 $ вместо 4 900 $, допы 2 000 $, 
   assert.equal(ltl.requires, "tms");
   assert.match(ltl.ru.t, /Сборные грузы/);
   assert.doesNotMatch(ltl.uz.t + ltl.uz.e + ltl.uz.who, /[А-Яа-яЁё]/, "ltl: кириллица в узбекском");
-  assert.equal(plan.ALL_TMS, 15000);
-  assert.equal(plan.ALL_MODULES, 18000);
+  assert.equal(plan.ALL_TMS, plan.ALL + 12000);
+  assert.equal(plan.ALL_MODULES, plan.ALL + 15000);
+  const usd = (n: number) => `${String(n).replace(/\B(?=(\d{3})+(?!\d))/g, "\u00a0")}\u00a0$`;
   const site = bundlePages("cargopro")!;
   assert.ok(site.html.includes("4 900 $") && site.html.includes("1 000 $"), "на первой странице не та цена");
-  assert.ok(site.html.includes("12 000 $") && site.html.includes("15 000 $") && site.html.includes("3 000 $"), "нет строк «Сайт с допами» и «С диспетчерской»");
+  assert.ok(site.html.includes(usd(12000)) && site.html.includes(usd(plan.ALL_TMS)) && site.html.includes(usd(plan.ALL)), "нет строк «Сайт с допами» и «С диспетчерской»");
   for (const page of [site.html, site.pages.uz]) {
-    assert.ok(page.includes("15 000 $") && page.includes("18 000 $"), "нет итогов «С диспетчерской» и «С диспетчерской и сборными грузами»");
+    assert.ok(page.includes(usd(plan.ALL_TMS)) && page.includes(usd(plan.ALL_MODULES)), "нет итогов «С диспетчерской» и «С диспетчерской и сборными грузами»");
     assert.ok(page.includes('data-mod="ltl" data-req="tms"') && page.includes('data-module="ltl"'), "нет тумблера модуля «Сборные грузы»");
   }
   assert.ok(site.pages.uz.includes(tms.market!.uz), "на узбекской странице нет рыночной вилки");

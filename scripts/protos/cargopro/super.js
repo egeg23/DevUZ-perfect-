@@ -141,7 +141,8 @@ function onStatus(id,s){var n=String(id).replace(/\D/g,'');
   if(S.ic.tg)xlog(t('il_tg_cl')+' «'+t('k_'+s)+'» · '+id);
   if(S.ic.tg&&s===3)xlog(t('il_tg_drv')+' · '+id);
   if(S.ic.c1&&s===0)xlog(t('il_1c_cpt')+' · '+id);
-  if(S.ic.c1&&s===5)xlog(t('il_1c_act')+' '+id)}
+  if(S.ic.c1&&s===5)xlog(t('il_1c_act')+' '+id);
+  var cb=get('cp-cab-1',{});if(S.ic.tg&&cb.links&&cb.links[id])xlog(t('il_tg_cab')+' '+((cb.u&&cb.u.n)||t('il_tg_cab_n'))+' '+t('il_tg_cab_st')+' «'+t('k_'+s)+'» · '+id)}
 var INT=[
   {k:'c1',n:'i_1c',e:'i_1c_e',dir:'i_1c_dir',sch:'i_1c_sched',f:[['i_1c_url','https://1c.cargoprogroup.uz/hs/cargo'],['i_1c_user','exchange']],map:[['i_f_trip','i_f_act'],['i_f_co','i_f_cpt'],['i_f_pay','i_f_paid']],sec:1},
   {k:'bx',n:'i_bx',e:'i_bx_e',dir:'i_bx_dir',sch:'i_bx_sched',f:[['i_bx_url','https://cargopro.bitrix24.kz/rest/1/••••••••/']],map:[['i_f_req','i_f_deal'],['i_f_st','i_f_stage'],['i_f_co','i_f_cpt'],['i_f_mgr','i_f_mgr']],sec:0},
@@ -149,9 +150,13 @@ var INT=[
 function report(){var tr=trips(),go=0,done=0;tr.forEach(function(o){var s=stOf(o.id,o.s0);if(s===5)done++;else if(s>=2)go++});
   var late=RUN.filter(function(r){return r.st==='late'}).length,ex=expiring().length;
   return{go:go,done:done,late:late,ex:ex,txt:t('x_report')+' · '+dshow(iso(0))+': '+go+' '+t('x_rep_go')+', '+done+' '+t('x_rep_done')+', '+late+' '+t('x_rep_late')+', '+ex+' '+t('x_rep_docs')}}
+/* Клиентский раздел на сайте: сколько заказов клиенты привязали к боту, показывать ли им телефон водителя. */
+function cabLine(){var cb=get('cp-cab-1',{}),n=Object.keys(cb.links||{}).length;S.ic.dph=S.ic.dph!==false;
+  return'<div class="dp-kv"><span>'+t('i_tg_cab')+'</span><b id="tgcab">'+n+'</b><span>'+t('i_dph')+'</span><b><button type="button" class="btn btn-g btn-s" id="dph" aria-pressed="'+S.ic.dph+'">'+t(S.ic.dph?'i_dph_on':'i_dph_off')+'</button></b></div>'}
 function vInt(){var h='<p class="pn-hint">'+t('i_hint')+'</p><div class="sp-ints">';
   h+=INT.map(function(c){var on=!!S.ic[c.k];return'<section class="pn-card sp-int'+(on?' on':'')+'"><header><b>'+t(c.n)+'</b><span class="sp-st">'+t(on?'i_on':'i_off')+'</span></header><p class="pn-mu">'+t(c.e)+'</p>'+
     '<div class="dp-kv"><span>'+t('i_dir')+'</span><b>'+t(c.dir)+'</b><span>'+t('i_sched')+'</span><b>'+t(c.sch)+'</b></div>'+
+    (c.k==='tg'?cabLine():'')+
     '<h4 class="dp-h4">'+t('i_map')+'</h4><div class="sp-map">'+c.map.map(function(m){return'<span>'+t(m[0])+'</span><i aria-hidden="true">→</i><span>'+t(m[1])+'</span>'}).join('')+'</div>'+
     (setup[c.k]?'<div class="sp-set">'+c.f.map(function(x,i){return'<label class="fld"><span>'+t(x[0])+'</span><input value="'+esc(x[1])+'" readonly'+(c.sec&&i===0&&c.k==='tg'?' type="password"':'')+'><small class="pn-mu">'+t('i_secret')+'</small></label>'}).join('')+'</div>':'')+
     '<div class="dp-act"><button type="button" class="btn btn-g btn-s" data-iset="'+c.k+'">'+t('i_setup')+'</button><button type="button" class="btn '+(on?'btn-g':'btn-a')+' btn-s" data-itog="'+c.k+'">'+t(on?'i_disconnect':'i_connect')+'</button></div></section>'}).join('');
@@ -160,7 +165,7 @@ function vInt(){var h='<p class="pn-hint">'+t('i_hint')+'</p><div class="sp-ints
     '<a class="btn btn-a btn-s" href="https://t.me/share/url?url=cargoprogroup.uz&amp;text='+encodeURIComponent(r.txt)+'" target="_blank" rel="noopener">'+t('x_rep_send')+'</a></section></div>';
   h+='<section class="pn-card" id="xlog"><h3>'+t('i_log')+'</h3><p class="pn-mu">'+t('i_log_e')+'</p>'+(S.xl.length?S.xl.map(function(x){return'<div class="pn-log"><time>'+new Date(x.at).toLocaleTimeString()+'</time><span>'+esc(x.x)+'</span></div>'}).join(''):'<p class="pn-mu">'+t('i_log_none')+'</p>')+'</section>';
   return h}
-function bindInt(v){$$('[data-iset]',v).forEach(function(b){b.addEventListener('click',function(){var k=b.getAttribute('data-iset');setup[k]=!setup[k];render()})});
+function bindInt(v){var dp=$('#dph',v);if(dp)dp.addEventListener('click',function(){S.ic.dph=!S.ic.dph;save();log('l_int',t('i_dph'));render()});$$('[data-iset]',v).forEach(function(b){b.addEventListener('click',function(){var k=b.getAttribute('data-iset');setup[k]=!setup[k];render()})});
   $$('[data-itog]',v).forEach(function(b){b.addEventListener('click',function(){var k=b.getAttribute('data-itog');S.ic[k]=!S.ic[k];var c=INT.filter(function(x){return x.k===k})[0];xlog(t(c.n)+': '+t(S.ic[k]?'il_conn':'il_disc'));log('l_int',t(c.n));render()})})}
 
 /* Paket dlya brokera: dannye reysa, voditelya, tyagacha i pritsepa, gruzy. Chego ne hvataet: krasnym do formirovaniya. */
@@ -242,3 +247,4 @@ function bindTrips(v){var find=function(id){return trips().filter(function(o){re
   $$('[data-pod]',v).forEach(function(b){b.addEventListener('click',function(){openModal('pod',find(b.getAttribute('data-pod')))})});
   $$('[data-idle]',v).forEach(function(i){i.addEventListener('input',function(){var id=i.getAttribute('data-idle'),h=Math.max(0,+i.value||0);S.tx[id]=S.tx[id]||{};S.tx[id].idle=h;save();var e=$('#ids-'+id);if(e)e.innerHTML=t('x_idle_sum')+': <b>'+fmt(idleSum(h))+' $</b>'})})}
 syncFleet();
+addEventListener('storage',function(e){if(e.key==='cp-cab-1'&&view==='int')render()});

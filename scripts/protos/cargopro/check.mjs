@@ -17,6 +17,9 @@ import { execSync } from "node:child_process";
 const require = createRequire(execSync("npm root -g").toString().trim() + "/playwright/package.json");
 const { chromium } = require("playwright");
 import assert from "node:assert/strict";
+import { ALL, ALL_TMS, ALL_MODULES } from "./plan.mjs";
+/* Итоги — из плана: клиентский раздел 470 $ (владелец, 31.10.2026). */
+const sum = (n) => new RegExp(String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " "));
 
 const B = "http://localhost:4853/proto/" + "A".repeat(43);
 const b = await chromium.launch();
@@ -27,7 +30,7 @@ const skip = async (p) => p.evaluate(() => { document.getElementById("dzi")?.rem
 for (const w of [390, 768, 1440]) {
   const c = await b.newContext({ viewport: { width: w, height: 860 } });
   const p = await c.newPage(); watch(p);
-  for (const path of ["", "site", "panel", "dispatch", "dispatch#map", "dispatch#trips", "dispatch#drivers", "dispatch#route", "dispatch#fleet", "dispatch#int", "uz", "uz/site", "uz/panel", "uz/dispatch", "uz/dispatch#map", "uz/dispatch#route", "uz/dispatch#fleet", "uz/dispatch#int"]) {
+  for (const path of ["", "site", "panel", "cabinet", "cabinet#map", "cabinet#tg", "dispatch", "dispatch#map", "dispatch#trips", "dispatch#drivers", "dispatch#route", "dispatch#fleet", "dispatch#int", "uz", "uz/site", "uz/panel", "uz/cabinet", "uz/cabinet#map", "uz/dispatch", "uz/dispatch#map", "uz/dispatch#route", "uz/dispatch#fleet", "uz/dispatch#int"]) {
     await p.goto(`${B}/${path}`, { waitUntil: "load" }); await skip(p);
     await p.evaluate(async () => { for (let y = 0; y < document.body.scrollHeight; y += 700) { scrollTo(0, y); await new Promise((r) => setTimeout(r, 30)); } scrollTo(0, 0); });
     const ov = await p.evaluate(() => document.documentElement.scrollWidth - innerWidth);
@@ -204,9 +207,9 @@ await dp.click('[data-itog="bx"]');
 assert.match(await dp.textContent(".sp-int:nth-child(2) .sp-st"), /не подключено/);
 await dp.evaluate(() => { localStorage.removeItem("cp-fleet-1"); });
 
-/* Конструктор: сборные грузы только вместе с диспетчерской, итоги 15 000 $ и 18 000 $. */
+/* Конструктор: сборные грузы только вместе с диспетчерской, итоги «с диспетчерской» и «со сборными». */
 await p.goto(`${B}/`, { waitUntil: "load" }); await skip(p);
-assert.match(await p.textContent("#withl"), /18 000/);
+assert.match(await p.textContent("#withl"), sum(ALL_MODULES));
 await p.evaluate(() => { const i = document.querySelector('[data-mod="ltl"]'); i.checked = false; i.dispatchEvent(new Event("change")); });
 assert.ok(await p.$eval('[data-module="ltl"]', (e) => e.classList.contains("off")), "сборные выключены, а строка видна");
 await dp.goto(`${B}/dispatch`, { waitUntil: "load" });
@@ -214,18 +217,61 @@ assert.equal(await dp.$$eval('.pn-tabs [data-v="route"]', (x) => x.length), 0, "
 await p.evaluate(() => { const i = document.querySelector('[data-mod="tms"]'); i.checked = false; i.dispatchEvent(new Event("change")); });
 await p.evaluate(() => { const i = document.querySelector('[data-mod="ltl"]'); i.checked = true; i.dispatchEvent(new Event("change")); });
 assert.ok(await p.$eval('[data-mod="tms"]', (e) => e.checked), "сборные включены без диспетчерской");
-assert.match(await p.textContent("#withl"), /18 000/);
+assert.match(await p.textContent("#withl"), sum(ALL_MODULES));
 await p.evaluate(() => { const i = document.querySelector('[data-mod="tms"]'); i.checked = false; i.dispatchEvent(new Event("change")); });
 assert.ok(!(await p.$eval('[data-mod="ltl"]', (e) => e.checked)), "диспетчерская выключена, а сборные нет");
 await p.evaluate(() => { localStorage.removeItem("cp-cfg-1"); });
 
 /* Тумблер модуля прячет выбор диспетчерской. */
 await p.goto(`${B}/`, { waitUntil: "load" }); await skip(p);
-assert.match(await p.textContent("#withm"), /15 000/);
+assert.match(await p.textContent("#withm"), sum(ALL_TMS));
 await p.evaluate(() => { const i = document.querySelector('[data-mod="tms"]'); i.checked = false; i.dispatchEvent(new Event("change")); });
 assert.ok(await p.$eval('.choice[data-module="tms"]', (e) => e.classList.contains("off")), "модуль выключен, а выбор виден");
-assert.match(await p.textContent("#total"), /3 000/);
+assert.match(await p.textContent("#total"), sum(ALL));
 await c.close();
+
+/* Клиентский раздел (доп cab, владелец, 31.10.2026): вход через Telegram (демо), «Мои грузы»,
+   статус из супер-админки → таймлайн и бот, машина едет по карте, тумблер допа прячет раздел. */
+{
+  const cc = await b.newContext({ viewport: { width: 390, height: 844 } });
+  const cp = await cc.newPage(); watch(cp);
+  await cp.goto(`${B}/cabinet`, { waitUntil: "load" });
+  await cp.click("#intg"); await cp.waitForSelector("#tgok");
+  assert.match(await cp.textContent("#shh"), /Telegram/);
+  await cp.click("#tgok");
+  assert.equal(await cp.$$eval(".cb-o", (x) => x.length), 3, "нет трёх демо-заказов");
+  /* По телефону: неверный код не пускает, демо-код пускает. */
+  await cp.click("#cbout"); await cp.click(".cb-ph summary"); await cp.fill("#inph", "+998 90 123 45 67"); await cp.click("#incode");
+  const code = (await cp.textContent("#incc")).replace(/\D/g, "");
+  await cp.fill("#inc", "0000"); await cp.click("#ingo"); assert.ok(await cp.$("#ingo"), "неверный код пустил");
+  await cp.fill("#inc", code); await cp.click("#ingo"); assert.ok(await cp.$(".cb-o"), "демо-код не пустил");
+  /* Заявка с сайта появляется в «Моих грузах». */
+  await cp.evaluate(() => { const r = JSON.parse(localStorage.getItem("cp-req-1") || "[]"); r.unshift({ id: "CPG-24299", at: Date.now(), n: "Test", dir: "cn", m: "air", cw: 300, tot: 2940, days: "4-7", txt: "x" }); localStorage.setItem("cp-req-1", JSON.stringify(r)); });
+  await cp.reload(); assert.ok(await cp.$('[data-o="CPG-24299"]'), "заявка с сайта не появилась в кабинете");
+  /* Привязка к боту и статус из супер-админки. */
+  await cp.goto(`${B}/cabinet#tg`); await cp.click('#cbv [data-link="CPG-24109"]');
+  for (const pg of cc.pages()) if (pg !== cp) await pg.close();
+  assert.match(await cp.textContent("#cbn"), /^1$/);
+  const sp = await cc.newPage(); watch(sp);
+  await sp.goto(`${B}/dispatch#trips`, { waitUntil: "load" }); await sp.click('[data-tr="CPG-24109"][data-s="4"]');
+  await cp.waitForFunction(() => /таможне/.test(document.querySelector("#cbchat")?.textContent || ""), null, { timeout: 4000 });
+  await sp.goto(`${B}/dispatch#int`); assert.match(await sp.textContent("#tgcab"), /^1$/);
+  assert.match(await sp.textContent("#xlog"), /клиенту Demo15/);
+  await sp.close();
+  await cp.goto(`${B}/cabinet`); assert.match(await cp.textContent('[data-o="CPG-24109"] .st'), /Таможня/);
+  /* Карта: машина в пути едет. */
+  await cp.evaluate(() => { const P = JSON.parse(localStorage.getItem("cp-panel-1") || "{}"); P.st = P.st || {}; P.st["CPG-24109"] = 3; localStorage.setItem("cp-panel-1", JSON.stringify(P)); });
+  await cp.goto(`${B}/cabinet#map`); await cp.waitForTimeout(300);
+  const t1 = await cp.$eval("#cbtr", (e) => e.getAttribute("transform")); await cp.waitForTimeout(1500);
+  const t2 = await cp.$eval("#cbtr", (e) => e.getAttribute("transform"));
+  assert.notEqual(t1, t2, "машина на карте стоит");
+  assert.ok(await cp.$('a[href^="tel:"]'), "нет кнопки звонка");
+  /* Тумблер допа «Клиентский раздел» прячет ссылку на сайте и сам раздел. */
+  await cp.evaluate(() => localStorage.setItem("cp-cfg-1", JSON.stringify({ cab: false })));
+  await cp.goto(`${B}/site`); assert.ok(await cp.$eval('.lk[data-addon="cab"]', (e) => e.classList.contains("off")), "ссылка на кабинет видна при выключенном допе");
+  await cp.goto(`${B}/cabinet`); assert.ok(await cp.$(".cb-off"), "кабинет открыт при выключенном допе");
+  await cc.close();
+}
 
 /* «Меньше движения»: залёт без кадров, итоговая карточка видна, маршруты стоят. */
 const r = await b.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: "reduce" });

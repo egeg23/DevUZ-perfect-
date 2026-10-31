@@ -6,6 +6,7 @@ import { LANES, EXTRA, FX, DIM } from "./tariffs.mjs";
 import { PANEL_UI } from "./panel-ui.mjs";
 import { DISPATCH_UI } from "./dispatch-ui.mjs";
 import { COMPARE } from "./super-ui.mjs";
+import { CAB_UI } from "./cabinet-ui.mjs";
 
 /*
  * Макет CARGO PRO GROUP (cargoprogroup.uz), 31.10.2026: международная
@@ -32,8 +33,10 @@ const DIR = new URL(".", import.meta.url).pathname;
 const IMG = "/protos/cargopro";
 // Комментарии уходят, метка числа `/*~*/` остаётся: её снимает отпечаток при показе.
 const strip = (s) => s.replace(/\/\*(?!~\*\/)[\s\S]*?\*\//g, "");
-const CSS = strip(readFileSync(DIR + "site.css", "utf8")).replace(/\n\s*/g, "");
+const CSS = strip(readFileSync(DIR + "site.css", "utf8") + readFileSync(DIR + "cabinet.css", "utf8")).replace(/\n\s*/g, "");
 const JS = strip(readFileSync(DIR + "site.js", "utf8")).replace(/\n\s*\n/g, "\n");
+/* Клиентский раздел (доп «cab», владелец, 31.10.2026): вход через Telegram, «Мои грузы», водитель на карте, бот. */
+const CAB_JS = strip(readFileSync(DIR + "cabinet.js", "utf8")).replace(/\n\s*\n/g, "\n");
 const LAND_JS = strip(readFileSync(DIR + "land.js", "utf8")).replace(/\n\s*\n/g, "\n");
 const PANEL_JS = strip(readFileSync(DIR + "panel.js", "utf8")).replace(/\n\s*\n/g, "\n");
 const PANEL_CSS = strip(readFileSync(DIR + "panel.css", "utf8")).replace(/\n\s*/g, "");
@@ -78,6 +81,7 @@ const ICON = {
   sea: I('<path d="M3 17c2 1.5 4 1.5 6 0s4-1.5 6 0 4 1.5 6 0M5 14l-1-4h16l-1 4M8 10V6h8v4M12 3v3"/>'),
   multi: I('<circle cx="6" cy="18" r="2"/><circle cx="18" cy="6" r="2"/><path d="M8 18h6a4 4 0 0 0 0-8h-4a4 4 0 0 1 0-8h6"/>'),
   customs: I('<path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6Z"/><path d="m9 12 2 2 4-4"/>'),
+  user: I('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>'),
 };
 const MODE_ICON = { air: ICON.air, auto: ICON.auto, rail: ICON.rail, sea: ICON.sea };
 const LOGO = (l, to = "site") => `<a class="logo" href="${href(l, to)}" aria-label="CARGO PRO GROUP"><img src="${IMG}/logo.webp" width="670" height="249" alt="CARGO PRO GROUP"></a>`;
@@ -128,6 +132,7 @@ function header(l, t) {
   return `<header class="top"><div class="mbar"><a href="${href(l)}">${ICON.back}<span>${t("Макет для CARGO PRO GROUP", "CARGO PRO GROUP uchun maket")}</span></a><a class="mb-adm" href="${href(l, "panel")}">${ICON.panel}<span>${t("Админка", "Admin panel")}</span>${ICON.arrow}</a></div><div class="top-in glass">
 ${LOGO(l)}
 <nav class="nav" aria-label="${t("Разделы", "Bo‘limlar")}">${nav.map(([id, n]) => `<a href="#${id}">${n}</a>`).join("")}</nav>
+<a class="lk" data-addon="cab" href="${href(l, "cabinet")}" aria-label="${t("Личный кабинет", "Shaxsiy kabinet")}">${ICON.user}<span>${t("Личный кабинет", "Shaxsiy kabinet")}</span></a>
 <button type="button" class="mine" id="mine" data-addon="track">${ICON.box}<span>${t("Мои заявки", "Arizalarim")}</span></button>
 <div class="langs">${LANGS.map((x) => `<a href="${href(x, "site")}" hreflang="${x}" lang="${x}"${x === l ? ' aria-current="true"' : ""}>${x.toUpperCase()}</a>`).join("")}</div>
 <a class="btn btn-a btn-s" href="tel:${COMPANY.tel}">${ICON.phone}<span>${t("Позвонить", "Qo‘ng‘iroq")}</span></a>
@@ -261,10 +266,18 @@ ${HUBS.map((h) => `<g transform="translate(${h.x} ${h.y})"><circle class="hubdot
 }
 
 function cab(l, t) {
+  const pts = [
+    [ICON.tg, t("Вход через Telegram", "Telegram orqali kirish"), t("Без пароля: одно нажатие в Telegram или код по телефону.", "Parolsiz: Telegramda bitta bosish yoki telefon kodi.")],
+    [ICON.box, t("Все грузы компании", "Kompaniyaning barcha yuklari"), t("Статус меняет диспетчер, клиент видит его сразу.", "Holatni dispetcher o‘zgartiradi, mijoz uni darhol ko‘radi.")],
+    [ICON.route, t("Где едет водитель", "Haydovchi qayerda"), t("Машина на карте, пройденные точки и время прибытия.", "Xaritada mashina, o‘tilgan nuqtalar va yetib kelish vaqti.")],
+    [ICON.doc, t("Статусы и документы в Telegram", "Telegramda holatlar va hujjatlar"), t("Заказ привязывается к Telegram через бота, дальше бот пишет сам.", "Buyurtma bot orqali Telegramga bog‘lanadi, keyin bot o‘zi yozadi.")],
+  ];
   return `<section class="sec" id="cab" data-addon="cab" style="background:var(--bg2)"><div class="wrap">
-<span class="ad-tag">${t("Доп · кабинет клиента", "Qo‘shimcha · mijoz kabineti")}</span>
-<h2 class="h2 rise">${t("Кабинет компании-клиента: <b>грузы и документы</b>", "Mijoz kompaniya kabineti: <b>yuklar va hujjatlar</b>")}</h2>
-<p class="lead rise">${t("Бухгалтер клиента сам скачивает инвойс и ГТД, менеджер логистики видит все грузы, повторить прошлую заявку: одна кнопка.", "Mijoz buxgalteri invoys va BYuDni o‘zi yuklab oladi, logistika menejeri barcha yuklarni ko‘radi, oldingi arizani takrorlash: bitta tugma.")}</p>
+<span class="ad-tag">${t("Доп · клиентский раздел", "Qo‘shimcha · mijozlar bo‘limi")}</span>
+<h2 class="h2 rise">${t("Личный кабинет: <b>груз, водитель и Telegram</b>", "Shaxsiy kabinet: <b>yuk, haydovchi va Telegram</b>")}</h2>
+<p class="lead rise">${t("Клиент заходит через Telegram, видит свои грузы и где сейчас едет машина, а статусы получает в Telegram от бота. Бухгалтер сам скачивает CMR, счёт и акт.", "Mijoz Telegram orqali kiradi, o‘z yuklarini va mashina hozir qayerdaligini ko‘radi, holatlarni esa botdan Telegramda oladi. Buxgalter CMR, hisob va dalolatnomani o‘zi yuklab oladi.")}</p>
+<ul class="cb-pts">${pts.map(([ic, b, p], i) => `<li class="${["rise", "slide", "pop", "slider"][i]}">${ic}<b>${b}</b><span>${p}</span></li>`).join("")}</ul>
+<div class="hero-act rise"><a class="btn btn-a" href="${href(l, "cabinet")}">${ICON.user}<span>${t("Открыть личный кабинет", "Shaxsiy kabinetni ochish")}</span>${ICON.arrow}</a></div>
 <div class="cab lift"><div class="bh" aria-hidden="true"><i></i><i></i><i></i></div><div class="bb"><div class="tbl"><table><thead><tr><th>${t("Груз", "Yuk")}</th><th>${t("Маршрут", "Yo‘nalish")}</th><th>${t("Статус", "Holat")}</th></tr></thead><tbody id="cabt"></tbody></table></div>
 <div class="dl"><b>${t("Документы по CPG-24117", "CPG-24117 bo‘yicha hujjatlar")}</b>${[t("Инвойс", "Invoys"), t("Упаковочный лист", "Qadoqlash varaqasi"), t("ГТД", "BYuD"), t("Акт выполненных работ", "Bajarilgan ishlar dalolatnomasi")].map((d) => `<button type="button" data-dl>${ICON.doc}<span>${d} · PDF</span></button>`).join("")}<button type="button" class="btn btn-g btn-s" data-dl>${t("Повторить заявку", "Arizani takrorlash")}</button></div></div></div>
 </div></section>`;
@@ -339,7 +352,7 @@ function footer(l, t) {
   return `<footer class="foot"><div class="wrap"><div class="fgrid">
 <div>${LOGO(l)}<p style="margin-top:16px;font-size:14px">${t("Опытная логистическая компания: экспедирование грузов разной сложности и направлений.", "Tajribali logistika kompaniyasi: turli murakkablik va yo‘nalishdagi yuklarni ekspeditsiya qilish.")}</p></div>
 <div><h4>${t("Услуги", "Xizmatlar")}</h4>${SERVICES.map((s) => `<a href="#services">${esc(s[l].t)}</a>`).join("")}</div>
-<div><h4>${t("Клиентам", "Mijozlarga")}</h4><a href="#calc">${t("Расчёт доставки", "Yetkazish hisobi")}</a><a href="#track" data-addon="track">${t("Где груз", "Yuk qayerda")}</a><a href="#customs">${t("Таможня", "Bojxona")}</a><a href="#hubs">${t("Склады", "Omborlar")}</a></div>
+<div><h4>${t("Клиентам", "Mijozlarga")}</h4><a href="${href(l, "cabinet")}" data-addon="cab">${t("Личный кабинет", "Shaxsiy kabinet")}</a><a href="#calc">${t("Расчёт доставки", "Yetkazish hisobi")}</a><a href="#track" data-addon="track">${t("Где груз", "Yuk qayerda")}</a><a href="#customs">${t("Таможня", "Bojxona")}</a><a href="#hubs">${t("Склады", "Omborlar")}</a></div>
 <div><h4>${t("Связь", "Aloqa")}</h4><a href="tel:${COMPANY.tel}">${COMPANY.phone}</a><a href="mailto:${COMPANY.email}">${COMPANY.email}</a></div>
 </div>
 <p class="warn-l">${t("Расчёт на сайте ориентировочный, по середине рынка. Номера грузов, клиенты и статусы в макете: демо.", "Saytdagi hisob taxminiy, bozor o‘rtasi bo‘yicha. Maketdagi yuk raqamlari, mijozlar va holatlar: demo.")}</p>
@@ -474,6 +487,7 @@ function landPage(l) {
     t("Сумма в UZS, USD, EUR, AED и срок в пути сразу", "UZS, USD, EUR, AED’da summa va yo‘ldagi muddat darhol"),
     t("Отслеживание груза по номеру, таможня, склады", "Yukni raqam bo‘yicha kuzatish, bojxona, omborlar"),
     t("Заявка с готовым текстом и «Мои заявки» со статусом", "Tayyor matnli ariza va holati bilan «Arizalarim»"),
+    t("Личный кабинет: вход через Telegram, водитель на карте, статусы от бота", "Shaxsiy kabinet: Telegram orqali kirish, xaritada haydovchi, botdan holatlar"),
   ];
   const pan = [
     t("Заявка с сайта первой строкой, с расчётом", "Saytdan ariza birinchi qatorda, hisob bilan"),
@@ -498,6 +512,7 @@ function landPage(l) {
     t("В админке откройте заявку и поставьте «В пути». Сайт покажет это в «Мои заявки» и в отслеживании.", "Admin panelda arizani oching va «Yo‘lda» qo‘ying. Sayt buni «Arizalarim» va kuzatishda ko‘rsatadi."),
     t("В диспетчерской нажмите «Распределить»: 14 грузов лягут по 12 машинам. Перенесите груз в чужой кузов, и машина загорится красным.", "Dispetcherlikda «Taqsimlash»ni bosing: 14 ta yuk 12 ta mashinaga tushadi. Yukni boshqa kuzovga ko‘chiring, mashina qizil yonadi."),
     t("Во вкладке «Сборные грузы и маршрут» нажмите «Собрать сборный рейс»: забор с нескольких адресов выстроится короче, чем по порядку заявок. Поменяйте адреса стрелками, и километры вырастут.", "«Yig‘ma yuklar va marshrut» bo‘limida «Yig‘ma reysni yig‘ish»ni bosing: bir nechta manzildan olib ketish arizalar tartibidan qisqaroq bo‘ladi. Manzillarni strelkalar bilan suring, kilometrlar oshadi."),
+    t("На сайте откройте «Личный кабинет», войдите через Telegram (это демо) и нажмите «Получать статусы в Telegram» у CPG-24109. В супер-админке во вкладке «Рейсы» поставьте ему «Таможня»: в кабинете обновятся таймлайн и сообщение бота.", "Saytda «Shaxsiy kabinet»ni oching, Telegram orqali kiring (bu demo) va CPG-24109 dagi «Holatlarni Telegramda olish»ni bosing. Super admin panelning «Reyslar» bo‘limida unga «Bojxona» qo‘ying: kabinetda vaqt chizig‘i va bot xabari yangilanadi."),
   ];
   const ld = { base: BASE.promo, root: BASE_URL, hours: OFFER_HOURS, img: IMG, n: 60, add: ADDONS.map((a) => ({ id: a.id, p: a.price, t: a[l].t })), mod: MODULES.map((m) => ({ id: m.id, p: m.price, t: m[l].t, req: m.requires || null })), t: { copied: t("Состав скопирован", "Tarkib nusxalandi"), tot: t("Сайт с допами", "Qo‘shimchalar bilan sayt"), totm: t("С супер-админкой", "Super admin panel bilan"), totl: t("С супер-админкой и сборными грузами", "Super admin panel va yig‘ma yuklar bilan"), none: t("не выбрана", "tanlanmagan") } };
   return `${head(l, t("CARGO PRO GROUP · макет сайта и панели · DevUz Studio", "CARGO PRO GROUP · sayt va panel maketi · DevUz Studio"), t("Макет для CARGO PRO GROUP: новый сайт с расчётом доставки и панель заявок и грузов. Конструктор цены.", "CARGO PRO GROUP uchun maket: yetkazish hisobi bilan yangi sayt va arizalar va yuklar paneli. Narx konstruktori."))}
@@ -562,6 +577,51 @@ ${offer(l, t)}
 <script type="application/json" id="cp-land">${JSON.stringify(ld).replace(/</g, "\\u003c")}</script>
 <script>
 ${LAND_JS}</script>
+</body>
+</html>`;
+}
+
+
+/* ── Клиентский раздел (доп «cab») ─────────────────────────────────── */
+(function checkCabDict() {
+  const keys = new Set([...CAB_JS.matchAll(/\bt\('([A-Za-z0-9_]+)'/g)].map((m) => m[1]));
+  for (const k of ["tab_", "n_"]) keys.delete(k);
+  for (const k of keys) {
+    const v = CAB_UI[k];
+    if (!v || v.length !== 2 || v.some((x) => !x)) throw new Error(`cabinet: нет подписи «${k}» на двух языках`);
+  }
+  for (const [k, v] of Object.entries(CAB_UI)) if (/[А-Яа-яЁё]/.test(v[1])) throw new Error(`cabinet: кириллица в узбекской подписи «${k}»`);
+  if (/[А-Яа-яЁё]/.test(CAB_JS)) throw new Error("cabinet: кириллица в коде раздела");
+})();
+/* Бот студии клиента неизвестен: имя условное и так подписано («уточним при запуске»). */
+const CAB_BOT = "https://t.me/cargoprogroup_bot";
+function cabPage(l) {
+  const t = T(l), i = l === "ru" ? 0 : 1;
+  const ui = Object.fromEntries(Object.entries(CAB_UI).map(([k, v]) => [k, v[i]]));
+  const st = data(l, t).t.st;
+  const cd = { l, ui, st, bot: CAB_BOT, site: href(l, "site"), home: href(l), tel: COMPANY.tel, drvTel: "+998000000000", town: t("Ташкент", "Toshkent"),
+    mode: { air: modeName("air", l), auto: modeName("auto", l), rail: modeName("rail", l), sea: modeName("sea", l) },
+    lanes: LANES.map((x) => ({ id: x.id, n: x[l], c: x.city[l], air: x.air, auto: x.auto, rail: x.rail, sea: x.sea })),
+    tgIcon: ICON.tg, docIcon: ICON.doc, dots: dots(1000, 600, 28),
+    truck: '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h11v10H3zM14 10h4l3 3v3h-7z"/><circle cx="7" cy="17.5" r="1.6"/><circle cx="17.5" cy="17.5" r="1.6"/></svg>' };
+  return `${head(l, t("Личный кабинет · CARGO PRO GROUP", "Shaxsiy kabinet · CARGO PRO GROUP"), t("Личный кабинет клиента CARGO PRO GROUP: вход через Telegram, свои грузы и статусы, водитель на карте, уведомления от бота.", "CARGO PRO GROUP mijoz kabineti: Telegram orqali kirish, yuklar va holatlar, xaritada haydovchi, botdan bildirishnomalar."))}
+<style>${CSS}</style>
+</head>
+<body>
+${DEFS}
+<header class="top"><div class="mbar"><a href="${href(l)}">${ICON.back}<span>${t("Макет для CARGO PRO GROUP", "CARGO PRO GROUP uchun maket")}</span></a><a class="mb-adm" href="${href(l, "dispatch")}" data-module="tms">${ICON.panel}<span>${t("Супер-админка", "Super admin panel")}</span>${ICON.arrow}</a></div><div class="top-in glass">
+${LOGO(l)}
+<nav class="nav" aria-label="${t("Разделы", "Bo‘limlar")}"><a href="${href(l, "site")}">${t("Сайт", "Sayt")}</a><a href="${href(l, "site")}#calc">${t("Расчёт", "Hisob")}</a><a href="${href(l, "site")}#track">${t("Где груз", "Yuk qayerda")}</a></nav>
+<div class="langs">${LANGS.map((x) => `<a href="${href(x, "cabinet")}" hreflang="${x}" lang="${x}"${x === l ? ' aria-current="true"' : ""}>${x.toUpperCase()}</a>`).join("")}</div>
+<a class="btn btn-a btn-s" href="tel:${COMPANY.tel}">${ICON.phone}<span>${t("Позвонить", "Qo‘ng‘iroq")}</span></a>
+</div></header>
+<main class="cb"><div class="wrap" id="cb-app"><p class="mu">${t("Личный кабинет загружается…", "Shaxsiy kabinet yuklanmoqda…")}</p></div></main>
+<footer class="foot"><div class="wrap"><div class="sm"><span>© 2026 ${COMPANY.legal}</span><span>${t("Макет DevUz Studio, демо-данные: клиент, водитель и положение машины выдуманы. Пользуясь макетом, вы принимаете", "DevUz Studio maketi, demo ma’lumotlar: mijoz, haydovchi va mashina joyi o‘ylab topilgan. Maketdan foydalanib, siz")} <a href="${TERMS(l)}" target="_blank" rel="noopener">${t("условия макета", "maket shartlarini qabul qilasiz")}</a>${t(".", "")}</span></div></div></footer>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="shh"><div class="sh" data-close></div><div class="box"><div class="bh"><b id="shh"></b><button type="button" class="x" data-close aria-label="${t("Закрыть", "Yopish")}">${ICON.close}</button></div><div class="bb" id="shb"></div><div class="bf" id="shf"></div></div></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script type="application/json" id="cb-data">${JSON.stringify(cd).replace(/</g, "\\u003c")}</script>
+<script>
+${CAB_JS}</script>
 </body>
 </html>`;
 }
@@ -645,6 +705,7 @@ for (const l of LANGS) {
   out[(KEY[l] ? KEY[l] + "/" : "") + "site"] = sitePage(l);
   out[(KEY[l] ? KEY[l] + "/" : "") + "panel"] = panelPage(l);
   out[(KEY[l] ? KEY[l] + "/" : "") + "dispatch"] = dispatchPage(l);
+  out[(KEY[l] ? KEY[l] + "/" : "") + "cabinet"] = cabPage(l);
 }
 for (const [k, v] of Object.entries(out)) {
   const lang = k.startsWith("uz") ? "uz" : "ru";
@@ -659,7 +720,7 @@ mkdirSync(DIR + "out", { recursive: true });
 writeFileSync(DIR + "out/pages.json", JSON.stringify(out));
 
 /* Сборка для сервера (lib/proto/bundles): стили и скрипты один раз. */
-const parts = { J: `<script>\n${JS}</script>`, C: `<style>${CSS}</style>`, PJ: `<script>\n${PANEL_JS}</script>`, LJ: `<script>\n${LAND_JS}</script>`, DJ: `<script>\n${DISP_JS}</script>` };
+const parts = { J: `<script>\n${JS}</script>`, C: `<style>${CSS}</style>`, PJ: `<script>\n${PANEL_JS}</script>`, LJ: `<script>\n${LAND_JS}</script>`, DJ: `<script>\n${DISP_JS}</script>`, CBJ: `<script>\n${CAB_JS}</script>` };
 const pages = {};
 for (const [key, html] of Object.entries(out)) {
   let p = html;
