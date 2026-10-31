@@ -2,7 +2,8 @@
 // запущенный serve.mjs (SCENE_KEY=… для кадров залёта). Пишет залёт на трёх
 // точках прокрутки, выбор, конструктор, сайт по разделам, заявку, «Мои
 // заявки», панель и диспетчерскую. Сообщает ошибки консоли и прокрутку вбок.
-// Третий аргумент «dispatch» — только снимки диспетчерской.
+// Третий аргумент «dispatch» — только снимки диспетчерской, «route» — только
+// сборных грузов и маршрута забора.
 import { createRequire } from "node:module";
 import { execSync } from "node:child_process";
 import { mkdirSync } from "node:fs";
@@ -21,7 +22,7 @@ for (const w of ws.split(",").map(Number)) {
   const p = await ctx.newPage();
   p.on("console", (m) => { if (m.type() === "error" && !/fonts\.g/.test(m.text())) errs.push(`${w}: ${m.text()}`); });
   p.on("pageerror", (e) => errs.push(`${w}: ${e.message}`));
-  if (only !== "dispatch") {
+  if (only !== "dispatch" && only !== "route") {
   await p.goto(R + "/", { waitUntil: "load" }); await p.evaluate(() => document.getElementById("dzi")?.remove()); await p.waitForTimeout(3500);
   for (const k of [0, 0.5, 1]) {
     await p.evaluate((k) => { const s = document.querySelector(".hs"); scrollTo(0, (s.offsetHeight - innerHeight) * k); }, k);
@@ -51,6 +52,7 @@ for (const w of ws.split(",").map(Number)) {
   await shot(p, `mine-${w}`);
   }
   /* Диспетчерская: очередь, распределение, перенос в чужой кузов, карта, карточка водителя, рейсы, водители. */
+  if (only !== "route") {
   await p.goto(R + "/dispatch", { waitUntil: "load" }); await p.evaluate(() => localStorage.removeItem("cp-disp-1")); await p.reload({ waitUntil: "load" }); await p.waitForTimeout(500);
   await shot(p, `dispatch-queue-${w}`);
   await p.click("#dist"); await p.waitForTimeout(2600);
@@ -67,6 +69,18 @@ for (const w of ws.split(",").map(Number)) {
   await shot(p, `dispatch-trips-${w}`);
   await p.goto(R + "/dispatch#drivers", { waitUntil: "load" }); await p.click('[data-sort="price"]'); await p.waitForTimeout(400);
   await shot(p, `dispatch-drivers-${w}`);
+  }
+  /* Сборные грузы и маршрут забора. */
+  await p.goto(R + "/dispatch#route", { waitUntil: "load" }); await p.selectOption("#role", "head"); await p.click("#rbuild"); await p.waitForTimeout(2200);
+  await shot(p, `route-${w}`);
+  await p.evaluate(() => document.querySelector(".dp-cmp").scrollIntoView({ block: "start" })); await p.waitForTimeout(300);
+  await shot(p, `route-compare-${w}`);
+  await p.click('[data-dn="0"]'); await p.waitForTimeout(400);
+  await p.evaluate(() => document.querySelector(".dp-cmp").scrollIntoView({ block: "start" })); await p.waitForTimeout(300);
+  await shot(p, `route-manual-${w}`);
+  await p.click("#rback"); await p.click("#radd"); await p.waitForTimeout(2200);
+  await p.evaluate(() => document.querySelector(".dp-rg").scrollIntoView({ block: "start" })); await p.waitForTimeout(300);
+  await shot(p, `route-add-${w}`);
   const dov = await p.evaluate(() => document.documentElement.scrollWidth - innerWidth);
   if (dov > 0) errs.push(`${w}: диспетчерская, прокрутка вбок на ${dov}px`);
   await ctx.close();

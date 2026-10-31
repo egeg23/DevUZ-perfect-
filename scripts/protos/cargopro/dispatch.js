@@ -20,7 +20,10 @@ var S=get('cp-disp-1',{});S.role=S.role||'disp';S.log=S.log||[];S.as=S.as||null;
 function save(){put('cp-disp-1',S)}
 function log(what,ref){S.log.unshift({at:Date.now(),who:S.role,w:what,r:ref||''});S.log=S.log.slice(0,80);save()}
 var head=function(){return S.role==='head'};
-var view=location.hash.slice(1)||'plan',pick=null,drv=null,offFor=null,sortBy='rate';
+/* Modul «sbornye gruzy» vyklyuchen v konstruktore - vkladki net. */
+var LTL=(function(){var c=get('cp-cfg-1',{});return c.m_ltl!==false&&c.m_tms!==false})();
+function vw(){var x=location.hash.slice(1)||'plan';return x==='route'&&!LTL?'plan':x}
+var view=vw(),pick=null,drv=null,offFor=null,sortBy='rate';
 
 /* Demo-zerno. */
 var zr=20261031;function rnd(){zr=(zr*16807)%2147483647;return zr/2147483647}
@@ -71,21 +74,21 @@ var RUN=FLEET.map(function(f,i){var to=['sam','fer','bux','alm','and','nuk','alm
   return{f:f,to:to,st:st,k:st==='free'?0:st==='load'?0:.08+rnd()*.7,sp:st==='go'||st==='late'?(st==='late'?.000006:.000011)*(0.7+rnd()*.6):0,spd:st==='go'?62+Math.floor(rnd()*28):st==='late'?38:0,
     fuel:30+Math.floor(rnd()*65),odo:60+Math.floor(rnd()*480),ping:Math.floor(rnd()*4)+1,off:i===4}});
 
-function shell(){var tabs=['plan','map','trips','drivers','log'];
+function shell(){var tabs=['plan','route','map','trips','drivers','log'].filter(function(x){return x!=='route'||LTL});
   $('#app').innerHTML='<header class="pn-top"><div class="pn-brand"><img src="'+D.logo+'" alt="CARGO PRO GROUP" width="670" height="249"><span>'+t('title')+' · '+t('demo')+'</span></div>'+
   '<label class="pn-role"><span>'+t('role')+'</span><select id="role"><option value="disp">'+t('role_disp')+'</option><option value="head">'+t('role_head')+'</option></select></label>'+
   '<a class="btn btn-g btn-s" href="'+D.home+'">'+t('home')+'</a><a class="btn btn-g btn-s" href="'+D.panel+'">'+t('panel')+'</a><a class="btn btn-a btn-s" href="'+D.site+'">'+t('site')+'</a></header>'+
   '<nav class="pn-tabs">'+tabs.map(function(x){return'<a href="#'+x+'" data-v="'+x+'"'+(x===view?' aria-current="page"':'')+'>'+t('tab_'+x)+'</a>'}).join('')+'</nav>'+
   '<div class="dp-go"><b>'+t('go_t')+'</b><span>'+t('go_e')+'</span><a href="'+D.gp+'" target="_blank" rel="noopener">Google Play</a><a href="'+D.as+'" target="_blank" rel="noopener">App Store</a></div><main class="pn-main" id="pv"></main>';
   $('#role').value=S.role;$('#role').addEventListener('change',function(e){S.role=e.target.value;log('l_role',t(S.role==='head'?'role_head':'role_disp'));render()})}
-addEventListener('hashchange',function(){view=location.hash.slice(1)||'plan';drv=null;shell();render()});
+addEventListener('hashchange',function(){view=vw();drv=null;shell();render()});
 
 function bar(x,lab){var c=x>1?'bad':x>.85?'hi':'';return'<div class="dp-bar '+c+'"><i style="transform:scaleX('+Math.min(1,x).toFixed(3)+')"></i><span>'+lab+'</span></div>'}
 function tyName(c){return t('ty_'+c.ty)}
 function chipC(c,cls){return'<button type="button" class="dp-c '+(cls||'')+' ty-'+c.ty+(pick===c.id?' sel':'')+'" data-c="'+c.id+'" draggable="true"><b>'+c.id+'</b><span>'+tyName(c)+' · '+fmt(c.kg)+' '+t('kg')+(c.v?' · '+fv(c.v)+' '+t('m3'):'')+(c.pal?' · '+c.pal+' '+t('pal'):'')+'</span><small>'+esc(C[c.to])+' · '+t(c.dl)+'</small></button>'}
 function vPlan(){var as=S.as;
   var q=CARGO.filter(function(c){return!as||!as[c.id]});
-  var h='<p class="pn-hint">'+t('p_hint')+'</p><div class="dp-act"><button type="button" class="btn btn-a" id="dist">'+t('dist')+'</button><button type="button" class="btn btn-g btn-s" id="reset">'+t('reset')+'</button>'+(pick?'<span class="dp-pick">'+t('pick')+' <b>'+pick+'</b></span>':'')+'</div>';
+  var h='<p class="pn-hint">'+t('p_hint')+'</p>'+(LTL?'<p class="dp-to-r">'+t('r_from_plan')+' <button type="button" class="dp-to-r-b" id="toroute">'+t('tab_route')+'</button></p>':'')+'<div class="dp-act"><button type="button" class="btn btn-a" id="dist">'+t('dist')+'</button><button type="button" class="btn btn-g btn-s" id="reset">'+t('reset')+'</button>'+(pick?'<span class="dp-pick">'+t('pick')+' <b>'+pick+'</b></span>':'')+'</div>';
   h+='<div class="dp-plan"><section class="pn-card dp-q" data-drop="q"><h3>'+t('queue')+' <small class="pn-mu">'+q.length+'</small></h3>'+(q.length?q.map(function(c){return chipC(c,as&&as[c.id]===null?'un':'')+(as&&as[c.id]===null&&S.why&&S.why[c.id]?'<p class="dp-why">'+esc(S.why[c.id])+'</p>':'')}).join(''):'<p class="pn-mu">'+t('q_none')+'</p>')+'</section>';
   h+='<section class="dp-fleet">'+FLEET.map(function(f){var s=load(as||{},f.id),bad=[];Object.keys(as||{}).forEach(function(c){if(as[c]===f.id)bad=bad.concat(why(CG[c],f,as))});
     bad=bad.filter(function(x,i){return bad.indexOf(x)===i});
@@ -133,9 +136,10 @@ function vLog(){var who=function(r){return t(r==='head'?'role_head':'role_disp')
 var toastT;function toast(m){var e=$('#pt');if(!e){e=d.createElement('div');e.id='pt';e.className='toast';e.setAttribute('role','status');d.body.appendChild(e)}e.textContent=m;e.classList.add('on');clearTimeout(toastT);toastT=setTimeout(function(){e.classList.remove('on')},2200)}
 
 function render(){var v=$('#pv');if(!v)return;
-  v.innerHTML=view==='map'?vMap():view==='trips'?vTrips():view==='drivers'?vDrivers():view==='log'?vLog():vPlan();
+  v.innerHTML=view==='route'?vRoute():view==='map'?vMap():view==='trips'?vTrips():view==='drivers'?vDrivers():view==='log'?vLog():vPlan();
   var g=function(s,f){var e=$(s,v);if(e)e.addEventListener('click',f)};
   g('#dist',function(){S.why={};S.as=plan();var n=Object.keys(S.as).filter(function(c){return S.as[c]}).length;log('l_dist',n+'/'+CARGO.length);render();toast(t('dist_ok')+' '+n+'/'+CARGO.length)});
+  g('#toroute',function(){location.hash='route'});
   g('#reset',function(){S.as=null;S.why={};pick=null;log('l_reset');render()});
   g('#dback',function(){drv=null;render()});
   $$('[data-c]',v).forEach(function(b){b.addEventListener('click',function(e){e.stopPropagation();pick=pick===b.getAttribute('data-c')?null:b.getAttribute('data-c');render()});
@@ -149,7 +153,86 @@ function render(){var v=$('#pv');if(!v)return;
   var ofc=$('#ofc',v);if(ofc)ofc.addEventListener('change',function(){offFor=ofc.value;render()});
   $$('[data-sort]',v).forEach(function(b){b.addEventListener('click',function(){sortBy=b.getAttribute('data-sort');render()})});
   $$('[data-give]',v).forEach(function(b){b.addEventListener('click',function(){var c=offFor||CARGO[0].id,f=b.getAttribute('data-give');S.as=S.as||{};S.as[c]=f;log('l_give',c+' → '+TR[f].dr);toast(t('given'));render()})});
+  if(view==='route')bindRoute(v);
   if(view==='map')place()}
+
+/* Sbornye gruzy i posledovatelnyy zabor. Koordinaty rayonov Tashkenta (shirota, dolgota), rasstoyanie: po pryamoy (gaversinus)
+   x koeffitsient dorog, orientir. Poryadok: blizhayshiy sosed, potom 2-opt i perestanovki po stoimosti (km + shtraf za opozdanie v okno). */
+var RF=/*~*/1.35,CITY_V=26,LOAD_H=1/3,T0=8.5,FUELP=11900;
+var GEO={base:[41.2905,69.2585],chi:[41.2757,69.2034],yun:[41.3647,69.2849],mu:[41.3248,69.3346],ser:[41.2263,69.2192],shy:[41.3241,69.2286],uch:[41.2989,69.1704],bek:[41.2091,69.3347],yas:[41.2900,69.3400],olm:[41.3517,69.2133],mir:[41.2925,69.2814],exit:[41.2440,69.1330]};
+/* Gde podpis rayona otnositelno tochki: dx, dy, vyravnivanie. */
+var LBL={mu:[0,34,'middle'],yas:[14,-12,''],mir:[14,-16,''],base:[14,30,''],exit:[-10,-18,''],bek:[-12,-12,'end'],yun:[12,-12,''],uch:[-12,-12,'end'],chi:[-14,-14,'end'],ser:[14,8,'']};
+var LPK={van:12,b5:18,b10:24,fura:31,ref:33,c20:30,c40:32,tral:42};
+var TN2=['[[t:5]]','[[t:6]]','[[t:7]]','[[t:8]]','[[t:9]]'];
+var ORD=[['S-01','chi','gen',0,1200,6,9,12,'tex'],['S-02','yun','gen',1,900,6,10,13,'food'],['S-03','mu','gen',0,1600,7,9,14,'parts'],['S-04','ser','gen',0,2100,8,12,16,'tile'],
+  ['S-05','shy','gen',0,700,4,9,11.5,'box'],['S-06','uch','dg',0,800,3,10,15,'paint'],['S-07','bek','gen',0,1500,6,13,17,'furn'],['S-08','yas','ref',1,1300,6,9,12,'milk'],['S-09','olm','gen',0,2600,10,9,15,'ele'],
+  ['S-10','mir','gen',0,600,3,11,15,'pap']].map(function(x,i){return{id:x[0],at:x[1],ty:x[2],food:!!x[3],kg:x[4],v:x[5],w:[x[6],x[7]],g:x[8],co:t('co')+' «'+(i<5?TN2[i]:TN[i-5])+'»'}});
+var OG={};ORD.forEach(function(o){OG[o.id]=o});
+var RTR=['T5','T6','T8','T3'];
+var R={tr:'T5',add:false,cons:null,opt:null,naive:null,cur:null,ins:null,k:0,drawn:false};
+function hav(a,b){var A=GEO[a],B=GEO[b],r=Math.PI/180,dl=(B[0]-A[0])*r,dn=(B[1]-A[1])*r,h=Math.sin(dl/2)*Math.sin(dl/2)+Math.cos(A[0]*r)*Math.cos(B[0]*r)*Math.sin(dn/2)*Math.sin(dn/2);return 12742*Math.asin(Math.sqrt(h))*RF}
+function hm(h){var m=Math.round(h*60);return('0'+Math.floor(m/60)).slice(-2)+':'+('0'+m%60).slice(-2)}
+function cons(f){var inn=[],left=[],kg=0,v=0,food=false,dg=false;
+  ORD.filter(function(o){return o.id!=='S-10'}).slice().sort(function(a,b){return a.w[0]-b.w[0]||b.kg-a.kg}).forEach(function(o){var r=null;
+    if(o.ty==='ref'&&f.b!=='ref')r=t('r_ref');else if(o.ty==='dg'&&!f.adr)r=t('w_adr');else if((o.ty==='dg'&&food)||(o.food&&dg))r=t('r_food');
+    else if(kg+o.kg>f.kg)r=t('w_kg')+' +'+fmt(kg+o.kg-f.kg)+' '+t('kg');else if(f.v&&v+o.v>f.v)r=t('w_v')+' +'+fv(v+o.v-f.v)+' '+t('m3');
+    if(r)left.push({o:o,r:r});else{inn.push(o.id);kg+=o.kg;v+=o.v;if(o.food)food=true;if(o.ty==='dg')dg=true}});
+  return{inn:inn,left:left,kg:kg,v:v}}
+/* Prosmotr poryadka: km, chasy, opozdaniya. Ranshe okna - zhdyom otkrytiya. */
+function sim(seq){var km=0,h=T0,at='base',late=0,rows=[];
+  seq.forEach(function(id){var o=OG[id],d=hav(at,o.at);km+=d;h+=d/CITY_V;var wait=h<o.w[0]?o.w[0]-h:0;h+=wait;var lt=h>o.w[1]?h-o.w[1]:0;late+=lt;rows.push({id:id,eta:h,wait:wait,late:lt,d:d});h+=LOAD_H;at=o.at});
+  var e=hav(at,'exit');km+=e;h+=e/CITY_V;return{km:km,h:h-T0,end:h,late:late,rows:rows,last:e}}
+function cost(seq){var s=sim(seq);return s.km+s.late*400}
+function optimize(ids){if(!ids.length)return[];var left=ids.slice(),seq=[],at='base';
+  while(left.length){left.sort(function(a,b){return hav(at,OG[a].at)-hav(at,OG[b].at)});var n=left.shift();seq.push(n);at=OG[n].at}
+  var best=cost(seq),it=0,imp=true,i,j;
+  while(imp&&it++<200){imp=false;
+    for(i=0;i<seq.length-1;i++)for(j=i+1;j<seq.length;j++){var c=seq.slice(0,i).concat(seq.slice(i,j+1).reverse(),seq.slice(j+1)),k=cost(c);if(k<best-1e-6){seq=c;best=k;imp=true}}
+    for(i=0;i<seq.length;i++)for(j=0;j<seq.length;j++){if(i===j)continue;var c2=seq.slice(),x=c2.splice(i,1)[0];c2.splice(j,0,x);var k2=cost(c2);if(k2<best-1e-6){seq=c2;best=k2;imp=true}}}
+  return seq}
+function insertCheap(seq,id){var best=null;for(var p=0;p<=seq.length;p++){var c=seq.slice();c.splice(p,0,id);var k=cost(c);if(!best||k<best.k)best={seq:c,k:k,p:p}}return best}
+function rBuild(){var f=TR[R.tr];R.cons=cons(f);var ids=R.cons.inn.slice();R.ins=null;
+  if(R.add){var o=OG['S-10'],okk=R.cons.kg+o.kg<=f.kg&&(!f.v||R.cons.v+o.v<=f.v);if(okk){R.cons.kg+=o.kg;R.cons.v+=o.v}else{R.add=false;R.ins={no:1}}}
+  R.naive=ids.slice().sort();R.opt=optimize(ids);
+  if(R.add){var b=insertCheap(R.opt,'S-10'),before=sim(R.opt).km;R.ins={km:sim(b.seq).km-before,a:b.p?OG[b.seq[b.p-1]].at:'base',b:b.p<b.seq.length-1?OG[b.seq[b.p+1]].at:'exit'};R.opt=b.seq;R.naive=R.naive.concat(['S-10'])}
+  R.cur=R.opt.slice();R.k=0;R.drawn=false}
+/* Karta goroda: proektsiya shiroty i dolgoty v svg, rayony podpisany. */
+function xy(k){var g=GEO[k];return[Math.round(20+(g[1]-69.11)*83.5*31),Math.round(20+(41.375-g[0])*111*31)]}
+function dpath(seq){var pts=['base'].concat(seq.map(function(id){return OG[id].at}),['exit']).map(xy),s='M'+pts[0][0]+' '+pts[0][1];
+  for(var i=1;i<pts.length;i++){var a=pts[i-1],b=pts[i],mx=(a[0]+b[0])/2+(b[1]-a[1])*.12,my=(a[1]+b[1])/2-(b[0]-a[0])*.12;s+=' Q '+mx.toFixed(0)+' '+my.toFixed(0)+' '+b[0]+' '+b[1]}return s}
+function rMap(){var dots='',x,y;for(x=14;x<680;x+=22)for(y=14;y<640;y+=22){var v=Math.sin(x*.02)*Math.cos(y*.017)+Math.sin((x+y)*.008);if(v>-.2)dots+='<circle cx="'+x+'" cy="'+y+'" r="1.6"/>'}
+  var c=xy('base'),ring='<ellipse class="dp-ring" cx="'+(c[0]+10)+'" cy="'+(c[1]-30)+'" rx="250" ry="235"/>',rows=sim(R.cur).rows;
+  var labs=Object.keys(GEO).map(function(k){var o=LBL[k]||[12,-12,''],p=xy(k),hub=k==='base'||k==='exit',on=hub||R.cur.some(function(id){return OG[id].at===k});return'<g class="dp-dst'+(on?' on':'')+(hub?' hub':'')+'"><circle cx="'+p[0]+'" cy="'+p[1]+'" r="'+(hub?8:4)+'"/><text x="'+(p[0]+o[0])+'" y="'+(p[1]+o[1])+'"'+(o[2]?' text-anchor="'+o[2]+'"':'')+'>'+esc(D.dist[k])+'</text></g>'}).join('');
+  var nums=R.cur.map(function(id,i){var p=xy(OG[id].at);return'<g class="dp-sn'+(rows[i].late?' late':'')+'" transform="translate('+p[0]+' '+p[1]+')"><circle r="13"/><text y="5">'+(i+1)+'</text></g>'}).join('');
+  return'<svg viewBox="-40 0 780 660" class="dp-map dp-cmap" role="img" aria-label="'+t('r_map')+'"><defs><linearGradient id="gArcR" x1="0" x2="1"><stop offset="0" stop-color="#f6c445"/><stop offset=".5" stop-color="#f08a24"/><stop offset="1" stop-color="#e5352b"/></linearGradient></defs><g class="dp-land">'+dots+'</g>'+ring+
+  '<path class="dp-naive" d="'+dpath(R.naive)+'"/><path id="rpath" class="dp-rp" d="'+dpath(R.cur)+'"/>'+labs+nums+'<g id="rtruck" class="dp-m s-go"><circle r="14" class="halo"/><circle r="8"/></g></svg>'}
+function stat(s,f){var L=s.km*LPK[f.b]/100;return{km:s.km,h:s.h,L:L,m:L*FUELP}}
+function dur(h){return Math.floor(h)+' '+t('h')+' '+Math.round(h%1*60)+' '+t('min')}
+function sbox(cls,title,s,f,extra){var x=stat(s,f);return'<div class="dp-sb '+cls+'"><small>'+title+'</small><b>'+fv(x.km.toFixed(1))+' '+t('km')+'</b><span>'+dur(x.h)+' '+t('r_hours')+'</span><span>'+fv(x.L.toFixed(1))+' '+t('r_l')+' · '+t('r_fuel')+'</span>'+(head()?'<span class="dp-money">'+fmt(x.m)+' '+t('sum')+'</span>':'')+(s.late?'<span class="dp-err">'+t('r_late')+'</span>':'')+(extra||'')+'</div>'}
+function vRoute(){if(!R.cons)rBuild();var f=TR[R.tr],sn=sim(R.naive),so=sim(R.opt),sc=sim(R.cur),own=R.cur.join()!==R.opt.join();
+  var sv=sn.km-so.km,sp=sn.km?sv/sn.km:0,dL=sv*LPK[f.b]/100;
+  var h='<p class="pn-hint">'+t('r_hint')+'</p><div class="dp-act"><label class="fld"><span>'+t('r_truck')+'</span><select id="rtr">'+RTR.map(function(id){var x=TR[id];return'<option value="'+id+'"'+(id===R.tr?' selected':'')+'>'+t('b_'+x.b)+(x.adr?' · ADR':'')+' · '+esc(x.dr)+'</option>'}).join('')+'</select></label>'+
+    '<button type="button" class="btn btn-a" id="rbuild">'+t('r_build')+'</button><button type="button" class="btn btn-g btn-s" id="radd">'+(R.add?t('r_rm'):t('r_add')+': S-10, '+esc(D.dist.mir))+'</button></div>';
+  h+='<div class="dp-rg"><section class="pn-card dp-rin"><h3>'+t('r_in')+' <small class="pn-mu">'+R.cur.length+' · '+esc(f.dr)+'</small></h3>'+bar(R.cons.kg/f.kg,t('kg')+' '+fmt(R.cons.kg)+' / '+fmt(f.kg)+' · '+pct(R.cons.kg/f.kg))+(f.v?bar(R.cons.v/f.v,t('m3')+' '+fv(R.cons.v)+' / '+f.v+' · '+pct(R.cons.v/f.v)):'')+
+    (R.ins&&R.ins.no?'<p class="dp-err">S-10: '+t('r_nofit')+'</p>':'')+(R.ins&&R.ins.km!=null?'<p class="dp-ok" id="rins">'+t('r_added')+' '+esc(D.dist[R.ins.a])+' · '+esc(D.dist[R.ins.b])+': +'+fv(R.ins.km.toFixed(1))+' '+t('km')+'</p>':'')+
+    '<h3 class="dp-h4">'+t('r_left')+' <small class="pn-mu">'+R.cons.left.length+'</small></h3>'+(R.cons.left.length?R.cons.left.map(function(x){return'<div class="dp-lo"><b>'+x.o.id+'</b> <span>'+esc(D.dist[x.o.at])+' · '+t('g_'+x.o.g)+' · '+fmt(x.o.kg)+' '+t('kg')+'</span><p class="dp-why">'+esc(x.r)+'</p></div>'}).join(''):'<p class="pn-mu">'+t('q_none')+'</p>')+'</section>';
+  h+='<section class="pn-card dp-cmw">'+rMap()+'<div class="dp-leg"><span class="lg-o"><i></i>'+t('r_opt')+'</span><span class="lg-n"><i></i>'+t('r_naive')+'</span></div><p class="pn-mu dp-note">'+t('r_km_note')+'. '+t('r_price')+'.</p></section></div>';
+  h+='<div class="dp-cmp">'+sbox('n',t('r_naive'),sn,f)+sbox('o',t('r_opt'),so,f,'<span class="dp-save" id="rsave" data-km="'+sv.toFixed(2)+'">'+t('r_save')+' '+fv(sv.toFixed(1))+' '+t('km')+' ('+Math.round(sp*100)+'%) · '+fv(dL.toFixed(1))+' '+t('r_l')+(head()?' · '+fmt(dL*FUELP)+' '+t('sum'):'')+'</span>')+(own?sbox('m',t('r_mine'),sc,f,'<span class="dp-err" id="rworse">'+t('r_worse')+' '+fv((sc.km-so.km).toFixed(1))+' '+t('km')+'</span>'):'')+'</div>';
+  h+='<section class="pn-card"><h3>'+t('r_stops')+'</h3><p class="pn-mu">'+t('r_start_t')+' · '+t('r_load20')+'</p><ol class="dp-stops"><li class="hub"><b>'+esc(D.dist.base)+'</b><span>'+hm(T0)+'</span></li>'+
+    sc.rows.map(function(r,i){var o=OG[r.id];return'<li class="'+(r.late?'late':'')+'"><span class="n">'+(i+1)+'</span><div><b>'+r.id+' · '+esc(D.dist[o.at])+'</b><small>'+esc(o.co)+' · '+t('g_'+o.g)+' · '+fmt(o.kg)+' '+t('kg')+' · '+fv(o.v)+' '+t('m3')+'</small><small>'+t('r_win')+' '+hm(o.w[0])+'-'+hm(o.w[1])+' · '+t('r_eta')+' '+hm(r.eta)+' · '+(r.late?'<em class="dp-bad">'+t('r_late')+'</em>':r.wait?t('r_wait'):t('r_ok'))+'</small></div><span class="mv"><button type="button" class="btn btn-g btn-s" data-up="'+i+'" aria-label="'+t('r_up')+'"'+(i?'':' disabled')+'>↑</button><button type="button" class="btn btn-g btn-s" data-dn="'+i+'" aria-label="'+t('r_down')+'"'+(i<sc.rows.length-1?'':' disabled')+'>↓</button></span></li>'}).join('')+
+    '<li class="hub"><b>'+esc(D.dist.exit)+'</b><span>'+hm(sc.end)+'</span></li></ol><p class="pn-mu">'+t('r_lifo')+' '+t('r_dest')+'</p><div class="dp-act">'+(own?'<button type="button" class="btn btn-g" id="rback">'+t('r_back')+'</button>':'')+
+    '<a class="btn btn-a" id="rsend" href="https://t.me/share/url?url=cargoprogroup.uz&amp;text='+encodeURIComponent(t('r_msg')+', '+t('b_'+f.b)+', '+f.dr+': '+sc.rows.map(function(r,i){return(i+1)+') '+D.dist[OG[r.id].at]+' '+r.id+' '+hm(OG[r.id].w[0])+'-'+hm(OG[r.id].w[1])}).join('; ')+'; '+D.dist.exit)+'" target="_blank" rel="noopener">'+t('r_send')+'</a></div>'+(head()?'':'<p class="pn-mu">'+t('r_money_h')+'</p>')+'</section>';
+  return h}
+function bindRoute(v){var g=function(s,f){var e=$(s,v);if(e)e.addEventListener('click',f)};
+  var sel=$('#rtr',v);if(sel)sel.addEventListener('change',function(){R.tr=sel.value;rBuild();render()});
+  g('#rbuild',function(){rBuild();var n=sim(R.naive).km-sim(R.opt).km;log('l_cons',R.cur.length+' · '+TR[R.tr].dr);log('l_opt','-'+fv(n.toFixed(1))+' '+t('km'));render();toast(t('r_built')+' '+fv(n.toFixed(1))+' '+t('km'))});
+  g('#radd',function(){R.add=!R.add;rBuild();if(R.ins&&R.ins.km!=null)log('l_ins','S-10 +'+fv(R.ins.km.toFixed(1))+' '+t('km'));render();if(R.ins&&R.ins.no)toast('S-10: '+t('r_nofit'))});
+  g('#rback',function(){R.cur=R.opt.slice();R.k=0;R.drawn=false;render()});
+  g('#rsend',function(){log('l_send',TR[R.tr].dr)});
+  $$('[data-up],[data-dn]',v).forEach(function(b){b.addEventListener('click',function(){var up=b.hasAttribute('data-up'),i=+b.getAttribute(up?'data-up':'data-dn'),j=up?i-1:i+1,x=R.cur[i];R.cur[i]=R.cur[j];R.cur[j]=x;R.k=0;R.drawn=false;log('l_order',R.cur.join(' '));render()})});
+  var p=$('#rpath',v);if(p){var L=p.getTotalLength();p.style.strokeDasharray=L;if(RM||R.drawn){p.style.strokeDashoffset=0}else{p.style.strokeDashoffset=L;p.getBoundingClientRect();requestAnimationFrame(function(){p.style.strokeDashoffset=0});R.drawn=true}}
+  rDrive(0)}
+function rDrive(dt){var p=$('#rpath'),m=$('#rtruck');if(!p||!m)return;R.k=(R.k+dt*0.00004)%1;var L=p.getTotalLength(),q=p.getPointAtLength(L*(RM?0:R.k));m.setAttribute('transform','translate('+q.x.toFixed(1)+' '+q.y.toFixed(1)+')')}
 
 /* Dvizhenie markerov: tolko atribut transform, bez perescheta vyorstki. */
 var last=0;
@@ -160,6 +243,6 @@ function place(){var j=0;RUN.forEach(function(r,i){var p=$('#rt'+i),m=$('[data-d
   if(drv!=null){var k=$('#dk'),e=$('#deta');if(k)k.textContent=pct(RUN[drv].k);if(e)e.textContent=eta(RUN[drv])}}
 function tick(ts){var dt=last?Math.min(64,ts-last):16;last=ts;
   RUN.forEach(function(r){if(r.sp){r.k+=r.sp*dt* /*~*/1.0;if(r.k>.97)r.k=.06}});
-  if(view==='map'&&!d.hidden)place();requestAnimationFrame(tick)}
+  if(view==='map'&&!d.hidden)place();if(view==='route'&&!d.hidden)rDrive(dt);requestAnimationFrame(tick)}
 shell();render();if(!RM)requestAnimationFrame(tick);
 })();
