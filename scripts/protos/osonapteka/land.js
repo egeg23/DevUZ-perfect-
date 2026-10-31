@@ -40,7 +40,7 @@ if(hs){
     for(var i=0;i<wd.length;i++)wd[i].style.setProperty('--u',cl(1-(p-.04-i*.05)/.12).toFixed(3));
     hs.style.setProperty('--lt',cl(1-(p-.18)/.15).toFixed(3));var q=cl((p-.72)/.2);hs.style.setProperty('--q',q.toFixed(3));hs.classList.toggle('end',q>.5);
     hs.classList.toggle('moved',p>.02)}
-  function loop(){raf=0;var dl=want-cur;cur=Math.abs(dl)<.0015?want:cur+dl*.18;if(ready)draw();if(cur!==want)raf=requestAnimationFrame(loop)}
+  function loop(){raf=0;var dl=want-cur;cur=Math.abs(dl)<.0015?want:cur+dl* /*~*/.18;if(ready)draw();if(cur!==want)raf=requestAnimationFrame(loop)}
   function poke(){want=prog();paint(want);if(!raf)raf=requestAnimationFrame(loop)}
   /* Заголовок стоит сразу и уходит по мере залёта. */
   wd.forEach(function(s){s.style.setProperty('--u','1')});

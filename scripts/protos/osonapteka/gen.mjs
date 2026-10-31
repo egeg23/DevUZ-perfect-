@@ -27,7 +27,8 @@ import { PANEL_UI } from "./panel-ui.mjs";
 
 const DIR = new URL(".", import.meta.url).pathname;
 const IMG = "/protos/osonapteka";
-const strip = (s) => s.replace(/\/\*[\s\S]*?\*\//g, "");
+// Комментарии уходят, метка числа `/*~*/` остаётся: её снимает отпечаток при показе.
+const strip = (s) => s.replace(/\/\*(?!~\*\/)[\s\S]*?\*\//g, "");
 const CSS = strip(readFileSync(DIR + "site.css", "utf8")).replace(/\n\s*/g, "");
 const JS = strip(readFileSync(DIR + "site.js", "utf8")).replace(/\n\s*\n/g, "\n");
 const LAND_JS = strip(readFileSync(DIR + "land.js", "utf8")).replace(/\n\s*\n/g, "\n");
@@ -308,7 +309,7 @@ ${add("watch", t("Цена", "Narx"), t("Следить за ценой", "Narxn
 ${add("unit", t("Цена за штуку", "Bitta dona narxi"), t("Что выгоднее в пересчёте на 1 шт.", "1 donaga nima foydaliroq"), t("Считаем по самой низкой цене и числу в упаковке.", "Eng past narx va qadoqdagi son bo‘yicha hisoblaymiz."),
   `<table class="ut"><tbody>${[iz10, iz20, kan, sor].map((p) => `<tr><td>${esc(p.name[l].split(" ").slice(0, 3).join(" "))}</td><td>№${p.cnt}</td><td><b>${sum(unit(p), l)}</b></td></tr>`).join("")}</tbody></table>`, "tilt")}
 ${add("cabph", t("Для аптек", "Dorixonalarga"), t("Кабинет аптеки", "Dorixona kabineti"), t("Аптека сама видит брони, просмотры, место в районе и счёт.", "Dorixona bronlar, ko‘rishlar, tumandagi o‘rni va hisobni o‘zi ko‘radi."),
-  `<div class="kp4">${[[t("Брони за неделю", "Haftalik bronlar"), "34"], [t("Выкуп", "Olib ketish"), "88%"], [t("Просмотры карточки", "Kartochka ko‘rishlari"), "1 240"], [t("Место в районе", "Tumandagi o‘rni"), "#3"]].map(([a, b]) => `<span><small>${a}</small><b>${b}</b></span>`).join("")}</div><p class="mu" style="font-size:12px;margin:8px 0 0">${t("Аптека 81 · демо", "Dorixona 81 · demo")}</p>`, "w2 pop")}
+  `<div class="kp4">${[[t("Брони за неделю", "Haftalik bronlar"), "34"], [t("Выкуп", "Olib ketish"), "88%"], [t("Просмотры карточки", "Kartochka ko‘rishlari"), "1 240"], [t("Место в районе", "Tumandagi o‘rni"), "#3"]].map(([a, b]) => `<span><small>${a}</small><b>${b}</b></span>`).join("")}</div><p class="mu" style="font-size:12px;margin:8px 0 0">${t("Аптека «[[t:0]]» · демо", "«[[t:0]]» dorixonasi · demo")}</p>`, "w2 pop")}
 ${add("ads", t("Реклама", "Reklama"), t("Рекламный кабинет", "Reklama kabineti"), t("Район, формат и срок: цена сразу, оплата без менеджера.", "Tuman, format va muddat: narx darhol, menejersiz to‘lov."),
   `<div class="adb"><label class="fld"><span>${t("Район", "Tuman")}</span><select id="adr">${DISTRICTS[l].map((d, i) => `<option value="${i}"${i === 8 ? " selected" : ""}>${esc(d)}</option>`).join("")}</select></label><div class="pays"><label><input type="radio" name="adf" value="${top}" checked> ${t("Топ района", "Tuman topi")}</label><label><input type="radio" name="adf" value="${ban}"> ${t("Баннер на главной", "Bosh sahifada banner")}</label></div><label class="fld"><span>${t("Недель", "Hafta")}: <b id="adwv">4</b></span><input type="range" id="adw" min="1" max="12" value="4"></label><div class="out" id="ado"></div></div>`, "w2 slide")}
 ${add("pwa", t("Приложение", "Ilova"), t("Иконка на экране, без App Store", "App Store’siz ekranda belgi"), t("Список и брони открываются без сети, пуш о готовой брони.", "Ro‘yxat va bronlar internetsiz ochiladi, tayyor bron haqida push."),

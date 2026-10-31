@@ -22,7 +22,7 @@ function log(what,ref){S.log.unshift({at:Date.now(),who:S.role,w:what,r:ref||''}
 /* Demo-zerno: vse tsifry paneli iz nego. */
 var zr=20261030;function rnd(){zr=(zr*16807)%2147483647;return zr/2147483647}
 var NAMES=['Akmal','Dilnoza','Jasur','Sardor','Malika','Rustam','Nigora','Aziz','Shahnoza','Otabek','Nodira','Kamol'];
-var PH=[];for(var i=0;i<24;i++){var di=i%D.dist.length;PH.push({id:i,n:'#'+(i+1)+' · '+D.dist[di],d:D.dist[di],top:rnd()>.7,upd:rnd()>.82?Math.floor(26+rnd()*70)*60:Math.ceil(rnd()*40),first:rnd()>.85})}
+var PH=[],TN=['[[t:0]]','[[t:1]]','[[t:2]]','[[t:3]]','[[t:4]]','[[t:5]]'];for(var i=0;i<24;i++){var di=i%D.dist.length;PH.push({id:i,n:'«'+TN[i%TN.length]+'» '+(i+1)+' · '+D.dist[di],d:D.dist[di],top:rnd()>.7,upd:rnd()>.82?Math.floor(26+rnd()*70)*60:Math.ceil(rnd()*40),first:rnd()>.85})}
 var Q={},AV={};D.p.forEach(function(p){Q[p.id]=Math.round((p.rx?400:1400)*(.4+rnd()))*(p.id%5===0?2:1);AV[p.id]=Math.max(2,Math.round((p.rx?60:220)*(.2+rnd())))});
 var demo=[],now=Date.now();
 for(var k=0;k<64;k++){var p=D.p[Math.floor(rnd()*rnd()*D.p.length)],ph=PH[Math.floor(rnd()*PH.length)];

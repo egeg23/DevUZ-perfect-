@@ -106,7 +106,7 @@ const BEFORE_TRAPS = new Set([
   "giftora", "lider-prof", "intalim", "asmo", "europegas", "domtut", "inapp", "invis", "arhbyuro",
   "greenwell", "medikor", "sia", "amani", "vtashkente", "dilrabo", "karomat", "tovar", "soffice",
   "baldinini", "ighub", "syanie", "jiguli", "usemtau", "semtravel", "samauto", "chechfarm", "fintax",
-  "cosmoworld", "neoline", "autopepe", "osonapteka",
+  "cosmoworld", "neoline", "autopepe",
 ]);
 
 test("каждая новая сборка — с ловушками в демо-данных и числом скрипта с меткой", () => {
