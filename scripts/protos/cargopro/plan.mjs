@@ -10,6 +10,8 @@
 // 40-60 млн сум (docs/research/osonapteka.md, «Цены»). Допы — то, что у
 // экспедиторов Узбекистана уже есть или чего клиенты просят первым
 // (docs/research/cargopro.md): все вместе 2 000 $, сайт с допами 3 000 $.
+// 31.10.2026 владелец поставил клиентскому разделу (доп cab) 470 $ вместо 400 $:
+// допы 2 070 $, сайт с допами 3 070 $.
 
 export const BASE = {
   price: 4900,
@@ -35,9 +37,13 @@ export const ADDONS = [
   { id: "track", price: 350, star: true,
     ru: { t: "Отслеживание груза по номеру", e: "Клиент вводит номер накладной и видит, где груз: склад, вылет, граница, таможня, выдача. Меньше звонков «где мой груз»", who: "есть у Meest, MK Express, iPost" },
     uz: { t: "Yukni raqam bo‘yicha kuzatish", e: "Mijoz yuk xati raqamini kiritadi va yuk qayerdaligini ko‘radi: ombor, uchish, chegara, bojxona, topshirish. «Yukim qayerda» qo‘ng‘iroqlari kamayadi", who: "Meest, MK Express, iPost’da bor" } },
-  { id: "cab", price: 400, star: true,
-    ru: { t: "Кабинет клиента: заявки, документы, счета", e: "Компания-клиент видит свои грузы, скачивает инвойсы, ГТД и акты, повторяет прошлую заявку в один шаг", who: "у экспедиторов Ташкента редкость" },
-    uz: { t: "Mijoz kabineti: arizalar, hujjatlar, hisoblar", e: "Mijoz kompaniya o‘z yuklarini ko‘radi, invoys, BYuD va dalolatnomalarni yuklab oladi, oldingi arizani bir qadamda takrorlaydi", who: "Toshkent ekspeditorlarida kam uchraydi" } },
+  /* Владелец DevUz, 31.10.2026: «Сделай на сайте компании клиентский раздел еще, чтобы они там могли
+     отслеживать, зайти через телеграмм, связать заказ с их телеграммам через бота, получать туда уведомление
+     о статусе или через сайт заходить и смотреть где едет водитель. Это входит в допы если этого нет, цену
+     поставь 470$.» Прежний «Кабинет клиента» (400 $) вошёл сюда: id тот же, цена владельца. */
+  { id: "cab", price: 470, star: true,
+    ru: { t: "Клиентский раздел: вход через Telegram, уведомления, водитель на карте", e: "Клиент входит через Telegram или кодом по телефону, видит свои грузы со статусом, CMR, счёт и акт, где сейчас едет машина и когда приедет. Заказ привязывается к его Telegram через бота, статусы бот присылает сам", who: "отслеживание с картой есть у Яндекс Доставки и Lalamove, у экспедиторов Ташкента редкость" },
+    uz: { t: "Mijozlar bo‘limi: Telegram orqali kirish, bildirishnomalar, xaritada haydovchi", e: "Mijoz Telegram yoki telefon kodi orqali kiradi, yuklarini holati bilan, CMR, hisob va dalolatnomani, mashina hozir qayerda va qachon yetib kelishini ko‘radi. Buyurtma bot orqali uning Telegramiga bog‘lanadi, holatlarni bot o‘zi yuboradi", who: "xaritali kuzatish Yandex Dostavka va Lalamove’da bor, Toshkent ekspeditorlarida kam uchraydi" } },
   { id: "bot", price: 300,
     ru: { t: "Telegram-бот: расчёт и статус груза", e: "Тот же калькулятор в Telegram, заявка в два касания и сообщение «груз прошёл таможню»", who: "боты есть у карго из Китая" },
     uz: { t: "Telegram-bot: hisob va yuk holati", e: "Telegramda xuddi shu kalkulyator, ikki bosishda ariza va «yuk bojxonadan o‘tdi» xabari", who: "Xitoydan kargolarda botlar bor" } },
