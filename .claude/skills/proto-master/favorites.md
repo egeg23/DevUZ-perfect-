@@ -111,6 +111,8 @@ CSS (`panel.js`, `panel.css`). То же самое на CSS:
 **V7 + CRM тёмный — как выглядит.** Тот же приём, но стекло дымчатое, тёмное,
 поверх размытого вечернего интерьера (тёмное дерево, тёплый свет лампы).
 Акцент один — тёплый оранжевый; всё остальное серое и белое.
+Код под этим роликом — тот же `StatsCard`, что под V2 (выше), строка в
+строку: это общий кусок автора, не код тёмной панели.
 
 - Слева — узкая тёмная колонка: знак продукта оранжевым квадратом сверху,
   иконки разделов, у некоторых — оранжевые кружки с числом («3 новых»),
@@ -240,6 +242,107 @@ Greenwell: это и есть показ того, что у каждой рол
 - Клавиатура: Tab по порядку, Enter отправляет, фокус виден, после
   переезда фокус — в первое поле новой формы.
 - Подписи — словарём (`ui.mjs`), на языках макета.
+
+---
+
+## OTP Animation V15 — ввод кода входа, 31.10.2026
+
+Владелец: «Анимация otp. Обрати внимание, что внизу каждого скриншота есть
+код элементов!». Образец — `docs/refs/otp-animation.webp`. Это второй шаг
+экрана входа (выше): человек ввёл телефон или нажал «Telegram» — дальше
+код.
+
+**Как выглядит.** Белая карточка с крупным скруглением на нежном
+градиенте (сиреневый → розовый). Сверху — круглая кнопка с замком в
+зелёном кольце: код верный — дужка замка открывается. Четыре клетки кода:
+когда код сошёлся, клетки по очереди слева направо заливаются зелёным с
+«щелчком» (чуть увеличиваются и встают на место), под залитой — мягкая
+зелёная тень; на кадре волна посередине: 1 — уже зелёная, 2 и 3 —
+светлеют, 4 — ещё белая. Ниже — широкая кнопка «Continue →» с
+сине-фиолетовым градиентом и зелёным свечением снизу. Под карточкой —
+«Your OTP is **1234**»: демо-код написан прямо на экране.
+
+**Код под роликом** — не код этой анимации, а начало файла `Dashboard.jsx`
+(данные карточек-чисел; React, react-icons, recharts), дословно:
+
+```jsx
+import React from 'react';
+import { FiUsers, FiFolder, FiTrendingUp, FiDollarSign } from 'react-icons/fi';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+
+const stats = [
+  { title: 'Total Projects', value: 12, icon: <FiFolder />, change: '+20%' },
+  { title: 'Active Tasks', value: 8, icon: <FiTrendingUp />, change: '+12%' },
+  { title: 'Team Members', value: 5, icon: <FiUsers />, change: '+0%' },
+  { title: 'Total Revenue', value: '$2,480', icon: <FiDollarSign />, change: '+18%' },
+];
+```
+
+Это тот же приём, что у карточек Glassy Dashboard: карточки-числа —
+массивом данных, разметка одна на все. В наших макетах так же: числа —
+из зерна демо, подписи — из словаря.
+
+**Сама анимация в наших макетах** — свой CSS и пара строк JS, без React:
+
+```html
+<label class="otp-l" for="otp">Код из Telegram или SMS</label>
+<div class="otp" style="--n:4">
+  <input id="otp" inputmode="numeric" autocomplete="one-time-code" maxlength="4" pattern="[0-9]*">
+  <i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i><i style="--i:3"></i>
+</div>
+<p class="otp-h">Демо: подходит код <b>1234</b></p>
+```
+
+```css
+.otp{position:relative;display:flex;gap:12px;justify-content:center}
+.otp input{position:absolute;inset:0;opacity:0;font-size:16px} /* одно настоящее поле: вставка и автоподстановка из SMS работают */
+.otp i{width:56px;height:64px;border-radius:14px;display:grid;place-items:center;font-weight:600;font-size:28px;line-height:1;font-style:normal;
+  background:#fff;box-shadow:0 2px 10px rgb(20 20 60 / .08);transition:background .3s,color .3s,box-shadow .3s}
+.otp i.on{box-shadow:0 0 0 2px var(--brand)}               /* клетка, в которую сейчас печатают */
+.otp.ok i{background:var(--ok,#1fa75a);color:#fff;box-shadow:0 10px 22px rgb(31 167 90 / .3);
+  animation:otp-pop .45s cubic-bezier(.3,1.6,.5,1) both;animation-delay:calc(var(--i)*90ms)}
+.otp.bad{animation:otp-shake .4s}
+@keyframes otp-pop{0%{transform:scale(.85)}60%{transform:scale(1.08)}100%{transform:scale(1)}}
+@keyframes otp-shake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+@media (prefers-reduced-motion:reduce){.otp.ok i,.otp.bad{animation:none}}
+```
+
+```js
+const DEMO_CODE = '1234';                                 // тот же, что в подсказке под полем
+const box = document.querySelector('.otp'), inp = box.querySelector('input'), cells = [...box.querySelectorAll('i')];
+inp.addEventListener('input', () => {
+  inp.value = inp.value.replace(/\D/g, '').slice(0, 4);
+  cells.forEach((c, k) => { c.textContent = inp.value[k] || ''; c.classList.toggle('on', k === inp.value.length); });
+  box.classList.remove('ok', 'bad');
+  if (inp.value.length < 4) return;
+  void box.offsetWidth;                                   // чтобы волна и встряска запускались каждый раз
+  const ok = inp.value === DEMO_CODE;
+  box.classList.add(ok ? 'ok' : 'bad');
+  if (!ok) setTimeout(() => { inp.value = ''; inp.dispatchEvent(new Event('input')); }, 450);
+});
+```
+
+Проверено в Chromium 31.10.2026: нажатие на клетку ставит курсор в поле,
+«1234» — волна, другой код — встряска и пустое поле.
+
+Дальше в макете: верно — класс `ok` (волна), замок открывается (дужка —
+`transform`), кольцо зелёное, кнопка активна, `aria-live` говорит «Код
+подтверждён». Неверно — `bad` (встряхнуть), клетки на миг красные,
+поле очищается, «Неверный код, попробуйте ещё раз». Под полем —
+«Отправить код снова через 0:59».
+
+**Под нас.**
+
+- Демо-код на экране — ровно наше правило «в демо подходит любой код, это
+  написано»: «Демо: подходит код 1234» (так уже в кабинете Cargo Pro).
+- Одно поле `autocomplete="one-time-code"` под четырьмя клетками, а не
+  четыре поля: iPhone и Android подставляют код из SMS, вставка всего
+  кода работает.
+- Цвета — фирменный для кнопки, зелёный — только «верно», красный — только
+  «неверно». Градиент кнопки из ролика не переносить, если его нет у
+  клиента.
+- Подписи — словарём, на языках макета; «Continue» — «Продолжить» /
+  «Davom etish».
 
 ---
 
