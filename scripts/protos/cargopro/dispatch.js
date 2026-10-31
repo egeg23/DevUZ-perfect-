@@ -74,7 +74,7 @@ var RUN=FLEET.map(function(f,i){var to=['sam','fer','bux','alm','and','nuk','alm
   return{f:f,to:to,st:st,k:st==='free'?0:st==='load'?0:.08+rnd()*.7,sp:st==='go'||st==='late'?(st==='late'?.000006:.000011)*(0.7+rnd()*.6):0,spd:st==='go'?62+Math.floor(rnd()*28):st==='late'?38:0,
     fuel:30+Math.floor(rnd()*65),odo:60+Math.floor(rnd()*480),ping:Math.floor(rnd()*4)+1,off:i===4}});
 
-function shell(){var tabs=['plan','route','map','trips','drivers','log'].filter(function(x){return x!=='route'||LTL});
+function shell(){var tabs=['plan','route','map','trips','drivers','fleet','int','log'].filter(function(x){return x!=='route'||LTL});
   $('#app').innerHTML='<header class="pn-top"><div class="pn-brand"><img src="'+D.logo+'" alt="CARGO PRO GROUP" width="670" height="249"><span>'+t('title')+' · '+t('demo')+'</span></div>'+
   '<label class="pn-role"><span>'+t('role')+'</span><select id="role"><option value="disp">'+t('role_disp')+'</option><option value="head">'+t('role_head')+'</option></select></label>'+
   '<a class="btn btn-g btn-s" href="'+D.home+'">'+t('home')+'</a><a class="btn btn-g btn-s" href="'+D.panel+'">'+t('panel')+'</a><a class="btn btn-a btn-s" href="'+D.site+'">'+t('site')+'</a></header>'+
@@ -93,7 +93,7 @@ function vPlan(){var as=S.as;
   h+='<section class="dp-fleet">'+FLEET.map(function(f){var s=load(as||{},f.id),bad=[];Object.keys(as||{}).forEach(function(c){if(as[c]===f.id)bad=bad.concat(why(CG[c],f,as))});
     bad=bad.filter(function(x,i){return bad.indexOf(x)===i});
     var cs=Object.keys(as||{}).filter(function(c){return as[c]===f.id});
-    return'<article class="dp-t'+(bad.length?' bad':'')+(pick?' tgt':'')+'" data-t="'+f.id+'"><header><b>'+t('b_'+f.b)+'</b>'+(f.adr?'<span class="dp-adr">ADR</span>':'')+'<small>'+fmt(f.kg)+' '+t('kg')+(f.v?' · '+f.v+' '+t('m3'):' · '+t('open'))+'</small></header>'+
+    return'<article class="dp-t'+(bad.length?' bad':'')+(pick?' tgt':'')+'" data-t="'+f.id+'"><header><b>'+bn(f)+'</b>'+(f.adr?'<span class="dp-adr">ADR</span>':'')+'<small>'+fmt(f.kg)+' '+t('kg')+(f.v?' · '+f.v+' '+t('m3'):' · '+t('open'))+'</small></header>'+
       '<p class="pn-mu">'+esc(f.dr)+' · '+f.pl+'</p>'+bar(s.kg/f.kg,t('kg')+' '+pct(s.kg/f.kg))+(f.v?bar(s.v/f.v,t('m3')+' '+pct(s.v/f.v)):'')+
       (bad.length?'<p class="dp-err">'+bad.map(esc).join(' · ')+'</p>':'')+'<div class="dp-in">'+cs.map(function(c){return chipC(CG[c],'in')}).join('')+'</div>'+
       (head()&&cs.length?'<p class="dp-money">'+t('rate_c')+': '+fmt(cs.reduce(function(a,c){return a+CG[c].bid},0))+' $ · '+t('margin')+': '+fmt(cs.reduce(function(a,c){return a+CG[c].bid},0)*.21)+' $</p>':'')+'</article>'}).join('')+'</section></div>';
@@ -109,7 +109,7 @@ function vMap(){var ev=[[RUN[4],'e_off'],[RUN[9],'e_idle'],[RUN[7],'e_late'],[RU
   return'<div class="dp-mapw"><section class="pn-card dp-mc">'+mapSvg()+'<div class="dp-leg">'+['go','load','free','idle','late'].map(function(s){return'<span class="s-'+s+'"><i></i>'+t('s_'+s)+'</span>'}).join('')+'</div></section>'+
   '<aside class="pn-card dp-side" id="dside">'+(drv!=null?card(RUN[drv]):'<h3>'+t('ev')+'</h3>'+ev.map(function(e){return'<button type="button" class="dp-ev" data-d="'+RUN.indexOf(e[0])+'"><b>'+t(e[1])+'</b><span>'+esc(e[0].f.dr)+' · '+esc(C[e[0].to])+'</span></button>'}).join('')+'<p class="pn-mu">'+t('m_hint')+'</p>')+'</aside></div>'}
 function card(r){var cs=S.as?Object.keys(S.as).filter(function(c){return S.as[c]===r.f.id}):[];var msg=encodeURIComponent(t('tg_msg')+' '+r.f.dr);
-  return'<button type="button" class="btn btn-g btn-s" id="dback">'+t('back')+'</button><h3>'+esc(r.f.dr)+'</h3><p class="pn-mu">'+t('b_'+r.f.b)+' · '+r.f.pl+'</p>'+
+  return'<button type="button" class="btn btn-g btn-s" id="dback">'+t('back')+'</button><h3>'+esc(r.f.dr)+'</h3><p class="pn-mu">'+bn(r.f)+' · '+r.f.pl+'</p>'+
   '<p><span class="dp-st s-'+r.st+'">'+t('s_'+r.st)+'</span></p><div class="dp-kv"><span>'+t('route')+'</span><b>'+esc(C.tas)+' → '+esc(C[r.to])+'</b><span>'+t('prog')+'</span><b id="dk">'+pct(r.k)+'</b><span>ETA</span><b id="deta">'+eta(r)+'</b><span>'+t('speed')+'</span><b>'+r.spd+' '+t('kmh')+'</b><span>'+t('ping')+'</span><b>'+r.ping+' '+t('min_ago')+'</b><span>'+t('fuel')+'</span><b>'+r.fuel+'%</b><span>'+t('odo')+'</span><b>'+r.odo+' '+t('km')+'</b></div>'+
   bar(r.k,t('prog'))+'<p class="pn-mu">'+t('onboard')+': '+(cs.length?cs.join(', '):t('empty'))+'</p>'+
   '<div class="dp-call"><a class="btn btn-a btn-s" href="tel:'+D.tel+'">'+t('call')+'</a><a class="btn btn-g btn-s" href="https://t.me/share/url?url=cargoprogroup.uz&amp;text='+msg+'" target="_blank" rel="noopener">Telegram</a></div>'}
@@ -117,26 +117,26 @@ function card(r){var cs=S.as?Object.keys(S.as).filter(function(c){return S.as[c]
 var STEPS=[0,2,3,4,5];
 function stOf(id,def){var P2=get('cp-panel-1',{});return P2.st&&P2.st[id]!==undefined?P2.st[id]:def}
 function setSt(id,s){var P2=get('cp-panel-1',{});P2.st=P2.st||{};P2.st[id]=s;P2.log=P2.log||[];P2.log.unshift({at:Date.now(),who:'manager',w:'l_st',r:id+' · '+t('k_'+s)});put('cp-panel-1',P2)}
-function trips(){var site=get('cp-req-1',[]).map(function(r,i){return{id:r.id,co:r.co||r.n,dr:FLEET[i%FLEET.length],s0:0,site:1,rt:Math.round(r.tot||600)}});
+function trips(){var site=get('cp-req-1',[]).map(function(r,i){return{id:r.id,co:r.co||r.n,dr:FLEET[i%FLEET.length],s0:0,site:1,dir:r.dir,rt:Math.round(r.tot||600)}});
   return site.concat(D.trips.map(function(x,i){return{id:x[0],co:t('co')+' «'+TN[x[2]]+'»',dr:FLEET[6+i],s0:x[1],rt:x[3]}}))}
 function vTrips(){return'<p class="pn-hint">'+t('t_hint')+'</p>'+trips().map(function(o){var s=stOf(o.id,o.s0);
   return'<section class="pn-card dp-trip"><header><b>'+o.id+'</b>'+(o.site?' <span class="pn-new">'+t('new')+'</span>':'')+'<span class="pn-mu">'+esc(o.co)+' · '+esc(o.dr.dr)+'</span></header><ol class="dp-tl">'+
   STEPS.map(function(k){return'<li><button type="button" data-tr="'+o.id+'" data-s="'+k+'" aria-pressed="'+(k===s)+'" class="'+(k<s?'done':'')+'">'+t('k_'+k)+'</button></li>'}).join('')+'</ol>'+
-  (head()?'<p class="dp-money">'+t('rate_c')+': '+fmt(o.rt)+' $ · '+t('pay')+': '+fmt(o.rt*.79)+' $ · '+t('margin')+': '+fmt(o.rt-Math.round(o.rt*.79))+' $</p>':'<p class="pn-mu">'+t('money_h')+'</p>')+'</section>'}).join('')}
+  (head()?'<p class="dp-money">'+t('rate_c')+': '+fmt(o.rt)+' $ · '+t('pay')+': '+fmt(o.rt*.79)+' $ · '+t('margin')+': '+fmt(o.rt-Math.round(o.rt*.79))+' $</p>':'<p class="pn-mu">'+t('money_h')+'</p>')+tripExtras(o)+'</section>'}).join('')}
 function doc(n){return n<0?'<b class="dp-bad">'+t('d_exp')+'</b>':n<30?'<b class="warn">'+n+' '+t('days')+'</b>':'<span>'+n+' '+t('days')+'</span>'}
 function vDrivers(){var c=offFor?CG[offFor]:CARGO[0];
   var cand=FLEET.filter(function(f){return FIT[c.ty].indexOf(f.b)>=0}).map(function(f){var dist={sam:300,bux:570,nav:470,fer:310,and:360,nuk:1100,ter:700,alm:810,bis:620}[c.to]||400;return{f:f,price:Math.round(dist*f.km*(.55+f.kg/20000*.9)+40)}});
   cand.sort(function(a,b){return sortBy==='rate'?b.f.rate-a.f.rate:a.price-b.price});
   return'<section class="pn-card"><h3>'+t('choose')+'</h3><p class="pn-mu">'+t('ch_hint')+'</p><div class="dp-act"><label class="fld"><span>'+t('cargo')+'</span><select id="ofc">'+CARGO.map(function(x){return'<option value="'+x.id+'"'+(x.id===c.id?' selected':'')+'>'+x.id+' · '+tyName(x)+' · '+esc(C[x.to])+'</option>'}).join('')+'</select></label>'+
   '<div class="pn-seg" role="group"><button type="button" data-sort="rate" aria-pressed="'+(sortBy==='rate')+'">'+t('by_rate')+'</button><button type="button" data-sort="price" aria-pressed="'+(sortBy==='price')+'">'+t('by_price')+'</button></div></div>'+
-  '<div class="dp-offers">'+(cand.length?cand.map(function(o,i){return'<div class="dp-off'+(i===0?' best':'')+'"><b>'+esc(o.f.dr)+'</b><span>★ '+o.f.rate.toFixed(2)+' · '+o.f.trips+' '+t('trips')+'</span><span>'+t('b_'+o.f.b)+'</span><b class="pr">'+fmt(o.price)+' $</b><button type="button" class="btn btn-g btn-s" data-give="'+o.f.id+'">'+t('give')+'</button></div>'}).join(''):'<p class="pn-mu">'+t('u_body')+'</p>')+'</div></section>'+
+  '<div class="dp-offers">'+(cand.length?cand.map(function(o,i){return'<div class="dp-off'+(i===0?' best':'')+'"><b>'+esc(o.f.dr)+'</b><span>★ '+o.f.rate.toFixed(2)+' · '+o.f.trips+' '+t('trips')+'</span><span>'+bn(o.f)+'</span><b class="pr">'+fmt(o.price)+' $</b><button type="button" class="btn btn-g btn-s" data-give="'+o.f.id+'">'+t('give')+'</button></div>'}).join(''):'<p class="pn-mu">'+t('u_body')+'</p>')+'</div></section>'+
   '<section class="pn-card"><h3>'+t('tab_drivers')+'</h3><table class="pn-t"><thead><tr><th>'+t('driver')+'</th><th>'+t('rating')+'</th><th>'+t('trips')+'</th><th>'+t('lates')+'</th><th>'+t('lic')+'</th><th>'+t('tech')+'</th><th>'+t('ins')+'</th></tr></thead><tbody>'+
-  FLEET.map(function(f){return'<tr><td>'+esc(f.dr)+'<br><small class="pn-mu">'+t('b_'+f.b)+' · '+f.pl+'</small></td><td>★ '+f.rate.toFixed(2)+'</td><td>'+f.trips+'</td><td>'+(f.late>3?'<b class="warn">'+f.late+'</b>':f.late)+'</td><td>'+doc(f.doc[0])+'</td><td>'+doc(f.doc[1])+'</td><td>'+doc(f.doc[2])+'</td></tr>'}).join('')+'</tbody></table></section>'}
+  FLEET.map(function(f){return'<tr><td>'+esc(f.dr)+'<br><small class="pn-mu">'+bn(f)+' · '+f.pl+'</small></td><td>★ '+f.rate.toFixed(2)+'</td><td>'+f.trips+'</td><td>'+(f.late>3?'<b class="warn">'+f.late+'</b>':f.late)+'</td><td>'+doc(f.doc[0])+'</td><td>'+doc(f.doc[1])+'</td><td>'+doc(f.doc[2])+'</td></tr>'}).join('')+'</tbody></table></section>'}
 function vLog(){var who=function(r){return t(r==='head'?'role_head':'role_disp')};return'<div class="pn-card">'+(S.log.length?S.log.map(function(x){return'<div class="pn-log"><time>'+new Date(x.at).toLocaleString()+'</time><b>'+who(x.who)+'</b><span>'+t(x.w)+(x.r?' '+esc(x.r):'')+'</span></div>'}).join(''):'<p class="pn-mu">'+t('l_none')+'</p>')+'</div>'}
 var toastT;function toast(m){var e=$('#pt');if(!e){e=d.createElement('div');e.id='pt';e.className='toast';e.setAttribute('role','status');d.body.appendChild(e)}e.textContent=m;e.classList.add('on');clearTimeout(toastT);toastT=setTimeout(function(){e.classList.remove('on')},2200)}
 
 function render(){var v=$('#pv');if(!v)return;
-  v.innerHTML=view==='route'?vRoute():view==='map'?vMap():view==='trips'?vTrips():view==='drivers'?vDrivers():view==='log'?vLog():vPlan();
+  v.innerHTML=view==='route'?vRoute():view==='fleet'?vFleet():view==='int'?vInt():view==='map'?vMap():view==='trips'?vTrips():view==='drivers'?vDrivers():view==='log'?vLog():vPlan();
   var g=function(s,f){var e=$(s,v);if(e)e.addEventListener('click',f)};
   g('#dist',function(){S.why={};S.as=plan();var n=Object.keys(S.as).filter(function(c){return S.as[c]}).length;log('l_dist',n+'/'+CARGO.length);render();toast(t('dist_ok')+' '+n+'/'+CARGO.length)});
   g('#toroute',function(){location.hash='route'});
@@ -149,11 +149,14 @@ function render(){var v=$('#pv');if(!v)return;
     z.addEventListener('dragover',function(e){e.preventDefault()});
     z.addEventListener('drop',function(e){e.preventDefault();var c=e.dataTransfer.getData('text/plain');if(c)moveTo(c,to)})});
   $$('[data-d]',v).forEach(function(m){var go=function(){drv=+m.getAttribute('data-d');render()};m.addEventListener('click',go);m.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}})});
-  $$('[data-tr]',v).forEach(function(b){b.addEventListener('click',function(){var id=b.getAttribute('data-tr'),s=+b.getAttribute('data-s');setSt(id,s);log('l_st',id+' · '+t('k_'+s));render();toast(t('synced'))})});
+  $$('[data-tr]',v).forEach(function(b){b.addEventListener('click',function(){var id=b.getAttribute('data-tr'),s=+b.getAttribute('data-s');setSt(id,s);onStatus(id,s);log('l_st',id+' · '+t('k_'+s));render();toast(t('synced'))})});
   var ofc=$('#ofc',v);if(ofc)ofc.addEventListener('change',function(){offFor=ofc.value;render()});
   $$('[data-sort]',v).forEach(function(b){b.addEventListener('click',function(){sortBy=b.getAttribute('data-sort');render()})});
   $$('[data-give]',v).forEach(function(b){b.addEventListener('click',function(){var c=offFor||CARGO[0].id,f=b.getAttribute('data-give');S.as=S.as||{};S.as[c]=f;log('l_give',c+' → '+TR[f].dr);toast(t('given'));render()})});
   if(view==='route')bindRoute(v);
+  if(view==='fleet')bindFleet(v);
+  if(view==='int')bindInt(v);
+  if(view==='trips')bindTrips(v);
   if(view==='map')place()}
 
 /* Sbornye gruzy i posledovatelnyy zabor. Koordinaty rayonov Tashkenta (shirota, dolgota), rasstoyanie: po pryamoy (gaversinus)
@@ -211,7 +214,7 @@ function dur(h){return Math.floor(h)+' '+t('h')+' '+Math.round(h%1*60)+' '+t('mi
 function sbox(cls,title,s,f,extra){var x=stat(s,f);return'<div class="dp-sb '+cls+'"><small>'+title+'</small><b>'+fv(x.km.toFixed(1))+' '+t('km')+'</b><span>'+dur(x.h)+' '+t('r_hours')+'</span><span>'+fv(x.L.toFixed(1))+' '+t('r_l')+' · '+t('r_fuel')+'</span>'+(head()?'<span class="dp-money">'+fmt(x.m)+' '+t('sum')+'</span>':'')+(s.late?'<span class="dp-err">'+t('r_late')+'</span>':'')+(extra||'')+'</div>'}
 function vRoute(){if(!R.cons)rBuild();var f=TR[R.tr],sn=sim(R.naive),so=sim(R.opt),sc=sim(R.cur),own=R.cur.join()!==R.opt.join();
   var sv=sn.km-so.km,sp=sn.km?sv/sn.km:0,dL=sv*LPK[f.b]/100;
-  var h='<p class="pn-hint">'+t('r_hint')+'</p><div class="dp-act"><label class="fld"><span>'+t('r_truck')+'</span><select id="rtr">'+RTR.map(function(id){var x=TR[id];return'<option value="'+id+'"'+(id===R.tr?' selected':'')+'>'+t('b_'+x.b)+(x.adr?' · ADR':'')+' · '+esc(x.dr)+'</option>'}).join('')+'</select></label>'+
+  var h='<p class="pn-hint">'+t('r_hint')+'</p><div class="dp-act"><label class="fld"><span>'+t('r_truck')+'</span><select id="rtr">'+RTR.map(function(id){var x=TR[id];return'<option value="'+id+'"'+(id===R.tr?' selected':'')+'>'+bn(x)+(x.adr?' · ADR':'')+' · '+esc(x.dr)+'</option>'}).join('')+'</select></label>'+
     '<button type="button" class="btn btn-a" id="rbuild">'+t('r_build')+'</button><button type="button" class="btn btn-g btn-s" id="radd">'+(R.add?t('r_rm'):t('r_add')+': S-10, '+esc(D.dist.mir))+'</button></div>';
   h+='<div class="dp-rg"><section class="pn-card dp-rin"><h3>'+t('r_in')+' <small class="pn-mu">'+R.cur.length+' · '+esc(f.dr)+'</small></h3>'+bar(R.cons.kg/f.kg,t('kg')+' '+fmt(R.cons.kg)+' / '+fmt(f.kg)+' · '+pct(R.cons.kg/f.kg))+(f.v?bar(R.cons.v/f.v,t('m3')+' '+fv(R.cons.v)+' / '+f.v+' · '+pct(R.cons.v/f.v)):'')+
     (R.ins&&R.ins.no?'<p class="dp-err">S-10: '+t('r_nofit')+'</p>':'')+(R.ins&&R.ins.km!=null?'<p class="dp-ok" id="rins">'+t('r_added')+' '+esc(D.dist[R.ins.a])+' · '+esc(D.dist[R.ins.b])+': +'+fv(R.ins.km.toFixed(1))+' '+t('km')+'</p>':'')+
@@ -221,7 +224,7 @@ function vRoute(){if(!R.cons)rBuild();var f=TR[R.tr],sn=sim(R.naive),so=sim(R.op
   h+='<section class="pn-card"><h3>'+t('r_stops')+'</h3><p class="pn-mu">'+t('r_start_t')+' · '+t('r_load20')+'</p><ol class="dp-stops"><li class="hub"><b>'+esc(D.dist.base)+'</b><span>'+hm(T0)+'</span></li>'+
     sc.rows.map(function(r,i){var o=OG[r.id];return'<li class="'+(r.late?'late':'')+'"><span class="n">'+(i+1)+'</span><div><b>'+r.id+' · '+esc(D.dist[o.at])+'</b><small>'+esc(o.co)+' · '+t('g_'+o.g)+' · '+fmt(o.kg)+' '+t('kg')+' · '+fv(o.v)+' '+t('m3')+'</small><small>'+t('r_win')+' '+hm(o.w[0])+'-'+hm(o.w[1])+' · '+t('r_eta')+' '+hm(r.eta)+' · '+(r.late?'<em class="dp-bad">'+t('r_late')+'</em>':r.wait?t('r_wait'):t('r_ok'))+'</small></div><span class="mv"><button type="button" class="btn btn-g btn-s" data-up="'+i+'" aria-label="'+t('r_up')+'"'+(i?'':' disabled')+'>↑</button><button type="button" class="btn btn-g btn-s" data-dn="'+i+'" aria-label="'+t('r_down')+'"'+(i<sc.rows.length-1?'':' disabled')+'>↓</button></span></li>'}).join('')+
     '<li class="hub"><b>'+esc(D.dist.exit)+'</b><span>'+hm(sc.end)+'</span></li></ol><p class="pn-mu">'+t('r_lifo')+' '+t('r_dest')+'</p><div class="dp-act">'+(own?'<button type="button" class="btn btn-g" id="rback">'+t('r_back')+'</button>':'')+
-    '<a class="btn btn-a" id="rsend" href="https://t.me/share/url?url=cargoprogroup.uz&amp;text='+encodeURIComponent(t('r_msg')+', '+t('b_'+f.b)+', '+f.dr+': '+sc.rows.map(function(r,i){return(i+1)+') '+D.dist[OG[r.id].at]+' '+r.id+' '+hm(OG[r.id].w[0])+'-'+hm(OG[r.id].w[1])}).join('; ')+'; '+D.dist.exit)+'" target="_blank" rel="noopener">'+t('r_send')+'</a></div>'+(head()?'':'<p class="pn-mu">'+t('r_money_h')+'</p>')+'</section>';
+    '<a class="btn btn-a" id="rsend" href="https://t.me/share/url?url=cargoprogroup.uz&amp;text='+encodeURIComponent(t('r_msg')+', '+bn(f)+', '+f.dr+': '+sc.rows.map(function(r,i){return(i+1)+') '+D.dist[OG[r.id].at]+' '+r.id+' '+hm(OG[r.id].w[0])+'-'+hm(OG[r.id].w[1])}).join('; ')+'; '+D.dist.exit)+'" target="_blank" rel="noopener">'+t('r_send')+'</a></div>'+(head()?'':'<p class="pn-mu">'+t('r_money_h')+'</p>')+'</section>';
   return h}
 function bindRoute(v){var g=function(s,f){var e=$(s,v);if(e)e.addEventListener('click',f)};
   var sel=$('#rtr',v);if(sel)sel.addEventListener('change',function(){R.tr=sel.value;rBuild();render()});
@@ -244,5 +247,6 @@ function place(){var j=0;RUN.forEach(function(r,i){var p=$('#rt'+i),m=$('[data-d
 function tick(ts){var dt=last?Math.min(64,ts-last):16;last=ts;
   RUN.forEach(function(r){if(r.sp){r.k+=r.sp*dt* /*~*/1.0;if(r.k>.97)r.k=.06}});
   if(view==='map'&&!d.hidden)place();if(view==='route'&&!d.hidden)rDrive(dt);requestAnimationFrame(tick)}
+/*@@SUPER@@*/
 shell();render();if(!RM)requestAnimationFrame(tick);
 })();

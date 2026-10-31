@@ -1,11 +1,11 @@
 // Подписи панели CARGO PRO GROUP парами [ru, uz]. gen.mjs падает, если
 // panel.js зовёт подпись, которой здесь нет, или в узбекской есть кириллица.
 export const PANEL_UI = {
-  title: ["Панель заявок и грузов", "Arizalar va yuklar paneli"],
+  title: ["Обычная админка: заявки и грузы", "Oddiy admin panel: arizalar va yuklar"],
   demo: ["демо-данные", "demo ma’lumotlar"],
   site: ["На сайт", "Saytga"],
   home: ["К выбору", "Tanlovga"],
-  disp: ["Диспетчерская", "Dispetcherlik"],
+  disp: ["Супер-админка", "Super admin panel"],
   role: ["Смотреть как", "Kim sifatida"],
   role_owner: ["Владелец", "Egasi"],
   role_manager: ["Менеджер", "Menejer"],

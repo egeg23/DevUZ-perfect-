@@ -3,7 +3,8 @@
 // точках прокрутки, выбор, конструктор, сайт по разделам, заявку, «Мои
 // заявки», панель и диспетчерскую. Сообщает ошибки консоли и прокрутку вбок.
 // Третий аргумент «dispatch» — только снимки диспетчерской, «route» — только
-// сборных грузов и маршрута забора.
+// сборных грузов и маршрута забора, «super» — только супер-админки
+// (сравнение, автопарк, пакет для брокера, интеграции, допы рейса).
 import { createRequire } from "node:module";
 import { execSync } from "node:child_process";
 import { mkdirSync } from "node:fs";
@@ -22,7 +23,7 @@ for (const w of ws.split(",").map(Number)) {
   const p = await ctx.newPage();
   p.on("console", (m) => { if (m.type() === "error" && !/fonts\.g/.test(m.text())) errs.push(`${w}: ${m.text()}`); });
   p.on("pageerror", (e) => errs.push(`${w}: ${e.message}`));
-  if (only !== "dispatch" && only !== "route") {
+  if (only !== "dispatch" && only !== "route" && only !== "super") {
   await p.goto(R + "/", { waitUntil: "load" }); await p.evaluate(() => document.getElementById("dzi")?.remove()); await p.waitForTimeout(3500);
   for (const k of [0, 0.5, 1]) {
     await p.evaluate((k) => { const s = document.querySelector(".hs"); scrollTo(0, (s.offsetHeight - innerHeight) * k); }, k);
@@ -52,7 +53,7 @@ for (const w of ws.split(",").map(Number)) {
   await shot(p, `mine-${w}`);
   }
   /* Диспетчерская: очередь, распределение, перенос в чужой кузов, карта, карточка водителя, рейсы, водители. */
-  if (only !== "route") {
+  if (only !== "route" && only !== "super") {
   await p.goto(R + "/dispatch", { waitUntil: "load" }); await p.evaluate(() => localStorage.removeItem("cp-disp-1")); await p.reload({ waitUntil: "load" }); await p.waitForTimeout(500);
   await shot(p, `dispatch-queue-${w}`);
   await p.click("#dist"); await p.waitForTimeout(2600);
@@ -70,6 +71,38 @@ for (const w of ws.split(",").map(Number)) {
   await p.goto(R + "/dispatch#drivers", { waitUntil: "load" }); await p.click('[data-sort="price"]'); await p.waitForTimeout(400);
   await shot(p, `dispatch-drivers-${w}`);
   }
+  /* Супер-админка: сравнение двух админок, автопарк, ошибки формы, сроки документов, пакет для брокера, интеграции, допы рейса. */
+  if (only === "super" || !only) {
+  await p.goto(R + "/", { waitUntil: "load" }); await p.evaluate(() => document.getElementById("dzi")?.remove());
+  await p.evaluate(() => document.getElementById("vs").scrollIntoView()); await p.waitForTimeout(400);
+  await p.evaluate(() => document.querySelectorAll("#vs .rise").forEach((e) => e.classList.add("on"))); await p.waitForTimeout(900);
+  await p.screenshot({ path: `${out}/super-compare-${w}.png`, fullPage: false });
+  await p.goto(R + "/panel", { waitUntil: "load" }); await p.evaluate(() => document.getElementById("vs").scrollIntoView()); await p.waitForTimeout(500);
+  await shot(p, `super-panel-${w}`);
+  await p.goto(R + "/dispatch#fleet", { waitUntil: "load" }); await p.evaluate(() => { localStorage.removeItem("cp-fleet-1"); }); await p.reload({ waitUntil: "load" }); await p.waitForTimeout(500);
+  await shot(p, `super-fleet-${w}`);
+  await p.click("#spat"); await p.fill('#spf [name="pl"]', "01 AB 12"); await p.fill('#spf [name="mk"]', "MAN TGX 18.480"); await p.fill('#spf [name="vin"]', "WMA06XZZ7KM81234"); await p.fill('#spf [name="yr"]', "2019"); await p.fill('#spf [name="t"]', "20"); await p.fill('#spf [name="m3"]', "86");
+  await p.click('#spf [type="submit"]'); await p.waitForTimeout(300); await p.evaluate(() => document.getElementById("spf").scrollIntoView({ block: "start" }));
+  await shot(p, `super-form-${w}`);
+  await p.goto(R + "/dispatch#trips", { waitUntil: "load" }); await p.waitForTimeout(400);
+  await shot(p, `super-trips-${w}`);
+  await p.click('[data-bk="CPG-24117"]'); await p.waitForTimeout(500);
+  await shot(p, `super-broker-miss-${w}`);
+  await p.click("#spmx"); await p.click('[data-bk="CPG-24109"]'); await p.waitForTimeout(300);
+  for (let k = 0; k < 8; k++) { const n = await p.$$eval("#spm .sp-need", (x) => x.length); if (!n) break; await p.evaluate(() => { const e = document.querySelector("#spm .sp-need"); e.value = e.getAttribute("data-b") === "seal" ? "UZ-70481" : "1"; e.dispatchEvent(new Event("change")); }); await p.waitForTimeout(80); }
+  await p.click("#bkmake"); await p.waitForTimeout(400); await p.evaluate(() => document.getElementById("sheet").scrollIntoView({ block: "start" })); await p.waitForTimeout(200);
+  await shot(p, `super-broker-${w}`);
+  await p.click("#spmx"); await p.click('[data-tr="CPG-24095"][data-s="5"]'); await p.waitForTimeout(200);
+  await p.click('[data-pod="CPG-24095"]'); await p.waitForTimeout(400);
+  await shot(p, `super-pod-${w}`);
+  await p.click("#spmx"); await p.click('[data-wb="CPG-24095"]'); await p.waitForTimeout(400);
+  await shot(p, `super-waybill-${w}`);
+  await p.click("#spmx"); await p.goto(R + "/dispatch#int", { waitUntil: "load" }); await p.click('[data-iset="bx"]'); await p.waitForTimeout(400);
+  await shot(p, `super-int-${w}`);
+  await p.evaluate(() => document.getElementById("xlog").scrollIntoView({ block: "start" })); await p.waitForTimeout(300);
+  await shot(p, `super-log-${w}`);
+  }
+  if (only === "super") { await ctx.close(); continue; }
   /* Сборные грузы и маршрут забора. */
   await p.goto(R + "/dispatch#route", { waitUntil: "load" }); await p.selectOption("#role", "head"); await p.click("#rbuild"); await p.waitForTimeout(2200);
   await shot(p, `route-${w}`);
