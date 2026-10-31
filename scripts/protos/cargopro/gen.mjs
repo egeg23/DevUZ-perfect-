@@ -460,7 +460,7 @@ function landPage(l) {
     t("Перегруз и не тот кузов горят красным", "Ortiqcha yuk va noto‘g‘ri kuzov qizil yonadi"),
     t("Водители на карте: в пути, простой, опоздание", "Xaritada haydovchilar: yo‘lda, to‘xtash, kechikish"),
     t("Статус рейса сразу у клиента на сайте", "Reys holati darhol mijozning saytida"),
-    t("Мы уже делали это для Cargo GO (LBM)", "Biz buni Cargo GO (LBM) uchun allaqachon qilganmiz"),
+    t("Мы уже делали это для Lider Cargo", "Biz buni Lider Cargo uchun allaqachon qilganmiz"),
   ];
   const li = (a) => `<ul class="feat">${a.map((x) => `<li>${ICON.check}<span>${x}</span></li>`).join("")}</ul>`;
   const steps = [
