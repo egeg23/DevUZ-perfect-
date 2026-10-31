@@ -2577,7 +2577,7 @@ test("CARGO PRO GROUP: выбор, сайт и панель на ru и uz — у
   const site = bundlePages("cargopro");
   assert.ok(site);
   const all: Record<string, string> = { "": site.html, ...site.pages };
-  assert.deepEqual(Object.keys(all).sort(), ["", "panel", "site", "uz", "uz/panel", "uz/site"]);
+  assert.deepEqual(Object.keys(all).sort(), ["", "dispatch", "panel", "site", "uz", "uz/dispatch", "uz/panel", "uz/site"]);
   const data = await import("../scripts/protos/cargopro/data.mjs");
   const plan = await import("../scripts/protos/cargopro/plan.mjs");
   for (const [path, page] of Object.entries(all)) {
@@ -2597,14 +2597,28 @@ test("CARGO PRO GROUP: выбор, сайт и панель на ru и uz — у
     for (const src of page.match(/\/protos\/cargopro\/[\w./-]+\.(?:webp|png|svg|js)/g) ?? []) assert.ok(existsSync("public" + src), `${path}: нет файла ${src}`);
     for (const id of (page.match(/href="#([\w-]+)"/g) ?? []).map((h) => h.slice(7, -1))) assert.ok(page.includes(`id="${id}"`), `${path}: ссылка на #${id}, а блока нет`);
     if (lang === "uz") assert.doesNotMatch(page.replace(/<script[\s\S]*?<\/script>/g, "").replace(/<style>[\s\S]*?<\/style>/g, ""), /[А-Яа-яЁё]/, `${path}: кириллица на узбекской странице`);
-    if (kind === "panel") continue;
+    if (kind === "panel") {
+      assert.ok(page.includes("D.disp") && page.includes(`/dispatch"`), `${path}: из админки нет ссылки в диспетчерскую`);
+      continue;
+    }
+    if (kind === "dispatch") {
+      /* Диспетчерская (владелец, 31.10.2026): распределение по кузову, весу и объёму, водители на карте, Cargo GO. */
+      assert.ok(page.includes(lang === "ru" ? "Мы уже делали это для Cargo GO (LBM)" : "Biz buni Cargo GO (LBM) uchun allaqachon qilganmiz"), `${path}: нет строки про Cargo GO`);
+      assert.ok(page.includes("com.lbmgo.ftl.driver") && page.includes("id6762045849"), `${path}: нет ссылок на приложение водителя LBM`);
+      for (const k of ["FIT", "BODY", "plan()", "getPointAtLength", "cp-panel-1", "requestAnimationFrame"]) assert.ok(page.includes(k), `${path}: нет ${k}`);
+      assert.match(page, /\[\[t:\d\]\]/, `${path}: нет слов-ловушек в демо-водителях`);
+      assert.match(page, /\/\*~\*\/\d*\.?\d+/, `${path}: нет числа с меткой`);
+      assert.ok(page.includes(`"tel":"${data.COMPANY.tel}"`) && page.includes("tel:'+D.tel"), `${path}: нет их телефона`);
+      continue;
+    }
     assert.match(page, /\bIDLE=3000\b/, `${path}: шапка не по правилу 3 секунд`);
     assert.match(page, /classList\.add\('hide'\)[\s\S]*IDLE\)/, `${path}: шапка не прячется`);
     if (kind === "land") {
       /* Видео DevUz первым, сразу за ним — залёт камерой в бренд (кадры шифром). */
       assert.ok(page.indexOf('id="dzi"') > 0 && page.indexOf('id="dzi"') < page.indexOf('id="fly"'), `${path}: нет видео DevUz перед залётом`);
       assert.ok(page.includes("/promo/scene") && page.includes("AES-GCM"), `${path}: кадры залёта не по ключу`);
-      assert.equal((page.match(/class="choice rise"/g) ?? []).length, 2, `${path}: не два выбора: сайт и админка`);
+      assert.equal((page.match(/class="choice rise"/g) ?? []).length, 3, `${path}: не три выбора: сайт, админка, диспетчерская`);
+      assert.ok(page.includes('data-mod="tms"') && page.includes('data-module="tms"'), `${path}: нет тумблера модуля «Диспетчерская»`);
       for (const a of plan.ADDONS) assert.ok(page.includes(`data-add="${a.id}"`), `${path}: нет тумблера ${a.id}`);
       continue;
     }
@@ -2648,8 +2662,19 @@ test("CARGO PRO GROUP: сайт 1 000 $ вместо 4 900 $, допы 2 000 $, 
   assert.ok(cn.auto!.kg >= 5.5 && cn.auto!.kg <= 6.99);
   assert.ok(cn.rail!.c40 >= 4608 && cn.rail!.c40 <= 5632);
   assert.equal(tf.DIM.air, 167);
+  /* Диспетчерская — отдельный модуль по рыночной цене (владелец, 31.10.2026: «За такое укажи рыночную стоимость»). */
+  assert.equal(plan.MODULES.length, 1);
+  const tms = plan.MODULES[0];
+  assert.equal(tms.id, "tms");
+  assert.equal(tms.price, 12000);
+  assert.equal(tms.market.ru, "по рынку 8 000-20 000 $ в СНГ, 40 000-70 000 € в Европе");
+  assert.doesNotMatch(tms.market.uz + tms.uz.t + tms.uz.e + tms.uz.who, /[А-Яа-яЁё]/, "tms: кириллица в узбекском");
+  assert.ok(tms.ru.who.includes("Cargo GO (LBM)") && tms.uz.who.includes("Cargo GO (LBM)"), "нет строки про Cargo GO");
+  assert.equal(plan.ALL_MODULES, 15000);
   const site = bundlePages("cargopro")!;
   assert.ok(site.html.includes("4 900 $") && site.html.includes("1 000 $"), "на первой странице не та цена");
+  assert.ok(site.html.includes("12 000 $") && site.html.includes("15 000 $") && site.html.includes("3 000 $"), "нет строк «Сайт с допами» и «С диспетчерской»");
+  assert.ok(site.pages.uz.includes(tms.market.uz), "на узбекской странице нет рыночной вилки");
 });
 
 test("Optimal Prime: выбор, сайт и панель на ru и uz — условия, noindex, видео DevUz и залёт в бренд, шапка 3 с, услуги, тарифы и клиенты с их сайта, uz без кириллицы", async () => {
