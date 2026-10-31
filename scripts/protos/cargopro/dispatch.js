@@ -3,6 +3,7 @@
    proverkoy, voditeli na karte (dvizhutsya po marshrutam, geozony), reysy so
    statusami (pishet cp-panel-1.st, sayt chitaet ego v «Gde gruz»), voditeli
    i reyting, vybor perevozchika po reytingu i tsene, roli i istoriya.
+   Nastroyki (settings.js, cp-set-1): tarify, ozhidanie, roli, kompaniya, uvedomleniya.
    Demo-dannye iz odnogo zerna. Sostoyanie: cp-disp-1. Podpisi tolko iz
    slovarya, bez modeli i vneshnih servisov. */
 (function(){
@@ -19,11 +20,15 @@ function pct(x){return Math.round(x*100)+'%'}
 var S=get('cp-disp-1',{});S.role=S.role||'disp';S.log=S.log||[];S.as=S.as||null;
 function save(){put('cp-disp-1',S)}
 function log(what,ref){S.log.unshift({at:Date.now(),who:S.role,w:what,r:ref||''});S.log=S.log.slice(0,80);save()}
-var head=function(){return S.role==='head'};
+/* Dengi vidit rol s pravom «money» (nastroyki, matritsa prav); vladelets vsegda. */
+function head(){return can('money')>=1}
 /* Modul «sbornye gruzy» vyklyuchen v konstruktore - vkladki net. */
 var LTL=(function(){var c=get('cp-cfg-1',{});return c.m_ltl!==false&&c.m_tms!==false})();
-function vw(){var x=location.hash.slice(1)||'plan';return x==='route'&&!LTL?'plan':x}
-var view=vw(),pick=null,drv=null,offFor=null,sortBy='rate';
+var TABS=['plan','route','map','trips','drivers','fleet','int','set','log'];
+function tabOk(x){return(x!=='route'||LTL)&&can(x)>=1}
+/* #set i #set-<gruppa> - nastroyki; vkladka, zakrytaya rolyu, uvodit v pervuyu otkrytuyu. */
+function vw(){var x=location.hash.slice(1)||'plan',g='tar';if(x.indexOf('set')===0){g=x.slice(4)||'tar';x='set'}if(x==='route'&&!LTL)x='plan';if(!tabOk(x))x=TABS.filter(tabOk)[0]||'plan';if(x==='set')setGrp=GRPS.indexOf(g)>=0?g:'tar';return x}
+var view='plan',setGrp='tar',pick=null,drv=null,offFor=null,sortBy='rate';
 
 /* Demo-zerno. */
 var zr=20261031;function rnd(){zr=(zr*16807)%2147483647;return zr/2147483647}
@@ -43,7 +48,8 @@ var CARGO=[
   ['C-305','gen',14000,70,'alm','d1'],['C-306','gen',3200,18,'and','d0'],['C-307','gen',9000,40,'nuk','d2'],['C-308','gen',18500,30,'bis','d1'],
   ['C-309','dg',4200,12,'fer','d1'],['C-310','ref',12000,50,'alm','d0'],['C-311','ref',9000,38,'sam','d1'],['C-312','oog',24000,0,'nav','d2'],
   ['C-313','gen',28000,60,'ter','d2'],['C-314','gen',600,4,'and','d0']
-].map(function(x,i){return{id:x[0],ty:x[1],kg:x[2],v:x[3],to:x[4],dl:x[5],pal:x[3]?Math.max(1,Math.round(x[3]/1.8)):0,co:t('co')+' «'+TN[(i+2)%TN.length]+'»',bid:Math.round((x[2]/1000*38+60)*(x[1]==='ref'?1.4:x[1]==='oog'?2.2:x[1]==='dg'?1.3:1))}});
+].map(function(x,i){return{id:x[0],ty:x[1],kg:x[2],v:x[3],to:x[4],dl:x[5],pal:x[3]?Math.max(1,Math.round(x[3]/1.8)):0,co:t('co')+' «'+TN[(i+2)%TN.length]+'»'}});
+/* Stavka klientu: baza po vesu x natsenka kategorii iz nastroek (bidOf v settings.js). */
 var CG={};CARGO.forEach(function(c){CG[c.id]=c});
 var TR={};FLEET.forEach(function(f){TR[f.id]=f});
 
@@ -74,13 +80,14 @@ var RUN=FLEET.map(function(f,i){var to=['sam','fer','bux','alm','and','nuk','alm
   return{f:f,to:to,st:st,k:st==='free'?0:st==='load'?0:.08+rnd()*.7,sp:st==='go'||st==='late'?(st==='late'?.000006:.000011)*(0.7+rnd()*.6):0,spd:st==='go'?62+Math.floor(rnd()*28):st==='late'?38:0,
     fuel:30+Math.floor(rnd()*65),odo:60+Math.floor(rnd()*480),ping:Math.floor(rnd()*4)+1,off:i===4}});
 
-function shell(){var tabs=['plan','route','map','trips','drivers','fleet','int','log'].filter(function(x){return x!=='route'||LTL});
+var GEAR='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>';
+function shell(){var tabs=TABS.filter(tabOk);
   $('#app').innerHTML='<header class="pn-top"><div class="pn-brand"><img src="'+D.logo+'" alt="CARGO PRO GROUP" width="670" height="249"><span>'+t('title')+' · '+t('demo')+'</span></div>'+
-  '<label class="pn-role"><span>'+t('role')+'</span><select id="role"><option value="disp">'+t('role_disp')+'</option><option value="head">'+t('role_head')+'</option></select></label>'+
+  '<label class="pn-role"><span>'+t('role')+'</span><select id="role">'+ROLES.map(function(r){return'<option value="'+r+'">'+t('role_'+r)+'</option>'}).join('')+'</select></label>'+(can('set')>=1?'<a class="btn btn-g btn-s pn-gear" '+hl()+' aria-label="'+t('tab_set')+'" title="'+t('tab_set')+'">'+GEAR+'</a>':'')+
   '<a class="btn btn-g btn-s" href="'+D.home+'">'+t('home')+'</a><a class="btn btn-g btn-s" href="'+D.panel+'">'+t('panel')+'</a><a class="btn btn-a btn-s" href="'+D.site+'">'+t('site')+'</a></header>'+
   '<nav class="pn-tabs">'+tabs.map(function(x){return'<a href="#'+x+'" data-v="'+x+'"'+(x===view?' aria-current="page"':'')+'>'+t('tab_'+x)+'</a>'}).join('')+'</nav>'+
   '<div class="dp-go"><b>'+t('go_t')+'</b><span>'+t('go_e')+'</span><a href="'+D.gp+'" target="_blank" rel="noopener">Google Play</a><a href="'+D.as+'" target="_blank" rel="noopener">App Store</a></div><main class="pn-main" id="pv"></main>';
-  $('#role').value=S.role;$('#role').addEventListener('change',function(e){S.role=e.target.value;log('l_role',t(S.role==='head'?'role_head':'role_disp'));render()})}
+  $('#role').value=S.role;$('#role').addEventListener('change',function(e){S.role=e.target.value;log('l_role',t('role_'+S.role));save();view=vw();shell();render()})}
 addEventListener('hashchange',function(){view=vw();drv=null;shell();render()});
 
 function bar(x,lab){var c=x>1?'bad':x>.85?'hi':'';return'<div class="dp-bar '+c+'"><i style="transform:scaleX('+Math.min(1,x).toFixed(3)+')"></i><span>'+lab+'</span></div>'}
@@ -88,7 +95,7 @@ function tyName(c){return t('ty_'+c.ty)}
 function chipC(c,cls){return'<button type="button" class="dp-c '+(cls||'')+' ty-'+c.ty+(pick===c.id?' sel':'')+'" data-c="'+c.id+'" draggable="true"><b>'+c.id+'</b><span>'+tyName(c)+' · '+fmt(c.kg)+' '+t('kg')+(c.v?' · '+fv(c.v)+' '+t('m3'):'')+(c.pal?' · '+c.pal+' '+t('pal'):'')+'</span><small>'+esc(C[c.to])+' · '+t(c.dl)+'</small></button>'}
 function vPlan(){var as=S.as;
   var q=CARGO.filter(function(c){return!as||!as[c.id]});
-  var h='<p class="pn-hint">'+t('p_hint')+'</p>'+(LTL?'<p class="dp-to-r">'+t('r_from_plan')+' <button type="button" class="dp-to-r-b" id="toroute">'+t('tab_route')+'</button></p>':'')+'<div class="dp-act"><button type="button" class="btn btn-a" id="dist">'+t('dist')+'</button><button type="button" class="btn btn-g btn-s" id="reset">'+t('reset')+'</button>'+(pick?'<span class="dp-pick">'+t('pick')+' <b>'+pick+'</b></span>':'')+'</div>';
+  var h='<p class="pn-hint">'+t('p_hint')+(can('set')>=1&&head()?' <a class="dp-to-r-b" '+hl('tar')+'>'+t('st_go')+'</a>':'')+'</p>'+(LTL?'<p class="dp-to-r">'+t('r_from_plan')+' <button type="button" class="dp-to-r-b" id="toroute">'+t('tab_route')+'</button></p>':'')+'<div class="dp-act"><button type="button" class="btn btn-a" id="dist"'+(can('plan')>=2?'':' disabled')+'>'+t('dist')+'</button><button type="button" class="btn btn-g btn-s" id="reset">'+t('reset')+'</button>'+(pick?'<span class="dp-pick">'+t('pick')+' <b>'+pick+'</b></span>':'')+'</div>';
   h+='<div class="dp-plan"><section class="pn-card dp-q" data-drop="q"><h3>'+t('queue')+' <small class="pn-mu">'+q.length+'</small></h3>'+(q.length?q.map(function(c){return chipC(c,as&&as[c.id]===null?'un':'')+(as&&as[c.id]===null&&S.why&&S.why[c.id]?'<p class="dp-why">'+esc(S.why[c.id])+'</p>':'')}).join(''):'<p class="pn-mu">'+t('q_none')+'</p>')+'</section>';
   h+='<section class="dp-fleet">'+FLEET.map(function(f){var s=load(as||{},f.id),bad=[];Object.keys(as||{}).forEach(function(c){if(as[c]===f.id)bad=bad.concat(why(CG[c],f,as))});
     bad=bad.filter(function(x,i){return bad.indexOf(x)===i});
@@ -96,7 +103,7 @@ function vPlan(){var as=S.as;
     return'<article class="dp-t'+(bad.length?' bad':'')+(pick?' tgt':'')+'" data-t="'+f.id+'"><header><b>'+bn(f)+'</b>'+(f.adr?'<span class="dp-adr">ADR</span>':'')+'<small>'+fmt(f.kg)+' '+t('kg')+(f.v?' · '+f.v+' '+t('m3'):' · '+t('open'))+'</small></header>'+
       '<p class="pn-mu">'+esc(f.dr)+' · '+f.pl+'</p>'+bar(s.kg/f.kg,t('kg')+' '+pct(s.kg/f.kg))+(f.v?bar(s.v/f.v,t('m3')+' '+pct(s.v/f.v)):'')+
       (bad.length?'<p class="dp-err">'+bad.map(esc).join(' · ')+'</p>':'')+'<div class="dp-in">'+cs.map(function(c){return chipC(CG[c],'in')}).join('')+'</div>'+
-      (head()&&cs.length?'<p class="dp-money">'+t('rate_c')+': '+fmt(cs.reduce(function(a,c){return a+CG[c].bid},0))+' $ · '+t('margin')+': '+fmt(cs.reduce(function(a,c){return a+CG[c].bid},0)*.21)+' $</p>':'')+'</article>'}).join('')+'</section></div>';
+      (head()&&cs.length?'<p class="dp-money">'+t('rate_c')+': '+fmt(cs.reduce(function(a,c){return a+bidOf(CG[c])},0))+' $ · '+t('margin')+': '+fmt(cs.reduce(function(a,c){return a+bidOf(CG[c])},0)*.21)+' $</p>':'')+'</article>'}).join('')+'</section></div>';
   return h}
 function moveTo(c,to){S.as=S.as||{};S.as[c]=to==='q'?undefined:to;if(to==='q')delete S.as[c];log('l_move',c+' → '+(to==='q'?t('queue'):TR[to].dr));pick=null;render()}
 
@@ -119,9 +126,9 @@ function stOf(id,def){var P2=get('cp-panel-1',{});return P2.st&&P2.st[id]!==unde
 function setSt(id,s){var P2=get('cp-panel-1',{});P2.st=P2.st||{};P2.st[id]=s;P2.log=P2.log||[];P2.log.unshift({at:Date.now(),who:'manager',w:'l_st',r:id+' · '+t('k_'+s)});put('cp-panel-1',P2)}
 function trips(){var site=get('cp-req-1',[]).map(function(r,i){return{id:r.id,co:r.co||r.n,dr:FLEET[i%FLEET.length],s0:0,site:1,dir:r.dir,rt:Math.round(r.tot||600)}});
   return site.concat(D.trips.map(function(x,i){return{id:x[0],co:t('co')+' «'+TN[x[2]]+'»',dr:FLEET[6+i],s0:x[1],rt:x[3]}}))}
-function vTrips(){return'<p class="pn-hint">'+t('t_hint')+'</p>'+trips().map(function(o){var s=stOf(o.id,o.s0);
+function vTrips(){var ed=can('trips')>=2;return'<p class="pn-hint">'+t('t_hint')+(can('set')>=1?' <a class="dp-to-r-b" '+hl('wt')+'>'+t('wt_t_h')+': '+t('st_go')+'</a>':'')+'</p>'+trips().map(function(o){var s=stOf(o.id,o.s0);
   return'<section class="pn-card dp-trip"><header><b>'+o.id+'</b>'+(o.site?' <span class="pn-new">'+t('new')+'</span>':'')+'<span class="pn-mu">'+esc(o.co)+' · '+esc(o.dr.dr)+'</span></header><ol class="dp-tl">'+
-  STEPS.map(function(k){return'<li><button type="button" data-tr="'+o.id+'" data-s="'+k+'" aria-pressed="'+(k===s)+'" class="'+(k<s?'done':'')+'">'+t('k_'+k)+'</button></li>'}).join('')+'</ol>'+
+  STEPS.map(function(k){return'<li><button type="button" data-tr="'+o.id+'" data-s="'+k+'" aria-pressed="'+(k===s)+'" class="'+(k<s?'done':'')+'"'+(ed?'':' disabled')+'>'+t('k_'+k)+'</button></li>'}).join('')+'</ol>'+
   (head()?'<p class="dp-money">'+t('rate_c')+': '+fmt(o.rt)+' $ · '+t('pay')+': '+fmt(o.rt*.79)+' $ · '+t('margin')+': '+fmt(o.rt-Math.round(o.rt*.79))+' $</p>':'<p class="pn-mu">'+t('money_h')+'</p>')+tripExtras(o)+'</section>'}).join('')}
 function doc(n){return n<0?'<b class="dp-bad">'+t('d_exp')+'</b>':n<30?'<b class="warn">'+n+' '+t('days')+'</b>':'<span>'+n+' '+t('days')+'</span>'}
 function vDrivers(){var c=offFor?CG[offFor]:CARGO[0];
@@ -132,11 +139,11 @@ function vDrivers(){var c=offFor?CG[offFor]:CARGO[0];
   '<div class="dp-offers">'+(cand.length?cand.map(function(o,i){return'<div class="dp-off'+(i===0?' best':'')+'"><b>'+esc(o.f.dr)+'</b><span>★ '+o.f.rate.toFixed(2)+' · '+o.f.trips+' '+t('trips')+'</span><span>'+bn(o.f)+'</span><b class="pr">'+fmt(o.price)+' $</b><button type="button" class="btn btn-g btn-s" data-give="'+o.f.id+'">'+t('give')+'</button></div>'}).join(''):'<p class="pn-mu">'+t('u_body')+'</p>')+'</div></section>'+
   '<section class="pn-card"><h3>'+t('tab_drivers')+'</h3><table class="pn-t"><thead><tr><th>'+t('driver')+'</th><th>'+t('rating')+'</th><th>'+t('trips')+'</th><th>'+t('lates')+'</th><th>'+t('lic')+'</th><th>'+t('tech')+'</th><th>'+t('ins')+'</th></tr></thead><tbody>'+
   FLEET.map(function(f){return'<tr><td>'+esc(f.dr)+'<br><small class="pn-mu">'+bn(f)+' · '+f.pl+'</small></td><td>★ '+f.rate.toFixed(2)+'</td><td>'+f.trips+'</td><td>'+(f.late>3?'<b class="warn">'+f.late+'</b>':f.late)+'</td><td>'+doc(f.doc[0])+'</td><td>'+doc(f.doc[1])+'</td><td>'+doc(f.doc[2])+'</td></tr>'}).join('')+'</tbody></table></section>'}
-function vLog(){var who=function(r){return t(r==='head'?'role_head':'role_disp')};return'<div class="pn-card">'+(S.log.length?S.log.map(function(x){return'<div class="pn-log"><time>'+new Date(x.at).toLocaleString()+'</time><b>'+who(x.who)+'</b><span>'+t(x.w)+(x.r?' '+esc(x.r):'')+'</span></div>'}).join(''):'<p class="pn-mu">'+t('l_none')+'</p>')+'</div>'}
+function vLog(){var who=function(r){return U['role_'+r]?t('role_'+r):r};return'<div class="pn-card">'+(S.log.length?S.log.map(function(x){return'<div class="pn-log"><time>'+new Date(x.at).toLocaleString()+'</time><b>'+who(x.who)+'</b><span>'+t(x.w)+(x.r?' '+esc(x.r):'')+'</span></div>'}).join(''):'<p class="pn-mu">'+t('l_none')+'</p>')+'</div>'}
 var toastT;function toast(m){var e=$('#pt');if(!e){e=d.createElement('div');e.id='pt';e.className='toast';e.setAttribute('role','status');d.body.appendChild(e)}e.textContent=m;e.classList.add('on');clearTimeout(toastT);toastT=setTimeout(function(){e.classList.remove('on')},2200)}
 
 function render(){var v=$('#pv');if(!v)return;
-  v.innerHTML=view==='route'?vRoute():view==='fleet'?vFleet():view==='int'?vInt():view==='map'?vMap():view==='trips'?vTrips():view==='drivers'?vDrivers():view==='log'?vLog():vPlan();
+  v.innerHTML=view==='set'?vSet():view==='route'?vRoute():view==='fleet'?vFleet():view==='int'?vInt():view==='map'?vMap():view==='trips'?vTrips():view==='drivers'?vDrivers():view==='log'?vLog():vPlan();
   var g=function(s,f){var e=$(s,v);if(e)e.addEventListener('click',f)};
   g('#dist',function(){S.why={};S.as=plan();var n=Object.keys(S.as).filter(function(c){return S.as[c]}).length;log('l_dist',n+'/'+CARGO.length);render();toast(t('dist_ok')+' '+n+'/'+CARGO.length)});
   g('#toroute',function(){location.hash='route'});
@@ -157,6 +164,7 @@ function render(){var v=$('#pv');if(!v)return;
   if(view==='fleet')bindFleet(v);
   if(view==='int')bindInt(v);
   if(view==='trips')bindTrips(v);
+  if(view==='set')bindSet(v);
   if(view==='map')place()}
 
 /* Sbornye gruzy i posledovatelnyy zabor. Koordinaty rayonov Tashkenta (shirota, dolgota), rasstoyanie: po pryamoy (gaversinus)
@@ -248,5 +256,6 @@ function tick(ts){var dt=last?Math.min(64,ts-last):16;last=ts;
   RUN.forEach(function(r){if(r.sp){r.k+=r.sp*dt* /*~*/1.0;if(r.k>.97)r.k=.06}});
   if(view==='map'&&!d.hidden)place();if(view==='route'&&!d.hidden)rDrive(dt);requestAnimationFrame(tick)}
 /*@@SUPER@@*/
-shell();render();if(!RM)requestAnimationFrame(tick);
+/*@@SETTINGS@@*/
+view=vw();shell();render();if(!RM)requestAnimationFrame(tick);
 })();

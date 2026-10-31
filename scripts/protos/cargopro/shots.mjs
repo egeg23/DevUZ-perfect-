@@ -5,7 +5,8 @@
 // Третий аргумент «dispatch» — только снимки диспетчерской, «route» — только
 // сборных грузов и маршрута забора, «super» — только супер-админки
 // (сравнение, автопарк, пакет для брокера, интеграции, допы рейса), «client» —
-// только клиентского раздела (вход, грузы, карта, бот).
+// только клиентского раздела (вход, грузы, карта, бот), «settings» — только
+// настроек супер-админки (тарифы, ожидание, роли, компания, уведомления, рейс).
 import { createRequire } from "node:module";
 import { execSync } from "node:child_process";
 import { mkdirSync } from "node:fs";
@@ -24,6 +25,25 @@ for (const w of ws.split(",").map(Number)) {
   const p = await ctx.newPage();
   p.on("console", (m) => { if (m.type() === "error" && !/fonts\.g/.test(m.text())) errs.push(`${w}: ${m.text()}`); });
   p.on("pageerror", (e) => errs.push(`${w}: ${e.message}`));
+  if (only === "settings") {
+    /* Настройки: тарифы, ожидание и простой, пользователи и роли (как руководитель), компания, уведомления, ожидание в рейсе и как диспетчер. */
+    await p.goto(R + "/dispatch#set", { waitUntil: "load" }); await p.evaluate(() => { localStorage.removeItem("cp-set-1"); localStorage.removeItem("cp-disp-1"); }); await p.reload({ waitUntil: "load" });
+    await p.selectOption("#role", "head"); await p.waitForTimeout(400); await shot(p, `settings-tariffs-${w}`);
+    await p.fill('[data-p="tar.dim.air"]', "200"); await p.waitForTimeout(400); await p.evaluate(() => document.getElementById("trprev").scrollIntoView({ block: "center" })); await p.waitForTimeout(300); await shot(p, `settings-unsaved-${w}`);
+    await p.click("#stcancel"); await p.waitForTimeout(300);
+    await p.goto(R + "/dispatch#set-wt", { waitUntil: "load" }); await p.waitForTimeout(400); await shot(p, `settings-waiting-${w}`);
+    await p.goto(R + "/dispatch#set-users", { waitUntil: "load" }); await p.waitForTimeout(400); await shot(p, `settings-roles-${w}`);
+    await p.evaluate(() => document.querySelector(".st-pm").scrollIntoView({ block: "center" })); await p.waitForTimeout(300); await shot(p, `settings-matrix-${w}`);
+    await p.goto(R + "/dispatch#set-co", { waitUntil: "load" }); await p.waitForTimeout(400); await shot(p, `settings-company-${w}`);
+    await p.goto(R + "/dispatch#set-nt", { waitUntil: "load" }); await p.waitForTimeout(400); await shot(p, `settings-notify-${w}`);
+    await p.goto(R + "/dispatch#trips", { waitUntil: "load" }); await p.waitForTimeout(300); await p.evaluate(() => document.getElementById("wt-CPG-24109").scrollIntoView({ block: "center" })); await p.waitForTimeout(300); await shot(p, `settings-trip-wait-${w}`);
+    await p.goto(R + "/dispatch#set", { waitUntil: "load" }); await p.selectOption("#role", "disp"); await p.waitForTimeout(400); await shot(p, `settings-readonly-${w}`);
+    await p.goto(R + "/cabinet", { waitUntil: "load" }); await p.click("#intg"); await p.click("#tgok"); await p.waitForTimeout(600);
+    await p.evaluate(() => document.querySelector(".cb-wt").scrollIntoView({ block: "center" })); await p.waitForTimeout(300); await shot(p, `settings-cabinet-wait-${w}`);
+    const sov = await p.evaluate(() => document.documentElement.scrollWidth - innerWidth);
+    if (sov > 0) errs.push(`${w}: настройки, прокрутка вбок на ${sov}px`);
+    await ctx.close(); continue;
+  }
   if (only === "client") {
     /* Клиентский раздел: вход, «Мои грузы», карта, Telegram и статус из супер-админки. */
     await p.goto(R + "/cabinet", { waitUntil: "load" }); await p.waitForTimeout(400);

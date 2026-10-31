@@ -1,6 +1,7 @@
 // Подписи диспетчерской CARGO PRO GROUP парами [ru, uz]. gen.mjs падает, если
 // dispatch.js зовёт подпись, которой здесь нет, или в узбекской есть кириллица.
 import { SUPER_UI } from "./super-ui.mjs";
+import { SET_UI } from "./settings-ui.mjs";
 
 const BASE_UI = {
   title: ["Супер-админка · диспетчерская", "Super admin panel · dispetcherlik"],
@@ -8,6 +9,7 @@ const BASE_UI = {
   role: ["Смотреть как", "Kim sifatida"],
   role_disp: ["Диспетчер", "Dispetcher"],
   role_head: ["Руководитель", "Rahbar"],
+  /* Остальные роли (владелец, менеджер по продажам, бухгалтер, водитель, брокер, клиент) — settings-ui.mjs. */
   home: ["К выбору", "Tanlovga"],
   panel: ["Обычная админка", "Oddiy admin panel"],
   site: ["На сайт", "Saytga"],
@@ -175,4 +177,4 @@ const BASE_UI = {
   l_give: ["назначил перевозчика", "tashuvchini tayinladi"],
 };
 
-export const DISPATCH_UI = { ...BASE_UI, ...SUPER_UI };
+export const DISPATCH_UI = { ...BASE_UI, ...SUPER_UI, ...SET_UI };

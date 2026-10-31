@@ -1,7 +1,9 @@
 /* CARGO PRO GROUP: поведение сайта. Прокрутку не перехватываем: сцены только
    читают, сколько прошли, и двигают transform и opacity. Состояние демо —
    в браузере: заявки cp-req-1 (их читает панель), статусы из панели
-   cp-panel-1, конструктор cp-cfg-1. Ставки — середина рынка из tariffs.mjs. */
+   cp-panel-1, конструктор cp-cfg-1, настройки супер-админки cp-set-1 (объёмный
+   коэффициент, наценка по категории, плотность, допы, валюты, курс, оплата).
+   Ставки — середина рынка из tariffs.mjs, пока в настройках не поменяли. */
 (function(){
 var d=document,w=window,$=function(s,r){return(r||d).querySelector(s)},$$=function(s,r){return[].slice.call((r||d).querySelectorAll(s))};
 var D=JSON.parse($('#cp-data').textContent),T=D.t;
@@ -13,6 +15,12 @@ function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;
 function cl(v){return v<0?0:v>1?1:v}
 var toastT=0;function toast(m){var t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('on')},2400)}
 var lanes={};D.lanes.forEach(function(x){lanes[x.id]=x});
+/* Настройки супер-админки: нет записи — умолчания из сборки (те же числа). */
+var SETS=get('cp-set-1',{});
+function sv(a,def){var o=SETS;for(var i=0;i<a.length;i++){if(o==null||typeof o!=='object')return def;o=o[a[i]]}return o==null||o===''?def:o}
+function bandK(b,d){if(!b)return 1;for(var i=0;i<b.length;i++){if(!(+b[i].to)||d<=+b[i].to)return +b[i].k||1}return 1}
+function sub(s,o){return String(s).replace(/\{(\w+)\}/g,function(_,k){return o[k]==null?'':o[k]})}
+function fv(n){return String(n).replace('.',D.l==='ru'?',':'.')}
 
 /* Конструктор на первой странице выключает допы: их блоки уходят. */
 var cfg=get('cp-cfg-1',{});
@@ -75,23 +83,28 @@ if(velo.length)veloLoop();
 /* ── Конструктор тарифов ──────────────────────────────────────────── */
 var st={dir:'cn',m:'air',kg:250,m3:1.2,ct:'c40',n:1,cur:'USD'};
 var kgI=$('#kg'),m3I=$('#m3');
-function money(n){var r=D.fx[st.cur],v=n*r;return st.cur==='USD'?fmt(v)+' $':st.cur==='UZS'?fmt(Math.round(v/1000)*1000)+' '+(D.l==='ru'?'сум':'so‘m'):st.cur==='EUR'?fmt(v)+' €':fmt(v)+' AED'}
+function money(n){var r=st.cur==='USD'?1:+sv(['co','fxAuto'],1)?D.fx[st.cur]:+sv(['co','fx',st.cur],D.fx[st.cur]),v=n*r;return st.cur==='USD'?fmt(v)+' $':st.cur==='UZS'?fmt(Math.round(v/1000)*1000)+' '+(D.l==='ru'?'сум':'so‘m'):st.cur==='EUR'?fmt(v)+' €':fmt(v)+' AED'}
 function avail(){var x=lanes[st.dir];$$('#modes [data-m]').forEach(function(b){var m=b.getAttribute('data-m');b.disabled=!x[m];b.setAttribute('aria-pressed',m===st.m)});
   if(!x[st.m]){st.m=['air','auto','rail','sea'].filter(function(m){return x[m]})[0];return avail()}}
 function calc(){avail();var x=lanes[st.dir],r=x[st.m],byKg=st.m==='air'||st.m==='auto';
   $('#bykg').hidden=!byKg;$('#bycont').hidden=byKg;
   $('#kgv').textContent=fmt(st.kg)+' '+T.kg;$('#m3v').textContent=String(st.m3).replace('.',D.l==='ru'?',':'.')+' '+T.m3;
   var lines=[],fr,cw=0;
-  if(byKg){cw=Math.max(st.kg,st.m3*D.dim[st.m]);fr=cw*r.kg;$('#cw').textContent=T.cw+': '+fmt(cw)+' '+T.kg+', '+(cw>st.kg?T.cwBy:T.cwW)+' · '+r.kg+' $ '+T.per;
-    lines.push([T.fr+' · '+T.mode[st.m]+', '+fmt(cw)+' '+T.kg,fr])}
+  /* Платный вес, плотность и минимальная сумма — из настроек супер-админки. */
+  if(byKg){var dim=+sv(['tar','dim',st.m],D.dim[st.m]),dens=st.m3?st.kg/st.m3:0,k=bandK(sv(['tar','bands'],D.bands),dens);cw=Math.max(st.kg,st.m3*dim);fr=cw*r.kg*k;
+    $('#cw').textContent=T.cw+': '+fmt(cw)+' '+T.kg+', '+(cw>st.kg?T.cwBy:T.cwW)+' · '+fv(r.kg)+' $ '+T.per+' · '+T.dens+' '+fmt(dens)+' '+T.kg+'/'+T.m3+(k!==1?' × '+fv(k):'');
+    var lab=T.fr+' · '+T.mode[st.m]+', '+fmt(cw)+' '+T.kg+(k!==1?' × '+fv(k):''),mn=+sv(['tar','min'],0);if(mn&&fr<mn){fr=mn;lab+=' · '+T.minc}
+    lines.push([lab,fr])}
   else{fr=r[st.ct]*st.n;lines.push([T.fr+' · '+T.mode[st.m]+', '+st.n+'×'+(st.ct==='c20'?'20′':'40′'),fr])}
-  if($('#odng').checked)lines.push([T.dng+' +'+D.ex.danger+'%',fr*D.ex.danger/100]);
-  var val=+$('#val').value||0,ins=Math.max(D.ex.ins.min,val*D.ex.ins.pct/100);$('#oinsp').textContent=money(ins);
+  var ck=$('#ocat').value,cp=+sv(['tar','cat',ck],D.cat[ck])||0;$('#ocatp').textContent=(cp>0?'+':'')+cp+'%';
+  if(cp)lines.push([T.cat[ck]+' '+(cp>0?'+':'')+cp+'%',fr*cp/100]);
+  var fu=+sv(['tar','fuel'],0);if(fu)lines.push([T.fuel+' '+fu+'%',fr*fu/100]);
+  var val=+$('#val').value||0,ins=Math.max(+sv(['tar','ins','min'],D.ex.ins.min),val*+sv(['tar','ins','pct'],D.ex.ins.pct)/100);$('#oinsp').textContent=money(ins);
   if($('#oins').checked)lines.push([T.ins,ins]);
-  if($('#ocus').checked)lines.push([T.cus,D.ex.customs]);
-  var door=byKg?D.ex.door.base+cw*D.ex.door.kg:D.ex.door.cont*st.n;$('#odoorp').textContent=money(door);
+  if($('#ocus').checked)lines.push([T.cus,+sv(['tar','customs'],D.ex.customs)]);
+  var door=byKg?+sv(['tar','door','base'],D.ex.door.base)+cw*+sv(['tar','door','kg'],D.ex.door.kg):+sv(['tar','door','cont'],D.ex.door.cont)*st.n;$('#odoorp').textContent=money(door);
   if($('#odoor').checked)lines.push([T.door,door]);
-  var cn=Math.max(1,+$('#consn').value||1);if($('#ocons').checked)lines.push([T.cons+' × '+cn,D.ex.cons*cn]);
+  var cn=Math.max(1,+$('#consn').value||1);if($('#ocons').checked)lines.push([T.cons+' × '+cn,+sv(['tar','cons'],D.ex.cons)*cn]);
   var tot=lines.reduce(function(a,l){return a+l[1]},0);
   $('#tsum').innerHTML=lines.map(function(l){return'<div class="li"><span>'+esc(l[0])+'</span><b>'+money(l[1])+'</b></div>'}).join('')+'<div class="big"><span>'+T.tot+'</span><b id="ttot">'+money(tot)+'</b></div>';
   $('#tdays').textContent=x.c+' → '+(D.l==='ru'?'Ташкент':'Toshkent')+': '+r.days+' '+T.days;
@@ -101,9 +114,13 @@ $$('#modes [data-m]').forEach(function(b){b.addEventListener('click',function(){
 kgI.addEventListener('input',function(){st.kg=+kgI.value;calc()});m3I.addEventListener('input',function(){st.m3=+m3I.value;calc()});
 $$('input[name=ct]').forEach(function(r){r.addEventListener('change',function(){st.ct=r.value;calc()})});
 $('#cn').addEventListener('input',function(){st.n=Math.max(1,Math.min(20,+$('#cn').value||1));calc()});
-['#oins','#ocus','#odoor','#ocons','#odng','#val','#consn'].forEach(function(s){$(s).addEventListener('input',calc);$(s).addEventListener('change',calc)});
+['#oins','#ocus','#odoor','#ocons','#ocat','#val','#consn'].forEach(function(s){$(s).addEventListener('input',calc);$(s).addEventListener('change',calc)});
 $$('.cur [data-cur]').forEach(function(b){b.addEventListener('click',function(){st.cur=b.getAttribute('data-cur');$$('.cur [data-cur]').forEach(function(x){x.setAttribute('aria-pressed',x===b)});calc()})});
-calc();
+/* Валюты, которые компания включила, и условия оплаты — из настроек. */
+function applySet(){SETS=get('cp-set-1',{});var on={};$$('.cur [data-cur]').forEach(function(b){var k=b.getAttribute('data-cur');on[k]=+sv(['co','cur',k],1)!==0;b.hidden=!on[k]});
+  if(!on[st.cur]){st.cur='USD';$$('.cur [data-cur]').forEach(function(x){x.setAttribute('aria-pressed',x.getAttribute('data-cur')==='USD')})}
+  var vat=+sv(['co','vat'],0);$('#payl').textContent=sub(T.pay,{p:sv(['co','prepay'],50),d:sv(['co','defer'],14)})+' · '+(vat?sub(T.vatOn,{v:sv(['co','vatPct'],12)}):T.vatOff)}
+applySet();calc();
 /* Быстрый расчёт на первом экране и кнопки услуг ведут в конструктор с выбором. */
 var qm='air';$$('[data-qm]').forEach(function(b){b.addEventListener('click',function(){qm=b.getAttribute('data-qm');$$('[data-qm]').forEach(function(x){x.setAttribute('aria-pressed',x===b)})})});
 function pick(dir,m,kg){if(dir){st.dir=dir;$$('#dirs [data-dir]').forEach(function(x){x.setAttribute('aria-pressed',x.getAttribute('data-dir')===dir)})}if(m)st.m=m;if(kg){st.kg=Math.max(10,Math.min(5000,Math.round(kg/10)*10));kgI.value=st.kg}calc()}
@@ -143,7 +160,7 @@ if($('#trkf')){$('#trkex').innerHTML=Object.keys(DEMO).concat(reqs().slice(0,2).
   $('#trkf').addEventListener('submit',function(e){e.preventDefault();showTrack($('#trkn').value)});
   $('#trkex').addEventListener('click',function(e){var b=e.target.closest('[data-tn]');if(!b)return;$('#trkn').value=b.getAttribute('data-tn');showTrack(b.getAttribute('data-tn'))})}
 $('#mine').addEventListener('click',function(){var all=reqs();open(T.mine,all.length?all.map(function(r){var o=find(r.id);return'<div class="tl" style="min-height:0">'+timeline(o)+'<div class="calc-l">'+esc(r.txt)+'</div></div>'}).join(''):'<p class="mu">'+T.none+'</p>')});
-addEventListener('storage',function(e){if(e.key==='cp-panel-1'||e.key==='cp-req-1'){mineBtn();var v=$('#trkn');if(v&&v.value)showTrack(v.value)}if(e.key==='cp-cfg-1')applyCfg()});
+addEventListener('storage',function(e){if(e.key==='cp-panel-1'||e.key==='cp-req-1'){mineBtn();var v=$('#trkn');if(v&&v.value)showTrack(v.value)}if(e.key==='cp-cfg-1')applyCfg();if(e.key==='cp-set-1'){applySet();calc()}});
 
 /* Кабинет клиента: грузы компании, демо. */
 var cabt=$('#cabt');if(cabt)cabt.innerHTML=Object.keys(DEMO).map(function(n){var o=find(n),x=lanes[o.dir];return'<tr><td>'+n+'</td><td>'+esc(x.n)+' → '+(D.l==='ru'?'Ташкент':'Toshkent')+', '+T.mode[o.m]+'</td><td><span class="st s'+o.s+'">'+T.st[o.s]+'</span></td></tr>'}).join('');

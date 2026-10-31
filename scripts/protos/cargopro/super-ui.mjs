@@ -160,10 +160,7 @@ export const SUPER_UI = {
   x_wb_med: ["Предрейсовый медосмотр", "Reys oldidan tibbiy ko‘rik"],
   x_wb_tech: ["Техконтроль перед выездом", "Chiqishdan oldin texnik nazorat"],
   x_wb_sign: ["Подпись, печать", "Imzo, muhr"],
-  x_idle: ["Простой", "To‘xtab turish"],
-  x_idle_e: ["Свыше 24 часов на погрузке и выгрузке: 70 $ за каждые сутки, демо-ставка, вписывается в счёт клиенту.", "Yuklash va tushirishda 24 soatdan ortiq: har bir sutka uchun 70 $, demo stavka, mijozga hisobga yoziladi."],
-  x_idle_h: ["Часов на погрузке и выгрузке", "Yuklash va tushirishdagi soatlar"],
-  x_idle_sum: ["К счёту клиенту за простой", "Mijoz hisobiga to‘xtab turish uchun"],
+  /* Простой считается из настроек «Ожидание и простой» (settings-ui.mjs, wt_*): заложено, бесплатно, ставка в час. */
   x_pod: ["Фото доставки", "Yetkazish surati"],
   x_pod_e: ["Водитель в боте фотографирует CMR с подписью получателя, фото ложится в рейс, клиент получает его в Telegram.", "Haydovchi botda qabul qiluvchi imzosi bilan CMR’ni suratga oladi, surat reysga tushadi, mijoz uni Telegramda oladi."],
   x_pod_wait: ["Фото придёт, когда рейс станет «Доставлен».", "Reys «Yetkazildi» bo‘lganda surat keladi."],
@@ -260,7 +257,8 @@ export const COMPARE = [
   ["Пакет для таможенного брокера: CMR, МДП, транзит", "Bojxona brokeri uchun paket: CMR, TIR, tranzit", 0, "free"],
   ["Сроки документов водителей и машин", "Haydovchi va mashina hujjatlari muddatlari", 0, "free"],
   ["Путевой лист на печать", "Chop etish uchun yo‘l varaqasi", 0, "free"],
-  ["Простой и штраф за простой в счёт клиенту", "To‘xtab turish va mijoz hisobiga jarima", 0, "free"],
+  ["Ожидание в рейсе: заложено, бесплатно, сверх нормы по часам в счёт клиенту", "Reysdagi kutish: kiritilgan, bepul, me’yordan tashqari soatbay mijoz hisobiga", 0, "free"],
+  ["Настройки: тарифы по категории и плотности, пользователи, роли и права", "Sozlamalar: toifa va zichlik bo‘yicha tariflar, foydalanuvchilar, rollar va huquqlar", 0, "free"],
   ["Фото доставки от водителя клиенту", "Haydovchidan mijozga yetkazish surati", 0, "free"],
   ["Отчёт дня в Telegram", "Telegramda kun hisoboti", 0, "free"],
 ];

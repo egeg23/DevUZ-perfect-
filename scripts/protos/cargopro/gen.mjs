@@ -7,6 +7,7 @@ import { PANEL_UI } from "./panel-ui.mjs";
 import { DISPATCH_UI } from "./dispatch-ui.mjs";
 import { COMPARE } from "./super-ui.mjs";
 import { CAB_UI } from "./cabinet-ui.mjs";
+import { SET_UI } from "./settings-ui.mjs";
 
 /*
  * Макет CARGO PRO GROUP (cargoprogroup.uz), 31.10.2026: международная
@@ -41,8 +42,21 @@ const LAND_JS = strip(readFileSync(DIR + "land.js", "utf8")).replace(/\n\s*\n/g,
 const PANEL_JS = strip(readFileSync(DIR + "panel.js", "utf8")).replace(/\n\s*\n/g, "\n");
 const PANEL_CSS = strip(readFileSync(DIR + "panel.css", "utf8")).replace(/\n\s*/g, "");
 /* Супер-админка (super.js) вставляется в замыкание диспетчерской: автопарк, брокер, интеграции. */
-const DISP_JS = strip(readFileSync(DIR + "dispatch.js", "utf8").replace("/*@@SUPER@@*/", () => readFileSync(DIR + "super.js", "utf8"))).replace(/\n\s*\n/g, "\n");
+const DISP_JS = strip(readFileSync(DIR + "dispatch.js", "utf8").replace("/*@@SUPER@@*/", () => readFileSync(DIR + "super.js", "utf8")).replace("/*@@SETTINGS@@*/", () => readFileSync(DIR + "settings.js", "utf8"))).replace(/\n\s*\n/g, "\n");
 const DISP_CSS = strip(readFileSync(DIR + "dispatch.css", "utf8")).replace(/\n\s*/g, "");
+/* Настройки супер-админки (владелец, 31.10.2026: «Для карго давай сделаем раздел настройки…»). Умолчания одни
+   для сайта, диспетчерской и кабинета клиента, поэтому без правок в настройках ничего не меняется. */
+const CATS = ["gen", "frag", "dg", "ref", "oog", "val", "ltl"];
+/* Наценка по категории груза, % к перевозке: опасный — как «опасный или температурный» в тарифах (EXTRA.danger),
+   рефрижератор и негабарит — как ставка диспетчерской до настроек (×1,4 и ×2,2), хрупкий и ценный — оценка DevUz. */
+const CAT_DEF = { gen: 0, frag: 10, dg: EXTRA.danger, ref: 40, oog: 120, val: 15, ltl: 0 };
+/* Коэффициент по плотности, кг/м³: плотный груз дешевле за кг, демо-значения; to: 0 — «свыше». */
+const BAND_DEF = [{ to: 150, k: 1 }, { to: 300, k: 1 }, { to: 500, k: 0.95 }, { to: 0, k: 0.9 }];
+/* Ожидание: заложено в цену и бесплатно сверх, по этапам (часы); ставка $/ч, рефрижератор дороже; демо-значения. */
+const WAIT_DEF = { plan: { load: 3, cus: 4, unl: 3 }, free: { load: 2, cus: 1, unl: 2 }, rate: 15, rateRef: 25, round: 0, cap: 0, payer: "client" };
+/* Факт ожидания в демо-рейсах: CPG-24109 стоял на погрузке 6 ч 20 мин → сверх нормы 1 ч 20 мин × 15 $ = 20 $. */
+const DEMO_WAIT = { "CPG-24109": { load: 6.33, cus: 4, unl: 0 } };
+const TPL_KEYS = ["dep", "cus", "arr", "doc", "idle"];
 const BASE_URL = "__PROTO_BASE__";
 const TERMS = (l) => `https://devuz.studio/${l}/mockup-terms`;
 const FONTS = "https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700&family=Onest:wght@400;700&display=swap";
@@ -216,12 +230,13 @@ function calc(l, t) {
 <label class="opt"><input type="checkbox" id="ocus" checked><span class="sw"></span><span class="ot"><b>${t("Таможенное оформление", "Bojxona rasmiylashtiruvi")}</b><small>${t("декларант, ГТД; пошлины и НДС по закону, отдельно", "deklarant, BYuD; bojlar va QQS qonun bo‘yicha, alohida")}</small></span><span class="op">${usd(EXTRA.customs)}</span></label>
 <label class="opt"><input type="checkbox" id="odoor"><span class="sw"></span><span class="ot"><b>${t("До двери по Ташкенту", "Toshkent bo‘ylab eshikkacha")}</b><small>${t("со склада в Ташкенте до вашего адреса", "Toshkentdagi ombordan manzilingizgacha")}</small></span><span class="op" id="odoorp"></span></label>
 <label class="opt"><input type="checkbox" id="ocons"><span class="sw"></span><span class="ot"><b>${t("Консолидация на складе", "Omborda konsolidatsiya")}</b><small>${t("соберём товар от нескольких поставщиков в одну отправку: ОАЭ, Индия, Узбекистан", "bir nechta yetkazib beruvchining tovarini bitta jo‘natmaga yig‘amiz: BAA, Hindiston, O‘zbekiston")}</small></span><span class="op">${usd(EXTRA.cons)} ${t("за место", "joy uchun")}</span><label class="fld"><span>${t("Поставщиков", "Yetkazib beruvchilar")}</span><input type="number" id="consn" min="1" max="20" value="3" inputmode="numeric"></label></label>
-<label class="opt"><input type="checkbox" id="odng"><span class="sw"></span><span class="ot"><b>${t("Опасный груз или температурный режим", "Xavfli yuk yoki harorat rejimi")}</b><small>${t("отдельная упаковка, документы и место", "alohida qadoq, hujjatlar va joy")}</small></span><span class="op">+${EXTRA.danger}%</span></label>
+<div class="opt opt-sel"><span class="ot"><b>${t("Категория груза", "Yuk toifasi")}</b><small>${t("наценка по категории: опасный, температурный, негабарит; задаётся в настройках супер-админки", "toifa bo‘yicha ustama: xavfli, haroratli, gabaritdan tashqari; super admin panel sozlamalarida beriladi")}</small></span><span class="op" id="ocatp"></span><label class="fld"><span>${t("Категория", "Toifa")}</span><select id="ocat">${CATS.map((k) => `<option value="${k}">${esc(SET_UI["cat_" + k][l === "ru" ? 0 : 1])}</option>`).join("")}</select></label></div>
 </div></div>
 </div>
 <aside class="tsum glass" aria-live="polite"><div class="cur" role="group" aria-label="${t("Валюта", "Valyuta")}"><button type="button" data-cur="USD" aria-pressed="true">USD</button><button type="button" data-cur="UZS" aria-pressed="false">UZS</button><button type="button" data-cur="EUR" aria-pressed="false" data-addon="fx">EUR</button><button type="button" data-cur="AED" aria-pressed="false" data-addon="fx">AED</button></div>
 <div id="tsum"></div>
 <p class="days">${ICON.clock}<span id="tdays"></span></p>
+<p class="mnote" id="payl"></p>
 <button type="button" class="btn btn-a" id="send">${ICON.mail}<span>${t("Отправить заявку", "Ariza yuborish")}</span></button>
 <a class="btn btn-g" href="tel:${COMPANY.tel}">${ICON.phone}<span>${COMPANY.phone}</span></a>
 <p class="mnote">${t("Ориентировочный расчёт по середине рынка Узбекистана: предложение DevUz для обсуждения, а не прайс CARGO PRO GROUP. Точную ставку менеджер подтвердит по вашему грузу.", "O‘zbekiston bozori o‘rtasi bo‘yicha taxminiy hisob: muhokama uchun DevUz taklifi, CARGO PRO GROUP prays-varag‘i emas. Aniq stavkani menejer yukingiz bo‘yicha tasdiqlaydi.")}</p>
@@ -364,8 +379,11 @@ function footer(l, t) {
 function data(l, t) {
   return {
     l, root: BASE_URL, img: IMG, mail: COMPANY.email, lanes: LANES.map((x) => ({ id: x.id, n: x[l], c: x.city[l], air: x.air, auto: x.auto, rail: x.rail, sea: x.sea })),
-    ex: EXTRA, fx: FX, dim: DIM,
+    ex: EXTRA, fx: FX, dim: DIM, cat: CAT_DEF, bands: BAND_DEF,
     t: {
+      catL: t("Категория груза", "Yuk toifasi"), cat: Object.fromEntries(CATS.map((k) => [k, SET_UI["cat_" + k][l === "ru" ? 0 : 1]])),
+      fuel: t("Топливная надбавка", "Yoqilg‘i ustamasi"), minc: t("минимальная сумма", "eng kam summa"), dens: t("плотность", "zichlik"),
+      pay: t("Оплата: предоплата {p}%, остаток в течение {d} дней после выдачи", "To‘lov: {p}% oldindan, qoldiq topshirilgandan keyin {d} kun ichida"), vatOn: t("НДС {v}% в счёте", "hisobda QQS {v}%"), vatOff: t("без НДС", "QQSsiz"),
       mode: { air: modeName("air", l), auto: modeName("auto", l), rail: modeName("rail", l), sea: modeName("sea", l) },
       days: t("дней в пути, ориентир", "kun yo‘lda, taxminan"), no: t("нет", "yo‘q"), kg: t("кг", "kg"), m3: t("м³", "m³"), per: t("за кг", "kg uchun"), cont: t("за контейнер", "konteyner uchun"),
       cw: t("Платный вес", "To‘lanadigan og‘irlik"), cwBy: t("считается по объёму", "hajm bo‘yicha hisoblanadi"), cwW: t("считается по весу", "og‘irlik bo‘yicha hisoblanadi"),
@@ -503,6 +521,7 @@ function landPage(l) {
     t("Статус рейса сразу у клиента на сайте", "Reys holati darhol mijozning saytida"),
     t("Интеграции 1С, Битрикс24, Telegram: бесплатно", "1C, Bitrix24, Telegram integratsiyalari: bepul"),
     t("Автопарк, водители и пакет для таможенного брокера", "Avtopark, haydovchilar va bojxona brokeri uchun paket"),
+    t("Настройки: тарифы по категории и плотности, ожидание по часам, пользователи и роли", "Sozlamalar: toifa va zichlik bo‘yicha tariflar, soatbay kutish, foydalanuvchilar va rollar"),
     t("Мы уже делали это для Lider Cargo", "Biz buni Lider Cargo uchun allaqachon qilganmiz"),
   ];
   const li = (a) => `<ul class="feat">${a.map((x) => `<li>${ICON.check}<span>${x}</span></li>`).join("")}</ul>`;
@@ -513,6 +532,7 @@ function landPage(l) {
     t("В диспетчерской нажмите «Распределить»: 14 грузов лягут по 12 машинам. Перенесите груз в чужой кузов, и машина загорится красным.", "Dispetcherlikda «Taqsimlash»ni bosing: 14 ta yuk 12 ta mashinaga tushadi. Yukni boshqa kuzovga ko‘chiring, mashina qizil yonadi."),
     t("Во вкладке «Сборные грузы и маршрут» нажмите «Собрать сборный рейс»: забор с нескольких адресов выстроится короче, чем по порядку заявок. Поменяйте адреса стрелками, и километры вырастут.", "«Yig‘ma yuklar va marshrut» bo‘limida «Yig‘ma reysni yig‘ish»ni bosing: bir nechta manzildan olib ketish arizalar tartibidan qisqaroq bo‘ladi. Manzillarni strelkalar bilan suring, kilometrlar oshadi."),
     t("На сайте откройте «Личный кабинет», войдите через Telegram (это демо) и нажмите «Получать статусы в Telegram» у CPG-24109. В супер-админке во вкладке «Рейсы» поставьте ему «Таможня»: в кабинете обновятся таймлайн и сообщение бота.", "Saytda «Shaxsiy kabinet»ni oching, Telegram orqali kiring (bu demo) va CPG-24109 dagi «Holatlarni Telegramda olish»ni bosing. Super admin panelning «Reyslar» bo‘limida unga «Bojxona» qo‘ying: kabinetda vaqt chizig‘i va bot xabari yangilanadi."),
+    t("В супер-админке нажмите шестерёнку «Настройки»: поставьте «Авиа, кг за 1 м³» 200 и «Сохранить». Расчёт объёмного груза на сайте изменится сразу. В «Ожидании и простое» видно, сколько часов заложено, сколько бесплатно и почём час сверх: у рейса CPG-24109 это 1 ч 20 мин × 15 $ = 20 $, то же видит клиент в кабинете. В «Пользователях и ролях» переключите диспетчеру «Деньги и маржа» и посмотрите как диспетчер: ставок не будет.", "Super admin panelda «Sozlamalar» tishli g‘ildiragini bosing: «Avia, 1 m³ uchun kg» ga 200 qo‘ying va «Saqlash». Saytdagi hajmli yuk hisobi darhol o‘zgaradi. «Kutish va to‘xtab turish»da necha soat kiritilgani, qanchasi bepul va undan tashqari soat qancha turishi ko‘rinadi: CPG-24109 reysida bu 1 soat 20 daqiqa × 15 $ = 20 $, mijoz ham kabinetda shuni ko‘radi. «Foydalanuvchilar va rollar»da dispetcherga «Pul va marja»ni almashtiring va dispetcher sifatida qarang: stavkalar bo‘lmaydi."),
   ];
   const ld = { base: BASE.promo, root: BASE_URL, hours: OFFER_HOURS, img: IMG, n: 60, add: ADDONS.map((a) => ({ id: a.id, p: a.price, t: a[l].t })), mod: MODULES.map((m) => ({ id: m.id, p: m.price, t: m[l].t, req: m.requires || null })), t: { copied: t("Состав скопирован", "Tarkib nusxalandi"), tot: t("Сайт с допами", "Qo‘shimchalar bilan sayt"), totm: t("С супер-админкой", "Super admin panel bilan"), totl: t("С супер-админкой и сборными грузами", "Super admin panel va yig‘ma yuklar bilan"), none: t("не выбрана", "tanlanmagan") } };
   return `${head(l, t("CARGO PRO GROUP · макет сайта и панели · DevUz Studio", "CARGO PRO GROUP · sayt va panel maketi · DevUz Studio"), t("Макет для CARGO PRO GROUP: новый сайт с расчётом доставки и панель заявок и грузов. Конструктор цены.", "CARGO PRO GROUP uchun maket: yetkazish hisobi bilan yangi sayt va arizalar va yuklar paneli. Narx konstruktori."))}
@@ -585,7 +605,7 @@ ${LAND_JS}</script>
 /* ── Клиентский раздел (доп «cab») ─────────────────────────────────── */
 (function checkCabDict() {
   const keys = new Set([...CAB_JS.matchAll(/\bt\('([A-Za-z0-9_]+)'/g)].map((m) => m[1]));
-  for (const k of ["tab_", "n_"]) keys.delete(k);
+  for (const k of ["tab_", "n_", "b_", "stg_"]) keys.delete(k);
   for (const k of keys) {
     const v = CAB_UI[k];
     if (!v || v.length !== 2 || v.some((x) => !x)) throw new Error(`cabinet: нет подписи «${k}» на двух языках`);
@@ -602,6 +622,7 @@ function cabPage(l) {
   const cd = { l, ui, st, bot: CAB_BOT, site: href(l, "site"), home: href(l), tel: COMPANY.tel, drvTel: "+998000000000", town: t("Ташкент", "Toshkent"),
     mode: { air: modeName("air", l), auto: modeName("auto", l), rail: modeName("rail", l), sea: modeName("sea", l) },
     lanes: LANES.map((x) => ({ id: x.id, n: x[l], c: x.city[l], air: x.air, auto: x.auto, rail: x.rail, sea: x.sea })),
+    wt: WAIT_DEF, dw: DEMO_WAIT,
     tgIcon: ICON.tg, docIcon: ICON.doc, dots: dots(1000, 600, 28),
     truck: '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h11v10H3zM14 10h4l3 3v3h-7z"/><circle cx="7" cy="17.5" r="1.6"/><circle cx="17.5" cy="17.5" r="1.6"/></svg>' };
   return `${head(l, t("Личный кабинет · CARGO PRO GROUP", "Shaxsiy kabinet · CARGO PRO GROUP"), t("Личный кабинет клиента CARGO PRO GROUP: вход через Telegram, свои грузы и статусы, водитель на карте, уведомления от бота.", "CARGO PRO GROUP mijoz kabineti: Telegram orqali kirish, yuklar va holatlar, xaritada haydovchi, botdan bildirishnomalar."))}
@@ -659,7 +680,7 @@ ${PANEL_JS}</script>
 /* ── Диспетчерская (отдельный модуль) ─────────────────────────────── */
 (function checkDispDict() {
   const keys = new Set([...DISP_JS.matchAll(/\bt\('([A-Za-z0-9_]+)'/g)].map((m) => m[1]));
-  for (const k of ["tab_", "s_", "b_", "ty_", "k_", "role_", "g_", "bt_", "post_"]) keys.delete(k);
+  for (const k of ["tab_", "s_", "b_", "ty_", "k_", "role_", "g_", "bt_", "post_", "cat_", "pm_", "ev_", "stg_", "mode_", "us_via_", "st_grp_", "wt_r", "role_"]) keys.delete(k);
   for (const k of keys) {
     const v = DISPATCH_UI[k];
     if (!v || v.length !== 2 || v.some((x) => !x)) throw new Error(`dispatch: нет подписи «${k}» на двух языках`);
@@ -685,7 +706,12 @@ function dispatchPage(l) {
     city: Object.fromEntries(Object.entries(CITY).map(([k, v]) => [k, v[i]])),
     dist: Object.fromEntries(Object.entries(DIST).map(([k, v]) => [k, v[i]])),
     gp: "https://play.google.com/store/apps/details?id=com.lbmgo.ftl.driver", as: "https://apps.apple.com/us/app/lbm-driver/id6762045849",
-    trips: [["CPG-24117", 4, 0, 4160], ["CPG-24109", 3, 2, 4950], ["CPG-24095", 5, 1, 3245]] };
+    trips: [["CPG-24117", 4, 0, 4160], ["CPG-24109", 3, 2, 4950], ["CPG-24095", 5, 1, 3245]],
+    /* Настройки: умолчания тарифов, реквизиты с их сайта (ИНН, банк, счёт пустые: в макете не выдумываем), ожидание, шаблоны бота. */
+    tar: { dim: DIM, ex: EXTRA, fx: FX, cat: CAT_DEF, bands: BAND_DEF, rate: { air: LANES[0].air.kg, auto: LANES[0].auto.kg } },
+    co: { name: COMPANY.name, addr: COMPANY.address[l], tel: COMPANY.phone, email: COMPANY.email },
+    wt: WAIT_DEF, dw: DEMO_WAIT,
+    tpl: Object.fromEntries(["ru", "uz"].map((x, j) => [x, Object.fromEntries(TPL_KEYS.map((k) => [k, CAB_UI["b_" + k][j]]))])) };
   return `${head(l, t("Диспетчерская CARGO PRO GROUP · демо", "CARGO PRO GROUP dispetcherligi · demo"), t("Диспетчерская CARGO PRO GROUP: распределение грузов по машинам по кузову, весу и объёму, водители на карте, рейсы со статусом для клиента, рейтинг водителей. Демо-данные.", "CARGO PRO GROUP dispetcherligi: yuklarni kuzov, og‘irlik va hajm bo‘yicha mashinalarga taqsimlash, xaritada haydovchilar, mijoz uchun holatli reyslar, haydovchilar reytingi. Demo ma’lumotlar."))}
 <style>${CSS}${PANEL_CSS}${DISP_CSS}</style>
 </head>

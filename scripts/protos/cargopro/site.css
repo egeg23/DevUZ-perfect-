@@ -468,3 +468,9 @@ input[type=range]{width:100%;accent-color:var(--ac);min-height:32px}
 .vs-mini .vs-t{margin-top:4px}
 .vs-mini .btn{justify-self:start}
 @media (prefers-reduced-motion:reduce){.vs-s::after{animation:none;opacity:0}}
+
+/* Категория груза в конструкторе: выбор вместо тумблера, наценка из настроек супер-админки. */
+.opt-sel{grid-template-columns:1fr auto;cursor:default}
+.opt-sel .fld{grid-column:1/-1;margin-top:0}
+.opt-sel .fld select{min-height:44px}
+.cur button[hidden]{display:none}
