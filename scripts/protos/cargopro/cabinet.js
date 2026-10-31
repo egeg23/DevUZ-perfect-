@@ -3,7 +3,8 @@
    «Мои грузы» со статусами из той же памяти браузера, что пишут админка и
    супер-админка (cp-panel-1), карта с машиной в пути, привязка заказа к
    Telegram через бота и превью чата бота. Состояние: cp-cab-1. Прокрутку не
-   перехватываем, движение только transform и opacity. */
+   перехватываем, движение только transform и opacity. Настройки супер-админки
+   (cp-set-1) читаются, не пишутся: ожидание в рейсе, шаблоны и каналы бота, тихие часы. */
 (function(){
 var d=document,w=window,$=function(s,r){return(r||d).querySelector(s)},$$=function(s,r){return[].slice.call((r||d).querySelectorAll(s))};
 var D=JSON.parse($('#cb-data').textContent),U=D.ui,ST=D.st;
@@ -14,7 +15,16 @@ function put(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 function fmt(n){return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g,' ')}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function cl(v){return v<0?0:v>1?1:v}
-function sub(s,o){return s.replace(/\{(\w+)\}/g,function(_,k){return o[k]})}
+function sub(s,o){return String(s).replace(/\{(\w+)\}/g,function(_,k){return o[k]==null?'':o[k]})}
+function fv(n){return String(n).replace('.',D.l==='ru'?',':'.')}
+function hm(h){var m=Math.round(h*60);return Math.floor(m/60)+' '+t('h')+(m%60?' '+(m%60)+' '+t('min'):'')}
+/* Настройки супер-админки: нет записи — умолчания из сборки. */
+function sv(){return get('cp-set-1',{})}
+function wtCfg(){var s=sv().wt||{},o=JSON.parse(JSON.stringify(D.wt));['plan','free'].forEach(function(k){if(s[k])Object.keys(s[k]).forEach(function(x){o[k][x]=s[k][x]})});['rate','rateRef','round','cap','payer'].forEach(function(k){if(s[k]!=null&&s[k]!=='')o[k]=s[k]});return o}
+function tplOf(k){var n=sv().nt||{},v=n.tpl&&n.tpl[D.l]&&n.tpl[D.l][k];return String(v||'').trim()||t('b_'+k)}
+function chOn(k){var n=sv().nt||{},c=n.ch&&n.ch[k];return!c||+c[0]!==0}
+function quietCfg(){var q=(sv().nt||{}).quiet||{};return{from:q.from==null?21:+q.from,to:q.to==null?8:+q.to}}
+function quietNow(){var q=quietCfg(),h=new Date().getHours();return q.from>q.to?(h>=q.from||h<q.to):(h>=q.from&&h<q.to)}
 var toastT=0;function toast(m){var e=$('#toast');e.textContent=m;e.classList.add('on');clearTimeout(toastT);toastT=setTimeout(function(){e.classList.remove('on')},2400)}
 var lanes={};D.lanes.forEach(function(x){lanes[x.id]=x});
 
@@ -42,13 +52,13 @@ function town(){return D.town}
 function days(o){var r=lanes[o.dir]&&lanes[o.dir][o.m],m=r?String(r.days).match(/\d+/g):null;return m?(+m[0]+ +(m[1]||m[0]))/2:5}
 
 /* Бот: сообщения появляются, когда статус привязанного заказа меняется. */
-function bot(x,me){S.msgs.push({x:x,me:!!me,at:Date.now()});S.msgs=S.msgs.slice(-24)}
+function bot(x,me){S.msgs.push({x:x,me:!!me,at:Date.now(),q:!me&&quietNow()?('0'+quietCfg().to).slice(-2):''});S.msgs=S.msgs.slice(-24)}
 function sync(){var ch=false;orders().forEach(function(o){var was=S.seen[o.id];
     if(was!==undefined&&was!==o.s&&S.links[o.id]){ch=true;
-      if(o.s===3&&S.nt.dep)bot(sub(t('b_dep'),{id:o.id,dr:DRV}));
-      else if(o.s===4&&S.nt.cus)bot(sub(t('b_cus'),{id:o.id}));
-      else if(o.s===5){if(S.nt.arr)bot(sub(t('b_arr'),{id:o.id}));if(S.nt.doc)bot(sub(t('b_doc'),{id:o.id}))}
-      else bot(sub(t('b_st'),{id:o.id,st:ST[o.s]}))}
+      if(o.s===3&&S.nt.dep&&chOn('dep'))bot(sub(tplOf('dep'),{id:o.id,dr:DRV,st:ST[o.s]}));
+      else if(o.s===4&&S.nt.cus&&chOn('cus'))bot(sub(tplOf('cus'),{id:o.id,st:ST[o.s]}));
+      else if(o.s===5){if(S.nt.arr&&chOn('arr'))bot(sub(tplOf('arr'),{id:o.id,st:ST[o.s]}));if(S.nt.doc&&chOn('doc'))bot(sub(tplOf('doc'),{id:o.id,st:ST[o.s]}))}
+      else if(o.s<3||o.s>5)bot(sub(t('b_st'),{id:o.id,st:ST[o.s]}))}
     S.seen[o.id]=o.s});
   save();return ch}
 
@@ -86,11 +96,17 @@ function tl(o){return'<ol class="cb-tl">'+ST.map(function(s,i){return'<li class=
 function vOrders(){var all=orders();if(!all.length)return'<p class="mu">'+t('none')+'</p>';
   return'<p class="mu cb-e">'+t('orders_e')+'</p><div class="cb-list">'+all.map(function(o,i){var x=lanes[o.dir]||{},ln=S.links[o.id];
     return'<article class="cb-card cb-o '+['rise','slide','pop'][i%3]+' on" data-o="'+o.id+'"><header><b>'+o.id+'</b>'+(o.site?'<span class="cb-new">'+t('from_site')+'</span>':'')+'<span class="st s'+o.s+'">'+ST[o.s]+'</span></header>'+
-    '<p class="cb-rt">'+esc(x.c||'')+' → '+town()+' · '+esc(D.mode[o.m])+'</p>'+tl(o)+
+    '<p class="cb-rt">'+esc(x.c||'')+' → '+town()+' · '+esc(D.mode[o.m])+'</p>'+tl(o)+waitLine(o)+
     '<div class="cb-docs"><b>'+t('docs')+'</b>'+['d_cmr','d_inv','d_act'].map(function(k){var ok=o.s>=5||(k!=='d_act'&&o.s>=3);return'<button type="button" class="cb-doc" data-dl'+(ok?'':' disabled')+'>'+D.docIcon+'<span>'+t(k)+'</span>'+(ok?'':'<small>'+t('d_wait')+'</small>')+'</button>'}).join('')+'</div>'+
     '<div class="cb-act">'+(o.s>=3&&o.s<5?'<button type="button" class="btn btn-a btn-s" data-map="'+o.id+'">'+t('see_map')+'</button>':'')+
     '<a class="btn btn-'+(ln?'g':'tg')+' btn-s" data-link="'+o.id+'" href="'+D.bot+'?start=order_'+o.id+'" target="_blank" rel="noopener">'+D.tgIcon+'<span>'+t(ln?'tg_linked':'tg_link')+'</span></a>'+
     '<a class="btn btn-g btn-s" data-rep="'+o.id+'" href="'+D.site+'#calc">'+t('repeat')+'</a></div></article>'}).join('')+'</div>'}
+
+/* Ожидание в рейсе: факт из супер-админки (cp-disp-1), норма и ставка из её настроек; только чтение. */
+function waitLine(o){var W=wtCfg(),tx=(get('cp-disp-1',{}).tx||{})[o.id],w=(tx&&tx.w)||D.dw[o.id];if(!w)return'';var any=false,rows=[],tot=0,rate=+W.rate||0;
+  ['load','cus','unl'].forEach(function(s){var f=+w[s]||0;if(f>0)any=true;var n=(+W.plan[s]||0)+(+W.free[s]||0),over=Math.max(0,f-n);if(+W.round>0&&over>0)over=Math.ceil(over*60/W.round)*W.round/60;var sum=over*rate;tot+=sum;rows.push({s:s,f:f,n:n,o:over,sum:sum})});
+  if(!any)return'';if(+W.cap>0&&tot>+W.cap)tot=+W.cap;
+  return'<div class="cb-wt"><b>'+t('wt_h')+'</b>: '+rows.filter(function(r){return r.f>0}).map(function(r){return t('stg_'+r.s)+' '+t('wt_fact')+' '+hm(r.f)+', '+t('wt_norm')+' '+hm(r.n)+', '+(r.o?'<span class="ov">'+t('wt_over')+' '+hm(r.o)+' × '+fv(rate)+' $ = '+fmt(r.sum)+' $</span>':'<span class="ok">'+t('wt_ok')+'</span>')}).join('; ')+'. <b>'+t(W.payer==='carrier'?'wt_sum_car':'wt_sum')+': '+fmt(tot)+' $</b><small>'+t('wt_note')+' · '+t('demo')+'</small></div>'}
 
 /* ── Карта: машина едет по маршруту, точки пройденные и следующие ───── */
 /* Схема одна на все направления: отправление справа, Ташкент слева, дуга через границу. */
@@ -143,7 +159,7 @@ function vTg(){var n=Object.keys(S.links).length;
   '<h3>'+t('notif')+'</h3><div class="cb-nt">'+['dep','cus','arr','doc','idle'].map(function(k){return'<label class="opt"><input type="checkbox" data-nt="'+k+'"'+(S.nt[k]?' checked':'')+'><span class="sw"></span><span class="ot"><b>'+t('n_'+k)+'</b></span></label>'}).join('')+'</div>'+
   '<button type="button" class="btn btn-g btn-s" id="cbidle">'+t('idle_try')+'</button></section>'+
   '<div class="phone" aria-label="Telegram"><div class="scr"><div class="tgh"><i></i><b>@cargoprogroup_bot</b></div><div class="chat on" id="cbchat">'+chat()+'</div></div></div></div>'}
-function chat(){if(!S.msgs.length)return'<div class="bt">'+t('bot_empty')+'</div>';return S.msgs.map(function(m){return'<div class="bt'+(m.me?' me':'')+'">'+esc(m.x)+'</div>'}).join('')}
+function chat(){if(!S.msgs.length)return'<div class="bt">'+t('bot_empty')+'</div>';return S.msgs.map(function(m){return'<div class="bt'+(m.me?' me':'')+'">'+esc(m.x)+(m.q?'<small class="q">'+esc(sub(t('quiet_hold'),{h:m.q}))+'</small>':'')+'</div>'}).join('')}
 function link(id){if(S.links[id])return;S.links[id]=Date.now();bot('/start order_'+id,true);bot(sub(t('b_linked'),{id:id}));save()}
 
 function bindView(){var v=$('#cbv');
@@ -165,7 +181,7 @@ addEventListener('keydown',function(e){if(e.key==='Escape'&&sheet.classList.cont
 
 addEventListener('hashchange',function(){tab=location.hash.slice(1)||'orders';if(['orders','map','tg'].indexOf(tab)<0)tab='orders';render()});
 /* Статус из админки или супер-админки: таймлайн и бот обновляются сами. */
-addEventListener('storage',function(e){if(e.key==='cp-panel-1'||e.key==='cp-req-1'){sync();if(S.u)render()}if(e.key==='cp-cfg-1'||e.key==='cp-disp-1')render()});
+addEventListener('storage',function(e){if(e.key==='cp-panel-1'||e.key==='cp-req-1'){sync();if(S.u)render()}if(e.key==='cp-cfg-1'||e.key==='cp-disp-1'||e.key==='cp-set-1')render()});
 if(['orders','map','tg'].indexOf(tab)<0)tab='orders';
 sync();render();
 })();
