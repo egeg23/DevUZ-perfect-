@@ -2603,7 +2603,7 @@ test("CARGO PRO GROUP: выбор, сайт и панель на ru и uz — у
     }
     if (kind === "dispatch") {
       /* Диспетчерская (владелец, 31.10.2026): распределение по кузову, весу и объёму, водители на карте, Cargo GO. */
-      assert.ok(page.includes(lang === "ru" ? "Мы уже делали это для Cargo GO (LBM)" : "Biz buni Cargo GO (LBM) uchun allaqachon qilganmiz"), `${path}: нет строки про Cargo GO`);
+      assert.ok(page.includes(lang === "ru" ? "Мы уже делали это для Lider Cargo" : "Biz buni Lider Cargo uchun allaqachon qilganmiz"), `${path}: нет строки про Lider Cargo`);
       assert.ok(page.includes("com.lbmgo.ftl.driver") && page.includes("id6762045849"), `${path}: нет ссылок на приложение водителя LBM`);
       for (const k of ["FIT", "BODY", "plan()", "getPointAtLength", "cp-panel-1", "requestAnimationFrame"]) assert.ok(page.includes(k), `${path}: нет ${k}`);
       assert.match(page, /\[\[t:\d\]\]/, `${path}: нет слов-ловушек в демо-водителях`);
@@ -2669,7 +2669,7 @@ test("CARGO PRO GROUP: сайт 1 000 $ вместо 4 900 $, допы 2 000 $, 
   assert.equal(tms.price, 12000);
   assert.equal(tms.market.ru, "по рынку 8 000-20 000 $ в СНГ, 40 000-70 000 € в Европе");
   assert.doesNotMatch(tms.market.uz + tms.uz.t + tms.uz.e + tms.uz.who, /[А-Яа-яЁё]/, "tms: кириллица в узбекском");
-  assert.ok(tms.ru.who.includes("Cargo GO (LBM)") && tms.uz.who.includes("Cargo GO (LBM)"), "нет строки про Cargo GO");
+  assert.ok(tms.ru.who.includes("Lider Cargo") && tms.uz.who.includes("Lider Cargo"), "нет строки про Lider Cargo");
   assert.equal(plan.ALL_MODULES, 15000);
   const site = bundlePages("cargopro")!;
   assert.ok(site.html.includes("4 900 $") && site.html.includes("1 000 $"), "на первой странице не та цена");

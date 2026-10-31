@@ -60,12 +60,12 @@ export const ALL = BASE.promo + ADDONS.reduce((s, a) => s + a.price, 0);
    такое укажи рыночную стоимость и скажи, что мы это уже делали для Cargo Go».
    Цена рыночная, середина вилки СНГ (SOURCES.md, «Диспетчерская»): система
    с GPS и водителями 8 000-20 000+ $, в Европе планирование, приложение
-   водителя и кабинет клиента 40 000-70 000 €. Cargo GO: рабочее название
-   грузового приложения LBM (бриф LBM от 08.06.2026). */
+   водителя и кабинет клиента 40 000-70 000 €. Делали для Lider Cargo: приложение водителя
+   LBM Driver (владелец, 31.10.2026; бриф LBM от 08.06.2026). */
 export const MODULES = [
   { id: "tms", price: 12000, star: true,
     market: { ru: "по рынку 8 000-20 000 $ в СНГ, 40 000-70 000 € в Европе", uz: "bozorda MDHda 8 000-20 000 $, Yevropada 40 000-70 000 €" },
-    ru: { t: "Диспетчерская: распределение грузов по машинам и водители на карте", e: "Грузы сами раскладываются по машинам по типу кузова, весу и объёму, водители видны на карте с остановками и опозданиями, статус рейса сразу виден клиенту на сайте, выбор перевозчика по рейтингу и цене, документы водителей со сроками, роли и история", who: "Мы уже делали это для Cargo GO (LBM): отслеживание водителя на карте, выбор водителя по рейтингу и цене, приложение водителя в App Store и Google Play" },
-    uz: { t: "Dispetcherlik: yuklarni mashinalarga taqsimlash va xaritada haydovchilar", e: "Yuklar kuzov turi, og‘irlik va hajm bo‘yicha mashinalarga o‘zi taqsimlanadi, haydovchilar xaritada to‘xtash va kechikishlar bilan ko‘rinadi, reys holati mijozga saytda darhol ko‘rinadi, tashuvchini reyting va narx bo‘yicha tanlash, haydovchi hujjatlari muddatlari bilan, rollar va tarix", who: "Biz buni Cargo GO (LBM) uchun allaqachon qilganmiz: haydovchini xaritada kuzatish, haydovchini reyting va narx bo‘yicha tanlash, App Store va Google Play’da haydovchi ilovasi" } },
+    ru: { t: "Диспетчерская: распределение грузов по машинам и водители на карте", e: "Грузы сами раскладываются по машинам по типу кузова, весу и объёму, водители видны на карте с остановками и опозданиями, статус рейса сразу виден клиенту на сайте, выбор перевозчика по рейтингу и цене, документы водителей со сроками, роли и история", who: "Мы уже делали это для Lider Cargo: отслеживание водителя на карте, выбор водителя по рейтингу и цене, приложение водителя LBM Driver в App Store и Google Play" },
+    uz: { t: "Dispetcherlik: yuklarni mashinalarga taqsimlash va xaritada haydovchilar", e: "Yuklar kuzov turi, og‘irlik va hajm bo‘yicha mashinalarga o‘zi taqsimlanadi, haydovchilar xaritada to‘xtash va kechikishlar bilan ko‘rinadi, reys holati mijozga saytda darhol ko‘rinadi, tashuvchini reyting va narx bo‘yicha tanlash, haydovchi hujjatlari muddatlari bilan, rollar va tarix", who: "Biz buni Lider Cargo uchun allaqachon qilganmiz: haydovchini xaritada kuzatish, haydovchini reyting va narx bo‘yicha tanlash, App Store va Google Play’da LBM Driver haydovchi ilovasi" } },
 ];
 export const ALL_MODULES = ALL + MODULES.reduce((s, m) => s + m.price, 0);
