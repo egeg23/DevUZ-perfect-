@@ -55,6 +55,7 @@ import autopepe from "@/content/proto-bundles/autopepe.json" with { type: "json"
 import osonapteka from "@/content/proto-bundles/osonapteka.json" with { type: "json" };
 import cargopro from "@/content/proto-bundles/cargopro.json" with { type: "json" };
 import optimalprime from "@/content/proto-bundles/optimalprime.json" with { type: "json" };
+import agora from "@/content/proto-bundles/agora.json" with { type: "json" };
 import { stampPages } from "@/lib/proto/stamp";
 
 type Bundle = { parts: Record<string, string>; pages: Record<string, string> };
@@ -101,6 +102,7 @@ const BUNDLES: Record<string, Bundle> = {
   osonapteka: osonapteka as Bundle,
   cargopro: cargopro as Bundle,
   optimalprime: optimalprime as Bundle,
+  agora: agora as Bundle,
 };
 
 /** Имена всех сборок — для проверок, которые идут по каждой (tests/proto-plain-text). */

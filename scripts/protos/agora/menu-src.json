@@ -1,0 +1,4104 @@
+{
+ "source": "https://api2.rezvo.uz/api/menu/restaurants/95645b7d-8b76-4296-8a86-4ccc4578d160 (страница merchant.rezvo.uz/v/…/menu), 01.11.2026",
+ "venue": {
+  "name": "AGORA",
+  "description": "AGORA - это атмосферное пространство, созданное для живого общения и отдыха. Мы стараемся дарить счастье людям и видим в этом нашу истинную миссию.",
+  "address": "ул. Амира Темура 15",
+  "lat": 41.326627,
+  "lng": 69.286005,
+  "phone": "+998 97 422 88 88",
+  "instagram": "agora.lounge",
+  "cuisines": [
+   {
+    "id": "957645ee-09ce-4d4c-9ef9-f660219c488a",
+    "label": "Европейская"
+   },
+   {
+    "id": "03b26c2c-3f72-4c7d-aa51-dabfcd448b01",
+    "label": "Бар"
+   },
+   {
+    "id": "ac47d6d9-ce17-416e-b250-b00edaa959df",
+    "label": "Дымный коктейль"
+   }
+  ],
+  "workingHours": {
+   "alwaysOpen": true,
+   "week": {
+    "mon": {
+     "is24h": true,
+     "closed": false,
+     "windows": []
+    },
+    "tue": {
+     "is24h": true,
+     "closed": false,
+     "windows": []
+    },
+    "wed": {
+     "is24h": true,
+     "closed": false,
+     "windows": []
+    },
+    "thu": {
+     "is24h": true,
+     "closed": false,
+     "windows": []
+    },
+    "fri": {
+     "is24h": true,
+     "closed": false,
+     "windows": []
+    },
+    "sat": {
+     "is24h": true,
+     "closed": false,
+     "windows": []
+    },
+    "sun": {
+     "is24h": true,
+     "closed": false,
+     "windows": []
+    }
+   },
+   "overrides": []
+  },
+  "gallery": [
+   "https://cdn.rezvo.uz/rezvo/venue.gallery/94538fad-b9e3-43a3-a44a-6851e8eaa44e.webp",
+   "https://cdn.rezvo.uz/rezvo/venue.gallery/ac0b3f97-90c9-4dfc-b95a-b1e8619c3a3e.png",
+   "https://cdn.rezvo.uz/rezvo/venue.gallery/54220163-8bb0-48c2-be09-6bfecb1f30d3.png",
+   "https://cdn.rezvo.uz/rezvo/venue.gallery/fdcb8a0a-341f-4baa-984a-1d86e2b21e89.png",
+   "https://cdn.rezvo.uz/rezvo/venue.gallery/6e25181b-090b-43b3-a7e1-a75ac33ac186.png",
+   "https://cdn.rezvo.uz/rezvo/venue.gallery/3e8f5dd7-e958-4f83-9be8-06fe0f2e93e4.png",
+   "https://cdn.rezvo.uz/rezvo/venue.gallery/d1601613-feb0-422d-a237-73a4717ae2b7.png",
+   "https://cdn.rezvo.uz/rezvo/venue.gallery/12d82d92-a0a8-46b1-b9dd-19243c785954.png",
+   "https://cdn.rezvo.uz/rezvo/venue.gallery/3527b944-f44f-4706-8525-0221732136ce.png",
+   "https://cdn.rezvo.uz/rezvo/venue.gallery/58946f13-2d95-4a95-99f0-3c1c58b40041.png",
+   "https://cdn.rezvo.uz/rezvo/venue.gallery/90313488-7c9a-487e-9457-6be9736d0f35.jpeg",
+   "https://cdn.rezvo.uz/rezvo/venue.gallery/0403cdde-7ebe-4f64-a54d-bfe35caa38b7.png"
+  ],
+  "logo": "https://cdn.rezvo.uz/rezvo/venue.logo/d456c04c-89fd-42df-b7f1-1baf0313376b.jpeg",
+  "cover": "https://cdn.rezvo.uz/rezvo/venue.cover/af4b6bdb-00ce-4fdd-a974-abe3991b4957.png"
+ },
+ "categories": [
+  {
+   "id": "3ab94873-b3d9-474a-a79b-5d050d06149c",
+   "cuisine": "957645ee-09ce-4d4c-9ef9-f660219c488a",
+   "name": "ХОЛОДНЫЕ ЗАКУСКИ",
+   "order": 0,
+   "items": [
+    {
+     "id": "9074d65b-19e4-4685-85d5-d071ccc340a9",
+     "name": "Мясное ассорти",
+     "desc": "Казы, язык, бастурма, мясной рулет, индейка, крылышки, куриный казы, корнишоны по французски, подаётся с сыром фета и соусом пелатти",
+     "price": 320000,
+     "g": 750,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/560efb0aa936d1de23c7d19315725973.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "137a7726-38d5-4c6b-a221-5663e0250a32",
+     "name": "Огурцы свежие",
+     "desc": "",
+     "price": 15000,
+     "g": 200,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "7d58155f-be8f-48ae-8eb8-7fbda99cf39e",
+     "name": "Сырная тарелка",
+     "desc": "",
+     "price": 220000,
+     "g": 503,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "669e76dc-302f-40a9-9105-8c6935055817",
+     "name": "Киви",
+     "desc": "",
+     "price": 20000,
+     "g": 200,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "effc9801-04eb-4d54-b004-01f2f8569147",
+     "name": "Соленый огурцы бочковые",
+     "desc": "",
+     "price": 15000,
+     "g": 100,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "8409f8ec-734d-4a37-9a96-ff3e64359e04",
+     "name": "Помидор",
+     "desc": "",
+     "price": 15000,
+     "g": 200,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "e2a117a8-bc34-46f5-a5f1-f39b63718f4b",
+     "name": "Овощная нарезка",
+     "desc": "Свежие помидоры, огурцы, болгарский перец светофор, чеснок, стручковый перец, укроп, лук зелёный, кинза, листья салата, лук шалот",
+     "price": 90000,
+     "g": 880,
+     "photo": "https://cdn.rezvo.uz/rezvo/menu.dish/c44898f2-a1ab-4a73-8e08-4906ca9ee968.webp",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "a9ca89b3-abff-4a43-ad80-9e86aea89040",
+     "name": "Апельсин",
+     "desc": "",
+     "price": 25000,
+     "g": 340,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "254cd2ff-0827-4b22-87ea-e02fa41f4cf0",
+     "name": "перец",
+     "desc": "",
+     "price": 10000,
+     "g": 20,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "ec0a6eff-361d-40fb-8c73-e2005105d5d6",
+     "name": "Зелень ассорти",
+     "desc": "",
+     "price": 20000,
+     "g": 160,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "98c83dec-b83f-47cd-98b2-3a23403f3399",
+     "name": "Груша",
+     "desc": "",
+     "price": 15000,
+     "g": 280,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "c2b3219f-839c-475b-957a-cca414f4b491",
+     "name": "Маринованное ассорти",
+     "desc": "Корнишоны по французски, опята, маринованые пачатки, шампиньоны, армянская капуста",
+     "price": 75000,
+     "g": 300,
+     "photo": "https://cdn.rezvo.uz/rezvo/menu.dish/90dd6b90-ce93-42d2-87b1-f025e0d6e282.webp",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "2f1933f1-5ded-4b34-9ffc-8204f84d1fba",
+     "name": "Сельд по домашнему",
+     "desc": "",
+     "price": 50000,
+     "g": 450,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/ff6ff309f60949b4d94b402681ea134e.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "521e342a-6ec9-4313-9fc2-169388a5059f",
+     "name": "Вителло тоннато",
+     "desc": "Говьяжья вырезка, каперсы, помидоры черри, руккола",
+     "price": 125000,
+     "g": 311.4,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/0dab947fb82e556814eac984e6cb83bb.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "433d7b00-b110-4db2-b029-e5025d741517",
+     "name": "Сментана 50 гр",
+     "desc": "",
+     "price": 10000,
+     "g": 50,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    }
+   ]
+  },
+  {
+   "id": "23c35791-4c61-4b30-9f31-c648956f2333",
+   "cuisine": "03b26c2c-3f72-4c7d-aa51-dabfcd448b01",
+   "name": "Напитки",
+   "order": 0,
+   "items": [
+    {
+     "id": "53e79df1-3cd0-471d-bf49-f5cba219fbfe",
+     "name": "Негазированная вода Bonaqua",
+     "desc": "",
+     "price": 20000,
+     "g": 500,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "e535bd44-45bd-434a-9923-14f15dbbc828",
+     "name": "Вода Истису 0,5",
+     "desc": "",
+     "price": 25000,
+     "g": 500,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "21570b6c-53de-4740-b378-9a03db237138",
+     "name": "Газированная вода Bonaqua 0.5",
+     "desc": "",
+     "price": 20000,
+     "g": 500,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "e45515b7-3554-4f58-b8fd-68f4d1f48fd8",
+     "name": "Вода б/г 1л",
+     "desc": "",
+     "price": 20000,
+     "g": 1000,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "a42bd275-e3a1-4c9e-a495-e1e497f6a3e8",
+     "name": "Сок в ассортименте",
+     "desc": "",
+     "price": 35000,
+     "g": 1000,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "279083dc-3028-4055-9d83-50cbf8fbfdea",
+     "name": "Sprite 0,250мл",
+     "desc": "",
+     "price": 30000,
+     "g": 250,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "b0b227e8-e926-46fc-81a0-01d1d8d20f85",
+     "name": "Coca-Cola 0,25",
+     "desc": "",
+     "price": 30000,
+     "g": 250,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "c019d0ea-cf35-42f1-aa2d-f51a99501903",
+     "name": "Fanta 0.250мл",
+     "desc": "",
+     "price": 30000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "0fcd3059-3c65-4cc4-97d7-ef63f50a52d4",
+     "name": "Мята",
+     "desc": "",
+     "price": 10000,
+     "g": 8,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "2b3a5143-0467-48a5-8533-3fc06c9061c0",
+     "name": "Red Bull 0.25",
+     "desc": "",
+     "price": 40000,
+     "g": 250,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "53d7d02e-13c2-4c6e-b109-c1bc8c3111a0",
+     "name": "Вода Истису 0,25",
+     "desc": "",
+     "price": 20000,
+     "g": 250,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "e6db5bc8-54c5-496d-a38c-248c3c56c69f",
+     "name": "Coca-Cola zero 0.25 Стекло",
+     "desc": "",
+     "price": 30000,
+     "g": 250,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    }
+   ]
+  },
+  {
+   "id": "3bfa4584-6db2-4bee-8962-50fd86df697d",
+   "cuisine": "957645ee-09ce-4d4c-9ef9-f660219c488a",
+   "name": "САЛАТЫ",
+   "order": 1,
+   "items": [
+    {
+     "id": "a6fab064-022e-4ca5-bce2-223afb9c91a0",
+     "name": "Оливье",
+     "desc": "",
+     "price": 70000,
+     "g": 274,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/f064e6c0f7edb67336c1db69acb11e59.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "bee9dfbd-669b-41bd-8d1c-2f14df1a69da",
+     "name": "Цезарь",
+     "desc": "",
+     "price": 70000,
+     "g": 360,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "2d8ef8c4-74f6-4aa9-a373-5662451406e8",
+     "name": "Салат Хрустящий баклажан с говядиной",
+     "desc": "",
+     "price": 105000,
+     "g": 590,
+     "photo": "https://cdn.rezvo.uz/rezvo/menu.dish/515a9ca3-ccff-4c80-8d1f-d6e9bde6621c.webp",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "b13f3b5e-54fc-41c1-84e0-2af6e462e2bc",
+     "name": "Греческий",
+     "desc": "",
+     "price": 70000,
+     "g": 477,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/ff970442f54776ddb3c738f7bf11b199.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "27237069-a80f-43c3-9c4b-17a3612b989c",
+     "name": "Салат с креветками и с овощами",
+     "desc": "",
+     "price": 120000,
+     "g": 545,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "3b260f43-c80f-49a3-9b90-570c9b6b84e4",
+     "name": "Тёплый салат с куриной печенью",
+     "desc": "Куриная печень, перепелиные яйца, микс салата, перец горошек розовый и чёрный, с добавлением мёда, сливочного масла, бальзамического уксуса",
+     "price": 50000,
+     "g": 421,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/e3ca1bd421047baa82de7a207ab9a6dc.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "534cf0b4-8755-4598-a4b5-f4b1294138c8",
+     "name": "Острый тёплый салат с баклажанами",
+     "desc": "Отварная тельятина, баклажаны, свежие помидоры, кинза, лук шалот, подаётся с аджикой",
+     "price": 85000,
+     "g": 363,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/fe1e3463505091d890a0f3694597dedb.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "2a99f514-8f0a-4f08-a438-dc636825d9b3",
+     "name": "Буррата с розовыми помидорами",
+     "desc": "Cыр буррата, розовые помидоры, руккола, базилик, крем бальзамика, соус песто, лолло росса на основе оливкового масла",
+     "price": 120000,
+     "g": 253,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/11054fe20ba82643159ecd6a3330ec16.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "8ffbb062-ec4d-4e5e-a933-31274d71e0f5",
+     "name": "Капрезе",
+     "desc": "Моцарелла, свежие помидоры, руккола, соус петто, на основе оливкового масла и крема бальзамики",
+     "price": 85000,
+     "g": 355,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/20206a98659407855dc4d09ec1ba0bac.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "9f4478b8-0d63-48ec-b815-3ba31b092004",
+     "name": "Салат с хрустящими баклажанами",
+     "desc": "",
+     "price": 55000,
+     "g": 565,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "0abed2ac-c860-46f1-938d-8227988daf4b",
+     "name": "Фирменный салат Агора",
+     "desc": "",
+     "price": 120000,
+     "g": 258,
+     "photo": "https://cdn.rezvo.uz/rezvo/menu.dish/bc7d6a15-da1b-4b21-be54-fd889a9ae2cd.webp",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "8b5b6d6a-ae68-40de-81b3-34faca5da6b5",
+     "name": "Четыре сезона",
+     "desc": "Отварная телятина, огурцы свежие, огурцы маринованные, грибы опята, маринованные шампиньоны, лук шалот, лук зелёный, маринованные початки на основе растительного масла",
+     "price": 75000,
+     "g": 275,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/f66fadaf520ef19ccf0536e5f1b72a93.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "adf3c1d0-e6ab-4544-a4d2-1f72e441f7dd",
+     "name": "Салат со шпинатом",
+     "desc": "",
+     "price": 95000,
+     "g": 285,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "f45e270b-fbfa-41e4-8dbb-bd58395fc395",
+     "name": "Ачи-чук",
+     "desc": "",
+     "price": 55000,
+     "g": 323,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    }
+   ]
+  },
+  {
+   "id": "8f091f84-7dae-4989-9bc6-38c681362361",
+   "cuisine": "03b26c2c-3f72-4c7d-aa51-dabfcd448b01",
+   "name": "ЛИМОНАДЫ",
+   "order": 1,
+   "items": [
+    {
+     "id": "775c0b5e-890b-4edc-8fb7-f0ca821f5974",
+     "name": "Лимонад Манго-Маракуя",
+     "desc": "",
+     "price": 70000,
+     "g": 824,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "71d739ec-3faa-4113-973a-1b4316fa99af",
+     "name": "Айс ти 1л",
+     "desc": "",
+     "price": 65000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "5519ea54-aaff-469a-92fe-f9fb66933b5b",
+     "name": "Лимонад Ягодный",
+     "desc": "",
+     "price": 70000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "64a95205-9599-482c-8268-0745a2fd2363",
+     "name": "Лимонад классический (450мл)",
+     "desc": "",
+     "price": 35000,
+     "g": 450.0249,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "5b241d36-358d-4551-87c1-22e1d9027b69",
+     "name": "Мохито",
+     "desc": "",
+     "price": 80000,
+     "g": 790,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "5b500489-b2e6-4b31-ad64-4e9cdbff2972",
+     "name": "Лимонад Манго-Маракуя (450мл)",
+     "desc": "",
+     "price": 35000,
+     "g": 449.9864,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "3946bc5b-7e7f-4c58-a74e-048a29225ad5",
+     "name": "Лимонад классический",
+     "desc": "",
+     "price": 70000,
+     "g": 897,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/be7948a64925afd7073e8314769dd76e.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "8143a21c-fd28-4423-88ec-7d7ef0498482",
+     "name": "Айс ти 0.45л",
+     "desc": "",
+     "price": 35000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "1412a675-49ca-4e98-8c87-1a2dae2060dd",
+     "name": "Сироп в ассортименте",
+     "desc": "",
+     "price": 15000,
+     "g": 15,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "e4a15d51-f38b-4206-8c91-a15ad9760b19",
+     "name": "Лимонад Ягодный 450 мл",
+     "desc": "",
+     "price": 35000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "75f34113-daad-48d7-9763-df0b3f923b82",
+     "name": "Лимонад киви-яблоко",
+     "desc": "",
+     "price": 70000,
+     "g": 898,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/be7948a64925afd7073e8314769dd76e.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "a830f4d7-b479-4457-a6e9-6d409925a27c",
+     "name": "Лимонад Киви-яблоко 450мл",
+     "desc": "",
+     "price": 35000,
+     "g": 449.9878,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "2688e9c9-bc5b-43db-8c5d-6edd6697485e",
+     "name": "Стакан Мохито классик",
+     "desc": "",
+     "price": 40000,
+     "g": 449.9696,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    }
+   ]
+  },
+  {
+   "id": "d51893ae-b126-4214-9475-e317fa1ca43d",
+   "cuisine": "957645ee-09ce-4d4c-9ef9-f660219c488a",
+   "name": "ГОРЯЧИЕ ЗАКУСКИ",
+   "order": 2,
+   "items": [
+    {
+     "id": "a59c3e24-6ef0-4cf0-8379-42c973e33665",
+     "name": "Сулугуни жаренный",
+     "desc": "",
+     "price": 35000,
+     "g": 150,
+     "photo": "https://cdn.rezvo.uz/rezvo/menu.dish/d177d796-3bde-4080-8bb1-07d9148e9da5.webp",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "616ff0ea-20da-4a1e-9e8d-fa0458d19d2a",
+     "name": "Охотничьи колбаски",
+     "desc": "",
+     "price": 55000,
+     "g": 250,
+     "photo": "https://cdn.rezvo.uz/rezvo/menu.dish/a53e65a7-ea74-4dbf-8d20-a9e9bfda1444.webp",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "5b004bd1-ddc6-4380-8be6-a4fa94249461",
+     "name": "Хрустящие креветки темпура",
+     "desc": "Tигровые креветки в кляре с чесночным соусом",
+     "price": 115000,
+     "g": 370,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/be7948a64925afd7073e8314769dd76e.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "02321cd2-acb2-42fa-a011-5dd8c640e033",
+     "name": "Кутабе с сыром и зеленью",
+     "desc": "",
+     "price": 30000,
+     "g": 260,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "fb719ce4-cade-4e3b-9c73-dd0fc5237aef",
+     "name": "Сендвич с куриный филе",
+     "desc": "",
+     "price": 50000,
+     "g": 298,
+     "photo": "https://cdn.rezvo.uz/rezvo/menu.dish/bf2a504a-91be-4eb3-ba17-dea507f73a8d.webp",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "c46d906f-f3ab-4204-a10e-b5123c7284e0",
+     "name": "Крылышки в соусе BBQ",
+     "desc": "",
+     "price": 70000,
+     "g": 550,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/0005f7f4a5ef3c2feb5511ab94624e24.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "190e1b14-8541-438e-977b-9e9aa91ff7ac",
+     "name": "Чесночные гренки",
+     "desc": "",
+     "price": 40000,
+     "g": 242,
+     "photo": "https://cdn.rezvo.uz/rezvo/menu.dish/af28edc5-f21e-4d29-b51f-06ed856117c3.webp",
+     "stop": false,
+     "src": "iiko"
+    }
+   ]
+  },
+  {
+   "id": "cf7ebeec-38d6-49d3-a898-f29999559243",
+   "cuisine": "03b26c2c-3f72-4c7d-aa51-dabfcd448b01",
+   "name": "СВЕЖЕВЫЖАТЫЕ СОКИ (ФРЕШ)",
+   "order": 2,
+   "items": [
+    {
+     "id": "8db02abb-07e5-4a1c-9f68-6c62a988be1d",
+     "name": "Фреш Яблочно-апельсиновый",
+     "desc": "",
+     "price": 50000,
+     "g": 331,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "d84b8a20-2f34-47ff-b989-d3e85e523b94",
+     "name": "Фреш яблочно морковный",
+     "desc": "",
+     "price": 45000,
+     "g": 625,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "5e828a82-f3a6-4074-97e2-2d8ffa3e02ef",
+     "name": "Фреш Яблочный",
+     "desc": "",
+     "price": 35000,
+     "g": 450,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "55441645-7b2d-4713-aa7b-979c2dfaf375",
+     "name": "Фреш апельсиновый",
+     "desc": "",
+     "price": 45000,
+     "g": 450,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/be7948a64925afd7073e8314769dd76e.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "69f79857-c602-49bb-ba40-e9c5cf065001",
+     "name": "Фреш Морковный",
+     "desc": "",
+     "price": 30000,
+     "g": 800,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    }
+   ]
+  },
+  {
+   "id": "f084f04d-544b-4f96-9899-4178cd92a442",
+   "cuisine": "957645ee-09ce-4d4c-9ef9-f660219c488a",
+   "name": "СУПЫ",
+   "order": 3,
+   "items": [
+    {
+     "id": "932ef5b9-0300-4403-bb64-dacc6979623e",
+     "name": "Куринная крем суп",
+     "desc": "",
+     "price": 35000,
+     "g": 370,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "4146886f-e862-44aa-9443-806721a79a16",
+     "name": "Бизнес ланч (Вторник)",
+     "desc": "",
+     "price": 95000,
+     "g": 795,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "abdbabf1-3b1a-435e-bddc-ec043c37fff3",
+     "name": "Суп Том Ям",
+     "desc": "",
+     "price": 120000,
+     "g": 613,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "2d0cc71e-d1d3-4f2f-acba-419020199235",
+     "name": "Солянка",
+     "desc": "",
+     "price": 65000,
+     "g": 370,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/be7948a64925afd7073e8314769dd76e.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "a9ae8b1e-4e78-4463-8cc2-e38eba63a33b",
+     "name": "Томатный суп",
+     "desc": "",
+     "price": 70000,
+     "g": 272,
+     "photo": "https://cdn.rezvo.uz/rezvo/menu.dish/c1086a5a-a6b6-431d-aeb5-0f306c281009.webp",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "fbced469-4181-4934-ba64-5ad804a3adf3",
+     "name": "Бизнес ланч (Понедельник)",
+     "desc": "",
+     "price": 95000,
+     "g": 665.5,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "8d922526-d35d-4149-adab-5f16ae7fe353",
+     "name": "Бизнес Ланч (четверг)",
+     "desc": "",
+     "price": 95000,
+     "g": 782,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "9f6722e8-471c-40c9-86ab-74670ea2d62b",
+     "name": "Бизнес ланч (Среда)",
+     "desc": "",
+     "price": 95000,
+     "g": 917.5,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "f715aefd-0e3e-4135-b274-41b9d52ef3bf",
+     "name": "Куриный суп с домашней лапшой",
+     "desc": "",
+     "price": 45000,
+     "g": 380,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "0f21cddd-b3ef-43e7-8c1a-6ae32b74d749",
+     "name": "Бизнес ланч (Пятница)",
+     "desc": "",
+     "price": 95000,
+     "g": 884.5,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "4fcc9f15-5c67-4717-bb8c-2a2f03e95be2",
+     "name": "контейнер",
+     "desc": "",
+     "price": 3500,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    }
+   ]
+  },
+  {
+   "id": "078c0d73-5a69-4138-a622-a4db3781f881",
+   "cuisine": "ac47d6d9-ce17-416e-b250-b00edaa959df",
+   "name": "ЛЕГКИЙ",
+   "order": 3,
+   "items": [
+    {
+     "id": "1d387bf5-e3cf-4f71-baf4-f2f2dfb347a2",
+     "name": "Барбарисовая Фантазия L",
+     "desc": "Сладкий и освежающий микс с ярким вкусом барбариса и ягод, создающий летнее настроение.",
+     "price": 210000,
+     "g": 1000,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "cf69bab6-83a8-4b4a-83b0-c5c55afa119e",
+     "name": "Кисло-сладкий Ягоды L (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 28,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "1a6555db-2499-4006-be91-ccf908656f34",
+     "name": "Мятный Десерт L",
+     "desc": "Освежающий мятный микс с нотами ванили и тропических фруктов",
+     "price": 210000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "a56a4726-f7a5-4cce-a262-a825400f2263",
+     "name": "Кисло-сладкий Ягоды L",
+     "desc": "Ягодный микс с яркой кислинкой и сладкими нотами, создающий освежающий вкус лета.",
+     "price": 210000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "ba12bc61-c74a-49b6-9380-0398b3becbc3",
+     "name": "Смородиновый L (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 28,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "e7db506a-8b1d-4d71-a407-8d6eb4c05bda",
+     "name": "Кокосовый Сок L (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 28,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "980389b1-d16a-42dd-b226-20c2bebc4126",
+     "name": "эвкалиптовый летний Ветер L (ЗАМЕНА)",
+     "desc": "",
+     "price": 210000,
+     "g": 28,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "63aefe8a-fb32-4d24-9279-d8c9ff44b700",
+     "name": "Мятный Десерт L (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 28,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "2aa06e34-da98-423e-ba54-3672a161c6ba",
+     "name": "Кокосовый Сок L",
+     "desc": "Тропический коктейль с нотами ананаса и кокоса, освежающий и сладкий.",
+     "price": 210000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "b843a6f9-7b7b-4085-a960-0d8976c2fcaf",
+     "name": "Барбарисовая фантазия L (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "c2c13cf9-270d-4c21-af4d-86b5817d28cd",
+     "name": "Черничный Йогурт L",
+     "desc": "Нежный и освежающий микс с ярким вкусом черники и ягод, словно легкий десерт в каждом вдохе",
+     "price": 210000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "c1624564-aa4e-4786-85b5-f7d13daa5dc7",
+     "name": "Виноградная феерия L (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 28,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "f830c15c-9b48-4ea1-82de-199ef67b0cc3",
+     "name": "Смородиновый L",
+     "desc": "Ягодный микс с ярким смородиновым вкусом и освежающей ноткой мяты.",
+     "price": 210000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "8b189cbd-73fd-45bd-ac34-33cbe6b2fe2e",
+     "name": "Сочная Груша L (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 24,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "fcbced59-3c43-4b53-b3ba-b7d9f3e2bae5",
+     "name": "Гавайский M (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "74c86700-21bc-448d-9354-108faf51db46",
+     "name": "Сладкий Рассвет L (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 28,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "e393b20f-9043-49fe-9b84-a0ceda66e215",
+     "name": "Эвкалиптовый Летний Ветер L",
+     "desc": "Описание: Легкий и свежий, как летний бриз. Эвкалиптовая свежесть с фруктовыми нотами.",
+     "price": 210000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "87842c60-5510-4a44-b617-d55cc745836d",
+     "name": "Ананас-Лемонграс L (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "53a3b03c-ae54-4ed5-b5db-f814a9af70c7",
+     "name": "Фреш Ананасовый L (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 28,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "54530973-adca-4241-8b48-7f1e670687d5",
+     "name": "Ягодный Взрыв L",
+     "desc": "Взрывной ягодный микс с освежающим ментоловым послевкусием.",
+     "price": 210000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "a2db88f8-18ea-4330-a687-2c8ad8b158d8",
+     "name": "Голгофа L (ЗАМЕНА)",
+     "desc": "",
+     "price": 210000,
+     "g": 28,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "8169ba3f-945a-4aa2-9ec1-e4d51647a954",
+     "name": "Голгофа L",
+     "desc": "",
+     "price": 210000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "abc856a3-80e4-49f7-9dc0-30fa6c8eabf1",
+     "name": "Ягодный Взрыв L (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 28,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "4c53c854-7110-48a9-a861-8086bc4ea7dc",
+     "name": "Сладкий Рассвет L",
+     "desc": "Нежное сочетание сладкой малины и клубничного десерта",
+     "price": 210000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "a6404f83-58b1-4e36-9e36-3fad1648fdb5",
+     "name": "Сочная Груша L",
+     "desc": "Нежный и освежающий микс, где сладость груши гармонично сочетается с цитрусовыми нотами",
+     "price": 210000,
+     "g": 66,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "de1bddc6-20d2-4c7f-b022-9d533396483f",
+     "name": "Ананас-Лемонграс L",
+     "desc": "",
+     "price": 210000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "12e1747b-9e17-47f6-90a8-af79072064ff",
+     "name": "Фреш Ананасовый L",
+     "desc": "Освежающий ананасовый микс с нотами манго и лимона, идеально подходит для жаркого дня",
+     "price": 210000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "e375edce-0907-423c-9f2b-3a773ee281f9",
+     "name": "Виноградная Феерия L",
+     "desc": "Нежный и насыщенный виноградный вкус яркого киш миша",
+     "price": 210000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    }
+   ]
+  },
+  {
+   "id": "abd97995-ae6a-43f0-a14a-abbfadfcb679",
+   "cuisine": "03b26c2c-3f72-4c7d-aa51-dabfcd448b01",
+   "name": "КОФЕ",
+   "order": 3,
+   "items": [
+    {
+     "id": "8b615ca2-1037-4522-92dd-f7539576184b",
+     "name": "Американо",
+     "desc": "",
+     "price": 25000,
+     "g": 28,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/be7948a64925afd7073e8314769dd76e.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "78dcc719-e03f-437a-a21c-37f9b16b764d",
+     "name": "Латте",
+     "desc": "",
+     "price": 35000,
+     "g": 218,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/be7948a64925afd7073e8314769dd76e.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "f9cdd833-3de4-444a-b02d-32d3fb02c23c",
+     "name": "Кофе Cappuccino",
+     "desc": "",
+     "price": 35000,
+     "g": 218,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "a7497eec-32a9-467e-8e2f-f734eed4e5b3",
+     "name": "Kakao",
+     "desc": "",
+     "price": 35000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "37da2dd9-34a7-496a-b1b3-1716517c32d1",
+     "name": "Espresso тоник",
+     "desc": "",
+     "price": 50000,
+     "g": 213,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "14a3bdd1-5edc-4494-bacd-9d249079e17b",
+     "name": "Эспрессо",
+     "desc": "",
+     "price": 25000,
+     "g": 28,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/be7948a64925afd7073e8314769dd76e.JPEG",
+     "stop": false,
+     "src": "iiko"
+    }
+   ]
+  },
+  {
+   "id": "06b42d52-c600-4794-b930-592c79cc976c",
+   "cuisine": "03b26c2c-3f72-4c7d-aa51-dabfcd448b01",
+   "name": "ЧАЙ",
+   "order": 4,
+   "items": [
+    {
+     "id": "a943e5da-7fa5-4992-b0d3-18540e891862",
+     "name": "Клюквенный чай с корицей",
+     "desc": "",
+     "price": 50000,
+     "g": null,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/be7948a64925afd7073e8314769dd76e.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "065bebc6-3ea2-47e6-b71d-eb1ccbab54c0",
+     "name": "Чай цитрусовый",
+     "desc": "",
+     "price": 50000,
+     "g": 185,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "9ddd5a4d-fb69-4861-b5b2-1932206b7dda",
+     "name": "Чай Марокканский",
+     "desc": "",
+     "price": 50000,
+     "g": 153,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/be7948a64925afd7073e8314769dd76e.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "a7378ba9-7d51-45b2-888b-04b695f6facb",
+     "name": "Чай Ягодный",
+     "desc": "",
+     "price": 50000,
+     "g": 181,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/be7948a64925afd7073e8314769dd76e.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "9ebec0a2-0871-4aa3-ba2f-f6ea8820605a",
+     "name": "Чай с лимоном и сахаром",
+     "desc": "",
+     "price": 35000,
+     "g": null,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/be7948a64925afd7073e8314769dd76e.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "f77aeea0-e4fa-47da-9bfb-e9a381474a8a",
+     "name": "ЧАЙ ЗЕЛЕНЫЙ",
+     "desc": "",
+     "price": 20000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "65015dab-ed77-4f47-a34a-ea430b22a0be",
+     "name": "Чай Черный",
+     "desc": "",
+     "price": 20000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "d0388995-38e5-4885-b886-f693892ee3f1",
+     "name": "Чай Имбирный",
+     "desc": "",
+     "price": 50000,
+     "g": 112,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "3cce4ec1-1b2f-4325-8e41-5b01b712d986",
+     "name": "Чай Карак",
+     "desc": "",
+     "price": 50000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "22959f7d-2855-4845-bf0b-867a02884711",
+     "name": "Чай (чёрный, зелёный)",
+     "desc": "",
+     "price": 30000,
+     "g": null,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/be7948a64925afd7073e8314769dd76e.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "f8cd2eed-1de9-4bc0-a13d-19715e812a52",
+     "name": "Сахар",
+     "desc": "",
+     "price": 5000,
+     "g": 50,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "98e0b5cb-6969-4f2d-9af5-d05e548ba899",
+     "name": "Чай Травяной",
+     "desc": "",
+     "price": 40000,
+     "g": null,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/be7948a64925afd7073e8314769dd76e.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "cda61239-a6de-4142-8f37-337d7f740909",
+     "name": "Чай жасминовый",
+     "desc": "",
+     "price": 35000,
+     "g": null,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/be7948a64925afd7073e8314769dd76e.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "ce51fbd1-00db-4aed-a0db-7a1a29298ddf",
+     "name": "Чай с мёдом и лимоном",
+     "desc": "",
+     "price": 40000,
+     "g": null,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/be7948a64925afd7073e8314769dd76e.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "8ed94520-17b5-4114-a8a7-f98f89be6d41",
+     "name": "Чай зеленый с лимоном и сахаром",
+     "desc": "",
+     "price": 35000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    }
+   ]
+  },
+  {
+   "id": "a91f765c-8190-443f-a975-3f37cfe59071",
+   "cuisine": "957645ee-09ce-4d4c-9ef9-f660219c488a",
+   "name": "ГОРЯЧИЕ БЛЮДА",
+   "order": 4,
+   "items": [
+    {
+     "id": "446dfc14-f2a3-4210-8f62-bc87058a1b62",
+     "name": "Курица с грибами",
+     "desc": "",
+     "price": 70000,
+     "g": 585,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/19cc0f5a254b2504ade053e2a0186e6d.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "3cacbe2c-d8d4-4a2d-9911-7e6526b40394",
+     "name": "Бургер Агора мясной",
+     "desc": "",
+     "price": 60000,
+     "g": 643.006,
+     "photo": "https://cdn.rezvo.uz/rezvo/menu.dish/88853f66-0c8d-4495-9dbf-f31497ecdbed.webp",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "69997f77-28b4-405d-8f69-0f17a7b8f4f2",
+     "name": "Томлённое куриное филе в соусе Том Ям",
+     "desc": "",
+     "price": 70000,
+     "g": 574,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/f2cff28fb9490ae77176a6a334e5ec89.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "6b88725c-753e-4cf3-ae48-30be28b13c1f",
+     "name": "Телячи язык в сливочном соусе",
+     "desc": "",
+     "price": 85000,
+     "g": 350,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/177c22035fa841897cad68d896ebb8f2.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "a355dd54-161e-448c-bc87-87de0be76896",
+     "name": "Телятина с грибами",
+     "desc": "",
+     "price": 160000,
+     "g": 519,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/056ad4f42721deb0a2cac31a3481a067.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "9e305a27-8079-4891-b4a3-3e71d83af45d",
+     "name": "Мясо по домашнему",
+     "desc": "",
+     "price": 160000,
+     "g": 609,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/affe55a23c99c6f02d1d0e8f2c199529.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "95d609bf-0474-4e6a-a9a1-25b5f34239bb",
+     "name": "Тушенка",
+     "desc": "",
+     "price": 145000,
+     "g": 610.923077,
+     "photo": "https://cdn.rezvo.uz/rezvo/menu.dish/d998415e-5946-4562-8890-b04fa921b1a5.webp",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "7167039f-54de-455e-b338-1b65c4d772ff",
+     "name": "Щечки говяжьи с кремом сельдерей",
+     "desc": "",
+     "price": 140000,
+     "g": 215,
+     "photo": "https://cdn.rezvo.uz/rezvo/menu.dish/f6529825-fd9c-4057-b382-ba662fa13563.webp",
+     "stop": false,
+     "src": "iiko"
+    }
+   ]
+  },
+  {
+   "id": "c410c04e-4e27-4deb-9863-e0a02e1ee76b",
+   "cuisine": "03b26c2c-3f72-4c7d-aa51-dabfcd448b01",
+   "name": "Пиво",
+   "order": 5,
+   "items": [
+    {
+     "id": "2b1a502b-90c2-492f-b236-cd40f00abb4d",
+     "name": "Пиво Corona 0.33l",
+     "desc": "",
+     "price": 80000,
+     "g": 350,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "0ca04f07-7dce-44ab-8eca-b57b112cfb80",
+     "name": "Пиво Bud безалкогольный 0.45л",
+     "desc": "",
+     "price": 40000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "a7e22624-ce68-4821-89bf-788cf1ae311f",
+     "name": "Пиво Paulaner 0% 0.45",
+     "desc": "",
+     "price": 65000,
+     "g": 500,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "c95c87fb-6686-4731-95e7-ddc4fc6ae62b",
+     "name": "Сарбаст 500 мл разлив",
+     "desc": "",
+     "price": 30000,
+     "g": 500,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "530b48f7-13ef-4ac2-9129-021758b5b1e1",
+     "name": "Пиво Guinness 0.44l",
+     "desc": "",
+     "price": 80000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "d253b82c-5676-453f-bd7c-0d8a5fc098eb",
+     "name": "Кружка пиво не фильтрованное",
+     "desc": "",
+     "price": 30000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "eaf5d839-5278-41dc-950f-5ce497bc5727",
+     "name": "Пиво Bud 0.45",
+     "desc": "",
+     "price": 50000,
+     "g": 440,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "f3c836b8-4202-4fb9-81b1-179060d8b272",
+     "name": "Пиво Efes",
+     "desc": "",
+     "price": 90000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "28a5490a-6faf-47de-8586-226a5cfac89d",
+     "name": "Пиво Paulaner 0.5l",
+     "desc": "",
+     "price": 90000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "1f2b97a1-03ff-4de4-b00d-1846ff36fb4b",
+     "name": "Hoegaarden",
+     "desc": "",
+     "price": 50000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "aeb62548-496d-4f9c-934b-7c09b4ca780c",
+     "name": "1664",
+     "desc": "",
+     "price": 65000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "39617d8f-32c8-448f-8cdd-893979c2de39",
+     "name": "Кружка пенного фильтрованное",
+     "desc": "",
+     "price": 30000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "00d10836-feab-4187-be8f-9bcd4bd14fac",
+     "name": "Пиво Stella Artois 0.45",
+     "desc": "",
+     "price": 60000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "c9be7a7b-94f0-4df2-b552-3309f6b4dc83",
+     "name": "Жатейский гусь 300 мл разлив",
+     "desc": "",
+     "price": 30000,
+     "g": 330,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    }
+   ]
+  },
+  {
+   "id": "de44eda5-7af2-4e97-b2fd-89f02febe935",
+   "cuisine": "957645ee-09ce-4d4c-9ef9-f660219c488a",
+   "name": "МАНГАЛ",
+   "order": 5,
+   "items": [
+    {
+     "id": "00bc9a7c-21eb-451e-a5e5-19460e76c11b",
+     "name": "Люля кебаб маленький (120гр)",
+     "desc": "",
+     "price": 50000,
+     "g": 156,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/be7948a64925afd7073e8314769dd76e.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "1192dfc6-40d4-4fdc-b8e8-f59eb967a3df",
+     "name": "Говядина кусковая (200гр)",
+     "desc": "",
+     "price": 120000,
+     "g": 263,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/cd7e6838155d1bee00972c56c03754e1.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "b2d68149-c778-45fb-a09d-5f7940ce87b0",
+     "name": "Веганский восторг",
+     "desc": "",
+     "price": 40000,
+     "g": 533,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/8bca741ac5a33ed9cd74e101b14b95f0.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "ade49a08-e31f-4f55-a1da-1b984b0043d9",
+     "name": "Куринное Магре",
+     "desc": "",
+     "price": 85000,
+     "g": 495,
+     "photo": "https://cdn.rezvo.uz/rezvo/menu.dish/ccbd6448-ad4f-46ec-9ca1-50e51fe85204.webp",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "072ee7d4-e002-4f3a-937b-059b4c5e0cea",
+     "name": "Сочные крыля на мангале (300гр)",
+     "desc": "",
+     "price": 70000,
+     "g": 405,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/5e72de3a05c1ad36614e608347505a46.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "2270225d-073e-45f5-9df1-b13898877831",
+     "name": "Крылышки маленькие (150гр)",
+     "desc": "",
+     "price": 40000,
+     "g": 232,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/be7948a64925afd7073e8314769dd76e.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "f79b0548-09a6-408c-8e8b-1cfde40063a4",
+     "name": "Молодой картофель с курдюком (280гр)",
+     "desc": "",
+     "price": 35000,
+     "g": 300,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "c64f9fe5-c647-4fda-b92b-d142d3390f76",
+     "name": "Корейка на мангале",
+     "desc": "",
+     "price": 150000,
+     "g": 403,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/2728b6e94e2b14e2699b883b74f091a2.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "71d8ca3b-bf1b-4a86-80f0-069e8b7f4e62",
+     "name": "Говядина кусковая маленькая (125гр)",
+     "desc": "",
+     "price": 70000,
+     "g": 159,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/be7948a64925afd7073e8314769dd76e.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "37bf195e-bda0-452a-981f-f85cab426172",
+     "name": "Люля кебаб (200гр)",
+     "desc": "",
+     "price": 90000,
+     "g": 263,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/45a27bb10ba5b33de7e1862eb76a9fa8.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "c45621f8-25c4-4c14-9135-e9faefce711a",
+     "name": "Шашлык кусковой баранина",
+     "desc": "",
+     "price": 120000,
+     "g": 347,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "9b1e584e-7a6a-4714-a8a8-73ab7efe2c8a",
+     "name": "Филе миньон в перечном соусе",
+     "desc": "",
+     "price": 160000,
+     "g": 510,
+     "photo": "https://cdn.rezvo.uz/rezvo/menu.dish/91a8210b-4d21-4edd-8892-64e8ccffa4b8.webp",
+     "stop": false,
+     "src": "iiko"
+    }
+   ]
+  },
+  {
+   "id": "e1299eae-9a4f-40ed-91e5-20f3f8e1fede",
+   "cuisine": "03b26c2c-3f72-4c7d-aa51-dabfcd448b01",
+   "name": "Наливки",
+   "order": 6,
+   "items": []
+  },
+  {
+   "id": "5269c306-6d8b-440a-8b8b-d66ef743d12f",
+   "cuisine": "957645ee-09ce-4d4c-9ef9-f660219c488a",
+   "name": "ПАСТА",
+   "order": 6,
+   "items": [
+    {
+     "id": "37445d75-9c45-48b0-b9c0-fb9392c89ef2",
+     "name": "Фетучини с креветками",
+     "desc": "",
+     "price": 135000,
+     "g": 410,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/d02497c4cfba999628f5c320f4aa2074.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "31221b1e-7509-4b95-9f92-50c7f3bf0a36",
+     "name": "Паста Болоньезе",
+     "desc": "",
+     "price": 65000,
+     "g": 240,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/932ac8d9588185454d0802294fdf39c6.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "16bcf889-c5ba-4b85-90ff-26a9dde8e470",
+     "name": "Паста Альфредо",
+     "desc": "",
+     "price": 80000,
+     "g": 450,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/8c1467d002f04a87a65086440c88024d.JPEG",
+     "stop": false,
+     "src": "iiko"
+    }
+   ]
+  },
+  {
+   "id": "89a8d86e-ec0a-4d38-adac-1eef6f385e3d",
+   "cuisine": "03b26c2c-3f72-4c7d-aa51-dabfcd448b01",
+   "name": "Алкогольные коктейли",
+   "order": 7,
+   "items": [
+    {
+     "id": "de54458e-1783-429b-a0a7-e05967d0f8ad",
+     "name": "Cuba Libre",
+     "desc": "",
+     "price": 100000,
+     "g": 320,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "9e1a1473-c07e-4fe3-b6c3-ae637a24157e",
+     "name": "Текила Бум",
+     "desc": "",
+     "price": 90000,
+     "g": 150,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "5b3970b3-5db3-4ce4-b1f3-e4297d78a67a",
+     "name": "Carolina",
+     "desc": "",
+     "price": 90000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "de4a6097-12f4-4fa5-b80b-86d090c1dcb5",
+     "name": "Мохито алкогольное",
+     "desc": "",
+     "price": 70000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "6264ee0f-8ae4-4e5d-8dc3-f40fce9a3fe4",
+     "name": "Голубая лагуна",
+     "desc": "",
+     "price": 80000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "10a01eb0-bb37-43cb-bfe4-b55cbfca45b9",
+     "name": "Aurora",
+     "desc": "",
+     "price": 90000,
+     "g": 100,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "fccbddf0-fe2d-4304-99ee-a6d74677aa7f",
+     "name": "Виски саур",
+     "desc": "",
+     "price": 70000,
+     "g": 120,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "728290f6-f18c-4ff0-8856-fd9d5bf082e9",
+     "name": "Old fashion",
+     "desc": "",
+     "price": 90000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "41712440-43b1-4869-bb14-669598b7643f",
+     "name": "Лонг-Айленд",
+     "desc": "",
+     "price": 120000,
+     "g": 400,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "035e8fe8-5cd0-47bc-87e5-ede5af903002",
+     "name": "Open Drink",
+     "desc": "",
+     "price": 50000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "da3e0690-6852-444b-90c8-eb3fbedf777a",
+     "name": "Джин тоник",
+     "desc": "",
+     "price": 60000,
+     "g": 220,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "d001ad0e-8f60-4359-b616-c1b4af59eddb",
+     "name": "Виски Grant's triple wood 50u",
+     "desc": "",
+     "price": 70000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "10c194ce-0636-4d6f-960f-a3714a83e070",
+     "name": "Негрони",
+     "desc": "",
+     "price": 70000,
+     "g": 90,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "8cafbf79-7695-4cb4-9b61-a127e1e57ca4",
+     "name": "Пина Колада",
+     "desc": "",
+     "price": 90000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "16bb94f3-6ec8-4fa6-9710-12ecf142d1ca",
+     "name": "Aperol Spritz",
+     "desc": "",
+     "price": 90000,
+     "g": 230,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "515215f1-203a-4a45-87a2-011a62bb487a",
+     "name": "Kamikadze",
+     "desc": "",
+     "price": 90000,
+     "g": 60,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "24d78aa6-6084-4f5b-b1e8-3eca87a4001e",
+     "name": "Сlover club",
+     "desc": "",
+     "price": 75000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    }
+   ]
+  },
+  {
+   "id": "b82d30ca-c791-4002-afb5-7bed5a75d139",
+   "cuisine": "957645ee-09ce-4d4c-9ef9-f660219c488a",
+   "name": "СНЕКИ",
+   "order": 7,
+   "items": [
+    {
+     "id": "1e75e5bf-93e6-49ec-96b4-7e6d2893ea1e",
+     "name": "Фисташки",
+     "desc": "",
+     "price": 45000,
+     "g": 40,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "2274bba9-ebfb-45e1-b86e-cf4a1857e2d3",
+     "name": "Чипсы",
+     "desc": "",
+     "price": 30000,
+     "g": 60,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "ecaf6f0b-689b-4658-a36f-30e20bacab10",
+     "name": "сулугуни",
+     "desc": "",
+     "price": 35000,
+     "g": 50,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "0e21fa6a-eec9-4816-8f62-071c67e2c25c",
+     "name": "Пивной сет",
+     "desc": "",
+     "price": 90000,
+     "g": 190,
+     "photo": "https://cdn.rezvo.uz/rezvo/menu.dish/44044cce-aca5-4dba-8811-02ce07f62bca.webp",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "ff9da924-2d2e-414d-a0b6-3ded0585eb48",
+     "name": "Миндаль",
+     "desc": "",
+     "price": 40000,
+     "g": 40,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "ef70f43b-5028-4ba6-99d8-31c55ec58d94",
+     "name": "Лайм дольки",
+     "desc": "",
+     "price": 30000,
+     "g": 90,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "16115c29-01cc-4cb3-9cbc-a58435bcf31a",
+     "name": "Курт",
+     "desc": "",
+     "price": 25000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "4a6c4c47-8ab2-4157-b6ea-9143e6635337",
+     "name": "Лимон",
+     "desc": "",
+     "price": 20000,
+     "g": 100,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "35a84789-3b64-4bfe-bdca-b88c852629df",
+     "name": "Нават",
+     "desc": "",
+     "price": 20000,
+     "g": 150,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "13bc54ec-3985-48ff-861f-0d9e1024d9e9",
+     "name": "Шоколад",
+     "desc": "",
+     "price": 40000,
+     "g": 90,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    }
+   ]
+  },
+  {
+   "id": "bdf1d347-4207-4f09-8c83-1b87dd567b4b",
+   "cuisine": "957645ee-09ce-4d4c-9ef9-f660219c488a",
+   "name": "ГАРНИРЫ",
+   "order": 8,
+   "items": [
+    {
+     "id": "08f57e3f-cc45-465a-b3e3-ac9b58f6e54d",
+     "name": "Картофельные дольки",
+     "desc": "",
+     "price": 30000,
+     "g": 187.5,
+     "photo": "https://cdn.rezvo.uz/rezvo/menu.dish/7f65f6cc-5a18-4cc3-ba46-2c542cc5ea31.webp",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "fb7621e8-98e7-4614-9a93-5cb30e6f8e8b",
+     "name": "Рис",
+     "desc": "",
+     "price": 20000,
+     "g": 150,
+     "photo": "https://cdn.rezvo.uz/rezvo/menu.dish/068dfd29-415b-4515-b1f0-264596b51723.webp",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "a6223d6b-518e-49ca-8fb4-1bb1c9f2073f",
+     "name": "Картофель фри",
+     "desc": "",
+     "price": 30000,
+     "g": 187.5,
+     "photo": "https://cdn.rezvo.uz/rezvo/menu.dish/28b96aa6-9df8-45ba-993a-02e88131126d.webp",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "18c2291c-225d-4498-b58f-1bbeb0f43acd",
+     "name": "Пюре",
+     "desc": "",
+     "price": 25000,
+     "g": 150,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/6480340a49a8c5b9702b81b4d088859a.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "587db71e-d8bd-4f23-806f-26db628f24b7",
+     "name": "Рис с овощами",
+     "desc": "",
+     "price": 35000,
+     "g": 150,
+     "photo": "https://cdn.rezvo.uz/rezvo/menu.dish/1620474f-e41d-41fd-88e3-42331eacb80f.webp",
+     "stop": false,
+     "src": "iiko"
+    }
+   ]
+  },
+  {
+   "id": "3fe0bb4a-a95d-43fe-b277-06b37280b812",
+   "cuisine": "03b26c2c-3f72-4c7d-aa51-dabfcd448b01",
+   "name": "Алкоголь крепкий",
+   "order": 8,
+   "items": [
+    {
+     "id": "efbed862-e38e-49e5-b505-32f000030472",
+     "name": "Водка амбарная 0.5л",
+     "desc": "",
+     "price": 200000,
+     "g": 500,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "d45e6668-5044-4e61-b7c0-3bae64dbee17",
+     "name": "Imperia V.S 50 ml",
+     "desc": "",
+     "price": 35000,
+     "g": 50,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "3e425f2a-7ae5-44c7-81c4-9fc738df74d9",
+     "name": "Водка Islandiya 0.5л",
+     "desc": "",
+     "price": 200000,
+     "g": 500,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "cb9bb63d-d495-4d25-a0c9-fac1f2cd2d80",
+     "name": "summum",
+     "desc": "",
+     "price": 70000,
+     "g": 50,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "3f215e16-af71-4f4d-92b5-57081f5a4f81",
+     "name": "Вино Martini Asti 0.75",
+     "desc": "",
+     "price": 550000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "217d9717-8125-4757-83ce-8339a0c13f4e",
+     "name": "Роса Мягкая (Водка, Россия)",
+     "desc": "Роса Мягкая (Водка, Россия) Новый экологичный бренд водки премиум-класса, созданный с фокусом на абсолютную натуральность и чистоту. Главная особенность производства — использование инновационной технологической установки «РОСА», которая бережно фильтрует напиток и позволяет раскрыть благородные природные экстракты, обеспечивая ультрамягкую текстуру. В состав водки входит высококачественный спирт класса «Люкс», кристальная природная минеральная вода, а также спиртованный настой и ароматный спирт солода. Напиток обладает безупречной прозрачностью и характерным, чистым ароматом с тонкими пшеничными и хлебными нотами. Вкус — удивительно гладкий, мягкий и гармоничный, со слабой солодовой сладостью и легкой маслянистой текстурой. Завершается чистым, освежающим послевкусием без лишней жгучести или горечи. Оформление бутылки с элементами водной ряби и природными цветами подчеркивает эко-концепцию продукта. Идеально подходит к сытным блюдам: мясным нарезкам, горячему стейку, запеченной рыбе, традиционным соленьям и маринадам. Рекомендуется подавать сильно охлажденной до 4–6°C. Характеристики: Страна: Россия Тип: Классическая водка / Эко-продукт (Premium Eco-Vodka) Особенности: Спирт «Люкс», настой и ароматный спирт солода Крепость: 40% Объем подачи: 50 мл",
+     "price": 20000,
+     "g": 50,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/1b18a9e3153ec21a0a518d3e784f0c3a.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "65d4ec57-4f15-44bb-a267-b44fd58c34df",
+     "name": "Пиво Peroni",
+     "desc": "",
+     "price": 50000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "ed714a31-0ba0-43d2-9d64-3c65a3d349e8",
+     "name": "Jack Daniel’s Old No.7 50ml",
+     "desc": "Jack Daniel’s Old No.7 (Виски, США) Легендарный американский виски из штата Теннесси, создаваемый по уникальной технологии с 1866 года. Его ключевая особенность — медленное смягчение через трехметровый слой прессованного угля из сахарного клена (Lincoln County Process) перед выдержкой в новых бочках ручной работы из белого американского дуба. Виски обладает глубоким янтарным цветом и мягким, округлым вкусом, в котором благородные древесно-угольные тона гармонично переплетаются с карамельно-ванильной сладостью, нотами спелого банана и легким оттенком дыма. Универсальный барный хит: безупречен в чистом виде, со льдом, а также в качестве основы для культовых миксов с колой, содовой или яблочным соком. Характеристики: Страна: США (Теннесси) Тип: Теннесси Виски (Tennessee Whiskey) Крепость: 40% Объем подачи: 50 мл",
+     "price": 80000,
+     "g": 50,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/859746babcc5a6b2316ca4f33455415f.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "73803297-8d08-46a7-87f3-cb5b7963d19c",
+     "name": "Bushmills The Original 50 ml",
+     "desc": "Bushmills The Original (Виски, Ирландия) Классический ирландский виски с самой старой лицензированной вискикурни в мире, ведущей свою историю с 1608 года. Изготавливается методом традиционной тройной дистилляции и бережного купажирования солодового виски с легким зерновым. Напиток обладает теплым золотистым цветом и исключительно мягким, округлым вкусом. В его палитре деликатные медовые и ванильные ноты гармонично сочетаются с оттенками спелых свежих фруктов, легкой пряностью дуба и тонкими нюансами крем-брюле. Превосходный выбор для употребления в чистом виде, со льдом или в качестве благородной основы для фирменных коктейлей. Характеристики: Страна: Ирландия Тип: Купажированный виски (Blended Irish Whiskey) Крепость: 40% Объем подачи: 50 мл",
+     "price": 80000,
+     "g": 50,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/084231d10872898b67436ac6698f02d8.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "07574e60-344c-47e4-86d8-f77bc4ce9bc8",
+     "name": "Gin & Tonic",
+     "desc": "",
+     "price": 90000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "bbaf8feb-f9e6-43c3-9a99-5045209bda88",
+     "name": "Джеймсон 50ml",
+     "desc": "Jameson (Виски, Ирландия) Самый известный и продаваемый ирландский виски в мире, чей безупречный характер формируется с 1780 года. Секрет его легендарной гладкости заключается в классической тройной дистилляции в медных перегонных кубах и длительной выдержке в бочках из-под бурбона и хереса. Напиток обладает мягким, сбалансированным вкусом с отчетливыми сладковато-ореховыми нотами, оттенками карамели, ванили и спелых сухофруктов, которые переходят в благородное пряное послевкусие. Универсальный выбор для любой компании: прекрасен в чистом виде, со льдом, а также служит идеальной основой для коктейлей и классического сочетания с яблочным соком или имбирным элем. Характеристики :Страна: Ирландия Тип: Купажированный виски (Blended Irish Whiskey) Крепость: 40% Объем подачи: 50 мл",
+     "price": 80000,
+     "g": 50,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/b85faa415f40b699dc1a1318071f13eb.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "5801099c-94ff-4247-8d98-f1351ce88819",
+     "name": "Вино Bagizagan 0.7",
+     "desc": "",
+     "price": 150000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "f21a3567-9164-4a91-9825-55316de22297",
+     "name": "Capitan Morgan Spiced Gold 50мл",
+     "desc": "",
+     "price": 55000,
+     "g": 50,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "16ff0c50-8979-4823-a9b2-87c3599f981d",
+     "name": "Bacardi Carta Negra 50ml",
+     "desc": "",
+     "price": 45000,
+     "g": 50,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "b6034aa6-0033-47ff-b46e-86c4219be867",
+     "name": "Johnnie Walker Black Label50ml",
+     "desc": "Johnnie Walker Black Label (Виски, Шотландия) Знаменитый шотландский купажированный виски класса делюкс, признанный эталоном высокого качества во всем мире. В его сложный и глубокий бленд входит около 40 отборных солодовых и зерновых виски со всех регионов Шотландии, каждый из которых выдерживается в дубовых бочках не менее 12 лет. Black Label обладает насыщенным темно-золотым цветом и роскошным, многогранным вкусом. В нем гармонично переплетаются фирменные ноты торфяного дыма и костра, сладкие тона изюма, апельсиновой цедры, сливочной карамели и пикантных специй. Превосходный дижестив для истинных ценителей, который рекомендуется подавать в чистом виде, с добавлением пары капель ледяной воды или с крупным кубиком льда. Краткий вариант для меню: Johnnie Walker Black Label — премиальный шотландский виски с выдержкой не менее 12 лет. Обладает сложным, богатым вкусом с узнаваемыми нотами торфяного дыма, сухофруктов, карамели и специй. Характеристики: Страна: Шотландия Тип: Купажированный шотландский виски (Blended Scotch Whisky) Выдержка: 12 лет (12 Years Old) Крепость: 40% Объем подачи: 50 мл",
+     "price": 70000,
+     "g": 50,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/76cc6c9b09dac2f41c07df25653bc12a.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "9847d4ee-a7ba-46fa-a873-d7bf22f9d300",
+     "name": "Архангельская Северная Выдержка",
+     "desc": "Архангельская Северная Выдержка (Водка, Россия) Известная российская водка премиум-класса от компании Novabev Group (ранее Beluga Group), которая объединяет в себе вековые традиции северного винокурения и чистоту заповедной природы. Главная технологическая гордость бренда — финальный этап производства: перед розливом готовый купаж отправляется на дополнительную выдержку в течение 14 дней в уникальные столетние медные доводные чаны, сохранившиеся на заводе АЛВИЗ. Основой напитка служит высококачественный спирт класса «Люкс» и сверхмягкая северная вода, проходящая трехступенчатую очистку. В уникальную рецептуру входят исключительно натуральные растительные компоненты Русского Севера и Соловецких островов: ароматные спирты брусничного листа и цетрарии исландской (исландского мха), а также спиртованные настои овсяных хлопьев, болотного сабельника и ламинарии. Благодаря растительным экстрактам и медной выдержке водка полностью лишена резких спиртовых тонов. Она обладает кристальной прозрачностью, мягким ароматом с едва заметными травяными и луговыми нюансами, а также исключительно гладким, сбалансированным вкусом с благородным, согревающим послевкусием. Идеальное гастрономическое сопровождение для сытных ресторанных блюд: прекрасно подходит к стейкам, мясным деликатесам, запеченной дичи, наваристым супам и традиционным разносолам. Рекомендуется подавать сильно охлажденной до 4–6°C. Характеристики: Страна: Россия (Архангельск) Тип: Классическая водка (Premium Vodka) Особенности: Спирт «Люкс», 14 дней выдержки в медных чанах, настои брусничного листа, исландского мха и овсяных хлопьев Крепость: 40% Объем подачи: 50 мл",
+     "price": 140000,
+     "g": null,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/c66023c7f55f125cf87c208e54b3d43b.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "b74cde66-088c-4d21-b07b-5ee27fe38a4e",
+     "name": "Вино Kakabadze Shilda 0,125ml красное",
+     "desc": "",
+     "price": 55000,
+     "g": 125,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "f51c8308-973f-4cf4-8fd0-cda59a88d8da",
+     "name": "Ром Capitan Morgan White 50мл",
+     "desc": "",
+     "price": 55000,
+     "g": 50,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "e7a5a685-4c71-4789-aa05-75ce93d956e0",
+     "name": "Olmeca Gold",
+     "desc": "Olmeca Gold (Текила, Мексика) Премиальная мексиканская текила с ярким, праздничным характером, создаваемая в легендарном регионе Халиско на высоте более 2000 метров над уровнем моря. Напиток производится из сока отборной голубой агавы (сорт Tequilana Weber), запеченной в традиционных кирпичных печах, и проходит дистилляцию в аутентичных медных кубах. Свой роскошный золотисто-янтарный цвет и мягкую округлость вкуса Olmeca Gold приобретает благодаря деликатному купажированию молодой текилы (Blanco) и выдержанных в бочках из-под бурбона спиртов (Reposado). Обладает богатым, манящим ароматом с выразительными нотами сочной запеченной агавы, спелых тропических фруктов, легких пряных специй и сладковатой древесной ванили. Вкус — идеально сбалансированный, густой и мягкий, с приятными медово-перечными нюансами в согревающем послевкусии. Настоящий хит любого яркого вечера. Традиционно подается в чистом виде (шотами) с долькой сочного апельсина и щепоткой молотой корицы, а также выступает в качестве премиальной основы для культовых барных коктейлей, таких как Margarita или Tequila Sunrise. Характеристики: Страна: Мексика (Халиско) Тип: Золотая текила (Tequila Gold / Joven) Крепость: 38% Объем подачи: 50 мл",
+     "price": 70000,
+     "g": 50,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/092fcf910dd8585d3595eb3ed34210bb.PNG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "974baff3-651d-46bd-a3b3-2fe56f4b4c6d",
+     "name": "Вино Kakabadze Shilda 0,75 красное сухое",
+     "desc": "",
+     "price": 350000,
+     "g": 750,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "1bf5f0fa-a45b-4d21-bae7-40d451cb1eca",
+     "name": "Джин Bickens 50ml",
+     "desc": "",
+     "price": 40000,
+     "g": 50,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "36eb5250-6162-4e63-935f-a51215ddc0a3",
+     "name": "Виски Black Label 50мл",
+     "desc": "",
+     "price": 70000,
+     "g": 50,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "709f921a-cfea-415a-9549-cce8a47fb9ba",
+     "name": "Вино Kakabadze Shilda 0,75 белое полусладкое",
+     "desc": "",
+     "price": 350000,
+     "g": 750,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "86e7881f-b892-4553-8351-30e378b81678",
+     "name": "Wolfburg 50г",
+     "desc": "",
+     "price": 50000,
+     "g": 50,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "cf661e4c-a93b-4151-97e0-4f36cb2972fa",
+     "name": "Caiman",
+     "desc": "",
+     "price": 25000,
+     "g": 50,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "aa4527c9-ae43-4332-9c11-eee0c660bac9",
+     "name": "DE LUXE 100.ГР",
+     "desc": "",
+     "price": 60000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "cfc6564d-bd03-4dd4-a188-52626ca1dfe2",
+     "name": "Dewar's 12 Years Old 50ml",
+     "desc": "Dewar's 12 Years Old (Виски, Шотландия) Один из самых титулованных и уважаемых шотландских купажированных виски в мире, созданный в честь основателя дома Джона Дюара. Главный секрет его исключительного характера — знаменитый процесс двойной выдержки (Double Aged for Extra Smoothness). После того как отборные односолодовые и зерновые спирты созревают не менее 12 лет, их купажируют и вновь возвращают в специально подобранные дубовые бочки еще на полгода для достижения идеальной гладкости и гармонии. Напиток обладает глубоким янтарным цветом и роскошным, теплым вкусом. В его богатой палитре раскрываются изысканные ноты сочной груши, спелых сухофруктов, тающего сливочного ириса и лугового меда с деликатным шлейфом цитрусовой цедры и мягкого дубового дыма. Великолепный премиальный дижестив, который рекомендуется подавать в чистом виде, с добавлением пары капель воды или с крупным кубом льда. Характеристики: Страна: Шотландия Тип: Купажированный шотландский виски (Blended Scotch Whisky) Выдержка: 12 лет Крепость: 40% Объем подачи: 50 мл",
+     "price": 90000,
+     "g": 50,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/2c2e7781114b83471a2ea959effa9ef8.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "4d645ade-8911-4328-8e02-7698a68edfe9",
+     "name": "Bushmills 40ml",
+     "desc": "",
+     "price": 70000,
+     "g": 40,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "209578af-a802-4783-a820-c0478a29b9bf",
+     "name": "Dewar`s12 50мл",
+     "desc": "",
+     "price": 75000,
+     "g": 50,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "806363e9-e474-4050-bdcf-4dfc48e1c5db",
+     "name": "Вино Kakabadze Shilda 0.75 белое сухое",
+     "desc": "",
+     "price": 350000,
+     "g": 750,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "729f09b9-64a9-4950-8fca-fd7bc049c1c8",
+     "name": "Cinzano Rossо 50мл",
+     "desc": "",
+     "price": 50000,
+     "g": 50,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "2c7394fd-1f19-40dc-806c-fab9d1281d8c",
+     "name": "Коньяк TANBOUR 7YO 50мл",
+     "desc": "",
+     "price": 30000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "c4017903-6c7e-47be-bc96-95ced2066eb1",
+     "name": "Ballantine's Finest 50ml",
+     "desc": "Ballantine's Finest (Виски, Шотландия) Один из самых знаменитых и популярных купажированных шотландских виски в мире, чей оригинальный рецепт остается неизменным с 1910 года. В его утонченный и элегантный купаж входит более 40 тщательно отобранных солодовых и зерновых спиртов со всех четырех регионов Шотландии, выдержанных в бочках из-под бурбона. Виски обладает светло-золотистым цветом и мягким, идеально сбалансированным вкусом. В его богатой палитре гармонично переплетаются ноты нежного молочного шоколада, спелых красных яблок, ванили и легкого цветочного меда, оставляя после себя приятное, долгое и освежающее послевкусие. Универсальный барный хит: превосходен как дижестив в чистом виде, со льдом, а также в качестве надежной основы для разнообразных коктейлей и простых миксов с колой, содовой или яблочным соком. Характеристики: Страна: Шотландия Тип: Купажированный шотландский виски (Blended Scotch Whisky) Крепость: 40% Объем подачи: 50 мл",
+     "price": 75000,
+     "g": 50,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/36aab432340b07623a11be9ec1b75692.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "d6971cdb-fb85-4360-b36c-e65d6c3dd2e6",
+     "name": "Chivas Regal 12 Years Old 50ml",
+     "desc": "Chivas Regal 12 Years Old (Виски, Шотландия) Один из самых знаменитых и уважаемых шотландских купажированных виски премиум-класса, ведущий свою историю с 1801 года. Сердцем его изысканного купажа является благородный односолодовый виски Стратайла (Strathisla), а каждый из входящих в бленд спиртов выдерживается в дубовых бочках не менее 12 лет. Виски обладает сияющим янтарным цветом и роскошным, округлым вкусом. В его богатой палитре гармонично переплетаются ноты спелых яблок в меду, диких трав, сливочной карамели и сочных садовых груш, оставляя за собой долгое, мягкое и согревающее послевкусие. Настоящий символ престижа и барной классики, который идеален в качестве дижестива в чистом виде, с добавлением льда или как основа для благородных крепких миксов. Характеристики: Страна: Шотландия Тип: Купажированный шотландский виски (Blended Scotch Whisky) Выдержка: 12 лет Крепость: 40% Объем подачи: 50 мл",
+     "price": 90000,
+     "g": 50,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/7762c4497481c50bccdac48625af7b59.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "9be34289-9323-4b34-b865-19611ada3ac2",
+     "name": "Campari 40ml",
+     "desc": "",
+     "price": 90000,
+     "g": 40,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "60a8f0ab-b623-4077-99d5-04dc66aeb56b",
+     "name": "The Famous Grouse 50ml",
+     "desc": "The Famous Grouse (Виски, Шотландия) Один из самых популярных и любимых брендов шотландского виски, являющийся настоящей национальной гордостью Шотландии. Его безупречный и сбалансированный купаж создается на основе знаменитых односолодовых спиртов, таких как The Macallan и Highland Park, которые выдерживаются в отборных дубовых бочках ручной работы. Виски обладает чистым золотистым цветом и легким, округлым вкусом с богатыми оттенками спелых садовых фруктов, сухофруктов, легкой карамельной сладости и мягких специй. Послевкусие — приятное, согревающее и слегка суховатое. Благодаря своей мягкости он максимально универсален: прекрасен как в чистом виде или со льдом, так и в качестве идеального барного компонента для разнообразных коктейлей и лонг-дринков. Характеристики: Страна: Шотландия Тип: Купажированный шотландский виски (Blended Scotch Whisky) Крепость: 40% Объем подачи: 50 мл",
+     "price": 65000,
+     "g": 50,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/f6ec68ef6b61253c4beaaab111b4190f.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "f4cb650e-5409-40b2-8c36-c763a00e65a9",
+     "name": "Вино Kakabadze Shilda 0,12ml белое",
+     "desc": "",
+     "price": 55000,
+     "g": 125,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "81125d63-c4d5-431c-a925-814bfef677da",
+     "name": "Tullamore D.E.W. 50ml",
+     "desc": "Tullamore D.E.W. (Виски, Ирландия) Знаменитый ирландский виски с богатой историей, создаваемый по уникальному методу тройной дистилляции и тройного купажирования (Triple Blend). В его составе гармонично сочетаются три типа виски: зерновой, солодовый и традиционный pot still, которые выдерживаются в бочках из-под бурбона и хереса. Благодаря этому напиток обладает легендарной ирландской мягкостью и глубоким вкусом с яркими нотами спелых зеленых яблок, сладкой карамели, ванили и деликатными древесно-пряными нюансами. Отличный выбор как для употребления в чистом виде или со льдом, так и для создания согревающих коктейлей, включая классический Irish Coffee. Характеристики: Страна: Ирландия Тип: Купажированный виски (Blended Irish Whiskey) Крепость: 40% Объем подачи: 50 мл",
+     "price": 90000,
+     "g": 50,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/9ed09ebebe3b516734edbb297ee73e97.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "38173a5f-e64d-4819-aefa-d947fd636294",
+     "name": "Ликёр Galliano 50 ml",
+     "desc": "",
+     "price": 60000,
+     "g": 50,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "3d32d913-ba18-4bbf-925f-6a05952815eb",
+     "name": "Jameson 50ml",
+     "desc": "",
+     "price": 80000,
+     "g": 50,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "3e27d103-0dd9-42d6-8c46-d1c9cccc8f9f",
+     "name": "Вино Sparkling Salute 0.75",
+     "desc": "",
+     "price": 220000,
+     "g": 750,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "4f89bd0f-cee7-4451-aa1f-7acadb2688c2",
+     "name": "Pamir Brut 0.75",
+     "desc": "",
+     "price": 180000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "9264b304-47e9-443b-851f-8867c38ef20b",
+     "name": "Пиво Asahi Super Dry 0.33",
+     "desc": "",
+     "price": 60000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "e1fdf2db-661c-4565-a634-045609038674",
+     "name": "Виски Famous Grouse 50мл",
+     "desc": "",
+     "price": 65000,
+     "g": 50,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "721c27bd-23ff-4a2c-85b4-2eb8ad10b1e5",
+     "name": "Вино Kakabadze Shilda Saperavi 0.75",
+     "desc": "",
+     "price": 400000,
+     "g": 750,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "3cffe812-b266-43ce-9d76-ffed4ee0a811",
+     "name": "Grant's Triple Wood 50ml",
+     "desc": "Grant’s Triple Wood (Виски, Шотландия) Знаменитый купажированный шотландский виски с богатой историей, создаваемый независимой семейной компанией William Grant & Sons с 1898 года. Его уникальный характер формируется благодаря особому процессу созревания Triple Wood: спирты выдерживаются в трех различных типах бочек — новых дубовых (придают пряную полноту), американских из-под бурбона (отвечают за мягкую ванильную сладость) и в бочках из-под хереса (дарят глубокие фруктовые и ореховые оттенки). Виски обладает чистым золотистым цветом и мягким, богатым, прекрасно сбалансированным вкусом с нотами спелой груши, ванильного крема, солода и легким намеком на древесный дым. Великолепен как в чистом виде или с добавлением льда, так и в качестве отличной основы для классических барных миксов. Характеристики: Страна: Шотландия Тип: Купажированный шотландский виски (Blended Scotch Whisky) Крепость: 40% Объем подачи: 50 мл",
+     "price": 75000,
+     "g": null,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/be7948a64925afd7073e8314769dd76e.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "294fc720-b6d6-49d2-9d5b-d597f84f0034",
+     "name": "Ликер Jagermeister 50мл",
+     "desc": "",
+     "price": 60000,
+     "g": 50,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "74885518-f40f-4705-bef8-ade1913e54a0",
+     "name": "Olmeca Silver",
+     "desc": "Olmeca Silver (Текила, Мексика) Классическая серебряная текила, изготовленная из отборной голубой агавы. Обладает чистым, мягким вкусом с яркими цитрусовыми нюансами, легкими травяными нотами и деликатной сладостью запеченной агавы в освежающем послевкусии. Идеально подходит как для традиционной подачи в чистом виде, так и в качестве основы для культовых коктейлей: Margarita, Paloma или Tequila Sunrise. Характеристики: Страна: Мексика Тип: Silver (Blanco) Крепость: 35% Объем подачи: 50 мл",
+     "price": 70000,
+     "g": 50,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/facb037ae46bb228cae2bb8c907b8a34.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "376a757b-4268-43a6-9b16-e544e486db91",
+     "name": "Виски Red Label 50 ml",
+     "desc": "",
+     "price": 45000,
+     "g": 50,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "54f1f86e-e12f-40c6-9477-4a0461391741",
+     "name": "Пробковый сбор",
+     "desc": "",
+     "price": 100000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "b1e7ef3c-0e36-4f34-ba76-058e956e4d03",
+     "name": "Tolly & Tonic",
+     "desc": "",
+     "price": 100000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "db59da7e-1234-442b-b4b3-cb7b59809674",
+     "name": "Вино Laguna ассортимент 0,75",
+     "desc": "",
+     "price": 150000,
+     "g": 750,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    }
+   ]
+  },
+  {
+   "id": "c7ed78b9-0ec4-440d-a2ba-1796968b844d",
+   "cuisine": "957645ee-09ce-4d4c-9ef9-f660219c488a",
+   "name": "ХЛЕБ",
+   "order": 9,
+   "items": [
+    {
+     "id": "90f985b0-2964-415b-b205-dde5a00b6064",
+     "name": "Патыр",
+     "desc": "Патыр — ароматная традиционная лепёшка с золотистой хрустящей корочкой и нежным, воздушным мякишем. Выпекается до румяной корочки, сохраняя насыщенный вкус и тепло домашнего хлеба. Идеально дополняет любое блюдо или подаётся как",
+     "price": 6000,
+     "g": 150,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/915d6cc9beec3745a175f733b0294c69.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "74811214-5825-4c98-863b-91ccd877097f",
+     "name": "Лепёшки",
+     "desc": "",
+     "price": 5000,
+     "g": null,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/91a347ad1cceb9bf61731759411326f5.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "87e29f90-d696-43fe-a437-bc60688eef64",
+     "name": "Булка с семенами",
+     "desc": "Ароматная булочка с хрустящей золотистой корочкой и щедрой россыпью кунжута, льна и подсолнечных семечек. Нежный, воздушный мякиш прекрасно сочетается с насыщенным ореховым вкусом семян, делая каждый кусочек особенно вкусным. Идеальна к завтраку, первым блюдам или как основа для любимых сэндвичей.",
+     "price": 5000,
+     "g": null,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/113a80af5bc0288f4c230fa85f41d709.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "8a7baebb-882f-4c95-b22d-d567a24eca3f",
+     "name": "Бородинский хлеб",
+     "desc": "",
+     "price": 20000,
+     "g": 150,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "c03a0584-0635-4ddf-a2da-378171187fb6",
+     "name": "Батон",
+     "desc": "",
+     "price": 20000,
+     "g": 149.989,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "d1cd92e0-b8ad-46d1-a196-01eba14164c4",
+     "name": "Тостерный хлеб",
+     "desc": "",
+     "price": 15000,
+     "g": 100,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "85e1a279-34ba-45b3-b032-61c3af9f6995",
+     "name": "Хлебная корзиночка",
+     "desc": "",
+     "price": 25000,
+     "g": null,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/1380529e831e3312a39a1d015a24680c.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "3b577f5e-8878-4081-a230-8f6fc0613e02",
+     "name": "Булка плетёнка",
+     "desc": "Воздушная, нежная и ароматная булка с красивым плетёным узором и золотистой румяной корочкой. Мягкий, слегка сладковатый мякиш буквально тает во рту, делая её идеальным дополнением к чашке чая, кофе или молока. Домашний вкус, который дарит уют с первого кусочка",
+     "price": 5000,
+     "g": null,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/daab955e92dd2df36ac6010ef5d87fca.JPEG",
+     "stop": false,
+     "src": "iiko"
+    }
+   ]
+  },
+  {
+   "id": "341299af-0030-405e-bb19-cac5bc780f11",
+   "cuisine": "957645ee-09ce-4d4c-9ef9-f660219c488a",
+   "name": "СОУСЫ",
+   "order": 10,
+   "items": [
+    {
+     "id": "89a9feb0-2107-4daa-8368-d38f719fb8f6",
+     "name": "Соус Чесночный 40гр",
+     "desc": "",
+     "price": 15000,
+     "g": 50,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "248ded4b-5d5b-44f5-9e6f-0b3d537069f5",
+     "name": "Соус тобаско",
+     "desc": "",
+     "price": 20000,
+     "g": 10,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "48100b72-df24-4602-916d-0baf31765b75",
+     "name": "Соус Пилати 40гр",
+     "desc": "",
+     "price": 10000,
+     "g": 50,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "596624cf-48ba-4e14-963c-a30c4f23b293",
+     "name": "Соус Цезарь 40гр",
+     "desc": "",
+     "price": 15000,
+     "g": 50,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "c2395c74-9a6d-4c31-9e75-688da1a966a6",
+     "name": "Соус BBQ 40гр",
+     "desc": "",
+     "price": 10000,
+     "g": 50,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    }
+   ]
+  },
+  {
+   "id": "810d0b3e-8c10-446b-8692-b42113cf7d94",
+   "cuisine": "957645ee-09ce-4d4c-9ef9-f660219c488a",
+   "name": "ДЕСЕРТЫ",
+   "order": 11,
+   "items": [
+    {
+     "id": "5947b3c0-2b6c-4a03-93eb-e4cc63705fca",
+     "name": "Дыня",
+     "desc": "Сочная, ароматная и невероятно сладкая дыня с нежной тающей мякотью. Освежает, дарит натуральную сладость и насыщенный летний вкус.",
+     "price": 35000,
+     "g": null,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/e1c603511e57466f55f752436e90129e.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "aa0406c7-b7ce-4d1b-8750-2b6d2443933d",
+     "name": "Творожный пирог от Гули",
+     "desc": "",
+     "price": 50000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "704a3cf3-4cde-4864-85f1-f7c3f637edec",
+     "name": "Арбуз - Дыня",
+     "desc": "",
+     "price": 55000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "cc167cd0-b648-42dc-964d-b3a564f5384d",
+     "name": "Арбуз",
+     "desc": "Сочный, сладкий и освежающий арбуз с насыщенным летним вкусом. Каждая долька наполнена прохладой, натуральной сладостью и свежестью, которая прекрасно утоляет жажду и дарит настоящее удовольствие в жаркий день.",
+     "price": 35000,
+     "g": null,
+     "photo": "https://16a9564f-f8ec-42ba-a998-3027aa809e50.selstorage.ru/agora-tashkent/123296/94110/images/items/46d0717a01713ebc30dd5a51c04d293e.JPEG",
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "ec56702b-2383-47a7-bc8b-e3f5902a09bf",
+     "name": "Мед 40гр",
+     "desc": "",
+     "price": 30000,
+     "g": 50,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    }
+   ]
+  },
+  {
+   "id": "bae3d864-3a18-49dc-b25a-4e91730964c8",
+   "cuisine": "ac47d6d9-ce17-416e-b250-b00edaa959df",
+   "name": "СРЕДНИЙ",
+   "order": 13,
+   "items": [
+    {
+     "id": "b42474a1-81c0-4ac8-a05c-01c71d51b9f6",
+     "name": "Сочная Груша М",
+     "desc": "Сладкий и сочный грушевый микс с легкими фруктовыми нотами.",
+     "price": 210000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "7722f293-ff5c-4336-929e-f63a263384d5",
+     "name": "Персиковая Симфония M",
+     "desc": "Нежный и сладкий микс, сочетающий персиковую свежесть с тропическими нотами.",
+     "price": 210000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "4a69badb-65e2-4453-ba47-e4b5d1fd9662",
+     "name": "Бахчевой M",
+     "desc": "Сочный микс, наполняющий летним настроением и освежающим вкусом.",
+     "price": 210000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "7cca895f-10a4-4192-9ec6-63022b8c888a",
+     "name": "Арктический Байкал M",
+     "desc": "Свежий ягодно-ментоловый микс, словно дыхание Арктики",
+     "price": 210000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "4bfef872-a625-44be-9248-000bfd3c9403",
+     "name": "Айвовая Нежность М (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 28,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "311917e7-6133-4974-8880-eb2df2bc64f1",
+     "name": "Лесные Ягоды М",
+     "desc": "Ягодный микс с освежающей кислинкой и легкой сладостью.",
+     "price": 210000,
+     "g": 28,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "ab39abcf-ae99-4f85-a1d6-e491b51b14e6",
+     "name": "Смородиновый М (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 28,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "8e716b48-57ca-45a6-b52b-d8305af172b6",
+     "name": "Арктический Байкал М (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 28,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "b148ef01-6217-42d3-ad32-4d61bfc3bbfc",
+     "name": "Барбарисовая Фантазия М (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 28,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "68104076-bd01-4522-85da-5ed743d36492",
+     "name": "Сладкие Вафли М",
+     "desc": "Нежный десертный микс с ягодным акцентом",
+     "price": 210000,
+     "g": 67,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "d7610a18-8e6f-4167-8aad-9ab4e99adc08",
+     "name": "Сладкий Рассвет М",
+     "desc": "Нежный ягодно-клубничный микс, наполняющий утро сладостью и свежестью.",
+     "price": 210000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "ad700873-0ec9-4d21-b489-7c67e121cb41",
+     "name": "Бузиновый М",
+     "desc": "Нежный ягодный микс с яркими нотами бузины и клюквы.",
+     "price": 210000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "e87c38b3-d1e5-486e-87c4-4febb37a9565",
+     "name": "эвкалиптовый летний Ветер M (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 24,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "7cc18ebf-f197-4604-991a-a3b167cd453d",
+     "name": "Ягодный урожай M",
+     "desc": "Сочный ягодный микс, который пробуждает летние воспоминания.",
+     "price": 210000,
+     "g": 62,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "9b35abe5-4879-4c40-8368-21e4bb53a369",
+     "name": "Виноградная Феерия М (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 28,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "0d2b06f5-e366-49b2-8907-331045cda960",
+     "name": "Лесная Симфония М",
+     "desc": "Ароматный микс лесных ягод с нотками свежести и легкой сладости.",
+     "price": 210000,
+     "g": 67,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "5e95f5a4-232a-4f00-a46b-6d135573c0f0",
+     "name": "Айвовая Нежность M",
+     "desc": "Нежный айвовый микс с персиковыми и ромашковыми нотами, дарящий уют и спокойствие",
+     "price": 210000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "08573975-656b-477d-bcb8-fd1d425352b8",
+     "name": "Виноградная Феерия М",
+     "desc": "Насыщенный виноградный микс с легкими ягодными нотами.",
+     "price": 210000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "cadb0cfd-9002-40f9-ab8d-38c66e70fc3f",
+     "name": "Сладкие Вафли М (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 25,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "3de4df30-bd82-46c0-9456-feda36768b14",
+     "name": "Грейпфрутовый Фреш М",
+     "desc": "Освежающий цитрусовый микс с яркими нотами грейпфрута и сладкими вишневыми акцентами",
+     "price": 210000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "83dc1be4-28fb-4430-ae2d-ef7fbaada95d",
+     "name": "Клюквенный М (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 28,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "f1db9df0-ecb9-48a6-bb2c-1111413a82e9",
+     "name": "Ягодный Взрыв М (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 24,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "13ddcd41-11e8-462a-9707-81de4efb4eea",
+     "name": "Смородиновый М",
+     "desc": "Яркий ягодный микс с насыщенным смородиновым вкусом и легкой вишневой ноткой",
+     "price": 210000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "78432b4f-2cfc-4bb6-a131-3d96d376c689",
+     "name": "Солнечный Апельсин М",
+     "desc": "Яркий и освежающий микс, наполненный солнечными цитрусовыми нотами",
+     "price": 210000,
+     "g": 68,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "05bd6551-be0f-4a6b-9429-45843d10c409",
+     "name": "Манговая Симфония 2.0 М",
+     "desc": "Сладкий и освежающий манговый микс с кремовыми нотами, дарящий тропическое наслаждение",
+     "price": 210000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "a0efbb37-97b4-494d-9d1d-c13cb6b39178",
+     "name": "Персиковая Симфония М (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 28,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "8d56f4dc-8566-4369-a1bc-637d107d349d",
+     "name": "Кактус М (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "966c114f-1bfd-4411-a00b-2580fabf118e",
+     "name": "Солнечный Апельсин М (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 26,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "7fa083f5-f341-4ec4-b03a-314a1e26ef73",
+     "name": "Бахчевой М (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 28,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "a8258323-494b-4922-83be-fa96c8cd6d3b",
+     "name": "Бузиновый Н (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 28,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "ca66ef1d-84b2-4264-a300-eee76208eb52",
+     "name": "Арбузный Гурман M",
+     "desc": "Сочный арбуз с ягодным акцентом и освежающим ментоловым послевкусием",
+     "price": 210000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "f6fc2b86-4437-4c29-be16-97a37fc55aaf",
+     "name": "Кисло-сладкий Ягоды М (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 28,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "73c24ca2-fb3d-40f3-ac3a-8ecea5ef6935",
+     "name": "Ананас-Лемонграс М",
+     "desc": "",
+     "price": 210000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "abd1c719-3783-4ed8-9b6b-3b271da1fc00",
+     "name": "Кактус M",
+     "desc": "",
+     "price": 210000,
+     "g": 1000,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "937e38b2-48bf-488f-b16d-3182d850109b",
+     "name": "Грейпфрутовый Фреш М (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 28,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "22237736-0519-4bf4-b37d-5a4ff140279c",
+     "name": "Манговая Симфония 2.0 М (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 28,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "8cc27f2a-4942-4174-9a38-64e82a7b742c",
+     "name": "Сладкий Рассвет М (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 28,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "1c4d9220-5462-4a1e-8864-42e141558146",
+     "name": "Лесные Ягоды М (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 28,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "fdbed601-f6fe-4c3d-bec4-d8b977bb4bdd",
+     "name": "Кисло-сладкий Ягоды М",
+     "desc": "Яркий микс ягод с освежающей кислинкой и сладким послевкусием.",
+     "price": 210000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "6c6d5324-a350-42d6-926c-11e62f1b3dc6",
+     "name": "Арбузный Гурман М (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 28,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "c8918e21-994b-4b2e-9e7d-7746474c8209",
+     "name": "Сочная Груша М (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 28,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "1c43046f-f8e1-42f3-abc7-5114217614ce",
+     "name": "Гавайский М",
+     "desc": "",
+     "price": 210000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "ad0182fd-289a-4e15-981c-41afc5a5fd3c",
+     "name": "Голгофа М",
+     "desc": "",
+     "price": 210000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "d5f5e597-6f39-48fd-9efb-bf6c7ee8f999",
+     "name": "Голгофа M (ЗАМЕНА)",
+     "desc": "",
+     "price": 210000,
+     "g": 28,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "f6f6f4ac-5b9c-4316-843e-21462647fc78",
+     "name": "Взрывной Гранат М",
+     "desc": "Яркий и насыщенный микс с гранатовым акцентом",
+     "price": 210000,
+     "g": 67,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "a1acc797-9173-4daf-aa1e-2669ee2e46d7",
+     "name": "Клюквенный М",
+     "desc": "Яркий и освежающий микс с кисло-сладким вкусом клюквы и ягодной гармонией.",
+     "price": 210000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "8130a270-ac59-455c-942e-86b41dbc8b62",
+     "name": "Эвкалиптовый Летний Ветер M",
+     "desc": "Легкий и освежающий микс с нотами эвкалипта, яблока и ягод, создающий атмосферу летнего прохлады.",
+     "price": 210000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "2a2df846-7171-46f4-9b98-592c02c1b184",
+     "name": "Барбарисовая Фантазия M",
+     "desc": "Сладкий и фруктовый микс с ярким вкусом барбариса, словно солнечное утро.",
+     "price": 210000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "300774f7-7bb3-4148-bdc9-24f9ebd37c6c",
+     "name": "Лесная Симфония М (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 25,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "cc0f3fb5-d70a-4474-80ad-85a89373e126",
+     "name": "Взрывной Гранат М (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 25,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "67571ec8-9865-455d-82d8-b1aced81b689",
+     "name": "Ананас-Лемонграс М (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "f1b6f3c0-be51-41cc-a706-db8bdee9424d",
+     "name": "Ягодный Взрыв М",
+     "desc": "Яркий и освежающий ягодный микс с ментоловым акцентом",
+     "price": 210000,
+     "g": 66,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    }
+   ]
+  },
+  {
+   "id": "ba245475-9af6-4399-b81d-7832121f6b09",
+   "cuisine": "ac47d6d9-ce17-416e-b250-b00edaa959df",
+   "name": "КРЕПКИЙ",
+   "order": 14,
+   "items": [
+    {
+     "id": "384500a2-60c5-493e-9ab9-512cfe48fe83",
+     "name": "Лесная Симфония Н (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 28,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "9f900b93-2c6d-46e9-a25e-a4729af74814",
+     "name": "Взрывной Гранат Н",
+     "desc": "Яркий и освежающий микс с нотами граната и вишни, создающий взрыв вкуса в каждом вдохе.",
+     "price": 210000,
+     "g": 67,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "28f3febf-2b0d-4b37-83ee-091029a2481f",
+     "name": "Сладкий Рассвет Н",
+     "desc": "Яркий ягодный микс с нотками сладкой малины и барбариса, дарящий утреннее бодрствование и свежесть.",
+     "price": 210000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "85fb8238-f956-47a1-a873-3bee69ac0dcd",
+     "name": "Манговая Симфония 2.0 Н (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "e26b6a91-1e3d-44a8-a724-87b19b6c0954",
+     "name": "Гавайский Н",
+     "desc": "",
+     "price": 210000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "bf98be3b-3164-443c-bd71-3d0c663a40fa",
+     "name": "Клюквенный Н (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 28,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "edfb1709-8723-4ffc-914f-cb5f11e2e10f",
+     "name": "Солнечный Апельсин Н (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 28,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "84631cf0-a6ce-41f5-adf2-a01e21692896",
+     "name": "Солнечный Апельсин Н",
+     "desc": "Яркий и освежающий цитрусовый микс, наполняющий солнечным настроением",
+     "price": 210000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "f12da6a6-cccd-4253-b27a-e5f0bad1fbac",
+     "name": "эвкалиптовый летний Ветер H (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 27,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "f929690c-ddfa-4d22-bfb1-7f9848d6cdd9",
+     "name": "Смородиновый Н (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 28,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "0b4078eb-9730-4abb-b0d3-b2bd4d93051f",
+     "name": "Эвкалиптовый Летний Ветер Н",
+     "desc": "Легкий и освежающий микс с нотами эвкалипта, яблока и ягод, создающий атмосферу летнего прохлады.",
+     "price": 210000,
+     "g": 69,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "c1a4cf9a-195d-4962-8b9e-865ac85b2e9c",
+     "name": "Бахчевой Н (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 1000,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "79869e4f-9943-41bc-9e2f-6933105ee5f8",
+     "name": "Манговая Симфония Н",
+     "desc": "Сладкий и освежающий манговый микс с кремовыми нотами, дарящий тропическое наслаждение",
+     "price": 210000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "9719edbf-5b76-4bf9-a933-297ff010bcc1",
+     "name": "Лесные Ягоды Н (ЗАМЕНА)",
+     "desc": "",
+     "price": 105500,
+     "g": 27,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "e3afda6e-91f6-47f3-ba2f-ba93b7c0b91f",
+     "name": "Манговая Симфония 2.0 Н",
+     "desc": "",
+     "price": 210000,
+     "g": 1000,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "9be32ce3-76b1-4de8-bc79-6ed2d40a4fc5",
+     "name": "Голгофа Н",
+     "desc": "",
+     "price": 210000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "d36f6489-9586-40a2-8711-bafabf5fd245",
+     "name": "Кактус H",
+     "desc": "",
+     "price": 210000,
+     "g": 1000,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "9c9fda09-c6b8-450b-963a-6fcf9df22a43",
+     "name": "Смородиновый Н",
+     "desc": "Яркий и насыщенным смородиновым вкусом, легкими цитрусовыми нотами.",
+     "price": 210000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "5ff0b907-744b-4f9b-b682-cdf9dd3cdd4e",
+     "name": "Грейпфрутовый Фреш H (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 1000,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "a1c73de6-9d06-46cb-990f-a4d947b771e5",
+     "name": "Голгофа Н (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 28,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "4c48750d-1d4a-4f53-9922-4469f493a5da",
+     "name": "Сладкий Рассвет Н (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 28,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "6fdc77c7-d7fb-4e2c-a3c1-4f8a8410609b",
+     "name": "Клюквенный Н",
+     "desc": "Ягодный микс с ярким клюквенным акцентом и сладким послевкусием",
+     "price": 210000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "8151a2df-bdec-47ab-8d3b-91177b6f3738",
+     "name": "Арбузный Гурман Н",
+     "desc": "Сочный арбуз с ягодным акцентом и освежающим ментоловым послевкусием",
+     "price": 210000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "65453f13-63f9-4735-9fd8-ed49bf1fa49c",
+     "name": "Взрывной Гранат Н (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 25,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "b5b11a93-fbf9-46f1-95f1-026a054506f7",
+     "name": "Барбарисовая Фантазия Н (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 28,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "5629d833-0ad5-4e65-abe3-4599fe36ab56",
+     "name": "Ягодный Взрыв Н (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 24,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "a20671eb-ed7c-411a-9aa3-bc9766eb9a31",
+     "name": "Бузиновый Н",
+     "desc": "Сладкий и ягодный микс с нотами бузины и лесных ягод.",
+     "price": 210000,
+     "g": 71,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "896f05f4-f504-4644-b147-c955244541e2",
+     "name": "Бахчевой Н",
+     "desc": "Сочный микс, наполняющий летним настроением и освежающим вкусом.",
+     "price": 210000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "6380e2fc-3c92-471b-bdb4-e56c9aed1571",
+     "name": "Лесные Ягоды Н",
+     "desc": "Сочная ягода с ледяным освежающим эффектом",
+     "price": 210000,
+     "g": 69,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "58fce95d-fb60-4d25-b747-0609bca7a0d6",
+     "name": "Персиковая Симфония Н (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 28,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "a5a91f36-b852-44b9-905f-2b5699e24d29",
+     "name": "Арктический Байкал Н (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 1000,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "83099cbb-2e34-4aea-8552-54d3e5c469b7",
+     "name": "Виноградная Феерия H",
+     "desc": "Сочный виноград с нотками черной смородины и черники, создающий яркий и освежающий вкус.",
+     "price": 210000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "99dc534a-75c4-468f-abe1-6c729f4c2bcf",
+     "name": "Кисло сладкий ягоды Н (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 28,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "9621a857-82d1-4869-bd8f-4462742e90dc",
+     "name": "Кисло сладкий ягоды Н",
+     "desc": "Яркий ягодный микс с нотами сладости и легкой кислинки.",
+     "price": 210000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "46fede00-dcbf-4c88-a5d2-f1a179f60d55",
+     "name": "Манговая Симфония Н (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 28,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "118984c6-1745-4f73-bcd3-4ceb485f43bd",
+     "name": "Ягодный Взрыв Н",
+     "desc": "Сочный ягодный микс с освежающей ноткой мяты",
+     "price": 210000,
+     "g": 66,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "df2a3cde-a224-4eee-bdb8-efb86bd04fcb",
+     "name": "Арбузный Гурман Н (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 28,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "0711e792-f0a1-4ef0-a74c-c1a562f33822",
+     "name": "Персиковая Симфония Н",
+     "desc": "Нежный и сладкий микс, сочетающий персиковую свежесть с тропическими нотами.",
+     "price": 210000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "b1121b4f-c3d3-4a59-9bbd-9ab4716f7589",
+     "name": "Ягодный урожай Н",
+     "desc": "Сочный ягодный микс, который пробуждает летние воспоминания.",
+     "price": 210000,
+     "g": 26,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "5f500bac-3156-4efc-84ce-85cd88773c49",
+     "name": "Манговая Гармония",
+     "desc": "Сладкий тропический микс, объединяющий манго, персик и банан для создания взрывного вкуса лета.",
+     "price": 210000,
+     "g": 1000,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "db7f038b-1b1b-41ca-be51-559a572fc028",
+     "name": "Виноградная Феерия Н (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 28,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "14d48b30-f6d9-43d1-b5fe-b742b12941d8",
+     "name": "Летний Сад Н",
+     "desc": "Солнечный фруктово-ментоловый микс, дарящий ощущение летнего сада и свежести.",
+     "price": 210000,
+     "g": 30,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "a71190d0-b7dc-4167-9af3-f2c144dbdca1",
+     "name": "Грейпфрутовый Фреш H",
+     "desc": "Яркий грейпфрутовый микс с нотами вишни, который освежает и поднимает настроение",
+     "price": 210000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "63f78d0a-0178-4690-a63f-2bf2bed51181",
+     "name": "Лесная Симфония Н",
+     "desc": "Нежный микс ягод и хвои, погружающий в атмосферу лесной свежести.",
+     "price": 210000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "26ac13f1-9657-4a19-a2a5-3b7a0fae9b7c",
+     "name": "Арктический Байкал Н",
+     "desc": "Свежий ягодно-ментоловый микс, словно дыхание Арктики",
+     "price": 210000,
+     "g": 68,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "cf1b7182-a24a-4d2b-891d-a38d390bc343",
+     "name": "Кактус Н (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 1000,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "f95ef2e1-3ff7-400d-8cba-5f9bc0103f96",
+     "name": "Гавайский Н (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "2ee887cb-572d-4fff-976b-9b818bfe717d",
+     "name": "Барбарисовая Фантазия Н",
+     "desc": "Сладкий и фруктовый микс с ярким вкусом барбариса, словно солнечное утро.",
+     "price": 210000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    }
+   ]
+  },
+  {
+   "id": "7077925f-f7cd-40ee-b0c6-a1242f4fa0ec",
+   "cuisine": "ac47d6d9-ce17-416e-b250-b00edaa959df",
+   "name": "КАЛЬЯН",
+   "order": 19,
+   "items": [
+    {
+     "id": "4d0aeb68-886b-4d82-a15b-517142f39432",
+     "name": "Апельсиновая чаша",
+     "desc": "",
+     "price": 105000,
+     "g": 382,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "5d26c4a0-d38f-45f7-9fdb-015ec56d3564",
+     "name": "Клубничный Шейк",
+     "desc": "",
+     "price": 210000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "bcf90f1f-bd54-4d38-828b-17e794d49ada",
+     "name": "Кастомный 400",
+     "desc": "",
+     "price": 400000,
+     "g": 42,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "8938f221-058c-407f-b57a-d7f4562a68d3",
+     "name": "Клубничный Милфей",
+     "desc": "",
+     "price": 210000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "f5920d93-b2c2-4b4f-bc03-32f0b5ba8299",
+     "name": "Вызов Кальянщика",
+     "desc": "",
+     "price": 0,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "793e1d3f-8d9c-452f-94d9-0a375fafe0d8",
+     "name": "Валентин Days",
+     "desc": "",
+     "price": 210000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "4432f66f-8744-48d5-9a06-a34604341d6d",
+     "name": "Бельгийский вафли 2.0 (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 72,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "90757238-4432-40ea-b735-2772c5596136",
+     "name": "Валентин Days (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": null,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "f7d49c93-ef07-4de0-9471-1322bc98694c",
+     "name": "Клубничный Милфей (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "3372cd11-9ebf-4f4a-b9c0-61db5076f33b",
+     "name": "Уголь 25",
+     "desc": "",
+     "price": 0,
+     "g": 14,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "a017e636-db3c-4400-9bd6-ee73f915bff4",
+     "name": "Клубничный Шейк (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 70,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "449d490b-ef37-4f57-8179-9fd9526ea926",
+     "name": "Кастомный",
+     "desc": "",
+     "price": 210000,
+     "g": 42,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "112d2ec3-22b1-48a5-8d89-39a5d54e5b1c",
+     "name": "Бельгийский вафли 2.0",
+     "desc": "",
+     "price": 210000,
+     "g": 72,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "34ff18f1-4868-4762-8072-08ce9ce588be",
+     "name": "Кастомный (ЗАМЕНА)",
+     "desc": "",
+     "price": 105000,
+     "g": 42,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "583ee212-bdce-4480-a415-46e4b7ce7e71",
+     "name": "ФРУКТОВАЯ ЧАША",
+     "desc": "",
+     "price": 105000,
+     "g": 492,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "25453778-2cb7-452d-8554-0f110e9d144b",
+     "name": "Кальян по акции",
+     "desc": "",
+     "price": 105000,
+     "g": 42,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    },
+    {
+     "id": "7c401f41-6d35-44f5-8456-03161c77274a",
+     "name": "Кастомный 300",
+     "desc": "",
+     "price": 300000,
+     "g": 42,
+     "photo": null,
+     "stop": false,
+     "src": "iiko"
+    }
+   ]
+  }
+ ]
+}
