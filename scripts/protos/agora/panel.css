@@ -4,7 +4,7 @@
 body.pn{min-height:100vh;background:#070504;overflow-x:hidden}
 .pn-bg{position:fixed;inset:-40px;z-index:0;pointer-events:none}
 .pn-bg img{width:100%;height:100%;object-fit:cover;filter:blur(18px) brightness(.55) saturate(1.2);transform:scale(1.1)}
-#app{position:relative;z-index:1}
+#app{position:relative;z-index:2}
 .pn-foot{position:relative;z-index:1;padding:24px 16px 96px;text-align:center;font-size:12px;color:var(--mu)}
 .pn-foot a{text-decoration:underline}
 .mu{color:var(--mu)}
@@ -221,4 +221,46 @@ body.pn .mlist.glass{background:rgb(16 12 10 / .9)}
   .psrch{order:3;flex-basis:100%}
   .kpis{grid-template-columns:1fr 1fr}.kpi b{font-size:24px}
   .tbl table{min-width:560px}}
+/* Меню, доставка, сайт: правит владелец, сайт читает те же ключи. */
+.mrow2{display:grid;grid-template-columns:56px minmax(0,1fr) 110px 130px 44px auto 44px;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--ln);font-size:14px;transition:opacity .2s}
+.mrow2:not(:has([data-md])){grid-template-columns:56px minmax(0,1fr) 110px 130px 44px 44px}
+.mrow2.off{opacity:.5}
+.mrow2 input,.mrow2 select,.addf input,.addf select,.addf textarea,.fg input,.fg select,.fl2 input,.zr input,.mtools select{min-height:40px;padding:0 12px;border-radius:12px;border:1px solid var(--ln);background:rgb(0 0 0 / .3);color:var(--tx);font:inherit;font-size:16px;width:100%;min-width:0}
+.mrow2 select{font-size:14px}
+.mi-p,.zr label{display:flex;align-items:center;gap:6px}
+.mi-p small,.zr small{color:var(--mu);font-size:12px}
+.ib.sm{width:40px;height:40px;padding:0;flex:none}
+.ib.sm svg{width:18px;height:18px}
+.ib.on{background:var(--a);color:#fff}
+.addf{padding:18px;border-radius:24px;margin-bottom:16px;background:rgb(16 12 10 / .9)}
+.addf h2{font:400 24px/1.1 var(--hd);margin:0 0 12px}
+.addf textarea{min-height:80px;padding:10px 12px}
+.addf input[type=file]{padding:8px 12px}
+.fg{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(200px,100%),1fr));gap:12px;margin:12px 0}
+.fg label,.fl2{display:grid;gap:6px;font-size:13px;color:var(--mu)}
+.fg .wide{grid-column:1/-1}
+.mtools{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.mtools select{width:auto;min-height:44px;border-radius:999px}
+.sets{display:grid;gap:4px}
+.sets h2{margin-bottom:6px}
+.sw2{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:10px 0;border-bottom:1px solid var(--ln)}
+.sw2>span{display:grid;gap:2px;min-width:0}
+.sw2 small{color:var(--mu);font-size:12px}
+.sw2 .tg{flex:none}
+.fl2{margin-top:10px}
+.zones{display:grid;gap:8px;margin-bottom:12px}
+.zr{display:grid;grid-template-columns:minmax(0,1fr) 150px 110px 40px;gap:8px;align-items:center}
+input[disabled],select[disabled]{opacity:.55}
+@media (max-width:759px){
+  .mrow2,.mrow2:not(:has([data-md])){grid-template-columns:48px minmax(0,1fr) minmax(0,1fr) 44px;row-gap:8px}
+  .mrow2>img,.mrow2>.noimg{width:48px;height:36px;grid-column:1;grid-row:1}
+  .mrow2>.mi-n,.mrow2>span{grid-column:2/4;grid-row:1}
+  .mrow2>.tg{grid-column:4;grid-row:1}
+  .mrow2>.mi-p,.mrow2>b{grid-column:1/3;grid-row:2}
+  .mrow2>.mi-t{grid-column:3;grid-row:2}
+  .mrow2>[data-mh]{grid-column:4;grid-row:2}
+  .mrow2>[data-md]{grid-column:4;grid-row:3}
+  .zr{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 40px}
+  .zr>input{grid-column:1/-1}
+  .rail button{min-width:0}}
 @media (prefers-reduced-motion:reduce){.lg-pane,.lg-f{transition:none!important}.dot-water i::before,.dot-water i::after{animation:none}}
