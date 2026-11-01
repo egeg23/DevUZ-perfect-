@@ -145,6 +145,9 @@ for (const w of [390, 768, 1440]) {
   await p.goto(`${B}/`, { waitUntil: "load" }); await skip(p);
   await p.evaluate(() => { const x = document.querySelector('[data-add="tgbot"]'); x.checked = false; x.dispatchEvent(new Event("change")); });
   assert.match(await p.textContent("#total"), /2\s450/, `${w}: итог без бота не 2 450 $`);
+  await p.evaluate(() => { const x = document.querySelector("[data-sync]"); x.checked = true; x.dispatchEvent(new Event("change")); });
+  assert.match(await p.textContent("#total"), /2\s450/, `${w}: синхронизация по запросу изменила итог`);
+  assert.ok(await p.evaluate(() => document.querySelectorAll("#sync .sync-c").length >= 10), `${w}: нет блока синхронизации`);
   await p.goto(`${B}/site`, { waitUntil: "load" });
   assert.ok(await p.evaluate(() => document.getElementById("bot").hidden), `${w}: блок бота не спрятался`);
   await c.close();

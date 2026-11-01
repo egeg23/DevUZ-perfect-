@@ -99,3 +99,52 @@ export const BOT = {
     uz: ["banket va 10 mehmondan katta stol", "shikoyat yoki norozi mehmon", "faktlaringizda javobi yo‘q savol (allergiya, maxsus menyu)", "mehmonning o‘zi «odam chaqiring» deb so‘raydi", "to‘lov va pulni qaytarish"],
   },
 };
+
+/*
+ * Синхронизация с системами ресторана — доп по запросу (руководитель,
+ * 01.11.2026: «синхронизация с вашей системой бронирования, управления
+ * рестораном. По запросу цена»). В ADDONS не входит: цена зависит от того,
+ * какие системы у ресторана и открыт ли у них доступ (API), поэтому в
+ * 3 000 $ и в договор из макета она не считается. Цену и срок называем
+ * письменно после разговора и списка систем.
+ */
+export const SYNC = {
+  id: "sync",
+  ru: { t: "Синхронизация с вашими системами", e: "Касса, бронирование, доставка, оплата и CRM работают с сайтом, ботом и панелью как одно целое: меню, цены, стоп-лист, брони и заказы в одном месте, без ручного переноса", who: "цена по запросу: зависит от ваших систем" },
+  uz: { t: "Tizimlaringiz bilan sinxronlash", e: "Kassa, bron, yetkazish, to‘lov va CRM sayt, bot va panel bilan bir butun bo‘lib ishlaydi: menyu, narxlar, stop-list, bronlar va buyurtmalar bir joyda, qo‘lda ko‘chirmasdan", who: "narx so‘rov bo‘yicha: tizimlaringizga bog‘liq" },
+  /* К чему подключаемся: по открытому доступу (API) системы. */
+  groups: [
+    { ru: "Касса и учёт ресторана", uz: "Kassa va restoran hisobi", list: "iiko, r_keeper, Poster, Jowi, Quick Resto",
+      give: { ru: "меню, цены и стоп-лист приходят на сайт и в бота сами; заказ с сайта уходит в кассу и на кухню", uz: "menyu, narxlar va stop-list sayt va botga o‘zi keladi; saytdagi buyurtma kassa va oshxonaga ketadi" } },
+    { ru: "Бронирование", uz: "Bron tizimlari", list: "Rezvo, Restoplace, своя таблица броней", listUz: "Rezvo, Restoplace, o‘z bron jadvalingiz",
+      give: { ru: "брони с сайта, из бота и по телефону в одном плане зала, один стол дважды не продаётся", uz: "sayt, bot va telefondan bronlar bitta zal rejasida, bitta stol ikki marta sotilmaydi" } },
+    { ru: "Доставка", uz: "Yetkazib berish", list: "Яндекс Еда, Uzum Tezkor, Wolt", listUz: "Yandex Eda, Uzum Tezkor, Wolt",
+      give: { ru: "стоп-лист и цены одни на сайте и в приложениях доставки, заказы оттуда видно в панели рядом с залом", uz: "stop-list va narxlar sayt va yetkazish ilovalarida bir xil, u yerdagi buyurtmalar panelda zal yonida ko‘rinadi" } },
+    { ru: "Оплата", uz: "To‘lov", list: "Payme, Click, Uzum Bank",
+      give: { ru: "предоплата брони и оплата заказа на сайте и в боте, деньги сходятся с кассой", uz: "bron oldindan to‘lovi va saytda hamda botda buyurtma to‘lovi, pul kassa bilan mos tushadi" } },
+    { ru: "CRM и бонусы гостей", uz: "CRM va mehmon bonuslari", list: "amoCRM, Bitrix24, программа лояльности кассы", listUz: "amoCRM, Bitrix24, kassaning sodiqlik dasturi",
+      give: { ru: "гость с историей визитов и заказов, бонусы считаются и в зале, и на сайте", uz: "tashriflar va buyurtmalar tarixi bilan mehmon, bonuslar zalda ham, saytda ham hisoblanadi" } },
+    { ru: "Отчёты", uz: "Hisobotlar", list: "Google Таблицы, выгрузка для бухгалтера", listUz: "Google Sheets, buxgalter uchun yuklab olish",
+      give: { ru: "продажи по всем каналам в одной таблице каждое утро", uz: "har tongda barcha kanallar bo‘yicha savdo bitta jadvalda" } },
+  ],
+  /* Что это даёт каждому в ресторане. */
+  roles: [
+    { ru: "Владельцу", uz: "Egasiga",
+      a: { ru: ["одна выручка по залу, сайту, боту и доставке, без сведения руками", "видно, откуда приходят гости и какой канал приносит деньги", "меню и цены правятся в одном месте, ошибок в ценах нет"], uz: ["zal, sayt, bot va yetkazish bo‘yicha bitta tushum, qo‘lda jamlamasdan", "mehmonlar qayerdan kelayotgani va qaysi kanal pul keltirayotgani ko‘rinadi", "menyu va narxlar bir joyda tahrirlanadi, narxlarda xato bo‘lmaydi"] } },
+    { ru: "Управляющему", uz: "Boshqaruvchiga",
+      a: { ru: ["один стоп-лист на всё: закончилось блюдо, его нет и на сайте, и в доставке", "все брони и заказы смены на одном экране", "нет двойных броней и забытых заказов"], uz: ["hammasi uchun bitta stop-list: taom tugadi, u saytda ham, yetkazishda ham yo‘q", "smenaning barcha bron va buyurtmalari bitta ekranda", "ikki marta bron va unutilgan buyurtmalar yo‘q"] } },
+    { ru: "Администратору и хостес", uz: "Administrator va xostesga",
+      a: { ru: ["брони с телефона, сайта, бота и Rezvo в одной ленте", "при звонке видно гостя: сколько раз был, что заказывал", "подтверждение брони уходит гостю само"], uz: ["telefon, sayt, bot va Rezvo bronlari bitta lentada", "qo‘ng‘iroqda mehmon ko‘rinadi: necha marta kelgan, nima buyurtma qilgan", "bron tasdig‘i mehmonga o‘zi ketadi"] } },
+    { ru: "Кухне и бару", uz: "Oshxona va barga",
+      a: { ru: ["заказ с сайта, бота и доставки сразу на кухонный принтер или экран", "никто не перебивает заказ в кассу вручную"], uz: ["sayt, bot va yetkazishdan buyurtma darhol oshxona printeri yoki ekraniga", "hech kim buyurtmani kassaga qo‘lda qayta kiritmaydi"] } },
+    { ru: "Бухгалтеру", uz: "Buxgalterga",
+      a: { ru: ["оплаты Payme и Click сходятся с кассой", "продажи по дням и каналам одной выгрузкой"], uz: ["Payme va Click to‘lovlari kassa bilan mos tushadi", "kunlar va kanallar bo‘yicha savdo bitta yuklab olishda"] } },
+    { ru: "Гостю", uz: "Mehmonga",
+      a: { ru: ["на сайте всегда настоящие цены и то, что есть сегодня", "бронь и заказ подтверждаются сразу, бонусы считаются везде"], uz: ["saytda doim haqiqiy narxlar va bugun bor narsa", "bron va buyurtma darhol tasdiqlanadi, bonuslar hamma joyda hisoblanadi"] } },
+  ],
+  /* Как считаем цену. */
+  steps: {
+    ru: ["созвон на 30 минут: какие системы у вас стоят", "проверяем, открыт ли у них доступ (API) и что он стоит у поставщика", "письменно: что подключаем, цена и срок, до начала работ"],
+    uz: ["30 daqiqalik qo‘ng‘iroq: sizda qaysi tizimlar bor", "ularda kirish (API) ochiqmi va yetkazib beruvchida qancha turishini tekshiramiz", "yozma: nimani ulaymiz, narx va muddat, ishdan oldin"],
+  },
+};

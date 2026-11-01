@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dzIntroSolo } from "../../../lib/proto/dz-video.mjs";
 import { LANGS, BRAND, CATS, MENU, SHOW, HALL, COUNT, HOOKAH } from "./data.mjs";
-import { BASE, ADDONS, OFFER_HOURS, ALL, SUPPORT, AI, BOT } from "./plan.mjs";
+import { BASE, ADDONS, OFFER_HOURS, ALL, SUPPORT, AI, BOT, SYNC } from "./plan.mjs";
 import { PANEL_UI } from "./ui.mjs";
 
 /*
@@ -432,7 +432,8 @@ function offer(l, t) {
 <p class="lead">${t(`48 часов с первого открытия макета: сайт ${usd(BASE.promo)} вместо ${usd(BASE.price)}. Допы включаются тумблером, и их блок на сайте тут же появляется или пропадает.`, `Maket birinchi ochilganidan 48 soat: sayt ${usd(BASE.price)} o‘rniga ${usd(BASE.promo)}. Qo‘shimchalar tumbler bilan yoqiladi va ularning bloki saytda darhol paydo bo‘ladi yoki yo‘qoladi.`)}</p>
 <div class="cst"><div>
 <div class="base"><div class="hd"><b>${esc(BASE[l].t)}</b><span class="pp"><s>${usd(BASE.price)}</s>${usd(BASE.promo)}</span></div><p>${esc(BASE[l].d)}</p></div>
-<div class="adds">${ADDONS.map((a) => `<label class="add"><input type="checkbox" data-add="${a.id}" checked><span class="sw" aria-hidden="true"></span><span><b>${esc(a[l].t)}</b>${a.star ? `<span class="star">${t("берут первым", "birinchi oladilar")}</span>` : ""}<p>${esc(a[l].e)}</p><small>${esc(a[l].who)}</small></span><span class="ap">${usd(a.price)}</span></label>`).join("")}</div>
+<div class="adds">${ADDONS.map((a) => `<label class="add"><input type="checkbox" data-add="${a.id}" checked><span class="sw" aria-hidden="true"></span><span><b>${esc(a[l].t)}</b>${a.star ? `<span class="star">${t("берут первым", "birinchi oladilar")}</span>` : ""}<p>${esc(a[l].e)}</p><small>${esc(a[l].who)}</small></span><span class="ap">${usd(a.price)}</span></label>`).join("")}
+<label class="add add-sync"><input type="checkbox" data-sync><span class="sw" aria-hidden="true"></span><span><b>${esc(SYNC[l].t)}</b><p>${esc(SYNC[l].e)}</p><small>${esc(SYNC[l].who)}</small><a class="more-l" href="#sync">${t("К чему подключаемся и что это даст", "Nimaga ulanamiz va bu nima beradi")}</a></span><span class="ap">${t("по запросу", "so‘rov bo‘yicha")}</span></label></div>
 </div>
 <aside class="sum glass" aria-live="polite">
 <div class="row"><span>${t("Сайт", "Sayt")}</span><span>${usd(BASE.promo)}</span></div>
@@ -444,6 +445,7 @@ function offer(l, t) {
 <button type="button" class="btn btn-g" id="copy">${ICON.copy}<span>${t("Скопировать состав", "Tarkibni nusxalash")}</span></button>
 <a class="btn btn-a" href="${DEVUZ}" target="_blank" rel="noopener">${ICON.tg}<span>${t("Обсудить с DevUz Studio", "DevUz Studio bilan muhokama qilish")}</span></a>
 </aside></div>
+${syncSec(l, t)}
 <div class="it" id="it"><div>
 <h3>${t("IT-поддержка, домен и сервер", "IT-qo‘llab-quvvatlash, domen va server")}</h3>
 <span class="it-note">${t(`Ежемесячные и годовые платежи: в ${usd(ALL)} разовых работ не входят`, `Oylik va yillik to‘lovlar: ${usd(ALL)} bir martalik ishlarga kirmaydi`)}</span>
@@ -456,6 +458,22 @@ function offer(l, t) {
 <p class="note">${t("«Поддержка сайта и бота» включается вместе с допом «Telegram-бот с ИИ».", "«Sayt va botni qo‘llab-quvvatlash» «Sun’iy intellektli Telegram-bot» qo‘shimchasi bilan birga yoqiladi.")}</p>
 </aside></div>
 </div></section>`;
+}
+
+/* Синхронизация с системами ресторана: к чему подключаемся и кому что даёт. */
+function syncSec(l, t) {
+  const S = SYNC;
+  return `<div class="sync" id="sync">
+<h3>${esc(S[l].t)} <span class="it-note">${t("цена по запросу, в " + usd(ALL) + " не входит", usd(ALL) + " ga kirmaydi, narx so‘rov bo‘yicha")}</span></h3>
+<p class="lead" style="font-size:16px">${t("Сайт, бот и панель из макета подключаются к тому, чем Agora уже пользуется. Меню в rezvo у вас уже идёт из iiko: с неё и начнём.", "Maketdagi sayt, bot va panel Agora allaqachon foydalanayotgan tizimlarga ulanadi. Rezvo’dagi menyuingiz allaqachon iiko’dan keladi: shundan boshlaymiz.")}</p>
+<h4>${t("К чему подключаемся", "Nimaga ulanamiz")}</h4>
+<div class="sync-g">${S.groups.map((g) => `<div class="sync-c"><b>${esc(g[l])}</b><span class="sync-l">${esc(l === "uz" && g.listUz ? g.listUz : g.list)}</span><p>${esc(g.give[l])}</p></div>`).join("")}</div>
+<h4>${t("Что это даёт каждому", "Bu har kimga nima beradi")}</h4>
+<div class="sync-r">${S.roles.map((r) => `<div class="sync-c"><b>${esc(r[l])}</b><ul>${r.a[l].map((x) => `<li>${esc(x)}</li>`).join("")}</ul></div>`).join("")}</div>
+<h4>${t("Как называем цену", "Narxni qanday aytamiz")}</h4>
+<ol class="sync-s">${S.steps[l].map((x) => `<li>${esc(x)}</li>`).join("")}</ol>
+<p class="note">${t("Подключаемся только к системам с открытым доступом (API). Доступ к ним у поставщика иногда платный, это обсуждаем заранее.", "Faqat ochiq kirishli (API) tizimlarga ulanamiz. Yetkazib beruvchida ularga kirish ba’zan pullik, buni oldindan kelishamiz.")}</p>
+</div>`;
 }
 
 function landPage(l) {
@@ -484,7 +502,7 @@ function landPage(l) {
     t("Откройте админку, войдите кодом 1234: ваша бронь первой строкой. Нажмите «Подтвердить».", "Admin panelni oching, 1234 kodi bilan kiring: broningiz birinchi qatorda. «Tasdiqlash»ni bosing."),
     t("Вернитесь на сайт: в «Моя бронь» уже «Подтверждена». В «Меню и стоп-лист» снимите блюдо, и оно пропадёт с сайта.", "Saytga qayting: «Mening bronim»da allaqachon «Tasdiqlandi». «Menyu va stop-list»da taomni o‘chiring, u saytdan yo‘qoladi."),
   ];
-  const ld = { base: BASE.promo, hours: OFFER_HOURS, logo: LOGO_VB, aim: [568, 192], add: ADDONS.map((a) => ({ id: a.id, p: a.price, t: a[l].t })), it: SUPPORT.map((s) => ({ id: s.id, p: s.price, per: s.per })), t: { copied: t("Состав скопирован", "Tarkib nusxalandi"), tot: t("Итого разово", "Bir martalik jami"), month: t("В месяц", "Oyiga"), year: t("В год", "Yiliga") } };
+  const ld = { base: BASE.promo, hours: OFFER_HOURS, logo: LOGO_VB, aim: [568, 192], add: ADDONS.map((a) => ({ id: a.id, p: a.price, t: a[l].t })), it: SUPPORT.map((s) => ({ id: s.id, p: s.price, per: s.per })), sync: SYNC[l].t, t: { req: t("по запросу", "so‘rov bo‘yicha"), copied: t("Состав скопирован", "Tarkib nusxalandi"), tot: t("Итого разово", "Bir martalik jami"), month: t("В месяц", "Oyiga"), year: t("В год", "Yiliga") } };
   return `${head(l, t("AGORA · макет сайта, панели и бота · DevUz Studio", "AGORA · sayt, panel va bot maketi · DevUz Studio"), t("Макет для Agora Lounge & bar: сайт с меню и бронью, панель ресторана и Telegram-бот. Конструктор цены и ежемесячные платежи.", "Agora Lounge & bar uchun maket: menyu va bronli sayt, restoran paneli va Telegram-bot. Narx konstruktori va oylik to‘lovlar."))}
 <link rel="preload" as="image" href="${IMG}/h-6.webp">
 <style>${CSS}</style>

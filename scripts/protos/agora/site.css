@@ -417,3 +417,19 @@ main{overflow-x:clip}
 .promo[hidden]{display:none}
 .tag.hot{background:var(--a)}
 .pause-n{margin:10px 0;padding:10px 14px;border-radius:14px;background:rgb(255 255 255 / .08);font-size:14px}
+
+/* Синхронизация с системами ресторана: доп по запросу. */
+.add-sync{border-style:dashed}
+.add-sync .ap{color:var(--gold)}
+.more-l{display:inline-block;margin-top:8px;font-size:14px;font-weight:700;text-decoration:underline;text-underline-offset:3px}
+.sync{margin-top:48px;padding-top:32px;border-top:1px solid var(--ln)}
+.sync h3{font:400 clamp(28px,4vw,40px)/1.1 var(--hd);margin-bottom:12px}
+.sync h3 .it-note{display:table;font:600 14px/1.4 var(--bd);margin-top:6px}
+.sync h4{font-size:18px;margin:28px 0 12px}
+.sync-g,.sync-r{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));gap:12px}
+.sync-c{padding:16px;border-radius:18px;background:var(--s2);border:1px solid var(--ln);min-width:0}
+.sync-c b{display:block;font-size:16px}
+.sync-l{display:block;margin-top:4px;font-size:13px;font-weight:700;color:var(--gold)}
+.sync-c p,.sync-c li{font-size:14px;color:var(--mu);margin-top:6px}
+.sync-c ul{padding-left:18px;margin:0}
+.sync-s{padding-left:20px;display:grid;gap:6px;font-size:15px}
