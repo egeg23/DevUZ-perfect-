@@ -69,19 +69,19 @@ function particles(cv,kind){var cx=cv.getContext('2d'),P=[],vis=false,raf=0;
 $$('.sc canvas').forEach(function(c){particles(c,c.getAttribute('data-k'))});
 
 /* ── Меню ───────────────────────────────────────────────────────── */
-var M=D.menu.map(function(a){return{id:a[0],cat:a[1],n:a[2],dsc:a[3],p:a[4],w:a[5],ph:a[6],alias:!!(a[7]&1),stock:!!(a[7]&2),alc:!!(a[7]&4),g:a[8]}});
+var M=D.menu.map(function(a){return{id:a[0],cat:a[1],n:a[2],dsc:a[3],p:a[4],w:a[5],ph:a[6],alias:!!(a[7]&1),stock:!!(a[7]&2),alc:!!(a[7]&4),ex:!!(a[7]&8),g:a[8]}});
 var byId={};M.forEach(function(m){byId[m.id]=m});
 var CAT={};D.cats.forEach(function(c){CAT[c.id]=c});
 var st={g:'k',cat:'all',q:'',f:{}},grid=$('#mn-grid'),stop=get('ag-stop-1',{});
 function norm(s){return String(s).toLowerCase().replace(/ё/g,'е').replace(/[‘’ʻ`']/g,'')}
 function card(m,i){var off=!!stop[m.id];return'<button type="button" class="mi'+(off?' off':'')+'" data-dish="'+m.id+'" style="animation-delay:'+Math.min(i,12)*30+'ms">'+
-  (m.ph?'<span class="mi-ph"><img src="'+D.img+'/d-'+m.ph+'-s.webp" alt="'+esc(m.n)+'" loading="lazy" width="560" height="420">':'<span class="mi-ph no">'+(m.g==='b'?IC.glass:IC.dish))+
+  (m.ph?'<span class="mi-ph"><img src="'+D.img+'/d-'+m.ph+'-s.webp" alt="'+esc(m.n)+'" loading="lazy" width="560" height="420">':'<span class="mi-ph no">'+(m.g==='b'?IC.glass:IC.dish)+'<em>'+esc(CAT[m.cat].n)+'</em>')+
   (off?'<span class="tag stop">'+T.stop+'</span>':m.alc?'<span class="tag">18+</span>':'')+'</span>'+
   '<span class="mi-b"><b>'+esc(m.n)+'</b>'+(m.w?'<small>'+m.w+' '+T.g+'</small>':'')+'<span class="mi-f"><span>'+sum(m.p)+'</span>'+(addonOn('order')&&!off?'<i aria-hidden="true">'+IC.plus+'</i>':'')+'</span></span></button>'}
 function pass(m){if(m.g!==st.g)return false;if(st.cat!=='all'&&m.cat!==st.cat)return false;
   if(st.q&&norm(m.n+' '+m.dsc).indexOf(norm(st.q))<0)return false;
   if(st.f.ph&&!m.ph)return false;if(st.f.cheap&&m.p>50000)return false;if(st.f.big&&!(m.w>=500))return false;if(st.f.soft&&m.alc)return false;return true}
-function render(){var list=M.filter(pass),h='';
+function render(){var list=M.filter(pass).map(function(m,i){return[m,i]}).sort(function(a,b){return(!a[0].ph-!b[0].ph)||a[1]-b[1]}).map(function(x){return x[0]}),h='';
   if(!list.length)h='<p class="empty">'+T.none+'</p>';
   else if(st.cat==='all'&&!st.q){D.cats.filter(function(c){return c.g===st.g}).forEach(function(c){var x=list.filter(function(m){return m.cat===c.id});if(!x.length)return;h+='<h3 class="mn-cat">'+esc(c.n)+' <small>'+x.length+'</small></h3><div class="grid">'+x.slice(0,6).map(card).join('')+'</div>'+(x.length>6?'<button type="button" class="btn btn-g btn-s mn-all" data-all="'+c.id+'">'+T.all.replace('{n}',x.length)+'</button>':'')})}
   else h='<div class="grid">'+list.map(card).join('')+'</div>';
@@ -109,7 +109,7 @@ d.addEventListener('keydown',function(e){if(e.key==='Escape'&&sheet.classList.co
 /* Карточка блюда */
 var cart=get('ag-cart-1',{});
 function dish(id){var m=byId[id];if(!m)return;var off=!!stop[id],q=1;
-  var src=m.ph?'<p class="note">'+(m.alias?T.alias:'')+(m.stock?(m.alias?' · ':'')+T.stock:'')+'</p>':'';
+  var src=m.ph?'<p class="note">'+(m.alias?T.alias:'')+(m.stock?(m.alias?' · ':'')+(m.ex?T.like:T.stock):'')+'</p>':'';
   open(m.n,(m.ph?'<div class="dish-ph"><img src="'+D.img+'/d-'+m.ph+'.webp" alt="'+esc(m.n)+'" width="1280" height="960"></div>':'')+
     '<p class="note">'+esc(CAT[m.cat].n)+(m.w?' · '+m.w+' '+T.g:'')+(m.alc?' · 18+':'')+'</p>'+(m.dsc?'<p style="margin-top:8px">'+esc(m.dsc)+'</p>':'')+src+
     '<div class="dish-p"><b>'+sum(m.p)+'</b>'+(off?'<span class="tag stop" style="position:static">'+T.stop+'</span>':addonOn('order')?'<span class="qty"><button type="button" data-q="-1" aria-label="−">−</button><span id="dq">1</span><button type="button" data-q="1" aria-label="+">+</button></span>':'')+'</div>'+

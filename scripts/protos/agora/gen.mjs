@@ -272,7 +272,7 @@ function contact(l, t) {
 
 function footer(l, t, to = "site") {
   return `<footer class="foot"><div class="wrap"><div class="fgrid">
-<div>${LOGO(l, to)}<p style="margin-top:16px">${t("Меню, цены, адрес и фото зала: ваше меню rezvo, 01.11.2026. Фото блюд ваши; у позиций без фото снимок того же блюда с Unsplash. Брони, заказы и цифры панели: демо.", "Menyu, narxlar, manzil va zal suratlari: rezvo menyuingiz, 01.11.2026. Taom suratlari sizniki; surati yo‘q pozitsiyalarda xuddi shu taomning Unsplash surati. Bronlar, buyurtmalar va panel raqamlari: demo.")}</p></div>
+<div>${LOGO(l, to)}<p style="margin-top:16px">${t("Меню, цены, адрес и фото зала: ваше меню rezvo, 01.11.2026. Фото блюд ваши; у позиций без своего фото снимок того же или похожего блюда с Unsplash, с подписью в карточке. Брони, заказы и цифры панели: демо.", "Menyu, narxlar, manzil va zal suratlari: rezvo menyuingiz, 01.11.2026. Taom suratlari sizniki; o‘z surati yo‘q pozitsiyalarda xuddi shu yoki o‘xshash taomning Unsplash surati, kartochkada izoh bilan. Bronlar, buyurtmalar va panel raqamlari: demo.")}</p></div>
 <div><h4>${t("Сайт", "Sayt")}</h4><a href="${href(l, "site")}#menu">${t("Меню", "Menyu")}</a><a href="${href(l, "site")}#book">${t("Бронь", "Bron")}</a><a href="${href(l, "site")}#bot">${t("Бот", "Bot")}</a></div>
 <div><h4>${t("Макет", "Maket")}</h4><a href="${href(l)}">${t("Первая страница", "Birinchi sahifa")}</a><a href="${href(l, "panel")}">${t("Админка", "Admin panel")}</a><a href="${href(l)}#offer">${t("Стоимость", "Narxi")}</a></div>
 <div><h4>Agora</h4><a href="tel:${BRAND.tel}">${BRAND.phone}</a><a href="${IG}" target="_blank" rel="noopener">Instagram</a><a href="https://devuz.studio" target="_blank" rel="noopener">DevUz Studio</a></div>
@@ -346,11 +346,11 @@ function data(l, t) {
   return {
     l, img: IMG, tel: BRAND.tel, telHref: `tel:${BRAND.tel}`, panel: href(l, "panel"), times,
     cats: CATS.map((c) => ({ id: c.id, g: c.g, n: c[l] })),
-    menu: MENU.map((m) => [m.id, m.cat, nm(m, l), l === "ru" ? m.dru : m.duz, m.price, m.w, m.ph, (m.alias ? 1 : 0) | (m.stock ? 2 : 0) | (m.alc ? 4 : 0), m.g]),
+    menu: MENU.map((m) => [m.id, m.cat, nm(m, l), l === "ru" ? m.dru : m.duz, m.price, m.w, m.ph, (m.alias ? 1 : 0) | (m.stock ? 2 : 0) | (m.alc ? 4 : 0) | (m.ex ? 8 : 0), m.g]),
     bot: botScripts(l, t),
     t: {
       sum: l === "ru" ? "сум" : "so‘m", g: t("г", "g"), stop: t("Сегодня нет", "Bugun yo‘q"), all: t("Показать все {n}", "Hammasini ko‘rsatish: {n}"), none: t("Ничего не нашлось. Попробуйте другое слово.", "Hech narsa topilmadi. Boshqa so‘zni sinab ko‘ring."),
-      alias: t("Фото позиции большой порции", "Katta porsiya surati"), stock: t("Фото того же блюда: Unsplash, ваше встанет сюда", "Xuddi shu taom surati: Unsplash, sizniki shu yerga qo‘yiladi"),
+      alias: t("Фото позиции большой порции", "Katta porsiya surati"), stock: t("Фото того же блюда: Unsplash, ваше встанет сюда", "Xuddi shu taom surati: Unsplash, sizniki shu yerga qo‘yiladi"), like: t("Похожее фото: Unsplash, ваше встанет сюда", "O‘xshash surat: Unsplash, sizniki shu yerga qo‘yiladi"),
       add: t("В заказ", "Buyurtmaga"), added: t("В заказе", "Buyurtmada"), call: t("Позвонить", "Qo‘ng‘iroq qilish"),
       cart: t("Ваш заказ", "Buyurtmangiz"), total: t("Итого", "Jami"), how: t("Как", "Qanday"), toBook: t("К брони", "Bronga"), toGo: t("Навынос", "Olib ketish"),
       name: t("Имя", "Ism"), phone: t("Телефон", "Telefon"), order: t("Оформить заказ", "Buyurtma berish"), clear: t("Очистить", "Tozalash"),

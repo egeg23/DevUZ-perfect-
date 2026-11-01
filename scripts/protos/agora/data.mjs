@@ -73,6 +73,10 @@ const SAME = {
   "Айс ти 0.45л": "Айс ти 1л",
   "Стакан Мохито классик": "Мохито",
   "Чай Черный": "Чай (чёрный, зелёный)",
+  "Bushmills 40ml": "Bushmills The Original 50 ml",
+  "Dewar`s12 50мл": "Dewar's 12 Years Old 50ml",
+  "Виски Famous Grouse 50мл": "The Famous Grouse 50ml",
+  "Лимонад Киви-яблоко 450мл": "Лимонад киви-яблоко",
 };
 
 /* Описания на узбекском — только у тех блюд, где они есть в их меню. */
@@ -123,6 +127,7 @@ export const MENU = CATS.flatMap((cat) => {
       w: d.g && d.g >= 10 && !cat.alc && cat.g === "k" ? Math.round(d.g) : null,
       ph, alias: ph && ph !== id,
       stock: ph ? PHOTOS[ph].src !== "rezvo" : false,
+      ex: ph ? !!PHOTOS[ph].ex : false,
       alc: cat.alc && !NO_ALC.test(d.name),
       wine,
       stop: d.stop,
