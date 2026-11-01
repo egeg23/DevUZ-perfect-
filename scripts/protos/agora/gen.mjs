@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dzIntroSolo } from "../../../lib/proto/dz-video.mjs";
 import { LANGS, BRAND, CATS, MENU, SHOW, HALL, COUNT, HOOKAH } from "./data.mjs";
-import { BASE, ADDONS, OFFER_HOURS, ALL, SUPPORT, AI, BOT } from "./plan.mjs";
+import { BASE, ADDONS, OFFER_HOURS, ALL, SUPPORT, AI, BOT, SYNC } from "./plan.mjs";
 import { PANEL_UI } from "./ui.mjs";
 
 /*
@@ -116,10 +116,11 @@ function hero(l, t) {
 <div class="wrap hero-in">
 <div><p class="kick">${t("Lounge &amp; bar · Ташкент", "Lounge &amp; bar · Toshkent")}</p>
 <h1>${words("AGORA")}</h1>
+<p class="promo glass" id="promo" hidden></p>
 <p class="hsub">${esc(B.kitchen)}. ${t("Место для живого общения и отдыха, как вы пишете о себе сами.", "O‘zingiz yozganingizdek, jonli muloqot va dam olish uchun joy.")}</p>
 <div class="hero-act"><a class="btn btn-a" href="#book" data-addon="booking">${ICON.cal}<span>${t("Забронировать стол", "Stol bron qilish")}</span></a><a class="btn btn-a" href="tel:${BRAND.tel}" data-off="booking">${ICON.phone}<span>${t("Позвонить", "Qo‘ng‘iroq qilish")}</span></a><a class="btn btn-g" href="#menu">${ICON.menu}<span>${t("Меню", "Menyu")}</span></a></div></div>
 <div class="hcard glass"><b>${esc(B.street)}</b>
-<span class="row">${ICON.clock}<span>${esc(B.hours)}</span></span>
+<span class="row">${ICON.clock}<span data-hours>${esc(B.hours)}</span></span>
 <span class="row">${ICON.menu}<span>${t(`${COUNT.all} позиций кухни и бара с ценами`, `Oshxona va barning ${COUNT.all} ta pozitsiyasi narxlar bilan`)}</span></span>
 <span class="row">${ICON.phone}<a href="tel:${BRAND.tel}">${BRAND.phone}</a></span></div>
 </div></section>`;
@@ -260,7 +261,7 @@ function contact(l, t) {
 <h2 class="h2 rise">${esc(B.street)}</h2>
 <div class="ct"><div class="ct-c glass rise">
 <div class="r">${ICON.pin}<div><b>${esc(B.street)}, ${esc(B.city)}</b><span>${t("на карте и в навигаторе по точке", "xaritada va navigatorda nuqta bo‘yicha")}</span></div></div>
-<div class="r">${ICON.clock}<div><b>${esc(B.hours)}</b><span>${t("часы работы", "ish vaqti")}</span></div></div>
+<div class="r">${ICON.clock}<div><b data-hours>${esc(B.hours)}</b><span>${t("часы работы", "ish vaqti")}</span></div></div>
 <div class="r">${ICON.phone}<div><b><a href="tel:${BRAND.tel}">${BRAND.phone}</a></b><span>${t("звонок и бронь", "qo‘ng‘iroq va bron")}</span></div></div>
 <div class="r">${ICON.ig}<div><b><a href="${IG}" target="_blank" rel="noopener">@${BRAND.ig}</a></b><span>Instagram</span></div></div>
 <div class="hero-act"><a class="btn btn-a" href="${ROUTE}" target="_blank" rel="noopener">${ICON.pin}<span>${t("Маршрут", "Yo‘nalish")}</span></a><a class="btn btn-g" href="tel:${BRAND.tel}">${ICON.phone}<span>${t("Позвонить", "Qo‘ng‘iroq")}</span></a></div></div>
@@ -340,11 +341,21 @@ function botScripts(l, t) {
   };
 }
 
+/* Настройки сайта по умолчанию: панель их меняет (ag-set-1), сайт читает. */
+const TIMES = ["12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00", "21:30", "22:00", "23:00", "00:00", "01:00"];
+function set0(l, t) {
+  return {
+    pause: false, bannerOn: true, banner: t("Бизнес-ланч по будням: 95 000 сум", "Ish kunlari biznes-lanch: 95 000 so‘m"), hours: BRAND[l].hours,
+    dlv: { on: true, pick: true, min: 100000, free: 400000, zones: [{ n: t("До 3 км", "3 km gacha"), p: 15000, m: 40 }, { n: t("3-7 км", "3-7 km"), p: 25000, m: 60 }, { n: t("7-12 км", "7-12 km"), p: 35000, m: 80 }] },
+    book: { from: "12:00", to: "01:00", max: 20, auto: false, pre: true },
+  };
+}
+
 /* Данные для site.js: меню — массивами, чтобы страница была легче. */
 function data(l, t) {
-  const times = ["12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00", "21:30", "22:00", "23:00", "00:00", "01:00"];
+  const times = TIMES;
   return {
-    l, img: IMG, tel: BRAND.tel, telHref: `tel:${BRAND.tel}`, panel: href(l, "panel"), times,
+    l, img: IMG, tel: BRAND.tel, telHref: `tel:${BRAND.tel}`, panel: href(l, "panel"), times, set0: set0(l, t),
     cats: CATS.map((c) => ({ id: c.id, g: c.g, n: c[l] })),
     menu: MENU.map((m) => [m.id, m.cat, nm(m, l), l === "ru" ? m.dru : m.duz, m.price, m.w, m.ph, (m.alias ? 1 : 0) | (m.stock ? 2 : 0) | (m.alc ? 4 : 0) | (m.ex ? 8 : 0), m.g]),
     bot: botScripts(l, t),
@@ -352,6 +363,10 @@ function data(l, t) {
       sum: l === "ru" ? "сум" : "so‘m", g: t("г", "g"), stop: t("Сегодня нет", "Bugun yo‘q"), all: t("Показать все {n}", "Hammasini ko‘rsatish: {n}"), none: t("Ничего не нашлось. Попробуйте другое слово.", "Hech narsa topilmadi. Boshqa so‘zni sinab ko‘ring."),
       alias: t("Фото позиции большой порции", "Katta porsiya surati"), stock: t("Фото того же блюда: Unsplash, ваше встанет сюда", "Xuddi shu taom surati: Unsplash, sizniki shu yerga qo‘yiladi"), like: t("Похожее фото: Unsplash, ваше встанет сюда", "O‘xshash surat: Unsplash, sizniki shu yerga qo‘yiladi"),
       add: t("В заказ", "Buyurtmaga"), added: t("В заказе", "Buyurtmada"), call: t("Позвонить", "Qo‘ng‘iroq qilish"),
+      toDlv: t("Доставка", "Yetkazib berish"), dishes: t("Блюда", "Taomlar"), paused: t("Сейчас заказы не принимаем: кухня на паузе. Бронь стола работает.", "Hozir buyurtma qabul qilmayapmiz: oshxona pauzada. Stol bron ishlaydi."),
+      noModes: t("Заказ с сайта сейчас выключен. Позвоните нам.", "Saytdan buyurtma hozir o‘chirilgan. Bizga qo‘ng‘iroq qiling."), zone: t("Куда везти", "Qayerga olib boramiz"), addr: t("Адрес", "Manzil"), addrPh: t("Улица, дом, подъезд", "Ko‘cha, uy, kirish"),
+      zonesDemo: t("Зоны и цены доставки ставит владелец в панели.", "Yetkazish hududlari va narxlarini egasi panelda belgilaydi."), dlvFee: t("Доставка", "Yetkazish"), freeFrom: t("бесплатно от", "bepul:"), free: t("бесплатно", "bepul"),
+      min: t("мин", "daq"), minOrder: t("Доставка от {n}", "Yetkazish {n} dan"), needAddr: t("Напишите адрес", "Manzilni yozing"), tag_hit: t("Хит", "Xit"), tag_new: t("Новинка", "Yangi"),
       cart: t("Ваш заказ", "Buyurtmangiz"), total: t("Итого", "Jami"), how: t("Как", "Qanday"), toBook: t("К брони", "Bronga"), toGo: t("Навынос", "Olib ketish"),
       name: t("Имя", "Ism"), phone: t("Телефон", "Telefon"), order: t("Оформить заказ", "Buyurtma berish"), clear: t("Очистить", "Tozalash"),
       ordNote: t("Это макет: заказ ложится в панель в этом браузере, никуда не уходит.", "Bu maket: buyurtma shu brauzerdagi panelga tushadi, hech qayerga ketmaydi."),
@@ -417,7 +432,8 @@ function offer(l, t) {
 <p class="lead">${t(`48 часов с первого открытия макета: сайт ${usd(BASE.promo)} вместо ${usd(BASE.price)}. Допы включаются тумблером, и их блок на сайте тут же появляется или пропадает.`, `Maket birinchi ochilganidan 48 soat: sayt ${usd(BASE.price)} o‘rniga ${usd(BASE.promo)}. Qo‘shimchalar tumbler bilan yoqiladi va ularning bloki saytda darhol paydo bo‘ladi yoki yo‘qoladi.`)}</p>
 <div class="cst"><div>
 <div class="base"><div class="hd"><b>${esc(BASE[l].t)}</b><span class="pp"><s>${usd(BASE.price)}</s>${usd(BASE.promo)}</span></div><p>${esc(BASE[l].d)}</p></div>
-<div class="adds">${ADDONS.map((a) => `<label class="add"><input type="checkbox" data-add="${a.id}" checked><span class="sw" aria-hidden="true"></span><span><b>${esc(a[l].t)}</b>${a.star ? `<span class="star">${t("берут первым", "birinchi oladilar")}</span>` : ""}<p>${esc(a[l].e)}</p><small>${esc(a[l].who)}</small></span><span class="ap">${usd(a.price)}</span></label>`).join("")}</div>
+<div class="adds">${ADDONS.map((a) => `<label class="add"><input type="checkbox" data-add="${a.id}" checked><span class="sw" aria-hidden="true"></span><span><b>${esc(a[l].t)}</b>${a.star ? `<span class="star">${t("берут первым", "birinchi oladilar")}</span>` : ""}<p>${esc(a[l].e)}</p><small>${esc(a[l].who)}</small></span><span class="ap">${usd(a.price)}</span></label>`).join("")}
+<label class="add add-sync"><input type="checkbox" data-sync><span class="sw" aria-hidden="true"></span><span><b>${esc(SYNC[l].t)}</b><p>${esc(SYNC[l].e)}</p><small>${esc(SYNC[l].who)}</small><a class="more-l" href="#sync">${t("К чему подключаемся и что это даст", "Nimaga ulanamiz va bu nima beradi")}</a></span><span class="ap">${t("по запросу", "so‘rov bo‘yicha")}</span></label></div>
 </div>
 <aside class="sum glass" aria-live="polite">
 <div class="row"><span>${t("Сайт", "Sayt")}</span><span>${usd(BASE.promo)}</span></div>
@@ -429,6 +445,7 @@ function offer(l, t) {
 <button type="button" class="btn btn-g" id="copy">${ICON.copy}<span>${t("Скопировать состав", "Tarkibni nusxalash")}</span></button>
 <a class="btn btn-a" href="${DEVUZ}" target="_blank" rel="noopener">${ICON.tg}<span>${t("Обсудить с DevUz Studio", "DevUz Studio bilan muhokama qilish")}</span></a>
 </aside></div>
+${syncSec(l, t)}
 <div class="it" id="it"><div>
 <h3>${t("IT-поддержка, домен и сервер", "IT-qo‘llab-quvvatlash, domen va server")}</h3>
 <span class="it-note">${t(`Ежемесячные и годовые платежи: в ${usd(ALL)} разовых работ не входят`, `Oylik va yillik to‘lovlar: ${usd(ALL)} bir martalik ishlarga kirmaydi`)}</span>
@@ -441,6 +458,22 @@ function offer(l, t) {
 <p class="note">${t("«Поддержка сайта и бота» включается вместе с допом «Telegram-бот с ИИ».", "«Sayt va botni qo‘llab-quvvatlash» «Sun’iy intellektli Telegram-bot» qo‘shimchasi bilan birga yoqiladi.")}</p>
 </aside></div>
 </div></section>`;
+}
+
+/* Синхронизация с системами ресторана: к чему подключаемся и кому что даёт. */
+function syncSec(l, t) {
+  const S = SYNC;
+  return `<div class="sync" id="sync">
+<h3>${esc(S[l].t)} <span class="it-note">${t("цена по запросу, в " + usd(ALL) + " не входит", usd(ALL) + " ga kirmaydi, narx so‘rov bo‘yicha")}</span></h3>
+<p class="lead" style="font-size:16px">${t("Сайт, бот и панель из макета подключаются к тому, чем Agora уже пользуется. Меню в rezvo у вас уже идёт из iiko: с неё и начнём.", "Maketdagi sayt, bot va panel Agora allaqachon foydalanayotgan tizimlarga ulanadi. Rezvo’dagi menyuingiz allaqachon iiko’dan keladi: shundan boshlaymiz.")}</p>
+<h4>${t("К чему подключаемся", "Nimaga ulanamiz")}</h4>
+<div class="sync-g">${S.groups.map((g) => `<div class="sync-c"><b>${esc(g[l])}</b><span class="sync-l">${esc(l === "uz" && g.listUz ? g.listUz : g.list)}</span><p>${esc(g.give[l])}</p></div>`).join("")}</div>
+<h4>${t("Что это даёт каждому", "Bu har kimga nima beradi")}</h4>
+<div class="sync-r">${S.roles.map((r) => `<div class="sync-c"><b>${esc(r[l])}</b><ul>${r.a[l].map((x) => `<li>${esc(x)}</li>`).join("")}</ul></div>`).join("")}</div>
+<h4>${t("Как называем цену", "Narxni qanday aytamiz")}</h4>
+<ol class="sync-s">${S.steps[l].map((x) => `<li>${esc(x)}</li>`).join("")}</ol>
+<p class="note">${t("Подключаемся только к системам с открытым доступом (API). Доступ к ним у поставщика иногда платный, это обсуждаем заранее.", "Faqat ochiq kirishli (API) tizimlarga ulanamiz. Yetkazib beruvchida ularga kirish ba’zan pullik, buni oldindan kelishamiz.")}</p>
+</div>`;
 }
 
 function landPage(l) {
@@ -469,7 +502,7 @@ function landPage(l) {
     t("Откройте админку, войдите кодом 1234: ваша бронь первой строкой. Нажмите «Подтвердить».", "Admin panelni oching, 1234 kodi bilan kiring: broningiz birinchi qatorda. «Tasdiqlash»ni bosing."),
     t("Вернитесь на сайт: в «Моя бронь» уже «Подтверждена». В «Меню и стоп-лист» снимите блюдо, и оно пропадёт с сайта.", "Saytga qayting: «Mening bronim»da allaqachon «Tasdiqlandi». «Menyu va stop-list»da taomni o‘chiring, u saytdan yo‘qoladi."),
   ];
-  const ld = { base: BASE.promo, hours: OFFER_HOURS, logo: LOGO_VB, aim: [568, 192], add: ADDONS.map((a) => ({ id: a.id, p: a.price, t: a[l].t })), it: SUPPORT.map((s) => ({ id: s.id, p: s.price, per: s.per })), t: { copied: t("Состав скопирован", "Tarkib nusxalandi"), tot: t("Итого разово", "Bir martalik jami"), month: t("В месяц", "Oyiga"), year: t("В год", "Yiliga") } };
+  const ld = { base: BASE.promo, hours: OFFER_HOURS, logo: LOGO_VB, aim: [568, 192], add: ADDONS.map((a) => ({ id: a.id, p: a.price, t: a[l].t })), it: SUPPORT.map((s) => ({ id: s.id, p: s.price, per: s.per })), sync: SYNC[l].t, t: { req: t("по запросу", "so‘rov bo‘yicha"), copied: t("Состав скопирован", "Tarkib nusxalandi"), tot: t("Итого разово", "Bir martalik jami"), month: t("В месяц", "Oyiga"), year: t("В год", "Yiliga") } };
   return `${head(l, t("AGORA · макет сайта, панели и бота · DevUz Studio", "AGORA · sayt, panel va bot maketi · DevUz Studio"), t("Макет для Agora Lounge & bar: сайт с меню и бронью, панель ресторана и Telegram-бот. Конструктор цены и ежемесячные платежи.", "Agora Lounge & bar uchun maket: menyu va bronli sayt, restoran paneli va Telegram-bot. Narx konstruktori va oylik to‘lovlar."))}
 <link rel="preload" as="image" href="${IMG}/h-6.webp">
 <style>${CSS}</style>
@@ -532,8 +565,8 @@ ${LAND_JS}</script>
 /* ── Панель: вход, «стекло» V7 + CRM ──────────────────────────── */
 (function checkDict() {
   const keys = new Set([...PANEL_JS.matchAll(/\bt\('([A-Za-z0-9_]+)'/g)].map((m) => m[1]));
-  for (const k of ["tab_", "src_"]) keys.delete(k);
-  for (const k of ["tab_sum", "tab_book", "tab_ord", "tab_bot", "tab_menu", "tab_log", "src_site", "src_bot", "src_call", "src_ig", "o_acc_do", "o_cook_do", "o_ready_do", "o_done_do"]) keys.add(k);
+  for (const k of ["tab_", "src_", "tag_", "dlv_"]) keys.delete(k);
+  for (const k of ["tab_sum", "tab_book", "tab_ord", "tab_bot", "tab_menu", "tab_log", "tab_dlv", "tab_set", "tag_hit", "tag_new", "dlv_min", "dlv_free", "src_site", "src_bot", "src_call", "src_ig", "o_acc_do", "o_cook_do", "o_ready_do", "o_done_do"]) keys.add(k);
   for (const k of keys) {
     const v = PANEL_UI[k];
     if (!v || v.length !== 2 || v.some((x) => !x)) throw new Error(`panel: нет подписи «${k}» на двух языках`);
@@ -549,7 +582,7 @@ function panelPage(l) {
     l, sum: l === "ru" ? "сум" : "so‘m", site: href(l, "site"), home: href(l), img: IMG, ui,
     menu: MENU.map((m) => [m.id, m.cat, nm(m, l), m.price, m.ph]),
     cats: CATS.map((c) => [c.id, c[l], c.g]),
-    street: BRAND[l].street,
+    street: BRAND[l].street, set0: set0(l, t), times: TIMES,
     /* Демо-гости и адреса доставки: часть имён — ловушки, при показе свои у клиента. */
     names: l === "ru" ? ["Азиз", "Мадина", "Тимур", "Камола", "Сардор", "Нигора", "Рустам", "Дилноза", "Бобур", "Лола", "Жасур", "Севара"] : ["Aziz", "Madina", "Timur", "Kamola", "Sardor", "Nigora", "Rustam", "Dilnoza", "Bobur", "Lola", "Jasur", "Sevara"],
     corp: l === "ru" ? "Банкет «[[t:0]] Group»" : "«[[t:0]] Group» banketi",

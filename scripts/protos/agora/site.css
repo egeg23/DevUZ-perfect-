@@ -285,8 +285,8 @@ main{overflow-x:clip}
 @keyframes fill{from{transform:scaleX(0)}to{transform:scaleX(1)}}
 .st-now{font:400 32px/1.1 var(--hd);margin:8px 0}
 /* Корзина */
-.cart{position:fixed;right:16px;bottom:92px;z-index:55;display:inline-flex;align-items:center;gap:10px;min-height:52px;padding:0 18px;border-radius:999px;background:var(--tx);color:#000;font-weight:700;box-shadow:var(--sh);transform:translateY(160%);transition:transform .45s cubic-bezier(.3,1.3,.5,1)}
-.cart.on{transform:none}
+.cart{position:fixed;right:16px;bottom:92px;z-index:55;display:inline-flex;align-items:center;gap:10px;min-height:52px;padding:0 18px;border-radius:999px;background:var(--tx);color:#000;font-weight:700;box-shadow:var(--sh);transform:translateY(160%);opacity:0;pointer-events:none;transition:transform .45s cubic-bezier(.3,1.3,.5,1),opacity .3s}
+.cart.on{transform:none;opacity:1;pointer-events:auto}
 .cart svg{width:20px;height:20px}
 .cart b{display:grid;place-items:center;min-width:24px;height:24px;border-radius:999px;background:var(--a);color:#fff;font-size:12px}
 @media (min-width:900px){.cart{bottom:24px}}
@@ -411,3 +411,25 @@ main{overflow-x:clip}
   .sc{height:auto}.sc-st{position:relative;height:auto;min-height:100vh}.sc-card{--o:1}
   .hs{height:auto}.hs-st{position:relative}
 }
+
+/* Строка акции из панели, метка блюда, пауза кухни. */
+.promo{display:inline-flex;margin:0 0 14px;padding:8px 16px;border-radius:999px;font-size:14px;font-weight:700;color:#fff;border:1px solid rgb(255 255 255 / .2)}
+.promo[hidden]{display:none}
+.tag.hot{background:var(--a)}
+.pause-n{margin:10px 0;padding:10px 14px;border-radius:14px;background:rgb(255 255 255 / .08);font-size:14px}
+
+/* Синхронизация с системами ресторана: доп по запросу. */
+.add-sync{border-style:dashed}
+.add-sync .ap{color:var(--gold)}
+.more-l{display:inline-block;margin-top:8px;font-size:14px;font-weight:700;text-decoration:underline;text-underline-offset:3px}
+.sync{margin-top:48px;padding-top:32px;border-top:1px solid var(--ln)}
+.sync h3{font:400 clamp(28px,4vw,40px)/1.1 var(--hd);margin-bottom:12px}
+.sync h3 .it-note{display:table;font:600 14px/1.4 var(--bd);margin-top:6px}
+.sync h4{font-size:18px;margin:28px 0 12px}
+.sync-g,.sync-r{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));gap:12px}
+.sync-c{padding:16px;border-radius:18px;background:var(--s2);border:1px solid var(--ln);min-width:0}
+.sync-c b{display:block;font-size:16px}
+.sync-l{display:block;margin-top:4px;font-size:13px;font-weight:700;color:var(--gold)}
+.sync-c p,.sync-c li{font-size:14px;color:var(--mu);margin-top:6px}
+.sync-c ul{padding-left:18px;margin:0}
+.sync-s{padding-left:20px;display:grid;gap:6px;font-size:15px}

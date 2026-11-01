@@ -56,9 +56,9 @@ function on(id){return cfg[id]!==false}
 function cfgApply(){var s=0,n=0;boxes.forEach(function(b){var id=b.getAttribute('data-add');b.checked=on(id);if(b.checked){var a=D.add.filter(function(x){return x.id===id})[0];s+=a.p;n++}});
   $('#adds').textContent=money(s);$('#addn').textContent=n?'('+n+')':'';$('#total').textContent=money(D.base+s);put('ag-cfg-1',cfg);itApply()}
 boxes.forEach(function(b){b.addEventListener('change',function(){cfg[b.getAttribute('data-add')]=b.checked;cfgApply()})});
-$('#allon').addEventListener('click',function(){cfg={};cfgApply()});
+$('#allon').addEventListener('click',function(){cfg={};var y=$('[data-sync]');if(y)y.checked=false;cfgApply()});
 $('#alloff').addEventListener('click',function(){boxes.forEach(function(b){cfg[b.getAttribute('data-add')]=false});cfgApply()});
-$('#copy').addEventListener('click',function(){var txt=[$('.base b').textContent+': '+money(D.base)];D.add.forEach(function(a){if(on(a.id))txt.push(a.t+': '+money(a.p))});txt.push(T.tot+': '+$('#total').textContent);
+$('#copy').addEventListener('click',function(){var txt=[$('.base b').textContent+': '+money(D.base)];D.add.forEach(function(a){if(on(a.id))txt.push(a.t+': '+money(a.p))});var sy=$('[data-sync]');if(sy&&sy.checked)txt.push(D.sync+': '+T.req);txt.push(T.tot+': '+$('#total').textContent);
   txt.push('');txt.push(T.month+': '+$('#it-m').textContent+' · '+T.year+': '+$('#it-y').textContent);
   var done=function(){toast(T.copied)};if(navigator.clipboard)navigator.clipboard.writeText(txt.join('\n')).then(done,done);else done()});
 /* Ежемесячные платежи: не входят в 3 000 $. Поддержка — одна из двух. */
@@ -67,6 +67,7 @@ function itApply(){var m=0,y=0;$$('[data-it]').forEach(function(x){var it=D.it.f
   $('#it-m').textContent=money(m);$('#it-y').textContent=money(y);
   var ai=$('#it-ai');ai.hidden=!on('tgbot')}
 $$('[data-it]').forEach(function(x){x.addEventListener('change',itApply)});
+var sy=$('[data-sync]');if(sy){sy.checked=cfg.sync===true;sy.addEventListener('change',function(){cfg.sync=sy.checked;put('ag-cfg-1',cfg)})}
 cfgApply();
 /* 48 часов с первого открытия макета на этом устройстве. */
 var t0=get('ag-offer-1',0);if(!t0){t0=Date.now();put('ag-offer-1',t0)}

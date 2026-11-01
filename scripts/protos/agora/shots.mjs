@@ -41,7 +41,7 @@ for (const w of ws.split(",").map(Number)) {
   await p.click('[data-sw="b"]'); await p.waitForTimeout(800); await shot("panel-login-tg");
   await p.click("#lg-tg"); await p.fill("#otp", "1234"); await p.waitForTimeout(500); await shot("panel-otp");
   await p.waitForSelector('[data-r="own"]'); await shot("panel-role"); await p.click('[data-r="own"]'); await p.waitForTimeout(900); await shot("panel-sum");
-  for (const tab of ["book", "ord", "bot", "menu"]) { await p.click(`[data-tab="${tab}"]`); await p.waitForTimeout(700); await shot(`panel-${tab}`); }
+  for (const tab of ["book", "ord", "bot", "menu", "dlv", "set"]) { await p.click(`[data-tab="${tab}"]`); await p.waitForTimeout(700); await shot(`panel-${tab}`); }
   await p.click('[data-tab="book"]'); await p.click('.tbl tbody tr:first-child [data-s="1"]'); await p.waitForTimeout(400);
   await p.click("#role"); await p.click('[data-tab="sum"]'); await p.waitForTimeout(700); await shot("panel-admin");
   await p.goto(R + "/site", { waitUntil: "load" }); await p.click("#mine"); await p.waitForTimeout(700); await shot("mine-ok");
