@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 
 import { cases } from "@/content/cases";
+import { BOX_PATH } from "@/content/box";
 import { MOCKUP_TERMS_PATH } from "@/content/mockup-terms";
 import { LANDING_LOCALES, LANDING_PATH } from "@/content/ai-staff/landing";
 import { serviceEnabled } from "@/lib/ai-staff/store";
@@ -56,6 +57,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // день, поэтому и перечитывать страницу стоит чаще остальных.
     { path: MARKETING_PATH, priority: 0.9, changeFrequency: "daily" as const },
     { path: "calculator", priority: 0.9, changeFrequency: "monthly" as const },
+    // DevUz Box: промо-страница коробки, на всех языках сайта.
+    { path: BOX_PATH, priority: 0.8, changeFrequency: "monthly" as const },
     // Аудитор — вход для холодного трафика: по запросам вида «проверить
     // сайт» приходят те, у кого уже что-то не так, а это готовый разговор.
     { path: "audit", priority: 0.9, changeFrequency: "monthly" as const },

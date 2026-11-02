@@ -10,6 +10,7 @@ import { routeNewLead } from "@/lib/admin/lead-queue-store";
 import { salesRecipients } from "@/lib/qualify/brief";
 import { sendLead } from "@/lib/qualify/telegram";
 import { newRequestNo } from "@/lib/qualify/engine";
+import { formSource } from "@/lib/qualify/form-sources";
 import { scoreLead } from "@/lib/qualify/scoring";
 import type { QualifyToolInput } from "@/lib/qualify/types";
 
@@ -55,6 +56,9 @@ export async function POST(request: Request) {
   const name = text(body.name, 120);
   const contact = text(body.contact, 200);
   const message = text(body.message, 1500);
+  const companyName = text(body.company, 120);
+  // Откуда форма: обычная или лист ожидания DevUz Box (lib/qualify/form-sources).
+  const source = formSource(body.source);
   const locale: Locale = isLocale(body.locale as string) ? (body.locale as Locale) : "ru";
 
   if (!contact) {
@@ -82,7 +86,7 @@ export async function POST(request: Request) {
 
   const input: QualifyToolInput = {
     contact_name: name,
-    company: "",
+    company: companyName,
     contact_handle: contact,
     contact_kind: detectContactKind(contact),
     niche: unqualified,
@@ -95,7 +99,7 @@ export async function POST(request: Request) {
     timing: "T3",
     intent: "needs_human",
     summary: {
-      client: name || "имя не указано",
+      client: [name || "имя не указано", companyName].filter(Boolean).join(", "),
       request: message || "текст задачи не указан",
       niche: unqualified,
       expertise: unqualified,
@@ -125,7 +129,7 @@ export async function POST(request: Request) {
 
   let leadId: string | null = null;
   try {
-    leadId = await saveLead(lead, [], "form", { requestNo, origin });
+    leadId = await saveLead(lead, [], source, { requestNo, origin });
   } catch (error) {
     console.error("saveLead form", error);
   }
@@ -150,7 +154,7 @@ export async function POST(request: Request) {
     leadId: leadId ?? "unsaved",
     lead,
     requestNo,
-    origin: { ...origin, source: "form" },
+    origin: { ...origin, source },
     fallback: await salesRecipients(),
   });
 
