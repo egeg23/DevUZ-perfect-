@@ -14,6 +14,9 @@
 
 export const BOX_NAME = "DevUz Box";
 
+/** Система внутри коробки. Тоже рабочее имя, в текстах через {os}. */
+export const BOX_OS = "DevUz OS";
+
 /** Адрес промо-страницы: /{язык}/box. */
 export const BOX_PATH = "box";
 
@@ -50,7 +53,14 @@ export const BOX_SHOTS: Record<"lite" | "pro" | "jarvis", { w: number; h: number
   jarvis: { w: 1080, h: 1040 },
 };
 
-/** Подставить имя коробки в строку словаря. */
+/**
+ * Экраны системы на промо-странице: концепт интерфейса, файлы
+ * `public/box/os-<key>.webp` (кадр 1344×752) и `-s` (800 px); подписи в словаре
+ * (`box.os.screens`) идут тем же порядком.
+ */
+export const BOX_OS_SCREENS = ["desktop", "studio", "inbox", "code"] as const;
+
+/** Подставить имена коробки и системы в строку словаря. */
 export function named(text: string): string {
-  return text.replaceAll("{name}", BOX_NAME);
+  return text.replaceAll("{name}", BOX_NAME).replaceAll("{os}", BOX_OS);
 }

@@ -4,7 +4,9 @@
  * Что держит: страница есть на каждом языке сайта и в карте сайта, кнопка с
  * главной ведёт на неё, «октябрь 2027» на месте, цен нет, тексты без длинных
  * тире и штампов ИИ, картинки сцены лежат в public/box и не тяжёлые, заявка с
- * листа ожидания помечена источником box.
+ * листа ожидания помечена источником box. Промо, а не страница для
+ * инвестора (владелец, 02.11.2026): названий моделей ИИ, чипов и систем в
+ * текстах нет, четырнадцать направлений и раздел системы с экранами на месте.
  *
  * Запуск: npm test
  */
@@ -15,7 +17,7 @@ import { test } from "node:test";
 
 import sitemap from "@/app/sitemap";
 import { leadChannelDict } from "@/content/admin-panel/lead-origin";
-import { BOX_CUTS, BOX_NAME, BOX_PATH, BOX_SHOTS, boxLayerCount, named } from "@/content/box";
+import { BOX_CUTS, BOX_NAME, BOX_OS, BOX_OS_SCREENS, BOX_PATH, BOX_SHOTS, boxLayerCount, named } from "@/content/box";
 import { boxCopy } from "@/content/box-copy";
 import { getDictionary } from "@/content/dictionaries";
 import { INBOUND_SOURCES } from "@/lib/admin/sales-stages";
@@ -76,8 +78,10 @@ test("DevUz Box: словарь на шести языках одной форм
     assert.match(copy.roadmap.stages.at(-1)!.when, /2027/, `${locale}: последний этап роадмапа`);
     assert.match(copy.seo.title, /2027/, `${locale}: заголовок страницы`);
     // Имя в текстах только через {name}: переименовать можно одной строкой в content/box.ts.
-    for (const s of strings(copy as unknown as Tree)) assert.doesNotMatch(s, /DevUz Box/, `${locale}: имя записано руками: «${s.slice(0, 50)}»`);
+    for (const s of strings(copy as unknown as Tree)) assert.doesNotMatch(s, /DevUz (Box|OS)/, `${locale}: имя записано руками: «${s.slice(0, 50)}»`);
     assert.equal(named("{name} Pro"), `${BOX_NAME} Pro`);
+    assert.equal(named("на {os}"), `на ${BOX_OS}`);
+    assert.match(copy.os.kicker, /\{os\}/, `${locale}: имя системы в подзаголовке через {os}`);
     if (locale !== "ru") assert.notEqual(copy.promo.title, ru.promo.title, `${locale}: промо не переведено`);
   }
 });
@@ -92,6 +96,34 @@ test("DevUz Box: тексты без длинных тире, штампов И�
     }
     const found = aiMarkers(all.join("\n"));
     assert.deepEqual(found, [], `${locale}: штампы ИИ`);
+  }
+});
+
+test("DevUz Box: промо без названий моделей ИИ, чипов и систем; четырнадцать направлений, четыре дела системы и её экраны на месте", () => {
+  // Владелец, 02.11.2026: «Про Qwen и тд не упоминай, это промо страница а не
+  // страница для инвестора. Лучше общие термины „свое ядро“ и тд».
+  const INSIDER = /\b(Qwen|gpt-oss|GPT|Llama|Mistral|DeepSeek|Whisper|Ryzen|Radeon|NVIDIA|GB10|Debian|Ubuntu|Linux|Docker|vLLM|Ollama|Strix)\b/i;
+  for (const locale of locales) {
+    const copy = getDictionary(locale).box;
+    for (const s of strings(copy as unknown as Tree)) assert.doesNotMatch(s, INSIDER, `${locale}: внутренняя кухня в «${s.slice(0, 60)}»`);
+    assert.equal(copy.scenarios.items.length, 14, `${locale}: направлений`);
+    assert.equal(copy.os.pillars.length, 4, `${locale}: четыре дела системы`);
+    assert.equal(copy.os.screens.length, BOX_OS_SCREENS.length, `${locale}: подписи экранов`);
+    assert.equal(copy.models.items.length, 4, `${locale}: четыре модели`);
+    for (const item of copy.models.items) for (const row of Object.keys(copy.models.rows)) assert.ok((item as Record<string, string>)[row], `${locale}: ${item.name} без «${row}»`);
+  }
+  const page = read("app/[locale]/box/page.tsx");
+  assert.doesNotMatch(page, INSIDER, "внутренняя кухня в разметке промо");
+  assert.match(page, /BOX_OS_SCREENS\.map/);
+  assert.match(page, /copy\.os\.pillars\.map/);
+  assert.match(page, /named\(copy\.os\.kicker\)/);
+  assert.match(read("components/box/roadmap.tsx"), /named\(stage\.t\)/, "этап роадмапа с {os} подставляется");
+  for (const key of BOX_OS_SCREENS) {
+    for (const [suffix, limit] of [["", 90_000], ["-s", 40_000]] as const) {
+      const path = join("public/box", `os-${key}${suffix}.webp`);
+      assert.ok(existsSync(path), `нет ${path}`);
+      assert.ok(statSync(path).size <= limit, `${path} тяжелее ${limit / 1000} КБ`);
+    }
   }
 });
 
@@ -130,7 +162,7 @@ test("DevUz Box: хиро сразу за «Делали для», кнопка 
   assert.match(page, /<BoxCutaway/);
   assert.match(page, /<BoxRoadmap/);
   assert.match(page, /<BoxWaitlist/);
-  assert.match(page, /faqSchema\(copy\.faq\.items\)/);
+  assert.match(page, /faqSchema\(copy\.faq\.items\.map/, "вопросы в разметке schema.org с подставленными именами");
   assert.equal(BOX_PATH, "box");
 
   assert.match(read("app/sitemap.ts"), /\{ path: BOX_PATH,/);

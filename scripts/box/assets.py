@@ -6,14 +6,17 @@
 из презентаций (сессия 01.11.2026); они не в репозитории, путь к папке с
 ними — первым аргументом. Запуск:
 
-    python3 -I scripts/box/assets.py <папка с кадрами> <trio-4k.png>
+    python3 -I scripts/box/assets.py <папка с кадрами> <trio-4k.png> [<папка с os-*.png>]
 
 Что делает:
   * режет кадр разреза «Про», «Лайт» и «Джарвис» на горизонтальные слои —
     из них на главной коробка собирается по прокрутке (components/box/scene.tsx);
     границы слоёв подобраны по сетке руками, перекрытия между соседями
     остаются в нижнем слое;
-  * собранные коробки, трио для первого экрана промо и обложка Open Graph.
+  * собранные коробки, трио для первого экрана промо и обложка Open Graph;
+  * экраны DevUz OS (`os-desktop.png`, `os-studio.png`, `os-inbox.png`,
+    `os-code.png`): концепт интерфейса, сгенерирован 02.11.2026 (Higgsfield,
+    gpt-image, по 0,25 кредита) по описанию из content/box-copy.ts → `os-*.webp`.
 
 WebP с потерями, качество 80; на телефон — вдвое уже. Все размеры и имена
 файлов — в LAYERS/ASSETS: компонент берёт те же имена из content/box.ts.
@@ -78,3 +81,15 @@ ch = round(w / target)
 og = trio.crop((0, (h - ch) // 2, w, (h - ch) // 2 + ch)).resize((1200, 630), Image.LANCZOS)
 og.save(out / "og.jpg", "JPEG", quality=86, optimize=True, progressive=True)
 print("og.jpg", (out / "og.jpg").stat().st_size // 1024, "KB")
+
+# Экраны системы: концепт интерфейса, если папка с ними передана.
+if len(sys.argv) > 3:
+    screens = Path(sys.argv[3])
+    for key in ("desktop", "studio", "inbox", "code"):
+        src_png = screens / f"os-{key}.png"
+        if not src_png.exists():
+            print("нет", src_png)
+            continue
+        im = Image.open(src_png).convert("RGB")
+        webp(im, f"os-{key}", 1600, 82)
+        webp(im, f"os-{key}-s", 800)

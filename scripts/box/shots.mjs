@@ -78,7 +78,7 @@ for (const [name, screen] of Object.entries(SCREENS)) {
   await page.screenshot({ path: path.join(out, `promo-top-${screen.width}.jpg`, type: "jpeg", quality: 82) });
   await scrollScene(page, "#cutaway", 1);
   await page.screenshot({ path: path.join(out, `promo-cutaway-${screen.width}.jpg`, type: "jpeg", quality: 82) });
-  for (const id of ["how", "models", "roadmap", "waitlist"]) {
+  for (const id of ["how", "features", "models", "roadmap", "waitlist"]) {
     await page.evaluate((id) => document.getElementById(id)?.scrollIntoView({ block: "start" }), id);
     await settle(page);
     await page.screenshot({ path: path.join(out, `promo-${id}-${screen.width}.jpg`, type: "jpeg", quality: 82) });

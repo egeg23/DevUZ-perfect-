@@ -1,4 +1,5 @@
 import { Reveal } from "@/components/ui/reveal";
+import { named } from "@/content/box";
 import type { Dictionary } from "@/content/dictionaries";
 import { cn } from "@/lib/cn";
 
@@ -29,8 +30,8 @@ export function BoxRoadmap({ dict }: { dict: Dictionary }) {
               <span className={cn("h-2 w-2 rounded-full", i === 0 ? "box-badge-dot bg-green" : i === last ? "bg-gold" : "bg-white/40")} />
             </span>
             <p className={cn("font-mono text-[0.7rem] uppercase tracking-[0.2em]", i === last ? "text-gold" : "text-green")}>{stage.when}</p>
-            <h3 className="mt-2 text-[1.05rem] font-semibold leading-snug text-white">{stage.t}</h3>
-            <p className="mt-2 text-[0.9rem] leading-relaxed text-muted">{stage.d}</p>
+            <h3 className="mt-2 text-[1.05rem] font-semibold leading-snug text-white">{named(stage.t)}</h3>
+            <p className="mt-2 text-[0.9rem] leading-relaxed text-muted">{named(stage.d)}</p>
             {i === 0 ? (
               <p className="mt-3 inline-flex rounded-full border border-green/35 bg-green/10 px-2.5 py-1 text-[0.72rem] font-medium text-green">{copy.now}</p>
             ) : null}
