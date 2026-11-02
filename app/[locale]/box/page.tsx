@@ -134,7 +134,7 @@ export default async function BoxPage({ params }: { params: Promise<{ locale: st
             ))}
           </div>
 
-          <div className="mt-10 grid gap-5 md:grid-cols-6">
+          <div id="os-screens" className="mt-10 grid gap-5 md:grid-cols-6">
             {BOX_OS_SCREENS.map((key, i) => {
               const screen = copy.os.screens[i];
               const wide = i === 0;
