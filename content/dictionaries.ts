@@ -20,6 +20,8 @@ const ru = {
     about: "О студии",
     contacts: "Контакты",
     partners: "Зарабатывай с нами",
+    // DevUz Box, промо /box (владелец, 02.11.2026: «Вынеси в новую кнопку сверху в меню: Ai офис»).
+    box: "AI офис",
   },
   cta: {
     discuss: "Обсудить проект",
@@ -475,7 +477,7 @@ const ru = {
 export type Dictionary = typeof ru;
 
 const en: Dictionary = {
-  nav: { services: "Services", marketing: "Marketing", calculator: "Development", audit: "Site check", products: "Products", razbor: "Teardowns", cases: "Work", process: "Process", about: "Studio", contacts: "Contacts", partners: "Earn with us" },
+  nav: { services: "Services", marketing: "Marketing", calculator: "Development", audit: "Site check", products: "Products", razbor: "Teardowns", cases: "Work", process: "Process", about: "Studio", contacts: "Contacts", partners: "Earn with us", box: "AI office" },
   cta: {
     discuss: "Discuss a project",
     calculate: "Get an estimate",
@@ -901,7 +903,7 @@ const en: Dictionary = {
 };
 
 const uz: Dictionary = {
-  nav: { services: "Xizmatlar", marketing: "Marketing", calculator: "Ishlab chiqish", audit: "Saytni tekshirish", products: "Mahsulotlar", razbor: "Tahlillar", cases: "Loyihalar", process: "Jarayon", about: "Studiya", contacts: "Aloqa", partners: "Hamkorlik" },
+  nav: { services: "Xizmatlar", marketing: "Marketing", calculator: "Ishlab chiqish", audit: "Saytni tekshirish", products: "Mahsulotlar", razbor: "Tahlillar", cases: "Loyihalar", process: "Jarayon", about: "Studiya", contacts: "Aloqa", partners: "Hamkorlik", box: "AI ofis" },
   cta: {
     discuss: "Loyihani muhokama qilish",
     calculate: "Loyihani hisoblash",
@@ -1327,7 +1329,7 @@ const uz: Dictionary = {
 };
 
 const zh: Dictionary = {
-  nav: { services: "服务", marketing: "营销", calculator: "开发", audit: "网站体检", products: "产品", razbor: "网站点评", cases: "案例", process: "流程", about: "关于我们", contacts: "联系方式", partners: "一起赚钱" },
+  nav: { services: "服务", marketing: "营销", calculator: "开发", audit: "网站体检", products: "产品", razbor: "网站点评", cases: "案例", process: "流程", about: "关于我们", contacts: "联系方式", partners: "一起赚钱", box: "AI 办公室" },
   cta: {
     discuss: "洽谈项目",
     calculate: "获取报价",
@@ -1759,6 +1761,7 @@ const uk: Dictionary = {
     about: "Про студію",
     contacts: "Контакти",
     partners: "Заробляй з нами",
+    box: "AI офіс",
   },
   cta: {
     discuss: "Обговорити проєкт",
@@ -2204,6 +2207,7 @@ const pl: Dictionary = {
     about: "O studiu",
     contacts: "Kontakt",
     partners: "Zarabiaj z nami",
+    box: "Biuro AI",
   },
   cta: {
     discuss: "Omów projekt",

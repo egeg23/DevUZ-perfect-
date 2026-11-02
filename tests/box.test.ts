@@ -144,6 +144,8 @@ test("DevUz Box: подписей столько, сколько слоёв в �
     assert.ok(statSync(join("public/box", `${model}.webp`)).size <= 120_000, `${model}.webp тяжелее 120 КБ`);
     assert.ok(BOX_SHOTS[model].w > 0 && BOX_SHOTS[model].h > 0);
   }
+  // «Премиум» собирается в корпусе «Про»: подписей столько же, сколько слоёв кадра «Про».
+  assert.equal(ru.cut.layers.premium.length, boxLayerCount("pro"), "premium: подписи и слои кадра «Про»");
   for (const file of ["trio.webp", "trio-s.webp", "og.jpg"]) assert.ok(existsSync(join("public/box", file)), `нет ${file}`);
   assert.ok(statSync("public/box/trio.webp").size <= 160_000, "trio.webp тяжелее 160 КБ");
 });
@@ -172,11 +174,30 @@ test("DevUz Box: хиро сразу за «Делали для», кнопка 
   }
 });
 
+test("DevUz Box: вкладок в разрезе столько же, сколько моделей; все кадры стоят и грузятся заранее; «AI офис» в шапке", () => {
+  // Владелец, 02.11.2026: «Моделей почему то 3, а потом идет еще и про версия
+  // (получается 4?)», «кнопки через раз работают, а джарвис вообще не
+  // открывается», «Вынеси в новую кнопку сверху в меню: Ai офис».
+  for (const locale of locales) {
+    const copy = getDictionary(locale).box;
+    assert.equal(Object.keys(copy.cut.models).length, copy.models.items.length, `${locale}: вкладок разреза и моделей поровну`);
+    assert.deepEqual(Object.values(copy.cut.models), copy.models.items.map((m) => m.name), `${locale}: вкладки зовутся как модели`);
+    assert.ok(getDictionary(locale).nav.box.trim(), `${locale}: пункт меню`);
+  }
+  const cut = read("components/box/cutaway.tsx");
+  assert.match(cut, /FRAMES\.map/, "кадры стоят друг на друге, а не пересоздаются");
+  assert.doesNotMatch(cut, /key=\{model\}/, "сцена не пересоздаётся на каждую вкладку");
+  assert.match(cut, /eager=\{near\}/);
+  assert.match(read("app/globals.css"), /\.box-tab \{[^}]*touch-action: manipulation/);
+  const header = read("components/layout/header.tsx");
+  assert.match(header, /href: localeHref\(locale, BOX_PATH\), label: dict\.nav\.box/);
+});
+
 test("DevUz Box: сцена двигает только transform и opacity, слои грузятся лениво", () => {
   const scene = read("components/box/scene.tsx");
   assert.match(scene, /translate3d\(/);
   assert.doesNotMatch(scene, /style=\{\{[^}]*\b(left|top|width|height):\s*`\$\{t[xy]/, "позиционирование слоёв по прокрутке через left/top");
-  assert.match(scene, /loading="lazy"/);
+  assert.match(scene, /loading=\{eager \? "eager" : "lazy"\}/, "на главной лениво, «В разрезе» грузит заранее");
   assert.match(scene, /srcSet=\{`\$\{BOX_IMG\}\/\$\{model\}-l\$\{i \+ 1\}-s\.webp 520w/);
   const css = read("app/globals.css");
   assert.match(css, /@media \(prefers-reduced-motion: reduce\) \{[^}]*\.box-sweep-idle/);
