@@ -69,19 +69,19 @@ for (const [name, screen] of Object.entries(SCREENS)) {
   await page.goto(`${base}/ru`, { waitUntil: "networkidle" });
   for (const [label, t] of [["start", 0.02], ["mid", 0.45], ["end", 1]]) {
     await scrollScene(page, "#box", t);
-    await page.screenshot({ path: path.join(out, `home-hero-${label}-${screen.width}.png`) });
+    await page.screenshot({ path: path.join(out, `home-hero-${label}-${screen.width}.jpg`, type: "jpeg", quality: 82) });
   }
 
   // Промо-страница: первый экран, разрез, модели, роадмап, лист ожидания, вся страница.
   await page.goto(`${base}/ru/box`, { waitUntil: "networkidle" });
   await settle(page);
-  await page.screenshot({ path: path.join(out, `promo-top-${screen.width}.png`) });
+  await page.screenshot({ path: path.join(out, `promo-top-${screen.width}.jpg`, type: "jpeg", quality: 82) });
   await scrollScene(page, "#cutaway", 1);
-  await page.screenshot({ path: path.join(out, `promo-cutaway-${screen.width}.png`) });
+  await page.screenshot({ path: path.join(out, `promo-cutaway-${screen.width}.jpg`, type: "jpeg", quality: 82) });
   for (const id of ["how", "models", "roadmap", "waitlist"]) {
     await page.evaluate((id) => document.getElementById(id)?.scrollIntoView({ block: "start" }), id);
     await settle(page);
-    await page.screenshot({ path: path.join(out, `promo-${id}-${screen.width}.png`) });
+    await page.screenshot({ path: path.join(out, `promo-${id}-${screen.width}.jpg`, type: "jpeg", quality: 82) });
   }
   await page.evaluate(async () => {
     // Показать все блоки перед полным снимком: Reveal ждёт прокрутки.
