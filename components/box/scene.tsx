@@ -35,6 +35,7 @@ export function BoxScene({
   alt,
   className,
   numbered = false,
+  eager = false,
 }: {
   model: CutModel;
   mode: "assemble" | "explode";
@@ -43,6 +44,12 @@ export function BoxScene({
   className?: string;
   /** Номера слоёв у правого края стопки: для подписей «В разрезе». */
   numbered?: boolean;
+  /**
+   * Грузить сразу, а не лениво. «В разрезе» включает его, когда блок подходит
+   * к экрану: ленивые картинки внутри липкого блока с движением iPhone
+   * грузил не всегда, и вкладка переключалась на пустую сцену.
+   */
+  eager?: boolean;
 }) {
   const cut = BOX_CUTS[model];
   const [sw, sh] = cut.stage;
@@ -92,7 +99,7 @@ export function BoxScene({
               srcSet={`${BOX_IMG}/${model}-l${i + 1}-s.webp 520w, ${BOX_IMG}/${model}-l${i + 1}.webp 980w`}
               sizes="(max-width: 767px) 92vw, 640px"
               alt=""
-              loading="lazy"
+              loading={eager ? "eager" : "lazy"}
               decoding="async"
               draggable={false}
               className="box-strip absolute left-0 w-full"
@@ -123,7 +130,7 @@ export function BoxScene({
             srcSet={`${BOX_IMG}/${model}-s.webp 660w, ${BOX_IMG}/${model}.webp 1320w`}
             sizes="(max-width: 767px) 92vw, 640px"
             alt=""
-            loading="lazy"
+            loading={eager ? "eager" : "lazy"}
             decoding="async"
             draggable={false}
             className="absolute inset-0 h-full w-full object-cover"

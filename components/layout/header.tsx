@@ -7,6 +7,7 @@ import { Logo } from "@/components/brand/logo";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
 import { Container } from "@/components/ui/container";
 import { company } from "@/content/company";
+import { BOX_PATH } from "@/content/box";
 import type { Dictionary } from "@/content/dictionaries";
 import { cn } from "@/lib/cn";
 import { telUrl } from "@/lib/phone-links";
@@ -27,6 +28,9 @@ export function Header({ locale, dict }: { locale: Locale; dict: Dictionary }) {
   }, []);
 
   const links = [
+    // DevUz Box: промо /box первым пунктом и своим видом (владелец, 02.11.2026:
+    // «Вынеси в новую кнопку сверху в меню: Ai офис»).
+    { href: localeHref(locale, BOX_PATH), label: dict.nav.box, box: true },
     { href: localeHref(locale, "services"), label: dict.nav.services },
     { href: localeHref(locale, "marketing"), label: dict.nav.marketing },
     { href: localeHref(locale, "calculator"), label: dict.nav.calculator },
@@ -73,8 +77,12 @@ export function Header({ locale, dict }: { locale: Locale; dict: Dictionary }) {
             сайт» и «О студии» ломались пополам. Сжатые зазоры и поздний
             брейкпоинт нужны, чтобы запрет переносов не превратился в
             выезд меню за край экрана. */}
+        {/* С пунктом «AI офис» по-русски не хватало ~60 px: пункты на 0.86rem
+            с зазором 12 px, а «Обсудить проект» не переносится (по-узбекски
+            он и раньше ломался в две строки). Контейнер шапки шире 1280 px
+            не растёт, поэтому размер один на всех ширинах. */}
         <nav
-          className="hidden items-center gap-4 xl:flex"
+          className="hidden items-center gap-3 xl:flex"
           aria-label={dict.nav.services}
         >
           {links.filter((link) => !("mobileOnly" in link && link.mobileOnly)).map((link) => (
@@ -82,14 +90,17 @@ export function Header({ locale, dict }: { locale: Locale; dict: Dictionary }) {
               key={link.href}
               href={link.href}
               className={
-                "live" in link && link.live
+                "box" in link && link.box
+                  ? "nav-box inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-[0.86rem] font-medium text-text"
+                  : "live" in link && link.live
                   ? // Единственный пункт с фоном: раздел новый, и он
                     // обновляется каждый день. Анимация — на CSS и гаснет
                     // при prefers-reduced-motion, см. globals.css.
-                    "nav-live whitespace-nowrap rounded-lg px-2.5 py-1 text-[0.92rem] text-text"
-                  : "link-underline whitespace-nowrap text-[0.92rem] text-muted transition-colors hover:text-text"
+                    "nav-live whitespace-nowrap rounded-lg px-2.5 py-1 text-[0.86rem] text-text"
+                  : "link-underline whitespace-nowrap text-[0.86rem] text-muted transition-colors hover:text-text"
               }
             >
+              {"box" in link && link.box ? <span aria-hidden="true" className="nav-box-dot h-1.5 w-1.5 rounded-full bg-green" /> : null}
               {link.label}
             </Link>
           ))}
@@ -101,7 +112,7 @@ export function Header({ locale, dict }: { locale: Locale; dict: Dictionary }) {
           </div>
           <Link
             href={localeHref(locale, "contact")}
-            className="hidden rounded-xl bg-green px-4 py-2.5 text-[0.88rem] font-semibold text-ink transition-colors hover:bg-white md:inline-flex"
+            className="hidden whitespace-nowrap rounded-xl bg-green px-4 py-2.5 text-[0.88rem] font-semibold text-ink transition-colors hover:bg-white md:inline-flex"
           >
             {dict.cta.discuss}
           </Link>

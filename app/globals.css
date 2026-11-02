@@ -641,6 +641,25 @@
  * Вне слоёв намеренно, как и мобильные правила панели: незаслоённый CSS
  * сильнее утилит Tailwind, и класс из разметки его не перебьёт.
  */
+/* «AI офис» в шапке: капсула с синим отливом и точкой, ведёт на /box.
+   Точка пульсирует только opacity и стоит при prefers-reduced-motion. */
+.nav-box {
+  border: 1px solid color-mix(in oklab, var(--color-blue-soft) 45%, transparent);
+  background: linear-gradient(90deg, color-mix(in oklab, var(--color-blue-soft) 16%, transparent), color-mix(in oklab, var(--color-green) 12%, transparent));
+  transition: border-color 0.3s, background-color 0.3s;
+}
+.nav-box:hover {
+  border-color: color-mix(in oklab, var(--color-green) 60%, transparent);
+}
+.nav-box-dot {
+  animation: box-pulse 2.4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-box-dot {
+    animation: none;
+  }
+}
+
 .nav-live {
   position: relative;
   isolation: isolate;
@@ -1095,6 +1114,13 @@
     backdrop-filter: none;
   }
 }
+/* Вкладки «В разрезе»: без задержки двойного касания и без синей вспышки
+   на iPhone; нажатие сразу, а не после прокрутки. */
+.box-tab {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
 .box-card {
   transition: transform 0.3s var(--ease-out-soft), border-color 0.3s;
 }
