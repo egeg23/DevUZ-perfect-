@@ -21,6 +21,7 @@ export const LOCALE_SECTIONS = [
   "about",
   "ai-sotrudnik",
   "audit",
+  "box",
   "calculator",
   "cases",
   "contact",

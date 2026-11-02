@@ -92,7 +92,8 @@ for (const [name, screen] of Object.entries(SCREENS)) {
     window.scrollTo(0, 0);
   });
   await settle(page, 1200);
-  await page.screenshot({ path: path.join(out, `promo-full-${screen.width}.png`), fullPage: true });
+  // Вся страница: JPEG, PNG на 18 МБ в репозитории не нужен.
+  await page.screenshot({ path: path.join(out, `promo-full-${screen.width}.jpg`), fullPage: true, type: "jpeg", quality: 80 });
   await context.close();
 }
 

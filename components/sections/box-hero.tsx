@@ -41,7 +41,7 @@ export function BoxHero({ locale, dict }: { locale: Locale; dict: Dictionary }) 
         <Container className="relative flex h-full flex-col justify-center gap-5 pt-16 pb-10 md:grid md:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] md:items-center md:gap-10 md:pt-20">
           <div
             className="box-glass relative z-10 rounded-3xl p-5 sm:p-7 md:p-9"
-            style={{ transform: `translate3d(0, ${(1 - intro) * 28}px, 0)`, opacity: 0.35 + 0.65 * intro }}
+            style={{ transform: `translate3d(0, ${(1 - intro) * 28}px, 0)`, opacity: 0.55 + 0.45 * intro }}
           >
             <p className="font-mono text-[0.68rem] uppercase tracking-[0.3em] text-green">
               {"// "}
