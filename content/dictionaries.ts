@@ -1,5 +1,7 @@
 import type { Locale } from "@/lib/i18n";
 
+import { boxCopy } from "@/content/box-copy";
+
 /**
  * Строки интерфейса. Русская версия — эталон формы: тип `Dictionary`
  * выводится из неё, поэтому пропущенный ключ в любой другой локали
@@ -464,6 +466,8 @@ const ru = {
     prefill:
       "Здравствуйте! Посчитал проект в калькуляторе на сайте:",
   },
+  /** DevUz Box: хиро на главной и промо-страница /box (content/box-copy.ts). */
+  box: boxCopy.ru,
   language: "Язык",
   skipToContent: "Перейти к содержимому",
 };
@@ -891,6 +895,7 @@ const en: Dictionary = {
     included: "already included",
     prefill: "Hello. I priced a project with the calculator on your site:",
   },
+  box: boxCopy.en,
   language: "Language",
   skipToContent: "Skip to content",
 };
@@ -1316,6 +1321,7 @@ const uz: Dictionary = {
     included: "allaqachon kiradi",
     prefill: "Assalomu alaykum! Saytdagi kalkulyatorda loyihani hisobladim:",
   },
+  box: boxCopy.uz,
   language: "Til",
   skipToContent: "Mazmunga o‘tish",
 };
@@ -1735,6 +1741,7 @@ const zh: Dictionary = {
     included: "已包含",
     prefill: "您好！我用贵司网站的计算器估算了一个项目：",
   },
+  box: boxCopy.zh,
   language: "语言",
   skipToContent: "跳到主要内容",
 };
@@ -2179,6 +2186,7 @@ const uk: Dictionary = {
     prefill:
       "Добрий день! Порахував проєкт у калькуляторі на сайті:",
   },
+  box: boxCopy.uk,
   language: "Мова",
   skipToContent: "Перейти до вмісту",
 };
@@ -2623,6 +2631,7 @@ const pl: Dictionary = {
     prefill:
       "Dzień dobry! Wyceniłem projekt w kalkulatorze na stronie:",
   },
+  box: boxCopy.pl,
   language: "Język",
   skipToContent: "Przejdź do treści",
 };
