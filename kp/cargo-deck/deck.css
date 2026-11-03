@@ -1,0 +1,106 @@
+/* Презентация для карго-компаний: слайды 1600×900, палитра макета (тёмно-синий, жёлто-оранжевый). */
+@page { size: 1600px 900px; margin: 0; }
+:root { --bg: #0b1226; --bg2: #121b36; --line: #253256; --ink: #f4f6fc; --mute: #a9b3cf; --y: #f6c445; --o: #f08a24; --r: #e8493a; --ok: #3ad29f; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: var(--bg); color: var(--ink); font: 400 22px/1.45 "Onest", system-ui, sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.slide { position: relative; width: 1600px; height: 900px; overflow: hidden; padding: 72px 88px 96px; page-break-after: always; break-after: page;
+  background: radial-gradient(1100px 600px at 92% -10%, rgba(240,138,36,.16), transparent 60%), linear-gradient(180deg, var(--bg), #0a1022); }
+.slide:last-child { page-break-after: auto; break-after: auto; }
+h1, h2, h3 { font-family: "Unbounded", "Onest", sans-serif; font-weight: 700; letter-spacing: -.01em; }
+h1 { font-size: 54px; line-height: 1.12; }
+h1 em, h2 em { font-style: normal; color: var(--y); }
+h2 { font-size: 40px; line-height: 1.18; max-width: 1300px; margin-bottom: 36px; }
+h3 { font-size: 22px; line-height: 1.25; margin-bottom: 10px; }
+.kick { font: 700 15px/1 "Onest", sans-serif; letter-spacing: .16em; text-transform: uppercase; color: var(--y); margin-bottom: 20px; display: flex; align-items: center; gap: 14px; }
+.kick::before { content: ""; width: 34px; height: 3px; border-radius: 2px; background: linear-gradient(90deg, var(--y), var(--o)); }
+.lead { color: var(--mute); font-size: 22px; max-width: 640px; margin-top: 24px; }
+.note { position: absolute; left: 88px; right: 88px; bottom: 96px; color: var(--mute); font-size: 18px; border-left: 3px solid var(--o); padding-left: 16px; }
+footer { position: absolute; left: 88px; right: 88px; bottom: 32px; display: flex; gap: 24px; align-items: center; font-size: 15px; color: var(--mute); border-top: 1px solid var(--line); padding-top: 16px; }
+footer b { color: var(--ink); }
+footer .n { margin-left: auto; font-weight: 700; color: var(--y); }
+
+/* Карточки и сетки */
+.card { background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.015)); border: 1px solid var(--line); border-radius: 22px; padding: 26px 28px; }
+.card p { color: var(--mute); font-size: 18px; line-height: 1.45; }
+.card > b { display: block; font: 700 15px/1 "Unbounded", sans-serif; color: var(--o); margin-bottom: 14px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+.grid2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 22px; }
+.grid3.tall .card { display: flex; flex-direction: column; gap: 6px; }
+
+/* Списки */
+.pts { list-style: none; display: grid; gap: 16px; }
+.pts li { position: relative; padding-left: 34px; font-size: 21px; line-height: 1.4; }
+.pts li::before { content: ""; position: absolute; left: 0; top: 7px; width: 18px; height: 18px; border-radius: 6px; background: linear-gradient(135deg, var(--y), var(--o)); box-shadow: 0 0 0 4px rgba(246,196,69,.12); }
+
+/* Экраны: окно браузера и телефон */
+.br { position: relative; border-radius: 18px; overflow: hidden; border: 1px solid #2c3a63; background: #0d1530; box-shadow: 0 30px 80px rgba(0,0,0,.45); padding-top: 30px; }
+.br i { position: absolute; top: 11px; left: 16px; width: 9px; height: 9px; border-radius: 50%; background: #e8493a; box-shadow: 16px 0 0 #f6c445, 32px 0 0 #3ad29f; }
+.br img { display: block; width: 100%; height: auto; }
+.ph { position: absolute; width: 230px; border-radius: 34px; overflow: hidden; border: 8px solid #1b2547; background: #0d1530; box-shadow: 0 30px 70px rgba(0,0,0,.6); }
+.ph img { display: block; width: 100%; height: auto; }
+.mini { margin-top: auto; padding-top: 22px; border-radius: 12px; }
+.mini i { top: 8px; left: 12px; width: 7px; height: 7px; box-shadow: 12px 0 0 #f6c445, 24px 0 0 #3ad29f; }
+
+/* Слайд «текст + экран» */
+.split { display: grid; grid-template-columns: 560px 1fr; gap: 64px; align-items: center; }
+.split.rev { grid-template-columns: 1fr 560px; }
+.split .pic { position: relative; }
+.split .pic .br { width: 100%; }
+.split .pic .over { right: -30px; bottom: -70px; }
+.split.rev .pic .over { right: auto; left: -40px; }
+.split .pic .over2 { position: absolute; width: 58%; right: 0; bottom: -60px; }
+.split h2 { font-size: 36px; margin-bottom: 30px; }
+.price { margin-top: 26px; display: inline-block; padding: 10px 18px; border-radius: 999px; border: 1px solid var(--o); color: var(--y); font-weight: 700; font-size: 17px; }
+.badge { position: absolute; left: -30px; bottom: -48px; width: 380px; background: linear-gradient(135deg, #1d2a52, #141d3d); border: 1px solid rgba(58,210,159,.5); border-radius: 20px; padding: 18px 22px; box-shadow: 0 24px 60px rgba(0,0,0,.5); }
+.badge b { display: block; font: 700 40px/1 "Unbounded", sans-serif; color: var(--ok); margin-bottom: 8px; }
+.badge span { font-size: 16px; color: var(--mute); }
+
+/* Обложка */
+.cover { display: grid; grid-template-columns: 680px 1fr; gap: 56px; align-items: center; padding-top: 80px; }
+.cover .tag { margin-top: 30px; display: inline-block; padding: 14px 22px; border-radius: 16px; background: linear-gradient(90deg, var(--y), var(--o)); color: #1a1405; font-weight: 700; font-size: 20px; }
+.cv-r { position: relative; height: 640px; }
+.cv-br { position: absolute; top: 20px; right: -180px; width: 900px; transform: rotate(-2deg); }
+.cv-ph { left: 10px; bottom: -40px; width: 250px; transform: rotate(3deg); }
+
+/* Сравнение */
+.cmp { width: 100%; border-collapse: separate; border-spacing: 0 8px; font-size: 19px; }
+.cmp th { text-align: left; font: 700 17px/1.2 "Unbounded", sans-serif; color: var(--mute); padding: 0 22px 6px; }
+.cmp th.hi { color: var(--y); }
+.cmp td { padding: 12px 22px; background: rgba(255,255,255,.035); }
+.cmp td:first-child { border-radius: 12px 0 0 12px; font-weight: 700; width: 250px; }
+.cmp td.no { color: var(--mute); }
+.cmp td.no::before { content: "✕  "; color: var(--r); font-weight: 700; }
+.cmp td.hi { background: linear-gradient(90deg, rgba(246,196,69,.14), rgba(240,138,36,.08)); border-radius: 0 12px 12px 0; }
+.cmp td.hi::before { content: "✓  "; color: var(--ok); font-weight: 700; }
+.vs h2 { font-size: 34px; margin-bottom: 22px; }
+
+/* Выгода */
+.money .card.big { padding: 30px 30px 34px; }
+.card .k { font-weight: 700; color: var(--ink); font-size: 19px; margin-bottom: 10px; }
+.card .v { font: 700 64px/1 "Unbounded", sans-serif; color: var(--y); margin-bottom: 16px; }
+
+/* Почему сейчас, уже делали */
+.why .card h3 { color: var(--y); }
+.done { display: grid; grid-template-columns: 600px 1fr; gap: 64px; align-items: center; }
+
+/* Цены */
+.pr { display: grid; grid-template-columns: 1.15fr 1fr; gap: 26px; }
+.pr .card .v { font-size: 52px; margin-bottom: 6px; }
+.pr .was { font-size: 16px; margin-bottom: 12px; }
+.pr .card.hi { border-color: rgba(246,196,69,.55); background: linear-gradient(160deg, rgba(246,196,69,.12), rgba(240,138,36,.04)); }
+.pr .pts li { font-size: 18px; }
+.ad { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 16px; }
+.ad td { padding: 6px 0; border-top: 1px solid var(--line); color: var(--mute); }
+.ad td:last-child { text-align: right; color: var(--ink); white-space: nowrap; padding-left: 16px; }
+.ad .sum td { color: var(--ink); font-weight: 700; font-size: 18px; border-top: 2px solid var(--o); padding-top: 10px; }
+.k2 { margin-top: 22px; font-weight: 700; font-size: 18px; color: var(--ink) !important; }
+.v2 { font: 700 34px/1.1 "Unbounded", sans-serif; color: var(--y) !important; }
+.prices h2 { margin-bottom: 26px; }
+.prices .note { bottom: 92px; }
+
+/* Как начать */
+.steps { list-style: none; display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px; margin-top: 10px; }
+.steps li { background: rgba(255,255,255,.04); border: 1px solid var(--line); border-radius: 22px; padding: 26px; font-size: 20px; min-height: 230px; }
+.steps b { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 16px; background: linear-gradient(135deg, var(--y), var(--o)); color: #1a1405; font: 700 24px/1 "Unbounded", sans-serif; margin-bottom: 20px; }
+.ct { margin-top: 54px; display: flex; gap: 48px; font-size: 28px; }
+.ct p:first-child b { color: var(--y); }
