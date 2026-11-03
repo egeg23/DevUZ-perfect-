@@ -4,6 +4,8 @@ import { test } from "node:test";
 
 import {
   BAN_CHECK_MS,
+  BAN_CHECK_SWITCH_KEY,
+  banCheckOff,
   FROZEN_MAIN_MS,
   FROZEN_UNTIL,
   banNotices,
@@ -181,4 +183,19 @@ test("заморозка — одно сообщение всем: что дел
 
   const sweep = readFileSync("lib/admin/account-ban-sweep.ts", "utf8");
   assert.match(sweep, /a\.status === "paused" && isFrozenError/);
+});
+
+test("проверку @SpamBot выключает строка в базе: скаут читает её до /start", () => {
+  assert.equal(BAN_CHECK_SWITCH_KEY, "tg-ban-check");
+  assert.equal(banCheckOff({ off: true }), true);
+  assert.equal(banCheckOff({ off: false }), false);
+  assert.equal(banCheckOff(null), false);
+  assert.equal(banCheckOff({ off: "yes" }), false);
+  const runner = readFileSync("scout/runner.mjs", "utf8");
+  const pause = runner.indexOf("await banCheckPaused()");
+  const ask = runner.indexOf('client.getInputEntity("SpamBot")');
+  assert.ok(pause > 0 && ask > pause, "выключатель должен стоять до обращения к @SpamBot");
+  const store = readFileSync("lib/admin/account-ban-store.ts", "utf8");
+  // Сбой чтения базы не включает проверку молча.
+  assert.match(store, /export async function banCheckPaused[\s\S]*?if \(error\) return true;/);
 });

@@ -1,4 +1,12 @@
-import { BAN_DEFAULT_MS, FROZEN_MAIN_MS, banKey, isFrozenError, type BanVerdict } from "@/lib/admin/account-ban";
+import {
+  BAN_CHECK_SWITCH_KEY,
+  BAN_DEFAULT_MS,
+  FROZEN_MAIN_MS,
+  banCheckOff,
+  banKey,
+  isFrozenError,
+  type BanVerdict,
+} from "@/lib/admin/account-ban";
 import { MAIN_ACCOUNT } from "@/lib/admin/work-accounts";
 import { serviceClient } from "@/lib/supabase";
 
@@ -104,6 +112,25 @@ export async function lastBanCheck(account: string): Promise<number | null> {
   if (!db) return null;
   const row = await readRow(db, account);
   return row?.checkedAt ? Date.parse(row.checkedAt) : null;
+}
+
+/**
+ * Выключена ли проверка @SpamBot (`BAN_CHECK_SWITCH_KEY`, см. account-ban.ts).
+ *
+ * База не ответила — тоже «выключена»: проверку выключил владелец, чтобы
+ * аккаунты лишний раз не писали @SpamBot, и молча включать её при сбое
+ * чтения нельзя. Ответ всё равно некуда было бы записать.
+ */
+export async function banCheckPaused(): Promise<boolean> {
+  const db = serviceClient();
+  if (!db) return true;
+  try {
+    const { data, error } = await db.from("stats_snapshots").select("payload").eq("key", BAN_CHECK_SWITCH_KEY).maybeSingle();
+    if (error) return true;
+    return banCheckOff(data?.payload);
+  } catch {
+    return true;
+  }
 }
 
 /** Ограничение главного для оповещения: до какого времени и заморозка ли это. */
