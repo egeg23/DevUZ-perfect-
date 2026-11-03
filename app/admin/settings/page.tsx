@@ -4,6 +4,7 @@ import { AdminShell } from "@/components/admin/shell";
 import { AppPush } from "@/components/admin/app-push";
 import { LocaleSwitch } from "@/components/admin/locale-switch";
 import { NavToggle } from "@/components/admin/nav-menu";
+import { TourAgain } from "@/components/admin/panel-tour";
 import { settingsDict } from "@/content/admin-panel/settings";
 import { requireSection } from "@/lib/admin/guard";
 import { pick } from "@/lib/admin/i18n";
@@ -64,7 +65,11 @@ export default async function SettingsPage() {
               <p className="text-sm text-text">{t.menuTitle}</p>
               <p className="mt-0.5 text-xs leading-snug text-faint">{t.menuNote}</p>
             </div>
-            <NavToggle classic={Boolean(staff.nav_classic)} />
+            <div className="flex flex-wrap items-center gap-3">
+              <NavToggle classic={Boolean(staff.nav_classic)} />
+              {/* Знакомство с новой панелью — ещё раз (components/admin/panel-tour.tsx). */}
+              {staff.nav_classic ? null : <TourAgain />}
+            </div>
           </li>
           <li className={ROW}>
             <div className="min-w-0 max-w-xl">
