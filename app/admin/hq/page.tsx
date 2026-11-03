@@ -3,6 +3,10 @@ import { DashboardHome } from "@/components/admin/dashboard-home";
 import { HqRefresh } from "@/components/admin/hq-refresh";
 import { HqSide } from "@/components/admin/hq-side";
 import { HqView } from "@/components/admin/hq";
+import { HqDesk } from "@/components/admin/hq-desk";
+import { hqDeskDict } from "@/content/admin-panel/hq-desk";
+import { pick } from "@/lib/admin/i18n";
+import { loadInbox } from "@/lib/admin/inbox-store";
 import { MyHqView } from "@/components/admin/hq-my";
 import { AdminShell } from "@/components/admin/shell";
 import { SweepBanner } from "@/components/admin/sweep-banner";
@@ -16,7 +20,7 @@ import { loadBotAudience } from "@/lib/admin/bot-users-store";
 import { makesMockups } from "@/lib/admin/mockup-order";
 import { requireSection } from "@/lib/admin/guard";
 import { seesEveryone } from "@/lib/admin/roles";
-import { HQ_REFRESH_MS } from "@/lib/admin/hq";
+import { HQ_REFRESH_MS, deltaOf } from "@/lib/admin/hq";
 import { loadHq } from "@/lib/admin/hq-store";
 import { loadMyHq } from "@/lib/admin/hq-my-store";
 import { SLOW_MS, memo } from "@/lib/memo";
@@ -45,7 +49,8 @@ export default async function HqPage({
   const { to, repeat, st, due, mk, p } = await searchParams;
   const now = new Date();
   if (!seesEveryone(staff.role)) {
-    const [my, plan] = await Promise.all([loadMyHq(staff, now), touchProgressOf(staff.id)]);
+    // «Входящие» — первым рядом, как в эталоне «DevUz Офис»: только свои.
+    const [my, plan, inbox] = await Promise.all([loadMyHq(staff, now), touchProgressOf(staff.id), loadInbox(staff, now)]);
     return (
       <AdminShell staff={staff}>
         <HqRefresh everyMs={HQ_REFRESH_MS} />
@@ -55,6 +60,7 @@ export default async function HqPage({
         <TouchPlanLine progress={plan} />
         {/* Приложение на телефоне и пуш: карточка, пока не поставлено или не включено. */}
         <AppPush variant="card" />
+        <HqDesk locale={staff.panel_locale} items={inbox.items} now={now} />
         <MyHqView
           my={my}
           locale={staff.panel_locale}
@@ -72,7 +78,7 @@ export default async function HqPage({
   // Состав команды, история рассылок и аудитория бота меняются редко, а
   // страница обновляется раз в 90 секунд: из памяти (lib/memo.ts). Новая
   // рассылка и «число изменилось» снимают запомненное сразу.
-  const [hq, people, history, usersHistory, audience, again, plan] = await Promise.all([
+  const [hq, people, history, usersHistory, audience, again, plan, inbox] = await Promise.all([
     loadHq(staff, now),
     memo("hq:people", SLOW_MS, () => broadcastPeople()),
     broadcasts ? memo("hq:broadcast:staff", HISTORY_MS, () => broadcastHistory("staff", 10)) : Promise.resolve([]),
@@ -80,7 +86,16 @@ export default async function HqPage({
     broadcasts ? memo("hq:audience", SLOW_MS, () => loadBotAudience()) : Promise.resolve(null),
     broadcasts && repeat ? broadcastById(repeat) : Promise.resolve(null),
     touchProgressOf(staff.id),
+    loadInbox(staff, now),
   ]);
+  // «Сегодня» верхнего ряда — те же числа пульса, что ниже, коротко (hq-desk.tsx).
+  const desk = pick(hqDeskDict, staff.panel_locale);
+  const tiles = [
+    { label: desk.newLeads, value: hq.leads.new7.now, delta: deltaOf(hq.leads.new7) },
+    { label: desk.replies, value: hq.touches.replies7.now, delta: deltaOf(hq.touches.replies7) },
+    { label: desk.touchesToday, value: hq.touches.today, sub: hq.touches.norm ? desk.ofNorm(hq.touches.norm) : undefined },
+  ];
+  const days = hq.people.reduce<number[]>((sum, p) => p.touchDays.map((v, i) => (sum[i] ?? 0) + v), []);
   // Себе тоже можно — последним: обычно задачу ставят другим.
   const taskPeople = [
     ...people.filter((p) => p.id !== staff.id),
@@ -92,6 +107,7 @@ export default async function HqPage({
       <HqRefresh everyMs={HQ_REFRESH_MS} />
       <AppPush variant="card" />
       <TouchPlanLine progress={plan} />
+      <HqDesk locale={staff.panel_locale} items={inbox.items} now={now} tiles={tiles} days={days.length ? days : undefined} />
       <HqView
         hq={hq}
         locale={staff.panel_locale}

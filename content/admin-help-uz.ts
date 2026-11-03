@@ -72,6 +72,24 @@ export const uz: HelpCopy = {
       what: "Egasi va rahbar uchun boshqaruv markazi: bitta ekranda kompaniyada bugun va 7 kunda nima bo‘layotgani, hozir nima yonayotgani va jamoadagi har bir kishi nima bilan bandligi. Panelga kirgandan keyin va «DevUz» logotipi bosilganda shu yerga tushasiz. Sahifa ochiq va ko‘rinib turgan paytda raqamlar bir yarim daqiqada bir marta o‘zi yangilanadi. «Sotuv bosqichlari», harakatsiz lidlar, darajalar va xabarnomalar tarixi kam o‘zgaradi va besh daqiqada bir marta yangilanadi: shunda panel bazaning bepul trafigini kamroq sarflaydi. O‘zingiz qo‘ygan bosqich belgisi va yangi xabarnoma darhol ko‘rinadi. Menejer bu yerda o‘z ish kunining holatini ko‘radi: nima yonmoqda, nimaning muddati o‘tgan, kim bilan bog‘lanish kerak, o‘z maketlari va o‘z ishi.",
       items: [
         {
+          id: "desk",
+          title: "Yuqori qator: «Kiruvchi» va «Bugun»",
+          body: {
+            manager: [
+              "03.11.2026 dan «Bosh sahifa» «DevUz Ofis» kabi **«Kiruvchi»** qatoridan boshlanadi: mijoz odam javobini kutayotgan oltitagacha yozishmangiz, ko‘proq kutgani — tepada. Qator uni [Kiruvchi](/admin/inbox) bo‘limida ochadi, suhbat va javob maydoni ham o‘sha yerda. Bo‘sh bo‘lsa — hech kim kutmayapti: model suhbatlarni o‘zi olib boradi.",
+              "Pastda — avvalgidek kuningiz pulsi: nima yonmoqda, kimga yozish kerak, maketlarim, ishim. Raqamlar o‘sha, qator faqat eng shoshilinchini tepaga yig‘adi.",
+            ],
+            head: [
+              "03.11.2026 dan «Bosh sahifa» «DevUz Ofis» kabi ikki kartochkali qatordan boshlanadi. **«Kiruvchi»** — mijoz odam javobini kutayotgan oltitagacha jamoa yozishmasi va botga murojaatlar, ko‘proq kutgani — tepada; qator uni [Kiruvchi](/admin/inbox) bo‘limida ochadi.",
+              "**«Bugun»** — uchta raqam: 7 kunda yangi lidlar va 7 kunda javob berganlar (strelka — oldingi 7 kunga nisbatan qanchaga ko‘p yoki kam) hamda kun normasidan bugungi aloqalar. Pastda — **«Kunlar bo‘yicha aloqalar»**: jamoa 7 kunning har birida nechta aloqa qilgani, oxirgi nuqta — bugun. Raqamlar pastdagi pulsdagi bilan bir xil — qaytadan hisoblanmaydi.",
+            ],
+            admin: [
+              "03.11.2026 dan «Bosh sahifa» «DevUz Ofis» kabi ikki kartochkali qatordan boshlanadi. **«Kiruvchi»** — mijoz odam javobini kutayotgan oltitagacha jamoa yozishmasi va botga murojaatlar, ko‘proq kutgani — tepada; qator uni [Kiruvchi](/admin/inbox) bo‘limida ochadi.",
+              "**«Bugun»** — uchta raqam: 7 kunda yangi lidlar va 7 kunda javob berganlar (strelka — oldingi 7 kunga nisbatan qanchaga ko‘p yoki kam) hamda kun normasidan bugungi aloqalar. Pastda — **«Kunlar bo‘yicha aloqalar»**: jamoa 7 kunning har birida nechta aloqa qilgani, oxirgi nuqta — bugun. Raqamlar pastdagi pulsdagi bilan bir xil — qaytadan hisoblanmaydi.",
+            ],
+          },
+        },
+        {
           id: "pulse",
           title: "Kompaniya holati: lidlar, aloqalar, maketlar, vazifalar",
           body: {
@@ -400,19 +418,27 @@ export const uz: HelpCopy = {
           },
         },
         {
+          id: "layout",
+          title: "Uch ustun: yozishmalar, suhbat, mijoz",
+          body: [
+            "03.11.2026 dan «Kiruvchi» «DevUz Ofis» kabi tuzilgan. **Chapda** — sizni kutayotgan yozishmalar: ko‘proq kutgani — tepada, qator o‘ngida — mijoz qancha kutayotgani, sariq — bir soat va undan ko‘p. Havorang doira — ish akkauntidan aloqa, binafsha — studiya botiga murojaat. Qatorni bosing — **o‘rtada** suhbat ochiladi: mijoz so‘zlari chapda, bizniki o‘ngda ko‘k rangda, biznikida — kerak bo‘lsa «yuborilishini kutmoqda» yoki «ketmadi». Botda bu yerda faqat mijozning oxirgi xabari: butun yozishma — Telegramda.",
+            "**O‘ngda** — mijoz: sayt, qaysi akkauntdan yozamiz va kim olib boradi, pastda — **«Bitim bosqichlari»**: [Bosh sahifa](/admin/hq) va lidlar doskasidagi o‘sha bosqichlar, o‘tilgani — sana bilan yashil belgi, keyingisi — ko‘k. Javob maydoni ustida ba’zan **«Javob maslahati»** chiqadi: mijoz so‘zlarida e’tiroz tanilsa («qimmat», «qanaqa sayt?», «rahbarga beraman»), bu «E’tirozlarga javoblar»dan tayyor javob. «Javobga qo‘yish» matnni maydonga qo‘yadi — mijozga moslab, yuboring; o‘zi ketmaydi. Telefonda avval ro‘yxat, bosilganda suhbat ochiladi, «← Barcha yozishmalar» qaytaradi; mijoz kartochkasi — suhbat ostida.",
+          ],
+        },
+        {
           id: "reply",
           title: "Qatordan javob berish",
           body: {
             manager: [
-              "**«Mijozga javob berish»** maydonni shu qatorning o‘zida ochadi; Ctrl+Enter — yuborish. Aloqaga javob kartochkadagi [«Lenta»](#leads-timeline) ostidagi maydondan ketgandek, aloqaning ish akkauntidan ketadi, shundan keyin model jim turadi. Maket va loyihalarimiz havolalari yuborishdan oldin tekshiriladi.",
+              "Javob maydoni suhbat ostida, darhol ochiq; Ctrl+Enter — yuborish. Aloqaga javob kartochkadagi [«Lenta»](#leads-timeline) ostidagi maydondan ketgandek, aloqaning ish akkauntidan ketadi, shundan keyin model jim turadi. Maket va loyihalarimiz havolalari yuborishdan oldin tekshiriladi.",
               "Butun suhbat kerak bo‘lsa — **«Kartochkani ochish»**: lenta yozishmada ochiladi. Lidsiz aloqa [Sovuq aloqalar](/admin/prospect) da ochiladi. Javob ketgach, qator yo‘qoladi: kiruvchiga javob berildi.",
             ],
             head: [
-              "**«Mijozga javob berish»** maydonni shu qatorning o‘zida ochadi; Ctrl+Enter — yuborish. Aloqaga javob kartochkadagi [«Lenta»](#leads-timeline) ostidagi maydondan ketgandek, aloqaning ish akkauntidan ketadi; bot mijoziga — «📩 Обращение в бота» ga javobdek studiya botidan, model yana 7 kun jim turadi. Maket va loyihalarimiz havolalari yuborishdan oldin tekshiriladi.",
+              "Javob maydoni suhbat ostida, darhol ochiq; Ctrl+Enter — yuborish. Aloqaga javob kartochkadagi [«Lenta»](#leads-timeline) ostidagi maydondan ketgandek, aloqaning ish akkauntidan ketadi; bot mijoziga — «📩 Обращение в бота» ga javobdek studiya botidan, model yana 7 kun jim turadi. Maket va loyihalarimiz havolalari yuborishdan oldin tekshiriladi.",
               "Butun suhbat kerak bo‘lsa — **«Kartochkani ochish»**: lenta yozishmada ochiladi. Lidsiz aloqa [Sovuq aloqalar](/admin/prospect) da ochiladi. Javob ketgach, qator yo‘qoladi: kiruvchiga javob berildi.",
             ],
             admin: [
-              "**«Mijozga javob berish»** maydonni shu qatorning o‘zida ochadi; Ctrl+Enter — yuborish. Aloqaga javob kartochkadagi [«Lenta»](#leads-timeline) ostidagi maydondan ketgandek, aloqaning ish akkauntidan ketadi; bot mijoziga — «📩 Обращение в бота» ga javobdek studiya botidan, model yana 7 kun jim turadi. Maket va loyihalarimiz havolalari yuborishdan oldin tekshiriladi.",
+              "Javob maydoni suhbat ostida, darhol ochiq; Ctrl+Enter — yuborish. Aloqaga javob kartochkadagi [«Lenta»](#leads-timeline) ostidagi maydondan ketgandek, aloqaning ish akkauntidan ketadi; bot mijoziga — «📩 Обращение в бота» ga javobdek studiya botidan, model yana 7 kun jim turadi. Maket va loyihalarimiz havolalari yuborishdan oldin tekshiriladi.",
               "Butun suhbat kerak bo‘lsa — **«Kartochkani ochish»**: lenta yozishmada ochiladi. Lidsiz aloqa [Sovuq aloqalar](/admin/prospect) da ochiladi. Javob ketgach, qator yo‘qoladi: kiruvchiga javob berildi.",
             ],
           },

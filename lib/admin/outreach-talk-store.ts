@@ -1518,13 +1518,22 @@ export type TalkLine = {
  * выбрали, и менеджеру она нужна ровно для того, чтобы её продолжить.
  */
 export async function talkForLead(leadId: string): Promise<TalkView | null> {
+  return talkWhere("lead_id", leadId);
+}
+
+/** Тот же разговор по самому касанию — для «Входящих», где у касания может не быть лида. */
+export async function talkForProspect(prospectId: string): Promise<TalkView | null> {
+  return talkWhere("id", prospectId);
+}
+
+async function talkWhere(column: "lead_id" | "id", value: string): Promise<TalkView | null> {
   const db = serviceClient();
   if (!db) return null;
 
   const { data: p } = await db
     .from("prospects")
     .select("id, host, label, niche, target, ai_handling, handover_reason, sent_via, target_kind, hello_at, pitch_at")
-    .eq("lead_id", leadId)
+    .eq(column, value)
     .maybeSingle();
   if (!p) return null;
 

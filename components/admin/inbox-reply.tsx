@@ -15,14 +15,21 @@ import { leadCardDict, leadResultDict } from "@/content/admin-panel/lead-card";
  * рабочем аккаунте), клиенту бота — replyBotAction. После ответа строка
  * пропадает при обновлении: входящее отвечено.
  */
-export function InboxReply(
-  props: { kind: "touch"; leadId: string; prospectId: string; limit: number } | { kind: "bot"; chatId: number; limit: number },
-) {
+type Where = { kind: "touch"; leadId: string; prospectId: string; limit: number } | { kind: "bot"; chatId: number; limit: number };
+
+/**
+ * В трёх колонках «Входящих» (эталон «DevUz Офис») поле открыто сразу, под
+ * перепиской, а над ним — «Подсказка ответа»: готовый текст из «Ответов на
+ * возражения», если в словах клиента узнали возражение (`objectionOf`, без
+ * модели). «Вставить в ответ» кладёт его в поле — уходит только по «Отправить».
+ */
+export function InboxReply(props: Where & { alwaysOpen?: boolean; suggest?: string | null }) {
   const t = usePanelDict(inboxDict);
   const card = usePanelDict(leadCardDict);
   const results = usePanelDict(leadResultDict);
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(Boolean(props.alwaysOpen));
+  const [used, setUsed] = useState(false);
   const [text, setText] = useState("");
   const [note, setNote] = useState<{ ok: boolean; text: string } | null>(null);
   const [pending, start] = useTransition();
@@ -59,10 +66,34 @@ export function InboxReply(
     );
   }
   return (
-    <div className="mt-2 w-full">
+    <div className={props.alwaysOpen ? "w-full" : "mt-2 w-full"}>
+      {props.suggest && !used ? (
+        <section className="os-ai mb-3">
+          <div className="flex items-center gap-2 text-[13px] font-semibold text-green">
+            <svg aria-hidden viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round">
+              <path d="M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2z" />
+            </svg>
+            {t.suggestTitle}
+          </div>
+          <p className="mt-2 whitespace-pre-line text-sm text-text">{props.suggest}</p>
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+            <span className="text-[11px] text-faint">{t.suggestWhy}</span>
+            <button
+              type="button"
+              onClick={() => {
+                setText(props.suggest ?? "");
+                setUsed(true);
+              }}
+              className="rounded-lg bg-green px-3 py-1.5 text-xs font-semibold text-ink transition hover:bg-green-dim"
+            >
+              {t.insert}
+            </button>
+          </div>
+        </section>
+      ) : null}
       <textarea
         value={text}
-        autoFocus
+        autoFocus={!props.alwaysOpen}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
