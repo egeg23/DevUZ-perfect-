@@ -132,7 +132,7 @@ export function TaskPulse() {
 
   if (!items.length) return null;
   return (
-    <div className="fixed bottom-4 right-4 z-30 flex w-[min(22rem,calc(100vw-2rem))] flex-col gap-2" role="status">
+    <div className="os-toasts fixed bottom-4 right-4 z-30 flex w-[min(22rem,calc(100vw-2rem))] flex-col gap-2" role="status">
       {items.map((item) => (
         <div
           key={`${item.id}-${item.kind}-${item.text}`}

@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
-import { sans, mono } from "@/app/fonts";
+import { display, sans, mono } from "@/app/fonts";
 import type { ReactNode } from "react";
 
 import { shellDict } from "@/content/admin-panel/shell";
@@ -34,15 +34,15 @@ export const viewport: Viewport = { themeColor: PWA_BACKGROUND };
  * app/[locale]/layout.tsx с его шапкой, футером и виджетом чата панели не
  * подходит — клиентский чат в админке выглядел бы как минимум странно.
  *
- * Шрифт display здесь не грузится: в панели нет ни одного заголовка, ради
- * которого стоило бы тянуть третье семейство.
+ * Шрифт display (Unbounded) — для логотипа и заголовков страниц в панели
+ * по эталону «DevUz Офис» (владелец, 03.11.2026).
  */
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   // Язык — из куки-зеркала: layout не ходит в базу за сотрудником (см.
   // requireStaff), а для атрибута lang подсказки браузеру достаточно.
   const locale = panelLocale((await cookies()).get(PANEL_LANG_COOKIE)?.value);
   return (
-    <html lang={PANEL_HTML_LANG[locale]} className={`${sans.variable} ${mono.variable}`}>
+    <html lang={PANEL_HTML_LANG[locale]} className={`${display.variable} ${sans.variable} ${mono.variable}`}>
       <body className="min-h-screen bg-ink text-text antialiased">{children}</body>
     </html>
   );

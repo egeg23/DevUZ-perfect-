@@ -3,13 +3,14 @@ import { Suspense, type ReactNode } from "react";
 
 import { signOut } from "@/app/admin/actions";
 import { ROLE_BADGE, homeOf, navOf } from "@/lib/admin/roles";
-import { findable, menuOf, parentsOf, tabsOf } from "@/lib/admin/nav";
+import { findable, parentsOf, railOf, tabsOf } from "@/lib/admin/nav";
 import type { Staff } from "@/lib/admin/session";
 import { pick } from "@/lib/admin/i18n";
 import { navGroupDict, shellDict } from "@/content/admin-panel/shell";
 import { SectionHelpLink } from "@/components/admin/help-link";
 import { AdminNavLink } from "@/components/admin/nav-link";
-import { NavMenu, NavToggle, type NavMenuGroup } from "@/components/admin/nav-menu";
+import { FindButton, NavMenu, NavToggle, type NavMenuGroup } from "@/components/admin/nav-menu";
+import { OsStatus } from "@/components/admin/os-status";
 import { LocaleSwitch } from "@/components/admin/locale-switch";
 import { PanelLocaleProvider } from "@/components/admin/panel-locale";
 import { UsageBeacon } from "@/components/admin/usage-beacon";
@@ -40,44 +41,35 @@ export function AdminShell({
   // Разделы приходят из матрицы ролей с галочками владельца (menuOf → navOf),
   // уже разложенные по группам. Общие пункты ярче, административные тише.
   const groupName = pick(navGroupDict, locale);
-  const menu: NavMenuGroup[] = menuOf(staff).map(({ group, sections }) => ({
+  // Полоса иконок — шесть ежедневных разделов, остальное под «Ещё» (railOf).
+  const { rail: railSections, more: moreGroups } = railOf(staff);
+  const item = (s: (typeof railSections)[number]) => ({ ...findable(s, groupName[s.group], locale), quiet: s.roles.length === 1 });
+  const rail = railSections.map(item);
+  const more: NavMenuGroup[] = moreGroups.map(({ group, sections }) => ({
     id: group,
     label: groupName[group],
-    items: sections.map((s) => ({ ...findable(s, groupName[group], locale), quiet: s.roles.length === 1 })),
+    items: sections.map(item),
   }));
   // Вкладки разделов (lib/admin/nav.ts): в меню их нет, но «Найти раздел»
   // ищет и их — человек помнит «Договоры», а не то, что они теперь в «Проектах».
   const parents = parentsOf(staff);
-  const find = navOf(staff).map((s) => ({ ...findable(s, groupName[s.group], locale), quiet: s.roles.length === 1 }));
+  const find = navOf(staff).map(item);
   const tabs = tabsOf(staff).map((family) => family.map((s) => ({ href: s.href, label: s.label[locale] })));
-  return (
-    <PanelLocaleProvider locale={locale}>
-      <div className="admin-panel min-h-screen">
-        {/* Учёт просмотров для отчёта «Использование». Владельца не считаем —
-            и маячок ему не ставим: лишний запрос на каждый переход ни к чему. */}
-        {staff.role === "admin" ? null : <UsageBeacon />}
-        {/* Задачи: пока панель открыта, новое приходит звуком и
-            уведомлением браузера — в любом разделе, не только на главной. */}
-        <TaskPulse />
-        {/* Полоса загрузки — с момента нажатия на ссылку до новой страницы. */}
-        <Suspense fallback={null}>
-          <NavProgress />
-        </Suspense>
-        {/* Шапка липкая: на телефоне список лидов длинный, и уходить наверх
-            ради перехода в другой раздел — лишняя прокрутка в обе стороны. */}
-        <header className="sticky top-0 z-20 border-b border-line bg-surface/95 backdrop-blur">
-          <div className="mx-auto flex max-w-7xl items-center gap-x-3 px-4 py-3 sm:px-5">
-            <Link href={homeOf(staff)} className="font-mono text-xs uppercase tracking-[0.2em] text-faint">
-              DevUz<span className="hidden sm:inline"> · {t.panel}</span>
-            </Link>
-
+  // Уголок шапки — одинаковый в обоих меню: инструкция, язык, имя с ролью,
+  // колокольчик, настройки, выход.
+  // В верхней панели нового меню на телефоне язык и имя не влезают: язык —
+  // в «Настройках», имя — там же и в «Команде».
+  const phoneHide = staff.nav_classic ? "" : "hidden sm:contents";
+  const corner = (
             <div className="ml-auto flex items-center gap-3 text-sm">
               {/* В шапке, а не на каждой странице: новый раздел получает
                   кнопку сам, и ведёт она в его пункт инструкции. */}
               <SectionHelpLink />
               {/* Рядом с инструкцией: язык выбирают, когда что-то непонятно. */}
-              <LocaleSwitch />
-              <span className="flex items-center gap-2 text-muted">
+              <span className={phoneHide}>
+                <LocaleSwitch />
+              </span>
+              <span className={`items-center gap-2 text-muted ${staff.nav_classic ? "flex" : "hidden sm:flex"}`}>
                 <span className="max-w-[7rem] truncate sm:max-w-none">{staff.display_name}</span>
                 {/* На телефоне роль не влезала рядом с именем руководителя
                     («рук. проектов») и сдвигала шапку вбок — с планшета она есть. */}
@@ -103,43 +95,89 @@ export function AdminShell({
                 </button>
               </form>
             </div>
-          </div>
+  );
+  return (
+    <PanelLocaleProvider locale={locale}>
+      <div className={`admin-panel min-h-screen${staff.nav_classic ? "" : " admin-os"}`}>
+        {/* Учёт просмотров для отчёта «Использование». Владельца не считаем —
+            и маячок ему не ставим: лишний запрос на каждый переход ни к чему. */}
+        {staff.role === "admin" ? null : <UsageBeacon />}
+        {/* Задачи: пока панель открыта, новое приходит звуком и
+            уведомлением браузера — в любом разделе, не только на главной. */}
+        <TaskPulse />
+        {/* Полоса загрузки — с момента нажатия на ссылку до новой страницы. */}
+        <Suspense fallback={null}>
+          <NavProgress />
+        </Suspense>
+        {staff.nav_classic ? (
+          <>
+            {/* Шапка липкая: на телефоне список лидов длинный, и уходить наверх
+                ради перехода в другой раздел — лишняя прокрутка в обе стороны. */}
+            <header className="sticky top-0 z-20 border-b border-line bg-surface/95 backdrop-blur">
+              <div className="mx-auto flex max-w-7xl items-center gap-x-3 px-4 py-3 sm:px-5">
+                <Link href={homeOf(staff)} className="font-mono text-xs uppercase tracking-[0.2em] text-faint">
+                  DevUz<span className="hidden sm:inline"> · {t.panel}</span>
+                </Link>
 
-          {/* Меню группами: двадцать с лишним пунктов в строку владелец
-              называл «с ума пойдешь». Открытая группа и раздел подсвечены —
-              по адресу видно, где ты, только в строке браузера, а её на
-              телефоне нет. Тумблер «Новое меню» возвращает меню как раньше
-              (staff.nav_classic) — каждый выбирает себе сам. */}
-          {staff.nav_classic ? (
-            <div className="mx-auto flex max-w-7xl items-start gap-4 px-4 pb-2.5 sm:px-5 sm:pb-3">
-              {/* Как раньше — одной строкой с прокруткой, а не переносом:
-                  двенадцать пунктов в четыре ряда занимали на телефоне треть
-                  экрана, и содержимое страницы начиналось за сгибом. */}
-              {/* Только вбок: подчёркивание открытого пункта (-mb-px) выходило
-                  на пиксель за строку, и на телефоне её можно было тянуть
-                  вверх-вниз, обрезая буквы (владелец, 13.10.2026). pb-px
-                  оставляет ему место, overflow-y-hidden — запрет на всякий случай. */}
-              <nav aria-label={t.nav} className="no-scrollbar min-w-0 flex-1 overflow-x-auto overflow-y-hidden pb-px">
-                <div className="flex w-max gap-4 text-sm sm:w-auto sm:flex-wrap">
-                  {navOf(staff).map((item) => (
-                    <AdminNavLink key={item.href} href={item.href} quiet={item.roles.length === 1}>
-                      {item.label[locale]}
-                    </AdminNavLink>
-                  ))}
+                {corner}
+              </div>
+
+              {/* Меню группами: двадцать с лишним пунктов в строку владелец
+                  называл «с ума пойдешь». Открытая группа и раздел подсвечены —
+                  по адресу видно, где ты, только в строке браузера, а её на
+                  телефоне нет. Тумблер «Новое меню» возвращает меню как раньше
+                  (staff.nav_classic) — каждый выбирает себе сам. */}
+                <div className="mx-auto flex max-w-7xl items-start gap-4 px-4 pb-2.5 sm:px-5 sm:pb-3">
+                  {/* Как раньше — одной строкой с прокруткой, а не переносом:
+                      двенадцать пунктов в четыре ряда занимали на телефоне треть
+                      экрана, и содержимое страницы начиналось за сгибом. */}
+                  {/* Только вбок: подчёркивание открытого пункта (-mb-px) выходило
+                      на пиксель за строку, и на телефоне её можно было тянуть
+                      вверх-вниз, обрезая буквы (владелец, 13.10.2026). pb-px
+                      оставляет ему место, overflow-y-hidden — запрет на всякий случай. */}
+                  <nav aria-label={t.nav} className="no-scrollbar min-w-0 flex-1 overflow-x-auto overflow-y-hidden pb-px">
+                    <div className="flex w-max gap-4 text-sm sm:w-auto sm:flex-wrap">
+                      {navOf(staff).map((item) => (
+                        <AdminNavLink key={item.href} href={item.href} quiet={item.roles.length === 1}>
+                          {item.label[locale]}
+                        </AdminNavLink>
+                      ))}
+                    </div>
+                  </nav>
+                  <NavToggle classic className="pt-0.5" />
                 </div>
-              </nav>
-              <NavToggle classic className="pt-0.5" />
-            </div>
-          ) : (
-            <NavMenu groups={menu} find={find} parents={parents} />
-          )}
-        </header>
-
-        <main className="mx-auto max-w-7xl px-4 py-6 sm:px-5 sm:py-8">
-          {/* В меню «как раньше» все разделы и так в строке — вкладки там не нужны. */}
-          {staff.nav_classic ? null : <SectionTabs families={tabs} />}
-          {children}
-        </main>
+            </header>
+            <main className="mx-auto max-w-7xl px-4 py-6 sm:px-5 sm:py-8">{children}</main>
+          </>
+        ) : (
+          <>
+            {/* Верхняя панель по эталону «DevUz Офис» (владелец, 03.11.2026):
+                логотип, поиск по всему, «в сети», часы и уголок. Липкая: на
+                телефоне список лидов длинный, а поиск нужен с любого места. */}
+            <header className="os-bar">
+              <Link href={homeOf(staff)} className="os-logo">
+                <svg aria-hidden width="22" height="22" viewBox="0 0 24 24">
+                  <path d="M5 3h7a9 9 0 0 1 0 18H5z" fill="none" stroke="var(--color-blue-soft)" strokeWidth="2.4" />
+                  <path d="M9 8h3a4 4 0 0 1 0 8H9z" fill="var(--color-green)" />
+                </svg>
+                <span>
+                  DevUz <em className="hidden sm:inline">{t.panel}</em>
+                </span>
+              </Link>
+              <FindButton />
+              <OsStatus />
+              {corner}
+            </header>
+            {/* Полоса иконок слева, на телефоне — снизу (components/admin/nav-menu.tsx). */}
+            <NavMenu rail={rail} more={more} find={find} parents={parents} />
+            <main className="os-main">
+              <div className="mx-auto max-w-7xl">
+                <SectionTabs families={tabs} />
+                {children}
+              </div>
+            </main>
+          </>
+        )}
       </div>
     </PanelLocaleProvider>
   );

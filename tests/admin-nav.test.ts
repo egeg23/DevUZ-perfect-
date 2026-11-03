@@ -7,7 +7,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { AdminShell } from "@/components/admin/shell";
 import { navGroupDict } from "@/content/admin-panel/shell";
 import { PANEL_LOCALES, pick, type PanelLocale } from "@/lib/admin/i18n";
-import { findSections, findable, foldName, isSingle, menuOf, parentsOf, tabsOf } from "@/lib/admin/nav";
+import { findSections, findable, foldName, isSingle, menuOf, parentsOf, railOf, tabsOf } from "@/lib/admin/nav";
 import { NAV_GROUPS, ROLES, SECTIONS, navOf, type Role } from "@/lib/admin/roles";
 import type { Staff } from "@/lib/admin/session";
 
@@ -175,27 +175,39 @@ const staff = (locale: PanelLocale, role: Role): Staff => ({
   panel_locale: locale,
 });
 
-test("шапка владельца: группы вместо двадцати пунктов, открытая группа подсвечена", () => {
+test("полоса иконок: шесть ежедневных по выбору владельца, остальное — под «Ещё»", () => {
+  // Владелец, 03.11.2026, на карту панели по эталону «DevUz Офис»: «6 ежедневных».
+  const { rail, more } = railOf({ role: "admin" });
+  assert.deepEqual(
+    rail.map((s) => s.href),
+    ["/admin/hq", "/admin/inbox", "/admin", "/admin/tasks", "/admin/prospect", "/admin/mockups"],
+  );
+  assert.deepEqual(
+    more.map((g) => g.group),
+    ["money", "marketing", "team", "reports", "help"],
+  );
+  // Ничего не потерялось: полоса и «Ещё» вместе — ровно меню человека.
+  for (const who of [{ role: "admin" as const }, { role: "manager" as const }, { role: "head" as const }]) {
+    const r = railOf(who);
+    const all = [...r.rail, ...r.more.flatMap((g) => g.sections)].map((s) => s.href).sort();
+    assert.deepEqual(all, menuOf(who).flatMap((g) => g.sections).map((s) => s.href).sort());
+  }
+
   globalThis.__pathname = "/admin/contracts/42";
   const html = renderToStaticMarkup(createElement(AdminShell, { staff: staff("ru", "admin"), children: "x" }));
-  for (const group of ["Деньги", "Маркетинг", "Команда", "Отчёты"]) {
-    assert.match(html, new RegExp(`aria-haspopup="true"[^>]*>${group}`), `нет группы «${group}»`);
+  const nav = /<nav aria-label="Разделы панели" class="os-rail">([\s\S]*?)<\/nav>/.exec(html)?.[1] ?? "";
+  for (const [href, name] of [["/admin/hq", "Главная"], ["/admin/inbox", "Входящие"], ["/admin", "Лиды"], ["/admin/tasks", "Задачи"], ["/admin/prospect", "Холодные касания"], ["/admin/mockups", "Макеты"]]) {
+    assert.match(nav, new RegExp(`href="${href}" aria-label="${name}"`), `${name}: нет кнопки в полосе`);
   }
-  assert.doesNotMatch(html, />Продажи</, "группа «Продажи» ушла: её разделы — вкладками");
-  // Открытая группа — зелёная, рядом — открытая вкладка своим именем.
-  assert.match(html, /border-green font-medium text-green[^"]*">Деньги<span[^>]*>· Договоры/);
-  // Ежедневное — ссылками без списка, сразу за «Главной» и «Задачами».
-  for (const [href, name] of [["/admin", "Лиды"], ["/admin/prospect", "Холодные касания"], ["/admin/mockups", "Макеты"]]) {
-    assert.match(html, new RegExp(`href="${href}"[^>]*>${name}<`), `${name}: не прямая кнопка`);
-  }
-  // «Договоры» — вкладка «Проектов»: в списке группы горит «Проекты».
-  assert.match(html, /aria-current="page"[^>]*>Проекты</);
-  // В карточке договора строки вкладок нет — она только на страницах разделов.
+  // Открыта вкладка «Договоры» из «Денег» — горит «Ещё».
+  assert.match(nav, /aria-haspopup="true" aria-label="Ещё"[^>]*data-active="true"/);
+  // На телефоне в нижней полосе пять кнопок: «Макеты» — под «Ещё».
+  assert.match(nav, /href="\/admin\/mockups"[^>]*class="os-rail-item os-rail-wide"/);
+  // Верхняя панель: поиск, «в сети», часы.
+  assert.match(html, /class="os-search"/);
+  assert.match(html, /В сети/);
+  assert.match(html, /title="Время в Ташкенте"/);
   assert.doesNotMatch(html, /aria-label="Вкладки раздела"/);
-  // Инструкции — ссылкой, без списка.
-  assert.match(html, /href="\/admin\/help"[^>]*>Инструкции</);
-  assert.match(html, /Найти раздел/);
-  assert.match(html, />Меню</);
 });
 
 test("на странице вкладки — строка вкладок раздела, открытая подсвечена; в меню «как раньше» её нет", () => {
@@ -221,7 +233,10 @@ test("Ctrl+K — по коду клавиши, чтобы работал и на
   assert.match(menu, /createPortal\(/);
   // Меню рисует только то, что дал сервер: своих списков разделов в нём нет.
   assert.doesNotMatch(menu, /SECTIONS|navOf/);
-  assert.match(read("components/admin/shell.tsx"), /menuOf\(staff\)/);
+  assert.match(read("components/admin/shell.tsx"), /railOf\(staff\)/);
+  // Поиск в верхней панели открывает то же окно, что Ctrl+K.
+  assert.match(menu, /window\.addEventListener\(FIND_EVENT, onFind\)/);
+  assert.match(menu, /window\.dispatchEvent\(new Event\(FIND_EVENT\)\)/);
 });
 
 declare global {
@@ -235,9 +250,11 @@ declare global {
 test("тумблер: по умолчанию новое меню, выключен — меню одной строкой, как раньше", () => {
   globalThis.__pathname = "/admin/contracts";
   const fresh = renderToStaticMarkup(createElement(AdminShell, { staff: staff("ru", "manager"), children: "x" }));
-  assert.match(fresh, /role="switch" aria-checked="true"/);
+  assert.match(fresh, /class="os-rail"/);
   assert.match(fresh, /aria-haspopup="true"/);
-  assert.match(fresh, /name="classic" value="1"/, "щелчок по включённому — выключает");
+  // Тумблер нового меню — внизу «Ещё» и в «Настройках».
+  assert.match(read("components/admin/nav-menu.tsx"), /<NavToggle classic=\{false\} \/>/);
+  assert.match(read("app/admin/settings/page.tsx"), /NavToggle/);
 
   const classic = renderToStaticMarkup(
     createElement(AdminShell, { staff: { ...staff("ru", "admin"), nav_classic: true }, children: "x" }),
@@ -282,7 +299,7 @@ test("меню как раньше на телефоне прокручивае�
  */
 test("число на кнопке «Задачи»: свои открытые задачи, из куки, счётом базы", () => {
   const menu = read("components/admin/nav-menu.tsx");
-  assert.match(menu, /only\.href === TASKS_HREF \? <TaskCount \/> : null/);
+  assert.match(menu, /item\.href === TASKS_HREF \? <TaskCount badge \/> : null/);
   const route = read("app/admin/tasks/count/route.ts");
   assert.match(route, /const staff = await currentStaff\(\);/);
   assert.match(route, /myTaskCounts\(staff\.id\)/);

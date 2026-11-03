@@ -56,6 +56,23 @@ export const shellDict = defineDict({
     uz: "Yoqilgan — bo‘limlar guruhlarda va «Bo‘lim yoki kompaniyani topish». O‘chirsangiz — menyu avvalgidek, bitta qatorda bo‘ladi.",
     pl: "Włączone — sekcje w grupach i «Znajdź sekcję lub firmę». Wyłącz — menu będzie jak dawniej, w jednym rzędzie.",
   },
+  // Полоса иконок (components/admin/nav-menu.tsx, NavMenu) и верхняя панель.
+  more: { ru: "Ещё", uz: "Yana", pl: "Więcej" },
+  // Короткие подписи нижней полосы на телефоне: полные названия не влезают в 60 px.
+  shortHome: { ru: "Главная", uz: "Bosh", pl: "Pulpit" },
+  shortInbox: { ru: "Входящие", uz: "Kiruvchi", pl: "Skrzynka" },
+  shortLeads: { ru: "Лиды", uz: "Lidlar", pl: "Leady" },
+  shortTasks: { ru: "Задачи", uz: "Vazifalar", pl: "Zadania" },
+  shortProspect: { ru: "Касания", uz: "Aloqalar", pl: "Kontakty" },
+  moreHint: {
+    ru: "Деньги, маркетинг, команда, отчёты и инструкции",
+    uz: "Pul, marketing, jamoa, hisobotlar va yo‘riqnoma",
+    pl: "Pieniądze, marketing, zespół, raporty i instrukcje",
+  },
+  search: { ru: "Поиск: раздел, компания, лид…", uz: "Qidiruv: bo‘lim, kompaniya, lid…", pl: "Szukaj: sekcja, firma, lead…" },
+  online: { ru: "В сети", uz: "Onlayn", pl: "Online" },
+  offline: { ru: "Нет связи", uz: "Aloqa yo‘q", pl: "Brak sieci" },
+  clock: { ru: "Время в Ташкенте", uz: "Toshkent vaqti", pl: "Czas w Taszkencie" },
   findKeys: {
     ru: "↑ ↓ — выбрать, Enter — открыть, Esc — закрыть",
     uz: "↑ ↓ — tanlash, Enter — ochish, Esc — yopish",
