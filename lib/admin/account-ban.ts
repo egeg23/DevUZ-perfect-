@@ -34,6 +34,23 @@ export const BAN_CHECK_MS = 60 * 60_000;
 /** Сколько ждать ответа @SpamBot, прежде чем считать проверку несостоявшейся. */
 export const BAN_REPLY_WAIT_MS = 20_000;
 
+/**
+ * Выключатель проверки @SpamBot — строка `stats_snapshots` с этим ключом.
+ *
+ * Владелец, 03.11.2026: «Останови рассылки с аккаунтов в спам боты пока что
+ * для проверки статусов». Скаут перед каждым /start читает строку:
+ * `{ "off": true }` — сообщение в @SpamBot не уходит. Включить обратно —
+ * `{ "off": false }` или удалить строку, без выкатки: скаут спрашивает базу
+ * каждый час. Ограничения по отказу на отправке (PEER_FLOOD, заморозка) это
+ * не трогает — они пишутся, как раньше.
+ */
+export const BAN_CHECK_SWITCH_KEY = "tg-ban-check";
+
+/** Выключена ли проверка @SpamBot по строке выключателя. Строки нет — включена. */
+export function banCheckOff(payload: unknown): boolean {
+  return Boolean(payload && typeof payload === "object" && (payload as { off?: unknown }).off === true);
+}
+
 /** Ограничение без срока или по отказу на отправке — сутки, как FLOOD_PAUSE_MS. */
 export const BAN_DEFAULT_MS = 24 * 60 * 60_000;
 

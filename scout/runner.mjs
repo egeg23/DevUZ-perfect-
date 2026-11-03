@@ -60,7 +60,7 @@ import {
 } from "@/lib/bloggers/tg-queue";
 import { MAIN_ACCOUNT } from "@/lib/admin/work-accounts";
 import { BAN_CHECK_MS, BAN_REPLY_WAIT_MS, spamBotVerdict } from "@/lib/admin/account-ban";
-import { lastBanCheck, mainLimitUntil, markMainFlood, recordBanCheck } from "@/lib/admin/account-ban-store";
+import { banCheckPaused, lastBanCheck, mainLimitUntil, markMainFlood, recordBanCheck } from "@/lib/admin/account-ban-store";
 import { startAccounts } from "./accounts.mjs";
 
 const DRY_RUN = process.argv.includes("--dry-run");
@@ -1119,8 +1119,16 @@ function startWorker({ client, Api, NewMessage, key, label, cap, paused, othersA
   // говорит свип (lib/admin/account-ban-sweep.ts). Сообщения от ботов
   // обработчик лички выше пропускает, так что ответ @SpamBot за ответ
   // клиента не примут.
+  //
+  // Владелец, 03.11.2026: «Останови рассылки с аккаунтов в спам боты пока что
+  // для проверки статусов». Перед /start — выключатель в базе
+  // (`banCheckPaused`, строка `tg-ban-check`): выключено — @SpamBot не пишем.
   const checkBan = async () => {
     try {
+      if (await banCheckPaused()) {
+        console.log(`бан${tag}: проверка @SpamBot выключена владельцем, не спрашиваю`);
+        return;
+      }
       const bot = await client.getInputEntity("SpamBot");
       const asked = await client.sendMessage(bot, { message: "/start" });
       const askedId = Number(asked?.id ?? 0);
