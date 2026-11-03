@@ -25,6 +25,7 @@ import { attributeClientAndNotify } from "@/lib/partners/attribute";
 import { setLeadInn } from "@/lib/partners/store";
 import { writeToClient } from "@/lib/qualify/bot-inbox-store";
 import type { BadLink } from "@/lib/admin/our-links";
+import { trashLead } from "@/lib/admin/lead-trash-store";
 
 /**
  * Переписать карточки лида в Telegram у всей команды.
@@ -72,6 +73,20 @@ export async function take(formData: FormData) {
   if (result.ok) syncCards(leadId, handledLabel("take", staff));
   revalidatePath(`/admin/leads/${leadId}`);
   backTo(leadId, result);
+}
+
+/**
+ * «🗑 Мусор» из карточки (lib/admin/lead-trash.ts): владелец и руководитель —
+ * любой лид, менеджер — ничей или свой. Лида после этого нет — обратно в
+ * список, результат плашкой сверху.
+ */
+export async function trashFromCard(formData: FormData) {
+  const staff = await requireStaff();
+  const leadId = leadIdFrom(formData);
+  const result = await trashLead(leadId, staff, undefined, "panel");
+  revalidatePath("/admin");
+  if (result.ok) redirect("/admin?done=trashed");
+  redirect(`/admin/leads/${leadId}?r=${result.reason === "gone" ? "gone" : result.reason === "failed" ? "failed" : "forbidden"}`);
 }
 
 export async function release(formData: FormData) {

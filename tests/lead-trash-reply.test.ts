@@ -10,7 +10,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
-import { canTrash, trashCallback, trashedLabel } from "@/lib/admin/lead-trash";
+import { canTrash, managerTrashLine, mayTrash, seesTrash, trashCallback, trashedLabel } from "@/lib/admin/lead-trash";
 import { trashLead } from "@/lib/admin/lead-trash-store";
 import {
   REPLY_HOLD_MIN,
@@ -75,23 +75,40 @@ test("карточка лида: коротко, словами, без балл
   assert.match(plainPriority(lead({ intent: "needs_human" })), /Просит живого человека/);
 });
 
-test("«🗑 Мусор»: только владелец и руководитель", async () => {
+test("«🗑 Мусор»: владелец и руководитель — любой лид, менеджер — ничей или свой", async () => {
+  // Владелец, 03.11.2026: «открой менеджерам кнопку „мусор“, чтобы лиды не попадали в общую очередь».
   assert.equal(canTrash("admin"), true);
   assert.equal(canTrash("head"), true);
-  assert.equal(canTrash("manager"), false);
+  assert.equal(canTrash("manager"), false, "полные права — только у владельца и руководителя");
+  assert.equal(seesTrash("manager"), true);
+  assert.equal(seesTrash("designer"), false);
+  const manager = { id: "m", role: "manager" };
+  assert.equal(mayTrash(manager, { assigned_staff_id: null }), true, "ничей — из общей очереди");
+  assert.equal(mayTrash(manager, { assigned_staff_id: "m" }), true, "свой");
+  assert.equal(mayTrash(manager, { assigned_staff_id: "other" }), false, "чужой — нет");
+  assert.equal(mayTrash({ id: "h", role: "head" }, { assigned_staff_id: "other" }), true);
   assert.equal(trashCallback("abc"), "trash:abc");
   assert.match(trashedLabel({ username: "egor", display_name: "Егор" }), /Удалён как мусор — @egor/);
-  // Менеджер не удаляет, даже прислав колбэк руками: база не трогается.
-  const res = await trashLead("abc", { id: "m", role: "manager", username: null, display_name: "М" });
+  assert.match(managerTrashLine({ username: "dina", display_name: "Дина" }, { request_no: "DZ-1", label: "Тест", words: "спам" }), /@dina убрал лид как мусор DZ-1: Тест/);
+  // Чужая роль не удаляет, даже прислав колбэк руками: база не трогается.
+  const res = await trashLead("abc", { id: "d", role: "designer" as never, username: null, display_name: "Д" });
   assert.deepEqual(res, { ok: false, reason: "role" });
 
+  const store = read("lib/admin/lead-trash-store.ts");
+  const fn = store.slice(store.indexOf("export async function trashLead"));
+  assert.ok(fn.indexOf("mayTrash(staff") < fn.indexOf('.delete().eq("id", leadId)'), "права по лиду — до удаления");
+  assert.match(fn, /if \(!canTrash\(staff\.role\)\) await tellBosses\(managerTrashLine/, "менеджер удалил — строка владельцу и руководителю");
+  assert.match(store, /if \(!messageWindow\(new Date\(\)\)\) return;/, "ночью строк нет");
   const route = read("app/api/telegram/webhook/route.ts");
   const handler = route.slice(route.indexOf('if (action === "trash")'));
-  assert.ok(handler.indexOf("canTrash(staff.role)") < handler.indexOf("trashLead("), "роль проверяется до удаления");
-  // Кнопка — только в личке владельца и руководителя.
+  assert.ok(handler.indexOf("seesTrash(staff.role)") < handler.indexOf("trashLead("), "роль проверяется до удаления");
+  // Кнопка — в личке сотрудников, которым приходят карточки.
   const tg = read("lib/qualify/telegram.ts");
   assert.match(tg, /trashChats\(targets\)/);
-  assert.match(read("lib/qualify/notices.ts"), /\.in\("role", \[\.\.\.TRASH_ROLES\]\)/);
+  assert.match(read("lib/qualify/notices.ts"), /\.in\("role", \[\.\.\.TRASH_BUTTON_ROLES\]\)/);
+  // В панели — из карточки и из «Разобрать лиды», тем же trashLead.
+  assert.match(read("app/admin/leads/[id]/actions.ts"), /trashLead\(leadId, staff, undefined, "panel"\)/);
+  assert.match(read("app/admin/leads/sort/actions.ts"), /trashLead\(leadId, staff, undefined, "panel"\)/);
   // Удаление уносит предложения очереди: lead_offers — on delete cascade.
   assert.match(read("supabase/migrations/0045_lead_offers.sql"), /references public\.leads\(id\) on delete cascade/);
 });

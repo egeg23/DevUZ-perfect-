@@ -618,11 +618,28 @@ export const leadsSections: Record<string, HelpEntry> = {
       },
       {
         id: "trash",
-        roles: ["admin", "head"],
-        title: "«🗑 Мусор»: usuń leada, który nie jest leadem",
+        title: "«🗑 Мусор» i «🗑 Do śmieci»: usuń leada, który nie jest leadem",
+        body: {
+          manager: [
+            "Od 03.11.2026 — także u menedżerów. Pod kartą leada na prywatnym czacie bota jest **«🗑 Мусор»**, w karcie leada w panelu i w [«Rozpatrz leady»](#leads-sort) — **«🗑 Do śmieci»**. To dla zgłoszeń, które leadami nie były: spam, test, pracownik napisał do bota, przypadkowa osoba. Kliknięcie usuwa leada w całości i zdejmuje go z kolejki ogólnej: nikt go już nie dostanie, we wszystkich kopiach karty w bocie pojawia się «🗑 Удалён как мусор — @nick».",
+            "Można usunąć niczyjego leada z kolejki ogólnej i swojego. Cudzego — nie: usuwa go ten, kto prowadzi, kierownik albo właściciel. Usuniętego nie da się przywrócić, dlatego panel zapyta «na pewno?». Właściciel i kierownik widzą wiersz «usunął leada jako śmieć» z tym, co było w leadzie. Prawdziwy klient bez zainteresowania to «Przegrane» albo «🗄 Отклонить», a nie śmieć.",
+          ],
+          head: [
+            "Pod kartą leada na prywatnym czacie bota — **«🗑 Мусор»**, w karcie leada w panelu i w [«Rozpatrz leady»](#leads-sort) — **«🗑 Do śmieci»**. To dla zgłoszeń, które leadami nie były: spam, test, pracownik napisał do bota. Kliknięcie usuwa leada z bazy w całości i zdejmuje go z kolejki, we wszystkich kopiach karty pojawia się «🗑 Удалён как мусор — @nick». Ty usuwasz każdego leada.",
+            "Od 03.11.2026 przycisk mają też menedżerowie: mogą usunąć niczyjego leada z kolejki ogólnej i swojego, cudzego — nie. Każde usunięcie przez menedżera przychodzi do ciebie wierszem «🗑 @nick usunął leada jako śmieć» z nazwą i tym, czego chciał klient (w dzień, w «Raporty»; w nocy — tylko w dzienniku). Usuniętego nie da się przywrócić: w dzienniku — numer zgłoszenia, kto kliknął i co było w leadzie. Prawdziwy klient, którego nie potrzebujemy, — «🗄 Отклонить».",
+          ],
+          admin: [
+            "Pod kartą leada na prywatnym czacie bota — **«🗑 Мусор»**, w karcie leada w panelu i w [«Rozpatrz leady»](#leads-sort) — **«🗑 Do śmieci»**. To dla zgłoszeń, które leadami nie były: spam, test, pracownik napisał do bota. Kliknięcie usuwa leada z bazy w całości i zdejmuje go z kolejki, we wszystkich kopiach karty pojawia się «🗑 Удалён как мусор — @nick». Ty usuwasz każdego leada.",
+            "Od 03.11.2026 przycisk mają też menedżerowie — twoja decyzja: mogą usunąć niczyjego leada z kolejki ogólnej i swojego, cudzego — nie. Każde usunięcie przez menedżera przychodzi do ciebie wierszem «🗑 @nick usunął leada jako śmieć» z nazwą i tym, czego chciał klient (w dzień, w «Raporty»; w nocy — tylko w [dzienniku](/admin/audit)). Usuniętego nie da się przywrócić: w dzienniku — numer zgłoszenia, kto kliknął i co było w leadzie. Prawdziwy klient, którego nie potrzebujemy, — «🗄 Отклонить».",
+          ],
+        },
+      },
+      {
+        id: "sort",
+        title: "«Rozpatrz leady»: zaległe po jednym",
         body: [
-          "Pod kartą leada, która przychodzi Ci na prywatny czat bota, jest przycisk **«🗑 Мусор»** (śmieci). Jest dla zgłoszeń, które leadami nie były: pracownik napisał do bota, spam, test, przypadkowa osoba. Po kliknięciu lead znika z bazy w całości, wypada z kolejki (nikt go już nie dostanie), a we wszystkich kopiach karty zamiast przycisków pojawia się «🗑 Удалён как мусор — @ник». Twoja decyzja z 22.10.2026.",
-          "Przycisk widzą tylko właściciel i kierownik, menedżerom nie przychodzi, a cudzego kliknięcia bot nie przyjmie. Usuniętego leada nie da się przywrócić: w dzienniku zostaje wpis «usunął leada jako śmieci» z numerem zgłoszenia i osobą, która kliknęła. Prawdziwy klient, którego nie potrzebujemy, to **«🗄 Отклонить»** (odrzuć), a nie śmieci: wtedy lead zostaje w bazie i w raportach.",
+          "Przycisk **«Rozpatrz leady»** — nad wyszukiwaniem w «Leady». Otwiera leady po jednym, dużą kartą: najpierw twoje leady «w toku» bez ruchu 7+ dni (ta sama zasada, co bot «Порядок в лидах»), potem niczyje nowe z kolejki ogólnej, najstarsze pierwsze. Na górze — ile zostało. Decyzja — od razu następny.",
+          "Niczyjemu: **«Weź do pracy»** (według tych samych zasad kolejki, co przycisk w karcie), **«🗑 Do śmieci»** albo **«Pomiń»**. Swojemu: **«🏆 Wygrane»** (od razu założenie projektu), **«❌ Przegrane»**, «⏳ Nadal w toku — kontakt za: jutro / 3 dni / tydzień» (ustawia zadanie «Skontaktuj się»; trzy razy z rzędu nie można), «🗑 Do śmieci» albo «Pomiń». «Pomiń» nic nie zmienia w bazie — lead wróci przy następnym wejściu. Wynik każdego przycisku — paskiem na górze przez parę sekund, w całym panelu ekran po kliknięciu zostaje na miejscu.",
         ],
       },
       {

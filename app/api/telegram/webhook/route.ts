@@ -103,7 +103,7 @@ import {
   saveCircleFromBot,
   takeCircle,
 } from "@/lib/admin/circle-bot";
-import { canTrash, trashedLabel } from "@/lib/admin/lead-trash";
+import { seesTrash, trashedLabel } from "@/lib/admin/lead-trash";
 import { trashLead } from "@/lib/admin/lead-trash-store";
 import { takeOverFromBot } from "@/lib/admin/outreach-talk-store";
 import { contactAsk, contactReply, seesContacts } from "@/lib/admin/contact-find";
@@ -1791,19 +1791,27 @@ async function handleButton(query: NonNullable<Update["callback_query"]>) {
     return;
   }
 
-  // «🗑 Мусор» — владелец и руководитель удаляют лид, и он уходит из
-  // очереди (lib/admin/lead-trash.ts). Права решает trashLead по роли, а не
+  // «🗑 Мусор» — лид удаляется и уходит из очереди (lib/admin/lead-trash.ts):
+  // владелец и руководитель — любой, менеджер — ничей или свой. Права решает
+  // trashLead по роли и лиду, а не
   // то, что кнопка нарисована: колбэк можно прислать и руками.
   if (action === "trash") {
     const staff = query.from?.id ? await staffByTelegramId(query.from.id) : null;
-    if (!staff || !canTrash(staff.role) || !leadId) {
-      await answerCallback(query.id, "Только владелец и руководитель");
+    if (!staff || !seesTrash(staff.role) || !leadId) {
+      await answerCallback(query.id, "Недоступно");
       return;
     }
     const here = query.message ? { chatId: query.message.chat.id, messageId: query.message.message_id } : undefined;
     const trashed = await trashLead(leadId, staff, here);
     if (!trashed.ok) {
-      await answerCallback(query.id, trashed.reason === "gone" ? "Лида уже нет" : "Не удалось удалить — откройте карточку");
+      await answerCallback(
+        query.id,
+        trashed.reason === "gone"
+          ? "Лида уже нет"
+          : trashed.reason === "not_yours"
+            ? "Лид уже взял другой менеджер — удалить его могут он, руководитель или владелец"
+            : "Не удалось удалить — откройте карточку",
+      );
       if (trashed.reason === "gone" && here) await markBriefHandled(here.chatId, here.messageId, "Лида уже нет");
       return;
     }

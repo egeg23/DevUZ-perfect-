@@ -1,0 +1,80 @@
+import { defineDict } from "@/lib/admin/i18n";
+
+/** «Разобрать лиды» (app/admin/leads/sort, lib/admin/lead-sort.ts) — на языке сотрудника. */
+export const leadSortDict = defineDict({
+  title: { ru: "Разобрать лиды", uz: "Lidlarni saralash", pl: "Rozpatrz leady" },
+  lead: {
+    ru: "По одному: решили — сразу следующий. Сначала ваши лиды без движения 7+ дней, потом ничьи новые из общей очереди.",
+    uz: "Bittadan: qaror qildingiz — darhol keyingisi. Avval 7+ kun harakatsiz lidlaringiz, keyin umumiy navbatdagi hech kimniki bo‘lmagan yangilari.",
+    pl: "Po jednym: decyzja — od razu następny. Najpierw twoje leady bez ruchu 7+ dni, potem niczyje nowe z kolejki ogólnej.",
+  },
+  left: {
+    ru: (idle: number, free: number) => `Осталось: ваших без движения — ${idle}, ничьих новых — ${free}`,
+    uz: (idle: number, free: number) => `Qoldi: harakatsiz lidlaringiz — ${idle}, hech kimniki yangilar — ${free}`,
+    pl: (idle: number, free: number) => `Zostało: twoich bez ruchu — ${idle}, niczyich nowych — ${free}`,
+  },
+  kindIdle: { ru: "Ваш лид без движения", uz: "Harakatsiz lidingiz", pl: "Twój lead bez ruchu" },
+  kindFree: { ru: "Ничей новый — общая очередь", uz: "Hech kimniki yangi — umumiy navbat", pl: "Niczyj nowy — kolejka ogólna" },
+  idleFor: {
+    ru: (d: number) => `без движения ${d} дн.`,
+    uz: (d: number) => `${d} kun harakatsiz`,
+    pl: (d: number) => `bez ruchu ${d} dn.`,
+  },
+  waitsFor: {
+    ru: (d: number) => (d < 1 ? "пришёл сегодня" : `ждёт ${d} дн.`),
+    uz: (d: number) => (d < 1 ? "bugun keldi" : `${d} kun kutmoqda`),
+    pl: (d: number) => (d < 1 ? "przyszedł dziś" : `czeka ${d} dn.`),
+  },
+  wants: { ru: "Что нужно клиенту", uz: "Mijozga nima kerak", pl: "Czego potrzebuje klient" },
+  noRequest: { ru: "не сказал", uz: "aytmadi", pl: "nie powiedział" },
+  source: { ru: "Откуда", uz: "Qayerdan", pl: "Skąd" },
+  open: { ru: "Открыть карточку", uz: "Kartochkani ochish", pl: "Otwórz kartę" },
+  take: { ru: "Взять в работу", uz: "Ishga olish", pl: "Weź do pracy" },
+  trash: { ru: "🗑 В мусор", uz: "🗑 Axlatga", pl: "🗑 Do śmieci" },
+  trashConfirm: {
+    ru: "Удалить лид как мусор? Он уйдёт из очереди и из базы, вернуть нельзя. Настоящему клиенту, которому не интересно, — «Проиграли».",
+    uz: "Lidni axlat sifatida o‘chirasizmi? U navbatdan va bazadan ketadi, qaytarib bo‘lmaydi. Qiziqmagan haqiqiy mijozga — «Yutqazdik».",
+    pl: "Usunąć leada jako śmieć? Zniknie z kolejki i z bazy, nie da się go przywrócić. Prawdziwemu klientowi bez zainteresowania — «Przegrane».",
+  },
+  skip: { ru: "Пропустить", uz: "O‘tkazib yuborish", pl: "Pomiń" },
+  won: { ru: "🏆 Выиграли", uz: "🏆 Yutdik", pl: "🏆 Wygrane" },
+  lost: { ru: "❌ Проиграли", uz: "❌ Yutqazdik", pl: "❌ Przegrane" },
+  waitTitle: { ru: "⏳ Ещё в работе — связаться через:", uz: "⏳ Hali ishda — bog‘lanish:", pl: "⏳ Nadal w toku — kontakt za:" },
+  w1: { ru: "завтра", uz: "ertaga", pl: "jutro" },
+  w3: { ru: "3 дня", uz: "3 kun", pl: "3 dni" },
+  w7: { ru: "неделю", uz: "bir hafta", pl: "tydzień" },
+  noWait: {
+    ru: "Откладывали уже трижды подряд — теперь только «Выиграли» или «Проиграли».",
+    uz: "Uch marta ketma-ket kechiktirilgan — endi faqat «Yutdik» yoki «Yutqazdik».",
+    pl: "Odkładano już trzy razy z rzędu — teraz tylko «Wygrane» albo «Przegrane».",
+  },
+  trashHint: {
+    ru: "«В мусор» — не лид вовсе: спам, проверка, сотрудник написал боту. Удаляется целиком, владелец и руководитель видят, кто удалил.",
+    uz: "«Axlatga» — umuman lid emas: spam, sinov, xodim botga yozgan. To‘liq o‘chiriladi, egasi va rahbar kim o‘chirganini ko‘radi.",
+    pl: "«Do śmieci» — to w ogóle nie lead: spam, test, pracownik napisał do bota. Usuwany w całości, właściciel i kierownik widzą, kto usunął.",
+  },
+  empty: {
+    ru: "Разбирать нечего: ваших лидов без движения нет, ничьих новых в очереди нет. Новые появятся здесь, когда придут заявки.",
+    uz: "Saralash uchun hech narsa yo‘q: harakatsiz lidlaringiz yo‘q, navbatda hech kimniki yangi yo‘q. Arizalar kelganda yangilari shu yerda chiqadi.",
+    pl: "Nie ma czego rozpatrywać: nie masz leadów bez ruchu, w kolejce nie ma niczyich nowych. Nowe pojawią się tu, gdy przyjdą zgłoszenia.",
+  },
+  skippedAll: {
+    ru: "Все оставшиеся пропущены. Начать заново — пропущенные вернутся.",
+    uz: "Qolganlarning hammasi o‘tkazib yuborildi. Qaytadan boshlang — o‘tkazilganlar qaytadi.",
+    pl: "Wszystkie pozostałe pominięte. Zacznij od nowa — pominięte wrócą.",
+  },
+  restart: { ru: "Начать заново", uz: "Qaytadan boshlash", pl: "Zacznij od nowa" },
+  back: { ru: "← Лиды", uz: "← Lidlar", pl: "← Leady" },
+  offline: { ru: "База не отвечает — список может быть неполным.", uz: "Baza javob bermayapti — ro‘yxat to‘liq bo‘lmasligi mumkin.", pl: "Baza nie odpowiada — lista może być niepełna." },
+  entry: {
+    ru: (n: number) => `Разобрать лиды: ${n}`,
+    uz: (n: number) => `Lidlarni saralash: ${n}`,
+    pl: (n: number) => `Rozpatrz leady: ${n}`,
+  },
+  src_chat: { ru: "чат на сайте", uz: "saytdagi chat", pl: "czat na stronie" },
+  src_form: { ru: "форма на сайте", uz: "saytdagi forma", pl: "formularz na stronie" },
+  src_box: { ru: "лист ожидания DevUz Box", uz: "DevUz Box kutish ro‘yxati", pl: "lista oczekujących DevUz Box" },
+  src_telegram: { ru: "бот студии", uz: "studiya boti", pl: "bot studia" },
+  src_manual: { ru: "заведён вручную", uz: "qo‘lda kiritilgan", pl: "dodany ręcznie" },
+  src_outreach: { ru: "холодное касание", uz: "sovuq aloqa", pl: "zimny kontakt" },
+});

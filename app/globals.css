@@ -1831,3 +1831,63 @@
     display: none;
   }
 }
+
+/* Плашка результата сверху экрана (components/admin/keep-place.tsx): на
+   2,5 секунды, сверху посередине, над верхней панелью. */
+.os-toast-wrap {
+  position: fixed;
+  z-index: 70;
+  top: calc(12px + env(safe-area-inset-top, 0px));
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  padding-inline: 16px;
+}
+.os-toast {
+  display: flex;
+  max-width: 34rem;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: 14px;
+  font-size: 14px;
+  color: var(--color-text);
+  background: rgb(11 15 22 / 0.96);
+  border: 1px solid rgb(255 255 255 / 0.12);
+  box-shadow: 0 18px 40px rgb(0 0 0 / 0.5);
+  animation: os-toast 2.6s var(--ease-out-soft) both;
+}
+.os-toast.is-ok {
+  border-color: rgb(34 240 160 / 0.5);
+}
+.os-toast.is-ok > span:first-child {
+  color: var(--color-green);
+}
+.os-toast.is-warn {
+  border-color: rgb(232 177 76 / 0.55);
+}
+.os-toast.is-warn > span:first-child {
+  color: var(--color-gold);
+}
+@keyframes os-toast {
+  0% {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  10%,
+  85% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .os-toast {
+    animation: none;
+  }
+}

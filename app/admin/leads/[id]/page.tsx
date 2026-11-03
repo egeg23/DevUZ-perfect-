@@ -6,6 +6,7 @@ import {
   changeStatus,
   finishReminder,
   release,
+  trashFromCard,
   askTransfer,
   decideTransferAction,
   revealContactAction,
@@ -16,6 +17,9 @@ import {
   toggleAutoReminder,
 } from "./actions";
 import { QuoteCard } from "@/components/admin/quote-card";
+import { TrashButton } from "@/components/admin/trash-button";
+import { leadSortDict } from "@/content/admin-panel/lead-sort";
+import { mayTrash } from "@/lib/admin/lead-trash";
 import { AdminShell } from "@/components/admin/shell";
 import { LeadTimeline } from "@/components/admin/lead-timeline";
 import { buildTimeline, channelsOf, reminderEvents, stageEvents } from "@/lib/admin/lead-timeline";
@@ -131,6 +135,7 @@ export default async function LeadPage({
   const staff = await requireStaff();
   const locale = staff.panel_locale;
   const t = pick(leadCardDict, locale);
+  const sortT = pick(leadSortDict, locale);
   const when = (iso: string) => cardWhen(iso, locale);
   const { id } = await params;
   const {
@@ -309,6 +314,7 @@ export default async function LeadPage({
 
       {result ? (
         <p
+          data-result={result === "ok" || result === "bot_sent" ? "ok" : "warn"}
           className={`mt-4 rounded-xl border px-4 py-2.5 text-sm ${
             result === "ok" || result === "bot_sent"
               ? "border-green/30 bg-green/10 text-green"
@@ -392,6 +398,19 @@ export default async function LeadPage({
                   {t.release}
                 </button>
               </form>
+            ) : null}
+
+            {/* «🗑 Мусор» — не лид вовсе (спам, проверка): удаляется целиком.
+                Менеджеру — ничей и свой (lib/admin/lead-trash.ts, mayTrash). */}
+            {mayTrash(staff, { assigned_staff_id: lead.assigned_staff_id ?? null }) ? (
+              <TrashButton
+                action={trashFromCard}
+                leadId={lead.id}
+                confirm={sortT.trashConfirm}
+                className="rounded-lg border border-red-400/30 bg-red-500/10 px-3 py-1.5 text-xs text-red-200 transition hover:border-red-400/60"
+              >
+                {sortT.trash}
+              </TrashButton>
             ) : null}
           </div>
         </div>
