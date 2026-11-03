@@ -17,6 +17,7 @@ import { PanelLocaleProvider } from "@/components/admin/panel-locale";
 import { UsageBeacon } from "@/components/admin/usage-beacon";
 import { TaskPulse } from "@/components/admin/task-alerts";
 import { NavProgress } from "@/components/admin/nav-progress";
+import { KeepPlace } from "@/components/admin/keep-place";
 import { SectionTabs } from "@/components/admin/section-tabs";
 import { Bell } from "@/components/admin/bell";
 
@@ -104,6 +105,10 @@ export function AdminShell({
         {/* Полоса загрузки — с момента нажатия на ссылку до новой страницы. */}
         <Suspense fallback={null}>
           <NavProgress />
+        </Suspense>
+        {/* После нажатия экран остаётся на месте, результат — плашкой сверху. */}
+        <Suspense fallback={null}>
+          <KeepPlace />
         </Suspense>
         {staff.nav_classic ? (
           <>

@@ -1,4 +1,4 @@
-import { TRASH_ROLES } from "@/lib/admin/lead-trash";
+import { TRASH_BUTTON_ROLES } from "@/lib/admin/lead-trash";
 import { serviceClient } from "@/lib/supabase";
 
 /**
@@ -51,9 +51,9 @@ export async function noticesOf(leadId: string): Promise<Notice[]> {
 }
 
 /**
- * Какие из этих чатов — лички владельца и руководителя: им под карточкой
- * лида есть «🗑 Мусор» (lib/admin/lead-trash.ts). Группа и личка менеджера
- * кнопку не получают. Сбой базы — никому: кнопка не главное в карточке.
+ * Какие из этих чатов — лички сотрудников: им под карточкой лида есть
+ * «🗑 Мусор» (lib/admin/lead-trash.ts; с 03.11.2026 и менеджерам — что можно
+ * удалить, решает mayTrash по лиду). Группа кнопку не получает. Сбой базы — никому: кнопка не главное в карточке.
  */
 export async function trashChats(chatIds: readonly (string | number)[]): Promise<Set<string>> {
   const ids = [...new Set(chatIds.map(Number).filter((id) => Number.isFinite(id) && id > 0))];
@@ -64,7 +64,7 @@ export async function trashChats(chatIds: readonly (string | number)[]): Promise
     .from("staff")
     .select("telegram_user_id")
     .in("telegram_user_id", ids)
-    .in("role", [...TRASH_ROLES])
+    .in("role", [...TRASH_BUTTON_ROLES])
     .eq("is_active", true);
   if (error) return new Set();
   return new Set((data ?? []).map((row) => String(row.telegram_user_id)));

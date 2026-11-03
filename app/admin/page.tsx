@@ -1,4 +1,6 @@
 import Link from "next/link";
+
+import { leadSortDict } from "@/content/admin-panel/lead-sort";
 import { redirect } from "next/navigation";
 
 import { AdminShell } from "@/components/admin/shell";
@@ -97,6 +99,7 @@ export default async function AdminHome({
   const params = await searchParams;
   const locale = staff.panel_locale;
   const t = pick(homeDict, locale);
+  const sortT = pick(leadSortDict, locale);
 
   // Трафик был вкладкой владельца, теперь это раздел для владельца и
   // руководителей. Старые закладки и адреса возврата из Google ведут сюда —
@@ -213,6 +216,22 @@ export default async function AdminHome({
           {t.tasksMoved}
         </Link>
       </p>
+
+      {/* «Разобрать лиды» — скопившееся по одному, решение в одно нажатие
+          (владелец, 03.11.2026: «более удобный способ разгребать лиды»). */}
+      <Link
+        href="/admin/leads/sort"
+        className="os-glass mb-5 flex items-center gap-3 px-4 py-3 text-sm transition hover:border-green/40"
+      >
+        <span aria-hidden className="grid h-9 w-9 place-items-center rounded-xl bg-green/10 text-green">
+          ⇆
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block font-semibold text-text">{sortT.title}</span>
+          <span className="block text-xs text-muted">{sortT.lead}</span>
+        </span>
+        <span aria-hidden className="text-green">→</span>
+      </Link>
 
       {/* Поиск — первым: компанию помнят по названию, а не по странице списка. */}
       <form action="/admin" className="flex flex-wrap items-end gap-2">

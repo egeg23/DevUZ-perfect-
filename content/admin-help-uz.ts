@@ -619,11 +619,28 @@ export const uz: HelpCopy = {
         },
         {
           id: "trash",
-          roles: ["admin", "head"],
-          title: "«🗑 Мусор»: lid bo‘lmagan lidni o‘chirish",
+          title: "«🗑 Мусор» va «🗑 Axlatga»: lid bo‘lmagan lidni o‘chirish",
+          body: {
+            manager: [
+              "03.11.2026 dan — menejerlarda ham. Botning shaxsiy chatidagi lid kartochkasi ostida **«🗑 Мусор»**, paneldagi lid kartochkasida va [«Lidlarni saralash»](#leads-sort)da — **«🗑 Axlatga»**. Bu lid bo‘lmagan arizalar uchun: spam, sinov, xodim botga yozgan, tasodifiy odam. Bosdingiz — lid to‘liq o‘chiriladi va umumiy navbatdan ketadi: uni boshqa hech kimga taklif qilishmaydi, botdagi barcha kartochka nusxalarida «🗑 Удалён как мусор — @nik» chiqadi.",
+              "Umumiy navbatdagi hech kimniki bo‘lmagan lidni va o‘zingiznikini o‘chirish mumkin. Boshqanikini — yo‘q: uni olib borayotgan, rahbar yoki egasi o‘chiradi. O‘chirilganni qaytarib bo‘lmaydi, shuning uchun panel «aniqmi?» deb so‘raydi. Egasi va rahbar lidda nima bo‘lgani bilan «lidni axlat sifatida olib tashladi» qatorini ko‘radi. Qiziqmagan haqiqiy mijoz — «Yutqazdik» yoki «🗄 Отклонить», axlat emas.",
+            ],
+            head: [
+              "Botning shaxsiy chatidagi lid kartochkasi ostida — **«🗑 Мусор»**, paneldagi lid kartochkasida va [«Lidlarni saralash»](#leads-sort)da — **«🗑 Axlatga»**. Bu lid bo‘lmagan arizalar uchun: spam, sinov, xodim botga yozgan. Bosdingiz — lid bazadan to‘liq o‘chiriladi va navbatdan ketadi, kartochkaning barcha nusxalarida «🗑 Удалён как мусор — @nik» chiqadi. Siz istalgan lidni o‘chirasiz.",
+              "03.11.2026 dan tugma menejerlarda ham bor: ular umumiy navbatdagi hech kimniki bo‘lmagan lidni va o‘zinikini o‘chira oladi, boshqanikini — yo‘q. Menejerning har bir o‘chirishi sizga nomi va mijoz nima xohlagani bilan «🗑 @nik lidni axlat sifatida olib tashladi» qatori bo‘lib keladi (kunduzi, «Hisobotlar» ostida; tunda — faqat jurnalda). O‘chirilganni qaytarib bo‘lmaydi: jurnalda — ariza raqami, kim bosgani va lidda nima bo‘lgani. Bizga kerak bo‘lmagan haqiqiy mijoz — «🗄 Отклонить».",
+            ],
+            admin: [
+              "Botning shaxsiy chatidagi lid kartochkasi ostida — **«🗑 Мусор»**, paneldagi lid kartochkasida va [«Lidlarni saralash»](#leads-sort)da — **«🗑 Axlatga»**. Bu lid bo‘lmagan arizalar uchun: spam, sinov, xodim botga yozgan. Bosdingiz — lid bazadan to‘liq o‘chiriladi va navbatdan ketadi, kartochkaning barcha nusxalarida «🗑 Удалён как мусор — @nik» chiqadi. Siz istalgan lidni o‘chirasiz.",
+              "03.11.2026 dan tugma menejerlarda ham bor — sizning qaroringiz: ular umumiy navbatdagi hech kimniki bo‘lmagan lidni va o‘zinikini o‘chira oladi, boshqanikini — yo‘q. Menejerning har bir o‘chirishi sizga nomi va mijoz nima xohlagani bilan «🗑 @nik lidni axlat sifatida olib tashladi» qatori bo‘lib keladi (kunduzi, «Hisobotlar» ostida; tunda — faqat [jurnalda](/admin/audit)). O‘chirilganni qaytarib bo‘lmaydi: jurnalda — ariza raqami, kim bosgani va lidda nima bo‘lgani. Bizga kerak bo‘lmagan haqiqiy mijoz — «🗄 Отклонить».",
+            ],
+          },
+        },
+        {
+          id: "sort",
+          title: "«Lidlarni saralash»: to‘planganini bittadan",
           body: [
-            "Botning shaxsiy chatiga keladigan lid kartochkasi ostida **«🗑 Мусор»** tugmasi bor. U lid bo‘lmagan arizalar uchun: xodim botga yozgan, spam, sinov, tasodifiy odam. Bosdingiz — lid bazadan butunlay o‘chadi, navbatdan chiqadi (endi hech kimga taklif qilinmaydi), kartochkaning barcha nusxalarida tugmalar o‘rniga «🗑 Удалён как мусор — @ник» chiqadi. Sizning 22.10.2026 dagi qaroringiz.",
-            "Tugmani faqat egasi va rahbar ko‘radi, menejerlarga u kelmaydi, boshqaning bosishini bot qabul qilmaydi. O‘chirilgan lidni qaytarib bo‘lmaydi: jurnalda ariza raqami va kim bosgani bilan «lidni axlat sifatida o‘chirdi» qatori qoladi. Bizga kerak bo‘lmagan, lekin haqiqiy mijoz — bu axlat emas, **«🗄 Отклонить»**: unda lid bazada va hisobotlarda qoladi.",
+            "**«Lidlarni saralash»** tugmasi — «Lidlar»da qidiruv ustida. Lidlarni bittadan katta kartochkada ochadi: avval 7+ kun harakatsiz «ishda»gi lidlaringiz («Порядок в лидах» botidagi qoida), keyin umumiy navbatdagi hech kimniki bo‘lmagan yangilar, eskilari birinchi. Tepada — qanchasi qolgani. Qaror qildingiz — darhol keyingisi.",
+            "Hech kimnikiga: **«Ishga olish»** (kartochkadagi tugma kabi navbat qoidalari bilan), **«🗑 Axlatga»** yoki **«O‘tkazib yuborish»**. O‘zingiznikiga: **«🏆 Yutdik»** (darhol loyiha ochish), **«❌ Yutqazdik»**, «⏳ Hali ishda — bog‘lanish: ertaga / 3 kun / bir hafta» («Bog‘lanish» vazifasini qo‘yadi; ketma-ket uch marta mumkin emas), «🗑 Axlatga» yoki «O‘tkazib yuborish». «O‘tkazib yuborish» bazada hech narsani o‘zgartirmaydi — lid keyingi kirishda qaytadi. Har bir tugma natijasi — bir necha soniyaga tepada plashka, butun panelda bosgandan keyin ekran joyida qoladi.",
           ],
         },
         {

@@ -115,6 +115,8 @@ export function sectionOfHref(href: string): string | null {
  * списка.
  */
 export const PAGE_TOPICS: readonly { prefix: string; section: string; item: string }[] = [
+  // «Разобрать лиды» (app/admin/leads/sort) — раньше карточки: тот же префикс.
+  { prefix: "/admin/leads/sort", section: "/admin", item: "sort" },
   { prefix: "/admin/leads/", section: "/admin", item: "card" },
   { prefix: "/admin/projects/", section: "/admin/projects", item: "card" },
   { prefix: "/admin/contracts/", section: "/admin/contracts", item: "review" },
