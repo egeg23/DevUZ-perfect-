@@ -1829,6 +1829,8 @@
 @media (max-width: 1023px) {
   .os-inbox > .os-phone-off {
     display: none;
+  }
+}
 
 /* Плашка результата сверху экрана (components/admin/keep-place.tsx): на
    2,5 секунды, сверху посередине, над верхней панелью. */

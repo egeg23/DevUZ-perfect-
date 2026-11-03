@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
+import postcss from "postcss";
+
 import { toastDict } from "@/content/admin-panel/toast";
 import { SKIP_MAX, idleDue, parseSkip, sortHref, sortQueue } from "@/lib/admin/lead-sort";
 import type { IdleLead } from "@/lib/admin/lead-tidy";
@@ -81,4 +83,10 @@ test("экран остаётся на месте, результат — пла
   const css = read("app/globals.css");
   assert.match(css, /@keyframes os-toast/);
   assert.match(css, /prefers-reduced-motion: reduce\) \{\s*\.os-toast \{\s*animation: none;/);
+});
+
+test("globals.css разбирается целиком: незакрытый блок ронял сборку на сервере", () => {
+  // 03.11.2026 после слияния двух правок в конце файла потерялись две «}» —
+  // npm test был зелёным, а «Сборка и проверка типов» упала на PostCSS.
+  assert.doesNotThrow(() => postcss.parse(read("app/globals.css")));
 });
