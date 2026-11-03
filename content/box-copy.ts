@@ -33,7 +33,7 @@ const ru = {
     wait: "Встать в лист ожидания",
     how: "Как это работает",
     honest: "Это план, а не обещание. Сроки и состав уточним по итогам пилота: с ноября 2026 студия месяц работает на первом образце сама.",
-    alt: "Три модели {name}: Лайт, Про и Джарвис на тёмном фоне",
+    alt: "Три модели {name}: Лайт, Про и Дарис на тёмном фоне",
   },
   cut: {
     kicker: "В разрезе",
@@ -42,7 +42,7 @@ const ru = {
     parts: "Деталей в кадре",
     concept: "Изображения: концепт дизайна. Первые образцы соберём в готовых корпусах.",
     shared: "Премиум собирается в корпусе «Про»: снаружи та же коробка, внутри другой ИИ-чип. Поэтому кадр разреза у них общий.",
-    models: { lite: "Лайт", pro: "Про", premium: "Премиум", jarvis: "Джарвис" },
+    models: { lite: "Лайт", pro: "Про", premium: "Премиум", jarvis: "Дарис" },
     layers: {
       pro: [
         { t: "Крышка с логотипом", d: "Алюминий работает как радиатор" },
@@ -177,7 +177,7 @@ const ru = {
         voice: "нет",
       },
       {
-        name: "Джарвис",
+        name: "Дарис",
         who: "Сеть филиалов, госорганизация, колл-центр, продакшн",
         memory: "96 ГБ видеопамяти и 128 ГБ",
         core: "Большое ядро на видеокарте: в три раза быстрее «Про»",
@@ -263,7 +263,7 @@ const en: BoxCopy = {
     wait: "Join the waiting list",
     how: "How it works",
     honest: "This is a plan, not a promise. Dates and specs will be refined after the pilot: from November 2026 the studio runs on the first unit itself for a month.",
-    alt: "Three {name} models: Lite, Pro and Jarvis on a dark background",
+    alt: "Three {name} models: Lite, Pro and Daris on a dark background",
   },
   cut: {
     kicker: "Cutaway",
@@ -272,7 +272,7 @@ const en: BoxCopy = {
     parts: "Parts in the frame",
     concept: "Images: design concept. The first units will ship in off-the-shelf cases.",
     shared: "Premium is built in the Pro case: the same box outside, a different AI chip inside. That is why they share one cutaway.",
-    models: { lite: "Lite", pro: "Pro", premium: "Premium", jarvis: "Jarvis" },
+    models: { lite: "Lite", pro: "Pro", premium: "Premium", jarvis: "Daris" },
     layers: {
       pro: [
         { t: "Lid with the logo", d: "The aluminium works as a heatsink" },
@@ -407,7 +407,7 @@ const en: BoxCopy = {
         voice: "no",
       },
       {
-        name: "Jarvis",
+        name: "Daris",
         who: "A branch network, a public body, a call centre, a production house",
         memory: "96 GB of video memory and 128 GB",
         core: "Large core on a graphics card: three times faster than Pro",
@@ -491,7 +491,7 @@ const uz: BoxCopy = {
     wait: "Kutish ro‘yxatiga yozilish",
     how: "Bu qanday ishlaydi",
     honest: "Bu reja, va’da emas. Muddat va tarkibni pilot yakunida aniqlashtiramiz: 2026-yil noyabridan studiya birinchi namunada bir oy o‘zi ishlaydi.",
-    alt: "{name}ning uchta modeli: Lite, Pro va Jarvis qora fonda",
+    alt: "{name}ning uchta modeli: Lite, Pro va Daris qora fonda",
   },
   cut: {
     kicker: "Kesimda",
@@ -500,7 +500,7 @@ const uz: BoxCopy = {
     parts: "Kadrdagi qismlar",
     concept: "Rasmlar: dizayn konsepti. Birinchi namunalar tayyor korpuslarda yig‘iladi.",
     shared: "Premium Pro korpusida yig‘iladi: tashqaridan o‘sha quti, ichida boshqa AI-chip. Shuning uchun ularning kesimi bitta.",
-    models: { lite: "Lite", pro: "Pro", premium: "Premium", jarvis: "Jarvis" },
+    models: { lite: "Lite", pro: "Pro", premium: "Premium", jarvis: "Daris" },
     layers: {
       pro: [
         { t: "Logotipli qopqoq", d: "Alyuminiy radiator vazifasini bajaradi" },
@@ -635,7 +635,7 @@ const uz: BoxCopy = {
         voice: "yo‘q",
       },
       {
-        name: "Jarvis",
+        name: "Daris",
         who: "Filiallar tarmog‘i, davlat tashkiloti, call-markaz, prodakshn",
         memory: "96 GB videoxotira va 128 GB",
         core: "Videokartadagi katta yadro: Pro’dan uch barobar tez",
@@ -719,7 +719,7 @@ const zh: BoxCopy = {
     wait: "加入等待名单",
     how: "它是怎么工作的",
     honest: "这是计划，不是承诺。时间和配置会在试点之后确定：从 2026 年 11 月起，工作室自己在第一台样机上工作一个月。",
-    alt: "{name} 的三款机型：Lite、Pro 和 Jarvis，深色背景",
+    alt: "{name} 的三款机型：Lite、Pro 和 Daris，深色背景",
   },
   cut: {
     kicker: "剖面",
@@ -728,7 +728,7 @@ const zh: BoxCopy = {
     parts: "画面中的零件",
     concept: "图片为设计概念。首批样机将采用现成机箱。",
     shared: "Premium 采用 Pro 的机箱：外观相同，内部是另一款 AI 芯片，所以两者共用同一张拆解图。",
-    models: { lite: "Lite", pro: "Pro", premium: "Premium", jarvis: "Jarvis" },
+    models: { lite: "Lite", pro: "Pro", premium: "Premium", jarvis: "Daris" },
     layers: {
       pro: [
         { t: "带标志的顶盖", d: "铝材本身就是散热器" },
@@ -863,7 +863,7 @@ const zh: BoxCopy = {
         voice: "无",
       },
       {
-        name: "Jarvis",
+        name: "Daris",
         who: "连锁分支机构、政府机构、呼叫中心、制作公司",
         memory: "96 GB 显存加 128 GB 内存",
         core: "显卡上的大核心：速度是 Pro 的三倍",
@@ -947,7 +947,7 @@ const uk: BoxCopy = {
     wait: "Стати в лист очікування",
     how: "Як це працює",
     honest: "Це план, а не обіцянка. Строки та склад уточнимо за підсумками пілота: з листопада 2026 студія місяць сама працює на першому зразку.",
-    alt: "Три моделі {name}: Лайт, Про та Джарвіс на темному тлі",
+    alt: "Три моделі {name}: Лайт, Про та Даріс на темному тлі",
   },
   cut: {
     kicker: "У розрізі",
@@ -956,7 +956,7 @@ const uk: BoxCopy = {
     parts: "Деталей у кадрі",
     concept: "Зображення: концепт дизайну. Перші зразки зберемо в готових корпусах.",
     shared: "Преміум збирається в корпусі «Про»: зовні та сама коробка, всередині інший ІІ-чип. Тому кадр розрізу в них спільний.",
-    models: { lite: "Лайт", pro: "Про", premium: "Преміум", jarvis: "Джарвіс" },
+    models: { lite: "Лайт", pro: "Про", premium: "Преміум", jarvis: "Даріс" },
     layers: {
       pro: [
         { t: "Кришка з логотипом", d: "Алюміній працює як радіатор" },
@@ -1091,7 +1091,7 @@ const uk: BoxCopy = {
         voice: "немає",
       },
       {
-        name: "Джарвіс",
+        name: "Даріс",
         who: "Мережа філій, держорганізація, кол-центр, продакшн",
         memory: "96 ГБ відеопам’яті та 128 ГБ",
         core: "Велике ядро на відеокарті: втричі швидше за «Про»",
@@ -1175,7 +1175,7 @@ const pl: BoxCopy = {
     wait: "Zapisz się na listę oczekujących",
     how: "Jak to działa",
     honest: "To plan, nie obietnica. Terminy i skład doprecyzujemy po pilotażu: od listopada 2026 studio przez miesiąc samo pracuje na pierwszym egzemplarzu.",
-    alt: "Trzy modele {name}: Lite, Pro i Jarvis na ciemnym tle",
+    alt: "Trzy modele {name}: Lite, Pro i Daris na ciemnym tle",
   },
   cut: {
     kicker: "W przekroju",
@@ -1184,7 +1184,7 @@ const pl: BoxCopy = {
     parts: "Części w kadrze",
     concept: "Obrazy: koncepcja designu. Pierwsze egzemplarze złożymy w gotowych obudowach.",
     shared: "Premium powstaje w obudowie Pro: z zewnątrz to samo pudełko, w środku inny układ AI. Dlatego mają wspólny przekrój.",
-    models: { lite: "Lite", pro: "Pro", premium: "Premium", jarvis: "Jarvis" },
+    models: { lite: "Lite", pro: "Pro", premium: "Premium", jarvis: "Daris" },
     layers: {
       pro: [
         { t: "Pokrywa z logo", d: "Aluminium działa jak radiator" },
@@ -1319,7 +1319,7 @@ const pl: BoxCopy = {
         voice: "nie",
       },
       {
-        name: "Jarvis",
+        name: "Daris",
         who: "Sieć oddziałów, instytucja publiczna, call center, produkcja",
         memory: "96 GB pamięci wideo i 128 GB",
         core: "Duży rdzeń na karcie graficznej: trzy razy szybszy niż Pro",
