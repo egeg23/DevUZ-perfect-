@@ -21,3 +21,6 @@ __pycache__/
 
 # Скриншоты check.mjs макета dilrabo (пишет в текущую папку)
 scripts/protos/dilrabo/*.png
+
+# Код сайта клиента до макета (scripts/protos/site-before.mjs): их код, в открытый репозиторий не кладём
+scripts/protos/*/.before/
