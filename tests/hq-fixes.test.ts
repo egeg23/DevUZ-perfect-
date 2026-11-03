@@ -106,9 +106,10 @@ test("нажатие видно сразу: пункт меню подсвече
   assert.match(link, /const active = here === href \|\| \(here !== null && also\.includes\(here\)\) \|\| pressed;/);
   assert.match(link, /<LinkPending \/>/);
   assert.match(read("components/admin/link-pending.tsx"), /const \{ pending \} = useLinkStatus\(\);/);
-  // Меню группами и меню телефона рисуют пункты этим же компонентом.
+  // «Ещё» рисует пункты этим же компонентом, кнопка полосы горит так же — сразу по нажатию.
   const menu = read("components/admin/nav-menu.tsx");
-  assert.ok((menu.match(/<AdminNavLink /g) ?? []).length >= 3);
+  assert.ok((menu.match(/<AdminNavLink /g) ?? []).length >= 2);
+  assert.match(menu, /onClick=\{\(\) => setPressedAt\(pathname\)\}/);
   assert.match(read("components/admin/shell.tsx"), /<NavProgress \/>/);
   assert.match(read("components/admin/nav-progress.tsx"), /document\.addEventListener\("click", onClick, true\)/);
   assert.match(read("app/globals.css"), /\.admin-panel :is\(a, button, summary, label\):active \{/);

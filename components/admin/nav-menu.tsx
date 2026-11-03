@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
+import { useEffect, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 
 import { setNavClassic } from "@/app/admin/actions";
@@ -15,15 +15,17 @@ import { sectionOfHref } from "@/lib/admin/help";
 import { findSections, type Findable } from "@/lib/admin/nav";
 
 /**
- * Меню панели: группы вместо двадцати с лишним пунктов в строку.
+ * Меню панели — полоса иконок, как в эталоне «DevUz Офис».
  *
- * Владелец, 12.10.2026: «вкладок куча, пока в каждую задаешь — с ума
- * пойдешь». На компьютере — строка групп, наведение показывает разделы
- * группы, щелчок закрепляет список. На телефоне — одна кнопка «Меню» со
- * всеми группами и полем поиска. Быстрый переход — «Найти раздел» или
- * Ctrl+K (⌘K): набрал «дог», Enter — «Договоры».
+ * Владелец, 03.11.2026: «у нас выглядит всё сложно и непонятно, а тут я за
+ * 5 минут понял, что к чему». Слева — узкая полоса: шесть ежедневных
+ * разделов (`railOf` в lib/admin/nav.ts — выбор владельца), подсказка при
+ * наведении, число на «Задачах», открытый раздел подсвечен. Редкое — под
+ * «Ещё» внизу полосы, группами, как раньше в выпадающих списках. На
+ * телефоне полоса — внизу экрана: пять кнопок и «Ещё».
  *
- * Что показывать, решает сервер (`menuOf` в lib/admin/nav.ts — роль и
+ * Быстрый переход — поиск в верхней панели (`FindButton`) или Ctrl+K (⌘K):
+ * набрал «дог», Enter — «Договоры». Что показывать, решает сервер (роль и
  * галочки владельца); здесь только раскладка и клавиши. Всё открытое
  * закрывается по Esc, щелчку мимо и переходу на другую страницу.
  */
@@ -34,18 +36,28 @@ export type NavMenuItem = Findable & { quiet: boolean };
 const TASKS_HREF = "/admin/tasks";
 export type NavMenuGroup = { id: string; label: string; items: NavMenuItem[] };
 
+/** Событие, которым кнопка поиска в верхней панели открывает «Найти раздел». */
+const FIND_EVENT = "admin-find";
+
+/** На телефоне в нижней полосе — столько кнопок, остальное — под «Ещё». */
+const PHONE_RAIL = 5;
+
 /** Что сейчас открыто и на какой странице. Перешёл на другую — всё закрыто само, без эффекта. */
-type Opened = { kind: "group"; id: string; pinned: boolean; path: string } | { kind: "sheet" | "finder"; path: string };
+type Opened = { kind: "more" | "finder"; path: string };
 
 export function NavMenu({
-  groups,
+  rail,
+  more,
   find,
   parents = {},
 }: {
-  groups: NavMenuGroup[];
-  /** Все открытые разделы, вкладки тоже — для «Найти раздел». Нет — те же, что в меню. */
-  find?: NavMenuItem[];
-  /** Вкладка → её раздел: открыты «Договоры» — горят «Деньги» и «Проекты». */
+  /** Ежедневное — кнопками полосы, по порядку. */
+  rail: NavMenuItem[];
+  /** Редкое — группами под «Ещё». */
+  more: NavMenuGroup[];
+  /** Все открытые разделы, вкладки тоже — для «Найти раздел». */
+  find: NavMenuItem[];
+  /** Вкладка → её раздел: открыты «Договоры» — горит «Проекты». */
   parents?: Readonly<Record<string, string>>;
 }) {
   const t = usePanelDict(shellDict);
@@ -57,14 +69,12 @@ export function NavMenu({
   const [state, setState] = useState<Opened | null>(null);
   const opened = state && state.path === pathname ? state : null;
   const close = () => setState(null);
-  const rootRef = useRef<HTMLDivElement>(null);
-  const leaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const items = find ?? groups.flatMap((g) => g.items);
-  // На телефоне рядом с «Меню» — где ты сейчас, вкладку тоже называем своим именем.
-  const currentItem = items.find((i) => i.href === section);
+  const moreActive =
+    more.some((g) => g.items.some((i) => i.href === current)) ||
+    rail.slice(PHONE_RAIL).some((i) => i.href === current);
 
   // Ctrl+K / ⌘K — из любого места панели. По коду клавиши, а не по букве:
-  // на русской раскладке та же клавиша — «л».
+  // на русской раскладке та же клавиша — «л». Поиск в верхней панели шлёт событие.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.code === "KeyK") {
@@ -72,160 +82,191 @@ export function NavMenu({
         setState({ kind: "finder", path: window.location.pathname });
       }
     };
+    const onFind = () => setState({ kind: "finder", path: window.location.pathname });
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener(FIND_EVENT, onFind);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener(FIND_EVENT, onFind);
+    };
   }, []);
 
-  // Esc и щелчок мимо закрывают открытое.
+  // Esc закрывает открытое.
   const isOpen = opened !== null;
   useEffect(() => {
     if (!isOpen) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setState(null);
     };
-    const onDown = (e: PointerEvent) => {
-      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
-        setState((s) => (s?.kind === "group" ? null : s));
-      }
-    };
     window.addEventListener("keydown", onKey);
-    document.addEventListener("pointerdown", onDown);
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      document.removeEventListener("pointerdown", onDown);
-    };
+    return () => window.removeEventListener("keydown", onKey);
   }, [isOpen]);
 
-  const hover = (id: string) => {
-    if (leaveTimer.current) clearTimeout(leaveTimer.current);
-    // Закреплённый список переезжает на соседнюю группу и остаётся закреплённым — как меню программы.
-    setState((s) => {
-      const pinned = s?.kind === "group" && s.pinned && s.path === pathname;
-      return s?.kind === "group" && s.id === id && s.path === pathname ? s : { kind: "group", id, pinned, path: pathname };
-    });
-  };
-  const leave = () => {
-    if (leaveTimer.current) clearTimeout(leaveTimer.current);
-    leaveTimer.current = setTimeout(() => setState((s) => (s?.kind === "group" && !s.pinned ? null : s)), 180);
-  };
-  // Щелчок по группе: открытую наведением — закрепляет, закреплённую — закрывает.
-  const toggle = (id: string) =>
-    setState((s) =>
-      s?.kind === "group" && s.id === id && s.path === pathname
-        ? s.pinned
-          ? null
-          : { ...s, pinned: true }
-        : { kind: "group", id, pinned: true, path: pathname },
-    );
-
   return (
-    <div ref={rootRef} className="mx-auto max-w-7xl px-4 pb-2.5 sm:px-5 sm:pb-3">
-      {/* Компьютер: строка групп. */}
-      <nav aria-label={t.nav} className="hidden flex-wrap items-center gap-x-4 gap-y-2 text-sm md:flex lg:gap-x-5">
-        {groups.map((group) => {
-          if (group.items.length === 1) {
-            const only = group.items[0];
-            return (
-              <AdminNavLink key={only.href} href={only.href} quiet={only.quiet} also={tabsOf(only.href)}>
-                {only.label}
-                {only.href === TASKS_HREF ? <TaskCount /> : null}
-              </AdminNavLink>
-            );
-          }
-          const active = group.items.some((i) => i.href === current);
-          const shown = opened?.kind === "group" && opened.id === group.id;
-          // Рядом с группой — где ты: вкладка своим именем («Деньги · Договоры»), а не её раздел.
-          const here = active ? (items.find((i) => i.href === section) ?? group.items.find((i) => i.href === current)) : undefined;
-          return (
-            <div key={group.id} className="relative" onMouseEnter={() => hover(group.id)} onMouseLeave={leave}>
-              <button
-                type="button"
-                aria-expanded={shown}
-                aria-haspopup="true"
-                onClick={() => toggle(group.id)}
-                className={`-mb-px flex items-center gap-1 whitespace-nowrap border-b-2 pb-1 transition-colors ${
-                  active ? "border-green font-medium text-green" : `border-transparent hover:text-text ${shown ? "text-text" : "text-muted"}`
-                }`}
-              >
-                {group.label}
-                {/* Открытый раздел рядом с группой — с самых широких экранов: на 1440 подпись выталкивала поиск во вторую строку. Группа и так зелёная, раздел — в её списке. */}
-                {here ? <span className="hidden font-normal text-green/70 2xl:inline">· {here.label}</span> : null}
-                <Chevron up={shown} />
-              </button>
-              <div
-                className={`absolute left-0 top-full z-30 pt-2 ${shown ? "" : "hidden"}`}
-                // Список прямо под кнопкой: между ними нет щели, в которую
-                // проваливается мышь по дороге вниз.
-              >
-                <div className="min-w-[13rem] rounded-lg border border-line bg-surface p-1.5 shadow-xl shadow-black/40">
-                  {group.items.map((item) => (
-                    <AdminNavLink key={item.href} href={item.href} quiet={item.quiet} also={tabsOf(item.href)} variant="item" onClick={close}>
-                      {item.label}
-                    </AdminNavLink>
-                  ))}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-        <NavToggle classic={false} compact className="ml-auto" />
-        {/* На узком экране — только значок: длинные названия групп по-польски
-            и по-узбекски иначе выталкивают кнопку за край. */}
-        <button
-          type="button"
-          onClick={() => setState({ kind: "finder", path: pathname })}
-          title={t.findSection}
-          className="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md border border-line px-2.5 py-1.5 text-faint transition hover:border-muted hover:text-text lg:py-1"
-        >
-          <SearchIcon />
-          <span className="hidden 2xl:inline">{t.findSection}</span>
-          <kbd className="hidden rounded bg-surface-2 px-1.5 font-mono text-[11px] text-faint xl:inline">Ctrl K</kbd>
-        </button>
+    <>
+      <nav aria-label={t.nav} className="os-rail">
+        {rail.map((item, i) => (
+          <RailLink key={item.href} item={item} also={tabsOf(item.href)} wide={i >= PHONE_RAIL}>
+            {item.href === TASKS_HREF ? <TaskCount badge /> : null}
+          </RailLink>
+        ))}
+        <span className="os-rail-gap" aria-hidden />
+        {more.length || rail.length > PHONE_RAIL ? (
+          <button
+            type="button"
+            aria-expanded={opened?.kind === "more"}
+            aria-haspopup="true"
+            aria-label={t.more}
+            title={t.moreHint}
+            data-active={moreActive || undefined}
+            onClick={() => setState((s) => (s?.kind === "more" && s.path === pathname ? null : { kind: "more", path: pathname }))}
+            className="os-rail-item"
+          >
+            <RailIcon href="more" />
+            <span className="os-rail-label">{t.more}</span>
+            <span className="os-tip" aria-hidden>
+              {t.more}
+            </span>
+          </button>
+        ) : null}
       </nav>
-
-      {/* Телефон: одна кнопка, рядом — где ты сейчас. */}
-      <div className="flex items-center gap-3 text-sm md:hidden">
-        <button
-          type="button"
-          aria-expanded={opened?.kind === "sheet"}
-          onClick={() => setState({ kind: "sheet", path: pathname })}
-          className="flex min-w-0 items-center gap-2 rounded-md border border-line px-3 py-1.5 text-text"
-        >
-          <MenuIcon />
-          <span>{t.menu}</span>
-          {currentItem ? <span className="truncate text-green">· {currentItem.label}</span> : null}
-        </button>
-        <NavToggle classic={false} className="ml-auto" />
-      </div>
 
       {opened?.kind === "finder" ? (
         <Overlay onClose={close} label={t.findSection} top>
-          <FindBox items={items} current={section} autoFocus onGo={close} />
+          <FindBox items={find} current={section} autoFocus onGo={close} />
         </Overlay>
       ) : null}
 
-      {opened?.kind === "sheet" ? (
-        <Overlay onClose={close} label={t.menu}>
-          <FindBox items={items} current={section} autoFocus={false} onGo={close}>
-            <div className="space-y-4">
-              {groups.map((group) => (
-                <section key={group.id}>
-                  {group.items.length > 1 ? (
-                    <h2 className="px-3 pb-1 font-mono text-[11px] uppercase tracking-[0.15em] text-faint">{group.label}</h2>
+      {opened?.kind === "more"
+        ? createPortal(
+            <div className="admin-panel fixed inset-0 z-40" onPointerDown={close}>
+              <div
+                role="dialog"
+                aria-modal="true"
+                aria-label={t.more}
+                onPointerDown={(e) => e.stopPropagation()}
+                className="os-more os-glass"
+              >
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {/* На телефоне в нижней полосе пять кнопок: шестая — здесь, первой. */}
+                  {rail.length > PHONE_RAIL ? (
+                    <section className="md:hidden">
+                      {rail.slice(PHONE_RAIL).map((item) => (
+                        <AdminNavLink key={item.href} href={item.href} quiet={item.quiet} also={tabsOf(item.href)} variant="item" onClick={close}>
+                          {item.label}
+                        </AdminNavLink>
+                      ))}
+                    </section>
                   ) : null}
-                  {group.items.map((item) => (
-                    <AdminNavLink key={item.href} href={item.href} quiet={item.quiet} also={tabsOf(item.href)} variant="item" onClick={close}>
-                      {item.label}
-                      {item.href === TASKS_HREF ? <TaskCount /> : null}
-                    </AdminNavLink>
+                  {more.map((group) => (
+                    <section key={group.id}>
+                      {group.items.length > 1 ? (
+                        <h2 className="px-3 pb-1 font-mono text-[11px] uppercase tracking-[0.15em] text-faint">{group.label}</h2>
+                      ) : null}
+                      {group.items.map((item) => (
+                        <AdminNavLink key={item.href} href={item.href} quiet={item.quiet} also={tabsOf(item.href)} variant="item" onClick={close}>
+                          {item.label}
+                        </AdminNavLink>
+                      ))}
+                    </section>
                   ))}
-                </section>
-              ))}
-            </div>
-          </FindBox>
-        </Overlay>
-      ) : null}
-    </div>
+                </div>
+                <div className="mt-3 flex items-center justify-between gap-3 border-t border-white/10 pt-3">
+                  <NavToggle classic={false} />
+                  <button type="button" onClick={close} className="text-xs text-faint hover:text-text">
+                    {t.closeMenu}
+                  </button>
+                </div>
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
+    </>
+  );
+}
+
+/**
+ * Кнопка полосы: значок, подсказка при наведении, на телефоне — подпись под
+ * значком. Нажатая горит сразу, до ответа сервера, как пункт старого меню.
+ */
+function RailLink({ item, also, wide, children }: { item: NavMenuItem; also: readonly string[]; wide: boolean; children?: ReactNode }) {
+  const t = usePanelDict(shellDict);
+  const short: Record<string, string> = {
+    "/admin/hq": t.shortHome,
+    "/admin/inbox": t.shortInbox,
+    "/admin": t.shortLeads,
+    "/admin/tasks": t.shortTasks,
+    "/admin/prospect": t.shortProspect,
+  };
+  const pathname = usePathname();
+  const [pressedAt, setPressedAt] = useState<string | null>(null);
+  const here = sectionOfHref(pathname ?? "");
+  const active = here === item.href || (here !== null && also.includes(here)) || (pressedAt !== null && pressedAt === pathname);
+  return (
+    <Link
+      href={item.href}
+      aria-label={item.label}
+      aria-current={active ? "page" : undefined}
+      onClick={() => setPressedAt(pathname)}
+      className={`os-rail-item${wide ? " os-rail-wide" : ""}`}
+    >
+      <RailIcon href={item.href} />
+      <span className="os-rail-label" aria-hidden>
+        {short[item.href] ?? item.label}
+      </span>
+      <span className="os-tip" aria-hidden>
+        {item.label}
+      </span>
+      {children}
+    </Link>
+  );
+}
+
+/** Поиск в верхней панели: открывает то же окно, что Ctrl+K. */
+export function FindButton() {
+  const t = usePanelDict(shellDict);
+  return (
+    <button
+      type="button"
+      onClick={() => window.dispatchEvent(new Event(FIND_EVENT))}
+      title={t.findSection}
+      aria-label={t.findSection}
+      className="os-search"
+    >
+      <SearchIcon />
+      <span className="hidden min-w-0 flex-1 truncate text-left md:inline">{t.search}</span>
+      <kbd className="hidden rounded bg-white/5 px-1.5 font-mono text-[11px] text-faint lg:inline">Ctrl K</kbd>
+    </button>
+  );
+}
+
+/** Значки полосы — по адресу раздела. Новый раздел в полосе без своего значка получает общий. */
+const RAIL_ICONS: Record<string, string> = {
+  "/admin/hq": "M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z",
+  "/admin/inbox": "M4 5h16v11H8l-4 4z",
+  "/admin": "M4 6h16M4 12h16M4 18h10",
+  "/admin/tasks": "M4 5h16v14H4zM8 12l3 3 5-6",
+  "/admin/prospect": "M21 3L10 14M21 3l-7 18-4-7-7-4z",
+  "/admin/mockups": "M3 5h18v14H3zM3 9h18M9 9v10",
+  more: "M5 12h.01M12 12h.01M19 12h.01",
+};
+
+function RailIcon({ href }: { href: string }) {
+  const d = RAIL_ICONS[href] ?? "M4 4h16v16H4z";
+  return (
+    <svg
+      aria-hidden
+      viewBox="0 0 24 24"
+      className="os-rail-icon"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={href === "more" ? 3.2 : 1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d={d} />
+    </svg>
   );
 }
 
@@ -416,13 +457,6 @@ function FindBox({
   );
 }
 
-function Chevron({ up }: { up: boolean }) {
-  return (
-    <svg aria-hidden width="10" height="10" viewBox="0 0 10 10" className={`opacity-60 transition-transform ${up ? "rotate-180" : ""}`}>
-      <path d="M1.5 3.5 5 7l3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-    </svg>
-  );
-}
 
 function SearchIcon() {
   return (
@@ -433,10 +467,3 @@ function SearchIcon() {
   );
 }
 
-function MenuIcon() {
-  return (
-    <svg aria-hidden width="14" height="14" viewBox="0 0 16 16" className="shrink-0">
-      <path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-    </svg>
-  );
-}

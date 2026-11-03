@@ -87,8 +87,9 @@ test("каждая страница раздела проверяет досту
 });
 
 test("меню, проверка страницы и видео инструкций знают галочки", () => {
-  // Меню группами (lib/admin/nav.ts) строится из того же navOf.
-  assert.match(readFileSync("components/admin/shell.tsx", "utf8"), /menuOf\(staff\)/);
+  // Полоса иконок и «Ещё» (lib/admin/nav.ts) строятся из того же navOf через menuOf.
+  assert.match(readFileSync("components/admin/shell.tsx", "utf8"), /railOf\(staff\)/);
+  assert.match(readFileSync("lib/admin/nav.ts", "utf8"), /const menu = menuOf\(who\);/);
   assert.match(readFileSync("lib/admin/nav.ts", "utf8"), /const open = navOf\(who\);/);
   assert.match(readFileSync("lib/admin/guard.ts", "utf8"), /if \(!opens\(staff, href\)\) redirect\("\/admin"\)/);
   assert.match(readFileSync("app/admin/help/video/[id]/route.ts", "utf8"), /canWatchHelpVideo\(staff, video\.section\)/);

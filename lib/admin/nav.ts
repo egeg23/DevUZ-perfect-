@@ -109,3 +109,32 @@ export function findSections<T extends Findable>(query: string, items: readonly 
     .sort((a, b) => a.r - b.r || a.index - b.index)
     .map((x) => x.item);
 }
+
+/**
+ * Полоса иконок слева (на телефоне — снизу). Владелец, 03.11.2026, на карту
+ * панели по эталону «DevUz Офис»: в полосе — «6 ежедневных»: Главная,
+ * Входящие, Лиды, Задачи, Холодные касания, Макеты. Остальное — под «Ещё».
+ */
+export const RAIL_GROUPS: readonly NavGroup[] = ["home", "inbox", "leads", "tasks", "prospect", "mockups"];
+
+export type Rail = { rail: Section[]; more: MenuGroup[] };
+
+/**
+ * Что из открытого человеку стоит в полосе, а что — под «Ещё». Тот же
+ * `menuOf`: роль и галочки владельца решают, полоса только раскладывает.
+ * Группа полосы — её первый раздел; вкладка, вставшая в группу из-за
+ * закрытого родителя, уходит под «Ещё» своей группой.
+ */
+export function railOf(who: Viewer): Rail {
+  const menu = menuOf(who);
+  const rail: Section[] = [];
+  const more: MenuGroup[] = [];
+  for (const group of RAIL_GROUPS) {
+    const g = menu.find((m) => m.group === group);
+    if (!g) continue;
+    rail.push(g.sections[0]);
+    if (g.sections.length > 1) more.push({ group, sections: g.sections.slice(1) });
+  }
+  for (const g of menu) if (!RAIL_GROUPS.includes(g.group)) more.push(g);
+  return { rail, more };
+}

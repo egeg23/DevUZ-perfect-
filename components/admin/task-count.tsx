@@ -11,9 +11,10 @@ import { shellDict } from "@/content/admin-panel/shell";
  * есть просроченные (владелец, 23.10.2026: «Делаем все сразу» на разбор
  * удобства). Спрашивает при открытии страницы, а не каждые полминуты:
  * звук и плашку о новом даёт TaskPulse (components/admin/task-alerts.tsx).
- * Нет задач или нет связи — ничего не рисует.
+ * Нет задач или нет связи — ничего не рисует. `badge` — кружком в углу
+ * значка полосы иконок (components/admin/nav-menu.tsx).
  */
-export function TaskCount() {
+export function TaskCount({ badge = false }: { badge?: boolean } = {}) {
   const t = usePanelDict(shellDict);
   const pathname = usePathname();
   const [counts, setCounts] = useState<{ open: number; overdue: number } | null>(null);
@@ -39,8 +40,14 @@ export function TaskCount() {
   return (
     <span
       title={late ? t.tasksCountLate(counts.open, counts.overdue) : t.tasksCount(counts.open)}
-      className={`ml-1.5 rounded-full px-1.5 py-0.5 font-mono text-[10px] leading-none ${
-        late ? "bg-red-500/15 text-red-300" : "bg-gold/15 text-gold"
+      className={`${badge ? "os-badge" : "ml-1.5 rounded-full px-1.5 py-0.5"} font-mono text-[10px] leading-none ${
+        badge
+          ? late
+            ? "bg-red-500 text-white"
+            : "bg-green text-ink"
+          : late
+            ? "bg-red-500/15 text-red-300"
+            : "bg-gold/15 text-gold"
       }`}
     >
       {counts.open}
