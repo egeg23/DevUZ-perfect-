@@ -71,6 +71,24 @@ export const leadsSections: Record<string, HelpEntry> = {
     what: "Centrum dowodzenia właściciela i kierownika: na jednym ekranie — co dzieje się w firmie dziś i w ostatnich 7 dniach, co płonie w tej chwili i czym zajmuje się każda osoba w zespole. Po zalogowaniu i po kliknięciu logo «DevUz» trafiasz właśnie tutaj. Liczby odświeżają się same co półtorej minuty, dopóki strona jest otwarta i widoczna. «Etapy sprzedaży», leady bez ruchu, poziomy i historia wysyłek zmieniają się rzadko i odświeżają się co pięć minut: tak panel zużywa mniej darmowego ruchu bazy. Własne oznaczenie etapu i nowa wysyłka widać od razu. Menedżer widzi tu puls swojego dnia pracy: co się pali, co jest zaległe, z kim się skontaktować, swoje makiety i swoją pracę.",
     items: [
       {
+        id: "desk",
+        title: "Górny rząd: «Skrzynka» i «Dziś»",
+        body: {
+          manager: [
+            "Od 03.11.2026 «Pulpit» zaczyna się, jak «DevUz Biuro», od rzędu **«Skrzynka»**: do sześciu twoich rozmów, w których klient czeka na odpowiedź człowieka, kto dłużej czeka — wyżej. Wiersz otwiera ją w sekcji [Skrzynka](/admin/inbox), tam jest też wątek i pole odpowiedzi. Pusto — nikt nie czeka: AI prowadzi rozmowy sama.",
+            "Niżej — twój puls dnia, jak dawniej: co się pali, do kogo napisać, moje makiety, moja praca. Liczby te same, rząd tylko zbiera najpilniejsze na górę.",
+          ],
+          head: [
+            "Od 03.11.2026 «Pulpit» zaczyna się, jak «DevUz Biuro», od rzędu dwóch kart. **«Skrzynka»** — do sześciu rozmów zespołu i zgłoszeń do bota, w których klient czeka na odpowiedź człowieka, kto dłużej czeka — wyżej; wiersz otwiera ją w sekcji [Skrzynka](/admin/inbox).",
+            "**«Dziś»** — trzy liczby: nowe leady w 7 dni i ci, którzy odpisali w 7 dni (strzałka — o ile więcej lub mniej niż 7 dni wcześniej), oraz kontakty dziś z normy dnia. Niżej — **«Kontakty według dni»**: ile kontaktów zespół zrobił każdego z 7 dni, ostatni punkt — dziś. Liczby te same co w pulsie niżej — nie są liczone od nowa.",
+          ],
+          admin: [
+            "Od 03.11.2026 «Pulpit» zaczyna się, jak «DevUz Biuro», od rzędu dwóch kart. **«Skrzynka»** — do sześciu rozmów zespołu i zgłoszeń do bota, w których klient czeka na odpowiedź człowieka, kto dłużej czeka — wyżej; wiersz otwiera ją w sekcji [Skrzynka](/admin/inbox).",
+            "**«Dziś»** — trzy liczby: nowe leady w 7 dni i ci, którzy odpisali w 7 dni (strzałka — o ile więcej lub mniej niż 7 dni wcześniej), oraz kontakty dziś z normy dnia. Niżej — **«Kontakty według dni»**: ile kontaktów zespół zrobił każdego z 7 dni, ostatni punkt — dziś. Liczby te same co w pulsie niżej — nie są liczone od nowa.",
+          ],
+        },
+      },
+      {
         id: "pulse",
         title: "Puls firmy: leady, kontakty, makiety, zadania",
         body: {
@@ -399,19 +417,27 @@ export const leadsSections: Record<string, HelpEntry> = {
         },
       },
       {
+        id: "layout",
+        title: "Trzy kolumny: rozmowy, wątek, klient",
+        body: [
+          "Od 03.11.2026 «Skrzynka» wygląda jak «DevUz Biuro». **Po lewej** — rozmowy, które czekają na ciebie: kto dłużej czeka — wyżej, po prawej w wierszu — ile klient czeka, na żółto — godzinę i dłużej. Niebieskie kółko — kontakt z konta firmowego, fioletowe — zgłoszenie do bota studia. Kliknij wiersz — **pośrodku** otworzy się wątek: słowa klienta po lewej, nasze po prawej na niebiesko, przy naszym — «czeka na wysłanie» albo «nie wysłano», jeśli tak jest. Przy bocie jest tu tylko ostatnia wiadomość klienta: cała rozmowa — w Telegramie.",
+          "**Po prawej** — klient: strona, z którego konta piszemy i kto prowadzi, niżej — **«Przebieg transakcji»**: te same etapy co na [Pulpicie](/admin/hq) i tablicy leadów, przebyte — zielonym ptaszkiem z datą, następny — na niebiesko. Nad polem odpowiedzi czasem pojawia się **«Podpowiedź odpowiedzi»**: jeśli w słowach klienta rozpoznano zarzut («drogo», «jaka strona?», «przekażę szefowi»), to gotowa odpowiedź z «Odpowiedzi na zastrzeżenia». «Wstaw do odpowiedzi» wkłada tekst do pola — popraw pod klienta i wyślij; sam nie wychodzi. Na telefonie najpierw lista, kliknięcie otwiera wątek, «← Wszystkie rozmowy» wraca; karta klienta — pod wątkiem.",
+        ],
+      },
+      {
         id: "reply",
         title: "Odpowiedz z wiersza",
         body: {
           manager: [
-            "**«Odpowiedz klientowi»** otwiera pole w samym wierszu; Ctrl+Enter — wyślij. Kontaktowi odpowiedź idzie z konta firmowego kontaktu, jak z pola pod [«Oś zdarzeń»](#leads-timeline) w karcie, a AI potem milczy. Nasze linki do makiet i realizacji są sprawdzane przed wysłaniem.",
+            "Pole odpowiedzi jest pod wątkiem, od razu otwarte; Ctrl+Enter — wyślij. Kontaktowi odpowiedź idzie z konta firmowego kontaktu, jak z pola pod [«Oś zdarzeń»](#leads-timeline) w karcie, a AI potem milczy. Nasze linki do makiet i realizacji są sprawdzane przed wysłaniem.",
             "Potrzebna cała rozmowa — **«Otwórz kartę»**: oś otworzy się na korespondencji. Kontakt bez leada otwiera się w [Zimne kontakty](/admin/prospect). Gdy odpowiedź wyszła, wiersz znika: wiadomość ma odpowiedź.",
           ],
           head: [
-            "**«Odpowiedz klientowi»** otwiera pole w samym wierszu; Ctrl+Enter — wyślij. Kontaktowi odpowiedź idzie z konta firmowego kontaktu, jak z pola pod [«Oś zdarzeń»](#leads-timeline) w karcie; klientowi bota — od bota studia, jak odpowiedź na «📩 Обращение в бота», a AI milczy jeszcze 7 dni. Nasze linki do makiet i realizacji są sprawdzane przed wysłaniem.",
+            "Pole odpowiedzi jest pod wątkiem, od razu otwarte; Ctrl+Enter — wyślij. Kontaktowi odpowiedź idzie z konta firmowego kontaktu, jak z pola pod [«Oś zdarzeń»](#leads-timeline) w karcie; klientowi bota — od bota studia, jak odpowiedź na «📩 Обращение в бота», a AI milczy jeszcze 7 dni. Nasze linki do makiet i realizacji są sprawdzane przed wysłaniem.",
             "Potrzebna cała rozmowa — **«Otwórz kartę»**: oś otworzy się na korespondencji. Kontakt bez leada otwiera się w [Zimne kontakty](/admin/prospect). Gdy odpowiedź wyszła, wiersz znika: wiadomość ma odpowiedź.",
           ],
           admin: [
-            "**«Odpowiedz klientowi»** otwiera pole w samym wierszu; Ctrl+Enter — wyślij. Kontaktowi odpowiedź idzie z konta firmowego kontaktu, jak z pola pod [«Oś zdarzeń»](#leads-timeline) w karcie; klientowi bota — od bota studia, jak odpowiedź na «📩 Обращение в бота», a AI milczy jeszcze 7 dni. Nasze linki do makiet i realizacji są sprawdzane przed wysłaniem.",
+            "Pole odpowiedzi jest pod wątkiem, od razu otwarte; Ctrl+Enter — wyślij. Kontaktowi odpowiedź idzie z konta firmowego kontaktu, jak z pola pod [«Oś zdarzeń»](#leads-timeline) w karcie; klientowi bota — od bota studia, jak odpowiedź na «📩 Обращение в бота», a AI milczy jeszcze 7 dni. Nasze linki do makiet i realizacji są sprawdzane przed wysłaniem.",
             "Potrzebna cała rozmowa — **«Otwórz kartę»**: oś otworzy się na korespondencji. Kontakt bez leada otwiera się w [Zimne kontakty](/admin/prospect). Gdy odpowiedź wyszła, wiersz znika: wiadomość ma odpowiedź.",
           ],
         },

@@ -4,6 +4,7 @@ import { Suspense, type ReactNode } from "react";
 import { signOut } from "@/app/admin/actions";
 import { ROLE_BADGE, homeOf, navOf } from "@/lib/admin/roles";
 import { findable, parentsOf, railOf, tabsOf } from "@/lib/admin/nav";
+import { initials } from "@/lib/admin/hq";
 import type { Staff } from "@/lib/admin/session";
 import { pick } from "@/lib/admin/i18n";
 import { navGroupDict, shellDict } from "@/content/admin-panel/shell";
@@ -55,21 +56,16 @@ export function AdminShell({
   const parents = parentsOf(staff);
   const find = navOf(staff).map(item);
   const tabs = tabsOf(staff).map((family) => family.map((s) => ({ href: s.href, label: s.label[locale] })));
-  // Уголок шапки — одинаковый в обоих меню: инструкция, язык, имя с ролью,
-  // колокольчик, настройки, выход.
-  // В верхней панели нового меню на телефоне язык и имя не влезают: язык —
-  // в «Настройках», имя — там же и в «Команде».
-  const phoneHide = staff.nav_classic ? "" : "hidden sm:contents";
+  // Уголок шапки меню «как раньше»: инструкция, язык, имя с ролью,
+  // колокольчик, настройки, выход. У нового — свой, в верхней панели.
   const corner = (
             <div className="ml-auto flex items-center gap-3 text-sm">
               {/* В шапке, а не на каждой странице: новый раздел получает
                   кнопку сам, и ведёт она в его пункт инструкции. */}
               <SectionHelpLink />
               {/* Рядом с инструкцией: язык выбирают, когда что-то непонятно. */}
-              <span className={phoneHide}>
-                <LocaleSwitch />
-              </span>
-              <span className={`items-center gap-2 text-muted ${staff.nav_classic ? "flex" : "hidden sm:flex"}`}>
+              <LocaleSwitch />
+              <span className="flex items-center gap-2 text-muted">
                 <span className="max-w-[7rem] truncate sm:max-w-none">{staff.display_name}</span>
                 {/* На телефоне роль не влезала рядом с именем руководителя
                     («рук. проектов») и сдвигала шапку вбок — с планшета она есть. */}
@@ -165,8 +161,38 @@ export function AdminShell({
                 </span>
               </Link>
               <FindButton />
-              <OsStatus />
-              {corner}
+              <div className="ml-auto flex items-center gap-3 text-sm sm:gap-4">
+                <OsStatus />
+                <SectionHelpLink />
+                <Bell />
+                <Link
+                  href="/admin/settings"
+                  title={t.settings}
+                  aria-label={t.settings}
+                  className="text-base leading-none text-faint transition hover:text-green"
+                >
+                  <span aria-hidden>⚙</span>
+                </Link>
+                {/* Имя, роль, язык и выход — под кружком, как в эталоне: в панели
+                    остаётся то, чем пользуются каждый день. */}
+                <details className="os-me relative">
+                  <summary title={staff.display_name} aria-label={staff.display_name} className="os-me-btn">
+                    {initials(staff.display_name)}
+                  </summary>
+                  <div className="os-me-menu os-glass">
+                    <div className="truncate font-semibold text-text">{staff.display_name}</div>
+                    <div className="mt-0.5 font-mono text-[11px] text-faint">{ROLE_BADGE[staff.role][locale]}</div>
+                    <div className="mt-3">
+                      <LocaleSwitch />
+                    </div>
+                    <form action={signOut} className="mt-3 border-t border-white/10 pt-3">
+                      <button type="submit" className="text-faint transition hover:text-text">
+                        {t.signOut}
+                      </button>
+                    </form>
+                  </div>
+                </details>
+              </div>
             </header>
             {/* Полоса иконок слева, на телефоне — снизу (components/admin/nav-menu.tsx). */}
             <NavMenu rail={rail} more={more} find={find} parents={parents} />

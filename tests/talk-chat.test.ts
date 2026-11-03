@@ -36,7 +36,8 @@ test("ответ ложится в очередь скаута, ИИ замол�
 });
 
 test("снятое до отправки в ленте не показывается, у своего видно статус", () => {
-  const view = between(read("lib/admin/outreach-talk-store.ts"), "export async function talkForLead(", "\n}\n");
+  // talkForLead и talkForProspect («Входящие») — одной функцией talkWhere.
+  const view = between(read("lib/admin/outreach-talk-store.ts"), "async function talkWhere(", "\n}\n");
   assert.match(view, /\.filter\(\(row\) => !\(row\.direction === "out" && row\.status === "done" && row\.failure\)\)/);
   const chat = read("components/admin/lead-timeline.tsx");
   assert.match(chat, /line\.status === "queued"[\s\S]*?t\.lineQueued/);

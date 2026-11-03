@@ -161,6 +161,8 @@ function visibleText(html: string): string {
     .replace(/<script[\s\S]*?<\/script>/g, " ")
     .replace(/<[^>]+>/g, " ")
     .replace(/Тест/g, " ")
+    // Инициалы имени в кружке верхней панели — имя человека, не текст панели.
+    .replace(/(^|\s)Т(?=\s|$)/g, " ")
     .replace(/&[a-z#0-9]+;/g, " ");
 }
 
@@ -180,7 +182,7 @@ test("каркас панели рисуется на каждом языке, �
       // Названия языков в переключателе — каждое на самом себе.
       const text = visibleText(html);
       assert.ok(!CYRILLIC.test(text), `${locale} ${role}: русское в шапке: ${text.match(/\S*[а-яё]\S*/i)}`);
-      for (const label of labels(html).filter((l) => l !== "Русский")) {
+      for (const label of labels(html).filter((l) => l !== "Русский" && l !== "Тест")) {
         assert.ok(!CYRILLIC.test(label), `${locale} ${role}: русская подпись «${label}»`);
       }
       assert.match(html, locale === "uz" ? />Chiqish</ : />Wyloguj</);
