@@ -35,6 +35,23 @@ const CUT = CSS_ALL.indexOf(".fl-mark{color:#fff");
 const CSS = CSS_ALL.replace(/\n\s*/g, "");
 const BASE_CSS = CSS_ALL.slice(0, CUT).replace(/\n\s*/g, "");
 const JS = strip(readFileSync(DIR + "site.js", "utf8")).replace(/\n\s*\n/g, "\n");
+const SCENE_JS = strip(readFileSync(DIR + "scene.js", "utf8")).replace(/\n\s*\n/g, "\n");
+/* Сцена D-MAX — кадры премиум-эталона SamAuto (владелец, 04.11.2026: «у них
+   тоже есть и узи d max, может просто закинем первый экран прокрутки с машиной
+   сюда? Только уже с логотипом этого салона»). Кадры, порядок и видео —
+   /protos/samauto/seq и scripts/protos/samauto/seq.json, ключ — тот же. */
+const SA = "/protos/samauto";
+const SEQ = JSON.parse(readFileSync(new URL("../samauto/seq.json", import.meta.url), "utf8"));
+const ORDER = SEQ.order;
+const NF = ORDER.length;
+const lastOf = (c) => `${c}-${String(SEQ.d.find(([n]) => n === c)[1] - 1).padStart(2, "0")}`;
+const TW = {
+  hold: (ORDER.indexOf(lastOf("t4")) + SEQ.hold / 2) / (NF - 1),
+  light: ORDER.indexOf(lastOf("t5b")) / (NF - 1),
+  side: ORDER.indexOf(lastOf("t6")) / (NF - 1),
+  away: (ORDER.indexOf(lastOf("t8")) - SEQ.d.find(([n]) => n === "t8")[1] / 4) / (NF - 1),
+};
+const win = (c, w = 0.035) => [c - w, c - w / 3, c + w / 3, c + w].map((x) => Math.max(0, Math.min(1, x)).toFixed(4)).join(",");
 const LAND_JS = strip(readFileSync(DIR + "land.js", "utf8")).replace(/\n\s*\n/g, "\n");
 const PANEL_JS = strip(readFileSync(DIR + "panel.js", "utf8")).replace(/\n\s*\n/g, "\n");
 const PANEL_CSS = strip(readFileSync(DIR + "panel.css", "utf8")).replace(/\n\s*/g, "");
@@ -137,16 +154,51 @@ ${langs(l, "site")}
 </div></header>`;
 }
 
+/* Первый экран — сцена D-MAX по прокрутке, их знак и их цифры: D-MAX IRBIS
+   с площадки (объявление и его описание: 4JJ1, 163 л.с., 2 999 см³, 4x4,
+   865 кг, автомат, 450 000 000 сум). Машина в кадре — D-MAX для показа. */
 function hero(l, t) {
-  return `<section class="hero" id="top" aria-label="SAMIST AUTO">
-<div class="hero-bg"><img src="${IMG}/salon.webp" width="1000" height="750" alt="${t("Площадка SAMIST AUTO на Ташкентской кольцевой: грузовики Isuzu и FAW перед автосалоном", "Toshkent aylanma yo‘lidagi SAMIST AUTO maydoni: avtosalon oldida Isuzu va FAW yuk mashinalari")}" fetchpriority="high"></div>
-<div class="wrap hero-in">
-<div><p class="kick"><i></i>${t("Isuzu · FAW · Ташкент, кольцевая, 120А", "Isuzu · FAW · Toshkent, aylanma yo‘l, 120A")}</p>
-<h1>${t(`${words("Грузовики, автобусы")} <em>${words("и спецтехника")}</em>`, `${words("Yuk mashinalari, avtobuslar")} <em>${words("va maxsus texnika")}</em>`)}</h1>
-<p class="hsub">${esc(ABOUT.motto[l])} ${t("Кредит и лизинг на часть моделей, оригинальные запчасти ISUZU и сервис.", "Ayrim modellarga kredit va lizing, ISUZU original ehtiyot qismlari va servis.")}</p>
-<div class="hero-act"><a class="btn btn-a" href="#lineup">${ICON.truck}<span>${t("Смотреть технику", "Texnikani ko‘rish")}</span></a><a class="btn btn-g" href="tel:${BRAND.tel}">${ICON.phone}<span>${t("Позвонить", "Qo‘ng‘iroq qilish")}</span></a></div></div>
-<div class="stats glass"><div><b data-count="${MODELS.length}">${MODELS.length}</b><span>${t("моделей на площадке", "model maydonda")}</span></div><div><b>${mln(PRICE_SPAN.min, l)}</b><span>${t("сум, самая доступная", "so‘m, eng arzoni")}</span></div><div><b data-count="${MODELS.filter((m) => m.isNew).length}">${MODELS.filter((m) => m.isNew).length}</b><span>${t("новых машин", "yangi mashina")}</span></div></div>
-</div></section>`;
+  const m = byId("isuzu-d-max-irbis");
+  const v = (k) => { const x = m.spec.find((q) => q.k === k); return x ? (l === "ru" ? x.v : x.vu) : ""; };
+  const chips = (a) => `<ul class="dmx-chips">${a.map(([k, x]) => `<li><small>${k}</small><b>${x}</b></li>`).join("")}</ul>`;
+  const EXP = [[t("Двигатель", "Dvigatel"), "Isuzu 4JJ1 · " + v("Мощность").replace(/ \(.*\)/, "")], [t("Дизель, объём", "Dizel, hajmi"), v("Объём двигателя")], [t("Привод", "Yuritma"), "4x4"]];
+  const SIDE = [[t("Длина", "Uzunligi"), "5 295 mm"], [t("Грузоподъёмность", "Yuk ko‘tarish"), v("Грузоподъемность")], [t("Коробка", "Uzatmalar qutisi"), v("Коробка")]];
+  const head = t("Для каждого клиента своя машина", "Har bir mijozga o‘z mashinasi");
+  return `<section class="dmx" id="top" aria-labelledby="dmx-h">
+<div class="dmx-track" id="dmx-track"><div class="dmx-stage" id="dmx-stage">
+<picture class="dmx-poster"><source media="(orientation: portrait)" srcset="${SA}/seq/m/t1-00.webp"><img src="${SA}/seq/d/t1-00.webp" alt="${t("Isuzu D-MAX под покрывалом на подиуме", "Isuzu D-MAX podiumda, parda ostida")}" fetchpriority="high"></picture>
+<video id="dmx-vd" muted playsinline preload="none" disablepictureinpicture aria-hidden="true"></video>
+<canvas id="dmx-cv" aria-hidden="true"></canvas>
+<div class="dmx-boot" id="dmx-boot" aria-hidden="true">${MARK()}<p><b id="dmx-boot-n">0</b>%</p><i><b id="dmx-boot-b"></b></i><span>${t("Загружаем сцену", "Sahna yuklanmoqda")}</span></div>
+<div class="dmx-copy dmx-c0" id="dmx-c0" data-w="0,0,0.0300,0.0800"><p class="kick"><i></i>Isuzu D-MAX IRBIS · SAMIST AUTO</p><h1 id="dmx-h">${t("Isuzu D-MAX <em>на кольцевой, 120А</em>", "Isuzu D-MAX <em>aylanma yo‘l, 120A da</em>")}</h1><p class="lead">${t("Листайте: покрывало слетит, машина разойдётся на детали, соберётся и уедет.", "Aylantiring: parda ochiladi, mashina detallarga ajraladi, yig‘iladi va yo‘lga chiqadi.")}</p><a class="dmx-hint" href="#ryad">${ICON.down}<span>${t("Листайте вниз", "Pastga aylantiring")}</span></a></div>
+<div class="dmx-copy dmx-c1" data-w="${win(TW.hold, 0.05)}" aria-hidden="true"><p class="kick"><i></i>${t("Изнутри", "Ichidan")}</p><p class="dmx-h">${t("Как устроен D-MAX", "D-MAX qanday tuzilgan")}</p>${chips(EXP)}</div>
+<div class="dmx-copy dmx-c2" data-w="${win(TW.light)}" aria-hidden="true"><p class="kick"><i></i>${t("Спереди", "Old tomondan")}</p><p class="dmx-h">${t("Посмотрите ближе", "Yaqinroq qarang")}</p></div>
+<div class="dmx-copy dmx-c3" data-w="${win(TW.side)}" aria-hidden="true"><p class="kick"><i></i>${t("Сбоку", "Yon tomondan")}</p><p class="dmx-h">D-MAX IRBIS</p>${chips(SIDE)}</div>
+<div class="dmx-copy dmx-c4" id="dmx-c4" data-w="${(TW.away - 0.006).toFixed(4)},${(TW.away + 0.012).toFixed(4)},2,2">${MARK()}<p class="dmx-h dmx-draw">${head.split(" ").map((w, i) => `<span style="--i:${i}">${w}</span>`).join(" ")}</p>
+<p class="lead">${t(`На площадке сейчас Isuzu D-MAX IRBIS ${m.year} года, ${v("Пробег")}, ${v("Цвет")}: ${sum(m.uzs, l)}. В сцене D-MAX для показа. И ещё ${MODELS.length - 1} моделей: фургоны, самосвал, автобус, тягач.`, `Maydonda hozir ${m.year} yilgi Isuzu D-MAX IRBIS, ${v("Пробег")}, ${v("Цвет")}: ${sum(m.uzs, l)}. Sahnada ko‘rsatish uchun D-MAX. Yana ${MODELS.length - 1} ta model: furgonlar, samosval, avtobus, shatakchi.`)}</p>
+<div class="dmx-b"><a class="btn btn-a" href="#ryad">${ICON.truck}<span>${t("Выбрать раздел", "Bo‘limni tanlash")}</span></a><button type="button" class="btn btn-g" data-open="isuzu-d-max-irbis">${t("D-MAX на площадке", "Maydondagi D-MAX")}${ICON.arrow}</button><a class="btn btn-g" href="tel:${BRAND.tel}">${ICON.phone}<span>${BRAND.phone}</span></a></div></div>
+<div class="dmx-bar" aria-hidden="true"><i id="dmx-bar"></i></div>
+</div></div>
+<div class="dmx-still"><div class="wrap"><img src="${SA}/poster-a-16.webp" width="1920" height="1072" alt="${t("Isuzu D-MAX на подиуме", "Isuzu D-MAX podiumda")}" loading="lazy"><img src="${SA}/poster-e-16.webp" width="1920" height="1072" alt="${t("Isuzu D-MAX, разобранный на детали", "Detallarga ajratilgan Isuzu D-MAX")}" loading="lazy">${chips([...EXP, ...SIDE])}</div></div>
+</section>`;
+}
+
+/* Площадка по разделам их сайта: снимок из их объявлений, число моделей и
+   цена «от». Нажатие — машина выезжает вперёд, остальные гаснут, камера
+   проваливается в раздел (site.js, как #qator у SamAuto). */
+const ROW = [["car", "isuzu-d-max-irbis"], ["comm", "faw-actis-t80"], ["truck", "isuzu-fvr-34q"], ["city", "isuzu-nqr-71-pl"], ["build", "faw-j6p"], ["bus", "isuzu-saz-hd-50"], ["tract", "faw-jh6-cng"]];
+function ryad(l, t) {
+  return `<section class="ry" id="ryad" aria-labelledby="ry-h"><div class="wrap">
+<p class="kick rise"><i></i>${t("Площадка по разделам", "Bo‘limlar bo‘yicha maydon")}</p>
+<h2 class="h2 rise" id="ry-h">${t(`${MODELS.length} машин, <b>${ROW.length} разделов</b>`, `${MODELS.length} ta mashina, <b>${ROW.length} ta bo‘lim</b>`)}</h2>
+<p class="lead rise">${t("Как в меню вашего сайта. Нажмите на раздел: машина выедет вперёд, а за ней откроются все модели раздела с ценами.", "Saytingiz menyusidagidek. Bo‘limni bosing: mashina oldinga chiqadi, uning ortidan bo‘limning barcha modellari narxlari bilan ochiladi.")}</p></div>
+<div class="ry-st" id="ry-st"><div class="ry-row">${ROW.map(([c, id], k) => {
+    const list = MODELS.filter((m) => m.cat === c), m = byId(id);
+    const from = Math.min(...list.map((x) => x.uzs));
+    return `<button type="button" class="ry-c" data-cat="${c}" style="--i:${k}" aria-haspopup="dialog"><span class="ry-ph"><img src="${IMG}/cat/${m.img[0]}" width="1280" height="960" alt="${esc(m.name)}, ${esc(catName(c, l))}" loading="lazy"></span><span class="ry-tx"><small>${list.length} ${t(list.length === 1 ? "модель" : list.length < 5 ? "модели" : "моделей", "ta model")}</small><b>${esc(catName(c, l))}</b><em>${t("от", "")} ${mln(from, l)} ${t("сум", "so‘mdan")}</em></span><i class="ry-glow" aria-hidden="true"></i></button>`;
+  }).join("")}</div><i class="rl ry-floor rise" aria-hidden="true"></i></div>
+<p class="ry-hint">${t("Нажмите на машину", "Mashinani bosing")}</p>
+</section>`;
 }
 
 function velo() {
@@ -356,10 +408,10 @@ function footer(l, t, to = "site") {
 /* Данные для site.js: каталог и подписи на языке страницы. */
 function data(l, t) {
   return {
-    l, tel: BRAND.tel, phone: BRAND.phone, legal: legal(l), addr: BRAND[l].addr, img: IMG, logo: LOGO_VB, scene: SCENE,
+    l, tel: BRAND.tel, phone: BRAND.phone, legal: legal(l), addr: BRAND[l].addr, img: IMG, logo: LOGO_VB, scene: SCENE, cats: CATS.map((c) => [c.id, c[l]]),
     models: MODELS.map((m) => ({ id: m.id, name: m.name, cat: m.cat, kind: nm(m, l), isNew: m.isNew, year: m.year, uzs: m.uzs, usd: m.usd, hp: m.hp, kg: m.kg, m3: m.m3, seats: m.seats, tank: m.tank, fuel: l === "ru" ? m.fuel : m.spec.find((s) => s.k === "Топливо")?.vu || "", credit: m.credit, use: m.use, spec: m.spec.map((s) => [l === "ru" ? s.ru : s.uz, l === "ru" ? s.v : s.vu]), img: m.img, url: m.url })),
     t: {
-      sum: t("сум", "so‘m"), mln: t("млн", "mln"), hello: t("Здравствуйте!", "Assalomu alaykum!"), sent_pc: t(`Заявка сохранена, текст скопирован. Отправьте его на ${BRAND.phone}`, `Ariza saqlandi, matn nusxalandi. Uni ${BRAND.phone} raqamiga yuboring`),
+      sum: t("сум", "so‘m"), mln: t("млн", "mln"), rz_range: t("от {a} до {b} сум", "{a} dan {b} so‘mgacha"), hello: t("Здравствуйте!", "Assalomu alaykum!"), sent_pc: t(`Заявка сохранена, текст скопирован. Отправьте его на ${BRAND.phone}`, `Ariza saqlandi, matn nusxalandi. Uni ${BRAND.phone} raqamiga yuboring`),
       mine: t("Моя заявка", "Mening arizam"), mine_note: t("Статус ставит менеджер в панели. Откройте админку макета, смените статус, и он появится здесь.", "Holatni menejer panelda qo‘yadi. Maket admin panelini oching, holatni o‘zgartiring, u shu yerda paydo bo‘ladi."),
       st0: t("Новая", "Yangi"), st1: t("В работе", "Ishda"), st2: t("Ждём вас", "Sizni kutamiz"), st3: t("Сделка", "Bitim"), st4: t("Отказ", "Rad etildi"),
       k_buy: t("Покупка", "Xarid"), k_credit: t("Кредит, лизинг", "Kredit, lizing"), k_drive: t("Тест-драйв", "Test-drayv"), k_trade: t("Трейд-ин", "Treyd-in"), k_service: t("Сервис", "Servis"), k_part: t("Запчасть", "Ehtiyot qism"), k_fleet: t("КП автопарку", "Avtoparkka taklif"), k_call: t("Звонок", "Qo‘ng‘iroq"),
@@ -390,7 +442,9 @@ function sitePage(l) {
   const title = t("SAMIST AUTO · грузовики, автобусы и спецтехника Isuzu и FAW в Ташкенте", "SAMIST AUTO · Toshkentda Isuzu va FAW yuk mashinalari, avtobuslar va maxsus texnika");
   const desc = t(`${MODELS.length} моделей на площадке с ценами: фургоны, самосвал, бетоносмеситель, автобус, тягач. Кредит и лизинг, сервис и запчасти ISUZU.`, `Maydonda narxlari bilan ${MODELS.length} ta model: furgonlar, samosval, betonaralashtirgich, avtobus, shatakchi. Kredit va lizing, ISUZU servisi va ehtiyot qismlari.`);
   return `${head(l, title, desc)}
-<link rel="preload" as="image" href="${IMG}/salon.webp">
+<script>(function(){var r=document.documentElement,calm=false;try{if(matchMedia('(prefers-reduced-motion: reduce)').matches)calm=true}catch(e){}try{var c=navigator.connection;if(c&&c.saveData)calm=true}catch(e){}if(navigator.deviceMemory&&navigator.deviceMemory<2)calm=true;if(calm)r.classList.add('calm')})()</script>
+<link rel="preload" as="image" href="${SA}/seq/m/t1-00.webp" media="(orientation: portrait)">
+<link rel="preload" as="image" href="${SA}/seq/d/t1-00.webp" media="(orientation: landscape)">
 <style>${CSS}</style>
 </head>
 <body>
@@ -400,6 +454,7 @@ ${header(l, t)}
 <main>
 ${hero(l, t)}
 ${velo()}
+${ryad(l, t)}
 ${scene(l, t)}
 ${lineup(l, t)}
 ${pickSec(l, t)}
@@ -419,9 +474,13 @@ ${footer(l, t)}
 <a class="cfgb glass" href="${href(l)}#offer">${t("Конструктор", "Konstruktor")}</a>
 <div class="cmp-bar glass" id="cmp-bar" data-addon="compare"><span></span><a class="btn btn-a btn-s" href="#compare">${ICON.cmp}<span>${t("Сравнить", "Taqqoslash")}</span></a></div>
 <div class="dock glass" id="dock"><a class="btn btn-a" href="tel:${BRAND.tel}">${ICON.phone}<span>${t("Позвонить", "Qo‘ng‘iroq")}</span></a><a class="btn btn-g" href="#lineup">${ICON.truck}<span>${t("Техника", "Texnika")}</span></a></div>
+<div class="rz" id="rz" role="dialog" aria-modal="true" aria-labelledby="rz-h"><div class="rz-bg"><img id="rz-bgi" alt=""></div><button type="button" class="rz-x" data-rzclose aria-label="${t("Закрыть", "Yopish")}">${ICON.close}</button><div class="rz-in" id="rz-in"><div class="wrap"><div class="rz-h"><div><p class="kick"><i></i>${t("Раздел площадки", "Maydon bo‘limi")}</p><h2 id="rz-h"></h2><p id="rz-s"></p></div></div><div class="rz-tabs chips" id="rz-tabs"></div><div class="grid" id="rz-grid"></div></div></div></div>
 <div class="mdl" id="mdl" role="dialog" aria-modal="true" aria-labelledby="mdl-h"><div class="mdl-sh" data-mclose></div><div class="mdl-box"><button type="button" class="mdl-x" data-mclose aria-label="${t("Закрыть", "Yopish")}">${ICON.close}</button><div id="mdl-in"></div></div></div>
 <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="shh"><div class="sh" data-close></div><div class="box"><div class="bh"><b id="shh"></b><button type="button" class="x" data-close aria-label="${t("Закрыть", "Yopish")}">${ICON.close}</button></div><div class="bb" id="shb"></div></div></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script type="application/json" id="sm-scene">${JSON.stringify({ img: SA, base: BASE_URL, frames: ORDER, fps: SEQ.fps })}</script>
+<script>
+${SCENE_JS}</script>
 <script type="application/json" id="sm-data">${JSON.stringify(data(l, t)).replace(/</g, "\\u003c")}</script>
 <script>
 ${JS}</script>
@@ -456,8 +515,8 @@ function landPage(l) {
   const t = T(l);
   const site = [
     t("Залёт в ваш знак и ночная дорога, нарисованные кодом", "Kod bilan chizilgan belgingizga uchib kirish va tungi yo‘l"),
-    t("Сцена по прокрутке из фото вашей площадки", "Maydoningiz suratlaridan aylantirishdagi sahna"),
-    t(`Все ${MODELS.length} моделей с ценами, «нырок» к машине`, `Narxlari bilan barcha ${MODELS.length} model, mashinaga «sho‘ng‘ish»`),
+    t("Первым экраном D-MAX по прокрутке: покрывало, детали, фара, выезд, с вашим знаком", "Birinchi ekranda aylantirishdagi D-MAX: parda, detallar, fara, yo‘lga chiqish, belgingiz bilan"),
+    t(`Разделы площадки: машина выезжает вперёд, за ней ${MODELS.length} моделей с ценами`, `Maydon bo‘limlari: mashina oldinga chiqadi, ortidan narxlari bilan ${MODELS.length} model`),
     t("Подбор, сравнение, кредит, трейд-ин, сервис, КП", "Tanlash, taqqoslash, kredit, treyd-in, servis, tijorat taklifi"),
   ];
   const pan = [
@@ -508,7 +567,7 @@ ${langs(l, "")}
 <p class="lead rise">${t("Это работающий макет на ваших машинах, ценах и фото с samist.autoline.uz. Сайт и панель связаны: заявка с сайта приходит в панель, статус из панели видит покупатель.", "Bu samist.autoline.uz’dagi mashinalaringiz, narxlaringiz va suratlaringizdagi ishlaydigan maket. Sayt va panel bog‘langan: saytdan ariza panelga keladi, paneldagi holatni xaridor ko‘radi.")}</p>
 <div class="choices" style="grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))">
 <a class="choice rise" href="${href(l, "site")}"><span class="ch-k">${t("Для покупателей", "Xaridorlar uchun")}</span><b>${t("Сайт", "Sayt")}</b>
-<span class="ch-pic"><img src="${IMG}/cat/${byId("isuzu-fvr-34q").img[0]}" width="1280" height="960" alt="${t("Isuzu FVR 34Q на площадке", "Maydondagi Isuzu FVR 34Q")}" loading="lazy"></span>
+<span class="ch-pic"><img src="${SA}/poster-a-16.webp" width="1920" height="1072" alt="${t("Isuzu D-MAX на подиуме, сцена сайта", "Podiumdagi Isuzu D-MAX, sayt sahnasi")}" loading="lazy"></span>
 ${li(site)}<span class="btn btn-a">${t("Открыть сайт", "Saytni ochish")}${ICON.arrow}</span></a>
 <a class="choice rise" href="${href(l, "panel")}"><span class="ch-k">${t("Для вас и менеджеров", "Siz va menejerlar uchun")}</span><b>${t("Панель", "Panel")}</b>
 <span class="ch-pic"><img src="${IMG}/salon-s.webp" width="640" height="480" alt="${t("Автосалон на кольцевой, 120А", "Aylanma yo‘l, 120A dagi avtosalon")}" loading="lazy"></span>
@@ -593,7 +652,7 @@ mkdirSync(DIR + "out", { recursive: true });
 writeFileSync(DIR + "out/pages.json", JSON.stringify(out));
 
 /* Сборка для сервера (lib/proto/bundles): стили, скрипты и знак один раз. */
-const parts = { J: `<script>\n${JS}</script>`, C: `<style>${CSS}</style>`, PC: `<style>${BASE_CSS}${PANEL_CSS}</style>`, PJ: `<script>\n${PANEL_JS}</script>`, LJ: `<script>\n${LAND_JS}</script>`, G: LOGO_G };
+const parts = { SJ: `<script>\n${SCENE_JS}</script>`, J: `<script>\n${JS}</script>`, C: `<style>${CSS}</style>`, PC: `<style>${BASE_CSS}${PANEL_CSS}</style>`, PJ: `<script>\n${PANEL_JS}</script>`, LJ: `<script>\n${LAND_JS}</script>`, G: LOGO_G };
 const pages = {};
 for (const [key, html] of Object.entries(out)) {
   let p = html;

@@ -2961,6 +2961,15 @@ test("SAMIST AUTO: выбор, сайт и панель на ru и uz — усл
     assert.match(page.slice(page.indexOf('class="top"'), page.indexOf("</header>")), new RegExp(`href="__PROTO_BASE__${lang === "uz" ? "/uz" : ""}/panel"`), `${path}: нет кнопки админки`);
     assert.ok(page.includes(`tel:${D.BRAND.tel}`), `${path}: нет звонка`);
     for (const id of ["top", "scn", "lineup", "about", "contact"]) assert.ok(page.includes(`id="${id}"`), `${path}: нет блока #${id}`);
+    /* Первый экран — сцена D-MAX премиум-эталона SamAuto (владелец, 04.11.2026), с их знаком. */
+    assert.ok(page.indexOf('class="dmx"') > 0 && page.indexOf('class="dmx"') < page.indexOf('id="ryad"'), `${path}: сцена D-MAX не первым экраном`);
+    assert.ok(page.includes('id="sm-scene"') && page.includes("/promo/scene") && page.includes("AES-GCM"), `${path}: кадры сцены не по ключу`);
+    assert.match(page.slice(page.indexOf('id="dmx-boot"'), page.indexOf('id="dmx-boot-n"')), /<use href="#sm-g"\/>/, `${path}: на загрузке сцены не их знак`);
+    for (const src of page.match(/\/protos\/samauto\/[\w./-]+\.(?:webp|bin)/g) ?? []) assert.ok(existsSync("public" + src), `${path}: нет кадра ${src}`);
+    /* Разделы площадки: нажатая машина выезжает вперёд, остальные гаснут, раздел открывается. */
+    assert.equal((page.match(/class="ry-c"/g) ?? []).length, 7, `${path}: не семь разделов`);
+    assert.ok(page.includes('id="rz"'), `${path}: нет окна раздела`);
+    assert.match(page, /classList\.add\('pick'\)[\s\S]*openCat\(/, `${path}: нажатие не проваливается в раздел`);
     for (const a of plan.ADDONS) assert.ok(page.includes(`data-addon="${a.id}"`), `${path}: тумблер ${a.id} не ведёт к блоку`);
     /* Техника на странице — их каталог, цены — их цены. */
     const data = JSON.parse(page.match(/<script type="application\/json" id="sm-data">([\s\S]*?)<\/script>/)![1]);
@@ -2968,6 +2977,9 @@ test("SAMIST AUTO: выбор, сайт и панель на ru и uz — усл
     const cat = JSON.parse(readFileSync("scripts/protos/samist/catalog.json", "utf8"));
     for (const m of data.models) assert.ok(cat.some((c: { uzs: number; url: string }) => c.uzs === m.uzs && c.url === m.url), `${m.name}: цены нет в их каталоге`);
   }
+  /* Сцена D-MAX — кадры SamAuto тем же ключом; своих кадров у SAMIST нет. */
+  const { SCENES } = await import("@/lib/proto/promo");
+  assert.equal(SCENES.samist, SCENES.samauto, "ключ сцены D-MAX не тот, что у SamAuto");
   /* Фото — только их, с их сайта; ни кадров, ни роликов генерации. */
   assert.deepEqual(readdirSync("public/protos/samist").filter((f) => /\.(mp4|bin|png|jpe?g)$/.test(f)), [], "посторонний ролик или кадр в public");
   const stamped = stampedBundle("samist", SEED)!;

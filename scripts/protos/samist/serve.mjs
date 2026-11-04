@@ -6,6 +6,8 @@ http.createServer((req,res)=>{
   const pages=JSON.parse(readFileSync(D+"out/pages.json"));
   const u=new URL(req.url,"http://x");
   if(u.pathname.startsWith("/protos/")&&existsSync(PUB+u.pathname)){res.setHeader("content-type",TYPE[u.pathname.slice(u.pathname.lastIndexOf("."))]||"application/octet-stream");res.end(readFileSync(PUB+u.pathname));return}
+  // Ключ сцены D-MAX (кадры SamAuto): локально — из SCENE_KEY, как у serve.mjs SamAuto.
+  if(/^\/proto\/[A-Za-z0-9_-]{43}\/promo\/scene$/.test(u.pathname)){if(!process.env.SCENE_KEY){res.statusCode=404;res.end();return}res.setHeader("content-type","application/octet-stream");res.end(Buffer.from(process.env.SCENE_KEY,"hex"));return}
   const m=u.pathname.match(/^\/proto\/([A-Za-z0-9_-]{43})(?:\/(.*))?$/);
   const key=m?(m[2]||"").replace(/\/$/,""):null;
   if(!m||!(key in pages)){res.statusCode=404;res.end("404");return}
