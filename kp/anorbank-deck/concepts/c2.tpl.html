@@ -1,0 +1,139 @@
+<!doctype html>
+{{lang}}
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+{{title}}
+
+<link rel="stylesheet" href="../../fonts-anorbank.css">
+<style>
+:root{--bg:#0e070b;--bg2:#170b12;--ac:#e0115f;--ac2:#a30041;--tx:#f7eef2;--tx2:#c9b3bd;--mu:#8f7884;--gl:rgb(255 255 255 / .06);--gl2:rgb(255 255 255 / .12);
+--hd:'Unbounded',system-ui,sans-serif;--bd:'Inter',system-ui,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font:400 16px/1.5 var(--bd);color:var(--tx);background:var(--bg);-webkit-font-smoothing:antialiased}
+.w{max-width:1280px;margin:0 auto;padding:0 32px}
+header{position:absolute;left:0;right:0;top:0;z-index:5}
+.hb{display:flex;align-items:center;gap:32px;height:88px}
+.logo{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none}
+.logo img{height:30px}.logo b{font:700 18px/1 var(--hd);letter-spacing:.04em}
+nav{display:flex;gap:22px;margin-right:auto;white-space:nowrap;padding:10px 20px;border-radius:999px;background:var(--gl);backdrop-filter:blur(14px);box-shadow:inset 0 0 0 1px var(--gl2)}
+nav a{font:500 14px var(--bd);color:var(--tx2);text-decoration:none}nav a.on{color:#fff}
+.lang{font:600 14px var(--bd);color:var(--tx2);white-space:nowrap}.lang b{color:#fff}
+.btn{display:inline-flex;align-items:center;gap:8px;white-space:nowrap;height:50px;padding:0 26px;border-radius:999px;font:600 15px var(--bd);text-decoration:none;color:#fff}
+.btn.p{background:linear-gradient(135deg,#ff2b74,#a30041);box-shadow:0 16px 36px -14px rgb(224 17 95 / .9)}
+.btn.g{background:var(--gl);box-shadow:inset 0 0 0 1px var(--gl2);backdrop-filter:blur(10px)}
+.hero{position:relative;min-height:900px;display:flex;align-items:center;overflow:hidden;background:#120810 url(img/night-16.jpg) 70% 50%/cover no-repeat}
+.hero::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgb(14 7 11 / .95) 0%,rgb(14 7 11 / .75) 38%,rgb(14 7 11 / 0) 64%),linear-gradient(0deg,var(--bg) 0%,rgb(14 7 11 / 0) 24%)}
+.hero .w{position:relative;width:100%}
+.kick{display:inline-flex;gap:10px;align-items:center;font:600 13px var(--bd);letter-spacing:.14em;text-transform:uppercase;color:var(--tx2)}
+.kick i{width:8px;height:8px;border-radius:50%;background:var(--ac);box-shadow:0 0 0 6px rgb(224 17 95 / .2)}
+h1{font:700 76px/1.02 var(--hd);letter-spacing:-.035em;margin:24px 0 24px;max-width:700px}
+h1 span{background:linear-gradient(120deg,#ff5d97,#e0115f 50%,#ffb3cd);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{font-size:18px;color:var(--tx2);max-width:480px}
+.cta{display:flex;gap:12px;margin-top:36px}
+.facts{display:flex;gap:12px;margin-top:56px}
+.fact{padding:16px 20px;border-radius:20px;background:var(--gl);backdrop-filter:blur(14px);box-shadow:inset 0 0 0 1px var(--gl2);min-width:180px}
+.fact b{display:block;font:700 20px var(--hd);letter-spacing:-.01em}
+.fact small{color:var(--tx2);font-size:13px}
+section{padding:96px 0}
+.eyebrow{font:600 13px var(--bd);letter-spacing:.14em;text-transform:uppercase;color:var(--ac)}
+h2{font:700 48px/1.08 var(--hd);letter-spacing:-.03em;margin:12px 0 16px;max-width:760px}
+.sub{color:var(--tx2);max-width:560px}
+.seeds{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:48px}
+.s{position:relative;padding:28px;border-radius:28px;background:linear-gradient(160deg,rgb(255 255 255 / .07),rgb(255 255 255 / .02));box-shadow:inset 0 0 0 1px var(--gl2);overflow:hidden;min-height:220px}
+.s::after{content:"";position:absolute;right:24px;top:24px;width:56px;height:56px;border-radius:50%;background:radial-gradient(circle at 34% 30%,#ffd1e0 0%,#ff4d8a 18%,#c0004c 52%,#4d001c 100%);box-shadow:0 0 40px 6px rgb(224 17 95 / .45)}
+.s .n{font:500 13px var(--hd);color:var(--mu)}
+.s h3{font:700 24px/1.15 var(--hd);letter-spacing:-.02em;margin:28px 0 8px;position:relative}
+.s p{color:var(--tx2);font-size:15px;position:relative;max-width:300px}
+.s .go{position:absolute;right:24px;bottom:24px;width:44px;height:44px;border-radius:50%;background:var(--gl2);display:grid;place-items:center}
+.prem{display:grid;grid-template-columns:1fr 1.1fr;gap:48px;align-items:center}
+.fan{position:relative;height:460px}
+.c{position:absolute;width:380px;height:240px;border-radius:24px;padding:24px;display:flex;flex-direction:column;justify-content:space-between;color:#fff;box-shadow:0 40px 80px -30px #000,inset 0 0 0 1px rgb(255 255 255 / .12)}
+.c .top{display:flex;align-items:center;gap:8px;font:700 13px var(--hd);letter-spacing:.08em}.c .top img{height:18px}
+.c .chipc{width:42px;height:30px;border-radius:6px;background:linear-gradient(135deg,#ecd9ab,#b3935a)}
+.c .bot{display:flex;justify-content:space-between;align-items:flex-end;font:600 13px var(--bd);letter-spacing:.06em}.c .bot b{font:700 14px var(--hd);letter-spacing:.1em}
+.c1{left:40px;top:0;background:linear-gradient(135deg,#2c2c33,#0b0b0e);transform:rotate(-10deg)}
+.c2{left:150px;top:100px;background:linear-gradient(135deg,#3a1022,#120509);transform:rotate(-2deg)}
+.c3{left:260px;top:200px;background:#0b0507 url(img/night-16.jpg) 78% 60%/260% no-repeat;transform:rotate(6deg)}
+.c3::before{content:"";position:absolute;inset:0;border-radius:24px;background:linear-gradient(90deg,rgb(0 0 0 / .65),rgb(0 0 0 / .1))}
+.c3>*{position:relative}
+.list{margin-top:28px;display:grid;gap:12px}
+.list div{display:flex;gap:14px;align-items:flex-start;padding:16px 18px;border-radius:18px;background:var(--gl);box-shadow:inset 0 0 0 1px var(--gl2)}
+.list i{flex:none;width:28px;height:28px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ff7aa8,#e0115f 45%,#6d0028);box-shadow:0 0 18px rgb(224 17 95 / .6)}
+.list b{display:block;font-weight:600}.list span{color:var(--tx2);font-size:14px}
+.note{font-size:12px;color:var(--mu);padding:0 0 48px}
+@media (max-width:700px){
+.w{padding:0 16px}
+.hb{height:64px;gap:12px}
+nav,.lang,.hb .btn.g{display:none}
+.logo img{height:26px}.logo b{font-size:15px}
+.hb .btn.p{height:40px;padding:0 16px;font-size:14px;margin-left:auto}
+.hero{min-height:844px;align-items:flex-end;padding-bottom:40px;background:#120810 url(img/night-9.jpg) 50% 0/cover no-repeat}
+.hero::before{background:linear-gradient(0deg,var(--bg) 8%,rgb(14 7 11 / .82) 48%,rgb(14 7 11 / .1) 75%)}
+h1{font-size:40px;margin:16px 0}
+.lead{font-size:16px}
+.cta{flex-direction:column;margin-top:24px}.cta .btn{justify-content:center}
+.facts{margin-top:24px;gap:8px;overflow:hidden;margin-right:-16px}.fact{min-width:150px;padding:12px 14px}.fact b{font-size:16px}
+section{padding:64px 0}
+h2{font-size:30px}
+.seeds{grid-template-columns:1fr;gap:12px;margin-top:28px}.s{min-height:170px}.s h3{font-size:21px;margin-top:20px}
+.prem{grid-template-columns:1fr;gap:16px}
+.fan{height:330px;margin:0 -16px}.c{width:250px;height:158px;padding:16px}
+.c1{left:10px}.c2{left:60px;top:70px}.c3{left:110px;top:140px}
+}
+</style>
+</head>
+<body>
+<header><div class="w hb">
+  <a class="logo" href="#"><img src="img/mark-white.png" alt=""><b>ANORBANK</b></a>
+  {{nav}}
+  {{langs}}
+  <a class="btn g" href="#"{{login}}/a>
+  <a class="btn p" href="#"{{app}}/a>
+</div></header>
+
+<section class="hero" style="padding:0">
+  <div class="w">
+    <span class="kick"><i></i>{{kick}}</span>
+    {{h1}}
+    <p class="lead">{{lead}}</p>
+    <div class="cta"><a class="btn p" href="#"{{order}}/a><a class="btn g" href="#"{{app}}/a></div>
+    <div class="facts">
+      <div class="fact">{{f1}}</div>
+      <div class="fact">{{f2}}</div>
+      <div class="fact"><b>4,7 ★</b>{{f3}}</div>
+    </div>
+  </div>
+</section>
+
+<section><div class="w">
+  {{s0}}
+  <div class="seeds">
+    <div class="s"><span class="n">01</span>{{s1}}<span class="go">→</span></div>
+    <div class="s"><span class="n">02</span>{{s2}}<span class="go">→</span></div>
+    <div class="s"><span class="n">03</span>{{s3}}<span class="go">→</span></div>
+    <div class="s"><span class="n">04</span>{{s4}}<span class="go">→</span></div>
+    <div class="s"><span class="n">05</span>{{s5}}<span class="go">→</span></div>
+    <div class="s"><span class="n">06</span>{{s6}}<span class="go">→</span></div>
+  </div>
+</div></section>
+
+<section style="padding-top:0"><div class="w prem">
+  <div class="fan">
+    <div class="c c1"><div class="top"><img src="img/mark-white.png" alt="">ANORBANK</div><div class="chipc"></div><div class="bot"><span>•••• 7741</span><b>VISA INFINITE</b></div></div>
+    <div class="c c2"><div class="top"><img src="img/mark-white.png" alt="">ANORBANK</div><div class="chipc"></div><div class="bot"><span>•••• 2209</span><b>WORLD ELITE</b></div></div>
+    <div class="c c3"><div class="top"><img src="img/mark-white.png" alt="">ANORBANK</div><div class="chipc"></div><div class="bot"><span>•••• 4589</span><b>ANOR BLACK</b></div></div>
+  </div>
+  <div>
+    <span class="eyebrow">Anor Premium</span>
+    {{p0}}
+    <div class="list">
+      <div><i></i><p><b>Visa Infinite</b>{{p1}}</p></div>
+      <div><i></i><p><b>Mastercard World Elite</b>{{p2}}</p></div>
+      <div><i></i><p><b>Anor Black</b>{{p3}}</p></div>
+    </div>
+  </div>
+</div></section>
+<p class="w note">{{note}}</p>
+</body>
+</html>

@@ -1,0 +1,93 @@
+/* Презентация для ANORBANK: слайды 1600×900, палитра банка (гранатовый #A30041, графит, светлый). */
+@page { size: 1600px 900px; margin: 0; }
+:root { --bg: #f6f4f5; --s1: #fff; --ink: #24232a; --mute: #5b5a66; --soft: #8a8996; --line: #e7e3e8; --ac: #a30041; --ac3: #fbeaf1;
+  --dbg: #0e070b; --dink: #f7eef2; --dmute: #c9b3bd; --dline: rgb(255 255 255 / .12); --pink: #ff4d8a; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: var(--bg); color: var(--ink); font: 400 21px/1.45 "Inter", system-ui, sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.slide { position: relative; width: 1600px; height: 900px; overflow: hidden; padding: 72px 88px 100px; page-break-after: always; break-after: page;
+  background: radial-gradient(900px 520px at 100% -10%, rgb(163 0 65 / .07), transparent 60%), var(--bg); }
+.slide:last-child { page-break-after: auto; break-after: auto; }
+h1, h2, h3 { font-family: "Montserrat", "Inter", sans-serif; font-weight: 800; letter-spacing: -.02em; }
+h1 { font-size: 64px; line-height: 1.04; }
+h1 em, h2 em { font-style: normal; color: var(--ac); }
+h2 { font-size: 42px; line-height: 1.12; max-width: 1200px; margin-bottom: 28px; }
+h3 { font-size: 22px; line-height: 1.25; margin-bottom: 8px; font-weight: 700; }
+.kick { font: 700 15px/1 "Inter", sans-serif; letter-spacing: .16em; text-transform: uppercase; color: var(--ac); margin-bottom: 20px; display: flex; align-items: center; gap: 14px; }
+.kick::before { content: ""; width: 34px; height: 3px; border-radius: 2px; background: var(--ac); }
+.lead { color: var(--mute); font-size: 22px; max-width: 640px; }
+footer { position: absolute; left: 88px; right: 88px; bottom: 32px; display: flex; gap: 24px; align-items: center; font-size: 15px; color: var(--soft); border-top: 1px solid var(--line); padding-top: 16px; }
+footer img { height: 20px; }
+footer b { color: var(--ink); }
+footer .n { margin-left: auto; font-weight: 700; color: var(--ac); }
+
+.card { background: var(--s1); border-radius: 22px; padding: 24px 26px; box-shadow: inset 0 0 0 1px var(--line); }
+.card p { color: var(--mute); font-size: 18px; line-height: 1.45; }
+.card > b { display: block; font: 700 14px/1 "Inter", sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--ac); margin-bottom: 12px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+.pts { list-style: none; display: grid; gap: 14px; }
+.pts li { position: relative; padding-left: 32px; font-size: 20px; line-height: 1.4; }
+.pts li::before { content: ""; position: absolute; left: 0; top: 7px; width: 16px; height: 16px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ff8ab0, #a30041 60%); }
+
+/* Окно браузера и телефон */
+.br { position: relative; border-radius: 18px; overflow: hidden; background: #fff; box-shadow: 0 30px 70px -30px rgb(36 35 42 / .45), 0 0 0 1px var(--line); padding-top: 30px; }
+.br::before { content: ""; position: absolute; top: 11px; left: 16px; width: 9px; height: 9px; border-radius: 50%; background: #e4567a; box-shadow: 16px 0 0 #f2b84b, 32px 0 0 #4cc38a; }
+.br img { display: block; width: 100%; height: auto; }
+.ph { position: absolute; border-radius: 36px; overflow: hidden; border: 9px solid #17151b; background: #17151b; box-shadow: 0 30px 70px -20px rgb(0 0 0 / .55); }
+.ph img { display: block; width: 100%; height: auto; }
+
+.split { display: grid; grid-template-columns: 520px 1fr; gap: 64px; align-items: center; height: 100%; }
+.split.rev { grid-template-columns: 1fr 520px; }
+.split .pic { position: relative; }
+.split h2 { font-size: 40px; }
+.split .lead { margin-bottom: 26px; }
+
+/* Обложка */
+.cover { display: grid; grid-template-columns: 640px 1fr; gap: 40px; align-items: center; padding-top: 60px; }
+.cover .logo { display: flex; align-items: center; gap: 12px; margin-bottom: 40px; font: 800 26px/1 "Montserrat", sans-serif; letter-spacing: .02em; }
+.cover .logo img { height: 40px; }
+.cover .tag { margin-top: 30px; display: inline-flex; gap: 10px; align-items: center; padding: 14px 22px; border-radius: 16px; background: var(--ac); color: #fff; font-weight: 600; font-size: 20px; }
+.cv { position: relative; height: 700px; }
+.cv .a { position: absolute; top: 0; left: 0; width: 700px; transform: rotate(-2deg); }
+.cv .b { position: absolute; top: 260px; left: 150px; width: 700px; transform: rotate(2deg); }
+.cv .lab { position: absolute; z-index: 2; padding: 8px 16px; border-radius: 999px; font: 700 15px "Inter", sans-serif; background: #fff; box-shadow: 0 10px 30px -12px rgb(0 0 0 / .4); }
+
+/* Тёмные слайды концепта 2 */
+.slide.dark { background: radial-gradient(900px 600px at 95% 0%, rgb(224 17 95 / .22), transparent 60%), var(--dbg); color: var(--dink); }
+.dark .kick { color: var(--pink); }
+.dark .kick::before { background: var(--pink); }
+.dark h2 em { color: var(--pink); }
+.dark .lead, .dark .card p { color: var(--dmute); }
+.dark .card { background: rgb(255 255 255 / .05); box-shadow: inset 0 0 0 1px var(--dline); }
+.dark .card > b { color: var(--pink); }
+.dark footer { border-top-color: var(--dline); color: #8f7884; }
+.dark footer b { color: var(--dink); }
+.dark footer .n { color: var(--pink); }
+.dark .br { background: #120810; box-shadow: 0 30px 70px -20px #000, 0 0 0 1px var(--dline); }
+.dark .ph { border-color: #2a1720; }
+
+/* Два пути */
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 12px; }
+.two .opt h3 { font-size: 30px; margin: 22px 0 6px; }
+.two .opt p { color: var(--mute); font-size: 19px; max-width: 620px; }
+
+/* Сравнение */
+.cmp { width: 100%; border-collapse: separate; border-spacing: 0 8px; font-size: 18px; }
+.cmp th { text-align: left; font: 800 20px/1.2 "Montserrat", sans-serif; padding: 0 20px 6px; }
+.cmp th.c2 { color: var(--ac); }
+.cmp td { padding: 12px 20px; background: var(--s1); vertical-align: top; }
+.cmp td:first-child { border-radius: 12px 0 0 12px; font-weight: 600; width: 240px; color: var(--mute); }
+.cmp td:last-child { border-radius: 0 12px 12px 0; }
+
+/* Этапы */
+.steps { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; counter-reset: s; margin-top: 8px; }
+.steps .card { position: relative; padding-top: 70px; min-height: 280px; }
+.steps .card::before { counter-increment: s; content: counter(s); position: absolute; top: 22px; left: 26px; width: 36px; height: 36px; border-radius: 50%; background: var(--ac); color: #fff; font: 700 17px/36px "Montserrat", sans-serif; text-align: center; }
+.foot-note { margin-top: 26px; color: var(--mute); font-size: 19px; border-left: 3px solid var(--ac); padding-left: 16px; max-width: 1200px; }
+.src { position: absolute; left: 88px; bottom: 74px; font-size: 14px; color: var(--soft); }
+
+/* Контакты */
+.cta { display: grid; grid-template-columns: 1fr 520px; gap: 60px; align-items: center; height: 100%; }
+.contacts { display: grid; gap: 12px; }
+.contacts div { display: flex; justify-content: space-between; gap: 20px; padding: 16px 22px; border-radius: 16px; background: var(--s1); box-shadow: inset 0 0 0 1px var(--line); font-size: 19px; }
+.contacts span { color: var(--soft); }
