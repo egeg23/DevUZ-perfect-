@@ -71,4 +71,28 @@ export const expensesDict = defineDict({
   colWhat: { ru: "На что", uz: "Nimaga", pl: "Na co" },
   colAmount: { ru: "Сумма", uz: "Summa", pl: "Kwota" },
   remove: { ru: "убрать", uz: "olib tashlash", pl: "usuń" },
+
+  // «Кто вносил» (владелец, 04.11.2026): вместе — по долям, один — вернуть ему до деления.
+  colPayer: { ru: "Кто вносил", uz: "Kim to‘lagan", pl: "Kto zapłacił" },
+  together: {
+    ru: (split: string) => `Вместе, ${split}`,
+    uz: (split: string) => `Birgalikda, ${split}`,
+    pl: (split: string) => `Wspólnie, ${split}`,
+  },
+  payerNote: {
+    ru: "«Вместе» — оплачено общими деньгами студии, расход делится по долям. Платил кто-то один из своих — выберите его: эта сумма вернётся ему из пришедших денег до деления.",
+    uz: "«Birgalikda» — studiyaning umumiy pulidan to‘langan, xarajat ulushlar bo‘yicha bo‘linadi. Kimdir bitta o‘z pulidan to‘lagan bo‘lsa — uni tanlang: bu summa unga bo‘linishdan oldin kelgan puldan qaytariladi.",
+    pl: "«Wspólnie» — zapłacone ze wspólnych pieniędzy studia, wydatek dzieli się według udziałów. Zapłacił ktoś jeden z własnych — wybierz go: ta kwota wróci do niego z wpływów przed podziałem.",
+  },
+  savePayer: { ru: "Сохранить", uz: "Saqlash", pl: "Zapisz" },
+  giveBack: {
+    ru: (sum: string) => `вернуть ${sum}`,
+    uz: (sum: string) => `${sum} qaytarish`,
+    pl: (sum: string) => `zwrot ${sum}`,
+  },
+  paidSelf: {
+    ru: (sum: string) => `вносил сам: ${sum}, вернётся до деления`,
+    uz: (sum: string) => `o‘zi to‘lagan: ${sum}, bo‘linishdan oldin qaytadi`,
+    pl: (sum: string) => `zapłacił sam: ${sum}, wróci przed podziałem`,
+  },
 });

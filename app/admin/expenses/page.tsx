@@ -1,13 +1,14 @@
 import { AdminShell } from "@/components/admin/shell";
 import { taxTitleDict } from "@/content/admin-panel/dashboard";
 import { expensesDict, taxWhatDict } from "@/content/admin-panel/expenses";
-import { EXPENSE_TR, isExpenseCategory, type Expense } from "@/lib/admin/finance";
+import { EXPENSE_TR, isExpenseCategory, paidBack, type Expense } from "@/lib/admin/finance";
 import { byCategory, splitExpense, splitTotals, type Founder } from "@/lib/admin/expense-split";
 import { requireSection } from "@/lib/admin/guard";
+import { keepsExpenses } from "@/lib/admin/roles";
 import { PANEL_INTL, pick, tr, type PanelLocale, type Tr } from "@/lib/admin/i18n";
 import { loadExpenses, loadPeople } from "@/lib/admin/ledger";
 import { DEFAULT_DEADLINES, upcoming } from "@/lib/admin/tax-calendar";
-import { addStudioExpense, dropStudioExpense } from "@/app/admin/expenses/actions";
+import { addStudioExpense, dropStudioExpense, setStudioExpensePayer } from "@/app/admin/expenses/actions";
 
 export const dynamic = "force-dynamic";
 
@@ -49,6 +50,12 @@ export default async function ExpensesPage() {
 
   const total = expenses.reduce((sum: number, e: Expense) => sum + e.amount_usd, 0);
   const totals = splitTotals(expenses, founders);
+  // «Кто вносил» (владелец, 04.11.2026): вместе — по долям; один из своих —
+  // сумма вернётся ему до деления (lib/admin/finance.ts, paidBack).
+  const back = paidBack(expenses);
+  const split = founders.map((f) => f.founder_percent).join("/");
+  const canPay = keepsExpenses(staff.role);
+  const nameOf = (id: string) => founders.find((f) => f.id === id)?.display_name ?? "?";
   const categories = byCategory(expenses);
   const soon = upcoming(DEFAULT_DEADLINES, new Date().toISOString().slice(0, 10));
 
@@ -106,6 +113,9 @@ export default async function ExpensesPage() {
               {share.name} · {share.percent}%
             </p>
             <p className="mt-1 text-2xl font-semibold">{usd(share.amount)}</p>
+            {(back.get(share.founderId) ?? 0) > 0 ? (
+              <p className="mt-1 text-xs text-amber-500">{t.paidSelf(usd(back.get(share.founderId) ?? 0))}</p>
+            ) : null}
           </div>
         ))}
       </section>
@@ -132,7 +142,7 @@ export default async function ExpensesPage() {
         <h2 className="font-mono text-[0.7rem] uppercase tracking-[0.25em] text-faint">
           {t.add}
         </h2>
-        <form action={addStudioExpense} className="mt-4 grid gap-3 sm:grid-cols-4">
+        <form action={addStudioExpense} className="mt-4 grid gap-3 sm:grid-cols-5">
           <input
             type="date"
             name="spent_on"
@@ -161,7 +171,19 @@ export default async function ExpensesPage() {
             placeholder={t.notePh}
             className="rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm text-text"
           />
-          <div className="sm:col-span-4">
+          <select
+            name="paid_by"
+            defaultValue="together"
+            aria-label={t.colPayer}
+            className="rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm text-text"
+          >
+            <option value="together">{t.together(split)}</option>
+            {founders.map((f) => (
+              <option key={f.id} value={f.id}>{f.display_name}</option>
+            ))}
+          </select>
+          <p className="text-xs leading-relaxed text-faint sm:col-span-5">{t.payerNote}</p>
+          <div className="sm:col-span-5">
             <button
               type="submit"
               className="rounded-lg border border-line bg-surface-2 px-4 py-1.5 text-xs transition hover:border-green/40 hover:text-green"
@@ -186,6 +208,7 @@ export default async function ExpensesPage() {
                 <th className="py-2 text-left font-normal">{t.colCategory}</th>
                 <th className="py-2 text-left font-normal">{t.colWhat}</th>
                 <th className="py-2 text-right font-normal">{t.colAmount}</th>
+                <th className="py-2 pl-4 text-left font-normal">{t.colPayer}</th>
                 {founders.map((f) => (
                   <th key={f.id} className="py-2 text-right font-normal">
                     {f.display_name}
@@ -203,6 +226,34 @@ export default async function ExpensesPage() {
                     <td className="py-2">{tr(EXPENSE_TR[expense.category], locale)}</td>
                     <td className="py-2 text-muted">{expense.note ?? "—"}</td>
                     <td className="py-2 text-right tabular-nums">{usd(expense.amount_usd)}</td>
+                    <td className="py-2 pl-4">
+                      {canPay ? (
+                        <form action={setStudioExpensePayer} className="flex flex-wrap items-center gap-2">
+                          <input type="hidden" name="id" value={expense.id} />
+                          <select
+                            name="paid_by"
+                            defaultValue={expense.paid_by ?? "together"}
+                            aria-label={t.colPayer}
+                            className="rounded-md border border-line bg-surface-2 px-2 py-1 text-xs text-text"
+                          >
+                            <option value="together">{t.together(split)}</option>
+                            {founders.map((f) => (
+                              <option key={f.id} value={f.id}>{f.display_name}</option>
+                            ))}
+                          </select>
+                          <button type="submit" className="text-xs text-faint hover:text-green">
+                            {t.savePayer}
+                          </button>
+                        </form>
+                      ) : (
+                        <span className="text-xs">{expense.paid_by ? nameOf(expense.paid_by) : t.together(split)}</span>
+                      )}
+                      {expense.paid_by ? (
+                        <p className="mt-1 text-xs text-amber-500">
+                          {nameOf(expense.paid_by)}: {t.giveBack(usd(expense.amount_usd))}
+                        </p>
+                      ) : null}
+                    </td>
                     {shares.map((share) => (
                       <td key={share.founderId} className="py-2 text-right tabular-nums text-muted">
                         {usd(share.amount)}

@@ -318,6 +318,13 @@ export type Expense = {
   amount_usd: number;
   category: ExpenseCategory;
   note: string | null;
+  /**
+   * Кто вносил деньги. null — вместе, общими деньгами студии: расход просто
+   * уменьшает «К делению», и 30/70 ложится на обоих само. Соучредитель —
+   * платил из своих: эта сумма возвращается ему до деления (`paidBack`).
+   * Необязательное: до миграции 0175 столбца нет, и все расходы — «вместе».
+   */
+  paid_by?: string | null;
 };
 
 export type FoundersPool = {
@@ -376,6 +383,53 @@ export type FounderShare = {
   percent: number;
   amount_usd: number;
 };
+
+export type FounderPayout = FounderShare & {
+  /** Внёс за расходы из своих: вернуть до деления. */
+  paid_back: number;
+  /** К выплате: доля от «К делению» плюс возврат. */
+  total: number;
+};
+
+/**
+ * Сколько вернуть каждому, кто платил за расходы из своих.
+ *
+ * Владелец, 04.11.2026: «Если вносил кто-то 1 — то потом эта сумма должна
+ * встать к выплате обратно тому кто вносил с проекта, перед тем как делить
+ * 30/70 после расходов». То есть: из пришедших денег сначала возвращается
+ * внесённое, остаток (он и есть «К делению»: пришло минус все расходы)
+ * делится по долям. Расход «вместе» не возвращается никому: он был оплачен
+ * общими деньгами и уже вычтен из «К делению».
+ *
+ * Плательщиком ставится только соучредитель (`setExpensePayer` и
+ * `addExpense` в ledger.ts проверяют это по базе).
+ */
+export function paidBack(expenses: readonly Pick<Expense, "amount_usd" | "paid_by">[]): Map<string, number> {
+  const out = new Map<string, number>();
+  for (const e of expenses) {
+    if (!e.paid_by) continue;
+    out.set(e.paid_by, (out.get(e.paid_by) ?? 0) + e.amount_usd);
+  }
+  return out;
+}
+
+/**
+ * Что каждому соучредителю к выплате: доля от «К делению» плюс возврат
+ * внесённого за расходы. Сумма по всем — ровно «пришло студии», ни доллара
+ * не теряется и не появляется: внесённое вычтено из котла один раз и
+ * возвращено один раз.
+ */
+export function founderPayouts(
+  pool: number,
+  founders: readonly Pick<Earner, "id" | "founder_percent">[],
+  expenses: readonly Pick<Expense, "amount_usd" | "paid_by">[],
+): FounderPayout[] {
+  const back = paidBack(expenses);
+  return founderShares(pool, founders).map((share) => {
+    const paid = back.get(share.staff_id) ?? 0;
+    return { ...share, paid_back: paid, total: share.amount_usd + paid };
+  });
+}
 
 /**
  * Доли соучредителей от котла.

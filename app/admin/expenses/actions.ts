@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { requestIp, requireRole } from "@/lib/admin/guard";
-import { addExpense, removeExpense } from "@/lib/admin/ledger";
+import { addExpense, payerFromForm, removeExpense, setExpensePayer } from "@/lib/admin/ledger";
 
 /**
  * Расходы студии.
@@ -29,6 +29,7 @@ export async function addStudioExpense(formData: FormData) {
       spentOn: String(formData.get("spent_on") ?? "").slice(0, 10) || null,
       category: String(formData.get("category") ?? "other"),
       note: String(formData.get("note") ?? "") || null,
+      paidBy: payerFromForm(formData.get("paid_by")),
     },
     staff,
     await requestIp(),
@@ -36,6 +37,23 @@ export async function addStudioExpense(formData: FormData) {
 
   revalidatePath("/admin/expenses");
   redirect("/admin/expenses");
+}
+
+/**
+ * «Кто вносил» у записанного расхода: оба соучредителя, каждое изменение —
+ * в журнал (lib/admin/ledger.ts, setExpensePayer).
+ */
+export async function setStudioExpensePayer(formData: FormData) {
+  const staff = await requireRole("admin", "head");
+  const result = await setExpensePayer(
+    String(formData.get("id") ?? ""),
+    payerFromForm(formData.get("paid_by")),
+    staff,
+    await requestIp(),
+  );
+  revalidatePath("/admin/expenses");
+  revalidatePath("/admin/finance");
+  redirect(`/admin/expenses?done=${result.ok ? "ok" : "fail"}`);
 }
 
 export async function dropStudioExpense(formData: FormData) {

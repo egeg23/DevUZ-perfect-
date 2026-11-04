@@ -174,9 +174,9 @@ export const financeDict = defineDict({
   // Доли соучредителей.
   founders: { ru: "Доли соучредителей", uz: "Hammuassislar ulushlari", pl: "Udziały współzałożycieli" },
   foundersNote: {
-    ru: "Делится то, что уже пришло, за вычетом расходов. Незакрытые сделки показаны отдельно и в делёж не идут: выплатить долю по сделке, которая ещё сорвётся, дороже, чем подождать.",
-    uz: "Allaqachon kelgan pul xarajatlar ayirilgandan keyin bo‘linadi. Yopilmagan bitimlar alohida ko‘rsatiladi va bo‘linishga kirmaydi: hali buzilishi mumkin bo‘lgan bitim bo‘yicha ulush to‘lash kutishdan qimmatroq.",
-    pl: "Dzieli się to, co już wpłynęło, po odjęciu wydatków. Niezamknięte transakcje są pokazane osobno i nie wchodzą do podziału: wypłata udziału z transakcji, która może jeszcze upaść, kosztuje więcej niż czekanie.",
+    ru: "Делится то, что уже пришло, за вычетом расходов. Кто платил за расход из своих, тому эта сумма возвращается до деления. Незакрытые сделки показаны отдельно и в делёж не идут: выплатить долю по сделке, которая ещё сорвётся, дороже, чем подождать.",
+    uz: "Allaqachon kelgan pul xarajatlar ayirilgandan keyin bo‘linadi. Kim xarajatni o‘z pulidan to‘lagan bo‘lsa, bu summa unga bo‘linishdan oldin qaytariladi. Yopilmagan bitimlar alohida ko‘rsatiladi va bo‘linishga kirmaydi: hali buzilishi mumkin bo‘lgan bitim bo‘yicha ulush to‘lash kutishdan qimmatroq.",
+    pl: "Dzieli się to, co już wpłynęło, po odjęciu wydatków. Kto zapłacił za wydatek z własnych, temu ta kwota wraca przed podziałem. Niezamknięte transakcje są pokazane osobno i nie wchodzą do podziału: wypłata udziału z transakcji, która może jeszcze upaść, kosztuje więcej niż czekanie.",
   },
   poolEarned: { ru: "Пришло студии", uz: "Studiyaga kelgan", pl: "Wpłynęło do studia" },
   poolEarnedNote: {
@@ -195,6 +195,20 @@ export const financeDict = defineDict({
     ru: "реклама, сервисы, подрядчики",
     uz: "reklama, servislar, pudratchilar",
     pl: "reklama, usługi, podwykonawcy",
+  },
+  poolPaidBack: {
+    ru: (sum: string) => `из них ${sum} вносили сами, это вернётся им до деления`,
+    uz: (sum: string) => `shundan ${sum} ni o‘zlari to‘lagan, bu ularga bo‘linishdan oldin qaytadi`,
+    pl: (sum: string) => `z tego ${sum} zapłacili sami, wróci to do nich przed podziałem`,
+  },
+  shareOfPool: { ru: "доля", uz: "ulush", pl: "udział" },
+  shareBack: { ru: "вернуть за расходы", uz: "xarajatlar uchun qaytarish", pl: "zwrot za wydatki" },
+  shareDue: { ru: "к выплате", uz: "to‘lanadi", pl: "do wypłaty" },
+  colPayer: { ru: "Кто вносил", uz: "Kim to‘lagan", pl: "Kto zapłacił" },
+  together: {
+    ru: (split: string) => `Вместе, ${split}`,
+    uz: (split: string) => `Birgalikda, ${split}`,
+    pl: (split: string) => `Wspólnie, ${split}`,
   },
   poolShare: { ru: "К делению", uz: "Bo‘linadi", pl: "Do podziału" },
   poolShareNote: {
