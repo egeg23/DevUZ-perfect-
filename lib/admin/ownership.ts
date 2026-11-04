@@ -119,6 +119,7 @@ export async function takeLead(
     openedAt: queue.openedAt,
     now: new Date(),
     share,
+    waitingSince: queue.openedAt,
   });
   if (!verdict.ok) return { ok: false, reason: verdict.reason };
 

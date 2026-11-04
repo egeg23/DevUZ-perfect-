@@ -11,6 +11,7 @@ import {
   OPEN_HEADING,
   QUEUE_ROLES,
   LOST_WINDOW_HOURS,
+  activeNow,
   heldHeading,
   isLostCard,
   isWorkingHours,
@@ -20,6 +21,7 @@ import {
   offerHeading,
   pickNext,
   watchHeading,
+  withinShare,
   type Candidate,
   type Offer,
   type Share,
@@ -225,10 +227,16 @@ export async function queueState(
  */
 export async function shareOf(staffId: string, now: Date = new Date()): Promise<Share> {
   const { candidates } = await queueCandidates(now);
+  const total = candidates.reduce((sum, c) => sum + c.taken, 0);
+  const people = candidates.length;
   return {
     mine: candidates.find((c) => c.id === staffId)?.taken ?? 0,
-    total: candidates.reduce((sum, c) => sum + c.taken, 0),
-    people: candidates.length,
+    total,
+    people,
+    // Есть ли кому уступить прямо сейчас: на месте и со своей долей не взятой.
+    othersAwake: candidates.filter(
+      (c) => c.id !== staffId && activeNow(c.activeAt, now) && withinShare({ mine: c.taken, total, people }),
+    ).length,
   };
 }
 

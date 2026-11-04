@@ -49,8 +49,42 @@ export function isWorkingHours(now: Date): boolean {
   return hour >= WORK_FROM_HOUR && hour < WORK_TO_HOUR;
 }
 
-/** Сколько взято за месяц: у этого человека, у всех вместе и сколько всех. */
-export type Share = { mine: number; total: number; people: number };
+/**
+ * Сколько взято за месяц: у этого человека, у всех вместе и сколько всех.
+ * `othersAwake` — сколько других в очереди сейчас на месте и ещё не взяли
+ * свою долю (`activeNow`); неизвестно — считаем, что есть.
+ */
+export type Share = { mine: number; total: number; people: number; othersAwake?: number };
+
+/**
+ * Владелец, 03.11.2026: «когда нерабочее время и приходит лид … из-за
+ * очереди или перегруза свободный менеджер не может оперативно его взять и
+ * подхватить разговор или закинуть на себя из-за лимита. Поправь».
+ *
+ * Потолок равной доли держит, только пока есть кому уступить: на месте
+ * коллега с меньшей долей и лид ждёт меньше NIGHT_GRACE_MINUTES. Никого
+ * больше нет или лид ждёт дольше — берёт тот, кто на месте.
+ */
+export const NIGHT_GRACE_MINUTES = 10;
+
+export function shareBlocks(s: Share, waitingSince: string | null | undefined, now: Date): boolean {
+  if (withinShare(s)) return false;
+  if ((s.othersAwake ?? 1) <= 0) return false;
+  const since = waitingSince ? Date.parse(waitingSince) : Number.NaN;
+  if (Number.isFinite(since) && now.getTime() - since >= NIGHT_GRACE_MINUTES * 60_000) return false;
+  return true;
+}
+
+/**
+ * Нерабочее время для очереди: до 08:00 и после 18:00 по Ташкенту, а также
+ * суббота и воскресенье целиком. В это время полчаса «того, чья очередь» не
+ * держат остальных: спит он или на выходном — лид берёт тот, кто на месте.
+ */
+export function isOffHours(now: Date): boolean {
+  if (!isWorkingHours(now)) return true;
+  const day = new Date(now.getTime() + TASHKENT_OFFSET_MS).getUTCDay();
+  return day === 0 || day === 6;
+}
 
 /**
  * Не больше, чем при равном распределении между всеми.
@@ -248,12 +282,16 @@ export function mayTake(input: {
    * счёт за месяц: взять его может любой, но не больше равной доли.
    */
   share?: Share | null;
+  /** С какого времени лид ждёт хозяина (queue_opened_at) — для NIGHT_GRACE_MINUTES. */
+  waitingSince?: string | null;
 }): TakeVerdict {
   if (input.role === "admin") return { ok: true };
   if (input.share) {
-    return withinShare(input.share) ? { ok: true } : { ok: false, reason: "share", holder: null, until: null };
+    return shareBlocks(input.share, input.waitingSince, input.now) ? { ok: false, reason: "share", holder: null, until: null } : { ok: true };
   }
   if (!input.offers.length || input.openedAt) return { ok: true };
+  // Нерабочее время (вечер, ночь, выходные): чужие полчаса не держат.
+  if (isOffHours(input.now)) return { ok: true };
 
   const open = input.offers.find((o) => o.outcome === null) ?? null;
   const live = open && Date.parse(open.expiresAt) > input.now.getTime();
@@ -297,7 +335,7 @@ export function watchHeading(holder: string, until: string): string {
 }
 
 export const NIGHT_HEADING =
-  "🌙 <b>Нерабочее время — лид открыт всем в очереди.</b> Взять можно, но не больше равной доли за месяц.";
+  "🌙 <b>Нерабочее время — лид открыт всем в очереди.</b> Берёт тот, кто на месте. Равная доля за месяц держит, только пока на месте коллега, у которого меньше, и не дольше 10 минут.";
 
 export const OPEN_HEADING = "🔓 <b>Никто из очереди не взял — лид открыт всем.</b> Берёт первый, кто нажмёт.";
 

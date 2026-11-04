@@ -51,9 +51,9 @@ export const leadResultDict = defineDict({
     pl: "To nie Twoja kolej: lead jest teraz zaproponowany komuś innemu na 30 minut. Jeśli go nie weźmie, trafi do kolejnej osoby i kolejka może dojść do Ciebie.",
   },
   share: {
-    ru: "Вы уже взяли свою равную долю лидов за месяц. Этот лид пришёл в нерабочее время и достаётся тем, у кого меньше.",
-    uz: "Siz oylik teng ulushingizni allaqachon oldingiz. Bu lid ish vaqtidan tashqari kelgan va kamroq lid olganlarga beriladi.",
-    pl: "Twoja równa część leadów na ten miesiąc jest już wykorzystana. Ten lead przyszedł poza godzinami pracy i trafia do osób, które mają ich mniej.",
+    ru: "Вы уже взяли свою равную долю лидов за месяц. Этот лид пришёл в нерабочее время, а на месте коллега, у которого меньше. Если за 10 минут его никто не возьмёт, сможете взять вы.",
+    uz: "Siz oylik teng ulushingizni allaqachon oldingiz. Bu lid ish vaqtidan tashqari kelgan, joyida esa kamroq olgan hamkasb bor. 10 daqiqada hech kim olmasa, siz olishingiz mumkin.",
+    pl: "Twoja równa część leadów na ten miesiąc jest już wykorzystana. Ten lead przyszedł poza godzinami pracy, a na miejscu jest kolega, który ma mniej. Jeśli w 10 minut nikt go nie weźmie, możesz go wziąć ty.",
   },
   forbidden: {
     ru: "Лид закреплён не за вами.",
