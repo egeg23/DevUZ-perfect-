@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Разбор сайта deviceuz.uz · DevUz Studio</title>
+<link rel="stylesheet" href="letterhead.css">
+<!--
+  Разбор сайта Device.uz (deviceuz.uz), лид DZ-1104-WE98, ведёт Александр
+  (владелец, 04.11.2026: «Это лид Александра, закрепим за ним»). Клиент
+  ответил на касание: «Ждем аудит».
+
+  Что проверено 04.11.2026, всё не из Узбекистана, одним сервером:
+  - главная, карточка (JBL Tune 510, DJI Mic 3), категория «Зарядные
+    устройства», два тега, обзор, «Отзывы», uz.deviceuz.uz: код страниц,
+    заголовки, разметка для поиска, подписи картинок;
+  - Playwright, iPhone 13 (390 px): первый экран, полная загрузка, вес; то же
+    у mcbro.uz, maxcom.uz, 220volt.uz (mediapark.uz отдал проверку от ботов);
+  - robots.txt и карты сайта: ru — sitemap.6193320.xml.gz, 2 102 адреса
+    (1 336 /magazin/tag, 700 /magazin/product, 16 /magazin/folder),
+    uz — sitemap-language-uz-20261103.xml, 66 адресов;
+  - Google (Firecrawl, Ташкент): «купить наушники Marshall Ташкент» —
+    deviceuz нет в десятке (McBro 1, 220volt 5, Maxcom 6); «DJI Mic купить в
+    Ташкенте» — deviceuz 4 (McBro 2); «device.uz» — сайт, Яндекс Карты 5,0
+    (348 оценок, 268 отзывов), 2ГИС 5,0;
+  - Яндекс поиск с наших серверов отдаёт проверку «вы не робот»: позиции не
+    сняты, обходить проверку не стали.
+
+  Цифры: значок Instagram в подвале — SVG 241 337 байт с картинкой внутри,
+  на странице дважды; HTML главной 1 049 416 байт, из них SVG 634 928.
+  Описание DJI Mic 3: «Цена 3,289,300 сум», на странице 3 597 000 сўм.
+  Viewport: maximum-scale=1.0, user-scalable=no. Файлы корзины, карточки,
+  поиска и шрифтов — с deviceuz.duckdns.org. Разметка товара и canonical
+  ставятся скриптом после загрузки, наличие у всех InStock.
+
+  Цены — только утверждённые: «3 ошибки за 2 дня — 150 $» (LADDER в
+  lib/admin/mockup-offer.ts), сайт от 1 000 $ (content/services.ts), макет за
+  12 часов бесплатно. Шаг 2 без суммы: смета после доступа к панели.
+
+  PDF: node scripts/kp-pdf.mjs kp/deviceuz-audit.html kp/deviceuz-audit.pdf
+-->
+<style>
+  .first h2 { margin-top: 4mm; }
+  .good { margin: 3mm 0; padding: 3mm 4mm; background: #f1f7f2; border-left: 3px solid #1c6b3b; font-size: 9.3pt; }
+  .good ul { margin: 1mm 0 0; }
+  .good li:last-child { margin-bottom: 0; }
+  .top { margin: 0 0 2mm; padding-left: 5mm; font-size: 9.4pt; }
+  .top li { margin-bottom: 1.2mm; }
+  table.cmp td, table.cmp th { font-size: 8.7pt; }
+  table.cmp th:first-child { width: 26mm; }
+  table.cmp tr.we td { background: #fff6e0; font-weight: 600; }
+  .bars { margin: 2mm 0 1mm; font-size: 8.6pt; }
+  .bars div { display: grid; grid-template-columns: 22mm 1fr 18mm; align-items: center; gap: 2mm; margin-bottom: 1.2mm; }
+  .bars i { display: block; height: 3.2mm; background: #b9b9b9; border-radius: 1mm; }
+  .bars .we i { background: #c98416; }
+  .bars span:last-child { text-align: right; }
+  .f { display: grid; grid-template-columns: 7mm 1fr; gap: 0 2mm; padding: 2.4mm 0; border-top: 1px solid rgba(0,0,0,.15); }
+  .f:last-of-type { border-bottom: 1px solid rgba(0,0,0,.15); }
+  .f .n { font-size: 12pt; font-weight: 700; color: #c98416; line-height: 1.2; }
+  .f b.h { display: block; font-size: 10pt; margin-bottom: .8mm; }
+  .f p { margin: 0 0 1mm; font-size: 9pt; line-height: 1.45; }
+  .f p.fix { margin: 0; color: #1c6b3b; }
+  .f p.fix b { color: #1c6b3b; }
+  .shots { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; margin: 1.5mm 0 1mm; }
+  .shots figure { margin: 0; display: grid; grid-template-columns: 27mm 1fr; gap: 3mm; align-items: start; }
+  .shots img { width: 27mm; display: block; border: 1px solid rgba(0,0,0,.2); border-radius: 2mm; }
+  figcaption { font-size: 8.4pt; line-height: 1.4; color: rgba(0,0,0,.78); }
+  figcaption b { display: block; color: #000; font-size: 9pt; margin-bottom: .6mm; }
+  .steps { list-style: none; margin: 1mm 0 2mm; padding: 0; }
+  .steps li { border: 1px solid rgba(0,0,0,.25); border-radius: 2mm; padding: 2mm 3.5mm; margin-bottom: 1.8mm; font-size: 9pt; line-height: 1.45; }
+  .steps li.on { border: 2px solid #000; }
+  .steps .hd { display: flex; justify-content: space-between; align-items: baseline; gap: 3mm; margin-bottom: 1mm; }
+  .steps .hd b { font-size: 10.2pt; }
+  .steps .sum { font-size: 11.5pt; font-weight: 700; white-space: nowrap; }
+  .steps p { margin: 0; }
+  .who { display: grid; grid-template-columns: 1.25fr 1fr 1fr; gap: 3mm; margin-top: 2mm; }
+  .who div { border-top: 2px solid #000; padding-top: 1.6mm; font-size: 8.8pt; line-height: 1.45; }
+  .who .k { display: block; font-size: 7.4pt; letter-spacing: .14em; text-transform: uppercase; color: rgba(0,0,0,.55); margin-bottom: .8mm; }
+  .who b { font-size: 10pt; }
+</style>
+</head>
+<body>
+
+<!-- 1. Коротко и сравнение -->
+<section class="sheet first">
+  <h1>Разбор сайта deviceuz.uz</h1>
+  <p class="subtitle">что видит покупатель и поисковик, и как это исправить</p>
+  <div class="place"><span>Для: Device.uz, Валентин</span><span>г. Ташкент · 4 ноября 2026 г.</span></div>
+
+  <p style="margin-top:4mm">Открыли сайт как покупатель, с телефона и компьютера: главная, каталог, карточки, узбекская версия. Посмотрели выдачу Google и карту сайта для поисковиков, сравнили с соседями, которые продают те же Marshall, DJI и JBL.</p>
+
+  <div class="good">
+    <b>Что уже хорошо</b>
+    <ul>
+      <li>Покупатели вас любят: <b>5,0 на Яндекс Картах</b> (348 оценок, 268 отзывов) и 5,0 в 2ГИС.</li>
+      <li>Есть то, чего нет у многих соседей: узбекская версия, «Купить в 1 клик», подбор с ИИ, доставка за 24 часа, свой журнал с обзорами.</li>
+      <li>Обзоры работают: по запросу «DJI Mic купить в Ташкенте» вы на 4-м месте в Google.</li>
+    </ul>
+  </div>
+
+  <h2>Главное, коротко</h2>
+  <ol class="top">
+    <li><b>Сайт открывается вдвое дольше, чем у соседей.</b> Каждую страницу тянет вниз значок Инстаграма весом 240 КБ.</li>
+    <li><b>Цена в Google и цена на сайте разные</b>, разница до 300 тысяч сумов.</li>
+    <li><b>Первый экран на телефоне без товара и цены</b>, а фото нельзя увеличить пальцами.</li>
+    <li><b>Две трети страниц для поисковиков пустые</b>, а узбекскую версию поиск почти не видит.</li>
+    <li><b>Корзина и поиск работают с чужого бесплатного адреса.</b> Перестанет он отвечать, и заказ не оформить.</li>
+  </ol>
+
+  <h2>Вы и соседи</h2>
+  <table class="cmp">
+    <tr><th>Сайт</th><th class="num">Первый экран</th><th class="num">Вся страница</th><th class="num">Вес кода</th><th>Google: наушники Marshall</th><th>Google: DJI Mic</th></tr>
+    <tr class="we"><td>deviceuz.uz</td><td class="num">4,7 с</td><td class="num">11,3 с</td><td class="num">484 КБ</td><td>нет в десятке</td><td>4-е место</td></tr>
+    <tr><td>mcbro.uz</td><td class="num">2,2 с</td><td class="num">6,8 с</td><td class="num">57 КБ</td><td>1-е место</td><td>2-е место</td></tr>
+    <tr><td>220volt.uz</td><td class="num">5,2 с</td><td class="num">7,8 с</td><td class="num">55 КБ</td><td>5-е место</td><td>нет в десятке</td></tr>
+    <tr><td>maxcom.uz</td><td class="num">4,2 с</td><td class="num">10,5 с</td><td class="num">28 КБ</td><td>6-е место</td><td>нет в десятке</td></tr>
+  </table>
+  <p class="small muted">Запросы: «купить наушники Marshall Ташкент» и «DJI Mic купить в Ташкенте», выдача по Ташкенту. Первый экран и вся страница: секунды на телефоне. Вес кода: без фото товаров; чем меньше, тем быстрее сайт на мобильном интернете. Замер 4 ноября 2026 года, iPhone, один сервер для всех, не из Узбекистана: из Ташкента цифры меньше, соотношение то же. В десятке Google ещё Mediapark, Uzum и OLX. Яндекс отвечает нашим серверам проверкой «вы не робот», места в Яндексе посмотрим вместе с вами из Ташкента.</p>
+</section>
+
+<!-- 2. Что мешает покупателю -->
+<section class="sheet">
+  <h2 style="margin-top:6mm">Что мешает покупателю</h2>
+
+  <div class="f"><span class="n">1</span><div>
+    <b class="h">На телефоне первый экран без товара и цены</b>
+    <div class="shots">
+      <figure><img src="deviceuz/phone-deviceuz.jpg" alt="Первый экран deviceuz.uz на телефоне"><figcaption><b>deviceuz.uz</b>Логотип, шесть пунктов меню, кнопка языка на целую строку, поиск. Первый товар с ценой только после прокрутки. Кнопки корзины и Telegram закрывают подпись «Всё нужное, по разделам».</figcaption></figure>
+      <figure><img src="deviceuz/phone-mcbro.jpg" alt="Первый экран mcbro.uz на телефоне"><figcaption><b>mcbro.uz</b>Сразу товар, цена в рассрочку крупно и окно «Есть вопрос? Напишите нам».</figcaption></figure>
+    </div>
+    <p>Рассрочка без переплат у вас есть, но о ней одна строка внизу главной. Человек с телефона решает за пару секунд, листать дальше или вернуться в поиск.</p>
+    <p class="fix"><b>Исправим:</b> меню в одну строку, на первый экран хиты с ценой и «рассрочка без переплат».</p>
+  </div></div>
+
+  <div class="f"><span class="n">2</span><div>
+    <b class="h">Сайт тяжёлый: страница весит около 1 МБ ещё до фото товаров</b>
+    <p>Почти половина веса приходится на значок Инстаграма в подвале. Картинка размером 60 на 60 точек весит 240 КБ, больше любого фото товара, и стоит на каждой странице дважды. Поэтому первый экран на телефоне появляется через 4,7 секунды, у McBro через 2,2. По данным Google, больше половины посетителей с телефона уходят, если страница грузится дольше 3 секунд.</p>
+    <p class="fix"><b>Исправим:</b> значок станет обычным файлом в 2 КБ. Страница вдвое легче, без перемен во внешнем виде.</p>
+  </div></div>
+
+  <div class="f"><span class="n">3</span><div>
+    <b class="h">Фото и текст нельзя увеличить пальцами</b>
+    <p>На сайте запрещено увеличение. Покупатель хочет рассмотреть разъём или цвет наушников, раздвигает пальцами, и ничего не происходит. Мелкие характеристики на телефоне не прочитать.</p>
+    <p class="fix"><b>Исправим:</b> одна строка в настройках страницы.</p>
+  </div></div>
+
+  <div class="f"><span class="n">4</span><div>
+    <b class="h">В Google одна цена, на сайте другая</b>
+    <p>DJI Mic 3: Google показывает «Цена 3 289 300 сум», на странице 3 597 000. Описание для поиска написано руками и не обновилось вместе с ценой. Человек приходит за одной ценой, видит на 300 тысяч выше и думает, что его обманули. Кроме того, для поисковиков у всех товаров стоит «в наличии», даже если товар закончился.</p>
+    <p class="fix"><b>Исправим:</b> цена и наличие в описании для поиска будут браться из карточки сами.</p>
+  </div></div>
+
+  <div class="f"><span class="n">5</span><div>
+    <b class="h">Настоящих отзывов на сайте не видно</b>
+    <p>На странице «Отзывы» тексты как из образца: «Василий Милославский» (герой фильма «Иван Васильевич меняет профессию»), «благодарю вас за качественно выполненную работу», ни слова о товаре или доставке. Внимательный покупатель это замечает. А 268 настоящих отзывов с оценкой 5,0 на Яндекс Картах остаются на картах.</p>
+    <p class="fix"><b>Исправим:</b> покажем на сайте настоящие отзывы и оценку с Яндекс Карт и 2ГИС.</p>
+  </div></div>
+</section>
+
+<!-- 3. Что мешает поиску, что предлагаем, контакты -->
+<section class="sheet">
+  <h2 style="margin-top:6mm">Что мешает находить вас в Google и Яндексе</h2>
+
+  <div class="f"><span class="n">6</span><div>
+    <b class="h">Две трети адресов в карте сайта ведут на пустые страницы тегов</b>
+    <p>В карте для поисковиков 2 102 адреса: 700 товаров, 16 категорий и 1 336 тегов вроде «кулер для телефона», где описание из тех же трёх слов. Тег «SanDisk Extreme PRO Portable SSD» спорит в поиске с карточкой этого же товара, у Marshall Monitor III два обзора, и они отбирают места друг у друга.</p>
+    <p class="fix"><b>Исправим:</b> лишние теги уберём из поиска, нужные сделаем подборками с текстом; одна модель, одна страница.</p>
+  </div></div>
+
+  <div class="f"><span class="n">7</span><div>
+    <b class="h">Узбекскую версию поиск почти не видит</b>
+    <p>В узбекской карте сайта 66 адресов против 2 102 русских: остальное закрыто от поиска, пока не переведено. Кто ищет «quloqchin Marshall», вас не найдёт. Цена там подписана кириллицей, «сўм».</p>
+    <p class="fix"><b>Исправим:</b> переведём категории и карточки, вычитаем, откроем поиску; «so‘m» латиницей.</p>
+  </div></div>
+
+  <div class="f"><span class="n">8</span><div>
+    <b class="h">Корзина и поиск работают с чужого бесплатного адреса</b>
+    <p>Корзина, карточка товара, поиск и шрифты загружаются с deviceuz.duckdns.org, бесплатного адреса стороннего сервиса. Перестанет он отвечать, и корзина на сайте не работает. Достанется адрес чужому, и он сможет подменить корзину.</p>
+    <p class="fix"><b>Исправим:</b> перенесём эти файлы на сам deviceuz.uz.</p>
+  </div></div>
+
+  <p style="font-size:9pt;margin-top:2mm"><b>Ещё по мелочи:</b> у 55 из 96 картинок главной нет подписи, и Google Картинки не приводят покупателей; при пересылке ссылки на главную в Telegram нет картинки; главный адрес страницы сайт сообщает только после загрузки, и Яндекс может его не увидеть.</p>
+
+  <h2 style="margin-top:4mm">Что предлагаем</h2>
+  <ol class="steps">
+    <li class="on"><div class="hd"><b>1. Быстрые правки за 2 дня</b><span class="sum">150 $</span></div><p>Три самые дорогие ошибки: тяжёлый значок (страница вдвое легче), увеличение пальцами, цена в Google из карточки.</p></li>
+    <li><div class="hd"><b>2. Порядок для поиска, 1-2 недели</b><span class="sum">по смете</span></div><p>Теги и дубли, узбекская версия, корзина на свой адрес, настоящие отзывы, мелочи. Сумму назовём, когда посмотрим вашу панель.</p></li>
+    <li><div class="hd"><b>3. По желанию: новый магазин на своём коде</b><span class="sum">от 1 000 $</span></div><p>Вместо шаблона платформы: товар и рассрочка на первом экране, загрузка до 2 секунд, все 700 товаров и адреса страниц переносим. До решения за 12 часов бесплатно соберём макет главной: откроете с телефона и посмотрите вживую.</p></li>
+  </ol>
+
+  <div class="who">
+    <div><span class="k">Ваш менеджер</span><b>Александр</b><br>+998 90 912-05-78, звонок и WhatsApp<br>Telegram: @AleksRaider</div>
+    <div><span class="k">Студия</span><b>devuz.studio</b><br>кейсы, цены, отзывы</div>
+    <div><span class="k">Бот студии</span><b>t.me/Devuz_studio_bot</b><br>вопрос или заявка в два касания</div>
+  </div>
+</section>
+
+<script src="letterhead.js"></script>
+</body>
+</html>
