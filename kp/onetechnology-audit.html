@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Разбор сайта onetechnology.uz · DevUz Studio</title>
+<link rel="stylesheet" href="letterhead.css">
+<!--
+  Разбор сайта ONE TECHNOLOGY (onetechnology.uz, автоматика для ворот,
+  шлагбаумы, Ташкент), лид DZ-1104-LB69, ведёт Александр. Клиент ответил на
+  кружок «Ну предложите». Владелец, 04.11.2026: «Такой же аудит для них».
+
+  Что проверено 04.11.2026, всё не из Узбекистана, одним сервером:
+  - все 44 адреса карты сайта (wp-sitemap.xml: 39 страниц, 4 вакансии,
+    автор, «clients 1»): заголовок, описание, h1, цены, текст;
+  - Playwright, iPhone 13 и 1440 px: главная, «Контакты», «Автоматические
+    шлагбаумы», Came ATS, меню; форма — first-name*, last-name* (подпись
+    «Организация»), your-email*, phone*, your-message; на «Контактах»
+    формы нет (0 полей), над пустым местом «Оставьте свои контактные данные»;
+  - в коде каждой страницы скрытый блок темы FreightExpress: «Transport &
+    Logistics», «Lorem ipsum…», «West 21th Street, New York», tel:+76757576560,
+    freightexpress@mail.com, ссылки на Instagram/Facebook/LinkedIn Qode
+    Interactive; на экране не виден;
+  - /wp-json/wp/v2/users отдаёт пользователя 1 с именем-почтой, страница
+    автора — та же почта в заголовке; wp-login.php открыт. Почту в документ
+    целиком не пишем (репозиторий открытый);
+  - Google (Firecrawl, Ташкент): «автоматика для ворот Ташкент купить
+    установка» — onetechnology 10 (vidcom 2, alutech 3, faac 7, SAT 8);
+    «шлагбаум автоматический купить в Ташкенте цена» — нет в десятке
+    (alutech 3 и 7, SAT 6); по названию — свой сайт и Яндекс Карты: 4,3 по
+    4 оценкам, «Буюк Ипак Йули, 40», +998 98 306 76 70 (на сайте 41 и
+    +998 90 907 71 77);
+  - цены на странице: alutech 4, SAT 35, vidcom 2, faac 0, onetechnology 0;
+    узбекская версия: SAT и FAAC есть, alutech, vidcom, onetechnology нет;
+  - Яндекс поиск с наших серверов отдаёт проверку «вы не робот»: позиции не
+    сняты, обходить проверку не стали.
+
+  Цены — только утверждённые: «3 ошибки за 2 дня — 150 $» (LADDER в
+  lib/admin/mockup-offer.ts), сайт от 1 000 $ (content/services.ts), макет за
+  12 часов бесплатно. Шаг 2 без суммы: смета после доступа к панели.
+
+  PDF: node scripts/kp-pdf.mjs kp/onetechnology-audit.html kp/onetechnology-audit.pdf
+-->
+<style>
+  .first h2 { margin-top: 4mm; }
+  .good { margin: 3mm 0; padding: 3mm 4mm; background: #f1f7f2; border-left: 3px solid #1c6b3b; font-size: 9.3pt; }
+  .good ul { margin: 1mm 0 0; }
+  .good li:last-child { margin-bottom: 0; }
+  .top { margin: 0 0 2mm; padding-left: 5mm; font-size: 9.4pt; }
+  .top li { margin-bottom: 1.2mm; }
+  table.cmp td, table.cmp th { font-size: 8.7pt; }
+  table.cmp th:first-child { width: 30mm; }
+  table.cmp tr.we td { background: #fff6e0; font-weight: 600; }
+  .f { display: grid; grid-template-columns: 7mm 1fr; gap: 0 2mm; padding: 2.4mm 0; border-top: 1px solid rgba(0,0,0,.15); }
+  .f:last-of-type { border-bottom: 1px solid rgba(0,0,0,.15); }
+  .f .n { font-size: 12pt; font-weight: 700; color: #c98416; line-height: 1.2; }
+  .f b.h { display: block; font-size: 10pt; margin-bottom: .8mm; }
+  .f p { margin: 0 0 1mm; font-size: 9pt; line-height: 1.45; }
+  .f p.fix { margin: 0; color: #1c6b3b; }
+  .f p.fix b { color: #1c6b3b; }
+  .shots { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; margin: 1.5mm 0 1mm; }
+  .shots figure { margin: 0; display: grid; grid-template-columns: 27mm 1fr; gap: 3mm; align-items: start; }
+  .shots img { width: 27mm; display: block; border: 1px solid rgba(0,0,0,.2); border-radius: 2mm; }
+  figcaption { font-size: 8.4pt; line-height: 1.4; color: rgba(0,0,0,.78); }
+  figcaption b { display: block; color: #000; font-size: 9pt; margin-bottom: .6mm; }
+  .steps { list-style: none; margin: 1mm 0 2mm; padding: 0; }
+  .steps li { border: 1px solid rgba(0,0,0,.25); border-radius: 2mm; padding: 2mm 3.5mm; margin-bottom: 1.8mm; font-size: 9pt; line-height: 1.45; }
+  .steps li.on { border: 2px solid #000; }
+  .steps .hd { display: flex; justify-content: space-between; align-items: baseline; gap: 3mm; margin-bottom: 1mm; }
+  .steps .hd b { font-size: 10.2pt; }
+  .steps .sum { font-size: 11.5pt; font-weight: 700; white-space: nowrap; }
+  .steps p { margin: 0; }
+  .who { display: grid; grid-template-columns: 1.25fr 1fr 1fr; gap: 3mm; margin-top: 2mm; }
+  .who div { border-top: 2px solid #000; padding-top: 1.6mm; font-size: 8.8pt; line-height: 1.45; }
+  .who .k { display: block; font-size: 7.4pt; letter-spacing: .14em; text-transform: uppercase; color: rgba(0,0,0,.55); margin-bottom: .8mm; }
+  .who b { font-size: 10pt; }
+</style>
+</head>
+<body>
+
+<!-- 1. Коротко и сравнение -->
+<section class="sheet first">
+  <h1>Разбор сайта onetechnology.uz</h1>
+  <p class="subtitle">что видит покупатель и поисковик, и как это исправить</p>
+  <div class="place"><span>Для: ONE TECHNOLOGY, автоматика для ворот</span><span>г. Ташкент · 4 ноября 2026 г.</span></div>
+
+  <p style="margin-top:4mm">Открыли сайт как покупатель, с телефона и компьютера: главная, разделы, модели, «Контакты», форма заявки. Проверили все 44 страницы для поисковиков, выдачу Google и сравнили с соседями, которые ставят ту же автоматику в Ташкенте.</p>
+
+  <div class="good">
+    <b>Что уже хорошо</b>
+    <ul>
+      <li>Сильные марки: Came, Hörmann, Alutech, Comunello, Rolflex. У каждой модели характеристики и видео.</li>
+      <li>Чистый дизайн и хорошие фото. Страницы открываются быстро: первый экран на телефоне за 2,5 секунды.</li>
+      <li>По названию компании вся первая страница Google ваша: сайт, его разделы и карточка на Яндекс Картах.</li>
+    </ul>
+  </div>
+
+  <h2>Главное, коротко</h2>
+  <ol class="top">
+    <li><b>Ни на одной странице нет цены</b>, а у соседей «от 7 052 900 сум» видно прямо в Google.</li>
+    <li><b>Заявку оставить трудно</b>: форма требует организацию и почту, а на странице «Контакты» формы нет совсем.</li>
+    <li><b>В коде сайта остался чужой шаблон</b>: адрес в Нью-Йорке, чужой телефон и вакансии склада на английском.</li>
+    <li><b>Google не знает, о чём страницы</b>: ни у одной нет описания, в заголовках только названия моделей.</li>
+    <li><b>Логин администратора виден всем</b>: от взлома сайт защищает только пароль.</li>
+  </ol>
+
+  <h2>Вы и соседи</h2>
+  <table class="cmp">
+    <tr><th>Сайт</th><th>Цены на странице</th><th>Описание для Google</th><th>Узбекская версия</th><th>Google: автоматика для ворот</th><th>Google: шлагбаум</th></tr>
+    <tr class="we"><td>onetechnology.uz</td><td>нет</td><td>нет</td><td>нет</td><td>10-е место</td><td>нет в десятке</td></tr>
+    <tr><td>vidcom.uz</td><td>есть</td><td>есть</td><td>нет</td><td>2-е место</td><td>нет в десятке</td></tr>
+    <tr><td>alutech.uz</td><td>есть</td><td>есть</td><td>нет</td><td>3-е место</td><td>3-е место</td></tr>
+    <tr><td>satsolutions.uz</td><td>есть</td><td>есть</td><td>есть</td><td>8-е место</td><td>6-е место</td></tr>
+    <tr><td>faac.uz</td><td>нет</td><td>есть</td><td>есть</td><td>7-е место</td><td>нет в десятке</td></tr>
+  </table>
+  <p class="small muted">Запросы: «автоматика для ворот Ташкент купить установка» и «шлагбаум автоматический купить в Ташкенте цена», выдача Google по Ташкенту, 4 ноября 2026 года. В десятке ещё OLX и Prom.uz. Яндекс отвечает нашим серверам проверкой «вы не робот», места в Яндексе посмотрим вместе с вами из Ташкента.</p>
+</section>
+
+<!-- 2. Что мешает покупателю -->
+<section class="sheet">
+  <h2 style="margin-top:6mm">Что мешает покупателю</h2>
+
+  <div class="f"><span class="n">1</span><div>
+    <b class="h">Цены нет нигде, даже «от»</b>
+    <div class="shots">
+      <figure><img src="onetechnology/phone-onetechnology.jpg" alt="Страница «Автоматические шлагбаумы» на onetechnology.uz, телефон"><figcaption><b>onetechnology.uz</b>«Автоматические шлагбаумы», кнопка «Заказать» и общий текст. Ни одной модели и цены на первом экране.</figcaption></figure>
+      <figure><img src="onetechnology/phone-satsolutions.jpg" alt="Страница «Шлагбаумы в Ташкенте» на satsolutions.uz, телефон"><figcaption><b>satsolutions.uz</b>«Шлагбаумы в Ташкенте: цены и наличие», 40 моделей, фильтры, «В наличии» и цена у каждой.</figcaption></figure>
+    </div>
+    <p>Человек, который выбирает шлагбаум или привод для ворот, сначала хочет понять порядок цены. Не нашёл у вас и звонит тем, у кого она есть: Alutech, SAT Solutions и Vidcom показывают её прямо в Google.</p>
+    <p class="fix"><b>Исправим:</b> у каждой модели «от … сум с установкой», у разделов вилка цен и что входит в монтаж.</p>
+  </div></div>
+
+  <div class="f"><span class="n">2</span><div>
+    <b class="h">Заявку оставить трудно</b>
+    <p>Форма внизу страниц требует четыре поля: имя, «Организация», почту и телефон. Хозяин частного дома не знает, что писать в «Организации», почты у многих нет, и форма не отправится. На странице «Контакты» формы нет совсем: написано «Оставьте свои контактные данные», а ниже пустое место. На главной нет ни телефона, ни кнопки заявки, только пять плиток с разделами.</p>
+    <p class="fix"><b>Исправим:</b> в форме имя и телефон, остальное по желанию; форма на «Контактах»; кнопки «Позвонить» и Telegram на каждом экране.</p>
+  </div></div>
+
+  <div class="f"><span class="n">3</span><div>
+    <b class="h">В коде каждой страницы остался чужой шаблон</b>
+    <p>Сайт собран на шаблоне для грузоперевозок, и его образец не удалили: «Transport &amp; Logistics», «Lorem ipsum», адрес «West 21th Street, New York», телефон +767 575 765 60, почта freightexpress@mail.com и ссылки на Instagram и Facebook автора шаблона. Покупатель этого не видит, а Google читает. В карте сайта для поисковиков ещё четыре вакансии склада на английском: «Warehouse Worker», «General Labour» и другие. Google может показать их в поиске под вашим именем.</p>
+    <p class="fix"><b>Исправим:</b> уберём образец шаблона и вакансии.</p>
+  </div></div>
+
+  <div class="f"><span class="n">4</span><div>
+    <b class="h">На Яндекс Картах другой адрес и другой телефон</b>
+    <p>На сайте: Буюк Ипак Йули, 41 и +998 90 907 71 77. На Яндекс Картах: Буюк Ипак Йули, 40 и +998 98 306 76 70, оценка 4,3 по четырём отзывам. Покупатель звонит по номеру с карт и может не дозвониться, а поисковики меньше доверяют компании, у которой адрес в разных местах разный.</p>
+    <p class="fix"><b>Исправим:</b> сведём адрес и телефон везде к одному и добавим на сайт кнопку «Оставить отзыв на картах».</p>
+  </div></div>
+</section>
+
+<!-- 3. Поиск, безопасность, предложение, контакты -->
+<section class="sheet">
+  <h2 style="margin-top:6mm">Что мешает находить вас в Google и Яндексе</h2>
+
+  <div class="f"><span class="n">5</span><div>
+    <b class="h">Поисковик не знает, о чём ваши страницы</b>
+    <p>Ни у одной из 44 страниц нет описания для поиска, и Google сам берёт кусок текста: под главной он показывает «СЕКЦИОННЫЕ ВОРОТА. Секционные ворота это…». В заголовках только названия моделей: «ATS», «Fort», «Limit 500». Ни «привод для ворот», ни «Ташкент», ни «купить». У главной нет даже главного заголовка, только «Onetechnology». Поэтому по «автоматика для ворот» вы десятые, а по «шлагбаум купить в Ташкенте» вас нет в первой десятке.</p>
+    <p class="fix"><b>Исправим:</b> заголовок и описание у каждой страницы, например «Привод Came ATS для распашных ворот в Ташкенте: цена с установкой».</p>
+  </div></div>
+
+  <div class="f"><span class="n">6</span><div>
+    <b class="h">Нет узбекской версии</b>
+    <p>Кто ищет «darvoza avtomatikasi» или «shlagbaum narxi», находит SAT Solutions и FAAC: у них она есть. У вас сайт только на русском.</p>
+    <p class="fix"><b>Исправим:</b> узбекская версия разделов и моделей, латиницей.</p>
+  </div></div>
+
+  <div class="f"><span class="n">7</span><div>
+    <b class="h">Логин администратора виден всем</b>
+    <p>Сайт открыто показывает имя, под которым входят в панель (почта khumoyun…@gmail.com), и страница входа стоит по обычному адресу. Подобрать пароль остаётся единственным шагом, а такие сайты подбирают программы, не люди.</p>
+    <p class="fix"><b>Исправим:</b> скроем имя, перенесём вход, поставим вход по коду и предел попыток.</p>
+  </div></div>
+
+  <p style="font-size:9pt;margin-top:2mm"><b>Ещё по мелочи:</b> у 20 из 23 картинок на странице шлагбаумов нет подписи, и Google Картинки вас не показывают; при пересылке ссылки в Telegram нет картинки; на телефоне кнопка письма закрывает текст.</p>
+
+  <h2 style="margin-top:4mm">Что предлагаем</h2>
+  <ol class="steps">
+    <li class="on"><div class="hd"><b>1. Быстрые правки за 2 дня</b><span class="sum">150 $</span></div><p>Три самые срочные: образец шаблона и вакансии долой, форма «имя и телефон» и форма на «Контактах», имя администратора скрыто.</p></li>
+    <li><div class="hd"><b>2. Цены и поиск, 1-2 недели</b><span class="sum">по смете</span></div><p>Цены «от» у моделей, заголовки и описания 39 страниц, адрес и телефон на картах, узбекская версия, мелочи. Сумму назовём, когда посмотрим вашу панель.</p></li>
+    <li><div class="hd"><b>3. По желанию: новый сайт</b><span class="sum">от 1 000 $</span></div><p>Каталог с ценами, расчёт «ворота под ключ» по размеру проезда, заявка сразу в Telegram, русский и узбекский. До решения за 12 часов бесплатно соберём макет главной: откроете с телефона и посмотрите вживую.</p></li>
+  </ol>
+
+  <div class="who">
+    <div><span class="k">Ваш менеджер</span><b>Александр</b><br>+998 90 912-05-78, звонок и WhatsApp<br>Telegram: @AleksRaider</div>
+    <div><span class="k">Студия</span><b>devuz.studio</b><br>кейсы, цены, отзывы</div>
+    <div><span class="k">Бот студии</span><b>t.me/Devuz_studio_bot</b><br>вопрос или заявка в два касания</div>
+  </div>
+</section>
+
+<script src="letterhead.js"></script>
+</body>
+</html>
