@@ -473,3 +473,123 @@ main{overflow-x:clip}
 .mine-i b{display:block}
 .mine-i small{color:var(--mu)}
 @media (prefers-reduced-motion:reduce){.fl-truck .tl{stroke-dashoffset:0}.bar i em{transform:scaleX(var(--v))}.msg{opacity:1;transform:none}}
+/* ── Сцена D-MAX (кадры и движок — премиум-эталон SamAuto, /protos/samauto/seq) ──
+   Высокая дорожка, сцена прилипает к экрану, прокрутка листает кадры; пока не
+   пришли все, на первом кадре — знак SAMIST и счёт до 100%. */
+.lock,.lock body{overflow:hidden}
+.dmx{position:relative;background:#07080a}
+.dmx-track{position:relative;height:1100vh}
+.dmx-stage{position:sticky;top:0;height:100vh;height:100svh;overflow:hidden;background:#07080a}
+.dmx-poster,.dmx-poster img,#dmx-cv{position:absolute;inset:0;width:100%;height:100%;max-width:none}
+.dmx-poster img{object-fit:cover}
+#dmx-cv{display:block}
+#dmx-vd{position:absolute;display:none;object-fit:fill;pointer-events:none;max-width:none}
+.dmx-stage.vid #dmx-vd{display:block}
+.calm #dmx-vd{display:none}
+.dmx-boot{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:14px;background:rgb(7 8 10 / .6);transition:opacity .6s ease,visibility .6s;z-index:2}
+.dmx-boot svg{width:140px;height:auto;color:#fff}
+.dmx-boot p{margin:0;font:700 56px/1 var(--hd);font-variant-numeric:tabular-nums}
+.dmx-boot i{display:block;width:200px;height:2px;background:var(--ln);border-radius:2px;overflow:hidden}
+.dmx-boot i b{display:block;height:100%;background:var(--a);transform-origin:left center;transform:scaleX(0)}
+.dmx-boot span{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--mu)}
+.dmx-stage.live .dmx-boot{opacity:0;visibility:hidden}
+.dmx-copy{position:absolute;left:0;right:0;padding:0 16px;max-width:680px;text-shadow:0 2px 24px rgb(0 0 0 / .65);pointer-events:none;opacity:0;transform:translateY(16px);z-index:1}
+.dmx-copy a,.dmx-copy .btn{pointer-events:auto}
+.dmx-copy .lead{margin:12px 0 0;font-size:16px}
+.dmx-c0{top:132px;opacity:1;transform:none}
+.dmx-c0 h1{font:700 32px/1.05 var(--hd);letter-spacing:-.03em;margin:0}
+.dmx-c0 h1 em{font-style:normal;color:var(--a2)}
+.dmx-hint{display:inline-flex;align-items:center;gap:8px;margin-top:24px;font-size:14px}
+.dmx-hint svg{width:20px;height:20px;animation:nudge 1.8s ease-in-out infinite}
+@keyframes nudge{0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}
+.dmx-c1,.dmx-c2,.dmx-c3{top:112px}
+.dmx-h{font:700 24px/1.15 var(--hd);letter-spacing:-.02em;margin:0}
+.dmx-chips{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin:16px 0 0;padding:0;list-style:none;text-shadow:none}
+.dmx-chips li{padding:8px 12px;border-radius:12px;background:rgb(14 16 19 / .78);border:1px solid var(--ln);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.dmx-chips small{display:block;font-size:12px;line-height:1.3;color:var(--mu)}
+.dmx-chips b{display:block;font:700 16px/1.3 var(--bd)}
+.dmx-bar{position:absolute;left:16px;right:16px;bottom:24px;height:2px;background:var(--ln);border-radius:2px;overflow:hidden;z-index:1}
+.dmx-bar i{display:block;height:100%;background:var(--a);transform-origin:left center;transform:scaleX(0)}
+@media(max-width:767px){.dmx-stage::before{content:"";position:absolute;inset:0 0 auto;height:50%;background:linear-gradient(rgb(7 8 10 / .88),rgb(7 8 10 / .6) 55%,rgb(7 8 10 / 0));z-index:1;pointer-events:none}.calm .dmx-stage::before{display:none}}
+@media(min-width:768px){
+  .dmx-copy{padding:0 32px}
+  .dmx-c0{top:auto;bottom:96px}.dmx-c0 h1{font-size:56px}
+  .dmx-c1,.dmx-c2,.dmx-c3{top:112px}.dmx-h{font-size:40px}
+  .dmx-c3{left:auto;right:0;text-align:right}.dmx-c3 .dmx-chips{justify-items:end}
+  .dmx-copy .lead{font-size:18px}
+  .dmx-bar{left:32px;right:32px;bottom:32px}
+}
+@media(min-width:1200px){.dmx-c0 h1{font-size:72px}}
+.dmx-stage::after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;opacity:var(--end,0);background:linear-gradient(180deg,rgb(7 8 10 / .82),rgb(7 8 10 / .45) 38%,rgb(7 8 10 / .1) 58%,rgb(7 8 10 / .6))}
+.calm .dmx-stage::after{display:none}
+.dmx-c4{top:84px;bottom:48px;max-width:none;display:flex;flex-direction:column;gap:14px}
+.dmx-c4>svg{width:180px;height:auto;color:#fff}
+.dmx-c4 .dmx-h{max-width:14em}
+.dmx-draw span{display:inline-block;opacity:0;transform:translateY(.45em);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1);transition-delay:calc(var(--i)*110ms)}
+.dmx-c4.on .dmx-draw span{opacity:1;transform:none}
+.dmx-c4 .lead,.dmx-c4 .dmx-b{opacity:0;transition:opacity .8s ease .6s}
+.dmx-c4.on .lead,.dmx-c4.on .dmx-b{opacity:1}
+.dmx-b{display:flex;flex-wrap:wrap;gap:12px}
+@media(min-width:768px){.dmx-c4{top:112px;bottom:64px;margin:0 auto;max-width:1240px}.dmx-c4>svg{width:240px}}
+.dmx-still{display:none}
+.calm .dmx-track{height:auto}
+.calm .dmx-stage{position:relative;height:auto;display:flex;flex-direction:column}
+.calm .dmx-poster{position:relative;inset:auto;height:auto;aspect-ratio:16/9}
+@media(orientation:portrait){.calm .dmx-poster{aspect-ratio:9/16;max-height:80svh}}
+.calm .dmx-poster img{position:static;height:100%}
+.calm #dmx-cv,.calm .dmx-boot,.calm .dmx-c1,.calm .dmx-c2,.calm .dmx-c3,.calm .dmx-bar{display:none}
+.calm .dmx-copy{position:relative;inset:auto;opacity:1;transform:none;padding-top:24px;padding-bottom:24px}
+.calm .dmx-c0{order:-1;padding-top:120px}
+.calm .dmx-draw span,.calm .dmx-c4 .lead,.calm .dmx-c4 .dmx-b{opacity:1;transform:none}
+.calm .dmx-still{display:block;padding:32px 0}
+.dmx-still img{width:100%;border-radius:20px}
+.dmx-still img+img{margin-top:16px}
+/* ── Площадка по разделам: нажатая машина выезжает вперёд, остальные гаснут,
+   потом камера проваливается в раздел (по эталону #qator SamAuto). ── */
+.ry{padding:clamp(72px,10vw,120px) 0 clamp(48px,6vw,80px);background:radial-gradient(120% 60% at 50% 100%,rgb(236 50 55 / .12),transparent 60%),#07080a;overflow:hidden}
+.ry-st{position:relative;margin-top:40px;perspective:1400px}
+.ry-row{display:flex;gap:14px;align-items:flex-end;padding:24px 16px 72px;max-width:1440px;margin:0 auto}
+.ry-c{position:relative;flex:1 1 0;min-width:0;display:block;padding:0;border-radius:22px;text-align:left;color:#fff;transform-style:preserve-3d;transition:transform .7s cubic-bezier(.2,.75,.15,1),opacity .5s ease,filter .5s ease;-webkit-box-reflect:below 10px linear-gradient(transparent 72%,rgb(0 0 0 / .22))}
+.ry-c:nth-child(odd){transform:translateY(12px)}
+.ry-ph{display:block;position:relative;aspect-ratio:3/4;border-radius:22px;overflow:hidden;background:#111;box-shadow:0 30px 60px -30px rgb(0 0 0 / .9)}
+.ry-ph img{width:100%;height:100%;object-fit:cover;transform:scale(1.04);transition:transform 1s cubic-bezier(.2,.75,.15,1)}
+.ry-ph::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgb(7 8 10 / .05) 30%,rgb(7 8 10 / .88));transition:opacity .5s}
+.ry-tx{position:absolute;left:14px;right:14px;bottom:14px;display:grid;gap:2px;z-index:1}
+.ry-tx small{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:rgb(255 255 255 / .7)}
+.ry-tx b{font:700 18px/1.1 var(--hd);letter-spacing:-.01em}
+.ry-tx em{font-style:normal;font-size:14px;color:var(--a2)}
+.ry-glow{position:absolute;left:8%;right:8%;bottom:-22px;height:28px;border-radius:50%;background:radial-gradient(closest-side,rgb(255 77 82 / .9),transparent);opacity:0;transform:scaleX(.6);transition:opacity .5s,transform .7s cubic-bezier(.2,.75,.15,1);pointer-events:none}
+.ry-floor{position:absolute;left:0;right:0;bottom:58px}
+.ry-st.hl .ry-c,.ry-st.pick .ry-c{opacity:.32;filter:saturate(.4)}
+.ry-st.hl .ry-c.hot,.ry-st.pick .ry-c.on{opacity:1;filter:none;z-index:3}
+.ry-st.hl .ry-c.hot{transform:translateY(-10px) scale(1.06)}
+.ry-st.pick .ry-c.on{transform:translateY(-26px) translateZ(180px) scale(1.14)}
+.ry-st.pick .ry-c:not(.on){transform:translateY(18px) scale(.92)}
+.ry-st.hl .ry-c.hot .ry-glow,.ry-st.pick .ry-c.on .ry-glow{opacity:1;transform:none}
+.ry-c.hot .ry-ph img,.ry-c.on .ry-ph img{transform:scale(1.12)}
+.ry-hint{display:flex;justify-content:center;gap:8px;color:var(--mu);font-size:14px;margin-top:-24px}
+@media(max-width:899px){
+  .ry-row{overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:24px 16px 64px;gap:12px}
+  .ry-row::-webkit-scrollbar{display:none}
+  .ry-c{flex:0 0 62vw;scroll-snap-align:center}
+  .ry-st.pick .ry-c.on{transform:translateY(-14px) scale(1.06)}
+}
+/* Раздел: снимок нажатой машины раскрывается во весь экран, в нём — модели раздела. */
+.rz{position:fixed;inset:0;z-index:92;visibility:hidden;pointer-events:none}
+.rz.on{visibility:visible;pointer-events:auto}
+.rz-bg{position:absolute;inset:0;overflow:hidden;background:#07080a;opacity:0;transition:opacity .5s}
+.rz.on .rz-bg{opacity:1}
+.rz-bg img{width:100%;height:100%;object-fit:cover;max-width:none;filter:blur(18px) brightness(.4) saturate(1.2);transform:scale(1.15)}
+.rz-fly{position:fixed;z-index:93;overflow:hidden;border-radius:22px;pointer-events:none;transform-origin:0 0;will-change:transform,opacity}
+.rz-fly img{width:100%;height:100%;object-fit:cover;max-width:none}
+.rz-in{position:relative;z-index:94;height:100%;overflow-y:auto;padding:88px 0 40px;opacity:0;transform:translateY(24px);transition:opacity .5s .15s,transform .6s cubic-bezier(.2,.75,.15,1) .15s}
+.rz.show .rz-in{opacity:1;transform:none}
+.rz-h{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:24px}
+.rz-h h2{font:700 clamp(32px,5vw,56px)/1.05 var(--hd);letter-spacing:-.02em;margin:0}
+.rz-h p{color:var(--mu);margin:8px 0 0}
+.rz-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:24px}
+.rz-x{position:fixed;right:16px;top:16px;z-index:96;width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:rgb(0 0 0 / .6);border:1px solid var(--ln);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.rz-x svg{width:22px;height:22px}
+.rz .grid .car{opacity:0;transform:translateY(18px);transition:opacity .5s calc(.25s + var(--i)*60ms),transform .6s cubic-bezier(.2,.75,.15,1) calc(.25s + var(--i)*60ms)}
+.rz.show .grid .car{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){.ry-c,.ry-st.pick .ry-c.on,.ry-st.hl .ry-c.hot{transform:none!important}.dmx-hint svg{animation:none}}

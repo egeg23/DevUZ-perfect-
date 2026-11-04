@@ -23,8 +23,11 @@ for (const w of ws.split(",").map(Number)) {
   await p.goto(R + "/", { waitUntil: "load" }); await p.waitForTimeout(800);
   for (const k of [0, 0.22, 0.5, 0.6, 0.7, 1]) { await at("fly", k); await p.waitForTimeout(1300); await shot(`fly-${Math.round(k * 100)}`); }
   for (const id of ["choose", "offer"]) { await at(id); await p.waitForTimeout(900); await shot(id); }
-  await p.goto(R + "/site", { waitUntil: "load" }); await p.waitForTimeout(1500); await shot("hero");
+  await p.goto(R + "/site", { waitUntil: "load" }); await p.waitForFunction(() => !document.documentElement.classList.contains("lock"), null, { timeout: 35000 }).catch(() => {}); await p.waitForTimeout(1500); await shot("hero");
   for (const k of [0.1, 0.5, 0.9]) { await at("scn", k); await p.waitForTimeout(1300); await shot(`scene-${Math.round(k * 100)}`); }
+  await p.evaluate(() => scrollTo(0, 0)); await p.waitForTimeout(600); await shot("dmax");
+  await at("ryad"); await p.waitForTimeout(1200); await shot("ryad");
+  await p.click('.ry-c[data-cat="truck"]'); await p.waitForTimeout(450); await shot("ryad-pick"); await p.waitForTimeout(1500); await shot("razdel"); await p.click("[data-rzclose]"); await p.waitForTimeout(700);
   for (const id of ["lineup", "pick", "credit", "trade", "drive", "service", "fleet", "tgbot", "admin", "about", "contact"]) { await at(id); await p.waitForTimeout(id === "tgbot" ? 7500 : 1100); await shot(id); }
   await at("lineup"); await p.waitForTimeout(500);
   await p.click('#grid [data-open="isuzu-fvr-34q"]'); await p.waitForTimeout(1400); await shot("model");
@@ -42,7 +45,7 @@ for (const w of ws.split(",").map(Number)) {
   await p.click('[data-tab="stock"]'); await p.selectOption('[data-ss="isuzu-fvr-34q"]', "sold"); await p.waitForTimeout(400);
   await p.click('[data-tab="log"]'); await p.waitForTimeout(600); await shot("panel-log");
   await p.click("#role"); await p.click('[data-tab="sum"]'); await p.waitForTimeout(700); await shot("panel-mgr");
-  await p.goto(R + "/site", { waitUntil: "load" }); await p.click("#mine"); await p.waitForTimeout(700); await shot("mine");
+  await p.goto(R + "/site", { waitUntil: "load" }); await p.waitForFunction(() => !document.documentElement.classList.contains("lock"), null, { timeout: 35000 }).catch(() => {}); await p.click("#mine"); await p.waitForTimeout(700); await shot("mine");
   await p.keyboard.press("Escape"); await at("lineup"); await p.waitForTimeout(900); await shot("lineup-sold");
   const ov = await p.evaluate(() => document.documentElement.scrollWidth - innerWidth);
   if (ov > 0) errs.push(`${w}: прокрутка вбок ${ov}px`);

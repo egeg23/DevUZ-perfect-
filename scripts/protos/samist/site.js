@@ -110,6 +110,7 @@ var nw=$('#onlynew');if(nw)nw.addEventListener('change',function(){F.isNew=nw.ch
 renderGrid();
 
 /* ── Окно модели: снимок карточки летит в окно («нырок»), полоски цифр ── */
+var rz=$('#rz'),ry=$('#ry-st'),rzFrom=null,CN={};D.cats.forEach(function(c){CN[c[0]]=c[1]});
 var mdl=$('#mdl'),MAX={hp:390,kg:20000,m3:51,tank:400,seats:31},lastFocus=null;
 d.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-open]');if(!b)return;openModel(b.getAttribute('data-open'),$('img',b))});
 function openModel(id,from){var m=byId[id];if(!m)return;lastFocus=d.activeElement;
@@ -134,9 +135,9 @@ function openModel(id,from){var m=byId[id];if(!m)return;lastFocus=d.activeElemen
     go();var b=$('#mdl-ph').getBoundingClientRect(),sx=b.width/a.width,sy=b.height/a.height;
     fly.animate([{transform:'none',borderRadius:'24px'},{transform:'translate('+(b.left-a.left)+'px,'+(b.top-a.top)+'px) scale('+sx+','+sy+')',borderRadius:'0px'}],{duration:/*~*/560,easing:'cubic-bezier(.2,.7,.2,1)',fill:'forwards'}).onfinish=function(){fly.remove()}}
   else go()}
-function closeModel(){mdl.classList.remove('on');d.body.style.overflow='';if(lastFocus&&lastFocus.focus)lastFocus.focus({preventScroll:true})}
+function closeModel(){mdl.classList.remove('on');d.body.style.overflow=rz&&rz.classList.contains('on')?'hidden':'';if(lastFocus&&lastFocus.focus)lastFocus.focus({preventScroll:true})}
 $$('[data-mclose]',mdl).forEach(function(b){b.addEventListener('click',closeModel)});
-d.addEventListener('keydown',function(e){if(e.key==='Escape'){if(mdl.classList.contains('on'))closeModel();else if(sh.classList.contains('on'))shut()}});
+d.addEventListener('keydown',function(e){if(e.key==='Escape'){if(mdl.classList.contains('on'))closeModel();else if(sh.classList.contains('on'))shut();else if(rz&&rz.classList.contains('on'))closeCat()}});
 mdl.addEventListener('click',function(e){var a;
   if((a=e.target.closest('[data-want]'))){var m=byId[a.getAttribute('data-want')];send('buy',m.name,T.t_buy.replace('{m}',m.name).replace('{p}',sum(m.price)));return}
   if((a=e.target.closest('[data-cred]'))){closeModel();setModel('#cr-m',a.getAttribute('data-cred'));calc()}
@@ -227,4 +228,31 @@ $$('[data-buy]').forEach(function(b){b.addEventListener('click',function(){send(
 /* ── Бот: переписка проигрывается, когда окно на экране ────────── */
 var tg=$('#tg-b');if(tg){var played=0,play=function(){if(played)return;played=1;var ms=$$('.msg',tg);ms.forEach(function(m,k){setTimeout(function(){m.classList.add('on')},RM?0:600+k*/*~*/1100)})};
   if(io&&!RM){var tio=new IntersectionObserver(function(es){if(es[0].isIntersecting){play();tio.disconnect()}},{threshold:.4});tio.observe(tg)}else play()}
+/* ── Площадка по разделам (как #qator у SamAuto): наведение высвечивает
+   машину, нажатие — она выезжает вперёд, остальные гаснут, и камера
+   проваливается в раздел: снимок раскрывается во весь экран, за ним модели. */
+function ryReset(){if(!ry)return;ry.classList.remove('pick','hl');$$('.ry-c',ry).forEach(function(x){x.classList.remove('on','hot')})}
+if(ry){$$('.ry-c',ry).forEach(function(c){
+  var hot=function(){if(TOUCH||ry.classList.contains('pick'))return;$$('.ry-c',ry).forEach(function(x){x.classList.toggle('hot',x===c)});ry.classList.add('hl')};
+  var cool=function(){c.classList.remove('hot');if(!$('.ry-c.hot',ry))ry.classList.remove('hl')};
+  c.addEventListener('pointerenter',hot);c.addEventListener('pointerleave',cool);c.addEventListener('focus',hot);c.addEventListener('blur',cool);
+  c.addEventListener('click',function(){if(ry.classList.contains('pick'))return;ry.classList.remove('hl');$$('.ry-c',ry).forEach(function(x){x.classList.remove('hot');x.classList.toggle('on',x===c)});ry.classList.add('pick');
+    setTimeout(function(){openCat(c.getAttribute('data-cat'),c)},RM?0:/*~*/620)})})}
+function fillCat(cat){var l=M.filter(function(m){return m.cat===cat}).sort(function(a,b){return a.price-b.price}),lo=l[0].price,hi=l[l.length-1].price;
+  $('#rz-h').textContent=CN[cat];$('#rz-s').textContent=(l.length>1?T.rz_range.replace('{a}',mln(lo)).replace('{b}',mln(hi)):sum(lo));
+  $('#rz-tabs').innerHTML=D.cats.filter(function(c){return M.some(function(m){return m.cat===c[0]})}).map(function(c){return'<button type="button" class="chip" data-rzcat="'+c[0]+'" aria-pressed="'+(c[0]===cat)+'">'+esc(c[1])+'</button>'}).join('');
+  var g=$('#rz-grid');g.innerHTML=l.map(card).join('');$$('.car',g).forEach(function(e,k){e.style.setProperty('--i',k);e.classList.add('on')});
+  $$('[data-rzcat]',rz).forEach(function(b){b.addEventListener('click',function(){fillCat(b.getAttribute('data-rzcat'))})})}
+function openCat(cat,c){if(!rz)return;rzFrom=c;var im=$('img',c);fillCat(cat);$('#rz-bgi').src=im.src;$('#rz-in').scrollTop=0;
+  var go=function(){rz.classList.add('on');d.body.style.overflow='hidden';setTimeout(function(){rz.classList.add('show');$('.rz-x',rz).focus({preventScroll:true})},RM?0:280)};
+  if(RM){go();return}
+  /* Снимок нажатой машины летит во весь экран (только transform), под ним открывается раздел. */
+  var a=im.getBoundingClientRect(),fly=d.createElement('div');fly.className='rz-fly';fly.innerHTML='<img src="'+im.src+'" alt="">';
+  fly.style.left=a.left+'px';fly.style.top=a.top+'px';fly.style.width=a.width+'px';fly.style.height=a.height+'px';d.body.appendChild(fly);
+  var k=Math.max(innerWidth/a.width,innerHeight/a.height);
+  var an=fly.animate([{transform:'none',opacity:1},{transform:'translate('+(innerWidth/2-a.left-a.width*k/2)+'px,'+(innerHeight/2-a.top-a.height*k/2)+'px) scale('+k+')',opacity:1,offset:.75},{transform:'translate('+(innerWidth/2-a.left-a.width*k/2)+'px,'+(innerHeight/2-a.top-a.height*k/2)+'px) scale('+k+')',opacity:0}],{duration:/*~*/900,easing:'cubic-bezier(.6,0,.2,1)',fill:'forwards'});
+  setTimeout(go,520);an.onfinish=function(){fly.remove()}}
+function closeCat(){if(!rz)return;rz.classList.remove('show');setTimeout(function(){rz.classList.remove('on');if(!mdl.classList.contains('on'))d.body.style.overflow='';ryReset();if(rzFrom&&rzFrom.focus)rzFrom.focus({preventScroll:true})},RM?0:300)}
+$$('[data-rzclose]').forEach(function(b){b.addEventListener('click',closeCat)});
+addEventListener('pageshow',ryReset);
 })();
