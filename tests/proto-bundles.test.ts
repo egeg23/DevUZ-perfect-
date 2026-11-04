@@ -2911,3 +2911,81 @@ test("Agora: сайт 1 000 $ вместо 2 500 $, допы 2 000 $ с бото
     assert.match(html, /3 000 \$ разовых работ не входят|3 000 \$ bir martalik ishlarga kirmaydi/, "нет подписи, что поддержка не входит в 3 000 $");
   }
 });
+
+test("SAMIST AUTO: выбор, сайт и панель на ru и uz — условия, noindex, видео DevUz и залёт в знак, шапка 3 с, техника и цены с их сайта, без Higgsfield, uz без кириллицы", async () => {
+  const { existsSync, readFileSync, readdirSync } = await import("node:fs");
+  const site = bundlePages("samist");
+  assert.ok(site);
+  const all: Record<string, string> = { "": site.html, ...site.pages };
+  assert.deepEqual(Object.keys(all).sort(), ["", "panel", "site", "uz", "uz/panel", "uz/site"]);
+  const plan = await import("../scripts/protos/samist/plan.mjs");
+  const D = await import("../scripts/protos/samist/data.mjs");
+  for (const [path, page] of Object.entries(all)) {
+    const lang = path.startsWith("uz") ? "uz" : "ru";
+    const kind = path.replace(/^uz\/?/, "") || "land";
+    assert.doesNotMatch(page, /@@[A-Z]+@@/, `${path}: метка сборки осталась в странице`);
+    assert.ok(page.includes(`<html lang="${lang}">`), `${path}: язык страницы`);
+    assert.ok(page.includes(`https://devuz.studio/${lang}/mockup-terms`), `${path}: нет условий на языке страницы`);
+    assert.match(page, /<meta name="robots" content="noindex/, `${path}: нет noindex`);
+    assert.match(page, /prefers-reduced-motion/, `${path}: анимацию нечем выключить`);
+    assert.doesNotMatch(page, /stamp|watermark|fingerprint|отпечат|seed|data-mark/i, `${path}: слово, по которому находят отпечаток`);
+    assert.doesNotMatch(page, /proto-ai|proxyapi|higgsfield|firecrawl|anthropic/i, `${path}: макет не зовёт модель и чужие сервисы`);
+    assert.doesNotMatch(page, /href="#"/, `${path}: ссылка в никуда`);
+    assert.doesNotMatch(page, /scroll-behavior|passive:\s*false|scrollIntoView|preventDefault\(\)[^;]*wheel/, `${path}: перехват прокрутки`);
+    assert.doesNotMatch(page.replace(/<script(?! type="application\/json")[\s\S]*?<\/script>/g, ""), /[—–]/, `${path}: длинное тире`);
+    for (const img of page.match(/<img [^>]+>/g) ?? []) assert.match(img, /alt="/, `${path}: картинка без alt`);
+    for (const src of page.match(/\/protos\/samist\/[\w./-]+\.(?:webp|png|svg|js)/g) ?? []) assert.ok(existsSync("public" + src), `${path}: нет файла ${src}`);
+    for (const id of (page.match(/href="#([\w-]+)"/g) ?? []).map((h) => h.slice(7, -1))) assert.ok(page.includes(`id="${id}"`), `${path}: ссылка на #${id}, а блока нет`);
+    const ids = page.replace(/<script[\s\S]*?<\/script>/g, "").match(/\bid="([\w-]+)"/g) ?? [];
+    assert.equal(new Set(ids).size, ids.length, `${path}: id повторяется`);
+    if (lang === "uz") assert.doesNotMatch(page.replace(/<script(?! type="application\/json")[\s\S]*?<\/script>/g, "").replace(/<style>[\s\S]*?<\/style>/g, ""), /[А-Яа-яЁё]/, `${path}: кириллица на узбекской странице`);
+    assert.ok(page.includes('<g id="sm-g">'), `${path}: нет их знака`);
+    if (kind === "panel") {
+      assert.match(page, /autocomplete="one-time-code"/, `${path}: код не одним полем`);
+      assert.match(page, /'1234'/, `${path}: демо-код не 1234`);
+      assert.ok(page.includes("dot-btn") && page.includes("text/csv"), `${path}: нет выгрузки CSV кнопкой`);
+      assert.ok(page.includes("backdrop-filter") && page.includes("sm-stock-1"), `${path}: нет стекла или наличия для сайта`);
+      assert.match(page, /S\.role==='own'/, `${path}: роли не различаются`);
+      continue;
+    }
+    assert.match(page, /\bIDLE=3000\b/, `${path}: шапка не по правилу 3 секунд`);
+    assert.match(page, /classList\.add\('hide'\)[\s\S]*IDLE\)/, `${path}: шапка не прячется`);
+    if (kind === "land") {
+      /* Видео DevUz первым, за ним — залёт в знак, дорога и грузовик кодом. */
+      assert.ok(page.indexOf('id="dzi"') > 0 && page.indexOf('id="dzi"') < page.indexOf('id="fly"'), `${path}: нет видео DevUz перед залётом`);
+      assert.ok(page.includes("setAttribute('viewBox'") && page.includes("fl-iris") && page.includes("fl-truck"), `${path}: залёт не камерой по знаку`);
+      assert.equal((page.match(/class="choice rise"/g) ?? []).length, 2, `${path}: не два выбора: сайт и панель`);
+      for (const a of plan.ADDONS) assert.ok(page.includes(`data-add="${a.id}"`), `${path}: нет тумблера ${a.id}`);
+      continue;
+    }
+    assert.match(page.slice(page.indexOf('class="top"'), page.indexOf("</header>")), new RegExp(`href="__PROTO_BASE__${lang === "uz" ? "/uz" : ""}/panel"`), `${path}: нет кнопки админки`);
+    assert.ok(page.includes(`tel:${D.BRAND.tel}`), `${path}: нет звонка`);
+    for (const id of ["top", "scn", "lineup", "about", "contact"]) assert.ok(page.includes(`id="${id}"`), `${path}: нет блока #${id}`);
+    for (const a of plan.ADDONS) assert.ok(page.includes(`data-addon="${a.id}"`), `${path}: тумблер ${a.id} не ведёт к блоку`);
+    /* Техника на странице — их каталог, цены — их цены. */
+    const data = JSON.parse(page.match(/<script type="application\/json" id="sm-data">([\s\S]*?)<\/script>/)![1]);
+    assert.equal(data.models.length, 14);
+    const cat = JSON.parse(readFileSync("scripts/protos/samist/catalog.json", "utf8"));
+    for (const m of data.models) assert.ok(cat.some((c: { uzs: number; url: string }) => c.uzs === m.uzs && c.url === m.url), `${m.name}: цены нет в их каталоге`);
+  }
+  /* Фото — только их, с их сайта; ни кадров, ни роликов генерации. */
+  assert.deepEqual(readdirSync("public/protos/samist").filter((f) => /\.(mp4|bin|png|jpe?g)$/.test(f)), [], "посторонний ролик или кадр в public");
+  const stamped = stampedBundle("samist", SEED)!;
+  assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
+  assert.notEqual(stamped.pages["uz/panel"], site.pages["uz/panel"], "отпечаток не поставился в узбекской панели");
+});
+
+test("SAMIST AUTO: сайт 1 000 $ вместо 3 900 $, ровно 10 допов на 2 500 $, всё 3 500 $", async () => {
+  const plan = await import("../scripts/protos/samist/plan.mjs");
+  /* Задача 04.11.2026: «Сайт 1000$, с допами +2500$, допов сделай 10 штук». */
+  assert.equal(plan.BASE.promo, 1000);
+  assert.equal(plan.BASE.price, 3900);
+  assert.equal(plan.OFFER_HOURS, 48);
+  assert.equal(plan.ADDONS.length, 10);
+  assert.equal(plan.ADDONS.reduce((s: number, a: { price: number }) => s + a.price, 0), 2500);
+  assert.equal(plan.ALL, 3500);
+  for (const a of plan.ADDONS) for (const l of ["ru", "uz"] as const) assert.ok(a[l].t && a[l].e && a[l].who, `${a.id}: нет текста на ${l}`);
+  for (const a of plan.ADDONS) assert.doesNotMatch(a.uz.t + a.uz.e + a.uz.who, /[А-Яа-яЁё]/, `${a.id}: кириллица в узбекском`);
+  const site = bundlePages("samist")!;
+  for (const html of [site.html, site.pages.uz]) assert.ok(html.includes("3 900 $") && html.includes("1 000 $") && html.includes("3 500 $"), "на первой странице не та цена");
+});
