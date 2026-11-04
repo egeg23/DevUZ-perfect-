@@ -682,6 +682,22 @@ export const workSections: Record<string, HelpEntry> = {
         },
       },
       {
+        id: "payer",
+        title: "Kto zapłacił",
+        body: {
+          head: [
+            "Każdy wydatek ma «Kto zapłacił». «Wspólnie, 70/30» znaczy, że zapłacono ze wspólnych pieniędzy studia: wydatek zmniejsza to, co się dzieli, i rozkłada się na obu według udziałów. Tak stoją też wszystkie stare wydatki, dopóki ktoś tego nie zmieni.",
+            "Zapłacił ktoś jeden z własnych — wybierz go przy zapisie albo później w wierszu wydatku i kliknij «Zapisz». Ta kwota wróci do niego z wpływów przed podziałem: w wierszu widać «zwrot $…», w karcie współzałożyciela «zapłacił sam: …». Sam wydatek i tak dzieli się według udziałów: temu, kto zapłacił, zwrócono, resztę podzielono.",
+            "Każdy dołożył swoją część z własnych — zapisz wydatek w dwóch wierszach, każdy ze swoim imieniem. Zaznaczać możesz Ty i właściciel; każdą zmianę właściciel widzi w dzienniku: «zapłacił sam» dodaje danej osobie zwrot.",
+          ],
+          admin: [
+            "Każdy wydatek ma «Kto zapłacił». «Wspólnie, 70/30» znaczy, że zapłacono ze wspólnych pieniędzy studia: wydatek zmniejsza to, co się dzieli, i rozkłada się na obu według udziałów. Tak stoją też wszystkie stare wydatki, dopóki ktoś tego nie zmieni.",
+            "Zapłacił ktoś jeden z własnych — wybierz go przy zapisie albo później w wierszu wydatku i kliknij «Zapisz». Ta kwota wróci do niego z wpływów przed podziałem: w wierszu widać «zwrot $…», w karcie współzałożyciela «zapłacił sam: …», a w «Udziałach współzałożycieli» w [Finansach](/admin/finance) «udział + zwrot za wydatki = do wypłaty».",
+            "Każdy dołożył swoją część z własnych — zapisz wydatek w dwóch wierszach, każdy ze swoim imieniem. Zaznaczasz Ty i kierownik-współzałożyciel; każda zmiana jest w [Dzienniku](/admin/audit) z tym, co było i co jest: «zapłacił sam» dodaje danej osobie zwrot.",
+          ],
+        },
+      },
+      {
         id: "taxes",
         title: "Terminy podatkowe",
         body: [
@@ -749,7 +765,7 @@ export const workSections: Record<string, HelpEntry> = {
           ],
           admin: [
             "Kafelki dla studia: «Z umów», «Zapłacone przez klientów», «Zysk netto» (z dopiskiem, ile projektów nie ma kosztu wytworzenia), «Naliczone zespołowi i partnerom», «Zostaje właścicielowi».",
-            "Tabela osób i «Według projektów» — z kolumnami podatku, kosztu wytworzenia, zysku i «Dla właściciela» (po odjęciu partnerów). «Udziały współzałożycieli» — co wpłynęło minus wydatki i jak to się dzieli. «Wydatki studia» — ta sama lista co w [Wydatkach](/admin/expenses).",
+            "Tabela osób i «Według projektów» — z kolumnami podatku, kosztu wytworzenia, zysku i «Dla właściciela» (po odjęciu partnerów). «Udziały współzałożycieli» — co wpłynęło minus wydatki, jak to się dzieli i ile zwrócić temu, kto zapłacił za wydatek z własnych (udział + zwrot za wydatki = do wypłaty). «Wydatki studia» — ta sama lista co w [Wydatkach](/admin/expenses).",
           ],
         },
       },

@@ -18,7 +18,7 @@ import {
   accrualsOf,
   balanceOf,
   earnersOf,
-  founderShares,
+  founderPayouts,
   foundersPool,
   isFounder,
   money as moneyIn,
@@ -133,7 +133,12 @@ export default async function FinancePage({
   const pool = ownerMoney
     ? foundersPool(ledger.projects, ledger.payments, accruals, expenses, bonuses)
     : null;
-  const shares = pool ? founderShares(pool.pool, founders) : [];
+  // Доля от «К делению» плюс возврат тому, кто платил за расход из своих
+  // (владелец, 04.11.2026: «эта сумма должна встать к выплате обратно тому
+  // кто вносил … перед тем как делить 30/70 после расходов»).
+  const shares = pool ? founderPayouts(pool.pool, founders, expenses) : [];
+  const paidBackTotal = shares.reduce((s, x) => s + x.paid_back, 0);
+  const split = founders.map((f) => f.founder_percent).join("/");
 
   const nameOf = (id: string | null) =>
     ledger.people.find((p) => p.id === id)?.display_name ?? "—";
@@ -488,7 +493,11 @@ export default async function FinancePage({
               note={t.poolFrozenNote}
               warn={pool.frozen > 0}
             />
-            <Card label={t.poolExpenses} value={money(pool.expenses)} note={t.poolExpensesNote} />
+            <Card
+              label={t.poolExpenses}
+              value={money(pool.expenses)}
+              note={paidBackTotal > 0 ? t.poolPaidBack(money(paidBackTotal)) : t.poolExpensesNote}
+            />
             <Card
               label={t.poolShare}
               value={money(pool.pool)}
@@ -502,9 +511,20 @@ export default async function FinancePage({
               <li key={share.staff_id} className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                 <span>{nameOf(share.staff_id)}</span>
                 <span className="text-xs text-faint">{share.percent} %</span>
+                <span className="text-xs text-faint">{t.shareOfPool}</span>
                 <span className={`font-mono ${share.amount_usd < 0 ? "text-gold" : ""}`}>
                   {money(share.amount_usd)}
                 </span>
+                {share.paid_back > 0 ? (
+                  <>
+                    <span className="text-xs text-faint">+ {t.shareBack}</span>
+                    <span className="font-mono">{money(share.paid_back)}</span>
+                    <span className="text-xs text-faint">= {t.shareDue}</span>
+                    <span className={`font-mono font-semibold ${share.total < 0 ? "text-gold" : ""}`}>
+                      {money(share.total)}
+                    </span>
+                  </>
+                ) : null}
               </li>
             ))}
           </ul>
@@ -545,6 +565,15 @@ export default async function FinancePage({
                 ))}
               </select>
             </label>
+            <label className="text-xs text-faint">
+              {t.colPayer}
+              <select name="paid_by" defaultValue="together" className={`mt-1 block w-44 ${INPUT}`}>
+                <option value="together">{t.together(split)}</option>
+                {founders.map((f) => (
+                  <option key={f.id} value={f.id}>{f.display_name}</option>
+                ))}
+              </select>
+            </label>
             <label className="min-w-[12rem] flex-1 text-xs text-faint">
               {t.fieldComment}
               <input
@@ -566,6 +595,7 @@ export default async function FinancePage({
                   <th className={TH}>{t.colWhat}</th>
                   <th className={TH}>{t.colHowMuch}</th>
                   <th className={TH}>{t.colComment}</th>
+                  <th className={TH}>{t.colPayer}</th>
                   <th className={TH} />
                 </tr>
               </thead>
@@ -577,6 +607,9 @@ export default async function FinancePage({
                     <td data-label={t.colHowMuch} className={`${TD} font-mono`}>{money(expense.amount_usd)}</td>
                     <td data-label={t.colComment} className={`${TD} text-xs text-muted`}>
                       {expense.note ?? "—"}
+                    </td>
+                    <td data-label={t.colPayer} className={`${TD} text-xs`}>
+                      {expense.paid_by ? nameOf(expense.paid_by) : t.together(split)}
                     </td>
                     <td data-label="" className={TD}>
                       <form action={deleteExpense}>
@@ -590,7 +623,7 @@ export default async function FinancePage({
                 ))}
                 {expenses.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-4 py-6 text-sm text-muted">
+                    <td colSpan={6} className="px-4 py-6 text-sm text-muted">
                       {t.expensesEmpty}
                     </td>
                   </tr>

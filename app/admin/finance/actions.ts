@@ -8,6 +8,7 @@ import { requestIp, requireStaff } from "@/lib/admin/guard";
 import {
   addExpense,
   addPayment,
+  payerFromForm,
   recordPayout,
   removeExpense,
   removePayment,
@@ -161,6 +162,7 @@ export async function saveExpense(formData: FormData) {
       spentOn: dateOrNull(formData.get("spent_on")),
       category: String(formData.get("category") ?? "other"),
       note: String(formData.get("note") ?? "") || null,
+      paidBy: payerFromForm(formData.get("paid_by")),
     },
     staff,
     await requestIp(),

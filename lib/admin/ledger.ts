@@ -509,20 +509,54 @@ export async function loadExpenses(since?: string): Promise<Expense[]> {
   const db = serviceClient();
   if (!db) return [];
 
-  let query = db
-    .from("expenses")
-    .select("id, spent_on, amount_usd, category, note")
-    .order("spent_on", { ascending: false });
-  if (since && DATE.test(since)) query = query.gte("spent_on", since);
+  const read = (columns: string) => {
+    let query = db
+      .from("expenses")
+      .select(columns)
+      .order("spent_on", { ascending: false });
+    if (since && DATE.test(since)) query = query.gte("spent_on", since);
+    return query;
+  };
 
-  const { data } = await query;
-  return (data ?? []).map((row) => ({
+  // «Кто вносил» (paid_by) — с миграции 0175. Пока её нет, читаем как раньше:
+  // все расходы «вместе», и деление то же, что было.
+  let { data, error } = await read("id, spent_on, amount_usd, category, note, paid_by");
+  if (error) ({ data } = await read("id, spent_on, amount_usd, category, note"));
+
+  const rows = (data ?? []) as unknown as Record<string, unknown>[];
+  return rows.map((row) => ({
     id: row.id as string,
     spent_on: row.spent_on as string,
     amount_usd: (row.amount_usd as number) ?? 0,
     category: isExpenseCategory(String(row.category)) ? (row.category as ExpenseCategory) : "other",
     note: (row.note as string | null) ?? null,
+    paid_by: (row.paid_by as string | null | undefined) ?? null,
   }));
+}
+
+/**
+ * Кто может стоять в «Кто вносил»: действующий соучредитель (доля > 0).
+ * Пусто — «вместе». Чужой id из формы не проходит: иначе можно было бы
+ * записать возврат человеку, который денег не вносил и в делёж не входит.
+ */
+async function payerOk(paidBy: string | null): Promise<boolean> {
+  if (paidBy === null) return true;
+  const db = serviceClient();
+  if (!db) return false;
+  const { data } = await db
+    .from("staff")
+    .select("id")
+    .eq("id", paidBy)
+    .eq("is_active", true)
+    .gt("founder_percent", 0)
+    .maybeSingle();
+  return Boolean(data);
+}
+
+/** Пусто или «together» из формы — вместе; иначе id соучредителя. */
+export function payerFromForm(value: FormDataEntryValue | null): string | null {
+  const text = String(value ?? "").trim();
+  return text && text !== "together" ? text.slice(0, 64) : null;
 }
 
 /**
@@ -541,6 +575,8 @@ export async function addExpense(
     spentOn: string | null;
     category: string;
     note: string | null;
+    /** Кто вносил: null — вместе (общими деньгами), иначе id соучредителя. */
+    paidBy?: string | null;
   },
   staff: Staff,
   ip: string,
@@ -550,6 +586,8 @@ export async function addExpense(
     return fail("invalid");
   }
   if (fields.spentOn !== null && !DATE.test(fields.spentOn)) return fail("invalid");
+  const paidBy = fields.paidBy ?? null;
+  if (!(await payerOk(paidBy))) return fail("invalid");
 
   const db = serviceClient();
   if (!db) return fail("offline");
@@ -562,6 +600,8 @@ export async function addExpense(
   };
   // Дата траты обязательна в схеме; пустое поле в форме значит «сегодня».
   row.spent_on = fields.spentOn ?? new Date().toISOString().slice(0, 10);
+  // «Вместе» в базу не пишем вовсе: так запись проходит и до миграции 0175.
+  if (paidBy) row.paid_by = paidBy;
 
   const { data, error } = await db.from("expenses").insert(row).select("id").maybeSingle();
   if (error || !data) return fail("failed");
@@ -571,7 +611,48 @@ export async function addExpense(
     targetType: "expense",
     targetId: data.id as string,
     ip,
-    meta: { amount_usd: fields.amountUsd, category: row.category, spent_on: row.spent_on },
+    meta: { amount_usd: fields.amountUsd, category: row.category, spent_on: row.spent_on, paid_by: paidBy },
+  });
+  return OK;
+}
+
+/**
+ * Поменять «Кто вносил» у записанного расхода. Оба соучредителя: старые
+ * расходы проставляет тот, кто помнит, кто платил.
+ *
+ * Отметка «внёс сам» добавляет человеку возврат, поэтому каждое изменение —
+ * в журнал с тем, что было и что стало, и владелец видит его в «Журнале».
+ */
+export async function setExpensePayer(
+  expenseId: string,
+  paidBy: string | null,
+  staff: Staff,
+  ip: string,
+): Promise<MoneyResult> {
+  if (!keepsExpenses(staff.role)) return fail("forbidden");
+  if (!(await payerOk(paidBy))) return fail("invalid");
+
+  const db = serviceClient();
+  if (!db) return fail("offline");
+
+  const { data: before, error: readError } = await db
+    .from("expenses")
+    .select("amount_usd, paid_by")
+    .eq("id", expenseId)
+    .maybeSingle();
+  if (readError) return fail("failed");
+  if (!before) return fail("gone");
+  if (((before.paid_by as string | null) ?? null) === paidBy) return OK;
+
+  const { error } = await db.from("expenses").update({ paid_by: paidBy }).eq("id", expenseId);
+  if (error) return fail("failed");
+
+  await record("expense.payer", {
+    actorStaffId: staff.id,
+    targetType: "expense",
+    targetId: expenseId,
+    ip,
+    meta: { amount_usd: before.amount_usd, from: before.paid_by ?? null, to: paidBy },
   });
   return OK;
 }

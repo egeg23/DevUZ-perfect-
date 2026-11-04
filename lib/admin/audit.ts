@@ -156,6 +156,7 @@ export const AUDIT_ACTIONS = [
   "payout.removed",
   "expense.added",
   "expense.removed",
+  "expense.payer",
   "project.share_set",
   // Партнёрская программа.
   "partner.created",

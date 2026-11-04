@@ -2106,6 +2106,22 @@ export const uz: HelpCopy = {
           },
         },
         {
+          id: "payer",
+          title: "Kim to‘lagan",
+          body: {
+            head: [
+              "Har bir xarajatda «Kim to‘lagan» bor. «Birgalikda, 70/30» — studiyaning umumiy pulidan to‘langan: xarajat bo‘linadigan summani kamaytiradi va ikkalangizga ulushlar bo‘yicha tushadi. Eski xarajatlar ham, boshqasi qo‘yilmaguncha, shunday turadi.",
+              "Kimdir bitta o‘z pulidan to‘lagan bo‘lsa — uni yozishda yoki keyin xarajat qatorida tanlang va «Saqlash» ni bosing. Bu summa unga bo‘linishdan oldin kelgan puldan qaytariladi: qatorda «$… qaytarish», muassis kartasida «o‘zi to‘lagan: …» ko‘rinadi. Xarajatning o‘zi baribir ulushlar bo‘yicha bo‘linadi: to‘lagan odamga qaytarildi, qoldig‘i bo‘lindi.",
+              "Har kim o‘z qismini o‘z pulidan to‘lagan bo‘lsa — xarajatni ikki qator qilib yozing, har birida o‘z ismi. Belgini siz va egasi qo‘yasiz; har bir o‘zgarishni egasi jurnalda ko‘radi: «o‘zi to‘lagan» odamga qaytarish qo‘shadi.",
+            ],
+            admin: [
+              "Har bir xarajatda «Kim to‘lagan» bor. «Birgalikda, 70/30» — studiyaning umumiy pulidan to‘langan: xarajat bo‘linadigan summani kamaytiradi va ikkalangizga ulushlar bo‘yicha tushadi. Eski xarajatlar ham, boshqasi qo‘yilmaguncha, shunday turadi.",
+              "Kimdir bitta o‘z pulidan to‘lagan bo‘lsa — uni yozishda yoki keyin xarajat qatorida tanlang va «Saqlash» ni bosing. Bu summa unga bo‘linishdan oldin kelgan puldan qaytariladi: qatorda «$… qaytarish», muassis kartasida «o‘zi to‘lagan: …», [«Moliya»](/admin/finance) bo‘limidagi «Hammuassislar ulushlari» da esa «ulush + xarajatlar uchun qaytarish = to‘lanadi» ko‘rinadi.",
+              "Har kim o‘z qismini o‘z pulidan to‘lagan bo‘lsa — xarajatni ikki qator qilib yozing, har birida o‘z ismi. Belgini siz va muassis-rahbar qo‘yasiz; har bir o‘zgarish [«Jurnal»](/admin/audit) da avval nima edi va endi nima bo‘ldi, shu bilan yoziladi: «o‘zi to‘lagan» odamga qaytarish qo‘shadi.",
+            ],
+          },
+        },
+        {
           id: "taxes",
           title: "Soliq muddatlari",
           body: [
@@ -2173,7 +2189,7 @@ export const uz: HelpCopy = {
             ],
             admin: [
               "Studiya bo‘yicha plitkalar: «Shartnomalar bo‘yicha», «Mijozlar to‘lagan», «Sof foyda» (nechta loyihada tannarx yo‘qligi belgisi bilan), «Jamoa va hamkorlarga hisoblangan», «Egasiga qoladi».",
-              "Odamlar jadvali va «Loyihalar bo‘yicha» — soliq, tannarx, foyda va «Egasiga» (hamkorlar ayirilgan) ustunlari bilan. «Hammuassislar ulushlari» — kelgan pul minus xarajatlar va u qanday bo‘linadi. «Studiya xarajatlari» — [«Xarajatlar»](/admin/expenses) bo‘limidagi ro‘yxatning o‘zi.",
+              "Odamlar jadvali va «Loyihalar bo‘yicha» — soliq, tannarx, foyda va «Egasiga» (hamkorlar ayirilgan) ustunlari bilan. «Hammuassislar ulushlari» — kelgan pul minus xarajatlar, u qanday bo‘linadi va xarajatni o‘z pulidan to‘laganga qancha qaytariladi (ulush + xarajatlar uchun qaytarish = to‘lanadi). «Studiya xarajatlari» — [«Xarajatlar»](/admin/expenses) bo‘limidagi ro‘yxatning o‘zi.",
             ],
           },
         },

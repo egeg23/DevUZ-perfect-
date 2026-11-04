@@ -5,9 +5,11 @@ import { test } from "node:test";
 import {
   HEAD_TEAM_PERCENT,
   accrualsOf,
+  founderPayouts,
   founderShares,
   foundersPool,
   isFounder,
+  paidBack,
   type Accrual,
   type Earner,
   type Expense,
@@ -269,4 +271,61 @@ test("себестоимость проекта не попадает в общ�
   );
   assert.match(sql, /check \(amount_usd > 0\)/);
   assert.match(sql, /founder_percent > 0 and founder_percent <= 100/);
+});
+
+/* ── Кто вносил ─────────────────────────────────────────────────────────── */
+
+// Владелец, 04.11.2026: «нужно проставить, кто вносил. Если вносили вместе:
+// 30/70 действует. Если к примеру вносил кто-то 1 — то потом эта сумма должна
+// встать к выплате обратно тому кто вносил с проекта, перед тем как делить
+// 30/70 после расходов».
+
+test("вносили вместе: расход делится 70/30, возврата нет никому", () => {
+  const paid = project({ id: "paid", amount_usd: 1_000, dev_cost_usd: 0, tax_percent: 0 });
+  const payments: PaymentMoney[] = [{ project_id: "paid", amount_usd: 1_000 }];
+  const ads = [expense(100, { paid_by: null })];
+
+  const pool = foundersPool([paid], payments, [], ads);
+  const [egor, alex] = founderPayouts(pool.pool, [
+    earner({ id: OWNER, founder_percent: 70 }),
+    earner({ id: ALEX, founder_percent: 30 }),
+  ], ads);
+
+  assert.equal(pool.pool, 900);
+  assert.deepEqual([egor?.paid_back, alex?.paid_back], [0, 0]);
+  assert.deepEqual([egor?.total, alex?.total], [630, 270]);
+});
+
+test("вносил один: сумма возвращается ему до деления 70/30", () => {
+  const paid = project({ id: "paid", amount_usd: 1_000, dev_cost_usd: 0, tax_percent: 0 });
+  const payments: PaymentMoney[] = [{ project_id: "paid", amount_usd: 1_000 }];
+  const ads = [expense(100, { paid_by: ALEX })];
+
+  const pool = foundersPool([paid], payments, [], ads);
+  const [egor, alex] = founderPayouts(pool.pool, [
+    earner({ id: OWNER, founder_percent: 70 }),
+    earner({ id: ALEX, founder_percent: 30 }),
+  ], ads);
+
+  // 1000 пришло: 100 вернули Александру, 900 поделили 630 / 270.
+  assert.equal(alex?.paid_back, 100);
+  assert.equal(alex?.total, 370);
+  assert.equal(egor?.total, 630);
+  // Ни доллара не теряется и не появляется: к выплате ровно то, что пришло.
+  assert.equal((egor?.total ?? 0) + (alex?.total ?? 0), pool.earned);
+});
+
+test("каждый внёс свою часть — двумя строками, к выплате ровно пришедшее", () => {
+  const paid = project({ id: "paid", amount_usd: 1_000, dev_cost_usd: 0, tax_percent: 0 });
+  const payments: PaymentMoney[] = [{ project_id: "paid", amount_usd: 1_000 }];
+  const parts = [expense(70, { id: "e1", paid_by: OWNER }), expense(30, { id: "e2", paid_by: ALEX })];
+
+  const pool = foundersPool([paid], payments, [], parts);
+  const payouts = founderPayouts(pool.pool, [
+    earner({ id: OWNER, founder_percent: 70 }),
+    earner({ id: ALEX, founder_percent: 30 }),
+  ], parts);
+
+  assert.deepEqual(payouts.map((p) => p.total), [700, 300]);
+  assert.deepEqual([...paidBack(parts).entries()], [[OWNER, 70], [ALEX, 30]]);
 });
