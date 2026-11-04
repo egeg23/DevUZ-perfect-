@@ -26,8 +26,10 @@ test("без доли ночной лид берётся сверх равной
   assert.deepEqual(mayTake({ role: "manager", staffId: "d", offers: [], openedAt: now.toISOString(), now, share: over }).ok, false);
   // nightShareFor отдаёт null тому, у кого лимита нет, — mayTake доли не видит.
   assert.equal(mayTake({ role: "manager", staffId: "d", offers: [], openedAt: now.toISOString(), now, share: null }).ok, true);
-  const offers = [{ staffId: "other", expiresAt: new Date(now.getTime() + 600_000).toISOString(), outcome: null }];
-  assert.equal(mayTake({ role: "head", staffId: "a", offers, openedAt: null, now, share: null }).ok, false, "чужие полчаса днём не берутся");
+  // Днём в будни (четверг, 11:00 по Ташкенту) чужие полчаса держат, как раньше.
+  const day = new Date("2026-10-22T06:00:00Z");
+  const offers = [{ staffId: "other", expiresAt: new Date(day.getTime() + 600_000).toISOString(), outcome: null }];
+  assert.equal(mayTake({ role: "head", staffId: "a", offers, openedAt: null, now: day, share: null }).ok, false, "чужие полчаса днём не берутся");
 });
 
 test("проверка стоит и при «Взять», и в карточке лида; база молчит — потолок как раньше", () => {

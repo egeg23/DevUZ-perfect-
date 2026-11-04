@@ -25,9 +25,9 @@ export const toastDict = defineDict({
     pl: "To nie twoja kolej: lead jest teraz zaproponowany komuś innemu na 30 minut",
   },
   done_no_share: {
-    ru: "Вы уже взяли свою долю ночных лидов за месяц",
-    uz: "Siz oylik tungi lidlar ulushingizni allaqachon oldingiz",
-    pl: "Twoja część nocnych leadów na ten miesiąc jest już wykorzystana",
+    ru: "Ваша доля за месяц взята, а на месте коллега, у которого меньше. Через 10 минут сможете взять сами",
+    uz: "Oylik ulushingiz olingan, joyida esa kamroq olgan hamkasb bor. 10 daqiqadan keyin o‘zingiz olishingiz mumkin",
+    pl: "Twoja część na ten miesiąc jest wykorzystana, a na miejscu jest kolega, który ma mniej. Za 10 minut możesz wziąć sam",
   },
   done_no_wait: {
     ru: "Третий раз «ещё в работе» нельзя — выберите «Выиграли» или «Проиграли»",

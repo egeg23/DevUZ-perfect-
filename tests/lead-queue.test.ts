@@ -3,6 +3,9 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
 import {
+  NIGHT_GRACE_MINUTES,
+  isOffHours,
+  shareBlocks,
   OFFER_MINUTES,
   QUEUE_ROLES,
   clock,
@@ -366,4 +369,37 @@ test("очередь читает присутствие и сгоревшие �
     readFileSync(new URL("../app/api/telegram/webhook/route.ts", import.meta.url), "utf8"),
     /await noteBotSeen\(update\.callback_query\.from\.id\)/,
   );
+});
+
+/**
+ * Владелец, 03.11.2026: «когда нерабочее время и приходит лид … свободный
+ * менеджер не может оперативно его взять … из-за лимита. Поправь».
+ */
+test("нерабочее время: равная доля держит, только пока есть кому уступить, и не дольше 10 минут", () => {
+  const now = new Date("2026-11-03T15:00:00Z"); // вторник, 20:00 по Ташкенту
+  const opened = (min: number) => new Date(now.getTime() - min * 60_000).toISOString();
+  const over = { mine: 4, total: 6, people: 7 };
+  const base = { role: "manager" as const, staffId: "d", offers: [], openedAt: opened(2), now };
+  assert.equal(mayTake({ ...base, share: { ...over, othersAwake: 1 }, waitingSince: opened(2) }).ok, false, "коллега с меньшей долей на месте — уступить");
+  assert.equal(mayTake({ ...base, share: { ...over, othersAwake: 0 }, waitingSince: opened(2) }).ok, true, "больше никого на месте — берёт тот, кто есть");
+  assert.equal(mayTake({ ...base, share: { ...over, othersAwake: 2 }, waitingSince: opened(NIGHT_GRACE_MINUTES) }).ok, true, "ждёт 10 минут — берёт первый");
+  assert.equal(shareBlocks({ mine: 0, total: 6, people: 7, othersAwake: 3 }, opened(1), now), false, "своя доля не взята — всегда можно");
+});
+
+test("нерабочее время: чужие полчаса очереди не держат — вечер, ночь, выходные", () => {
+  const offers = (now: Date) => [{ staffId: "спит", expiresAt: new Date(now.getTime() + 20 * 60_000).toISOString(), outcome: null }];
+  const take = (iso: string) => {
+    const now = new Date(iso);
+    return mayTake({ role: "manager", staffId: "на-месте", offers: offers(now), openedAt: null, now }).ok;
+  };
+  assert.equal(take("2026-11-03T06:00:00Z"), false, "вторник, 11:00 — дневная очередь как раньше");
+  assert.equal(take("2026-11-03T14:30:00Z"), true, "вторник, 19:30");
+  assert.equal(take("2026-11-02T02:00:00Z"), true, "понедельник, 07:00");
+  assert.equal(take("2026-11-07T06:00:00Z"), true, "суббота, 11:00");
+  assert.equal(isOffHours(new Date("2026-11-08T07:00:00Z")), true, "воскресенье");
+  assert.equal(isOffHours(new Date("2026-11-04T07:00:00Z")), false, "среда, 12:00");
+  // Кто на месте — считает хранилище: другие в очереди, активные за 30 минут, со своей долей не взятой.
+  const store = read("lib/admin/lead-queue-store.ts");
+  assert.match(store, /othersAwake: candidates\.filter\(\s*\(c\) => c\.id !== staffId && activeNow\(c\.activeAt, now\) && withinShare/);
+  assert.match(read("lib/admin/ownership.ts"), /waitingSince: queue\.openedAt/);
 });

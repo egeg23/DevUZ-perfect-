@@ -238,6 +238,7 @@ export default async function LeadPage({
     openedAt: queue.openedAt,
     now: new Date(),
     share,
+    waitingSince: queue.openedAt,
   });
   const offer = queue.offers.find((o) => o.outcome === null && Date.parse(o.expiresAt) > Date.now()) ?? null;
   const hideHandle = free && !turn.ok;

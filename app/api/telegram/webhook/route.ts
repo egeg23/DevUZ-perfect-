@@ -1853,10 +1853,10 @@ async function handleButton(query: NonNullable<Update["callback_query"]>) {
       await answerCallback(query.id, "Не ваша очередь — лид сейчас предложен другому");
       return;
     }
-    // Ночной лид: свою равную долю за месяц человек уже взял, и этот — для
-    // тех, у кого меньше.
+    // Ночной лид: свою равную долю человек уже взял, а на месте коллега, у
+    // которого меньше (lib/admin/lead-queue.ts, shareBlocks) — 10 минут его.
     if (!taken.ok && taken.reason === "share") {
-      await answerCallback(query.id, "Вы уже взяли свою равную долю за месяц — этот лид для тех, у кого меньше");
+      await answerCallback(query.id, "Ваша доля за месяц взята, а на месте коллега, у которого меньше. Через 10 минут, если никто не возьмёт, сможете вы");
       return;
     }
     if (!taken.ok) {
