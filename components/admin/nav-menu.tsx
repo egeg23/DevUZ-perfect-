@@ -104,7 +104,7 @@ export function NavMenu({
 
   return (
     <>
-      <nav aria-label={t.nav} className="os-rail">
+      <nav aria-label={t.nav} className="os-rail" data-tour="rail">
         {rail.map((item, i) => (
           <RailLink key={item.href} item={item} also={tabsOf(item.href)} wide={i >= PHONE_RAIL}>
             {item.href === TASKS_HREF ? <TaskCount badge /> : null}
@@ -119,6 +119,7 @@ export function NavMenu({
             aria-label={t.more}
             title={t.moreHint}
             data-active={moreActive || undefined}
+            data-tour="more"
             onClick={() => setState((s) => (s?.kind === "more" && s.path === pathname ? null : { kind: "more", path: pathname }))}
             className="os-rail-item"
           >
@@ -233,6 +234,7 @@ export function FindButton() {
       title={t.findSection}
       aria-label={t.findSection}
       className="os-search"
+      data-tour="search"
     >
       <SearchIcon />
       <span className="hidden min-w-0 flex-1 truncate text-left md:inline">{t.search}</span>

@@ -1891,3 +1891,123 @@
     animation: none;
   }
 }
+
+/* Знакомство с новой панелью (components/admin/panel-tour.tsx): затемнение,
+   подсветка настоящего места на экране и карточка шага. */
+.os-tour {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+}
+.os-tour-dim {
+  position: absolute;
+  inset: 0;
+  background: rgb(5 7 11 / 0.74);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+  animation: os-tour-fade 0.3s var(--ease-out-soft) both;
+}
+.os-tour-spot {
+  position: absolute;
+  border-radius: 16px;
+  box-shadow:
+    0 0 0 2px rgb(34 240 160 / 0.85),
+    0 0 28px 4px rgb(34 240 160 / 0.35),
+    0 0 0 9999px rgb(5 7 11 / 0.74);
+  transition:
+    top 0.35s var(--ease-out-soft),
+    left 0.35s var(--ease-out-soft),
+    width 0.35s var(--ease-out-soft),
+    height 0.35s var(--ease-out-soft);
+  pointer-events: none;
+}
+.os-tour-spot::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 20px;
+  border: 2px solid rgb(34 240 160 / 0.5);
+  animation: os-tour-pulse 1.8s ease-out infinite;
+}
+.os-tour-card {
+  position: absolute;
+  width: min(400px, calc(100vw - 24px));
+  padding: 18px;
+  background: linear-gradient(145deg, rgb(17 24 35 / 0.97), rgb(11 15 22 / 0.97));
+  animation: os-tour-in 0.35s var(--ease-out-soft) both;
+}
+.os-tour-card.is-center {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: os-tour-fade 0.35s var(--ease-out-soft) both;
+}
+.os-tour-hero {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  margin-top: 14px;
+  border-radius: 18px;
+  background: linear-gradient(145deg, #3b82f6, #22f0a0);
+  box-shadow: 0 10px 30px rgb(34 240 160 / 0.3);
+  color: #04120c;
+  font: 800 26px var(--font-display);
+}
+.os-tour-dot {
+  display: block;
+  width: 6px;
+  height: 6px;
+  border-radius: 99px;
+  background: rgb(255 255 255 / 0.18);
+  transition:
+    width 0.25s var(--ease-out-soft),
+    background-color 0.25s;
+}
+.os-tour-dot.is-done {
+  background: rgb(34 240 160 / 0.5);
+}
+.os-tour-dot.is-on {
+  width: 18px;
+  background: var(--color-green);
+}
+@keyframes os-tour-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes os-tour-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes os-tour-pulse {
+  0% {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.08);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .os-tour-dim,
+  .os-tour-card,
+  .os-tour-card.is-center,
+  .os-tour-spot::after {
+    animation: none;
+  }
+  .os-tour-spot,
+  .os-tour-dot {
+    transition: none;
+  }
+}

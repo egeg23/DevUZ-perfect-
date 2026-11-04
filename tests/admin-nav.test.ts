@@ -195,7 +195,7 @@ test("полоса иконок: шесть ежедневных по выбор
 
   globalThis.__pathname = "/admin/contracts/42";
   const html = renderToStaticMarkup(createElement(AdminShell, { staff: staff("ru", "admin"), children: "x" }));
-  const nav = /<nav aria-label="Разделы панели" class="os-rail">([\s\S]*?)<\/nav>/.exec(html)?.[1] ?? "";
+  const nav = /<nav aria-label="Разделы панели" class="os-rail"[^>]*>([\s\S]*?)<\/nav>/.exec(html)?.[1] ?? "";
   for (const [href, name] of [["/admin/hq", "Главная"], ["/admin/inbox", "Входящие"], ["/admin", "Лиды"], ["/admin/tasks", "Задачи"], ["/admin/prospect", "Холодные касания"], ["/admin/mockups", "Макеты"]]) {
     assert.match(nav, new RegExp(`href="${href}" aria-label="${name}"`), `${name}: нет кнопки в полосе`);
   }

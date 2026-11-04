@@ -18,6 +18,7 @@ import { UsageBeacon } from "@/components/admin/usage-beacon";
 import { TaskPulse } from "@/components/admin/task-alerts";
 import { NavProgress } from "@/components/admin/nav-progress";
 import { KeepPlace } from "@/components/admin/keep-place";
+import { PanelTour } from "@/components/admin/panel-tour";
 import { SectionTabs } from "@/components/admin/section-tabs";
 import { Bell } from "@/components/admin/bell";
 
@@ -180,7 +181,7 @@ export function AdminShell({
                 </Link>
                 {/* Имя, роль, язык и выход — под кружком, как в эталоне: в панели
                     остаётся то, чем пользуются каждый день. */}
-                <details className="os-me relative">
+                <details className="os-me relative" data-tour="me">
                   <summary title={staff.display_name} aria-label={staff.display_name} className="os-me-btn">
                     {initials(staff.display_name)}
                   </summary>
@@ -201,6 +202,8 @@ export function AdminShell({
             </header>
             {/* Полоса иконок слева, на телефоне — снизу (components/admin/nav-menu.tsx). */}
             <NavMenu rail={rail} more={more} find={find} parents={parents} />
+            {/* Знакомство с новой панелью — один раз (lib/admin/panel-tour.ts). */}
+            <PanelTour />
             <main className="os-main">
               <div className="mx-auto max-w-7xl">
                 <SectionTabs families={tabs} />
