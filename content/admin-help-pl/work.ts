@@ -730,7 +730,7 @@ export const workSections: Record<string, HelpEntry> = {
         body: [
           "**Zysk netto z transakcji** = kwota z umowy − podatek − koszt wytworzenia. Procent liczy się od niego, a nie od kwoty umowy. Podatek i koszt wytworzenia wpisuje właściciel.",
           "Stawki według poziomu: **młodszy menedżer** — 10% od nowego klienta i 0 od dosprzedaży; **menedżer** — 15% i 5%; **kierownik** — 30% i 30%. Poziom i stawkę indywidualną ustawia właściciel w sekcji «Zespół». Stawka indywidualna zastępuje poziom tylko przy nowych klientach.",
-          "Kierownik dodatkowo dostaje 5% z każdej transakcji menedżerów swojego zespołu — ponad to, a nie z ich udziału. U kierownika-współzałożyciela ten wiersz wynosi 0: i tak dostaje udział we wszystkim, co zostało.",
+          "Kierownik dodatkowo dostaje 5% z każdej transakcji menedżerów swojego zespołu — ponad to, a nie z ich udziału. U kierownika-współzałożyciela ten wiersz wynosi 0: i tak dostaje udział we wszystkim, co zostało. Kto przyprowadził i dodał [agencję](/admin/agencies), dostaje jeszcze 5% od kwoty każdego projektu tej agencji przez 12 miesięcy — wierszem «przyprowadził agencję», od kwoty umowy, a nie od zysku.",
           "Właściciel może ustawić procent na konkretną transakcję — ma on pierwszeństwo przed poziomem i stawką indywidualną. Naliczenie pojawia się, gdy projekt ma kwotę i osobę prowadzącą. Transakcja wyszła na minus — naliczenie wynosi 0: minus to zmartwienie właściciela.",
         ],
       },

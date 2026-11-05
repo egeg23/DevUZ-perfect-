@@ -1,4 +1,5 @@
 import {
+  AGENCY_FINDER_MONTHS,
   accrualState,
   paidOf,
   profitOf,
@@ -101,8 +102,11 @@ export function partnerPercent(input: {
   partnerOverride: number | null;
   amountUsd: number | null;
   model?: PayoutModel | null;
+  /** Агентство — 15% с суммы всегда (AGENCY_PERCENT), без ступеней и личной ставки. */
+  agency?: boolean;
 }): number {
   if (input.projectPercent !== null) return input.projectPercent;
+  if (input.agency) return AGENCY_PERCENT;
   if (input.partnerOverride !== null) return input.partnerOverride;
   return tierPercent(Math.max(0, input.amountUsd ?? 0), input.model ?? DEFAULT_MODEL);
 }
@@ -324,10 +328,12 @@ export type PartnerAccrual = {
 export function partnerAccrualOf(
   project: PartnerProject,
   payments: PaymentMoney[],
-  partner: { id: string; percent_override: number | null },
+  partner: { id: string; percent_override: number | null; kind?: PartnerKind },
 ): PartnerAccrual | null {
   if (project.partner_id !== partner.id) return null;
-  const model = isPayoutModel(project.partner_model) ? project.partner_model : DEFAULT_MODEL;
+  // Агентство — всегда с оборота, какая бы модель ни записалась на заявке.
+  const agency = partner.kind === "agency";
+  const model = agency ? "turnover" : isPayoutModel(project.partner_model) ? project.partner_model : DEFAULT_MODEL;
   const base = partnerBase(project, model);
   if (base === null || project.amount_usd === null) return null;
 
@@ -338,10 +344,12 @@ export function partnerAccrualOf(
     partnerOverride: partner.percent_override,
     amountUsd: project.amount_usd,
     model,
+    agency,
   });
   // Выплачен по ставке копилки — она и остаётся: выплаченное вниз не
   // пересчитывается. Процент, заданный владельцем на проекте, важнее.
-  const bonus = project.partner_percent === null ? (project.partner_bonus_percent ?? null) : null;
+  // У агентства копилки нет: ставка фиксированная.
+  const bonus = project.partner_percent === null && !agency ? (project.partner_bonus_percent ?? null) : null;
   const percent = bonus !== null && bonus > tier ? bonus : tier;
   const voided = project.partner_void_reason !== null;
   const state: AccrualState = voided ? "void" : accrualState(project, paidOf(project.id, payments));
@@ -637,6 +645,69 @@ export function agencyMatches(
   const an = companyKey(agency.name);
   const ln = companyKey(lead.company);
   return an.length >= 4 && an === ln;
+}
+
+/* ── Агентства — партнёры студии ────────────────────────────────────────── */
+
+/**
+ * Агентство как партнёр студии: оно само приводит нам заказы своих клиентов
+ * и получает 15% с суммы каждого такого проекта — всегда, без ступеней,
+ * выбора модели и копилки. Тому из команды, кто привёл и завёл агентство, —
+ * 5% с суммы его проектов 12 месяцев (lib/admin/finance.ts,
+ * AGENCY_FINDER_PERCENT, AGENCY_FINDER_MONTHS).
+ *
+ * Владелец, 05.11.2026: «Надо зафиксировать условия для агентств: 15% с
+ * оборота проекта фиксировано. Для наших менеджеров: те кто привел
+ * агентство и завел его у нас — они на 12 месяцев получают 5% с оборота
+ * этого агентства».
+ *
+ * Не путать с «агентствами партнёров» выше (partner_agencies): там человек
+ * по ссылке подключает агентство, и заказы агентства идут ему по его ставке.
+ */
+export const PARTNER_KINDS = ["person", "agency"] as const;
+export type PartnerKind = (typeof PARTNER_KINDS)[number];
+
+export function isPartnerKind(value: unknown): value is PartnerKind {
+  return typeof value === "string" && (PARTNER_KINDS as readonly string[]).includes(value);
+}
+
+/** Агентству — с суммы каждого его проекта. */
+export const AGENCY_PERCENT = 15;
+
+/** До какого момента тому, кто привёл агентство, идут 5%. `null` — не привёл никто. */
+export function finderUntil(broughtAt: string | null): Date | null {
+  if (!broughtAt) return null;
+  const from = new Date(broughtAt);
+  if (Number.isNaN(from.getTime())) return null;
+  const until = new Date(from);
+  until.setUTCMonth(until.getUTCMonth() + AGENCY_FINDER_MONTHS);
+  return until;
+}
+
+/** «05.11.2027» — до какого дня идут 5%; пусто, если не привёл никто. */
+export function finderUntilDay(broughtAt: string | null): string {
+  const until = finderUntil(broughtAt);
+  return until ? until.toISOString().slice(0, 10).split("-").reverse().join(".") : "";
+}
+
+/**
+ * Кому 5% с этого проекта: тому, кто привёл агентство, если проект —
+ * агентства и заведён в его 12 месяцах (с дня, как агентство завели, до
+ * того же дня через год). Проект, заведённый до агентства, — не его: его
+ * привели не через агентство. Срок вышел — новые проекты без 5%, уже
+ * заведённые в сроке остаются ему.
+ */
+export function agencyFinder(
+  project: { partner_id: string | null; created_at?: string | null },
+  partner: { id: string; kind?: PartnerKind; brought_by?: string | null; brought_at?: string | null } | null | undefined,
+): string | null {
+  if (!partner || partner.kind !== "agency" || !partner.brought_by) return null;
+  if (project.partner_id !== partner.id || !project.created_at || !partner.brought_at) return null;
+  const at = new Date(project.created_at).getTime();
+  const from = new Date(partner.brought_at).getTime();
+  const until = finderUntil(partner.brought_at);
+  if (Number.isNaN(at) || Number.isNaN(from) || !until) return null;
+  return at >= from && at < until.getTime() ? partner.brought_by : null;
 }
 
 /* ── Клиенты партнёра ───────────────────────────────────────────────────── */

@@ -75,6 +75,8 @@ export type Project = {
   partner_bonus_percent: number | null;
   /** Смета менеджера: категория, допы, обещанный срок. Вилка считается из неё. */
   quote: QuoteInput | null;
+  /** Кто привёл агентство, чей это проект, — 5% с суммы (ставит loadLedger, lib/partners/rules.ts agencyFinder). */
+  agency_finder?: string | null;
 };
 
 const COLUMNS =
@@ -408,6 +410,23 @@ export async function projectsOwnedBy(scope: "all" | readonly string[]): Promise
   const { data, error } = await query.limit(500);
   if (error) {
     console.error("admin: не прочитал проекты для финансов", error.message);
+    return [];
+  }
+  return (data ?? []).map((row) => shape(row as Record<string, unknown>));
+}
+
+/** Проекты, которые привели эти партнёры (агентства), — все стадии, как и для финансов. */
+export async function projectsOfPartners(partnerIds: readonly string[]): Promise<Project[]> {
+  const db = serviceClient();
+  if (!db || !partnerIds.length) return [];
+  const { data, error } = await db
+    .from("projects")
+    .select(COLUMNS)
+    .in("partner_id", [...partnerIds])
+    .order("created_at", { ascending: false })
+    .limit(500);
+  if (error) {
+    console.error("admin: не прочитал проекты агентств", error.message);
     return [];
   }
   return (data ?? []).map((row) => shape(row as Record<string, unknown>));

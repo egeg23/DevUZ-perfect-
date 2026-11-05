@@ -8,10 +8,11 @@ import {
   type Grade,
   type Purpose,
 } from "@/lib/admin/finance";
-import { projectsOwnedBy, type Project } from "@/lib/admin/projects";
+import { projectsOfPartners, projectsOwnedBy, type Project } from "@/lib/admin/projects";
 import { settleTurnover } from "@/lib/partners/autopay";
 import { esc } from "@/lib/qualify/telegram";
 import { notifyPartner, partnerById, partnersById, summarize, type Partner } from "@/lib/partners/store";
+import { agencyFinder } from "@/lib/partners/rules";
 import { keepsExpenses, type Role } from "@/lib/admin/roles";
 import { belowFloor, parseQuote, quoteFor } from "@/lib/admin/quote";
 import type { Staff } from "@/lib/admin/session";
@@ -262,19 +263,53 @@ export async function loadLedger(scope: "all" | readonly string[]): Promise<Ledg
     };
   }
 
-  const [people, projects, payouts] = await Promise.all([
+  const [people, owned, payouts, found] = await Promise.all([
     loadPeople(),
     projectsOwnedBy(scope),
     payoutsFor(scope),
+    agencyProjectsOf(scope),
   ]);
-  const ids = projects.map((p) => p.id);
-  const partnerIds = [...new Set(projects.map((p) => p.partner_id).filter((id): id is string => id !== null))];
+  // Проекты агентств, которых привели люди круга, — даже если ведёт их не
+  // круг: 5% за агентство — их деньги (владелец, 05.11.2026). Чужие строки
+  // начислений в таких проектах страница не показывает — только свою.
+  const have = new Set(owned.map((p) => p.id));
+  const merged = [...owned, ...found.filter((p) => !have.has(p.id))];
+  const ids = merged.map((p) => p.id);
+  const partnerIds = [...new Set(merged.map((p) => p.partner_id).filter((id): id is string => id !== null))];
   const [payments, shares, partners] = await Promise.all([
     paymentsFor(ids),
     sharesFor(ids),
     partnersById(partnerIds),
   ]);
+  const projects = merged.map((p) => withFinder(p, partners));
   return { offline: false, projects, payments, payouts, people, shares, partners };
+}
+
+/** Проект с тем, кто привёл его агентство (5% с суммы), если проект в его 12 месяцах. */
+export function withFinder<P extends { partner_id: string | null; created_at?: string | null }>(
+  project: P,
+  partners: ReadonlyMap<string, Pick<Partner, "id" | "kind" | "brought_by" | "brought_at">>,
+): P & { agency_finder: string | null } {
+  const partner = project.partner_id ? partners.get(project.partner_id) : undefined;
+  return { ...project, agency_finder: agencyFinder(project, partner) };
+}
+
+/**
+ * Проекты агентств, которых привели люди круга. Для «всех» — пусто: все
+ * проекты и так в выборке.
+ */
+async function agencyProjectsOf(scope: "all" | readonly string[]): Promise<Project[]> {
+  if (scope === "all" || !scope.length) return [];
+  const db = serviceClient();
+  if (!db) return [];
+  const { data, error } = await db
+    .from("partners")
+    .select("id")
+    .eq("kind", "agency")
+    .in("brought_by", [...scope])
+    .limit(500);
+  if (error || !data?.length) return [];
+  return projectsOfPartners(data.map((row) => String(row.id)));
 }
 
 /* ── Записи ─────────────────────────────────────────────────────────────── */

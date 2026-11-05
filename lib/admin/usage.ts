@@ -144,6 +144,7 @@ export const FEATURES: readonly Feature[] = [
     roles: ["head"],
   },
   { key: "expenses", label: { ru: "Расходы", uz: "Xarajatlar", pl: "Wydatki" }, actions: ["expense.added", "expense.removed", "expense.payer"], roles: ["head"] },
+  { key: "agencies", label: { ru: "Агентства: завести агентство", uz: "Agentliklar: agentlik qo‘shish", pl: "Agencje: dodanie agencji" }, actions: ["partner.agency_created"] },
 ];
 
 const TEAM_ROLES: readonly Role[] = ["head", "manager"];

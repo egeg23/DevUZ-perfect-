@@ -4,6 +4,7 @@ import { addPartner, cancelClientAction, decide, decideAgencyAction, deletePartn
 import { AdminShell } from "@/components/admin/shell";
 import { when } from "@/components/admin/lead-table";
 import { partnersDict, partnersResultDict, perkDict, usd } from "@/content/admin-panel/partners";
+import { agenciesDict } from "@/content/admin-panel/agencies";
 import { requireSection } from "@/lib/admin/guard";
 import { pick, type PanelLocale } from "@/lib/admin/i18n";
 import { partnerClientsDict } from "@/content/admin-panel/partner-clients";
@@ -59,6 +60,7 @@ export default async function PartnersPage({
   const { r } = await searchParams;
   const locale = admin.panel_locale;
   const t = pick(partnersDict, locale);
+  const ta = pick(agenciesDict, locale);
   const results = pick(partnersResultDict, locale);
   const tc = pick(partnerClientsDict, locale);
   // Ответы по закреплённым клиентам — из их словаря, остальные — из словаря раздела.
@@ -305,6 +307,14 @@ export default async function PartnersPage({
                     {partner.name}
                   </Link>
                   {partner.status === "blocked" ? <span className="ml-2 text-xs text-gold">{t.blocked}</span> : null}
+                  {partner.kind === "agency" ? (
+                    <Link
+                      href="/admin/agencies"
+                      className="ml-2 rounded border border-blue-soft/40 px-1.5 py-0.5 text-xs text-blue-soft hover:underline"
+                    >
+                      {ta.partnerBadge}
+                    </Link>
+                  ) : null}
                   {partner.telegram_user_id && staffIds.has(partner.telegram_user_id) ? (
                     <span className="ml-2 rounded border border-gold/40 px-1.5 py-0.5 text-xs text-gold">{t.isStaff}</span>
                   ) : null}

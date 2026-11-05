@@ -2155,7 +2155,7 @@ export const uz: HelpCopy = {
           body: [
             "**Bitimning sof foydasi** = shartnoma summasi − soliq − ishlab chiqish tannarxi. Foiz shartnoma summasidan emas, undan olinadi. Soliq va tannarxni egasi yozadi.",
             "Daraja bo‘yicha stavkalar: **kichik menejer** — yangi mijozdan 10% va qo‘shimcha sotuvdan 0; **menejer** — 15% va 5%; **rahbar** — 30% va 30%. Daraja va shaxsiy stavkani egasi «Jamoa» bo‘limida qo‘yadi. Shaxsiy stavka darajani faqat yangi mijozlar uchun almashtiradi.",
-            "Rahbar qo‘shimcha ravishda o‘z jamoasi menejerlarining har bir bitimidan 5% oladi — ustiga, ularning ulushidan emas. Muassis-rahbarda bu qator 0: u baribir qolgan hamma narsadan ulush oladi.",
+            "Rahbar qo‘shimcha ravishda o‘z jamoasi menejerlarining har bir bitimidan 5% oladi — ustiga, ularning ulushidan emas. Muassis-rahbarda bu qator 0: u baribir qolgan hamma narsadan ulush oladi. Agentlikni olib kelib, uni [Agentliklar](/admin/agencies) bo‘limida qo‘shgan odam esa 12 oy davomida shu agentlikning har bir loyihasi summasidan yana 5% oladi — «agentlikni olib kelgan» qatori, foydadan emas, shartnoma summasidan.",
             "Egasi aniq bitim uchun foiz belgilashi mumkin — u daraja va shaxsiy stavkadan muhimroq. Hisoblanma loyihada summa va mas’ul bo‘lganda paydo bo‘ladi. Bitim minusga ketdi — hisoblanma 0: minus — egasining tashvishi.",
           ],
         },
@@ -2445,7 +2445,7 @@ export const uz: HelpCopy = {
           body: [
             "Ikki model, hamkor o‘zi kabinetda tanlaydi. «От чистой прибыли» (summa − soliq − tannarx): $2 500 gacha — 10%, $2 501–5 000 — 15%, $5 001–10 000 — 20%, $10 001–30 000 — 25%, $30 001 dan — 30%. «С оборота» (butun shartnoma summasi) xuddi shu chegaralarda: 6, 10, 14, 17, 20%. Har bir loyihaning pog‘onasi o‘z summasiga qarab. «Barcha hamkorlar» jadvalida, «Stavka» ustunida model va qachon o‘zgartirilgani ko‘rinadi.",
             "Model haftasiga bir martadan ko‘p o‘zgarmaydi, mijozga esa uning so‘rovi kunidagi model biriktiriladi: o‘zgartirish ketayotgan loyihalarni qayta hisoblamaydi. Loyiha kartochkasida «Hamkor» yonida — «20 % foydadan» yoki «14 % aylanmadan». Loyihadagi foiz hamkorning shaxsiy stavkasidan muhimroq, shaxsiysi — pog‘onadan. «foydadan» modeli uchun loyiha tannarxini kiriting — usiz ulush soliq ayirilgan summadan hisoblanadi.",
-            "Mijoz loyihani to‘liq to‘lamaguncha hisoblanma muzlatilgan — xodimlardagi kabi.",
+            "Mijoz loyihani to‘liq to‘lamaguncha hisoblanma muzlatilgan — xodimlardagi kabi. Agentlikning stavkasi o‘ziga xos: loyiha summasidan doim 15%, modellarsiz va jamg‘armasiz — u ro‘yxatda «agentlik · 15%» belgisi bilan turadi, batafsil — [Agentliklar](/admin/agencies) bo‘limida.",
             "Jamg‘arma. Hamkor kabinetida tugma bor: o‘zbekcha kabinetda — «Avtomatik rejimda olmaslik», ruscha kabinetda — «Не забирать в автоматическом режиме». U yoqilgan paytda to‘langan loyihalar uchun pul hamkorga darhol ketmaydi: aylanmadan avtoto‘lovlar bo‘lmaydi, to‘langan va hali to‘lanmagan barcha loyihalar bo‘yicha stavka esa ularning umumiy summasi bo‘yicha — o‘sha jadval bo‘yicha hisoblanadi. $2 000 lik uchta loyiha — bu $6 000, va uchalasi bo‘yicha 10% (6%) emas, foydadan 20% (aylanmadan 14%). Studiya pulni o‘zida uzoqroq ushlab, rivojlanishga yo‘naltiradi, hamkor esa oxirida ko‘proq oladi. Stavka oddiysidan past bo‘lmaydi; qo‘lda foiz berilgan loyiha va shaxsiy stavkali hamkor jamg‘armada qatnashmaydi. «Barcha hamkorlar» jadvalida, «Stavka» ustunida bunday hamkorda yashil «jamg‘arma: $… · stavka …%» qatori bor. Tugmani o‘chirsa — oshirish yo‘qoladi, to‘lanmagani har bir loyihaning oddiy pog‘onasi bo‘yicha hisoblanadi, aylanmadan avtoto‘lovlar qaytadi.",
           ],
         },
@@ -2504,6 +2504,83 @@ export const uz: HelpCopy = {
             "«Barcha hamkorlar» jadvalida, «Tahrirlash» ustunida, «saqlash» ostida — «o‘chirish». Ogohlantirish ochiladi: hamkorning havolalari ishlamay qoladi, kabinet va bot orqali kirish yopiladi; uning loyihalari va buyurtmalaridan «kim olib kelgan» olib tashlanadi — ular bo‘yicha hisoblash bo‘lmaydi; agentliklar va biriktirilgan mijozlar o‘chiriladi. **«Butunlay o‘chirish»** tugmasi. Qaytarib bo‘lmaydi — faqat qaytadan qo‘shish mumkin. Hamkorga hech narsa yozilmaydi.",
             "To‘lovlari bor hamkorni o‘chirib bo‘lmaydi: to‘lov — allaqachon ketgan yoki qaror kutayotgan pul, uning tarixi yo‘qolmasligi kerak. Bunday hamkorda tugma o‘rnida tushuntirish bor; uni faqat bloklash mumkin. O‘chirish [Jurnal](/admin/audit)ga yoziladi. Telegrami xodimniki bo‘lgan hamkorlarni jadval «studiya xodimi» deb belgilaydi — ularni o‘chiring: xodim hamkor bo‘la olmaydi.",
           ],
+        },
+      ],
+    },
+
+    /* ── Агентства ──────────────────────────────────────────────────────── */
+    "/admin/agencies": {
+      what: "Agentliklar — studiya hamkorlari: agentlik bizga o‘z mijozlarining buyurtmalarini olib keladi va har bir shunday loyiha summasidan 15% oladi. Jamoadan kim agentlikni olib kelib, uni shu yerda qo‘shgan bo‘lsa, 12 oy davomida agentlik loyihalari summasidan 5% oladi. Agentlikni har kim qo‘sha oladi: bo‘lim «Hamkorlar» bo‘limi yonida turadi, bu bo‘lim yo‘q odamlarda esa menyuning o‘zida turadi.",
+      items: [
+        {
+          id: "terms",
+          title: "Shartlar: agentlikka 15%, olib kelganga 5%",
+          body: [
+            "Agentlikka — har bir loyihasi summasidan doim 15%: bosqichlarsiz, foydadan yoki aylanmadan model tanlovisiz va jamg‘armasiz, havola orqali keladigan hamkorlardagi kabi emas. Summa — loyihada, boshqacha aytganda shartnomada turgan summa.",
+            "Agentlikni olib kelganga — agentlik shu yerda qo‘shilgan kundan boshlab 12 oy ichida ochilgan har bir loyihasi summasidan 5%. Keyinroq ochilgan loyiha endi 5% siz, muddat ichida ochilgani esa keyin ham unda qoladi. Agentlikdan oldin ochilgan loyiha ham 5% siz: u agentlik orqali kelmagan. Muddat jadvalda, «5% gacha» ustunida ko‘rinadi.",
+            "5% hamma narsaning ustidan tushadi. Agentlik loyihasini o‘zingiz olib borsangiz, olib boruvchi foizingiz odatdagidek hisoblanadi, 5% esa alohida «agentlikni olib kelgan» qatori bo‘lib tushadi. Boshqa odam olib borsa, unda uning foizi, sizda sizning 5%.",
+            "Ikkala ulush ham mijoz loyihani to‘liq to‘lamaguncha muzlatilgan, [Moliya](/admin/finance) bo‘limidagi hamma narsa kabi: qisman to‘lov — muzlatilgan, to‘liq — ishlab topilgan. Bekor qilingan loyiha hech narsa bermaydi.",
+          ],
+        },
+        {
+          id: "add",
+          title: "Agentlikni qanday qo‘shish kerak",
+          body: {
+            manager: [
+              "«Agentlik qo‘shish» bloki: «Agentlik nomi», «Bizga qanday yozadi: @telegram, telefon yoki pochta» — majburiy, «Sayt» va «Izoh» — ixtiyoriy. «Agentlik qo‘shish» tugmasi. Agentlikni siz olib keldingiz: u sizga yoziladi va shu kundan 12 oy davomida uning loyihalari summasidan 5% sizniki.",
+              "Agentlik bilan kelishgan zahoti qo‘shing, birinchi buyurtma kelganda emas: muddat agentlik qo‘shilgan kundan boshlanadi, agentlikdan oldin ochilgan loyiha esa 5% ga kirmaydi.",
+              "Bitta agentlik — bitta yozuv. Xuddi shu kontakt yoki nomdagi agentlikni siz, hamkasbingiz yoki hamkor allaqachon qo‘shgan bo‘lsa, panel «Bu agentlik allaqachon qo‘shilgan…» deb javob beradi va ikkinchi yozuv bo‘lmaydi. Agar bu xato bo‘lsa, egasiga yozing: kim olib kelganini faqat u o‘zgartira oladi.",
+            ],
+            head: [
+              "«Agentlik qo‘shish» bloki: «Agentlik nomi», «Bizga qanday yozadi: @telegram, telefon yoki pochta» — majburiy, «Sayt» va «Izoh» — ixtiyoriy, hamda «Kim olib kelgan» — 5% kimga tushadi: odatda siz, xodimni yoki «Hech kim, o‘zi kelgan» variantini tanlash mumkin. «Agentlik qo‘shish» tugmasi.",
+              "Agentlik bilan kelishgan zahoti qo‘shing, birinchi buyurtma kelganda emas: muddat agentlik qo‘shilgan kundan boshlanadi, agentlikdan oldin ochilgan loyiha esa 5% ga kirmaydi.",
+              "Bitta agentlik — bitta yozuv: xuddi shu agentlik (kontakt yoki nom bir xil) ikkinchi marta qo‘shilmaydi, hamkor allaqachon ulagan agentlik ham. Keyin kim olib kelganini faqat ega o‘zgartiradi.",
+            ],
+            admin: [
+              "«Agentlik qo‘shish» bloki: «Agentlik nomi», «Bizga qanday yozadi: @telegram, telefon yoki pochta» — majburiy, «Sayt» va «Izoh» — ixtiyoriy, hamda «Kim olib kelgan» — 5% kimga tushadi: odatda siz, xodimni yoki «Hech kim, o‘zi kelgan» variantini tanlash mumkin. «Agentlik qo‘shish» tugmasi.",
+              "Agentlik bilan kelishgan zahoti qo‘shing, birinchi buyurtma kelganda emas: muddat agentlik qo‘shilgan kundan boshlanadi, agentlikdan oldin ochilgan loyiha esa 5% ga kirmaydi.",
+              "Bitta agentlik — bitta yozuv: xuddi shu agentlik (kontakt yoki nom bir xil) ikkinchi marta qo‘shilmaydi, hamkor allaqachon ulagan agentlik ham. Kim olib kelganini jadvalning o‘zida o‘zgartirasiz: «Kim olib kelgan» ustunida odamni tanlang va «saqlash» tugmasini bosing. 12 oylik muddat bunda surilmaydi — u agentlik qo‘shilgan kundan. Har bir o‘zgarish — [Jurnal](/admin/audit) bo‘limida.",
+            ],
+          },
+        },
+        {
+          id: "orders",
+          title: "Agentlik buyurtmalari unga qanday yoziladi",
+          body: {
+            manager: [
+              "Agentlik qo‘shilgan zahoti uning o‘z havolasi bor — jadvalda, «agentlik uchun havola». Uni agentlikka yuboring: shu havola orqali saytga yoki botga kelgan mijoz agentlikka yoziladi, havola orqali kelgan hamkor mijozi kabi.",
+              "Agentlik o‘zi yuboradigan arizalarni — saytdan, chatdan yoki botdan — panel uning kontakti yoki nomi bo‘yicha taniydi va agentlikka yozadi, havolasiz va muddatsiz. Bunday arizadan ochilgan loyiha agentlikni meros qilib oladi, 15% va 5% loyihada o‘zi paydo bo‘ladi.",
+              "Buyurtma qo‘ng‘iroq yoki menejerga shaxsiy xabar orqali kelgan bo‘lsa, egasidan loyihani agentlikka bog‘lashni so‘rang: buni u loyiha kartochkasida qiladi.",
+            ],
+            head: [
+              "Agentlik qo‘shilgan zahoti uning o‘z havolasi bor — jadvalda, «agentlik uchun havola». Uni agentlikka yuboring: shu havola orqali saytga yoki botga kelgan mijoz agentlikka yoziladi, havola orqali kelgan hamkor mijozi kabi.",
+              "Agentlik o‘zi yuboradigan arizalarni — saytdan, chatdan yoki botdan — panel uning kontakti yoki nomi bo‘yicha taniydi va agentlikka yozadi, havolasiz va muddatsiz. Bunday arizadan ochilgan loyiha agentlikni meros qilib oladi, 15% va 5% loyihada o‘zi paydo bo‘ladi.",
+              "Buyurtma qo‘ng‘iroq yoki menejerga shaxsiy xabar orqali kelgan bo‘lsa, egasidan loyihani agentlikka bog‘lashni so‘rang: buni u loyiha kartochkasida qiladi.",
+            ],
+            admin: [
+              "Agentlik qo‘shilgan zahoti uning o‘z havolasi bor — jadvalda, «agentlik uchun havola». Uni agentlikka yuboring: shu havola orqali saytga yoki botga kelgan mijoz agentlikka yoziladi, havola orqali kelgan hamkor mijozi kabi.",
+              "Agentlik o‘zi yuboradigan arizalarni — saytdan, chatdan yoki botdan — panel uning kontakti yoki nomi bo‘yicha taniydi va agentlikka yozadi, havolasiz va muddatsiz. Bunday arizadan ochilgan loyiha agentlikni meros qilib oladi, 15% va 5% loyihada o‘zi paydo bo‘ladi.",
+              "Buyurtma qo‘ng‘iroq yoki shaxsiy xabar orqali kelgan bo‘lsa, loyihani o‘zingiz bog‘lang: loyiha kartochkasi, «Hamkor» bloki, agentlikni tanlang. Hamkorlar ro‘yxatida agentlik yonida «agentlik · 15%» belgisi bor.",
+            ],
+          },
+        },
+        {
+          id: "money",
+          title: "Pul qayerda ko‘rinadi",
+          body: {
+            manager: [
+              "«Mening agentliklarim» jadvalida — siz olib kelgan agentliklar: agentlikning nechta loyihasi bor, «Loyihalar summasi» va «Agentlik uchun 5%» — qancha ishlab topilgan va qancha muzlatilgan. Xuddi shu 5% — [Moliya](/admin/finance) bo‘limida «agentlikni olib kelgan» qatori: ular balansingizga kiradi va qolgan pul bilan birga to‘lanadi.",
+              "Agentlik qancha olishini ko‘rmaysiz: bu begona odamga pul, uni to‘lashni ega hal qiladi.",
+            ],
+            head: [
+              "«Barcha agentliklar» jadvalida — barcha agentliklar, har birini kim olib kelgani, nechta loyihasi bor, «Loyihalar summasi», «Agentlik uchun 5%» va «Agentlikka 15%». Sizning 5% va jamoangizning 5% — [Moliya](/admin/finance) bo‘limida, «agentlikni olib kelgan» qatori.",
+              "Agentlik [Hamkorlar](/admin/partners) umumiy ro‘yxatida ham bor, «agentlik · 15%» belgisi bilan: u yerda uning hisoblanmalari va to‘lov so‘rovlari, har qanday hamkordagi kabi. To‘lov bo‘yicha qaror — egada.",
+            ],
+            admin: [
+              "«Barcha agentliklar» jadvalida — barcha agentliklar, har birini kim olib kelgani, nechta loyihasi bor, «Loyihalar summasi», «Agentlik uchun 5%» va «Agentlikka 15%». [Moliya](/admin/finance) bo‘limida 5% — olib kelgan odamda «agentlikni olib kelgan» qatori; ular jamoaga har qanday hisoblanma kabi studiyaga qoladigan puldan ayiriladi.",
+              "Agentlik [Hamkorlar](/admin/partners) umumiy ro‘yxatida ham bor, «agentlik · 15%» belgisi bilan: u yerda uning hisoblanmalari, rekvizitlari va to‘lov so‘rovlari, har qanday hamkordagi kabi. To‘lovni siz hal qilasiz.",
+            ],
+          },
         },
       ],
     },

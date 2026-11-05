@@ -109,7 +109,12 @@ test("группа, где у человека один раздел, — про
   }
   // «Ступени продажи» — вкладкой «Статистики»: в «Отчётах» у менеджера один пункт, и он ссылкой.
   assert.deepEqual(manager.find((g) => g.group === "reports")?.sections.map((s) => s.href), ["/admin/stats"]);
-  assert.equal(manager.find((g) => g.group === "marketing"), undefined);
+  // Из «Маркетинга» менеджеру — только «Агентства»: вкладка «Партнёров», а
+  // «Партнёров» у него нет, и вкладка встаёт в меню сама (владелец,
+  // 05.11.2026: агентство заводит тот, кто его привёл).
+  const marketing = manager.find((g) => g.group === "marketing")!;
+  assert.deepEqual(marketing.sections.map((s) => s.href), ["/admin/agencies"]);
+  assert.ok(isSingle(marketing), "один раздел группы — ссылка");
   // Обучение выключено для команды — «Команда» у менеджера пропадает целиком.
   const off = menuOf({ role: "manager", sections_off: ["/admin/learn"] });
   assert.equal(off.find((g) => g.group === "team"), undefined);
@@ -122,8 +127,8 @@ test("галочка владельца кладёт открытый разде
   const who = { role: "manager" as const, section_access: { "/admin/traffic": true, "/admin/talks": false } };
   const granted = menuOf(who);
   const marketing = granted.find((g) => g.group === "marketing");
-  assert.deepEqual(marketing?.sections.map((s) => s.href), ["/admin/traffic"]);
-  assert.ok(isSingle(marketing!), "один открытый раздел группы — ссылка");
+  assert.deepEqual(marketing?.sections.map((s) => s.href), ["/admin/traffic", "/admin/agencies"]);
+  assert.ok(!isSingle(marketing!), "два раздела группы — меню");
   const prospect = tabsOf(who).find((f) => f[0].href === "/admin/prospect")!;
   assert.ok(!prospect.some((s) => s.href === "/admin/talks"), "закрытый галочкой раздел из вкладок ушёл");
 });

@@ -1,7 +1,8 @@
 import { partnerCopy } from "@/content/partner-bot";
-import { DEFAULT_MODEL, PERK_TITLE, agencyUntilDay, clientUntilDay, isPayoutModel, partnerPercent } from "@/lib/partners/rules";
+import { AGENCY_PERCENT, DEFAULT_MODEL, PERK_TITLE, agencyUntilDay, clientUntilDay, isPayoutModel, partnerPercent } from "@/lib/partners/rules";
 import {
   attributeAgencyLead,
+  attributeAgencyPartnerLead,
   attributeClientLead,
   attributeLead,
   notifyPartner,
@@ -25,7 +26,21 @@ export async function attributeAndNotify(
   attribution: { code: string | null; at?: number | null; telegramId?: number | null; chatId?: number | null },
   lead: { contact_handle?: string | null; company?: string | null },
 ): Promise<Attribution | null> {
-  // Сначала — агентство партнёра на субподряде. Его заказы — партнёра
+  // Первым — само агентство-партнёр студии (15% с суммы проекта): оно пишет
+  // нам напрямую, его контакт или название сошлись.
+  const ownAgency = await attributeAgencyPartnerLead(leadId, {
+    contactHandle: lead.contact_handle ?? null,
+    company: lead.company ?? null,
+  });
+  if (ownAgency) {
+    await notifyPartner(
+      ownAgency,
+      `🏢 Заказ записан на ваше агентство. ${AGENCY_PERCENT}% с суммы проекта — ваши, когда клиент оплатит проект целиком.`,
+    );
+    return { partner: ownAgency, link: null, reason: null };
+  }
+
+  // Потом — агентство партнёра на субподряде. Его заказы — партнёра
   // 12 месяцев с подтверждения, без окна в 30 дней и без ссылки: агентство
   // пишет нам напрямую.
   // Оно важнее куки: заказ пришёл от агентства, кто бы ни дал ссылку.
@@ -116,10 +131,11 @@ export async function tellPartnerContractSigned(projectId: string, amountUsd: nu
 
   const [summary] = await summarize([partner]);
   const accrual = summary?.accruals.find((a) => a.project_id === projectId) ?? null;
-  const model = isPayoutModel(project.partner_model) ? project.partner_model : DEFAULT_MODEL;
+  const agency = partner.kind === "agency";
+  const model = agency ? "turnover" : isPayoutModel(project.partner_model) ? project.partner_model : DEFAULT_MODEL;
   const percent =
     accrual?.percent ??
-    partnerPercent({ projectPercent: null, partnerOverride: partner.percent_override, amountUsd, model });
+    partnerPercent({ projectPercent: null, partnerOverride: partner.percent_override, amountUsd, model, agency });
   const name = String(project.client ?? "").trim() || String(project.title ?? "").trim();
   const costsKnown = project.dev_cost_usd !== null && project.dev_cost_usd !== undefined;
 

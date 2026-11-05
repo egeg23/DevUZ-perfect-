@@ -106,6 +106,21 @@ export const RATE_PERCENT: Record<Grade, Record<DealKind, number>> = {
  */
 export const HEAD_TEAM_PERCENT = 5;
 
+/**
+ * Тому из команды, кто привёл и завёл агентство, — 5% с суммы каждого
+ * проекта этого агентства, 12 месяцев с того дня, как завёл. С суммы, а не
+ * с прибыли: так сказал владелец, и это число видно сразу, без
+ * себестоимости. Поверх всего остального: ведёт проект он же или другой —
+ * его доля ведущего считается как обычно.
+ *
+ * Владелец, 05.11.2026: «Для наших менеджеров: те кто привел агентство и
+ * завел его у нас — они на 12 месяцев получают 5% с оборота этого
+ * агентства». Само агентство получает 15% (lib/partners/rules.ts,
+ * AGENCY_PERCENT).
+ */
+export const AGENCY_FINDER_PERCENT = 5;
+export const AGENCY_FINDER_MONTHS = 12;
+
 /** Налог по умолчанию для нового проекта; правится в каждом. */
 export const DEFAULT_TAX_PERCENT = 4;
 
@@ -138,6 +153,12 @@ export type ProjectMoney = {
   tax_percent: number;
   dev_cost_usd: number | null;
   stage: string;
+  /**
+   * Кто привёл агентство, чей это проект, если проект в его 12 месяцах
+   * (lib/partners/rules.ts, agencyFinder). Ставит тот, кто читает проекты;
+   * нет — строки «за агентство» нет.
+   */
+  agency_finder?: string | null;
 };
 
 export type PaymentMoney = { project_id: string; amount_usd: number };
@@ -202,8 +223,11 @@ export function accrualState(project: Pick<ProjectMoney, "amount_usd" | "stage">
 export type Accrual = {
   project_id: string;
   staff_id: string;
-  /** Чья это доля: владельца клиента или его руководителя. */
-  share: "owner" | "head";
+  /**
+   * Чья это доля: ведущего, его руководителя или того, кто привёл агентство
+   * (5% с суммы проекта, AGENCY_FINDER_PERCENT).
+   */
+  share: "owner" | "head" | "agency";
   percent: number;
   /** Процент задан владельцем по этой сделке, а не взят из грейда. */
   manual: boolean;
@@ -223,6 +247,9 @@ export type Accrual = {
  * сотруднику. Они важнее и грейда, и персональной ставки, но строк не
  * добавляют: процент можно задать только тем, кто к сделке закреплён, —
  * ведущему и его руководителю. Запись для постороннего молча не считается.
+ *
+ * Проект агентства в 12 месяцах того, кто его привёл (`agency_finder`), даёт
+ * ещё строку «за агентство» — 5% с суммы проекта, даже без ведущего.
  */
 export function accrualsOf(
   project: ProjectMoney,
@@ -238,10 +265,11 @@ export function accrualsOf(
 ): Accrual[] {
   const owner = project.owner_staff_id ? earners.get(project.owner_staff_id) : undefined;
   const profit = profitOf(project);
-  if (!owner || profit === null) return [];
+  const state = accrualState(project, paidOf(project.id, payments));
+  const fromAgency = agencyLine(project, state);
+  if (!owner || profit === null) return fromAgency ? [fromAgency] : [];
 
   const base = Math.max(0, profit);
-  const state = accrualState(project, paidOf(project.id, payments));
   const line = (staffId: string, share: Accrual["share"], byRule: number): Accrual => {
     const manual = shares.get(staffId);
     const percent = manual ?? byRule;
@@ -272,7 +300,27 @@ export function accrualsOf(
     // за конкретную работу, и отменять это правилом нельзя.
     if (byRule > 0 || shares.has(headId)) out.push(line(headId, "head", byRule));
   }
+  if (fromAgency) out.push(fromAgency);
   return out;
+}
+
+/**
+ * Строка «за агентство»: 5% с суммы проекта тому, кто привёл агентство.
+ * Ручной процент по сделке её не меняет — он про ведущего и руководителя.
+ * Заморожена до полной оплаты, как и остальные; отменённый проект — ноль.
+ */
+function agencyLine(project: ProjectMoney, state: AccrualState): Accrual | null {
+  const finder = project.agency_finder ?? null;
+  if (!finder || project.amount_usd === null || project.amount_usd <= 0) return null;
+  return {
+    project_id: project.id,
+    staff_id: finder,
+    share: "agency",
+    percent: AGENCY_FINDER_PERCENT,
+    manual: false,
+    amount_usd: state === "void" ? 0 : Math.round((project.amount_usd * AGENCY_FINDER_PERCENT) / 100),
+    state,
+  };
 }
 
 /** Что остаётся владельцу студии: прибыль минус все начисления. */
