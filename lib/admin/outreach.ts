@@ -374,7 +374,10 @@ export function outreachProof(input: {
   /** Заголовки пройденных страниц: в них ниша названа прямым текстом. */
   hints?: readonly string[];
 }): Proof {
-  return proofFor(input.niche, [input.label ?? "", input.host, ...(input.hints ?? [])]);
+  // Подтверждение ниши — вывеской: название, адрес и заголовок главной
+  // (первая строка обхода). Без обхода — названием и адресом.
+  const confirm = [input.label ?? "", input.host, input.hints?.[0] ?? ""];
+  return proofFor(input.niche, [input.label ?? "", input.host, ...(input.hints ?? [])], confirm);
 }
 
 /**

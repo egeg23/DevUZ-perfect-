@@ -40,7 +40,7 @@ import { AUTO_PROTO, autoPrototype } from "@/lib/proto/auto";
 import { markAutoSent } from "@/lib/proto/store";
 import { WRITE_MYSELF_MAX, WRITE_MYSELF_NOTE, mayWriteMyself } from "@/lib/admin/write-myself";
 import { checkFresh } from "@/lib/admin/check-fresh";
-import { LETTER_TEXTS, letterProblems, renderLetter, theses } from "@/lib/admin/letter-texts";
+import { LETTER_TEXTS, letterProblems, mainFinding, renderLetter, theses } from "@/lib/admin/letter-texts";
 import { chooseVariant } from "@/lib/admin/letter-texts-store";
 import { translateLetter } from "@/lib/admin/letter-translate";
 import type { HelloLang } from "@/lib/admin/hello-first";
@@ -864,10 +864,10 @@ async function letterFromText(input: {
   sender: string;
   lang: HelloLang;
 }): Promise<({ ok: true; message: string; variant: string }) | ({ ok: false; why: string } & TouchFail)> {
-  const variant = await chooseVariant(input.owner, Boolean(input.reference));
-  if (!variant) return { ok: false, why: "Нет текста письма.", code: "model_empty" };
   const points = theses(input.findings, input.reference);
   if (!points.length) return { ok: false, why: "Проверка по факту не подтвердила ни одной находки — писать владельцу не о чем.", code: "nothing_confirmed" };
+  const variant = await chooseVariant(input.owner, Boolean(input.reference), Boolean(mainFinding(input.findings)));
+  if (!variant) return { ok: false, why: "Нет текста письма.", code: "model_empty" };
   const ctx = { host: input.host, label: input.label, sender: input.sender, theses: points };
   const unavailable = { ok: false as const, why: "Не получилось перевести письмо на язык сайта — попробуйте ещё раз через минуту.", code: "model_down" as const };
 

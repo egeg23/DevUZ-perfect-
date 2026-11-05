@@ -19,6 +19,8 @@ import {
   MIN_SENT,
   PROTOTYPE_LINE_UZ,
   candidates,
+  CASES_URL,
+  mainFinding,
   chanceBetter,
   letterProblems,
   maxWordsFor,
@@ -45,22 +47,31 @@ const DOWN = { ...finding("unreachable", "Сайт не отвечает"), seve
 const PRICES = finding("no_prices", "Нигде не указаны цены");
 const REF = { name: "MAVERA", url: "https://devuz.studio/cases/mavera", niche: "застройщик" };
 
-test("тезисы: что не так, что он теряет и проект из его ниши — без балла видимости", () => {
+test("тезисы: макет из его ниши первым, одна находка про клиентов, без мелочей и балла", () => {
+  // Владелец, 05.11.2026: разборы «выглядят как попытка докопаться до мелочей»,
+  // «предлагаем менеджерам в сообщении ссылку на макеты».
   const list = theses([MOBILE, PHONE], REF);
-  assert.match(list[0], /^• Сайт не приспособлен к телефонам: покупатели с телефона уходят, не дочитав\.$/);
-  assert.ok(list.some((l) => /теряете (от \d+ до \d+|около \d+) обращений из каждых 100/.test(l)), "нет тезиса о потерях");
-  assert.match(list[list.length - 1], /^• Для «MAVERA» \(застройщик\) мы это уже сделали, посмотрите: https:\/\/devuz\.studio\/cases\/mavera$/);
+  assert.equal(list[0], "• Макет, который мы сделали для «MAVERA» (застройщик): https://devuz.studio/cases/mavera");
+  assert.match(list[1], /^• Сайт не приспособлен к телефонам: покупатели с телефона уходят, не дочитав\.$/);
+  assert.equal(list.length, 2, "с макетом — без потерь в цифрах и без второй находки");
   assert.ok(!list.join(" ").includes("из 100 —"), "балл видимости вернулся");
-  assert.ok(list.length <= 3);
 
-  // Проекта в его нише нет — тезиса «уже сделали» нет: выдумкой его не заменяем.
-  assert.ok(!theses([MOBILE], null).some((l) => l.includes("уже сделали")));
+  // Макета в его нише нет — ссылка на все наши макеты последней строкой, выдумкой не заменяем.
+  const plain = theses([MOBILE], null);
+  assert.ok(!plain.some((l) => l.includes("для «")));
+  assert.equal(plain.at(-1), `• Макеты, которые мы делали другим компаниям: ${CASES_URL}`);
+  assert.ok(plain.some((l) => /теряете (от \d+ до \d+|около \d+) обращений из каждых 100/.test(l)), "нет тезиса о потерях");
   // Сайт лежит — без чисел, но с тем, что он теряет.
   assert.deepEqual(theses([DOWN, MOBILE], null), [
     "• Сайт не открывается: клиенты попадают в никуда и уходят к тем, у кого открылось.",
     "• Пока это так, вы теряете каждого, кто зашёл на сайт.",
+    `• Макеты, которые мы делали другим компаниям: ${CASES_URL}`,
   ]);
-  // Цен в касании нет (NOT_IN_OUTREACH) — и тезиса о них тоже.
+  // Мелочь («ссылка пересылается без карточки») письмо не открывает: остаются только макеты.
+  const og = finding("no_og", "Ссылка на сайт выглядит пусто при пересылке");
+  assert.deepEqual(theses([og], null), [`• Макеты, которые мы делали другим компаниям: ${CASES_URL}`]);
+  assert.equal(mainFinding([og]), null);
+  // Цен в касании нет (NOT_IN_OUTREACH) — и тезиса о них тоже; писать не о чем.
   assert.deepEqual(theses([PRICES], null), []);
 });
 
@@ -116,8 +127,12 @@ test("кому какой текст: свои → общие → заходы; 
   assert.deepEqual(candidates({ autopilot: false, own, common, hasReference: true }).map((v) => v.id), ["text:1", "text:2"]);
   assert.deepEqual(candidates({ autopilot: false, own: [], common, hasReference: true }).map((v) => v.id), ["text:3"]);
   assert.deepEqual(candidates({ autopilot: false, own: [], common: [], hasReference: false }).map((v) => v.id), ["auto:pain", "auto:question"]);
-  // Автопрогон пишет своими заходами, а не текстами менеджеров.
-  assert.deepEqual(candidates({ autopilot: true, own, common, hasReference: true }).map((v) => v.id), ["auto:pain", "auto:question", "auto:rival"]);
+  // Автопрогон пишет своими заходами, а не текстами менеджеров. Есть макет в
+  // его нише — только «Свои в нише»: макет первой строкой.
+  assert.deepEqual(candidates({ autopilot: true, own, common, hasReference: true }).map((v) => v.id), ["auto:rival"]);
+  assert.deepEqual(candidates({ autopilot: false, own: [], common: [], hasReference: true }).map((v) => v.id), ["auto:rival"]);
+  // Находки про клиентов нет — «вопрос о потерях» не задаём.
+  assert.deepEqual(candidates({ autopilot: true, own: [], common: [], hasReference: false, hasFinding: false }).map((v) => v.id), ["auto:pain"]);
 
   const list = candidates({ autopilot: false, own, common: [], hasReference: false });
   assert.equal(pickVariant(list, () => 0)?.id, "text:1");
@@ -149,10 +164,12 @@ test("письмо ушло: через бота — после ответа н�
 });
 
 test("перед отправкой письмо по тексту проверяется своими правилами, а не баллом и потерями", () => {
+  // Адрес без слов ниши: иначе пример из ниши найдётся по адресу («mebel»), и
+  // тезисы перед отправкой будут другими, чем в этом письме.
   const points = theses([MOBILE, PHONE], null);
-  const message = renderLetter(AUTO_ARMS[0].body, { host: "mebel.uz", label: null, sender: "Мадина", theses: points });
+  const message = renderLetter(AUTO_ARMS[0].body, { host: "abc.uz", label: null, sender: "Мадина", theses: points });
   const prospect = {
-    host: "mebel.uz",
+    host: "abc.uz",
     label: null,
     niche: null,
     findings: [MOBILE, PHONE],

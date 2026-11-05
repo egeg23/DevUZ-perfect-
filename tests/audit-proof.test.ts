@@ -21,6 +21,7 @@ import { NICHES } from "@/content/razbor/catalog";
 import { cases } from "@/content/cases";
 import { proof } from "@/content/company";
 import { nicheBrief, proofFor, proofLines, referenceFor } from "@/lib/audit/proof";
+import { outreachProof } from "@/lib/admin/outreach";
 
 test("застройщик не уезжает в письмо логистической компании", () => {
   // Владелец: «MAVERA идёт в пример логистики, странно. Это же застройщик,
@@ -240,4 +241,37 @@ test("«клуб» — форма, а не занятие: фитнес-клуб
   // Ниша словами — в «Адресат — …» она сама, а не слово из чужого кейса.
   assert.match(nicheBrief("фитнес клуб", null), /Адресат — фитнес клуб\./);
   assert.doesNotMatch(nicheBrief("фитнес клуб", referenceFor("компьютерный клуб")), /компьютерный/);
+});
+
+test("ниша для примера — только если её подтверждает вывеска компании", () => {
+  // SBS Security, 05.11.2026: охранное агентство, а классификатор по
+  // слову «квартир» со внутренней страницы решил «недвижимость», и письмо
+  // предлагало ему макет застройщика. Владелец: «предлагаем менеджерам в
+  // сообщении ссылку на макеты». Пример из ниши ставится первой строкой —
+  // значит, ниша должна сходиться с названием, адресом или заголовком главной.
+  const sbs = outreachProof({
+    niche: "nedvizhimost",
+    label: "SBS Security",
+    host: "sbssecurity.uz",
+    hints: ["Охранное агентство в Ташкенте | Услуги частной охраны SBS", "Охрана квартир и домов"],
+  });
+  assert.equal(sbs.reference, null, "охранному агентству снова пример застройщика");
+
+  // Настоящий застройщик: заголовок главной говорит сам за себя.
+  const builder = outreachProof({
+    niche: "nedvizhimost",
+    label: "Yangi Binolar",
+    host: "yangibinolar.uz",
+    hints: ["Квартиры в рассрочку от застройщика | Новостройки Ташкента"],
+  });
+  assert.equal(builder.reference?.name, "MAVERA");
+
+  // Ниша видна по самому адресу — тоже подтверждение.
+  const furniture = outreachProof({ niche: "mebel", label: null, host: "tashmebel.uz", hints: [] });
+  assert.equal(furniture.reference?.name, "Namuna");
+
+  // Без подтверждения подбор прежний: письмо без сайта и кейсы на сайте
+  // берут нишу, которую назвал человек.
+  assert.equal(referenceFor("nedvizhimost")?.name, "MAVERA");
+  assert.equal(referenceFor("nedvizhimost", [], ["SBS Security", "sbssecurity.uz"]), null);
 });

@@ -228,34 +228,52 @@ const firstSentence = (text: string) => (text.split(/(?<=[.!?])\s+/)[0] ?? text)
 const lowerFirst = (text: string) => text.charAt(0).toLowerCase() + text.slice(1);
 const plain = (text: string) => text.trim().replace(/[.!?]+$/, "");
 
+/** Все наши макеты и кейсы — когда своего в нише адресата нет. */
+export const CASES_URL = "https://devuz.studio/cases";
+
+/** Находка, с которой письмо вправе начаться: сайт лежит или она про клиентов и деньги. */
+export function mainFinding(findings: readonly Finding[]): Finding | null {
+  const shown = outreachFindings(findings);
+  return outageFinding(shown) ?? leadFindings(shown, 1)[0] ?? null;
+}
+
 /**
- * Два-три тезиса вместо разбора: что не так и что он теряет, и — если такой
- * проект у нас правда есть — что компании из его ниши мы это уже сделали.
+ * Тезисы письма — сначала показать, потом одна находка.
  *
- * Второго тезиса без проекта нет: «делали вашим конкурентам» без имени и
- * ссылки адресат читает как пустую угрозу, а выдуманный — проверит одним
- * переходом (то же правило, что было в OUTREACH_SYSTEM).
+ * Владелец, 05.11.2026: разборы «довольно скромные. Выглядит как попытка
+ * докопаться до мелочей… вместо этого мы будем высылать макет из той же
+ * ниши», и следом: «предлагаем менеджерам в сообщении ссылку на макеты».
+ * Поэтому:
+ * - есть наш макет в его нише (и ниша подтверждена вывеской, `referenceFor`) —
+ *   он первой строкой, со ссылкой; потерь в цифрах тогда нет;
+ * - нет — ссылка на все наши макеты последней строкой;
+ * - находка — одна и только про клиентов и деньги (`leadFindings`): «ссылка
+ *   пересылается без карточки» и прочие мелочи письмо больше не открывают.
+ *
+ * Ни макета, ни находки — пусто: писать не о чем.
  */
 export function theses(findings: readonly Finding[], reference: Reference | null): string[] {
   const shown = outreachFindings(findings);
   const outage = outageFinding(shown);
-  const main = outage ?? leadFindings(shown, 1)[0] ?? shown[0];
-  if (!main) return [];
+  const main = mainFinding(findings);
+  if (!main && !reference && !shown.length) return [];
 
-  const loss = LOSS[main.code] ?? lowerFirst(firstSentence(main.impact));
-  const out = [`• ${plain(TITLE[main.code] ?? main.title)}: ${plain(loss)}.`];
-
-  const lost = outage ? null : outreachHooks(shown).lost;
-  if (outage) out.push("• Пока это так, вы теряете каждого, кто зашёл на сайт.");
-  else if (lost && lost[1] >= LOSS_WORTH) {
-    out.push(
-      lost[0] === lost[1]
-        ? `• По нашей оценке, так вы теряете около ${lost[1]} обращений из каждых 100.`
-        : `• По нашей оценке, так вы теряете от ${lost[0]} до ${lost[1]} обращений из каждых 100.`,
-    );
+  const out: string[] = [];
+  if (reference) out.push(`• Макет, который мы сделали для «${reference.name}» (${plain(reference.niche)}): ${reference.url}`);
+  if (main) {
+    const loss = LOSS[main.code] ?? lowerFirst(firstSentence(main.impact));
+    out.push(`• ${plain(TITLE[main.code] ?? main.title)}: ${plain(loss)}.`);
+    const lost = outage ? null : outreachHooks(shown).lost;
+    if (outage) out.push("• Пока это так, вы теряете каждого, кто зашёл на сайт.");
+    else if (!reference && lost && lost[1] >= LOSS_WORTH) {
+      out.push(
+        lost[0] === lost[1]
+          ? `• По нашей оценке, так вы теряете около ${lost[1]} обращений из каждых 100.`
+          : `• По нашей оценке, так вы теряете от ${lost[0]} до ${lost[1]} обращений из каждых 100.`,
+      );
+    }
   }
-
-  if (reference) out.push(`• Для «${reference.name}» (${plain(reference.niche)}) мы это уже сделали, посмотрите: ${reference.url}`);
+  if (!reference) out.push(`• Макеты, которые мы делали другим компаниям: ${CASES_URL}`);
   return out;
 }
 
@@ -316,10 +334,16 @@ export function candidates(input: {
   own: readonly StoredText[];
   common: readonly StoredText[];
   hasReference: boolean;
+  /** Есть ли находка про клиентов (`mainFinding`). Нет — «вопрос о потерях» не к чему задавать. */
+  hasFinding?: boolean;
 }): Variant[] {
   if (!input.autopilot && input.own.length) return input.own.map(variantOfText);
   if (!input.autopilot && input.common.length) return input.common.map(variantOfText);
-  return AUTO_ARMS.filter((a) => !a.needsReference || input.hasReference).map(variantOfArm);
+  // Есть наш макет в его нише — только «Свои в нише»: макет первой строкой
+  // (владелец, 05.11.2026: «предлагаем менеджерам в сообщении ссылку на макеты»).
+  if (input.hasReference) return AUTO_ARMS.filter((a) => a.key === "rival").map(variantOfArm);
+  const arms = AUTO_ARMS.filter((a) => !a.needsReference);
+  return (input.hasFinding === false ? arms.filter((a) => a.key === "pain") : arms).map(variantOfArm);
 }
 
 /** Поровну и случайно: так A/B честный, а не «кто первый в списке». */

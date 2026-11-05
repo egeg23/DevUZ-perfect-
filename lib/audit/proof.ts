@@ -128,7 +128,33 @@ function words(value: string): string[] {
  * Подставить «похожий» нельзя: «делали в вашей нише» про чужую нишу — это
  * та самая ложь, которую адресат ловит за десять секунд.
  */
-export function referenceFor(niche: string | null, hints: readonly string[] = []): Reference | null {
+/**
+ * Ниша подтверждается тем, как компания называет себя сама: названием,
+ * адресом сайта, заголовком главной.
+ *
+ * Классификатор смотрит весь сайт, и одно слово на внутренней странице
+ * перетягивает нишу: у охранного агентства SBS Security на странице «Охрана
+ * квартир» было «квартир», и письмо ушло с «Для «MAVERA» (застройщик) мы это
+ * уже сделали» (владелец, 05.11.2026: разборы «выглядят как попытка
+ * докопаться», а пример из чужой ниши — хуже). Так что пример из ниши —
+ * только если о ней говорит сама вывеска: слово ниши классификатора или
+ * слово из ниш кейса.
+ */
+export function nicheConfirmed(slug: string, item: Pick<Case, "niches">, confirm: readonly string[]): boolean {
+  const text = confirm.join(" ").toLowerCase();
+  if (!text.trim()) return false;
+  if (nicheWords(slug).some((stem) => text.includes(stem.toLowerCase()))) return true;
+  const own = new Set(words(text));
+  return item.niches.some((n) => words(n).some((w) => own.has(w)));
+}
+
+/**
+ * `confirm` — чем компания называет себя (название, адрес, заголовок
+ * главной). Передан — пример по нише классификатора идёт, только если ниша
+ * там подтверждается (`nicheConfirmed`); не передан — как раньше (письмо без
+ * сайта, где ниша взята из карточки на картах).
+ */
+export function referenceFor(niche: string | null, hints: readonly string[] = [], confirm?: readonly string[]): Reference | null {
   // Сначала — прямое попадание по нише классификатора.
   //
   // Совпадение словами оставлено ниже только для случая, когда ниша не
@@ -138,6 +164,7 @@ export function referenceFor(niche: string | null, hints: readonly string[] = []
   const slug = (niche ?? "").trim().toLowerCase();
   if (slug) {
     const exact = cases.find((item) => item.forNiches.includes(slug));
+    if (exact && confirm && !nicheConfirmed(slug, exact, confirm)) return null;
     if (exact) return { name: exact.name, url: `${SITE}/cases/${exact.slug}`, niche: nicheLabel(slug, exact) };
     // Ниша известна и ни одному кейсу не подходит — на этом и останавливаемся.
     // Подбор по словам здесь дал бы ровно ту подстановку наугад, из-за
@@ -231,9 +258,9 @@ export function nicheBrief(niche: string | null, reference: Reference | null = n
     .join(" ");
 }
 
-export function proofFor(niche: string | null, hints: readonly string[] = []): Proof {
+export function proofFor(niche: string | null, hints: readonly string[] = [], confirm?: readonly string[]): Proof {
   return {
-    reference: referenceFor(niche, hints),
+    reference: referenceFor(niche, hints, confirm),
     staff: proof.staff,
     projects: proof.projects,
     lift: proof.lift,

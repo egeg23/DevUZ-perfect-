@@ -39,7 +39,7 @@ export async function liveTexts(): Promise<StoredText[]> {
  * Какой текст достаётся этому касанию — и запомнить выбор.
  * `owner` — менеджер; null — автопрогон (его заходы из кода).
  */
-export async function chooseVariant(owner: string | null, hasReference: boolean): Promise<Variant | null> {
+export async function chooseVariant(owner: string | null, hasReference: boolean, hasFinding = true): Promise<Variant | null> {
   const texts = owner ? await liveTexts() : [];
   return pickVariant(
     candidates({
@@ -47,6 +47,7 @@ export async function chooseVariant(owner: string | null, hasReference: boolean)
       own: texts.filter((t) => t.owner === owner),
       common: texts.filter((t) => t.owner === null),
       hasReference,
+      hasFinding,
     }),
   );
 }
