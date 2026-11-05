@@ -12,7 +12,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { test } from "node:test";
 
-import { cases, casesByDate } from "@/content/cases";
+import { cases, casesOnSite } from "@/content/cases";
 import { SCENES, sceneKeyOk } from "@/lib/proto/promo";
 
 const read = (file: string) => readFileSync(new URL(`../${file}`, import.meta.url), "utf8");
@@ -36,7 +36,9 @@ test("ключ сцены: только из хранилища, только с
 test("кейс SamAuto: первым, прототип — кнопкой со страницы кейса, ролик 60 к/с на главной", () => {
   const item = cases.find((c) => c.slug === "samauto");
   assert.ok(item?.prototype, "у кейса нет прототипа");
-  assert.equal(casesByDate[0].slug, "samauto");
+  // «Первым» — на сайте (главная, /cases): кейсы с роликом идут выше, и
+  // макеты свежее SamAuto, у которых только снимки, его не сдвигают.
+  assert.equal(casesOnSite[0].slug, "samauto");
   assert.match(item.prototype.href, /^\/proto\/[A-Za-z0-9_-]{43}$/);
   for (const f of ["teaser-16.mp4", "teaser-9.mp4", "poster-16.webp", "poster-9.webp"]) {
     const path = `public${item.prototype.teaser.replace(/teaser$/, "")}${f}`;

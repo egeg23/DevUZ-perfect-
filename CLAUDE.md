@@ -106,7 +106,10 @@ https://devuz.studio/sia-cms/admin.
   цвета темы. Растровые — WebP без потерь не выше 160 точек, файл до 40 КБ,
   `ratio` совпадает с файлом. Добавить или убрать бренд — строка и файл.
 - 29.10.2026 — 34 бренда; MAVERA и «Сияние Севера» без логотипа (настоящего
-  не нашлось).
+  не нашлось). 05.11.2026 — 40 (владелец: «добавь туда последние макеты…
+  и в раздел кейсов тоже»): Oson Apteka, SAMIST AUTO, Optimal Prime, Cargo
+  Pro Group, AutoPepe, Agora; в кейсы — они и CZECHFARM, FinTax, Cosmo
+  World, Neoline (`content/cases.ts`, снимки — `public/cases/<slug>/`).
 - Держит `tests/clients-logos.test.ts`; снимки — `docs/screens/clients/`.
 
 ## План на будущее — `docs/plans/future.md`
