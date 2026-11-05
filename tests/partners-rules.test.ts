@@ -83,7 +83,7 @@ test("две модели: от прибыли 10–30 %, с оборота 6–
 
 test("от прибыли — процент от чистой прибыли, с оборота — от суммы; заморожено до полной оплаты", () => {
   // 10 000 − 4 % налога − 3 000 себестоимости = 6 600; ступень 20 % → 1 320.
-  const profit = partnerAccrualOf(project(), [], PARTNER);
+  const profit = partnerAccrualOf(project(), [], PARTNER, []);
   assert.ok(profit);
   assert.equal(profit.model, "profit");
   assert.equal(profit.percent, 20);
@@ -91,19 +91,19 @@ test("от прибыли — процент от чистой прибыли, �
   assert.equal(profit.state, "frozen");
 
   // Та же сумма с оборота: ступень 14 % от 10 000 → 1 400.
-  const turnover = partnerAccrualOf(project({ partner_model: "turnover" }), [], PARTNER);
+  const turnover = partnerAccrualOf(project({ partner_model: "turnover" }), [], PARTNER, []);
   assert.equal(turnover?.model, "turnover");
   assert.equal(turnover?.percent, 14);
   assert.equal(turnover?.amount_usd, 1_400);
 
-  const earned = partnerAccrualOf(project(), [{ project_id: "pr1", amount_usd: 10_000 }], PARTNER);
+  const earned = partnerAccrualOf(project(), [{ project_id: "pr1", amount_usd: 10_000 }], PARTNER, []);
   assert.equal(earned?.state, "earned");
 
   // Крупный проект: 40 000 − 4 % − 3 000 = 35 400 × 30 % = 10 620; с оборота 20 % = 8 000.
-  assert.equal(partnerAccrualOf(project({ amount_usd: 40_000 }), [], PARTNER)?.amount_usd, 10_620);
-  assert.equal(partnerAccrualOf(project({ amount_usd: 40_000, partner_model: "turnover" }), [], PARTNER)?.amount_usd, 8_000);
+  assert.equal(partnerAccrualOf(project({ amount_usd: 40_000 }), [], PARTNER, [])?.amount_usd, 10_620);
+  assert.equal(partnerAccrualOf(project({ amount_usd: 40_000, partner_model: "turnover" }), [], PARTNER, [])?.amount_usd, 8_000);
   // Минус по проекту — забота студии, партнёру ноль, а не долг.
-  assert.equal(partnerAccrualOf(project({ dev_cost_usd: 12_000 }), [], PARTNER)?.amount_usd, 0);
+  assert.equal(partnerAccrualOf(project({ dev_cost_usd: 12_000 }), [], PARTNER, [])?.amount_usd, 0);
 });
 
 test("модель меняется не чаще раза в неделю", () => {
@@ -117,21 +117,22 @@ test("модель меняется не чаще раза в неделю", () 
 });
 
 test("процент по проекту, заданный владельцем, помечен как ручной", () => {
-  const line = partnerAccrualOf(project({ partner_percent: 15 }), [], PARTNER);
+  const line = partnerAccrualOf(project({ partner_percent: 15 }), [], PARTNER, []);
   assert.equal(line?.percent, 15);
   assert.equal(line?.manual, true);
   assert.equal(line?.amount_usd, 990);
 });
 
 test("чужой проект, проект без суммы и аннулированный не дают денег", () => {
-  assert.equal(partnerAccrualOf(project({ partner_id: "other" }), [], PARTNER), null);
-  assert.equal(partnerAccrualOf(project({ partner_id: null }), [], PARTNER), null);
-  assert.equal(partnerAccrualOf(project({ amount_usd: null }), [], PARTNER), null);
+  assert.equal(partnerAccrualOf(project({ partner_id: "other" }), [], PARTNER, []), null);
+  assert.equal(partnerAccrualOf(project({ partner_id: null }), [], PARTNER, []), null);
+  assert.equal(partnerAccrualOf(project({ amount_usd: null }), [], PARTNER, []), null);
 
   const voided = partnerAccrualOf(
     project({ partner_void_reason: "self" }),
     [{ project_id: "pr1", amount_usd: 10_000 }],
     PARTNER,
+    [],
   );
   assert.equal(voided?.state, "void");
   assert.equal(voided?.amount_usd, 0);

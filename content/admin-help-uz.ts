@@ -2445,8 +2445,9 @@ export const uz: HelpCopy = {
           body: [
             "Ikki model, hamkor o‘zi kabinetda tanlaydi. «От чистой прибыли» (summa − soliq − tannarx): $2 500 gacha — 10%, $2 501–5 000 — 15%, $5 001–10 000 — 20%, $10 001–30 000 — 25%, $30 001 dan — 30%. «С оборота» (butun shartnoma summasi) xuddi shu chegaralarda: 6, 10, 14, 17, 20%. Har bir loyihaning pog‘onasi o‘z summasiga qarab. «Barcha hamkorlar» jadvalida, «Stavka» ustunida model va qachon o‘zgartirilgani ko‘rinadi.",
             "Model haftasiga bir martadan ko‘p o‘zgarmaydi, mijozga esa uning so‘rovi kunidagi model biriktiriladi: o‘zgartirish ketayotgan loyihalarni qayta hisoblamaydi. Loyiha kartochkasida «Hamkor» yonida — «20 % foydadan» yoki «14 % aylanmadan». Loyihadagi foiz hamkorning shaxsiy stavkasidan muhimroq, shaxsiysi — pog‘onadan. «foydadan» modeli uchun loyiha tannarxini kiriting — usiz ulush soliq ayirilgan summadan hisoblanadi.",
-            "Mijoz loyihani to‘liq to‘lamaguncha hisoblanma muzlatilgan — xodimlardagi kabi. Agentlikning stavkasi o‘ziga xos: loyiha summasidan doim 15%, modellarsiz va jamg‘armasiz — u ro‘yxatda «agentlik · 15%» belgisi bilan turadi, batafsil — [Agentliklar](/admin/agencies) bo‘limida.",
+            "Mijoz loyihani to‘liq to‘lamaguncha hisoblanma muzlatilgan — xodimlardagi kabi. Agentlikning stavkasi o‘ziga xos: loyiha summasidan 15%, modellarsiz va jamg‘armasiz, $50 000 buyurtmadan keyin esa umrbod 20%; u ro‘yxatda «agentlik · 15%» yoki «agentlik · 20%» belgisi bilan turadi, batafsil — [Agentliklar](/admin/agencies) bo‘limida.",
             "Jamg‘arma. Hamkor kabinetida tugma bor: o‘zbekcha kabinetda — «Avtomatik rejimda olmaslik», ruscha kabinetda — «Не забирать в автоматическом режиме». U yoqilgan paytda to‘langan loyihalar uchun pul hamkorga darhol ketmaydi: aylanmadan avtoto‘lovlar bo‘lmaydi, to‘langan va hali to‘lanmagan barcha loyihalar bo‘yicha stavka esa ularning umumiy summasi bo‘yicha — o‘sha jadval bo‘yicha hisoblanadi. $2 000 lik uchta loyiha — bu $6 000, va uchalasi bo‘yicha 10% (6%) emas, foydadan 20% (aylanmadan 14%). Studiya pulni o‘zida uzoqroq ushlab, rivojlanishga yo‘naltiradi, hamkor esa oxirida ko‘proq oladi. Stavka oddiysidan past bo‘lmaydi; qo‘lda foiz berilgan loyiha va shaxsiy stavkali hamkor jamg‘armada qatnashmaydi. «Barcha hamkorlar» jadvalida, «Stavka» ustunida bunday hamkorda yashil «jamg‘arma: $… · stavka …%» qatori bor. Tugmani o‘chirsa — oshirish yo‘qoladi, to‘lanmagani har bir loyihaning oddiy pog‘onasi bo‘yicha hisoblanadi, aylanmadan avtoto‘lovlar qaytadi.",
+            "Umrbod +5. Hamkorning hamma vaqtdagi buyurtmalari summasi $50 000 ga yetganda, keyingi har bir loyiha stavkasiga 5 qo‘shiladi — umrbod, qayta ko‘rib chiqilmaydi: jadval pog‘onasiga ham, jamg‘arma stavkasiga ham. Shartnomalardagi loyiha summalari hisoblanadi, bekor qilingan va hisobga olinmaganlar kirmaydi; chegaradan o‘tgan loyiha hali eski stavkada. Loyihada qo‘lda berilgan foiz va shaxsiy stavkaga ustama tegmaydi, blogerning 12 oylik darajalari bilan (ularni egasi loyihadagi foiz bilan qo‘yadi) qo‘shilmaydi. Bunday hamkorda «Barcha hamkorlar» jadvalida «+5% umrbod» belgisi, loyiha kartochkasida — «50 000 $ buyurtma uchun umrbod +5». Chegaragacha qancha qolganini hamkor o‘z kabinetida ko‘radi. Egasining 05.11.2026 dagi qarori.",
           ],
         },
         {
@@ -2523,10 +2524,19 @@ export const uz: HelpCopy = {
           ],
         },
         {
+          id: "lifetime",
+          title: "Umrbod 20% — agentlik buyurtmalari $50 000 dan oshganda",
+          body: [
+            "Agentlikning hamma vaqtdagi buyurtmalari summasi $50 000 ga yetganda, uning stavkasi umrbod 20% bo‘ladi: keyingi har bir loyihaga +5, muddatsiz va qayta ko‘rib chiqilmaydi. Shartnomalardagi loyiha summalari hisoblanadi; bekor qilingan va hisobga olinmaganlar kirmaydi. Agentlik $50 000 dan o‘tgan loyiha hali 15% da, keyingisi — 20% da. Egasining 05.11.2026 dagi qarori.",
+            "Qayerda ko‘rinadi: jadvalda, «Loyihalar summasi» ustunida summa ostida — «20% umrbod» yoki «20% gacha: yana …»; «Hamkorlar» bo‘limida agentlikda — «agentlik · 20%» belgisi; loyiha kartochkasida hamkor qatorida — «50 000 $ buyurtma uchun umrbod +5». Agentlik qancha qolganini o‘z kabinetida, saytdagi taqdimotda esa $50 000 buyurtmadan keyin 20% bo‘lishini ko‘radi. Pul o‘zi hisoblanadi: qo‘lda hech narsa qo‘yish shart emas.",
+            "Agentlikni olib kelganning 5% i bundan o‘zgarmaydi: loyiha summasidan o‘sha 5% va o‘sha 12 oy. Agentlikka ustamani studiya o‘z ulushidan to‘laydi.",
+          ],
+        },
+        {
           id: "deck",
           title: "«Qanday ishlaydi» sxemasi va agentlik uchun taqdimot",
           body: [
-            "Bo‘lim tepasida — «Qanday ishlaydi — qisqacha»: buyurtmaning uch qadamli yo‘li va bitta loyihadan kim qancha olishi, $2 000 lik misol bilan: agentlikka $300, olib kelganga $100, qolgani — studiyaga, undan olib boruvchiga foydadan odatdagi foizi. Bu yerda hammasi, bizning 5% ham bor: bu jamoa uchun sxema.",
+            "Bo‘lim tepasida — «Qanday ishlaydi — qisqacha»: buyurtmaning uch qadamli yo‘li va bitta loyihadan kim qancha olishi, $2 000 lik misol bilan: agentlikka $300, olib kelganga $100, qolgani — studiyaga, undan olib boruvchiga foydadan odatdagi foizi. Bu yerda hammasi, bizning 5% ham bor: bu jamoa uchun sxema. «20%» qatori ham shu yerda — $50 000 buyurtmadan keyingi agentlik stavkasi.",
             "«Taqdimotni ochish» — saytdagi olti tildagi (rus, ingliz, o‘zbek, xitoy, ukrain, polyak) sahifa, agentlikning o‘zi uchun: katta 15% raqami, uch qadam, chiziqli misol, qoidalar, nimalarni olib kelish mumkinligi va Telegram tugmasi. Olib kelgan odamning foizi u yerda yo‘q va bo‘lmaydi: bu ichki ma’lumot, agentlikka ko‘rsatmaymiz. Havolani yuboring yoki sahifani ochib, yuqoridagi PDF tugmasini bosing va faylni yuboring. Jadvalda har bir agentlikning o‘z «taqdimot» havolasi bor: u bilan sahifadagi Telegram tugmasi botga shu agentlik kodi bilan olib boradi.",
           ],
         },

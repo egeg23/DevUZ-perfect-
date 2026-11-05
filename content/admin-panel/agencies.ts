@@ -60,7 +60,17 @@ export const agenciesDict = defineDict({
   colProjects: { ru: "Проекты", uz: "Loyihalar", pl: "Projekty" },
   colTurnover: { ru: "Сумма проектов", uz: "Loyihalar summasi", pl: "Kwota projektów" },
   colFinder: { ru: "5% за агентство", uz: "Agentlik uchun 5%", pl: "5% za agencję" },
-  colAgencyShare: { ru: "Агентству 15%", uz: "Agentlikka 15%", pl: "Dla agencji 15%" },
+  colAgencyShare: { ru: "Доля агентства", uz: "Agentlik ulushi", pl: "Udział agencji" },
+  lifetimeOn: {
+    ru: (p: number) => `${p}% навсегда`,
+    uz: (p: number) => `${p}% umrbod`,
+    pl: (p: number) => `${p}% na zawsze`,
+  },
+  lifetimeLeft: {
+    ru: (left: string, p: number) => `до ${p}%: ещё ${left}`,
+    uz: (left: string, p: number) => `${p}% gacha: yana ${left}`,
+    pl: (left: string, p: number) => `do ${p}%: jeszcze ${left}`,
+  },
   link: { ru: "ссылка для агентства", uz: "agentlik uchun havola", pl: "link dla agencji" },
   blocked: { ru: "заблокировано", uz: "bloklangan", pl: "zablokowana" },
   since: {
@@ -131,7 +141,11 @@ export const agenciesDict = defineDict({
     uz: "Saqlab bo‘lmadi. Yana urinib ko‘ring.",
     pl: "Nie udało się zapisać. Spróbuj jeszcze raz.",
   },
-  partnerBadge: { ru: "агентство · 15%", uz: "agentlik · 15%", pl: "agencja · 15%" },
+  partnerBadge: {
+    ru: (p: number) => `агентство · ${p}%`,
+    uz: (p: number) => `agentlik · ${p}%`,
+    pl: (p: number) => `agencja · ${p}%`,
+  },
 
   // «Как это работает — коротко»: схема для команды, со всеми процентами
   // (владелец, 05.11.2026: «на дашборде пишем все»).
@@ -149,6 +163,14 @@ export const agenciesDict = defineDict({
     ru: (p: number, months: number) => `Тому из команды, кто привёл агентство, — ${p}% с суммы проекта. ${months} месяцев с того дня, как завёл агентство.`,
     uz: (p: number, months: number) => `Jamoadan agentlikni olib kelganga — loyiha summasidan ${p}%. Agentlik qo‘shilgan kundan ${months} oy.`,
     pl: (p: number, months: number) => `Osoba z zespołu, która przyprowadziła agencję — ${p}% od kwoty projektu. Przez ${months} miesięcy od dnia dodania agencji.`,
+  },
+  getsLifetime: {
+    ru: (from: string, bonus: number, p: number) =>
+      `Заказов агентства набралось на ${from} — дальше ${p}% навсегда: +${bonus} к каждому следующему проекту. Проект, которым перешагнули порог, ещё по старой ставке.`,
+    uz: (from: string, bonus: number, p: number) =>
+      `Agentlik buyurtmalari ${from} ga yetdi — endi umrbod ${p}%: keyingi har bir loyihaga +${bonus}. Chegaradan o‘tgan loyiha hali eski stavkada.`,
+    pl: (from: string, bonus: number, p: number) =>
+      `Zlecenia agencji osiągnęły ${from} — dalej ${p}% na zawsze: +${bonus} do każdego kolejnego projektu. Projekt, którym przekroczono próg, jest jeszcze po starej stawce.`,
   },
   getsOwner: {
     ru: "Тому, кто ведёт проект, — его обычный процент от прибыли, как всегда. Ведёт тот же, кто привёл, — получает и то и другое.",

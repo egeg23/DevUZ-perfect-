@@ -4,6 +4,9 @@ import { company } from "@/content/company";
 import type { CabinetCopy } from "@/content/partner-cabinet";
 import type { Locale } from "@/lib/i18n";
 import {
+  AGENCY_PERCENT,
+  LIFETIME_BONUS,
+  LIFETIME_FROM_USD,
   MIN_PAYOUT_USD,
   PERKS,
   PARTNER_TIERS,
@@ -163,6 +166,28 @@ export function CabinetView({
           <Stat label={t.statSigned} value={String(signed)} />
           <Stat label={t.statPaid} value={String(summary.paidProjects)} />
         </section>
+
+        {/* ── Навсегда +5 % ──────────────────────────────────────── */}
+        {/* С персональной ставкой надбавки нет: договорённость отдельная (rules.ts, lifetimeOf). */}
+        {partner.percent_override === null ? (
+          <section id="lifetime" className={`mt-6 scroll-mt-28 ${summary.lifetime.reached ? "rounded-xl border border-green/40 bg-green/[0.06] px-5 py-5" : CARD}`}>
+            <h2 className="font-display text-lg font-semibold">{t.lifetimeTitle(LIFETIME_BONUS)}</h2>
+            <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted">
+              {t.lifetimeLead(money(locale, LIFETIME_FROM_USD), LIFETIME_BONUS, AGENCY_PERCENT)}
+            </p>
+            <div className="mt-4 h-2.5 max-w-xl overflow-hidden rounded-full bg-white/10">
+              <div
+                className="h-full rounded-full bg-green"
+                style={{ width: `${Math.min(100, Math.round((summary.lifetime.total / LIFETIME_FROM_USD) * 100))}%` }}
+              />
+            </div>
+            <p className={`mt-3 text-sm ${summary.lifetime.reached ? "text-green" : "text-text"}`}>
+              {summary.lifetime.reached
+                ? t.lifetimeReached(money(locale, summary.lifetime.total), LIFETIME_BONUS)
+                : t.lifetimeLeft(money(locale, summary.lifetime.total), money(locale, summary.lifetime.left))}
+            </p>
+          </section>
+        ) : null}
 
         {/* ── Модель дохода ──────────────────────────────────────── */}
         {partner.percent_override === null ? (
@@ -775,6 +800,7 @@ function ReferralRow({ x, t, locale, mainLabel }: { x: Referral; t: CabinetCopy;
     const amount = money(locale, x.accrual.amount_usd);
     share = x.accrual.state === "earned" ? t.shareEarned(amount) : x.accrual.state === "frozen" ? t.shareFrozen(amount) : "—";
     if (x.accrual.boosted) share += ` · ${t.poolMark} ${x.accrual.percent} %`;
+    if (x.accrual.lifetime) share += ` · ${t.lifetimeMark(LIFETIME_BONUS)}`;
   }
   const stageTone =
     x.stage === "paid" ? "text-green" : x.stage === "signed" ? "text-text" : x.stage === "lost" ? "text-faint" : "text-muted";

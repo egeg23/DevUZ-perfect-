@@ -318,17 +318,84 @@ export type PartnerAccrual = {
   void_reason: string | null;
   /** Ставка поднята копилкой — сейчас или при выплате. */
   boosted?: boolean;
+  /** В ставке пожизненный грейд +5 (lifetimeOf). */
+  lifetime?: boolean;
 };
+
+/* ── Пожизненный грейд ──────────────────────────────────────────────────── */
+
+/**
+ * +5 процентных пунктов навсегда — тому, кто привёл нам заказов на 50 000 $.
+ *
+ * Владелец, 05.11.2026: «Грейд +5% если совокупная сумма заказов от
+ * агентства / блоггера превысит 50000$. Тогда будет 20% пожизненно».
+ *
+ * Сумма заказов — суммы всех проектов партнёра, кроме отменённых и
+ * аннулированных (сам себя, старый клиент): то, что стоит в договорах.
+ * Надбавка — на каждый проект, заведённый после того, как сумма прошлых
+ * проектов дошла до 50 000 $; проект, которым партнёр перешагнул порог, ещё
+ * по старой ставке. Срока нет: дошёл — дальше всегда с надбавкой.
+ *
+ * Сверху любой ставки, которую считает код: 15% агентства (станет 20%),
+ * ступень блогера и его копилка. Не трогает то, что владелец задал руками:
+ * процент на проекте и персональную ставку партнёра — там договорённость
+ * отдельная, как и у копилки. С уровнями блогера за 12 месяцев
+ * (lib/partners/grades.ts) не складывается: те владелец ставит процентом на
+ * проекте, а он главнее.
+ */
+export const LIFETIME_FROM_USD = 50_000;
+export const LIFETIME_BONUS = 5;
+
+/** Сколько полей проекта нужно, чтобы посчитать сумму заказов партнёра. */
+export type LifetimeProject = {
+  id: string;
+  partner_id: string | null;
+  amount_usd: number | null;
+  stage: string;
+  created_at?: string | null;
+  partner_void_reason?: string | null;
+};
+
+export type Lifetime = {
+  /** Сумма заказов партнёра, $. */
+  total: number;
+  /** Дошёл до 50 000 $. */
+  reached: boolean;
+  /** Сколько ещё до порога, $; 0 — дошёл. */
+  left: number;
+  /** Проекты, на которые идёт надбавка. */
+  boosted: ReadonlySet<string>;
+};
+
+/** Сумма заказов партнёра и проекты с надбавкой — по всей его истории. */
+export function lifetimeOf(partnerId: string, history: readonly LifetimeProject[]): Lifetime {
+  const own = history
+    .filter((p) => p.partner_id === partnerId && p.stage !== "cancelled" && !p.partner_void_reason)
+    .slice()
+    .sort((a, b) => (a.created_at ?? "").localeCompare(b.created_at ?? "") || a.id.localeCompare(b.id));
+  let total = 0;
+  const boosted = new Set<string>();
+  for (const p of own) {
+    if (total >= LIFETIME_FROM_USD) boosted.add(p.id);
+    total += Math.max(0, p.amount_usd ?? 0);
+  }
+  const reached = total >= LIFETIME_FROM_USD;
+  return { total, reached, left: reached ? 0 : LIFETIME_FROM_USD - total, boosted };
+}
 
 /**
  * Начисление партнёру по проекту. `null`, если проект не партнёрский или
  * без суммы. Проект с причиной аннулирования даёт строку с нулём: видно,
  * что привязка была и почему не засчитана.
+ *
+ * `history` — все проекты этого партнёра (хватит полей LifetimeProject): по
+ * ним решается пожизненный грейд. Пустая — грейда нет.
  */
 export function partnerAccrualOf(
   project: PartnerProject,
   payments: PaymentMoney[],
   partner: { id: string; percent_override: number | null; kind?: PartnerKind },
+  history: readonly LifetimeProject[],
 ): PartnerAccrual | null {
   if (project.partner_id !== partner.id) return null;
   // Агентство — всегда с оборота, какая бы модель ни записалась на заявке.
@@ -339,13 +406,17 @@ export function partnerAccrualOf(
 
   // Ступень — по сумме проекта в обеих моделях, а процент берётся с базы
   // своей модели.
-  const tier = partnerPercent({
+  const rate = partnerPercent({
     projectPercent: project.partner_percent,
     partnerOverride: partner.percent_override,
     amountUsd: project.amount_usd,
     model,
     agency,
   });
+  // Пожизненный грейд — только поверх ставки, которую считает код.
+  const byHand = project.partner_percent !== null || (!agency && partner.percent_override !== null);
+  const lifetime = !byHand && lifetimeOf(partner.id, history).boosted.has(project.id);
+  const tier = lifetime ? rate + LIFETIME_BONUS : rate;
   // Выплачен по ставке копилки — она и остаётся: выплаченное вниз не
   // пересчитывается. Процент, заданный владельцем на проекте, важнее.
   // У агентства копилки нет: ставка фиксированная.
@@ -364,6 +435,7 @@ export function partnerAccrualOf(
     state,
     void_reason: project.partner_void_reason,
     ...(percent > tier ? { boosted: true } : {}),
+    ...(lifetime ? { lifetime: true } : {}),
   };
 }
 
@@ -423,7 +495,8 @@ export function withPool<P extends PartnerProject>(
   return accruals.map((a) => {
     const project = byId.get(a.project_id);
     if (!project) return a;
-    const boosted = tierPercent(total, a.model);
+    // Пожизненный грейд копилка не съедает: он сверху и её ступени.
+    const boosted = tierPercent(total, a.model) + (a.lifetime ? LIFETIME_BONUS : 0);
     if (boosted <= a.percent) return a;
     const base = partnerBase(project, a.model) ?? 0;
     return { ...a, percent: boosted, amount_usd: Math.round((base * boosted) / 100), boosted: true };

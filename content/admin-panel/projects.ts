@@ -283,7 +283,12 @@ export const projectCardDict = defineDict({
   fromTurnover: { ru: "с оборота", uz: "aylanmadan", pl: "od obrotu" },
   fromProfit: { ru: "от прибыли", uz: "foydadan", pl: "od zysku" },
   byAmount: { ru: " · по сумме проекта", uz: " · loyiha summasi bo‘yicha", pl: " · według kwoty projektu" },
-  agencyFixed: { ru: " · агентство, всегда 15%", uz: " · agentlik, doim 15%", pl: " · agencja, zawsze 15%" },
+  agencyFixed: { ru: " · агентство, ставка без ступеней", uz: " · agentlik, bosqichsiz stavka", pl: " · agencja, stawka bez progów" },
+  lifetimeMark: {
+    ru: (b: number) => ` · +${b} навсегда за 50 000 $ заказов`,
+    uz: (b: number) => ` · 50 000 $ buyurtma uchun umrbod +${b}`,
+    pl: (b: number) => ` · +${b} na zawsze za 50 000 $ zleceń`,
+  },
   agency: {
     ru: (name: string) => ` · агентство «${name}»`,
     uz: (name: string) => ` · «${name}» agentligi`,

@@ -7,7 +7,7 @@ import { company } from "@/content/company";
 import { deckCopy } from "@/content/partner-decks";
 import { services } from "@/content/services";
 import { isLocale, localeHref } from "@/lib/i18n";
-import { AGENCY_PERCENT, botLink, codeFromQuery } from "@/lib/partners/rules";
+import { AGENCY_PERCENT, LIFETIME_BONUS, LIFETIME_FROM_USD, botLink, codeFromQuery } from "@/lib/partners/rules";
 import { buildMetadata } from "@/lib/seo";
 
 /**
@@ -19,7 +19,9 @@ import { buildMetadata } from "@/lib/seo";
  * агентство, на клиентском сайте не пишем («На клиентском сайте % менеджера
  * не пишем, а на дашборде пишем все») — он во вкладке «Агентства» панели.
  *
- * Ставка и суммы примера — из AGENCY_PERCENT, по которому считаются деньги.
+ * Ставка и суммы примера — из AGENCY_PERCENT, по которому считаются деньги;
+ * «с 50 000 $ — 20% навсегда» — из LIFETIME_FROM_USD и LIFETIME_BONUS (владелец,
+ * 05.11.2026), итоговой ставкой: «+5%» на сайте не пишем.
  * Ссылка с `?ref=КОД` ставит куку агентства (middleware), и кнопка Telegram
  * ведёт в бота с тем же кодом.
  */
@@ -70,6 +72,9 @@ export default async function AgencyDeck({
           <div className="text-center lg:text-right">
             <p className="font-display text-8xl font-semibold leading-none text-green sm:text-9xl">{AGENCY_PERCENT}%</p>
             <p className="mt-3 max-w-[16rem] text-sm leading-snug text-muted lg:ml-auto">{t.bigLabel}</p>
+            <p className="mt-4 inline-block max-w-[18rem] rounded-xl border border-green/40 bg-green/[0.08] px-4 py-2 text-sm font-medium leading-snug text-green lg:ml-auto">
+              {t.lifetime(usd(locale, LIFETIME_FROM_USD), AGENCY_PERCENT + LIFETIME_BONUS)}
+            </p>
           </div>
         </div>
       </Slide>
@@ -133,6 +138,12 @@ export default async function AgencyDeck({
             </li>
           ))}
         </ul>
+        <p className="mt-3 flex gap-4 rounded-xl border border-green/40 bg-green/[0.06] px-5 py-4 text-base font-medium leading-relaxed text-green">
+          <span className="font-display text-xl font-semibold" aria-hidden>
+            {AGENCY_PERCENT + LIFETIME_BONUS}%
+          </span>
+          <span>{t.lifetime(usd(locale, LIFETIME_FROM_USD), AGENCY_PERCENT + LIFETIME_BONUS)}</span>
+        </p>
       </Slide>
 
       <Slide>

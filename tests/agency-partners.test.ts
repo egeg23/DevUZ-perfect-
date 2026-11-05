@@ -72,15 +72,15 @@ test("агентству — 15% с суммы проекта всегда: бе
   assert.equal(partnerPercent({ projectPercent: 18, partnerOverride: null, amountUsd: 1000, agency: true }), 18);
 
   // С оборота, даже если на заявке записалась модель «от прибыли»: 2000 × 15% = 300.
-  const line = partnerAccrualOf(project({ partner_bonus_percent: 30 } as Partial<PartnerProject>), [], AGENCY);
+  const line = partnerAccrualOf(project({ partner_bonus_percent: 30 } as Partial<PartnerProject>), [], AGENCY, []);
   assert.equal(line?.model, "turnover");
   assert.equal(line?.percent, 15);
   assert.equal(line?.amount_usd, 300);
   assert.equal(line?.state, "frozen");
   // Оплачен целиком — заработано.
-  assert.equal(partnerAccrualOf(project(), [{ project_id: "p1", amount_usd: 2000 }], AGENCY)?.state, "earned");
+  assert.equal(partnerAccrualOf(project(), [{ project_id: "p1", amount_usd: 2000 }], AGENCY, [])?.state, "earned");
   // Человек по ссылке — как раньше, по ступени своей модели.
-  assert.equal(partnerAccrualOf(project(), [], { id: "ag1", percent_override: null, kind: "person" })?.percent, 10);
+  assert.equal(partnerAccrualOf(project(), [], { id: "ag1", percent_override: null, kind: "person" }, [])?.percent, 10);
 });
 
 test("5% тому, кто привёл: только проекты, заведённые в его 12 месяцах", () => {

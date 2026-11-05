@@ -142,6 +142,12 @@ export type CabinetCopy = {
   poolTop: string;
   poolEmpty: string;
   poolMark: string;
+  /** Пожизненный грейд: +5 п.п. с 50 000 $ заказов (lib/partners/rules.ts, lifetimeOf). */
+  lifetimeTitle: (bonus: number) => string;
+  lifetimeLead: (from: string, bonus: number, agency: number) => string;
+  lifetimeLeft: (total: string, left: string) => string;
+  lifetimeReached: (total: string, bonus: number) => string;
+  lifetimeMark: (bonus: number) => string;
   poolResult: Record<"on" | "off" | "failed", string>;
   payoutTitle: string;
   payoutRules: (min: string) => string;
@@ -385,6 +391,12 @@ const ru: CabinetCopy = {
   poolTop: "Это верхняя ступень таблицы.",
   poolEmpty: "Копилка пока пуста — сюда лягут проекты, когда клиенты оплатят их целиком.",
   poolMark: "ставка копилки",
+  lifetimeTitle: (bonus) => `+${bonus} % навсегда`,
+  lifetimeLead: (from, bonus, agency) =>
+    `Когда сумма ваших заказов дойдёт до ${from}, к ставке каждого следующего проекта прибавится ${bonus} % — навсегда, без срока. У агентства ${agency} % станет ${agency + bonus} %. Считаются суммы проектов в договорах, отменённые не считаются.`,
+  lifetimeLeft: (total, left) => `Сейчас заказов на ${total}. Ещё на ${left} — и надбавка ваша.`,
+  lifetimeReached: (total, bonus) => `Заказов на ${total} — надбавка +${bonus} % ваша навсегда.`,
+  lifetimeMark: (bonus) => `+${bonus} % навсегда`,
   poolResult: {
     on: "Копилка включена: оплаченные проекты копятся, ставка растёт с общей суммой.",
     off: "Копилка выключена: выплаты снова приходят как обычно.",
@@ -662,6 +674,12 @@ const en: CabinetCopy = {
   poolTop: "This is the top tier of the table.",
   poolEmpty: "Your savings are empty for now — projects land here once clients pay them in full.",
   poolMark: "savings rate",
+  lifetimeTitle: (bonus) => `+${bonus}% for life`,
+  lifetimeLead: (from, bonus, agency) =>
+    `Once your orders add up to ${from}, every next project gets ${bonus}% on top of its rate — for life, with no end date. For an agency ${agency}% becomes ${agency + bonus}%. We count project amounts in the contracts; cancelled ones don't count.`,
+  lifetimeLeft: (total, left) => `Orders so far: ${total}. ${left} more and the bonus is yours.`,
+  lifetimeReached: (total, bonus) => `Orders worth ${total} — the +${bonus}% bonus is yours for life.`,
+  lifetimeMark: (bonus) => `+${bonus}% for life`,
   poolResult: {
     on: "Savings on: paid projects accumulate, and the rate grows with the total.",
     off: "Savings off: payouts arrive as usual again.",
@@ -939,6 +957,12 @@ const uz: CabinetCopy = {
   poolTop: "Bu jadvalning eng yuqori pog'onasi.",
   poolEmpty: "Jamg'arma hozircha bo'sh — mijozlar loyihani to'liq to'lagach, ular shu yerga tushadi.",
   poolMark: "jamg'arma stavkasi",
+  lifetimeTitle: (bonus) => `+${bonus} % umrbod`,
+  lifetimeLead: (from, bonus, agency) =>
+    `Buyurtmalaringiz summasi ${from} ga yetganda, keyingi har bir loyiha stavkasiga ${bonus} % qo'shiladi — umrbod, muddatsiz. Agentlikda ${agency} % ${agency + bonus} % bo'ladi. Shartnomadagi loyiha summalari hisoblanadi, bekor qilinganlari hisobga olinmaydi.`,
+  lifetimeLeft: (total, left) => `Hozir buyurtmalar ${total}. Yana ${left} — va ustama sizniki.`,
+  lifetimeReached: (total, bonus) => `Buyurtmalar ${total} — +${bonus} % ustama umrbod sizniki.`,
+  lifetimeMark: (bonus) => `+${bonus} % umrbod`,
   poolResult: {
     on: "Jamg'arma yoqildi: to'langan loyihalar jamlanadi, stavka umumiy summa bilan o'sadi.",
     off: "Jamg'arma o'chirildi: to'lovlar yana odatdagidek keladi.",
@@ -1212,6 +1236,12 @@ const zh: CabinetCopy = {
   poolTop: "这是表格的最高档。",
   poolEmpty: "存钱罐暂时是空的——客户付清项目后，项目会进入这里。",
   poolMark: "存钱罐费率",
+  lifetimeTitle: (bonus) => `终身 +${bonus}%`,
+  lifetimeLead: (from, bonus, agency) =>
+    `当您的订单总额达到 ${from} 后，此后每个新项目的费率都加 ${bonus}%——终身有效，没有期限。代理机构的 ${agency}% 将变为 ${agency + bonus}%。按合同中的项目金额计算，已取消的不计入。`,
+  lifetimeLeft: (total, left) => `目前订单总额 ${total}。再有 ${left}，加成就归您。`,
+  lifetimeReached: (total, bonus) => `订单总额 ${total}——+${bonus}% 加成终身归您。`,
+  lifetimeMark: (bonus) => `终身 +${bonus}%`,
   poolResult: {
     on: "存钱罐已开启：已付清的项目会累积，费率随总额提高。",
     off: "存钱罐已关闭：付款恢复正常发放。",
@@ -1486,6 +1516,12 @@ const uk: CabinetCopy = {
   poolTop: "Це найвищий щабель таблиці.",
   poolEmpty: "Скарбничка поки порожня — сюди потраплять проєкти, коли клієнти оплатять їх повністю.",
   poolMark: "ставка скарбнички",
+  lifetimeTitle: (bonus) => `+${bonus} % назавжди`,
+  lifetimeLead: (from, bonus, agency) =>
+    `Коли сума ваших замовлень дійде до ${from}, до ставки кожного наступного проєкту додасться ${bonus} % — назавжди, без строку. В агенції ${agency} % стане ${agency + bonus} %. Рахуються суми проєктів у договорах, скасовані не рахуються.`,
+  lifetimeLeft: (total, left) => `Зараз замовлень на ${total}. Ще на ${left} — і надбавка ваша.`,
+  lifetimeReached: (total, bonus) => `Замовлень на ${total} — надбавка +${bonus} % ваша назавжди.`,
+  lifetimeMark: (bonus) => `+${bonus} % назавжди`,
   poolResult: {
     on: "Скарбничку ввімкнено: оплачені проєкти накопичуються, ставка зростає із загальною сумою.",
     off: "Скарбничку вимкнено: виплати знову надходять як звичайно.",
@@ -1763,6 +1799,12 @@ const pl: CabinetCopy = {
   poolTop: "To najwyższy próg tabeli.",
   poolEmpty: "Skarbonka jest na razie pusta — trafią tu projekty, gdy klienci opłacą je w całości.",
   poolMark: "stawka skarbonki",
+  lifetimeTitle: (bonus) => `+${bonus}% na zawsze`,
+  lifetimeLead: (from, bonus, agency) =>
+    `Gdy suma Twoich zleceń dojdzie do ${from}, do stawki każdego kolejnego projektu dojdzie ${bonus}% — na zawsze, bez terminu. W agencji ${agency}% zmieni się w ${agency + bonus}%. Liczą się kwoty projektów z umów, anulowane się nie liczą.`,
+  lifetimeLeft: (total, left) => `Teraz zleceń na ${total}. Jeszcze ${left} — i dodatek jest Twój.`,
+  lifetimeReached: (total, bonus) => `Zlecenia na ${total} — dodatek +${bonus}% jest Twój na zawsze.`,
+  lifetimeMark: (bonus) => `+${bonus}% na zawsze`,
   poolResult: {
     on: "Skarbonka włączona: opłacone projekty się zbierają, a stawka rośnie z łączną kwotą.",
     off: "Skarbonka wyłączona: wypłaty znów przychodzą jak zwykle.",

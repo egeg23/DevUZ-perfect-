@@ -238,8 +238,9 @@ export const moreSections: Record<string, HelpEntry> = {
         body: [
           "Dwa modele, partner wybiera sam w panelu partnera. «Od zysku netto» (kwota − podatek − koszt wytworzenia): do $2 500 — 10%, $2 501–5 000 — 15%, $5 001–10 000 — 20%, $10 001–30 000 — 25%, od $30 001 — 30%. «Od obrotu» (cała kwota umowy) przy tych samych progach: 6, 10, 14, 17, 20%. Próg każdego projektu zależy od jego własnej kwoty. W tabeli «Wszyscy partnerzy», w kolumnie «Stawka», widać model i kiedy go zmieniono.",
           "Model można zmienić najwyżej raz w tygodniu, a przy kliencie zostaje ten, który obowiązywał w dniu jego zgłoszenia: zmiana nie przelicza projektów, które już trwają. W karcie projektu przy «Partner» — «20 % od zysku» albo «14 % od obrotu». Procent ustawiony na projekcie jest ważniejszy niż indywidualna stawka partnera, a indywidualna — ważniejsza niż próg. Przy modelu „od zysku” wpisz koszt wytworzenia projektu — bez niego udział liczy się od kwoty pomniejszonej tylko o podatek.",
-          "Naliczenie jest zamrożone, dopóki klient nie opłaci projektu w całości — tak jak u pracowników. Agencja ma własną stawkę: zawsze 15% od kwoty projektu, bez modeli i skarbonki — jest na liście z oznaczeniem «agencja · 15%», szczegóły w zakładce [Agencje](/admin/agencies).",
+          "Naliczenie jest zamrożone, dopóki klient nie opłaci projektu w całości — tak jak u pracowników. Agencja ma własną stawkę: 15% od kwoty projektu, bez modeli i skarbonki, a od $50 000 zleceń — 20% na zawsze; jest na liście z oznaczeniem «agencja · 15%» albo «agencja · 20%», szczegóły w zakładce [Agencje](/admin/agencies).",
           "Skarbonka. W panelu partnera jest przełącznik «Nie wypłacaj automatycznie» (w rosyjskiej wersji panelu — «Не забирать в автоматическом режиме»). Dopóki jest włączony, pieniądze za opłacone projekty nie idą do partnera od razu: nie ma automatycznych wypłat od obrotu, a stawka dla wszystkich opłaconych i jeszcze niewypłaconych projektów liczy się od ich łącznej kwoty — według tej samej tabeli. Trzy projekty po $2 000 to $6 000, więc dla wszystkich trzech jest 20% od zysku (14% od obrotu) zamiast 10% (6%). Studio dłużej trzyma pieniądze u siebie i inwestuje je w rozwój, a partner w efekcie dostaje więcej. Stawka nigdy nie jest niższa niż zwykła; projekt z procentem ustawionym ręcznie i partner z indywidualną stawką w skarbonce nie uczestniczą. W tabeli «Wszyscy partnerzy», w kolumnie «Stawka», taki partner ma zielony wiersz «skarbonka: $… · stawka …%». Wyłączył przełącznik — podwyżka znika, niewypłacone liczy się według zwykłego progu każdego projektu, a automatyczne wypłaty od obrotu wracają.",
+          "Na zawsze +5. Gdy suma zleceń partnera z całego czasu dojdzie do $50 000, do stawki każdego kolejnego projektu dochodzi 5 — na zawsze, bez przeglądu: i do progu tabeli, i do stawki skarbonki. Liczą się kwoty projektów z umów, bez anulowanych i niezaliczonych; projekt, którym przekroczono próg, jest jeszcze po starej stawce. Procentu ustawionego ręcznie na projekcie i indywidualnej stawki dodatek nie rusza, a z poziomami blogera za 12 miesięcy (właściciel ustawia je procentem na projekcie) się nie sumuje. Taki partner ma w «Wszyscy partnerzy» oznaczenie «+5% na zawsze», a w karcie projektu — «+5 na zawsze za 50 000 $ zleceń». Ile zostało do progu, partner widzi w swoim panelu. Decyzja właściciela z 05.11.2026.",
         ],
       },
       {
@@ -316,10 +317,19 @@ export const moreSections: Record<string, HelpEntry> = {
         ],
       },
       {
+        id: "lifetime",
+        title: "20% na zawsze — od $50 000 zleceń agencji",
+        body: [
+          "Gdy suma zleceń agencji z całego czasu dojdzie do $50 000, jej stawka staje się 20% na zawsze: +5 do każdego kolejnego projektu, bez terminu i bez przeglądu. Liczą się kwoty projektów z umów; anulowane i niezaliczone się nie liczą. Projekt, którym agencja przekroczyła $50 000, jest jeszcze po 15%, następny już po 20%. Decyzja właściciela z 05.11.2026.",
+          "Gdzie to widać: w tabeli, w kolumnie «Kwota projektów», pod kwotą — «20% na zawsze» albo «do 20%: jeszcze …»; w «Partnerzy» przy agencji — oznaczenie «agencja · 20%»; w karcie projektu przy wierszu partnera — «+5 na zawsze za 50 000 $ zleceń». Agencja widzi, ile zostało, w swoim panelu, a w prezentacji na stronie — że od $50 000 zleceń będzie 20%. Pieniądze liczą się same: ręcznie niczego nie trzeba ustawiać.",
+          "5% dla tego, kto przyprowadził agencję, się nie zmienia: te same 5% od kwoty projektu i te same 12 miesięcy. Dodatek dla agencji studio płaci ze swojej części.",
+        ],
+      },
+      {
         id: "deck",
         title: "Schemat «Jak to działa» i prezentacja dla agencji",
         body: [
-          "Na górze zakładki — «Jak to działa — w skrócie»: droga zlecenia w trzech krokach i kto ile dostaje z jednego projektu, z przykładem na $2 000: agencja $300, osoba, która przyprowadziła, $100, reszta dla studia, a z niej prowadzący dostaje swój zwykły procent od zysku. Tu jest wszystko, łącznie z naszymi 5%: to schemat dla zespołu.",
+          "Na górze zakładki — «Jak to działa — w skrócie»: droga zlecenia w trzech krokach i kto ile dostaje z jednego projektu, z przykładem na $2 000: agencja $300, osoba, która przyprowadziła, $100, reszta dla studia, a z niej prowadzący dostaje swój zwykły procent od zysku. Tu jest wszystko, łącznie z naszymi 5%: to schemat dla zespołu. Wiersz «20%» też jest tutaj — stawka agencji po $50 000 zleceń.",
           "«Otwórz prezentację» — strona na stronie internetowej w sześciu językach (rosyjski, angielski, uzbecki, chiński, ukraiński, polski) dla samej agencji: duża liczba 15%, trzy kroki, przykład z paskami, zasady, co można przyprowadzić, i przycisk do Telegrama. Procentu osoby, która przyprowadziła, tam nie ma i nie będzie: to sprawa wewnętrzna, agencji tego nie pokazujemy. Wyślij link albo otwórz stronę, kliknij przycisk PDF u góry i prześlij plik. W tabeli każda agencja ma własny link «prezentacja»: z nim przycisk Telegrama na stronie prowadzi do bota z kodem tej agencji.",
         ],
       },

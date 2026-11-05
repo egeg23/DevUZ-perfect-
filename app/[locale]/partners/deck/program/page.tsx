@@ -7,7 +7,7 @@ import { company } from "@/content/company";
 import { deckCopy } from "@/content/partner-decks";
 import { isLocale, localeHref } from "@/lib/i18n";
 import { GRADES, gradeCap } from "@/lib/partners/grades";
-import { AGENCY_PERCENT, PARTNER_TIERS, tierPercent } from "@/lib/partners/rules";
+import { AGENCY_PERCENT, LIFETIME_BONUS, LIFETIME_FROM_USD, PARTNER_TIERS, tierPercent } from "@/lib/partners/rules";
 import { buildMetadata } from "@/lib/seo";
 
 /**
@@ -109,10 +109,14 @@ export default async function ProgramDeck({
                   ))}
                 </tbody>
               </table>
+              <p className="mt-3 rounded-xl border border-green/40 bg-green/[0.06] px-4 py-3 text-sm leading-relaxed">
+                {t.gradesLifetime(usd(locale, LIFETIME_FROM_USD), LIFETIME_BONUS)}
+              </p>
             </div>
           ))}
-          {/* Агентствам уровней нет: 15% с суммы проекта всегда (владелец,
-              05.11.2026: «Убирай надбавки, да») — их условия в своей презентации. */}
+          {/* Агентствам уровней за 12 месяцев нет: 15% с суммы проекта (владелец,
+              05.11.2026: «Убирай надбавки, да»), с 50 000 $ заказов — 20% навсегда
+              («Грейд +5%… Тогда будет 20% пожизненно») — условия в своей презентации. */}
           <div>
             <p className="font-display text-lg font-semibold">{t.gradesAgency}</p>
             <a
@@ -121,6 +125,9 @@ export default async function ProgramDeck({
             >
               <span className="font-display text-5xl font-semibold text-green">{AGENCY_PERCENT}%</span>
               <span className="text-sm leading-relaxed">{agency.teaser}</span>
+              <span className="text-sm font-medium leading-relaxed text-green">
+                {agency.lifetime(usd(locale, LIFETIME_FROM_USD), AGENCY_PERCENT + LIFETIME_BONUS)}
+              </span>
               <span className="text-sm font-semibold text-green">{agency.teaserCta} →</span>
             </a>
           </div>

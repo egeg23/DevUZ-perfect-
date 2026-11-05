@@ -31,6 +31,7 @@ import {
   isTarget,
   isReserved,
   normalizeCode,
+  lifetimeOf,
   partnerAccrualOf,
   partnerBalanceOf,
   withPool,
@@ -38,6 +39,8 @@ import {
   validRequisites,
   voidReason,
   SLUG_RE,
+  type Lifetime,
+  type LifetimeProject,
   type PartnerAccrual,
   type PartnerKind,
   type PayoutModel,
@@ -357,6 +360,38 @@ export async function projectsOfPartners(partnerIds: readonly string[]): Promise
   return (data ?? []).map((row) => shapeProject(row as Record<string, unknown>));
 }
 
+/**
+ * Вся история проектов партнёров — только поля для суммы заказов
+ * (lib/partners/rules.ts, lifetimeOf): по ней решается пожизненный грейд.
+ * Отдельно от projectsOfPartners: та тянет все поля и до 2 000 строк на
+ * всех партнёров разом, а здесь нужны шесть полей и вся история.
+ */
+export async function partnerHistory(partnerIds: readonly string[]): Promise<LifetimeProject[]> {
+  const db = serviceClient();
+  const ids = [...new Set(partnerIds)];
+  if (!db || !ids.length) return [];
+  const { data, error } = await db
+    .from("projects")
+    .select("id, partner_id, amount_usd, stage, created_at, partner_void_reason")
+    .in("partner_id", ids)
+    .limit(5000);
+  if (error) {
+    console.error("admin: не прочитал историю проектов партнёров", error.message);
+    return [];
+  }
+  return (data ?? []).map((row) => {
+    const r = row as Record<string, unknown>;
+    return {
+      id: String(r.id),
+      partner_id: r.partner_id ? String(r.partner_id) : null,
+      amount_usd: r.amount_usd === null || r.amount_usd === undefined ? null : Number(r.amount_usd),
+      stage: String(r.stage ?? ""),
+      created_at: r.created_at ? String(r.created_at) : null,
+      partner_void_reason: r.partner_void_reason ? String(r.partner_void_reason) : null,
+    };
+  });
+}
+
 async function paymentsOf(projectIds: readonly string[]): Promise<PaymentMoney[]> {
   const db = serviceClient();
   if (!db || !projectIds.length) return [];
@@ -412,6 +447,8 @@ export type PartnerSummary = {
   partner: Partner;
   projects: ProjectWithPartner[];
   accruals: PartnerAccrual[];
+  /** Сумма заказов и пожизненный грейд +5 (rules.ts, lifetimeOf). */
+  lifetime: Lifetime;
   balance: PartnerBalance;
   /** Оплаченных целиком проектов по приведённым клиентам. */
   paidProjects: number;
@@ -426,11 +463,12 @@ export type PartnerSummary = {
  */
 export async function summarize(partners: Partner[]): Promise<PartnerSummary[]> {
   const ids = partners.map((p) => p.id);
-  const [projects, links, payouts, leads] = await Promise.all([
+  const [projects, links, payouts, leads, history] = await Promise.all([
     projectsOfPartners(ids),
     linksOf(ids),
     payoutsOf(ids),
     leadCounts(ids),
+    partnerHistory(ids),
   ]);
   const payments = await paymentsOf(projects.map((p) => p.id));
 
@@ -440,7 +478,7 @@ export async function summarize(partners: Partner[]): Promise<PartnerSummary[]> 
     // Копилка поднимает ставку невыплаченных проектов до ступени их общей
     // суммы — только пока тумблер включён (rules.ts, withPool).
     const accruals = withPool(
-      mine.map((p) => partnerAccrualOf(p, payments, partner)).filter((a): a is PartnerAccrual => a !== null),
+      mine.map((p) => partnerAccrualOf(p, payments, partner, history)).filter((a): a is PartnerAccrual => a !== null),
       mine,
       partner,
     );
@@ -451,6 +489,7 @@ export async function summarize(partners: Partner[]): Promise<PartnerSummary[]> 
       partner,
       projects: mine,
       accruals,
+      lifetime: lifetimeOf(partner.id, history),
       balance: partnerBalanceOf(accruals, own),
       paidProjects,
       leads: leads.get(partner.id) ?? 0,

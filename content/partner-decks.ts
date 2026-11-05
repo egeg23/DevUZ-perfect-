@@ -74,6 +74,8 @@ export type DeckCopy = {
     gradesLead: string;
     gradesAgency: string;
     gradesBlogger: string;
+    /** Пожизненный грейд: с 50 000 $ заказов — +5 навсегда (lib/partners/rules.ts, lifetimeOf). */
+    gradesLifetime: (from: string, bonus: number) => string;
     gradeNames: Record<string, string>;
     gradeStart: string;
     gradeWhen: (projects: number, turnover: string | null) => string;
@@ -171,6 +173,7 @@ const ru: DeckCopy = {
     gradesLead: "К ставке из таблицы прибавляется надбавка уровня — для обеих моделей. Уровень считается по проектам, которые клиенты оплатили за последние 12 месяцев.",
     gradesAgency: "Агентства и компании",
     gradesBlogger: "Блогеры и авторы каналов",
+    gradesLifetime: (from, bonus) => `Навсегда: привели заказов на ${from} — к ставке каждого следующего проекта +${bonus}, без срока. С уровнем за 12 месяцев не складывается: действует больший.`,
     gradeNames: { start: "Старт", author: "Автор", ambassador: "Амбассадор", face: "Лицо студии" },
     gradeStart: "с первого дня",
     gradeWhen: (projects, turnover) => `${projects} ${projects === 1 ? "оплаченный проект" : projects < 5 ? "оплаченных проекта" : "оплаченных проектов"}${turnover ? ` или ${turnover} оборота` : ""}`,
@@ -268,6 +271,7 @@ const en: DeckCopy = {
     gradesLead: "A level bonus is added to the rate from the table, for both models. The level is based on projects your clients paid for in the last 12 months.",
     gradesAgency: "Agencies and companies",
     gradesBlogger: "Bloggers and channel authors",
+    gradesLifetime: (from, bonus) => `For life: once your orders reach ${from}, every next project gets +${bonus} on its rate, with no end date. It does not add up with the 12-month level: the higher one applies.`,
     gradeNames: { start: "Start", author: "Author", ambassador: "Ambassador", face: "Face of the studio" },
     gradeStart: "from day one",
     gradeWhen: (projects, turnover) => `${projects} paid ${projects === 1 ? "project" : "projects"}${turnover ? ` or ${turnover} turnover` : ""}`,
@@ -365,6 +369,7 @@ const uz: DeckCopy = {
     gradesLead: "Jadvaldagi stavkaga daraja ustamasi qo‘shiladi, ikkala model uchun ham. Daraja oxirgi 12 oyda mijozlaringiz to‘liq to‘lagan loyihalar bo‘yicha hisoblanadi.",
     gradesAgency: "Agentliklar va kompaniyalar",
     gradesBlogger: "Blogerlar va kanal mualliflari",
+    gradesLifetime: (from, bonus) => `Umrbod: buyurtmalaringiz ${from} ga yetsa — keyingi har bir loyiha stavkasiga +${bonus}, muddatsiz. 12 oylik daraja bilan qo‘shilmaydi: kattasi amal qiladi.`,
     gradeNames: { start: "Start", author: "Muallif", ambassador: "Ambassador", face: "Studiya yuzi" },
     gradeStart: "birinchi kundan",
     gradeWhen: (projects, turnover) => `${projects} ta to‘langan loyiha${turnover ? ` yoki ${turnover} aylanma` : ""}`,
@@ -462,6 +467,7 @@ const zh: DeckCopy = {
     gradesLead: "在表格比例之上再加等级加成，两种模式都适用。等级按过去 12 个月内客户全额付款的项目计算。",
     gradesAgency: "代理机构和公司",
     gradesBlogger: "博主和频道作者",
+    gradesLifetime: (from, bonus) => `终身：订单总额达到 ${from} 后，此后每个项目的费率 +${bonus}，没有期限。与 12 个月等级加成不叠加：取较高者。`,
     gradeNames: { start: "起步", author: "作者", ambassador: "大使", face: "工作室代言人" },
     gradeStart: "从第一天起",
     gradeWhen: (projects, turnover) => `${projects} 个已付款项目${turnover ? `或 ${turnover} 营业额` : ""}`,
@@ -559,6 +565,7 @@ const uk: DeckCopy = {
     gradesLead: "До ставки з таблиці додається надбавка рівня — для обох моделей. Рівень рахується за проєктами, які клієнти оплатили за останні 12 місяців.",
     gradesAgency: "Агенції та компанії",
     gradesBlogger: "Блогери та автори каналів",
+    gradesLifetime: (from, bonus) => `Назавжди: привели замовлень на ${from} — до ставки кожного наступного проєкту +${bonus}, без строку. З рівнем за 12 місяців не додається: діє більший.`,
     gradeNames: { start: "Старт", author: "Автор", ambassador: "Амбасадор", face: "Обличчя студії" },
     gradeStart: "з першого дня",
     gradeWhen: (projects, turnover) => `${projects} ${projects === 1 ? "оплачений проєкт" : projects < 5 ? "оплачені проєкти" : "оплачених проєктів"}${turnover ? ` або ${turnover} обороту` : ""}`,
@@ -656,6 +663,7 @@ const pl: DeckCopy = {
     gradesLead: "Do stawki z tabeli dochodzi dodatek za poziom, w obu modelach. Poziom liczymy z projektów opłaconych przez klientów w ostatnich 12 miesiącach.",
     gradesAgency: "Agencje i firmy",
     gradesBlogger: "Blogerzy i autorzy kanałów",
+    gradesLifetime: (from, bonus) => `Na zawsze: gdy Twoje zlecenia osiągną ${from}, do stawki każdego kolejnego projektu dochodzi +${bonus}, bez terminu. Nie sumuje się z poziomem za 12 miesięcy: obowiązuje wyższy.`,
     gradeNames: { start: "Start", author: "Autor", ambassador: "Ambasador", face: "Twarz studia" },
     gradeStart: "od pierwszego dnia",
     gradeWhen: (projects, turnover) => `${projects} ${projects === 1 ? "opłacony projekt" : projects < 5 ? "opłacone projekty" : "opłaconych projektów"}${turnover ? ` lub ${turnover} obrotu` : ""}`,
