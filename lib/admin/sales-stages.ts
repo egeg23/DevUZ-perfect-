@@ -27,10 +27,17 @@
  * - **оплата** — платёж по проекту из лида (`project_payments`) или статус
  *   «Выиграли».
  *
- * Дошёл до поздней ступени — прошёл и ранние: макет без записанного ответа
- * всё равно значит, что клиент отвечал. Такая ступень получает время самой
- * ранней из поздних, но в зачёт человеку не идёт — только то, что сделано на
- * самом деле (`own`).
+ * Дошёл до поздней ступени — прошёл и те ранние, которые из неё следуют
+ * (`IMPLIES`): макет без записанного ответа всё равно значит, что клиент
+ * отвечал. Такая ступень получает время самой ранней из поздних, но в зачёт
+ * человеку не идёт — только то, что сделано на самом деле (`own`). «Макет» и
+ * «показ» из цены не следуют: строка цены уходит сразу после «+», до макета
+ * (владелец, 05.11.2026, CREAT: «статусы сами поменялись, хотя мы ещё макет
+ * им даже не делали»).
+ *
+ * Ступень, отмеченную по ошибке, снимают нажатием (`undo` в sales_marks,
+ * `UNDO_STAGES`): всё, что записано до снятия, на этой ступени и после неё
+ * не считается; то, что случится потом, считается снова.
  *
  * Только арифметика над строками из базы, без запросов и без модели: одни и
  * те же строки дают одни и те же числа (tests/sales-stages.test.ts). Строки
@@ -49,6 +56,33 @@ export type Stage = (typeof STAGES)[number];
 /** Ступени, которые отмечает человек. «Показ» база сама не узнает никогда. */
 export const MARK_KINDS = ["interest", "shown", "priced"] as const;
 export type MarkKind = (typeof MARK_KINDS)[number];
+
+/**
+ * Что следует из поздней ступени. Не «все ранние»: цену бот называет сразу
+ * после «+», раньше макета, поэтому из «цены» не следуют ни «макет», ни
+ * «показ». Оплата — цена точно была названа; показ — макет точно ушёл.
+ */
+export const IMPLIES: Readonly<Record<Stage, readonly Stage[]>> = {
+  written: [],
+  replied: [],
+  interest: ["replied"],
+  mockup: ["interest", "replied"],
+  shown: ["mockup", "interest", "replied"],
+  priced: ["interest", "replied"],
+  paid: ["priced", "interest", "replied"],
+};
+
+/**
+ * Ступени, которые снимают нажатием (владелец, 05.11.2026: «Сделай
+ * возможность откатывать менеджерам статусы, просто нажимая на статус»).
+ * «Написали» — наше сообщение, «оплата» — деньги: их так не снимают.
+ */
+export const UNDO_STAGES = ["replied", "interest", "mockup", "shown", "priced"] as const;
+export type UndoStage = (typeof UNDO_STAGES)[number];
+
+export function isUndoStage(v: unknown): v is UndoStage {
+  return typeof v === "string" && (UNDO_STAGES as readonly string[]).includes(v);
+}
 export const SHOWN_VIA = ["video", "live"] as const;
 export type ShownVia = (typeof SHOWN_VIA)[number];
 
@@ -104,7 +138,9 @@ export type StageMockup = {
 };
 
 export type StageMark = {
-  kind: MarkKind;
+  /** «undo» — ступень снята нажатием: `undo_stage` и всё после неё до этой минуты не считается. */
+  kind: MarkKind | "undo";
+  undo_stage?: string | null;
   lead_id: string | null;
   prospect_id: string | null;
   staff_id: string | null;
@@ -200,11 +236,16 @@ export function dealsOf(input: StageInput): Deal[] {
     if (!d.leadId && leadId) d.leadId = leadId;
     return d;
   };
-  /** Записать ступень: самое раннее время; кто — у самого раннего. */
+  // Все события ступени, а не одно самое раннее: снятие ступени убирает
+  // записанное до него, а то, что случилось позже, должно остаться.
+  const events = new Map<string, Partial<Record<Stage, { at: string; by: string | null }[]>>>();
+  const undos = new Map<string, { stage: UndoStage; at: number }[]>();
+  /** Записать событие ступени. */
   const put = (d: Deal | null, stage: Stage, at: string | null | undefined, by: string | null) => {
     if (!d || !valid(at)) return;
-    const cur = d.own[stage];
-    if (!cur || ms(at) < ms(cur.at)) d.own[stage] = { at, by };
+    const list = events.get(d.key) ?? {};
+    (list[stage] ??= []).push({ at, by });
+    events.set(d.key, list);
   };
 
   for (const p of input.prospects) {
@@ -253,11 +294,31 @@ export function dealsOf(input: StageInput): Deal[] {
   const marks = [...input.marks].sort((a, b) => ms(a.created_at) - ms(b.created_at));
   for (const m of marks) {
     const d = deal(m.prospect_id, m.lead_id);
+    if (m.kind === "undo") {
+      if (d && isUndoStage(m.undo_stage) && valid(m.created_at)) {
+        undos.set(d.key, [...(undos.get(d.key) ?? []), { stage: m.undo_stage, at: ms(m.created_at) }]);
+        if (STAGES.indexOf(m.undo_stage) <= STAGES.indexOf("priced")) d.priceUsd = null;
+      }
+      continue;
+    }
     put(d, m.kind, m.created_at, m.staff_id);
     if (d && m.kind === "priced" && m.amount_usd) d.priceUsd = Number(m.amount_usd);
   }
 
   for (const d of deals.values()) {
+    // Снятие ступени: на ней и после неё не считается всё, что записано до
+    // снятия. Своя граница у каждой ступени — самое позднее снятие, которое её задело.
+    const cut = Object.fromEntries(STAGES.map((s) => [s, Number.NEGATIVE_INFINITY])) as Record<Stage, number>;
+    for (const u of undos.get(d.key) ?? []) {
+      for (const s of STAGES.slice(STAGES.indexOf(u.stage))) if (s !== "paid" && u.at > cut[s]) cut[s] = u.at;
+    }
+    const list = events.get(d.key) ?? {};
+    for (const s of STAGES) {
+      const first = (list[s] ?? []).filter((e) => ms(e.at) > cut[s]).sort((a, b) => ms(a.at) - ms(b.at))[0];
+      if (first) d.own[s] = first;
+    }
+    if (!d.own.priced && cut.priced > Number.NEGATIVE_INFINITY) d.priceUsd = null;
+
     const lead = d.leadId ? leadById.get(d.leadId) : undefined;
     const prospect = d.prospectId ? prospectById.get(d.prospectId) : undefined;
     d.ownerId = lead?.assigned_staff_id ?? prospect?.handled_by ?? prospect?.claimed_by ?? prospect?.touched_by ?? null;
@@ -267,14 +328,20 @@ export function dealsOf(input: StageInput): Deal[] {
       const o = d.own[s];
       if (o && !o.by) o.by = s === "written" && prospect?.touched_by ? prospect.touched_by : d.ownerId;
     }
-    // Поздняя ступень подразумевает ранние. «Написали» — только наши касания.
-    let later: string | null = null;
-    for (let i = STAGES.length - 1; i >= 0; i -= 1) {
-      const s = STAGES[i];
-      const own = d.own[s]?.at ?? null;
-      const at = own ?? (s === "written" ? null : later);
-      if (at) d.at[s] = at;
-      if (own && (!later || ms(own) < ms(later))) later = own;
+    // Поздняя ступень подразумевает те ранние, что из неё следуют (IMPLIES):
+    // время — самое раннее из поздних. «Написали» — только наши касания.
+    for (const s of STAGES) {
+      const own = d.own[s]?.at;
+      if (own) d.at[s] = own;
+    }
+    for (const s of STAGES) {
+      const own = d.own[s]?.at;
+      if (!own) continue;
+      for (const t of IMPLIES[s]) {
+        if (d.own[t]) continue;
+        const cur = d.at[t];
+        if (!cur || ms(own) < ms(cur)) d.at[t] = own;
+      }
     }
   }
   return [...deals.values()];

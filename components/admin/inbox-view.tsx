@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { InboxReply } from "@/components/admin/inbox-reply";
+import { StageUndo } from "@/components/admin/stage-undo";
 import { inboxDict } from "@/content/admin-panel/inbox";
 import { salesStagesDict } from "@/content/admin-panel/sales-stages";
 import { PANEL_INTL, pick, type PanelLocale, type Picked } from "@/lib/admin/i18n";
@@ -8,7 +9,7 @@ import { waitedMinutes, type InboxItem } from "@/lib/admin/inbox";
 import type { Inbox } from "@/lib/admin/inbox-store";
 import { objectionOf } from "@/lib/admin/objections";
 import type { TalkView } from "@/lib/admin/outreach-talk-store";
-import { STAGES, type Deal } from "@/lib/admin/sales-stages";
+import { STAGES, isUndoStage, type Deal } from "@/lib/admin/sales-stages";
 
 /** Длины полей ответа — из хранилищ касаний и бота (здесь числами: вёрстка без базы). */
 export type ReplyLimits = { touch: number; bot: number };
@@ -38,9 +39,12 @@ export function InboxView({
   names,
   now,
   limits,
+  me,
 }: {
   locale: PanelLocale;
   role: string;
+  /** Кто смотрит: снять ступень в «Ходе сделки» может тот, чья сделка, руководитель и владелец. */
+  me: string;
   inbox: Inbox;
   /** Выбранный в адресе; null — на компьютере открыт первый, на телефоне список. */
   picked: InboxItem | null;
@@ -181,7 +185,13 @@ export function InboxView({
                   <h2 className="mb-2 text-[15px] font-semibold text-text" style={{ fontFamily: "var(--font-sans)" }}>
                     {t.deal}
                   </h2>
-                  <DealSteps deal={deal} labels={st} locale={locale} />
+                  <DealSteps
+                    deal={deal}
+                    labels={st}
+                    locale={locale}
+                    canUndo={Boolean(deal) && (everyone || deal?.ownerId === me)}
+                    back={`/admin/inbox?c=${keyOf(current)}`}
+                  />
                 </div>
               ) : null}
 
@@ -277,7 +287,19 @@ function Bubble({ mine, text, meta, failed }: { mine: boolean; text: string; met
   );
 }
 
-function DealSteps({ deal, labels, locale }: { deal: Deal | null; labels: Picked<typeof salesStagesDict>; locale: PanelLocale }) {
+function DealSteps({
+  deal,
+  labels,
+  locale,
+  canUndo,
+  back,
+}: {
+  deal: Deal | null;
+  labels: Picked<typeof salesStagesDict>;
+  locale: PanelLocale;
+  canUndo: boolean;
+  back: string;
+}) {
   const at = deal?.at ?? {};
   const reached = SIDE_STAGES.filter((s) => at[s]);
   const next = SIDE_STAGES.find((s) => !at[s]);
@@ -288,15 +310,37 @@ function DealSteps({ deal, labels, locale }: { deal: Deal | null; labels: Picked
         const done = Boolean(at[stage]);
         const now = !done && stage === next && reached.length > 0;
         const label = labels[stage];
-        return (
-          <li key={stage} className={done ? "is-ok" : now ? "is-now" : ""}>
+        const title = label.charAt(0).toUpperCase() + label.slice(1);
+        const inner = (
+          <>
             <span className="os-step-dot" aria-hidden>
               {done ? "✓" : ""}
             </span>
             <span className="min-w-0 flex-1 truncate">
-              {i + 1}. {label.charAt(0).toUpperCase() + label.slice(1)}
+              {i + 1}. {title}
             </span>
             <span className="font-mono text-[11px] text-faint">{at[stage] ? day(at[stage] as string) : "—"}</span>
+          </>
+        );
+        // Пройденную ступень можно снять нажатием, если отметилась по ошибке.
+        const undo = done && canUndo && deal && isUndoStage(stage);
+        return (
+          <li key={stage} className={done ? "is-ok" : now ? "is-now" : ""}>
+            {undo ? (
+              <StageUndo
+                stage={stage}
+                leadId={deal.leadId}
+                prospectId={deal.leadId ? null : deal.prospectId}
+                back={back}
+                confirm={labels.undoConfirm(title)}
+                title={labels.undoTitle}
+                className="-m-2 flex min-h-11 min-w-0 flex-1 items-center gap-3 rounded-[10px] p-2 text-left transition hover:bg-white/[0.06] active:bg-white/[0.1]"
+              >
+                {inner}
+              </StageUndo>
+            ) : (
+              inner
+            )}
           </li>
         );
       })}

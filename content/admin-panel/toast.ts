@@ -12,6 +12,7 @@ export const toastDict = defineDict({
   done_won: { ru: "Отмечено: выиграли", uz: "Belgilandi: yutdik", pl: "Zaznaczono: wygrane" },
   done_lost: { ru: "Отмечено: проиграли", uz: "Belgilandi: yutqazdik", pl: "Zaznaczono: przegrane" },
   done_term: { ru: "Задача «Связаться» поставлена", uz: "«Bog‘lanish» vazifasi qo‘yildi", pl: "Zadanie «Skontaktuj się» ustawione" },
+  done_undone: { ru: "Ступень снята", uz: "Bosqich olib tashlandi", pl: "Etap zdjęty" },
   done_skipped: { ru: "Пропустили — вернётся позже", uz: "O‘tkazib yuborildi — keyin qaytadi", pl: "Pominięto — wróci później" },
   done_no_yours: {
     ru: "Этот лид уже ведёт другой менеджер",

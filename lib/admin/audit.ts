@@ -68,6 +68,8 @@ export const AUDIT_ACTIONS = [
   // Ступени продажи: «Есть интерес», «Показал макет», «Назвал цену»
   // (lib/admin/sales-stages-store.ts).
   "lead.sales_marked",
+  // Ступень снята нажатием в «Ходе сделки» или карточке лида.
+  "lead.sales_unmarked",
   // Порядок в лидах (lib/admin/lead-tidy.ts): «⏳ Ещё в работе» под вопросом
   // бота и лид, который бот сам закрыл «проиграли» после 21 дня без движения.
   "lead.idle_snoozed",

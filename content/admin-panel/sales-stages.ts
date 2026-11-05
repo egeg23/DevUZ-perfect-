@@ -164,6 +164,21 @@ export const salesStagesDict = defineDict({
     pl: (who: string, when: string) => `${who}, ${when}`,
   },
   rOk: { ru: "Отмечено.", uz: "Belgilandi.", pl: "Zaznaczono." },
+  rUndone: {
+    ru: "Ступень снята. В журнале видно, кто и когда снял.",
+    uz: "Bosqich olib tashlandi. Kim va qachon olib tashlagani jurnalda ko‘rinadi.",
+    pl: "Etap zdjęty. W dzienniku widać, kto i kiedy go zdjął.",
+  },
+  undoTitle: {
+    ru: "Нажмите, чтобы снять, если отметилось по ошибке",
+    uz: "Xato belgilangan bo‘lsa, olib tashlash uchun bosing",
+    pl: "Kliknij, aby zdjąć, jeśli zaznaczyło się przez pomyłkę",
+  },
+  undoConfirm: {
+    ru: (stage: string) => `Снять «${stage}» и всё, что после? Из счёта ступень пропадёт, в журнале останется. Если это случится на самом деле позже, отметится снова.`,
+    uz: (stage: string) => `«${stage}» va undan keyingilarni olib tashlaymizmi? Bosqich hisobdan chiqadi, jurnalda qoladi. Keyinroq haqiqatan bo‘lsa, yana belgilanadi.`,
+    pl: (stage: string) => `Zdjąć «${stage}» i wszystko, co dalej? Etap zniknie z liczenia, w dzienniku zostanie. Jeśli później naprawdę się wydarzy, zaznaczy się ponownie.`,
+  },
   rForbidden: {
     ru: "Это не ваш лид — отметить может тот, у кого он, руководитель или владелец.",
     uz: "Bu sizning lidingiz emas — uni lid kimda bo‘lsa o‘sha xodim, rahbar yoki egasi belgilashi mumkin.",

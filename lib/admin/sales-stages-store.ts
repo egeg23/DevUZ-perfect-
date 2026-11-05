@@ -16,6 +16,7 @@ import {
   type StageLead,
   type StageMark,
   type StageProspect,
+  type UndoStage,
 } from "@/lib/admin/sales-stages";
 import type { Staff } from "@/lib/admin/session";
 import { esc, sendMessage } from "@/lib/qualify/telegram";
@@ -34,6 +35,9 @@ import { serviceClient } from "@/lib/supabase";
 
 const LIMIT = 5000;
 const SECOND = 500;
+
+/** Поля отметок; undo_stage — со снятия ступени (миграция 0176). */
+const MARK_FIELDS = "kind, undo_stage, lead_id, prospect_id, staff_id, created_at, via, amount_usd";
 
 const str = (v: unknown) => (typeof v === "string" && v ? v : null);
 const rows = (res: { data: unknown }) => (res.data ?? []) as Record<string, unknown>[];
@@ -110,7 +114,7 @@ async function readDeals(now: Date, days: number, limit: number): Promise<Deal[]
       .limit(limit),
     db.from("leads").select(LEAD_FIELDS).gte("created_at", from).limit(limit),
     db.from("mockup_offers").select("lead_id, prospect_id, sent_at, client, mockup_ref").gte("sent_at", from).limit(limit),
-    db.from("sales_marks").select("kind, lead_id, prospect_id, staff_id, created_at, via, amount_usd").gte("created_at", from).limit(limit),
+    db.from("sales_marks").select(MARK_FIELDS).gte("created_at", from).limit(limit),
     db
       .from("outreach_messages")
       .select("lead_id, prospect_id, created_at, sent_at")
@@ -220,28 +224,9 @@ export async function markStage(
   if (input.kind === "shown" && !input.via) return "bad";
   if (input.kind === "priced" && !input.amountUsd) return "bad";
 
-  const [{ data: lead }, { data: prospect }] = await Promise.all([
-    leadId ? db.from("leads").select("id, assigned_staff_id").eq("id", leadId).maybeSingle() : Promise.resolve({ data: null }),
-    prospectId
-      ? db.from("prospects").select("id, lead_id, handled_by, claimed_by, touched_by").eq("id", prospectId).maybeSingle()
-      : Promise.resolve({ data: null }),
-  ]);
-  if ((leadId && !lead) || (prospectId && !prospect)) return "gone";
-  // Касание с лидом — отметка идёт за лидом: разговор там.
-  const ownLeadId = leadId ?? str(prospect?.lead_id);
-  let leadOwner: string | null = lead ? str(lead.assigned_staff_id) : null;
-  if (!lead && ownLeadId) {
-    const { data } = await db.from("leads").select("assigned_staff_id").eq("id", ownLeadId).maybeSingle();
-    leadOwner = data ? str(data.assigned_staff_id) : null;
-  }
-  const ok = canMark(staff, {
-    hasLead: Boolean(ownLeadId),
-    leadOwner,
-    handled_by: str(prospect?.handled_by),
-    claimed_by: str(prospect?.claimed_by),
-    touched_by: str(prospect?.touched_by),
-  });
-  if (!ok) return "forbidden";
+  const target = await markTarget(db, leadId, prospectId, staff);
+  if (target === "gone" || target === "forbidden") return target;
+  const ownLeadId = target.leadId;
 
   const { error } = await db.from("sales_marks").insert({
     kind: input.kind,
@@ -266,6 +251,84 @@ export async function markStage(
   return "ok";
 }
 
+type Db = NonNullable<ReturnType<typeof serviceClient>>;
+
+/**
+ * Чья сделка и можно ли её отмечать: менеджер — только свою (canMark),
+ * руководитель и владелец — любую. Касание с лидом — отметка идёт за лидом:
+ * разговор там.
+ */
+async function markTarget(
+  db: Db,
+  leadId: string | null,
+  prospectId: string | null,
+  staff: Pick<Staff, "id" | "role">,
+): Promise<{ leadId: string | null } | "gone" | "forbidden"> {
+  const [{ data: lead }, { data: prospect }] = await Promise.all([
+    leadId ? db.from("leads").select("id, assigned_staff_id").eq("id", leadId).maybeSingle() : Promise.resolve({ data: null }),
+    prospectId
+      ? db.from("prospects").select("id, lead_id, handled_by, claimed_by, touched_by").eq("id", prospectId).maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
+  if ((leadId && !lead) || (prospectId && !prospect)) return "gone";
+  const ownLeadId = leadId ?? str(prospect?.lead_id);
+  let leadOwner: string | null = lead ? str(lead.assigned_staff_id) : null;
+  if (!lead && ownLeadId) {
+    const { data } = await db.from("leads").select("assigned_staff_id").eq("id", ownLeadId).maybeSingle();
+    leadOwner = data ? str(data.assigned_staff_id) : null;
+  }
+  const ok = canMark(staff, {
+    hasLead: Boolean(ownLeadId),
+    leadOwner,
+    handled_by: str(prospect?.handled_by),
+    claimed_by: str(prospect?.claimed_by),
+    touched_by: str(prospect?.touched_by),
+  });
+  if (!ok) return "forbidden";
+  return { leadId: ownLeadId };
+}
+
+/**
+ * Снять ступень нажатием (владелец, 05.11.2026: «Сделай возможность
+ * откатывать менеджерам статусы, просто нажимая на статус»). Права — как у
+ * отметки (markTarget). Ничего не удаляется: пишется строка `undo` в
+ * sales_marks, и всё, что записано на этой ступени и после неё до этой
+ * минуты, перестаёт считаться (dealsOf). Шаг — в журнал (lead.sales_unmarked).
+ */
+export async function undoStage(
+  input: { stage: UndoStage; leadId?: string | null; prospectId?: string | null },
+  staff: Pick<Staff, "id" | "role">,
+  ip: string | null,
+): Promise<MarkResult> {
+  const db = serviceClient();
+  if (!db) return "failed";
+  const leadId = input.leadId ?? null;
+  const prospectId = input.prospectId ?? null;
+  if (!leadId && !prospectId) return "bad";
+
+  const target = await markTarget(db, leadId, prospectId, staff);
+  if (target === "gone" || target === "forbidden") return target;
+
+  const { error } = await db.from("sales_marks").insert({
+    kind: "undo",
+    undo_stage: input.stage,
+    lead_id: target.leadId,
+    prospect_id: prospectId,
+    staff_id: staff.id,
+  });
+  if (error) return "failed";
+  await record("lead.sales_unmarked", {
+    actorStaffId: staff.id,
+    targetType: target.leadId ? "lead" : "prospect",
+    targetId: target.leadId ?? prospectId,
+    meta: { stage: input.stage },
+    ip,
+  });
+  forget("hq:deals:");
+  forget("deals:");
+  return "ok";
+}
+
 /** Последние отметки по лиду или касанию — для карточки: что уже отмечено и кем. */
 export async function marksFor(ids: { leadId?: string | null; prospectId?: string | null }): Promise<StageMark[]> {
   const db = serviceClient();
@@ -273,7 +336,7 @@ export async function marksFor(ids: { leadId?: string | null; prospectId?: strin
   const or = [ids.leadId ? `lead_id.eq.${ids.leadId}` : "", ids.prospectId ? `prospect_id.eq.${ids.prospectId}` : ""].filter(Boolean).join(",");
   const { data } = await db
     .from("sales_marks")
-    .select("kind, lead_id, prospect_id, staff_id, created_at, via, amount_usd")
+    .select(MARK_FIELDS)
     .or(or)
     .order("created_at", { ascending: false })
     .limit(20);
@@ -352,7 +415,7 @@ export async function dealForLead(leadId: string): Promise<Deal | null> {
   const projectIds = rows(projectsRes).map((r) => String(r.id));
   const [mockupsRes, marksRes, pricesRes, paymentsRes] = await Promise.all([
     db.from("mockup_offers").select("lead_id, prospect_id, sent_at").or(or("prospect_id")).limit(50),
-    db.from("sales_marks").select("kind, lead_id, prospect_id, staff_id, created_at, via, amount_usd").or(or("prospect_id")).limit(50),
+    db.from("sales_marks").select(MARK_FIELDS).or(or("prospect_id")).limit(50),
     db
       .from("outreach_messages")
       .select("lead_id, prospect_id, created_at, sent_at")

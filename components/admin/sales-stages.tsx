@@ -237,6 +237,8 @@ export function markResultText(mk: string | undefined, s: S): { ok: boolean; tex
   switch (mk) {
     case "ok":
       return { ok: true, text: s.rOk };
+    case "undone":
+      return { ok: true, text: s.rUndone };
     case "forbidden":
       return { ok: false, text: s.rForbidden };
     case "bad":

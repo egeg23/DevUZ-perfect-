@@ -42,6 +42,7 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
         names={Object.fromEntries(people.map((p) => [p.id, p.display_name]))}
         now={Date.now()}
         limits={{ touch: STAFF_REPLY_MAX, bot: BOT_WRITE_MAX }}
+        me={staff.id}
       />
     </AdminShell>
   );

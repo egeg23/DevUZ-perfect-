@@ -79,7 +79,8 @@ import {
 import { activeStaff } from "@/lib/admin/team";
 import { InterestButton, PricedButton, ShownButton, markResultText } from "@/components/admin/sales-stages";
 import { salesStagesDict } from "@/content/admin-panel/sales-stages";
-import { STAGES, seesStagesMoney } from "@/lib/admin/sales-stages";
+import { STAGES, isUndoStage, seesStagesMoney } from "@/lib/admin/sales-stages";
+import { StageUndo } from "@/components/admin/stage-undo";
 import { dealForLead } from "@/lib/admin/sales-stages-store";
 import { approves, openTransferFor } from "@/lib/admin/transfers";
 
@@ -601,15 +602,38 @@ export default async function LeadPage({
           </p>
         ) : null}
         <ol className="mt-2 grid gap-1 text-sm sm:grid-cols-2">
-          {STAGES.map((st) => (
-            <li key={st} className={deal?.at[st] ? "text-text" : "text-faint"}>
-              {deal?.at[st] ? "✓" : "·"} {ss[st]}
-              {deal?.at[st] ? <span className="text-xs text-faint"> — {when(deal.at[st] as string)}</span> : null}
-              {st === "priced" && deal?.priceUsd && seesStagesMoney(staff.role) ? (
-                <span className="text-xs text-gold"> · ${deal.priceUsd}</span>
-              ) : null}
-            </li>
-          ))}
+          {STAGES.map((st) => {
+            const inner = (
+              <>
+                {deal?.at[st] ? "✓" : "·"} {ss[st]}
+                {deal?.at[st] ? <span className="text-xs text-faint"> — {when(deal.at[st] as string)}</span> : null}
+                {st === "priced" && deal?.priceUsd && seesStagesMoney(staff.role) ? (
+                  <span className="text-xs text-gold"> · ${deal.priceUsd}</span>
+                ) : null}
+              </>
+            );
+            // Пройденную ступень снимают нажатием, если отметилась по ошибке
+            // (владелец, 05.11.2026); права — как у отметок (mine).
+            return (
+              <li key={st} className={deal?.at[st] ? "text-text" : "text-faint"}>
+                {mine && deal?.at[st] && isUndoStage(st) ? (
+                  <StageUndo
+                    stage={st}
+                    leadId={lead.id}
+                    prospectId={null}
+                    back={`/admin/leads/${lead.id}`}
+                    confirm={ss.undoConfirm(ss[st])}
+                    title={ss.undoTitle}
+                    className="-mx-1 inline-flex min-h-9 items-baseline rounded-md px-1 text-left underline decoration-dotted decoration-faint underline-offset-4 transition hover:bg-surface-2"
+                  >
+                    {inner}
+                  </StageUndo>
+                ) : (
+                  inner
+                )}
+              </li>
+            );
+          })}
         </ol>
         {mine ? (
           <div className="mt-3 flex flex-wrap items-start gap-2">

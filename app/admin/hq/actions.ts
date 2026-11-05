@@ -15,8 +15,8 @@ import { decideTidy } from "@/lib/admin/lead-tidy-store";
 import { giveLead, revealContact } from "@/lib/admin/ownership";
 import { contactLink } from "@/lib/contact";
 import { opens } from "@/lib/admin/roles";
-import { MARK_KINDS, SHOWN_VIA, parseAmount, type MarkKind, type ShownVia } from "@/lib/admin/sales-stages";
-import { markStage } from "@/lib/admin/sales-stages-store";
+import { MARK_KINDS, SHOWN_VIA, isUndoStage, parseAmount, type MarkKind, type ShownVia } from "@/lib/admin/sales-stages";
+import { markStage, undoStage } from "@/lib/admin/sales-stages-store";
 import { orderFromForm, type OrderProblem } from "@/lib/admin/mockup-order";
 import { createTasks, deliverAssignment } from "@/lib/admin/task-store";
 import { QUICK_DUES, messageWindow, parseLocalInput, quickDue, type QuickDue } from "@/lib/admin/tasks";
@@ -226,6 +226,8 @@ function backOf(raw: unknown): string {
   const back = String(raw ?? "");
   // «Лиды» доской (components/admin/lead-board.tsx): отметка с карточки доски — обратно на доску.
   if (back === BOARD_HREF) return back;
+  // «Входящие»: снятие ступени в «Ходе сделки» — обратно в ту же переписку.
+  if (/^\/admin\/inbox\?c=[tb]:[A-Za-z0-9_-]{1,64}$/.test(back)) return back;
   return /^\/admin(\/[A-Za-z0-9/_-]*)?$/.test(back) ? back : HREF;
 }
 
@@ -255,4 +257,28 @@ export async function markStageAction(formData: FormData): Promise<void> {
     : "bad";
   revalidatePath(back);
   redirect(`${back}${back.includes("?") ? "&" : "?"}mk=${result}${back.startsWith("/admin/leads/") ? "#stages" : ""}`);
+}
+
+/**
+ * Снять ступень сделки нажатием — из «Хода сделки» во «Входящих» и из
+ * «Ступеней продажи» в карточке лида (владелец, 05.11.2026: «Сделай
+ * возможность откатывать менеджерам статусы, просто нажимая на статус»).
+ * Права — как у отметки (undoStage → canMark). Модели здесь нет.
+ */
+export async function undoStageAction(formData: FormData): Promise<void> {
+  const staff = await currentStaff();
+  const back = backOf(formData.get("back"));
+  if (!staff) redirect("/admin");
+  const stage = String(formData.get("stage") ?? "");
+  const id = (name: string) => {
+    const v = String(formData.get(name) ?? "");
+    return /^[0-9a-f-]{36}$/i.test(v) ? v : null;
+  };
+  const result = isUndoStage(stage)
+    ? await undoStage({ stage, leadId: id("lead"), prospectId: id("prospect") }, staff, await requestIp())
+    : "bad";
+  revalidatePath(back.split("?")[0] ?? back);
+  const sep = back.includes("?") ? "&" : "?";
+  if (back.startsWith("/admin/inbox")) redirect(`${back}${sep}done=${result === "ok" ? "undone" : result === "forbidden" ? "no_yours" : "fail"}`);
+  redirect(`${back}${sep}mk=${result === "ok" ? "undone" : result}${back.startsWith("/admin/leads/") ? "#stages" : ""}`);
 }
