@@ -65,6 +65,10 @@ export function LeadAdd({
           {t.from} <span className="text-faint/70">· {t.optional}</span>
           <input name="from" maxLength={200} placeholder={t.fromPlaceholder} className={INPUT} />
         </label>
+        <label className="block text-xs text-faint">
+          {t.promo} <span className="text-faint/70">· {t.optional}</span>
+          <input name="promo" maxLength={80} placeholder="AZIZ" autoCapitalize="characters" className={INPUT} />
+        </label>
         <label className="block text-xs text-faint sm:col-span-2">
           {t.need} <span className="text-faint/70">· {t.optional}</span>
           <textarea name="need" rows={3} maxLength={2000} placeholder={t.needPlaceholder} className={INPUT} />

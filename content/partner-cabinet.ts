@@ -142,6 +142,14 @@ export type CabinetCopy = {
   poolTop: string;
   poolEmpty: string;
   poolMark: string;
+  /** Промокод-слово (lib/partners/rules.ts, promoOf): его клиент называет вслух. */
+  codeTitle: string;
+  codeLead: (code: string) => string;
+  codeSay: (code: string, perk: string) => string;
+  codePerkLabel: string;
+  codePerkSave: string;
+  codeAsk: string;
+  codeResult: Record<"ok" | "failed", string>;
   /** Пожизненный грейд: +5 п.п. с 50 000 $ заказов (lib/partners/rules.ts, lifetimeOf). */
   lifetimeTitle: (bonus: number) => string;
   lifetimeLead: (from: string, bonus: number, agency: number) => string;
@@ -391,6 +399,14 @@ const ru: CabinetCopy = {
   poolTop: "Это верхняя ступень таблицы.",
   poolEmpty: "Копилка пока пуста — сюда лягут проекты, когда клиенты оплатят их целиком.",
   poolMark: "ставка копилки",
+  codeTitle: "Ваш промокод",
+  codeLead: (code) =>
+    `Клиент называет «${code}» менеджеру, пишет его в бот или в заявке на сайте — и он ваш, даже если не нажимал ссылку. Это же слово работает в ссылке: devuz.studio/?ref=${code}.`,
+  codeSay: (code, perk) => `Как сказать аудитории: «Назовите промокод ${code} — ${perk.toLowerCase()}».`,
+  codePerkLabel: "Скидка клиенту по промокоду",
+  codePerkSave: "Сохранить",
+  codeAsk: "Хотите другое слово — напишите нам в бот, поменяем.",
+  codeResult: { ok: "Скидка по промокоду сохранена.", failed: "Не получилось сохранить. Попробуйте ещё раз." },
   lifetimeTitle: (bonus) => `+${bonus} % навсегда`,
   lifetimeLead: (from, bonus, agency) =>
     `Когда сумма ваших заказов дойдёт до ${from}, к ставке каждого следующего проекта прибавится ${bonus} % — навсегда, без срока. У агентства ${agency} % станет ${agency + bonus} %. Считаются суммы проектов в договорах, отменённые не считаются.`,
@@ -674,6 +690,14 @@ const en: CabinetCopy = {
   poolTop: "This is the top tier of the table.",
   poolEmpty: "Your savings are empty for now — projects land here once clients pay them in full.",
   poolMark: "savings rate",
+  codeTitle: "Your promo code",
+  codeLead: (code) =>
+    `A client says “${code}” to our manager, types it in the bot or in a request on the site — and the client is yours, even without clicking a link. The same word works in a link: devuz.studio/?ref=${code}.`,
+  codeSay: (code, perk) => `What to tell your audience: “Use promo code ${code}: ${perk.toLowerCase()}.”`,
+  codePerkLabel: "Discount for the client with the promo code",
+  codePerkSave: "Save",
+  codeAsk: "Want a different word? Message us in the bot and we'll change it.",
+  codeResult: { ok: "Promo code discount saved.", failed: "Couldn't save. Please try again." },
   lifetimeTitle: (bonus) => `+${bonus}% for life`,
   lifetimeLead: (from, bonus, agency) =>
     `Once your orders add up to ${from}, every next project gets ${bonus}% on top of its rate — for life, with no end date. For an agency ${agency}% becomes ${agency + bonus}%. We count project amounts in the contracts; cancelled ones don't count.`,
@@ -957,6 +981,14 @@ const uz: CabinetCopy = {
   poolTop: "Bu jadvalning eng yuqori pog'onasi.",
   poolEmpty: "Jamg'arma hozircha bo'sh — mijozlar loyihani to'liq to'lagach, ular shu yerga tushadi.",
   poolMark: "jamg'arma stavkasi",
+  codeTitle: "Sizning promokodingiz",
+  codeLead: (code) =>
+    `Mijoz «${code}» ni menejerga aytadi, botga yoki saytdagi so'rovga yozadi — va u sizniki, havolani bosmagan bo'lsa ham. Shu so'z havolada ham ishlaydi: devuz.studio/?ref=${code}.`,
+  codeSay: (code, perk) => `Auditoriyaga qanday aytish: «${code} promokodini ayting — ${perk.toLowerCase()}».`,
+  codePerkLabel: "Promokod bo'yicha mijozga chegirma",
+  codePerkSave: "Saqlash",
+  codeAsk: "Boshqa so'z kerakmi — botda bizga yozing, almashtiramiz.",
+  codeResult: { ok: "Promokod chegirmasi saqlandi.", failed: "Saqlab bo'lmadi. Yana urinib ko'ring." },
   lifetimeTitle: (bonus) => `+${bonus} % umrbod`,
   lifetimeLead: (from, bonus, agency) =>
     `Buyurtmalaringiz summasi ${from} ga yetganda, keyingi har bir loyiha stavkasiga ${bonus} % qo'shiladi — umrbod, muddatsiz. Agentlikda ${agency} % ${agency + bonus} % bo'ladi. Shartnomadagi loyiha summalari hisoblanadi, bekor qilinganlari hisobga olinmaydi.`,
@@ -1236,6 +1268,14 @@ const zh: CabinetCopy = {
   poolTop: "这是表格的最高档。",
   poolEmpty: "存钱罐暂时是空的——客户付清项目后，项目会进入这里。",
   poolMark: "存钱罐费率",
+  codeTitle: "您的优惠码",
+  codeLead: (code) =>
+    `客户向我们的经理说出“${code}”，或在机器人、网站申请中填写它——即使没有点击链接，客户也算您的。同一个词也可用在链接里：devuz.studio/?ref=${code}。`,
+  codeSay: (code, perk) => `对受众这样说：“报优惠码 ${code}——${perk}。”`,
+  codePerkLabel: "使用优惠码的客户折扣",
+  codePerkSave: "保存",
+  codeAsk: "想换一个词？在机器人里给我们留言，我们来改。",
+  codeResult: { ok: "优惠码折扣已保存。", failed: "保存失败，请再试一次。" },
   lifetimeTitle: (bonus) => `终身 +${bonus}%`,
   lifetimeLead: (from, bonus, agency) =>
     `当您的订单总额达到 ${from} 后，此后每个新项目的费率都加 ${bonus}%——终身有效，没有期限。代理机构的 ${agency}% 将变为 ${agency + bonus}%。按合同中的项目金额计算，已取消的不计入。`,
@@ -1516,6 +1556,14 @@ const uk: CabinetCopy = {
   poolTop: "Це найвищий щабель таблиці.",
   poolEmpty: "Скарбничка поки порожня — сюди потраплять проєкти, коли клієнти оплатять їх повністю.",
   poolMark: "ставка скарбнички",
+  codeTitle: "Ваш промокод",
+  codeLead: (code) =>
+    `Клієнт називає «${code}» менеджеру, пише його в бот або в заявці на сайті — і він ваш, навіть якщо не натискав посилання. Це ж слово працює в посиланні: devuz.studio/?ref=${code}.`,
+  codeSay: (code, perk) => `Як сказати аудиторії: «Назвіть промокод ${code} — ${perk.toLowerCase()}».`,
+  codePerkLabel: "Знижка клієнту за промокодом",
+  codePerkSave: "Зберегти",
+  codeAsk: "Хочете інше слово — напишіть нам у бот, змінимо.",
+  codeResult: { ok: "Знижку за промокодом збережено.", failed: "Не вдалося зберегти. Спробуйте ще раз." },
   lifetimeTitle: (bonus) => `+${bonus} % назавжди`,
   lifetimeLead: (from, bonus, agency) =>
     `Коли сума ваших замовлень дійде до ${from}, до ставки кожного наступного проєкту додасться ${bonus} % — назавжди, без строку. В агенції ${agency} % стане ${agency + bonus} %. Рахуються суми проєктів у договорах, скасовані не рахуються.`,
@@ -1799,6 +1847,14 @@ const pl: CabinetCopy = {
   poolTop: "To najwyższy próg tabeli.",
   poolEmpty: "Skarbonka jest na razie pusta — trafią tu projekty, gdy klienci opłacą je w całości.",
   poolMark: "stawka skarbonki",
+  codeTitle: "Twój kod promocyjny",
+  codeLead: (code) =>
+    `Klient podaje „${code}” menedżerowi, wpisuje go w bocie lub w zgłoszeniu na stronie — i jest Twój, nawet jeśli nie kliknął linku. To samo słowo działa w linku: devuz.studio/?ref=${code}.`,
+  codeSay: (code, perk) => `Jak powiedzieć odbiorcom: „Podaj kod ${code} — ${perk.toLowerCase()}”.`,
+  codePerkLabel: "Rabat dla klienta z kodem",
+  codePerkSave: "Zapisz",
+  codeAsk: "Chcesz inne słowo — napisz do nas w bocie, zmienimy.",
+  codeResult: { ok: "Rabat z kodu zapisany.", failed: "Nie udało się zapisać. Spróbuj ponownie." },
   lifetimeTitle: (bonus) => `+${bonus}% na zawsze`,
   lifetimeLead: (from, bonus, agency) =>
     `Gdy suma Twoich zleceń dojdzie do ${from}, do stawki każdego kolejnego projektu dojdzie ${bonus}% — na zawsze, bez terminu. W agencji ${agency}% zmieni się w ${agency + bonus}%. Liczą się kwoty projektów z umów, anulowane się nie liczą.`,

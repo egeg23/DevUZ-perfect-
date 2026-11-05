@@ -1,7 +1,7 @@
 import { company } from "@/content/company";
 import { partnerCopy, type PartnerStats } from "@/content/partner-bot";
 import type { Locale } from "@/lib/i18n";
-import { botLink, linkUrl, shortUrl, withdrawOpens } from "@/lib/partners/rules";
+import { botLink, linkUrl, promoOf, shortUrl, withdrawOpens } from "@/lib/partners/rules";
 import { LOGIN_TOKEN_MINUTES, loginLink } from "@/lib/partners/session";
 import {
   createLink,
@@ -145,7 +145,11 @@ async function handleRef(
     const main = summary.links.find((l) => l.is_default);
     await sendMessage(
       chatId,
-      copy.intro(main?.slug ? shortUrl(siteUrl, main.slug) : linkUrl(siteUrl, partner.code), botLink(company.telegram, partner.code)),
+      copy.intro(
+        main?.slug ? shortUrl(siteUrl, main.slug) : linkUrl(siteUrl, promoOf(partner)),
+        botLink(company.telegram, promoOf(partner)),
+        promoOf(partner),
+      ),
     );
   }
   await sendMessage(chatId, copy.stats(statsOf(summary)));

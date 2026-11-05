@@ -12,6 +12,7 @@ import {
   revealContactAction,
   revealTranscriptAction,
   saveInnAction,
+  savePartnerAction,
   takeOverTalkAction,
   take,
   toggleAutoReminder,
@@ -131,7 +132,7 @@ export default async function LeadPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ r?: string; contact?: string; transcript?: string; inn?: string; mk?: string }>;
+  searchParams: Promise<{ r?: string; contact?: string; transcript?: string; inn?: string; mk?: string; pr?: string }>;
 }) {
   const staff = await requireStaff();
   const locale = staff.panel_locale;
@@ -145,6 +146,7 @@ export default async function LeadPage({
     transcript: wantsTranscript,
     inn: innResult,
     mk: markResult,
+    pr: promoResult,
   } = await searchParams;
 
   const lead = await leadById(id);
@@ -208,6 +210,16 @@ export default async function LeadPage({
   }
 
   const mine = canEdit(lead, staff);
+  // Итог «Промокод или кто привёл» (savePartnerAction → ?pr=).
+  const promoText = (code: string): string =>
+    ({
+      ok: t.promoOk,
+      void: t.promoVoid,
+      not_found: t.promoNotFound,
+      already: t.promoAlready,
+      forbidden: t.promoForbidden,
+      empty: t.promoEmpty,
+    })[code] ?? t.promoFailed;
   // Контакт и переписка свободного лида — только после «Взять себе», и
   // руководителю тоже: он в очереди наравне со всеми. Владелец — вне её.
   const reveals = canReveal(lead, staff);
@@ -874,7 +886,50 @@ export default async function LeadPage({
       <dl className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         <Field label={t.who} value={lead.contact_name} />
         <Field label={t.company} value={lead.company} />
-        <Field label={t.partner} value={partnerLabel} />
+        {/* Ничей лид — поле «Промокод или кто привёл»: клиент назвал промокод
+            менеджеру (lib/partners/store.ts, assignLeadPartner). */}
+        {mine && !lead.partner_id ? (
+          <div id="partner" className="scroll-mt-24">
+            <dt className="text-xs uppercase tracking-wider text-faint">{t.promoLabel}</dt>
+            <dd className="mt-1">
+              {/* Код без партнёра (ссылка с чужим кодом) — видно, что было. */}
+              {partnerLabel ? <p className="mb-1 text-sm text-muted">{partnerLabel}</p> : null}
+              <form action={savePartnerAction} className="flex flex-wrap items-center gap-2">
+                <input type="hidden" name="lead" value={lead.id} />
+                <input
+                  name="promo"
+                  maxLength={80}
+                  placeholder={t.promoPlaceholder}
+                  aria-label={t.promoLabel}
+                  autoCapitalize="characters"
+                  className="w-40 rounded-lg border border-line bg-surface-2 px-3 py-1.5 font-mono text-sm"
+                />
+                <SubmitButton pendingLabel={t.promoSaving} base="rounded-lg px-3 py-1.5 text-xs" tone="quiet">
+                  {t.promoSave}
+                </SubmitButton>
+              </form>
+              <p
+                data-result={promoResult ? "warn" : undefined}
+                className={`mt-1 text-xs ${promoResult ? "text-gold" : "text-faint"}`}
+              >
+                {promoResult ? promoText(promoResult) : t.promoHint}
+              </p>
+            </dd>
+          </div>
+        ) : (
+          <div id="partner" className="scroll-mt-24">
+            <dt className="text-xs uppercase tracking-wider text-faint">{t.partner}</dt>
+            <dd className="mt-1 text-sm">{partnerLabel || "—"}</dd>
+            {promoResult ? (
+              <dd
+                data-result={promoResult === "ok" ? "ok" : "warn"}
+                className={`mt-1 text-xs ${promoResult === "ok" ? "text-green" : "text-gold"}`}
+              >
+                {promoText(promoResult)}
+              </dd>
+            ) : null}
+          </div>
+        )}
         <div id="inn" className="scroll-mt-24">
           <dt className="text-xs uppercase tracking-wider text-faint">{tc.innLabel}</dt>
           {mine ? (

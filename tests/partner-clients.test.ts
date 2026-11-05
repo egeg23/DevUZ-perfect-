@@ -177,7 +177,7 @@ test("кабинет: закрепление — после проверки в�
 test("лид узнаётся по закреплению последним: агентство и ссылка важнее", () => {
   const attribute = read("lib/partners/attribute.ts");
   const agency = attribute.indexOf("await attributeAgencyLead(leadId");
-  const link = attribute.indexOf("await attributeLead(leadId, attribution.code");
+  const link = attribute.indexOf("await attributeLead(leadId, code");
   const client = attribute.indexOf("await attributeClientAndNotify(leadId)");
   assert.ok(agency > 0 && link > agency && client > link);
 

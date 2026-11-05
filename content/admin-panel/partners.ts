@@ -70,6 +70,11 @@ export const partnersResultDict = defineDict({
     uz: "Hamkor o‘chirildi: havolalar ishlamaydi, kabinet yopildi.",
     pl: "Partner usunięty: linki nie działają, panel jest zamknięty.",
   },
+  reserved: {
+    ru: "Это слово занято студией (ADMIN, DEVUZ, PROMO и подобные) — придумайте другое.",
+    uz: "Bu so‘zni studiya band qilgan (ADMIN, DEVUZ, PROMO va shunga o‘xshash) — boshqasini o‘ylab toping.",
+    pl: "To słowo jest zarezerwowane przez studio (ADMIN, DEVUZ, PROMO i podobne) — wymyśl inne.",
+  },
   staff: {
     ru: "Это Telegram сотрудника студии — партнёром сотрудник быть не может.",
     uz: "Bu studiya xodimining Telegrami — xodim hamkor bo‘la olmaydi.",
@@ -236,6 +241,13 @@ export const partnersDict = defineDict({
   blocked: { ru: "заблокирован", uz: "bloklangan", pl: "zablokowany" },
   /** Пометка у партнёра, чей Telegram — у сотрудника: такого быть не должно. */
   isStaff: { ru: "сотрудник студии", uz: "studiya xodimi", pl: "pracownik studia" },
+  // Промокод-слово партнёра (lib/partners/rules.ts, promoOf): его клиент называет вслух.
+  promoWord: { ru: "Промокод", uz: "Promokod", pl: "Kod promocyjny" },
+  promoWordHint: {
+    ru: "Слово, которое клиент называет менеджеру: латиница и цифры, до 12 знаков.",
+    uz: "Mijoz menejerga aytadigan so‘z: lotin harflari va raqamlar, 12 belgigacha.",
+    pl: "Słowo, które klient podaje menedżerowi: litery łacińskie i cyfry, do 12 znaków.",
+  },
   lifetimeBadge: {
     ru: (b: number) => `+${b}% навсегда`,
     uz: (b: number) => `+${b}% umrbod`,

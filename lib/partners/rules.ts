@@ -189,6 +189,100 @@ export function generateCode(random: () => number = Math.random, length = 7): st
   return out;
 }
 
+/* ── Промокод ───────────────────────────────────────────────────────────── */
+
+/**
+ * Промокод партнёра — слово, которое клиент может сказать вслух: AZIZ,
+ * MEDIAPRO. Владелец, 05.11.2026, на разбор «как мы поймём, что клиент от
+ * этого блогера»: «Одну ссылку нет, но остальное да, делаем».
+ *
+ * Ссылка срабатывает, только если клиент нажал её и оставил заявку на сайте
+ * или в боте с того же телефона. А у нас пишут менеджеру в Telegram и
+ * звонят — и ссылка теряется. Слово переживает любой путь: клиент называет
+ * его, менеджер вписывает в карточку лида («Промокод или кто привёл»), бот и
+ * чат на сайте узнают его в тексте («промокод AZIZ»). То же слово работает и
+ * в ссылке: devuz.studio/?ref=AZIZ, t.me/бот?start=ref_AZIZ.
+ *
+ * Хранится в partners.promo; старый случайный код (partners.code) и коды
+ * ссылок работают как раньше — уже разосланные ссылки не ломаются.
+ */
+export const PROMO_MAX = 12;
+
+/** Кириллица → латиница, как пишут имена в Узбекистане: Жасур → JASUR, Хуршид → XURSHID. */
+const TRANSLIT: Record<string, string> = {
+  а: "a", б: "b", в: "v", г: "g", д: "d", е: "e", ё: "yo", ж: "j", з: "z", и: "i", й: "y",
+  к: "k", л: "l", м: "m", н: "n", о: "o", п: "p", р: "r", с: "s", т: "t", у: "u", ф: "f",
+  х: "x", ц: "ts", ч: "ch", ш: "sh", щ: "sh", ъ: "", ы: "i", ь: "", э: "e", ю: "yu", я: "ya",
+  ғ: "g", қ: "q", ў: "o", ҳ: "h", і: "i", ї: "yi", є: "ye", ґ: "g",
+};
+
+export function latinOf(raw: string): string {
+  return [...raw.toLowerCase()].map((ch) => TRANSLIT[ch] ?? ch).join("");
+}
+
+/**
+ * Слово для промокода из имени: у человека — первое слово имени («Азиз
+ * Каримов» → AZIZ; короче трёх букв — пусто, тогда пробуют ник), у
+ * агентства — название целиком, пока влезает («Media Pro Agency» →
+ * MEDIAPRO). Зарезервированное слово — пусто: тогда промокод поставит
+ * человек в «Партнёрах».
+ */
+export function wordCode(name: string, kind: PartnerKind = "person"): string {
+  const words = latinOf(name.replace(/^@/, ""))
+    .replace(/[ʻ‘’'`]/g, "")
+    .toUpperCase()
+    .split(/[^A-Z0-9]+/)
+    .filter(Boolean)
+    .filter((w) => !LEGAL_LATIN.has(w));
+  if (!words.length) return "";
+  let word = "";
+  if (kind === "agency") {
+    for (const w of words) {
+      if (word && (word + w).length > PROMO_MAX) break;
+      word += w;
+    }
+  } else {
+    word = words[0];
+  }
+  word = word.slice(0, PROMO_MAX);
+  // С DEVUZ не начинаем: такой промокод выглядел бы как студийный.
+  return word.length >= 3 && validCode(word) && !isReserved(word) && !word.startsWith("DEVUZ") ? word : "";
+}
+
+/** Формы компаний — не слово промокода: «ООО «Ромашка»» → ROMASHKA. */
+const LEGAL_LATIN = new Set(["OOO", "OAO", "ZAO", "IP", "MCHJ", "LLC", "LTD", "INC", "AGENCY", "AGENTSTVO", "AGENTLIGI"]);
+
+/** Варианты, если слово занято: AZIZ, AZIZ2 … AZIZ99. */
+export function wordCandidates(base: string): string[] {
+  if (!base) return [];
+  const out = [base];
+  for (let n = 2; n < 100; n++) out.push(`${base.slice(0, PROMO_MAX - String(n).length)}${n}`);
+  return out;
+}
+
+/** Промокод, который видит партнёр и называет клиент: слово, а нет его — старый код. */
+export function promoOf(partner: { promo?: string | null; code: string }): string {
+  return partner.promo || partner.code;
+}
+
+/**
+ * Промокоды, которые человек назвал в тексте: «промокод AZIZ», «код: aziz»,
+ * «promokod Aziz», «промо АЗИЗ». Только после слова «промокод/код/promo»:
+ * просто имя в тексте («меня зовут Азиз») промокодом не считается. Что из
+ * этого настоящий промокод, решает база (store.ts, resolveCode).
+ */
+const PROMO_IN_TEXT =
+  /(?<![\p{L}\p{N}])(?:промо[\s-]?код|промокод|промо|код|promo[\s-]?(?:code|kod)|promocode|promokod|promo|kod|code)\s*[:=\-–—«"'“]*\s*([\p{L}\p{N}_-]{3,24})/giu;
+
+export function promosInText(text: string | null | undefined): string[] {
+  const out: string[] = [];
+  for (const m of (text ?? "").matchAll(PROMO_IN_TEXT)) {
+    const code = normalizeCode(latinOf(m[1]).replace(/[ʻ‘’'`]/g, ""));
+    if (CODE_RE.test(code) && !out.includes(code)) out.push(code);
+  }
+  return out.slice(0, 5);
+}
+
 export function linkUrl(siteUrl: string, code: string): string {
   return `${siteUrl.replace(/\/$/, "")}/?ref=${code}`;
 }

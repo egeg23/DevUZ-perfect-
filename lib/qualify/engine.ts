@@ -399,7 +399,12 @@ async function qualifyTurn(options: TurnOptions): Promise<TurnResult> {
   // контакту и компании, а не по ссылке.
   if (leadId) {
     try {
-      await attributeAndNotify(leadId, options.attribution ?? { code: null }, lead);
+      // «промокод AZIZ» в словах клиента засчитывается, если ссылки не было.
+      const said = history
+        .filter((m) => m.role === "user")
+        .map((m) => m.content)
+        .join("\n");
+      await attributeAndNotify(leadId, options.attribution ?? { code: null }, { ...lead, said });
     } catch (error) {
       console.error("partners: привязка лида", error);
     }

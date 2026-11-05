@@ -605,6 +605,51 @@ export const leadCardDict = defineDict({
     uz: (code: string) => `kod ${code} — hamkor topilmadi`,
     pl: (code: string) => `kod ${code} — nie znaleziono partnera`,
   },
+  // «Промокод или кто привёл» — менеджер вписывает, что сказал клиент.
+  promoLabel: { ru: "Промокод или кто привёл", uz: "Promokod yoki kim olib kelgan", pl: "Kod promocyjny lub kto przyprowadził" },
+  promoPlaceholder: { ru: "AZIZ", uz: "AZIZ", pl: "AZIZ" },
+  promoSave: { ru: "Записать", uz: "Yozish", pl: "Zapisz" },
+  promoSaving: { ru: "Записываю…", uz: "Yozilmoqda…", pl: "Zapisuję…" },
+  promoHint: {
+    ru: "Клиент назвал промокод или сказал, кто его привёл, — впишите. Партнёру уйдёт строка в бот, деньги ему посчитаются сами.",
+    uz: "Mijoz promokodni aytdi yoki kim olib kelganini aytdi — yozing. Hamkorga botda xabar boradi, puli o‘zi hisoblanadi.",
+    pl: "Klient podał kod promocyjny albo powiedział, kto go przyprowadził — wpisz. Partner dostanie wiadomość w bocie, pieniądze policzą się same.",
+  },
+  promoOk: {
+    ru: "Записано: клиент партнёра, партнёру ушла строка в бот.",
+    uz: "Yozildi: hamkor mijozi, hamkorga botda xabar ketdi.",
+    pl: "Zapisano: klient partnera, partner dostał wiadomość w bocie.",
+  },
+  promoVoid: {
+    ru: "Записано, но не засчитано — причина рядом с именем партнёра.",
+    uz: "Yozildi, lekin hisobga olinmadi — sababi hamkor ismi yonida.",
+    pl: "Zapisano, ale nie zaliczono — powód jest obok nazwy partnera.",
+  },
+  promoNotFound: {
+    ru: "Такого промокода нет. Проверьте у клиента, как пишется, или спросите руководителя.",
+    uz: "Bunday promokod yo‘q. Mijozdan qanday yozilishini so‘rang yoki rahbardan so‘rang.",
+    pl: "Nie ma takiego kodu. Sprawdź u klienta, jak się pisze, albo zapytaj kierownika.",
+  },
+  promoAlready: {
+    ru: "Лид уже записан на партнёра. Поменять может только владелец — в проекте.",
+    uz: "Lid allaqachon hamkorga yozilgan. Faqat egasi o‘zgartira oladi — loyihada.",
+    pl: "Lead jest już zapisany na partnera. Zmienić może tylko właściciel — w projekcie.",
+  },
+  promoForbidden: {
+    ru: "Вписать может тот, у кого лид, руководитель и владелец.",
+    uz: "Lid kimda bo‘lsa, o‘sha, rahbar va egasi yoza oladi.",
+    pl: "Wpisać może osoba, która ma leada, kierownik i właściciel.",
+  },
+  promoEmpty: {
+    ru: "Впишите промокод или имя партнёра.",
+    uz: "Promokod yoki hamkor ismini yozing.",
+    pl: "Wpisz kod promocyjny lub nazwę partnera.",
+  },
+  promoFailed: {
+    ru: "Не получилось записать. Попробуйте ещё раз.",
+    uz: "Yozib bo‘lmadi. Yana urinib ko‘ring.",
+    pl: "Nie udało się zapisać. Spróbuj jeszcze raz.",
+  },
 
   brief: { ru: "Бриф", uz: "Brif", pl: "Brief" },
   quote: { ru: "Смета", uz: "Smeta", pl: "Kosztorys" },

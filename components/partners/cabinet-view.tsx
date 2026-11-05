@@ -5,6 +5,7 @@ import type { CabinetCopy } from "@/content/partner-cabinet";
 import type { Locale } from "@/lib/i18n";
 import {
   AGENCY_PERCENT,
+  promoOf,
   LIFETIME_BONUS,
   LIFETIME_FROM_USD,
   MIN_PAYOUT_USD,
@@ -51,6 +52,7 @@ export type CabinetActions = {
   requestAgency: (formData: FormData) => Promise<void>;
   requestClient: (formData: FormData) => Promise<void>;
   setAccumulate: (formData: FormData) => Promise<void>;
+  setPromoPerk: (formData: FormData) => Promise<void>;
 };
 
 const CARD = "rounded-xl border border-white/12 bg-white/[0.03] px-5 py-5";
@@ -104,7 +106,9 @@ export function CabinetView({
   const signed = referrals.filter((x) => x.stage === "signed" || x.stage === "paid").length;
   const links = [...summary.links].sort((a, b) => Number(b.is_default) - Number(a.is_default));
   const main = links.find((l) => l.is_default) ?? links[0] ?? null;
-  const mainUrl = main ? shortUrl(siteUrl, main.slug) : `${siteUrl}/?ref=${partner.code}`;
+  const mainUrl = main ? shortUrl(siteUrl, main.slug) : `${siteUrl}/?ref=${promoOf(partner)}`;
+  // Скидка по промокоду — у основной ссылки: промокод и есть её слово.
+  const mainPerk = links.find((l) => l.is_default)?.perk ?? "none";
   const pending = summary.payouts.some((p) => p.status === "requested");
   const open = canWithdrawNow(now);
   const canRequest = open && !pending && summary.balance.available >= MIN_PAYOUT_USD && Boolean(partner.requisites);
@@ -165,6 +169,42 @@ export function CabinetView({
           <Stat label={t.statLeads} value={String(summary.leads)} />
           <Stat label={t.statSigned} value={String(signed)} />
           <Stat label={t.statPaid} value={String(summary.paidProjects)} />
+        </section>
+
+        {/* ── Промокод ───────────────────────────────────────────── */}
+        {/* Слово, которое клиент называет вслух (rules.ts, promoOf): ссылка теряется,
+            когда клиент пишет менеджеру или звонит, а промокод — нет. */}
+        <section id="promo-code" className="mt-6 scroll-mt-28 rounded-xl border border-green/40 bg-green/[0.06] px-5 py-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="font-display text-lg font-semibold">{t.codeTitle}</h2>
+            <span className="flex items-center gap-2">
+              <span id="promo-word" className="font-mono text-2xl font-semibold tracking-wider text-green">
+                {promoOf(partner)}
+              </span>
+              <CopyButton text={promoOf(partner)} label={t.copy} done={t.copied} targetId="promo-word" />
+            </span>
+          </div>
+          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted">{t.codeLead(promoOf(partner))}</p>
+          {mainPerk !== "none" ? (
+            <p className="mt-2 text-sm">{t.codeSay(promoOf(partner), t.perks[mainPerk])}</p>
+          ) : null}
+          <form action={actions.setPromoPerk} className="mt-3 flex flex-wrap items-end gap-2">
+            <input type="hidden" name="l" value={locale} />
+            <label className="text-xs text-muted">
+              {t.codePerkLabel}
+              <select name="perk" defaultValue={mainPerk} className={`mt-1 block ${INPUT}`}>
+                {PERKS.map((perk) => (
+                  <option key={perk} value={perk}>
+                    {t.perks[perk]}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button type="submit" className={BUTTON}>
+              {t.codePerkSave}
+            </button>
+          </form>
+          <p className="mt-3 text-xs text-faint">{t.codeAsk}</p>
         </section>
 
         {/* ── Навсегда +5 % ──────────────────────────────────────── */}
@@ -310,9 +350,9 @@ export function CabinetView({
           <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-muted">
             <span>{t.botLinkTitle}:</span>
             <code id="bot-link" className="font-mono text-xs text-text">
-              {botLink(company.telegram, partner.code).replace(/^https?:\/\//, "")}
+              {botLink(company.telegram, promoOf(partner)).replace(/^https?:\/\//, "")}
             </code>
-            <CopyButton text={botLink(company.telegram, partner.code)} label={t.copy} done={t.copied} targetId="bot-link" />
+            <CopyButton text={botLink(company.telegram, promoOf(partner))} label={t.copy} done={t.copied} targetId="bot-link" />
           </div>
 
           <form action={actions.createLink} className={`mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 ${CARD}`}>
@@ -629,13 +669,13 @@ export function CabinetView({
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted">{t.decksLead}</p>
           <div className="mt-5 grid gap-3 md:grid-cols-2">
             {(["studio", "program"] as const).map((deck) => {
-              const url = `${siteUrl}/${locale}/partners/deck/${deck}?ref=${partner.code}`;
+              const url = `${siteUrl}/${locale}/partners/deck/${deck}?ref=${promoOf(partner)}`;
               return (
                 <div key={deck} className={`flex flex-col ${CARD}`}>
                   <p className="font-display text-lg font-semibold">{t.decks[deck].title}</p>
                   <p className="mt-1 flex-1 text-sm leading-relaxed text-muted">{t.decks[deck].text}</p>
                   <div className="mt-4 flex flex-wrap items-center gap-2">
-                    <a href={`/${locale}/partners/deck/${deck}?ref=${partner.code}`} className={BUTTON}>
+                    <a href={`/${locale}/partners/deck/${deck}?ref=${promoOf(partner)}`} className={BUTTON}>
                       {t.deckOpen}
                     </a>
                     <span id={`deck-${deck}`} className="sr-only">
@@ -768,6 +808,10 @@ export function resultText(t: CabinetCopy, code: string): { ok: boolean; text: s
     return t.modelResult[key] ? { ok: key === "ok", text: t.modelResult[key] } : null;
   }
   if (code === "media_gone") return { ok: false, text: t.mediaGone };
+  if (code.startsWith("code_")) {
+    const key = code.slice(5) as keyof CabinetCopy["codeResult"];
+    return t.codeResult[key] ? { ok: key === "ok", text: t.codeResult[key] } : null;
+  }
   if (code.startsWith("pool_")) {
     const key = code.slice(5) as keyof CabinetCopy["poolResult"];
     return t.poolResult[key] ? { ok: key !== "failed", text: t.poolResult[key] } : null;

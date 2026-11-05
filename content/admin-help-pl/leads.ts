@@ -747,6 +747,15 @@ export const leadsSections: Record<string, HelpEntry> = {
         },
       },
       {
+        id: "partner-code",
+        title: "«Kod promocyjny lub kto przyprowadził»: klient od partnera",
+        body: [
+          "Klient powiedział, że przyprowadził go bloger lub agencja, albo podał kod promocyjny — słowo łacińskimi literami, np. AZIZ — wpisz go w karcie leada w polu **«Kod promocyjny lub kto przyprowadził»** i kliknij **«Zapisz»**. Można też wpisać nazwę partnera tak, jak jest u nas zapisana. To samo pole jest w [«Dodaj leada ręcznie»](#leads-add). Wpisać może osoba, która ma leada, kierownik i właściciel.",
+          "Co się stanie: lead zapisuje się na partnera, partner dostaje wiadomość w Telegramie, a gdy projekt z leada zostanie opłacony, policzy mu się procent — ręcznie niczego nie trzeba ustawiać. Klient, który był już w studiu (ten sam kontakt lub firma), zapisuje się z adnotacją «nie zaliczono»: partner nie dostaje za niego pieniędzy. Lead jest już zapisany na partnera — pola nie ma, zmienić może tylko właściciel w projekcie: klient należy do tego, kto został zapisany pierwszy.",
+          "Jeśli klient sam napisał „kod AZIZ” w czacie na stronie, w bocie albo w zgłoszeniu ze strony, a linku partnera nie było, lead zapisze się na partnera sam. Takiego kodu nie ma w bazie — panel powie «Nie ma takiego kodu»: sprawdź u klienta, jak się pisze, albo zapytaj kierownika.",
+        ],
+      },
+      {
         id: "timeline",
         title: "«Oś zdarzeń»: wszystko z klientem w jednym miejscu",
         body: [
