@@ -748,6 +748,15 @@ export const uz: HelpCopy = {
           },
         },
         {
+          id: "partner-code",
+          title: "«Promokod yoki kim olib kelgan»: hamkordan kelgan mijoz",
+          body: [
+            "Mijoz uni bloger yoki agentlik olib kelganini aytdi yoki promokodni — AZIZ kabi lotincha so‘zni — aytdi: lid kartochkasidagi **«Promokod yoki kim olib kelgan»** maydoniga yozing va **«Yozish»** tugmasini bosing. Hamkor ismini bizda qanday yozilgan bo‘lsa, shunday yozsa ham bo‘ladi. Xuddi shu maydon [«Lidni qo‘lda qo‘shish»](#leads-add) formasida ham bor. Lid kimda bo‘lsa, o‘sha, rahbar va egasi yoza oladi.",
+            "Nima bo‘ladi: lid hamkorga yoziladi, hamkorga Telegramda xabar boradi, lid loyihasi to‘langanda esa unga foiz hisoblanadi — qo‘lda hech narsa qo‘yish shart emas. Studiyada avval bo‘lgan mijoz (o‘sha kontakt yoki kompaniya) «hisobga olinmadi» belgisi bilan yoziladi: u bo‘yicha hamkorga pul yo‘q. Lid allaqachon hamkorga yozilgan bo‘lsa, maydon chiqmaydi, faqat egasi loyihada o‘zgartira oladi: mijoz birinchi yozilgan odamniki.",
+            "Agar mijoz o‘zi saytdagi chatda, botda yoki saytdagi so‘rovda «promokod AZIZ» deb yozsa va hamkor havolasi bo‘lmasa, lid hamkorga o‘zi yoziladi. Bunday promokod bazada bo‘lmasa, panel «Bunday promokod yo‘q» deb aytadi: mijozdan qanday yozilishini so‘rang yoki rahbardan so‘rang.",
+          ],
+        },
+        {
           id: "timeline",
           title: "«Lenta»: mijoz bilan bo‘lgan hammasi bir joyda",
           body: [
@@ -2467,6 +2476,15 @@ export const uz: HelpCopy = {
             "Kompaniyani o‘zi — havolasiz — olib keladigan hamkor uni saytdagi kabinetda, «Mening mijozlarim» blokida biriktiradi: nomi, STIR (INN, 9–12 raqam) — hamkor bilsa, mas’ul shaxs, telefon yoki Telegram (kamida bittasi), sayt va mijozga nima kerakligi. Tasdiqlash shart emas — biriktirish darhol kuchga kiradi, kim oldin biriktirsa, mijoz o‘shaniki. Buning o‘rniga so‘rov paytida baza o‘zi tekshiradi: bu kompaniya lidlar, loyihalar, shartnomalar va [Aloqalar](/admin/prospect) orasida yo‘qmi — STIR, nom, telefon, Telegram va sayt bo‘yicha — va uni boshqa hamkor yoki uning agentligi biriktirmaganmi. Qanday solishtiriladi: STIR, telefon, Telegram yoki sayt mos kelsa — bu o‘sha kompaniya. Faqat nom mos kelsa — STIR hal qiladi: ikkala tomonda ma’lum va har xil bo‘lsa, bu bir xil nomli ikki xil kompaniya, biriktirish mumkin. Hamkor STIRni ko‘rsatmagan, bizda esa shunday STIRli kompaniya bo‘lsa — u «Bunday nomli kompaniya bizda allaqachon bor. STIRni kiriting…» ni ko‘radi. Bizda STIR bo‘lmasa (STIRsiz lid yoki aloqa) — ajratishga hech narsa yo‘q va bu bizning kompaniyamiz hisoblanadi. Tekshiruvdan o‘tmasa — hamkor sababi bilan rad javobini ko‘radi («studiyada allaqachon bor», «boshqa hamkor biriktirgan»), biriktirish bo‘lmaydi. Shunday qilib biz allaqachon ishlayotgan yoki yozgan kompaniyalarni «egallab olish» mumkin emas. Bitta hamkordan oyiga 20 tadan ortiq biriktirish qabul qilinmaydi.",
             "Sizga STIR va kontakt bilan «🧾 Партнёр закрепил клиента» keladi, bu yerda esa «Hamkorlar biriktirgan mijozlar» blokida qator paydo bo‘ladi. Biriktirishdan darhol hamkor bergan hamma narsa bilan «hamkordan» ustuvor lid ochiladi — uni barcha menejerlar ko‘radi (qanday tarqatilishi — [navbat](#leads-queue) bandida). Shu daqiqadan 12 oy mijozning barcha buyurtmalari hamkorga hisoblanadi — «buyurtmalar … gacha hamkorga», hamkorga esa «🧾 Клиент … закреплён за вами и передан менеджерам» ketadi. Mijoz keyin o‘zi yozsa, uning so‘rovi ham taniladi: saytdagi formadan, chat va botdan — STIR, nom, telefon yoki Telegram mos kelsa; keyinroq ham — menejer lid kartochkasiga STIRni yozganda. Hamkorning havolasi yoki agentligi ishlagan bo‘lsa, ular biriktirishdan muhimroq. Bunday liddan ochilgan loyiha hamkorni meros oladi. 12 oy o‘tsa — «muddat tugadi»: yangi buyurtmalar oddiydek ketadi, allaqachon bog‘langanlari hamkorda qoladi, kompaniyani esa yana biriktirish mumkin.",
             "Kompaniya aslida bizniki ekanini ko‘rsangiz — u bilan paneldan tashqarida ishlaganmiz, studiya tanishlari, — sababini yozing va **«biriktirishni bekor qilish»** ni bosing. Sababsiz bekor bo‘lmaydi: uni hamkor botda oladi. Bekor qilingandan keyin mijozning yangi so‘rovlari hamkorga hisoblanmaydi; allaqachon bog‘langan lid yoki loyiha loyiha kartochkasida, «Hamkor» blokida o‘tkaziladi.",
+          ],
+        },
+        {
+          id: "code",
+          title: "Hamkor promokodi — mijoz ovoz chiqarib aytadigan so‘z",
+          body: [
+            "Har bir hamkorning **promokodi** bor — AZIZ yoki MEDIAPRO kabi lotincha so‘z. U «Barcha hamkorlar» ro‘yxatida ism ostida turadi («Promokod: …»). Hamkor ismidan o‘zi yaratiladi (ism uch harfdan qisqa bo‘lsa, nikdan); yetti belgili eski kod va barcha havolalar avvalgidek ishlaydi. Egasining 05.11.2026 dagi qarori: mijoz menejerga yozsa yoki qo‘ng‘iroq qilsa, havola yo‘qoladi, so‘z esa yo‘qolmaydi.",
+            "Qayerda ishlaydi: havolada (devuz.studio/?ref=AZIZ va botga havola), mijozning so‘zlarida — saytdagi chatda, botda va saytdagi so‘rovda «promokod AZIZ», — va lid kartochkasida, menejer uni «Promokod yoki kim olib kelgan» maydoniga yozganda ([qanday](#leads-partner-code)). Mijoz birinchi yozilgan odamniki; studiyada avval bo‘lgan mijoz hisobga olinmaydi.",
+            "So‘zni o‘zgartirish — hamkor qatorida, **«Promokod»** maydoni, «saqlash» tugmasi: lotin harflari va raqamlar, 12 belgigacha, bitta so‘z — bitta hamkor. Band yoki xizmat so‘zi (ADMIN, DEVUZ va shunga o‘xshash) saqlanmaydi, panel sababini aytadi. O‘zgartirilgandan keyin eski promokod ishlamaydi. Promokod bo‘yicha mijozga chegirmani (birinchi loyihaga 5, 10 yoki 15%) hamkor kabinetda o‘zi tanlaydi: chegirmasiz mijozlar promokodni kamroq aytadi.",
           ],
         },
         {

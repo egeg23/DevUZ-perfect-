@@ -64,6 +64,11 @@ export const AUDIT_ACTIONS = [
   "partner.agency_decided",
   "partner.agency_created",
   "partner.agency_finder",
+  // Промокод-слово партнёра и скидка по нему; «Промокод или кто привёл» в
+  // карточке лида (lib/partners/store.ts).
+  "partner.promo",
+  "partner.promo_perk",
+  "lead.partner_set",
   "partner.client_claimed",
   "partner.client_lead",
   "lead.inn_set",

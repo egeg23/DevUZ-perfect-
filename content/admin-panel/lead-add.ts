@@ -31,6 +31,8 @@ export const leadAddDict = defineDict({
     pl: "Strona dla kliniki, terminy, budżet — wszystko, czego udało się dowiedzieć",
   },
   from: { ru: "Откуда клиент", uz: "Mijoz qayerdan", pl: "Skąd jest klient" },
+  // Промокод партнёра или его имя — лид записывается на партнёра (lib/partners/store.ts, assignLeadPartner).
+  promo: { ru: "Промокод или кто привёл", uz: "Promokod yoki kim olib kelgan", pl: "Kod promocyjny lub kto przyprowadził" },
   fromPlaceholder: { ru: "Звонок, рекомендация, выставка…", uz: "Qo‘ng‘iroq, tavsiya, ko‘rgazma…", pl: "Telefon, polecenie, targi…" },
   assignee: { ru: "Кому лид", uz: "Lid kimga", pl: "Komu lead" },
   assigneeSelf: { ru: "Себе", uz: "O‘zimga", pl: "Sobie" },

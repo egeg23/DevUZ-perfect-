@@ -14,6 +14,7 @@ import {
   decidePayout,
   notifyPartner,
   partnerById,
+  setPartnerPromo,
   updatePartner,
 } from "@/lib/partners/store";
 import { agencyUntilDay } from "@/lib/partners/rules";
@@ -61,6 +62,13 @@ export async function editPartner(formData: FormData) {
   // Ставку меняет только владелец: у руководителя поля нет, и пустое
   // значение не должно её стирать.
   const owner = admin.role === "admin";
+
+  // Промокод — отдельной проверкой: слово одно на всех партнёров, коды и ссылки.
+  const promo = String(formData.get("promo") ?? "").trim();
+  if (promo && promo.toUpperCase() !== String(formData.get("promo_was") ?? "").toUpperCase()) {
+    const changed = await setPartnerPromo(partnerId, promo, admin, await requestIp());
+    if (!changed.ok) back(changed.reason);
+  }
 
   const result = await updatePartner(
     partnerId,

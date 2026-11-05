@@ -38,6 +38,12 @@ import {
   validCode,
   validRequisites,
   voidReason,
+  wordCandidates,
+  wordCode,
+  latinOf,
+  promosInText,
+  CODE_RE,
+  PROMO_MAX,
   SLUG_RE,
   type Lifetime,
   type LifetimeProject,
@@ -72,6 +78,8 @@ export type Partner = {
   username: string | null;
   name: string;
   code: string;
+  /** Промокод — слово, которое клиент называет вслух (rules.ts, promoOf). Нет — старый code. */
+  promo: string | null;
   requisites: string | null;
   status: PartnerStatus;
   percent_override: number | null;
@@ -124,7 +132,7 @@ export type PartnerPayout = {
 };
 
 const PARTNER_COLUMNS =
-  "id, created_at, telegram_user_id, username, name, code, requisites, status, percent_override, note, payout_model, model_changed_at, accumulate, kind, contact, website, brought_by, brought_at";
+  "id, created_at, telegram_user_id, username, name, code, promo, requisites, status, percent_override, note, payout_model, model_changed_at, accumulate, kind, contact, website, brought_by, brought_at";
 const LINK_COLUMNS = "id, created_at, partner_id, code, slug, target, label, perk, clicks, leads, is_default";
 const PAYOUT_COLUMNS =
   "id, created_at, partner_id, amount_usd, requisites, status, note, paid_at, decided_by, project_id";
@@ -139,6 +147,7 @@ function shapePartner(row: Record<string, unknown>): Partner {
     username: (row.username as string | null) ?? null,
     name: row.name as string,
     code: row.code as string,
+    promo: (row.promo as string | null) ?? null,
     requisites: (row.requisites as string | null) ?? null,
     status: row.status === "blocked" ? "blocked" : "active",
     percent_override: (row.percent_override as number | null) ?? null,
@@ -333,11 +342,14 @@ export async function resolveCode(
     return partner ? { partner, link } : null;
   }
 
-  const { data: partnerRow } = await db
+  const { data: byCode } = await db
     .from("partners")
     .select(PARTNER_COLUMNS)
     .eq("code", code)
     .maybeSingle();
+  // Промокод-слово (AZIZ) — тот же партнёр и его основная ссылка.
+  const partnerRow =
+    byCode ?? (await db.from("partners").select(PARTNER_COLUMNS).eq("promo", code).maybeSingle()).data;
   if (!partnerRow) return null;
   const partner = shapePartner(partnerRow as Record<string, unknown>);
   const links = await linksOf([partner.id]);
@@ -526,6 +538,39 @@ async function freeCode(db: NonNullable<ReturnType<typeof serviceClient>>): Prom
   return null;
 }
 
+/**
+ * Свободное слово для промокода из имени: AZIZ, занято — AZIZ2 и дальше.
+ * Сверяется со всеми промокодами, кодами партнёров и кодами ссылок: одно
+ * слово — один партнёр, куда бы его ни вписали. Не вышло — null, промокодом
+ * остаётся старый код.
+ */
+async function freeWord(
+  db: NonNullable<ReturnType<typeof serviceClient>>,
+  names: readonly (string | null | undefined)[],
+  kind: PartnerKind = "person",
+): Promise<string | null> {
+  // Имя, потом ник, потом имя целиком («Al Bek» → ALBEK): первое годное слово.
+  const sources = names.filter((n): n is string => Boolean(n?.trim()));
+  const bases = [...sources.map((n) => wordCode(n, kind)), ...sources.map((n) => wordCode(n, "agency"))];
+  for (const base of [...new Set(bases.filter(Boolean))]) {
+    for (const word of wordCandidates(base)) {
+      if (isReserved(word) || !validCode(word)) continue;
+      if (!(await codeTaken(db, word))) return word;
+    }
+  }
+  return null;
+}
+
+async function codeTaken(db: NonNullable<ReturnType<typeof serviceClient>>, code: string, except?: string): Promise<boolean> {
+  const [{ data: p }, { data: pr }, { data: l }] = await Promise.all([
+    db.from("partners").select("id").eq("code", code).maybeSingle(),
+    db.from("partners").select("id").eq("promo", code).maybeSingle(),
+    db.from("partner_links").select("partner_id").eq("code", code).maybeSingle(),
+  ]);
+  const owners = [p?.id, pr?.id, l?.partner_id].filter((id): id is string => typeof id === "string");
+  return owners.some((id) => id !== except);
+}
+
 /** Свободный slug короткой ссылки. Совпадение из 27 млрд — почти невероятно, но проверяем. */
 async function freeSlug(db: NonNullable<ReturnType<typeof serviceClient>>): Promise<string | null> {
   for (let attempt = 0; attempt < 8; attempt++) {
@@ -562,6 +607,7 @@ export async function ensurePartner(from: TelegramIdentity): Promise<Partner | n
 
   const code = await freeCode(db);
   if (!code) return null;
+  const promo = await freeWord(db, [from.first_name, from.username, displayName(from)]);
 
   const { data, error } = await db
     .from("partners")
@@ -570,6 +616,7 @@ export async function ensurePartner(from: TelegramIdentity): Promise<Partner | n
       username: from.username ?? null,
       name: displayName(from),
       code,
+      promo,
     })
     .select(PARTNER_COLUMNS)
     .maybeSingle();
@@ -618,17 +665,21 @@ export async function createPartner(
   if (fields.code) {
     code = normalizeCode(fields.code);
     if (!validCode(code)) return { ok: false, reason: "invalid" };
+    if (await codeTaken(db, code)) return { ok: false, reason: "taken" };
   } else {
     code = await freeCode(db);
     if (!code) return { ok: false, reason: "failed" };
   }
 
+  // Код, заданный руками словом, и есть промокод; случайный — промокод из имени.
+  const promo = fields.code ? null : await freeWord(db, [name]);
   const { data, error } = await db
     .from("partners")
     .insert({
       telegram_user_id: fields.telegramUserId,
       name,
       code,
+      promo,
       note: fields.note?.trim().slice(0, 1000) || null,
     })
     .select(PARTNER_COLUMNS)
@@ -685,8 +736,8 @@ export async function createLink(
     .eq("partner_id", partner.id);
   if ((count ?? 0) >= MAX_LINKS) return { ok: false, reason: "limit" };
 
-  const { data: clash } = await db.from("partners").select("id").eq("code", code).maybeSingle();
-  if (clash) return { ok: false, reason: "taken" };
+  // Чужой код, промокод или ссылка с тем же словом — занято; свой промокод можно.
+  if (await codeTaken(db, code, partner.id)) return { ok: false, reason: "taken" };
 
   const slug = await freeSlug(db);
   if (!slug) return { ok: false, reason: "failed" };
@@ -1381,6 +1432,122 @@ export async function setProjectPartner(
 /* ── Уведомления партнёру ───────────────────────────────────────────────── */
 
 /** Партнёру без Telegram написать некуда — молча. */
+/* ── Промокод ───────────────────────────────────────────────────────────── */
+
+export type PromoFailure = "offline" | "forbidden" | "invalid" | "reserved" | "taken" | "gone" | "failed";
+
+/**
+ * Промокод партнёра — поправить. Владелец и руководитель (PARTNER_DESK):
+ * партнёр просит своё слово — его ставят здесь. Старый промокод перестаёт
+ * работать, старый код и ссылки — нет.
+ */
+export async function setPartnerPromo(
+  partnerId: string,
+  raw: string,
+  staff: Staff,
+  ip: string,
+): Promise<{ ok: true; promo: string } | { ok: false; reason: PromoFailure }> {
+  if (!PARTNER_DESK.includes(staff.role)) return { ok: false, reason: "forbidden" };
+  const db = serviceClient();
+  if (!db) return { ok: false, reason: "offline" };
+  const promo = normalizeCode(latinOf(raw).replace(/[ʻ‘’'`]/g, ""));
+  if (!validCode(promo) || promo.length > PROMO_MAX) return { ok: false, reason: "invalid" };
+  if (isReserved(promo)) return { ok: false, reason: "reserved" };
+  if (await codeTaken(db, promo, partnerId)) return { ok: false, reason: "taken" };
+
+  const { data, error } = await db.from("partners").update({ promo }).eq("id", partnerId).select("id").maybeSingle();
+  if (error) return { ok: false, reason: error.code === "23505" ? "taken" : "failed" };
+  if (!data) return { ok: false, reason: "gone" };
+  await record("partner.promo", { actorStaffId: staff.id, targetType: "partner", targetId: partnerId, ip, meta: { promo } });
+  return { ok: true, promo };
+}
+
+/**
+ * Скидка по промокоду — та же, что у основной ссылки: промокод и есть её
+ * слово. Партнёр выбирает в кабинете, новому клиенту — на первый проект.
+ */
+export async function setPromoPerk(partner: Partner, perk: Perk): Promise<boolean> {
+  const db = serviceClient();
+  if (!db) return false;
+  const { data, error } = await db
+    .from("partner_links")
+    .update({ perk })
+    .eq("partner_id", partner.id)
+    .eq("is_default", true)
+    .select("id")
+    .maybeSingle();
+  if (error || !data) return false;
+  await record("partner.promo_perk", { targetType: "partner", targetId: partner.id, meta: { perk } });
+  return true;
+}
+
+/** Партнёр по тому, что сказал клиент: промокод, код, а нет — точное имя или название. */
+export async function partnerByWord(raw: string): Promise<{ partner: Partner; code: string } | null> {
+  const word = normalizeCode(latinOf(raw.trim()).replace(/[ʻ‘’'`]/g, ""));
+  if (CODE_RE.test(word)) {
+    const hit = await resolveCode(word);
+    if (hit) return { partner: hit.partner, code: hit.link?.code ?? hit.partner.code };
+  }
+  const key = companyKey(raw);
+  if (key.length < 3) return null;
+  const same = (await listPartners()).filter((p) => p.status === "active" && companyKey(p.name) === key);
+  return same.length === 1 ? { partner: same[0], code: same[0].code } : null;
+}
+
+/** Промокод, названный в тексте («промокод AZIZ»), — первый, который есть в базе. */
+export async function promoFromText(text: string | null | undefined): Promise<string | null> {
+  for (const code of promosInText(text)) {
+    if (await resolveCode(code)) return code;
+  }
+  return null;
+}
+
+export type LeadPartnerFailure = "offline" | "empty" | "not_found" | "already" | "failed";
+
+/**
+ * «Промокод или кто привёл» в карточке лида и в «Добавить лид вручную»:
+ * менеджер вписывает, что сказал клиент, — промокод или имя партнёра.
+ * Права (кто может править лид) проверяет действие. Лид уже чей-то — не
+ * перезаписываем: клиент того, кто записан первым; поменять — только
+ * владелец, в проекте. Проверки те же, что у ссылки (attributeLead): клиент
+ * уже был у студии или партнёр сам себя — привязка с причиной, без денег.
+ */
+export async function assignLeadPartner(
+  leadId: string,
+  raw: string,
+  staff: Staff,
+  ip: string,
+): Promise<{ ok: true; attribution: Attribution } | { ok: false; reason: LeadPartnerFailure }> {
+  const db = serviceClient();
+  if (!db) return { ok: false, reason: "offline" };
+  if (!raw.trim()) return { ok: false, reason: "empty" };
+
+  const { data: lead } = await db
+    .from("leads")
+    .select("id, partner_id, contact_handle, company")
+    .eq("id", leadId)
+    .maybeSingle();
+  if (!lead) return { ok: false, reason: "failed" };
+  if (lead.partner_id) return { ok: false, reason: "already" };
+
+  const hit = await partnerByWord(raw);
+  if (!hit) return { ok: false, reason: "not_found" };
+  const attribution = await attributeLead(leadId, hit.code, {
+    contactHandle: (lead.contact_handle as string | null) ?? null,
+    company: (lead.company as string | null) ?? null,
+  });
+  if (!attribution) return { ok: false, reason: "failed" };
+
+  await record("lead.partner_set", {
+    actorStaffId: staff.id,
+    targetType: "lead",
+    targetId: leadId,
+    ip,
+    meta: { partner: hit.partner.id, code: hit.code, said: raw.trim().slice(0, 60), void: attribution.reason },
+  });
+  return { ok: true, attribution };
+}
+
 export async function notifyPartner(partner: Partner, text: string): Promise<void> {
   if (partner.telegram_user_id === null) return;
   try {
@@ -1670,12 +1837,14 @@ export async function createAgencyPartner(
 
   const code = await freeCode(db);
   if (!code) return { ok: false, reason: "failed" };
+  const promo = await freeWord(db, [name], "agency");
   const { data, error } = await db
     .from("partners")
     .insert({
       kind: "agency",
       name,
       code,
+      promo,
       contact,
       website: fields.website.trim().slice(0, 200) || null,
       note: fields.note.trim().slice(0, 1000) || null,

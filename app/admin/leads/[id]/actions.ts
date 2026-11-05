@@ -21,7 +21,7 @@ import { queueStaffReply, takeOverTalk, type StaffReplyError } from "@/lib/admin
 import { record } from "@/lib/admin/audit";
 import { decideTransfer, requestTransfer } from "@/lib/admin/transfers";
 import { handledLabel, markLeadCards } from "@/lib/qualify/telegram";
-import { attributeClientAndNotify } from "@/lib/partners/attribute";
+import { assignAndNotify, attributeClientAndNotify } from "@/lib/partners/attribute";
 import { setLeadInn } from "@/lib/partners/store";
 import { writeToClient } from "@/lib/qualify/bot-inbox-store";
 import type { BadLink } from "@/lib/admin/our-links";
@@ -306,6 +306,29 @@ export async function decideTransferAction(formData: FormData) {
       ? `/admin/leads/${leadId}?r=${decision === "approved" ? "approved" : "declined"}`
       : `/admin/leads/${leadId}?r=${result.reason}`,
   );
+}
+
+/**
+ * «Промокод или кто привёл» в карточке лида. Вписать может тот, у кого лид,
+ * руководитель и владелец — как ИНН. Лид уже чей-то — не перезаписывается
+ * (lib/partners/store.ts, assignLeadPartner).
+ */
+export async function savePartnerAction(formData: FormData) {
+  const staff = await requireStaff();
+  const leadId = leadIdFrom(formData);
+  const lead = await leadById(leadId);
+  if (!lead) redirect("/admin");
+  if (!canEdit(lead, staff)) redirect(`/admin/leads/${leadId}?pr=forbidden#partner`);
+
+  let code = "failed";
+  try {
+    const result = await assignAndNotify(leadId, String(formData.get("promo") ?? ""), staff, await requestIp());
+    code = result.ok ? (result.attribution.reason ? "void" : "ok") : result.reason === "offline" ? "failed" : result.reason;
+  } catch (error) {
+    console.error("partners: промокод из карточки лида", error);
+  }
+  revalidatePath(`/admin/leads/${leadId}`);
+  redirect(`/admin/leads/${leadId}?pr=${code}#partner`);
 }
 
 /**

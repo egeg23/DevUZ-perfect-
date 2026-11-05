@@ -278,13 +278,14 @@ test("модель закрепляется за клиентом в день з
 test("заказ агентства — партнёру 12 месяцев с подтверждения, раньше кода и без окна в 30 дней", () => {
   const attribute = read("lib/partners/attribute.ts");
   const agency = attribute.indexOf("await attributeAgencyLead(leadId");
-  const byCode = attribute.indexOf("await attributeLead(leadId, attribution.code");
+  const byCode = attribute.indexOf("await attributeLead(leadId, code");
   assert.ok(agency > 0 && byCode > agency, "без кода в заявке заказ агентства не проверяется");
   // Закреплённый вручную клиент — после ссылки: ссылка и агентство важнее.
   const byClient = attribute.indexOf("await attributeClientAndNotify(leadId)");
   assert.ok(byClient > byCode, "закрепление клиента проверяется раньше ссылки");
   // Заявка без кода тоже доходит до проверки агентства — во всех каналах.
-  assert.match(read("lib/qualify/engine.ts"), /await attributeAndNotify\(leadId, options\.attribution \?\? \{ code: null \}, lead\);/);
+  // С текстом клиента: «промокод AZIZ» в словах засчитывается, если ссылки не было.
+  assert.match(read("lib/qualify/engine.ts"), /await attributeAndNotify\(leadId, options\.attribution \?\? \{ code: null \}, \{ \.\.\.lead, said \}\);/);
   assert.doesNotMatch(read("app/api/lead/route.ts"), /if \(ref\)[^\n]*attributeAndNotify/);
 
   const store = read("lib/partners/store.ts");
@@ -333,7 +334,8 @@ test("презентации: четыре языка, те же пункты, �
   assert.match(read("app/[locale]/partners/deck/program/page.tsx"), /PARTNER_TIERS\.map\(/);
 
   const view = read("components/partners/cabinet-view.tsx");
-  assert.match(view, /partners\/deck\/\$\{deck\}\?ref=\$\{partner\.code\}/, "клиент по презентации не засчитается партнёру");
+  // В ссылке — промокод-слово (rules.ts, promoOf): resolveCode узнаёт и его, и старый код.
+  assert.match(view, /partners\/deck\/\$\{deck\}\?ref=\$\{promoOf\(partner\)\}/, "клиент по презентации не засчитается партнёру");
   // Печать: по листу на слайд, кнопка PDF в лист не попадает.
   assert.match(read("components/partners/deck.tsx"), /@page \{ size: A4 landscape; margin: 0; \}/);
   assert.doesNotMatch(read("app/globals.css"), /size: A4 landscape/, "альбомный лист достанется счёту");

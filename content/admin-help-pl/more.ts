@@ -263,6 +263,15 @@ export const moreSections: Record<string, HelpEntry> = {
         ],
       },
       {
+        id: "code",
+        title: "Kod promocyjny partnera — słowo, które klient wypowiada na głos",
+        body: [
+          "Każdy partner ma **kod promocyjny** — słowo łacińskimi literami, np. AZIZ lub MEDIAPRO. Stoi pod nazwą w «Wszyscy partnerzy» («Kod promocyjny: …»). Tworzy się sam z imienia partnera (z nicka, gdy imię ma mniej niż trzy litery); stary siedmioznakowy kod i wszystkie linki działają jak wcześniej. Decyzja właściciela z 05.11.2026: link ginie, gdy klient pisze do menedżera lub dzwoni, a słowo nie.",
+          "Gdzie działa: w linku (devuz.studio/?ref=AZIZ i link do bota), w słowach klienta — „kod AZIZ” w czacie na stronie, w bocie i w zgłoszeniu ze strony — oraz w karcie leada, gdy menedżer wpisuje go w pole «Kod promocyjny lub kto przyprowadził» ([jak](#leads-partner-code)). Klient należy do tego, kto został zapisany pierwszy; klient, który był już w studiu, nie jest zaliczany.",
+          "Zmiana słowa — w wierszu partnera, pole **«Kod promocyjny»**, przycisk «zapisz»: litery łacińskie i cyfry, do 12 znaków, jedno słowo — jeden partner. Zajęte lub służbowe słowo (ADMIN, DEVUZ i podobne) się nie zapisze, a panel powie dlaczego. Po zmianie stary kod przestaje działać. Rabat dla klienta z kodem (5, 10 lub 15% na pierwszy projekt) partner wybiera sam w swoim panelu: bez rabatu klienci rzadziej podają kod.",
+        ],
+      },
+      {
         id: "promo",
         title: "Materiały promocyjne",
         body: [

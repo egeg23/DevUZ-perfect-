@@ -28,7 +28,8 @@ export type PartnerStats = {
 };
 
 export type PartnerCopy = {
-  intro: (link: string, botLink: string) => string;
+  /** promo — слово, которое клиент называет вслух (lib/partners/rules.ts, promoOf). */
+  intro: (link: string, botLink: string, promo: string) => string;
   stats: (s: PartnerStats) => string;
   linkCreated: (code: string, url: string) => string;
   linkFailed: (reason: LinkFailure) => string;
@@ -66,7 +67,7 @@ function tiers(upTo: (n: string) => string, over: (n: string) => string, profit:
 }
 
 const ru: PartnerCopy = {
-  intro: (link, botLink) =>
+  intro: (link, botLink, promo) =>
     [
       "🤝 <b>Партнёрская программа DevUz Studio</b>",
       "",
@@ -79,6 +80,8 @@ const ru: PartnerCopy = {
       "",
       "<b>Ссылка в этот бот:</b>",
       botLink,
+      "",
+      `<b>Ваш промокод:</b> <code>${promo}</code> — клиент называет его менеджеру, пишет в бот или в заявке на сайте, и он ваш, даже без ссылки. Скидку клиенту по промокоду выберите в кабинете: /cabinet.`,
       "",
       `Клиент приходит по ссылке и в течение ${REF_TTL_DAYS} дней оставляет заявку на сайте или пишет сюда — он ваш. Когда его проект оплачен целиком, начисление появляется здесь — команда /ref. Вывод — с первого рабочего дня месяца, команда /payout.`,
       "",
@@ -165,7 +168,7 @@ const ru: PartnerCopy = {
 };
 
 const en: PartnerCopy = {
-  intro: (link, botLink) =>
+  intro: (link, botLink, promo) =>
     [
       "🤝 <b>DevUz Studio partner program</b>",
       "",
@@ -178,6 +181,8 @@ const en: PartnerCopy = {
       "",
       "<b>Your link to this bot:</b>",
       botLink,
+      "",
+      `<b>Your promo code:</b> <code>${promo}</code> — a client says it to our manager or types it in the bot or a request on the site, and the client is yours, even without the link. Pick the client discount for it in your dashboard: /cabinet.`,
       "",
       `A client who opens your link and leaves a request on the site or writes here within ${REF_TTL_DAYS} days is yours. Once their project is paid in full, the accrual shows up here — /ref. Withdrawals open on the first business day of each month — /payout.`,
       "",

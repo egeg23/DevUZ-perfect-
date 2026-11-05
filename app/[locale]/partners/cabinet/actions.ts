@@ -9,6 +9,7 @@ import { currentPartner } from "@/lib/partners/session";
 import { createPartnerLead, partnerLeadNotice } from "@/lib/partners/priority-lead";
 import { clientUntilDay } from "@/lib/partners/rules";
 import {
+  setPromoPerk,
   createLink,
   notifyPartner,
   requestAgency,
@@ -164,6 +165,17 @@ export async function requestClientAction(formData: FormData) {
 }
 
 /** Тумблер копилки: «не забирать в автоматическом режиме». */
+/** Скидка клиенту по промокоду — у основной ссылки (store.ts, setPromoPerk). */
+export async function setPromoPerkAction(formData: FormData) {
+  const locale = localeOf(formData);
+  const partner = await currentPartner();
+  if (!partner) redirect(`/${locale}/partners/cabinet`);
+
+  const perk = String(formData.get("perk") ?? "none");
+  const ok = isPerk(perk) && (await setPromoPerk(partner, perk));
+  back(locale, ok ? "code_ok" : "code_failed", "promo-code");
+}
+
 export async function setAccumulateAction(formData: FormData) {
   const locale = localeOf(formData);
   const partner = await currentPartner();

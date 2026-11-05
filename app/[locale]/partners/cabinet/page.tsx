@@ -8,6 +8,7 @@ import {
   requestPayoutAction,
   saveRequisitesAction,
   setAccumulateAction,
+  setPromoPerkAction,
   switchModelAction,
 } from "./actions";
 import { CabinetView, resultText } from "@/components/partners/cabinet-view";
@@ -98,6 +99,7 @@ export default async function CabinetPage({
         requestAgency: requestAgencyAction,
         requestClient: requestClientAction,
         setAccumulate: setAccumulateAction,
+        setPromoPerk: setPromoPerkAction,
       }}
     />
   );

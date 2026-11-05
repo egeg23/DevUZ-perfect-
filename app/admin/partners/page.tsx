@@ -11,6 +11,7 @@ import { partnerClientsDict } from "@/content/admin-panel/partner-clients";
 import { PartnerClientsBlock } from "@/components/admin/partner-clients";
 import {
   AGENCY_PERCENT,
+  promoOf,
   LIFETIME_BONUS,
   MIN_PAYOUT_USD,
   PARTNER_TIERS,
@@ -330,6 +331,9 @@ export default async function PartnersPage({
                     {" · "}
                     {t.since(when(partner.created_at, locale))}
                   </span>
+                  <span className="block font-mono text-xs text-green">
+                    {t.promoWord}: {promoOf(partner)}
+                  </span>
                   {partner.note ? <span className="block text-xs text-muted">{partner.note}</span> : null}
                 </td>
                 <td data-label={t.colLinks} className={`${TD} text-xs`}>
@@ -415,6 +419,17 @@ export default async function PartnersPage({
                         <option value="blocked">{t.blocked}</option>
                       </select>
                     </div>
+                    <label className="flex items-center gap-2 text-xs text-faint" title={t.promoWordHint}>
+                      {t.promoWord}
+                      <input type="hidden" name="promo_was" value={promoOf(partner)} />
+                      <input
+                        name="promo"
+                        maxLength={24}
+                        defaultValue={promoOf(partner)}
+                        aria-label={t.promoWord}
+                        className={`${SMALL} w-32 font-mono uppercase`}
+                      />
+                    </label>
                     <input name="requisites" maxLength={200} placeholder={t.requisitesPh} defaultValue={partner.requisites ?? ""} className={`${SMALL} w-full`} />
                     <input name="note" maxLength={1000} placeholder={t.noteTermsPh} defaultValue={partner.note ?? ""} className={`${SMALL} w-full`} />
                     <button type="submit" className="self-start text-xs text-faint hover:text-green">

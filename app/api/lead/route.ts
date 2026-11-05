@@ -142,7 +142,12 @@ export async function POST(request: Request) {
   // Без кода тоже: заказ от агентства партнёра узнаётся по контакту.
   if (leadId) {
     try {
-      await attributeAndNotify(leadId, { code: ref, at: ref && mark?.code === ref ? mark.at : null }, lead);
+      await attributeAndNotify(
+        leadId,
+        { code: ref, at: ref && mark?.code === ref ? mark.at : null },
+        // «промокод AZIZ» в тексте заявки — если ссылки не было.
+        { ...lead, said: message },
+      );
     } catch (error) {
       console.error("partners: привязка лида из формы", error);
     }

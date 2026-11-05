@@ -1,4 +1,5 @@
 import { partnerCopy } from "@/content/partner-bot";
+import type { Staff } from "@/lib/admin/session";
 import {
   AGENCY_PERCENT,
   DEFAULT_MODEL,
@@ -17,7 +18,9 @@ import {
   attributeLead,
   notifyPartner,
   partnerById,
+  assignLeadPartner,
   partnerHistory,
+  promoFromText,
   summarize,
   type Attribution,
 } from "@/lib/partners/store";
@@ -35,7 +38,12 @@ import { serviceClient } from "@/lib/supabase";
 export async function attributeAndNotify(
   leadId: string,
   attribution: { code: string | null; at?: number | null; telegramId?: number | null; chatId?: number | null },
-  lead: { contact_handle?: string | null; company?: string | null },
+  lead: {
+    contact_handle?: string | null;
+    company?: string | null;
+    /** Что клиент написал сам: «промокод AZIZ» в тексте засчитывается, если ссылки не было. */
+    said?: string | null;
+  },
 ): Promise<Attribution | null> {
   // Первым — само агентство-партнёр студии (15% с суммы проекта): оно пишет
   // нам напрямую, его контакт или название сошлись.
@@ -70,8 +78,20 @@ export async function attributeAndNotify(
     return { partner: fromAgency.partner, link: null, reason: null };
   }
 
-  const result = attribution.code
-    ? await attributeLead(leadId, attribution.code, {
+  // Ссылки не было — может, клиент назвал промокод словами («промокод
+  // AZIZ»). Только если лид ещё ничей: клиент того, кто записан первым.
+  let code = attribution.code;
+  let spoken = false;
+  if (!code && lead.said) {
+    const word = await promoFromText(lead.said);
+    if (word && !(await leadHasPartner(leadId))) {
+      code = word;
+      spoken = true;
+    }
+  }
+
+  const result = code
+    ? await attributeLead(leadId, code, {
         refAt: attribution.at ? new Date(attribution.at * 1000) : null,
         telegramId: attribution.telegramId ?? null,
         chatId: attribution.chatId ?? null,
@@ -85,7 +105,9 @@ export async function attributeAndNotify(
     const perk = result.link && result.link.perk !== "none" ? `\nОбещанный бонус: ${PERK_TITLE[result.link.perk]}.` : "";
     await notifyPartner(
       result.partner,
-      `🤝 По вашей ссылке пришёл ${who}.${perk}\nКогда проект будет оплачен целиком, начисление появится в /ref.`,
+      spoken
+        ? `🤝 Клиент назвал ваш промокод ${esc(code ?? "")}: пришёл ${who}.${perk}\nКогда проект будет оплачен целиком, начисление появится в /ref.`
+        : `🤝 По вашей ссылке пришёл ${who}.${perk}\nКогда проект будет оплачен целиком, начисление появится в /ref.`,
     );
     return result;
   }
@@ -94,6 +116,39 @@ export async function attributeAndNotify(
   // агентство, если сработали, важнее; не засчитанная ссылка — нет.
   const fromClient = await attributeClientAndNotify(leadId);
   return fromClient ?? result;
+}
+
+async function leadHasPartner(leadId: string): Promise<boolean> {
+  const db = serviceClient();
+  if (!db) return true;
+  const { data } = await db.from("leads").select("partner_id").eq("id", leadId).maybeSingle();
+  return Boolean(data?.partner_id);
+}
+
+/**
+ * «Промокод или кто привёл» — менеджер вписал в карточку лида или при
+ * «Добавить лид вручную». Засчитано — партнёру строка в бот, как по ссылке.
+ */
+export async function assignAndNotify(
+  leadId: string,
+  raw: string,
+  staff: Staff,
+  ip: string,
+): ReturnType<typeof assignLeadPartner> {
+  const result = await assignLeadPartner(leadId, raw, staff, ip);
+  if (result.ok && !result.attribution.reason) {
+    const db = serviceClient();
+    const { data } = db ? await db.from("leads").select("company").eq("id", leadId).maybeSingle() : { data: null };
+    const company = String(data?.company ?? "").trim();
+    const who = company ? `«${esc(company)}»` : "новый клиент";
+    const link = result.attribution.link;
+    const perk = link && link.perk !== "none" ? `\nОбещанный бонус: ${PERK_TITLE[link.perk]}.` : "";
+    await notifyPartner(
+      result.attribution.partner,
+      `🤝 Ваш клиент записан на вас: ${who} назвал менеджеру ваш промокод.${perk}\nКогда проект будет оплачен целиком, начисление появится в /ref.`,
+    );
+  }
+  return result;
 }
 
 /**

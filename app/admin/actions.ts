@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { record } from "@/lib/admin/audit";
 import { currentStaff, requestIp, requireStaff } from "@/lib/admin/guard";
 import { addManualLead } from "@/lib/admin/lead-add";
+import { assignAndNotify } from "@/lib/partners/attribute";
 import { PANEL_LANG_COOKIE, isPanelLocale } from "@/lib/admin/i18n";
 import { SESSION_COOKIE, destroySession, setStaffLocale, setStaffNavClassic } from "@/lib/admin/session";
 
@@ -83,8 +84,21 @@ export async function addLead(formData: FormData) {
     await requestIp(),
   );
   if (result.ok) {
+    // «Промокод или кто привёл»: клиент назвал партнёра — лид его
+    // (lib/partners/attribute.ts, assignAndNotify). Итог — в карточке лида.
+    const promo = text("promo").trim();
+    let pr = "";
+    if (promo) {
+      try {
+        const assigned = await assignAndNotify(result.id, promo, staff, await requestIp());
+        pr = assigned.ok ? (assigned.attribution.reason ? "void" : "ok") : assigned.reason === "offline" ? "failed" : assigned.reason;
+      } catch (error) {
+        console.error("partners: промокод при добавлении лида", error);
+        pr = "failed";
+      }
+    }
     revalidatePath("/admin");
-    redirect(`/admin/leads/${result.id}`);
+    redirect(pr ? `/admin/leads/${result.id}?pr=${pr}#partner` : `/admin/leads/${result.id}`);
   }
   redirect(`/admin?add=${result.reason}#add-lead`);
 }
