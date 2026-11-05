@@ -44,7 +44,9 @@ test("по дате новые сверху; на сайте — сначала 
   // SamAuto — первым: кейс с живым прототипом (владелец, 21.10.2026).
   assert.deepEqual(home.map((c) => c.slug), ["samauto", "jiguli", "syanie-severa", "tovar", "sia", "amani"]);
   assert.ok(home.every((c) => coverRank(c) === 0), "на главной карточка без ролика");
-  assert.deepEqual(casesByDate.slice(0, 4).map((c) => c.slug), ["samauto", "usemtau", "jiguli", "semtravel"]);
+  // Макеты 30.10-04.11.2026 (05.11.2026: «добавь … в раздел кейсов тоже») —
+  // со снимками, без ролика: по дате они сверху, на главной ролики прежние.
+  assert.deepEqual(casesByDate.slice(0, 4).map((c) => c.slug), ["samist-auto", "agora", "cargo-pro", "optimal-prime"]);
   assert.ok(casesByDate.find((c) => c.slug === "ig-hub")?.demo, "хаб — демо, не клиент");
   // Главная, список и «следующий проект» берут порядок сайта; презентация
   // для партнёров — список без заставок, в ней шесть самых свежих.
