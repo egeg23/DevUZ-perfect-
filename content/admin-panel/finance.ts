@@ -180,9 +180,9 @@ export const financeDict = defineDict({
   },
   poolEarned: { ru: "Пришло студии", uz: "Studiyaga kelgan", pl: "Wpłynęło do studia" },
   poolEarnedNote: {
-    ru: "после начислений команде",
-    uz: "jamoaga hisoblanmalardan keyin",
-    pl: "po naliczeniach dla zespołu",
+    ru: "после начислений команде и долей партнёров и агентств",
+    uz: "jamoaga hisoblanmalar va hamkorlar hamda agentliklar ulushidan keyin",
+    pl: "po naliczeniach dla zespołu i udziałach partnerów i agencji",
   },
   poolFrozen: { ru: "Ещё не оплачено", uz: "Hali to‘lanmagan", pl: "Jeszcze nieopłacone" },
   poolFrozenNote: {

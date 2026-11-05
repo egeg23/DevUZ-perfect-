@@ -302,3 +302,22 @@ test("миграция: отметки на карточке, неделя-ни�
   assert.match(sql, /autopilot_weeks enable row level security/);
   assert.match(sql, /autopilot_settings enable row level security/);
 });
+
+test("автопрогон с главного аккаунта не пишет — только с дополнительных", async () => {
+  // Владелец, 05.11.2026: «Отключи авто прогон с основного аккаунта», затем «Правило сделай».
+  const { AUTOPILOT_ON_MAIN, MAIN_ACCOUNT, takesAutopilot } = await import("@/lib/admin/work-accounts");
+  assert.equal(AUTOPILOT_ON_MAIN, false);
+  assert.equal(takesAutopilot(MAIN_ACCOUNT), false);
+  assert.equal(takesAutopilot("9189a36e-3f69-48d4-a530-fdd741326abc"), true);
+
+  const src = (file: string) => readFileSync(new URL(`../${file}`, import.meta.url), "utf8");
+  // Очередь: «Здравствуйте» автопрогона главный аккаунт пропускает.
+  assert.match(
+    src("lib/admin/outreach-queue.ts"),
+    /if \(\(row as \{ autopilot_at\?: string \| null \}\)\.autopilot_at && !takesAutopilot\(account\)\) continue;/,
+  );
+  // Писать некому — автопрогон не готовит письма впрок.
+  const store = src("lib/admin/autopilot-store.ts");
+  assert.match(store, /if \(!\(await autopilotAccountReady\(db, now\)\)\) return \{ \.\.\.run, skipped: "no_account" \};/);
+  assert.match(store, /\.from\("tg_accounts"\)\.select\("id, flood_until"\)\.eq\("status", "active"\)/);
+});

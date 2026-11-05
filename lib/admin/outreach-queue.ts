@@ -9,7 +9,7 @@ import {
   isStopError,
   type RouteKind,
 } from "@/lib/admin/outreach";
-import { DISPATCH_STALE_MS, MAIN_ACCOUNT, accountOf, mayTake } from "@/lib/admin/work-accounts";
+import { DISPATCH_STALE_MS, MAIN_ACCOUNT, accountOf, mayTake, takesAutopilot } from "@/lib/admin/work-accounts";
 import { queueEtas, type Eta, type EtaAccount } from "@/lib/admin/queue-eta";
 import { isFrozenError } from "@/lib/admin/tg-frozen";
 import { mainLimitUntil } from "@/lib/admin/account-ban-store";
@@ -239,6 +239,8 @@ export async function nextQueued(
     for (const row of data ?? []) {
       const by = (row as { claimed_by?: string | null }).claimed_by ?? null;
       if (by && !mayTake(account, assigned.get(by))) continue;
+      // «Здравствуйте» автопрогона главный аккаунт не берёт (AUTOPILOT_ON_MAIN).
+      if ((row as { autopilot_at?: string | null }).autopilot_at && !takesAutopilot(account)) continue;
       const job = toQueued(row as Record<string, unknown>, hellos);
       if (job && (await take(db, job.id, account, now))) return job;
     }

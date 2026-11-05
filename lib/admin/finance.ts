@@ -398,6 +398,11 @@ export type FoundersPool = {
  *
  * Расходы вычитаются ДО деления — и именно поэтому реклама ложится на
  * соучредителей ровно в их пропорции сама, без отдельного правила.
+ *
+ * Доли партнёров и агентств — тоже до деления (владелец, 05.11.2026:
+ * «Вычитать деньги до деления — да»): это деньги, которые студия отдаёт
+ * тому, кто привёл клиента, и делить их между соучредителями нельзя. До
+ * этого строка проекта и «Остаётся владельцу» их вычитали, а котёл — нет.
  */
 export function foundersPool(
   projects: readonly ProjectMoney[],
@@ -406,9 +411,13 @@ export function foundersPool(
   expenses: readonly Expense[],
   /** Премии за сделки месяца — тоже уходят из того, что остаётся студии. */
   bonuses: readonly Bonus[] = [],
+  /** Доли партнёров и агентств по проектам (lib/partners/rules.ts, partnerAccrualOf). */
+  partners: readonly Pick<Accrual, "project_id" | "amount_usd">[] = [],
 ): FoundersPool {
   let earned = 0;
   let frozen = 0;
+  const toPartners = new Map<string, number>();
+  for (const line of partners) toPartners.set(line.project_id, (toPartners.get(line.project_id) ?? 0) + line.amount_usd);
 
   for (const project of projects) {
     const state = accrualState(project, paidOf(project.id, payments));
@@ -416,9 +425,10 @@ export function foundersPool(
 
     const remainder = ownerShare(project, [...accruals]);
     if (remainder === null) continue;
+    const left = remainder - (toPartners.get(project.id) ?? 0);
 
-    if (state === "earned") earned += remainder;
-    else frozen += remainder;
+    if (state === "earned") earned += left;
+    else frozen += left;
   }
 
   earned -= bonuses.reduce((sum, b) => sum + b.amount_usd, 0);
