@@ -5,6 +5,10 @@ import type { CabinetCopy } from "@/content/partner-cabinet";
 import type { Locale } from "@/lib/i18n";
 import {
   AGENCY_PERCENT,
+  CHOOSABLE_MODELS,
+  CLIENT_CLAIMS,
+  PARTNER_AGENCIES,
+  POOL,
   promoOf,
   LIFETIME_BONUS,
   LIFETIME_FROM_USD,
@@ -121,6 +125,8 @@ export function CabinetView({
   const poolRate = tierPercent(poolTotal, partner.payout_model);
   const poolNext = nextPoolTier(poolTotal, partner.payout_model);
   const claimedThisMonth = clients.filter((c) => tashkentMonth(new Date(c.created_at)) === month).length;
+  // Модели в таблице: те, что можно выбрать, и та, что стоит у партнёра (старая «от прибыли»).
+  const shownModels = PAYOUT_MODELS.filter((m) => CHOOSABLE_MODELS.includes(m) || m === partner.payout_model);
 
 
   return (
@@ -230,11 +236,13 @@ export function CabinetView({
         ) : null}
 
         {/* ── Модель дохода ──────────────────────────────────────── */}
-        {partner.percent_override === null ? (
+        {/* С 05.11.2026 модель одна — с оборота (rules.ts, CHOOSABLE_MODELS); у агентства
+            своя ставка, таблицы ему не показываем. Старая «от прибыли» видна, пока стоит. */}
+        {partner.percent_override === null && partner.kind !== "agency" ? (
           <section id="model" className={`mt-6 scroll-mt-28 ${CARD}`}>
             <h2 className="font-display text-lg font-semibold">{t.tiersTitle}</h2>
-            <div className="mt-4 grid gap-3 md:grid-cols-2">
-              {PAYOUT_MODELS.map((model) => {
+            <div className={`mt-4 grid gap-3 ${shownModels.length > 1 ? "md:grid-cols-2" : ""}`}>
+              {shownModels.map((model) => {
                 const current = partner.payout_model === model;
                 return (
                   <div
@@ -270,7 +278,7 @@ export function CabinetView({
                         ))}
                       </tbody>
                     </table>
-                    {!current && switchable ? (
+                    {!current && switchable && CHOOSABLE_MODELS.includes(model) ? (
                       <form action={actions.switchModel} className="mt-3">
                         <input type="hidden" name="l" value={locale} />
                         <input type="hidden" name="model" value={model} />
@@ -284,7 +292,12 @@ export function CabinetView({
               })}
             </div>
             <p className="mt-3 text-xs leading-relaxed text-faint">
-              {t.modelFixed} {nextSwitch ? t.modelNext(day(nextSwitch.toISOString())) : null} {t.tiersNote}
+              {shownModels.length > 1 ? (
+                <>
+                  {t.modelFixed} {nextSwitch ? t.modelNext(day(nextSwitch.toISOString())) : null}{" "}
+                </>
+              ) : null}
+              {t.tiersNote}
             </p>
           </section>
         ) : null}
@@ -424,7 +437,8 @@ export function CabinetView({
 
         {/* ── Выплата ────────────────────────────────────────────── */}
         {/* ── Копилка ─────────────────────────────────────────────── */}
-        {partner.percent_override === null ? (
+        {/* Копилки нет с 05.11.2026 (rules.ts, POOL). */}
+        {POOL && partner.percent_override === null ? (
           <section id="pool" className={`mt-12 scroll-mt-28 ${CARD}`}>
             <form action={actions.setAccumulate} className="flex items-center justify-between gap-4">
               <input type="hidden" name="l" value={locale} />
@@ -525,6 +539,9 @@ export function CabinetView({
         </section>
 
         {/* ── Агентства ──────────────────────────────────────────── */}
+        {/* Новых агентств партнёра нет с 05.11.2026 (rules.ts, PARTNER_AGENCIES):
+            уже подключённые видны, пока они есть. */}
+        {PARTNER_AGENCIES || agencies.length ? (
         <section id="agencies" className="mt-12 scroll-mt-28">
           <h2 className="font-display text-2xl font-semibold">{t.agenciesTitle}</h2>
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted">{t.agenciesLead}</p>
@@ -553,6 +570,7 @@ export function CabinetView({
           ) : (
             <p className="mt-4 text-sm text-faint">{t.agenciesEmpty}</p>
           )}
+          {PARTNER_AGENCIES ? (
           <form action={actions.requestAgency} className={`mt-4 grid gap-4 sm:grid-cols-2 ${CARD}`}>
             <input type="hidden" name="l" value={locale} />
             <label className="flex flex-col gap-1.5 text-sm">
@@ -577,9 +595,14 @@ export function CabinetView({
               </button>
             </div>
           </form>
+          ) : null}
         </section>
+        ) : null}
 
         {/* ── Клиенты, закреплённые вручную ─────────────────────── */}
+        {/* Закреплений по ИНН нет с 05.11.2026 (rules.ts, CLIENT_CLAIMS): клиент называет
+            промокод. Уже закреплённые видны, пока они есть. */}
+        {CLIENT_CLAIMS || clients.length ? (
         <section id="claims" className="mt-12 scroll-mt-28">
           <h2 className="font-display text-2xl font-semibold">{t.claimsTitle}</h2>
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted">{t.claimsLead}</p>
@@ -617,6 +640,7 @@ export function CabinetView({
           ) : (
             <p className="mt-4 text-sm text-faint">{t.claimsEmpty}</p>
           )}
+          {CLIENT_CLAIMS ? (
           <form action={actions.requestClient} className={`mt-4 grid gap-4 sm:grid-cols-2 ${CARD}`}>
             <input type="hidden" name="l" value={locale} />
             <label className="flex flex-col gap-1.5 text-sm">
@@ -661,7 +685,9 @@ export function CabinetView({
               <span className="text-xs text-faint">{t.claimsLimit(claimedThisMonth, MAX_CLIENTS_PER_MONTH)}</span>
             </div>
           </form>
+          ) : null}
         </section>
+        ) : null}
 
         {/* ── Презентации ────────────────────────────────────────── */}
         <section id="decks" className="mt-12 scroll-mt-28">

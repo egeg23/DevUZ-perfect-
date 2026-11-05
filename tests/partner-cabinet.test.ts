@@ -347,8 +347,11 @@ test("агентство — любая компания с регулярным
   // (IT, маркетинг и т. д.)… укажи, что мы можем работать субподрядчиком
   // на тендерных заказах в сфере IT».
   const ru = deckCopy("ru").program;
-  assert.match(ru.ways[2].text, /IT-компания/);
-  assert.match(ru.agencyText, /IT-компаниям/);
+  // С 05.11.2026 партнёр агентство не подключает (PARTNER_AGENCIES): у агентства
+  // свои условия, 15% (AGENCY_PERCENT), третий способ привести клиента — промокод.
+  assert.match(ru.ways[2].text, /AZIZ/);
+  assert.match(ru.agencyText(15), /IT-компаниям.*15 %/);
+  assert.match(read("app/[locale]/partners/deck/program/page.tsx"), /t\.agencyText\(AGENCY_PERCENT\)/);
   assert.match(cabinetCopy("ru").agenciesLead, /IT-компанию.*генподрядчика IT-тендеров/);
   for (const locale of locales) {
     const program = deckCopy(locale).program;

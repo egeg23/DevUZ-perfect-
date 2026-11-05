@@ -5,7 +5,7 @@ import { BLOGGER_MODEL, BLOGGER_SITE } from "@/lib/bloggers/judge";
 import { programTerms, type PitchLang } from "@/lib/bloggers/rules";
 import { anthropic } from "@/lib/model-road";
 import { effortFor } from "@/lib/model-limits";
-import { MODEL_SWITCH_DAYS, PARTNER_TIERS, REF_TTL_DAYS } from "@/lib/partners/rules";
+import { PARTNER_TIERS, REF_TTL_DAYS } from "@/lib/partners/rules";
 
 /**
  * Один ход переписки агента с блогером — в Direct студии или в Telegram.
@@ -46,14 +46,14 @@ export function programFacts(lang: PitchLang, siteUrl: string): string {
   const tiers = PARTNER_TIERS.map((tier, i) => {
     const from = i === 0 ? "" : `от ${PARTNER_TIERS[i - 1].upTo} $ `;
     const to = tier.upTo === null ? "и дороже" : `до ${tier.upTo} $`;
-    return `- проект ${from}${to}: ${tier.profit}% от прибыли или ${tier.turnover}% от суммы`;
+    return `- проект ${from}${to}: ${tier.turnover}% от суммы`;
   });
   return [
     `Студия DevUz (${host}): сайты, интернет-магазины и Telegram-боты для бизнеса в Узбекистане.`,
     "Партнёрская программа: блогер получает личную ссылку и рекомендует студию. Клиент пришёл по ссылке и оплатил проект — блогер получает процент с каждой оплаты.",
-    `Две модели на выбор: от прибыли проекта (от ${t.profitFrom} до ${t.profitTo}%) или от суммы проекта (от ${t.turnoverFrom} до ${t.turnoverTo}%). Процент зависит от суммы проекта:`,
+    `Процент — от суммы проекта (суммы договора), от ${t.turnoverFrom} до ${t.turnoverTo}%. Чем крупнее проект, тем выше процент:`,
     ...tiers,
-    `Модель можно менять не чаще раза в ${MODEL_SWITCH_DAYS} дней; она действует на новых клиентов.`,
+    "Ещё есть промокод: слово из имени блогера, клиент называет его менеджеру или пишет в заявке, и он засчитывается блогеру даже без ссылки.",
     `Клиент закрепляется за блогером на ${REF_TTL_DAYS} дней после перехода по ссылке.`,
     `Выплата от ${t.minPayout} $.`,
     `Условия целиком: ${host}/${lang}/partners`,

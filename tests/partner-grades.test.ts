@@ -42,7 +42,7 @@ test("уровень — по проектам или обороту за 12 м�
 
 test("документ на бланке называет те же пороги", () => {
   const doc = read("kp/partner-grades.html");
-  for (const phrase of ["3 оплативших клиента", "10 000 $", "30 000 $", "7 оплативших клиентов", "+6 п.п.", "36 % от прибыли", "26 % с оборота"]) {
+  for (const phrase of ["3 оплативших клиента", "10 000 $", "30 000 $", "7 оплативших клиентов", "+6 п.п.", "26 % с суммы проекта"]) {
     assert.ok(doc.includes(phrase), `в kp/partner-grades.html нет «${phrase}»`);
   }
 });
@@ -53,7 +53,7 @@ test("презентация называет каждый уровень на �
     for (const list of Object.values(GRADES)) {
       for (const g of list) assert.ok(t.gradeNames[g.key], `${locale}: нет названия уровня ${g.key}`);
     }
-    assert.ok(t.gradesNote(36, 26).includes("36"));
+    assert.ok(t.gradesNote(26).includes("26"));
   }
   assert.match(read("app/[locale]/partners/deck/program/page.tsx"), /GRADES\[kind\]/);
 });

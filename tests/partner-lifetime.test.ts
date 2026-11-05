@@ -10,7 +10,7 @@ import {
   lifetimeOf,
   partnerAccrualOf,
   tierPercent,
-  withPool,
+  applyPool,
   type PartnerProject,
 } from "@/lib/partners/rules";
 
@@ -130,7 +130,7 @@ test("копилка не съедает надбавку: ступень коп
   const ps = [project(55_000, { partner_payout_id: "po1" }), project(3_000), project(3_000)];
   const partner = { ...BLOGGER, accumulate: true };
   const base = ps.map((p) => partnerAccrualOf(p, paid(ps), partner, ps)).filter((a) => a !== null);
-  const pooled = withPool(base, ps, partner);
+  const pooled = applyPool(base, ps, partner);
   const line = pooled.find((a) => a.project_id === ps[2].id);
   assert.equal(line?.percent, tierPercent(6_000, "turnover") + LIFETIME_BONUS);
   assert.equal(line?.lifetime, true);

@@ -40,6 +40,11 @@ import {
   voidReason,
   wordCandidates,
   wordCode,
+  CHOOSABLE_MODELS,
+  NEW_MODEL,
+  PARTNER_AGENCIES,
+  POOL,
+  CLIENT_CLAIMS,
   latinOf,
   promosInText,
   CODE_RE,
@@ -154,7 +159,8 @@ function shapePartner(row: Record<string, unknown>): Partner {
     note: (row.note as string | null) ?? null,
     payout_model: isPayoutModel(row.payout_model) ? row.payout_model : DEFAULT_MODEL,
     model_changed_at: (row.model_changed_at as string | null) ?? null,
-    accumulate: row.accumulate === true,
+    // Копилка выключена программой (rules.ts, POOL): её как будто нет — и автовыплаты идут.
+    accumulate: POOL && row.accumulate === true,
     kind: row.kind === "agency" ? "agency" : "person",
     contact: (row.contact as string | null) ?? null,
     website: (row.website as string | null) ?? null,
@@ -617,6 +623,7 @@ export async function ensurePartner(from: TelegramIdentity): Promise<Partner | n
       name: displayName(from),
       code,
       promo,
+      payout_model: NEW_MODEL,
     })
     .select(PARTNER_COLUMNS)
     .maybeSingle();
@@ -680,6 +687,7 @@ export async function createPartner(
       name,
       code,
       promo,
+      payout_model: NEW_MODEL,
       note: fields.note?.trim().slice(0, 1000) || null,
     })
     .select(PARTNER_COLUMNS)
@@ -1571,6 +1579,8 @@ export async function setPayoutModel(partner: Partner, model: string, now: Date 
   const db = serviceClient();
   if (!db) return { ok: false, reason: "offline" };
   if (!isPayoutModel(model)) return { ok: false, reason: "invalid" };
+  // «От прибыли» больше не выбрать (rules.ts, PROFIT_MODEL).
+  if (!CHOOSABLE_MODELS.includes(model)) return { ok: false, reason: "invalid" };
   // Агентство — 15% с суммы проекта всегда: модели у него не выбирают.
   if (partner.kind === "agency") return { ok: false, reason: "invalid" };
   if (model === partner.payout_model) return { ok: false, reason: "same" };
@@ -1676,6 +1686,8 @@ export async function requestAgency(
   partner: Partner,
   fields: { name: string; contact: string; website: string; note: string },
 ): Promise<{ ok: true; agency: PartnerAgency } | { ok: false; reason: AgencyFailure }> {
+  // Агентства партнёра больше не подключаются (rules.ts, PARTNER_AGENCIES).
+  if (!PARTNER_AGENCIES) return { ok: false, reason: "failed" };
   const db = serviceClient();
   if (!db) return { ok: false, reason: "offline" };
   const name = fields.name.trim().slice(0, 120);
@@ -2212,6 +2224,9 @@ export async function requestClient(
   fields: { name: string; inn: string; contactName: string; phone: string; telegram: string; website: string; note: string },
   now: Date = new Date(),
 ): Promise<{ ok: true; client: PartnerClient } | { ok: false; reason: ClientFailure }> {
+  // Закрепления по ИНН больше не принимаем (rules.ts, CLIENT_CLAIMS): клиент
+  // называет промокод, менеджер вписывает его в карточку лида.
+  if (!CLIENT_CLAIMS) return { ok: false, reason: "failed" };
   const db = serviceClient();
   if (!db) return { ok: false, reason: "offline" };
   if (partner.status !== "active") return { ok: false, reason: "blocked" };
@@ -2479,6 +2494,7 @@ export async function turnoverProjectsDue(): Promise<string[]> {
 export async function setAccumulate(partner: Partner, on: boolean): Promise<boolean> {
   const db = serviceClient();
   if (!db) return false;
+  if (!POOL && on) return false;
   if (partner.accumulate === on) return true;
   const { error } = await db.from("partners").update({ accumulate: on }).eq("id", partner.id);
   if (error) return false;

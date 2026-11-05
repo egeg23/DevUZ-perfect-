@@ -343,13 +343,13 @@ export function channelFor(b: { telegram: string | null; email: string | null })
   return b.telegram ? "telegram" : b.email ? "email" : "direct";
 }
 
-/** Условия программы — из lib/partners/rules.ts: свои цифры агент не придумывает. */
+/**
+ * Условия программы — из lib/partners/rules.ts: свои цифры агент не придумывает.
+ * Модель одна — с суммы проекта (владелец, 05.11.2026, `PROFIT_MODEL`).
+ */
 export function programTerms() {
-  const profit = PARTNER_TIERS.map((t) => t.profit);
   const turnover = PARTNER_TIERS.map((t) => t.turnover);
   return {
-    profitFrom: Math.min(...profit),
-    profitTo: Math.max(...profit),
     turnoverFrom: Math.min(...turnover),
     turnoverTo: Math.max(...turnover),
     minPayout: MIN_PAYOUT_USD,
@@ -375,14 +375,14 @@ export function pitchText(b: { name: string; handle: string }, lang: PitchLang, 
   if (lang === "uz") {
     return [
       `Assalomu alaykum${name ? `, ${name}` : ""}! DevUz studiyasidan yozyapmiz (${host}): O‘zbekistondagi biznes uchun saytlar, internet-do‘konlar va Telegram-botlar qilamiz.`,
-      `Sizga hamkorlikni taklif qilmoqchimiz: auditoriyangizga bizni shaxsiy havolangiz orqali tavsiya qilasiz, har bir to‘langan loyihadan esa foydaning ${t.profitFrom}% dan ${t.profitTo}% gacha yoki loyiha summasining ${t.turnoverFrom}% dan ${t.turnoverTo}% gacha olasiz, tanlovingiz bo‘yicha. To‘lov ${t.minPayout} $ dan.`,
+      `Sizga hamkorlikni taklif qilmoqchimiz: auditoriyangizga bizni shaxsiy havolangiz orqali tavsiya qilasiz, har bir to‘langan loyihadan esa loyiha summasining ${t.turnoverFrom}% dan ${t.turnoverTo}% gacha olasiz. To‘lov ${t.minPayout} $ dan.`,
       `Shartlar: ${host}/uz/partners`,
       "Gaplashib ko‘ramizmi?",
     ].join("\n\n");
   }
   return [
     `Здравствуйте${name ? `, ${name}` : ""}! Пишем из студии DevUz (${host}): делаем сайты, интернет-магазины и Telegram-ботов для бизнеса в Узбекистане.`,
-    `Хотим предложить партнёрство: вы рекомендуете нас своей аудитории по личной ссылке, а с каждого оплаченного проекта получаете от ${t.profitFrom} до ${t.profitTo}% прибыли или от ${t.turnoverFrom} до ${t.turnoverTo}% от суммы проекта, на выбор. Выплаты от ${t.minPayout} $.`,
+    `Хотим предложить партнёрство: вы рекомендуете нас своей аудитории по личной ссылке, а с каждого оплаченного проекта получаете от ${t.turnoverFrom} до ${t.turnoverTo}% от его суммы. Выплаты от ${t.minPayout} $.`,
     `Условия: ${host}/ru/partners`,
     "Интересно обсудить?",
   ].join("\n\n");
