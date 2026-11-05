@@ -104,3 +104,10 @@ footer .n { margin-left: auto; font-weight: 700; color: var(--y); }
 .steps b { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 16px; background: linear-gradient(135deg, var(--y), var(--o)); color: #1a1405; font: 700 24px/1 "Unbounded", sans-serif; margin-bottom: 20px; }
 .ct { margin-top: 54px; display: flex; gap: 48px; font-size: 28px; }
 .ct p:first-child b { color: var(--y); }
+
+/* PDF: без теней. Chrome печатает box-shadow картинкой-маской, а просмотрщик
+   PDF на iPhone рисует её тёмной плашкой поверх текста (владелец, 05.11.2026,
+   про презентацию студии: «темные подложки почему-то залазят на текст»). */
+@media print {
+  *, *::before, *::after { box-shadow: none !important; text-shadow: none !important; }
+}
