@@ -91,3 +91,10 @@ footer .n { margin-left: auto; font-weight: 700; color: var(--ac); }
 .contacts { display: grid; gap: 12px; }
 .contacts div { display: flex; justify-content: space-between; gap: 20px; padding: 16px 22px; border-radius: 16px; background: var(--s1); box-shadow: inset 0 0 0 1px var(--line); font-size: 19px; }
 .contacts span { color: var(--soft); }
+
+/* PDF: без теней. Chrome печатает box-shadow картинкой-маской, а просмотрщик
+   PDF на iPhone рисует её тёмной плашкой поверх текста (владелец, 05.11.2026,
+   про презентацию студии: «темные подложки почему-то залазят на текст»). */
+@media print {
+  *, *::before, *::after { box-shadow: none !important; text-shadow: none !important; }
+}

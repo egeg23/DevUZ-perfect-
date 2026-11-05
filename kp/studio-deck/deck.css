@@ -356,3 +356,11 @@ h1 em, h2 em, .grad { font-style: normal; background: linear-gradient(100deg, va
 .can .tender .sub { color: #c9d3e0; font-size: 15.5px; line-height: 1.42; }
 .can .tender .pts { gap: 9px; }
 .can .tender .pts li { font-size: 15.5px; line-height: 1.38; }
+
+/* PDF: без теней. Chrome печатает box-shadow картинкой-маской размером с лист,
+   а просмотрщик PDF на iPhone рисует её тёмной плашкой поверх текста и
+   соседних карточек (владелец, 05.11.2026: «темные подложки почему-то
+   залазят на текст и блоки»). Свечение выделенных карточек держит рамка. */
+@media print {
+  *, *::before, *::after { box-shadow: none !important; text-shadow: none !important; }
+}
