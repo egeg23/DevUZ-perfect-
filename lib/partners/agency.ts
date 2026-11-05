@@ -1,12 +1,12 @@
 import { AGENCY_FINDER_PERCENT, accrualState, paidOf, type PaymentMoney } from "@/lib/admin/finance";
-import { agencyFinder, partnerAccrualOf, type PartnerKind, type PartnerProject } from "@/lib/partners/rules";
+import { agencyFinder, lifetimeOf, partnerAccrualOf, type Lifetime, type PartnerKind, type PartnerProject } from "@/lib/partners/rules";
 
 /**
  * Деньги одного агентства-партнёра для вкладки «Агентства» — правилами, без
  * базы и без модели.
  *
  * Агентству — 15% с суммы каждого его проекта (partnerAccrualOf с `kind:
- * agency`). Тому, кто привёл, — 5% с суммы проектов, заведённых в его 12
+ * agency`), с 50 000 $ заказов — 20% навсегда (lifetimeOf). Тому, кто привёл, — 5% с суммы проектов, заведённых в его 12
  * месяцах (agencyFinder). Обе доли заморожены до полной оплаты проекта, как
  * у всех; отменённый проект не считается вовсе.
  */
@@ -26,6 +26,8 @@ export type AgencyMoney = {
   finder: Split;
   /** Сколько проектов в 12 месяцах того, кто привёл. */
   finderProjects: number;
+  /** Сумма заказов и пожизненный грейд +5. */
+  lifetime: Lifetime;
 };
 
 export function agencyMoney(
@@ -39,13 +41,15 @@ export function agencyMoney(
     agency: { earned: 0, frozen: 0 },
     finder: { earned: 0, frozen: 0 },
     finderProjects: 0,
+    // Проекты агентства читаются все (agencyProjects) — это и есть его история.
+    lifetime: lifetimeOf(agency.id, projects),
   };
   for (const project of projects) {
     if (project.partner_id !== agency.id || project.stage === "cancelled") continue;
     out.projects += 1;
     out.turnover += Math.max(0, project.amount_usd ?? 0);
 
-    const line = partnerAccrualOf(project, payments, agency);
+    const line = partnerAccrualOf(project, payments, agency, projects);
     if (line && line.state !== "void") out.agency[line.state] += line.amount_usd;
 
     if (agencyFinder(project, agency) && project.amount_usd !== null && project.amount_usd > 0) {

@@ -236,6 +236,11 @@ export const partnersDict = defineDict({
   blocked: { ru: "заблокирован", uz: "bloklangan", pl: "zablokowany" },
   /** Пометка у партнёра, чей Telegram — у сотрудника: такого быть не должно. */
   isStaff: { ru: "сотрудник студии", uz: "studiya xodimi", pl: "pracownik studia" },
+  lifetimeBadge: {
+    ru: (b: number) => `+${b}% навсегда`,
+    uz: (b: number) => `+${b}% umrbod`,
+    pl: (b: number) => `+${b}% na zawsze`,
+  },
   /** У руководителя вместо кнопок выплаты. */
   ownerDecides: { ru: "решает владелец", uz: "egasi hal qiladi", pl: "decyduje właściciel" },
   deleteOpen: { ru: "удалить", uz: "o‘chirish", pl: "usuń" },

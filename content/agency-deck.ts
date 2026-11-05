@@ -21,6 +21,13 @@ export type AgencyDeckCopy = {
   lead: string;
   /** Подпись под большим «15%». */
   bigLabel: string;
+  /**
+   * Пожизненный грейд: с 50 000 $ заказов — 20% (lib/partners/rules.ts,
+   * lifetimeOf). Числа подставляет страница из правил денег; пишется итоговой
+   * ставкой, а не «+5%»: на сайте не должно быть «5%», похожего на процент
+   * того, кто привёл (тест «на клиентском сайте процента менеджера нет»).
+   */
+  lifetime: (from: string, percent: number) => string;
   stepsTitle: string;
   steps: { title: string; text: string }[];
   exampleTitle: string;
@@ -46,6 +53,7 @@ const ru: AgencyDeckCopy = {
   title: "Приводите клиентов — получайте 15% с каждого проекта",
   lead: "Для маркетинговых агентств, веб-студий и IT-компаний. Ваш клиент заказывает у нас сайт, бот или приложение — вы получаете 15% от суммы договора. Просто и всегда одинаково.",
   bigLabel: "от суммы каждого проекта, который вы привели",
+  lifetime: (from, percent) => `Привели заказов на ${from} — дальше ${percent}% с каждого проекта, навсегда.`,
   stepsTitle: "Как это работает — 3 шага",
   steps: [
     { title: "Вы приводите клиента", text: "Даёте ему свою ссылку или пишете нам сами: «у нас клиент, ему нужен сайт»." },
@@ -59,7 +67,7 @@ const ru: AgencyDeckCopy = {
   exampleNote: "Чем дороже проект, тем больше ваши 15%. Сумма — та, что в договоре с клиентом.",
   rulesTitle: "Правила — коротко",
   rules: [
-    "Всегда 15% от суммы договора. Не от прибыли, без ступеней и мелкого шрифта.",
+    "Всегда 15% от суммы договора. Не от прибыли и без мелкого шрифта.",
     "Без лимита и срока: 15% с каждого проекта, сколько бы клиентов вы ни привели.",
     "Деньги — когда клиент оплатил проект целиком.",
     "Ваш клиент — ваш: заявку по вашей ссылке или от вас самих мы записываем на вас. Клиенты, которые уже работали с нами, не засчитываются.",
@@ -79,6 +87,7 @@ const en: AgencyDeckCopy = {
   title: "Bring clients, earn 15% of every project",
   lead: "For marketing agencies, web studios and IT companies. Your client orders a website, bot or app from us, and you get 15% of the contract amount. Simple, and always the same.",
   bigLabel: "of every project you bring",
+  lifetime: (from, percent) => `Once your orders reach ${from}, you get ${percent}% of every project after that, for life.`,
   stepsTitle: "How it works: 3 steps",
   steps: [
     { title: "You bring a client", text: "Give them your link or message us yourself: “we have a client who needs a website”." },
@@ -92,7 +101,7 @@ const en: AgencyDeckCopy = {
   exampleNote: "The bigger the project, the bigger your 15%. The amount is the one in the contract with the client.",
   rulesTitle: "The rules in short",
   rules: [
-    "Always 15% of the contract amount. Not of profit, no tiers, no fine print.",
+    "Always 15% of the contract amount. Not of profit, no fine print.",
     "No limit and no end date: 15% of every project, however many clients you bring.",
     "You get paid once the client has paid for the project in full.",
     "Your client stays yours: a request via your link or from you is recorded as yours. Clients who already worked with us do not count.",
@@ -112,6 +121,7 @@ const uz: AgencyDeckCopy = {
   title: "Mijoz olib keling — har bir loyihadan 15% oling",
   lead: "Marketing agentliklari, veb-studiyalar va IT-kompaniyalar uchun. Mijozingiz bizdan sayt, bot yoki ilova buyurtma qiladi — siz shartnoma summasidan 15% olasiz. Oddiy va doim bir xil.",
   bigLabel: "siz olib kelgan har bir loyiha summasidan",
+  lifetime: (from, percent) => `Buyurtmalaringiz ${from} ga yetsa, keyingi har bir loyihadan ${percent}%, umrbod.`,
   stepsTitle: "Qanday ishlaydi — 3 qadam",
   steps: [
     { title: "Siz mijoz olib kelasiz", text: "Unga havolangizni berasiz yoki bizga o‘zingiz yozasiz: «mijozimiz bor, unga sayt kerak»." },
@@ -125,7 +135,7 @@ const uz: AgencyDeckCopy = {
   exampleNote: "Loyiha qanchalik qimmat bo‘lsa, sizning 15% shunchalik ko‘p. Summa — mijoz bilan shartnomadagi summa.",
   rulesTitle: "Qoidalar — qisqacha",
   rules: [
-    "Doim shartnoma summasidan 15%. Foydadan emas, bosqichlarsiz va mayda shriftsiz.",
+    "Doim shartnoma summasidan 15%. Foydadan emas va mayda shriftsiz.",
     "Cheklovsiz va muddatsiz: qancha mijoz olib kelsangiz ham, har bir loyihadan 15%.",
     "Pul — mijoz loyihani to‘liq to‘laganda.",
     "Mijozingiz — sizniki: havolangiz orqali yoki o‘zingizdan kelgan arizani sizga yozamiz. Avval biz bilan ishlagan mijozlar hisobga olinmaydi.",
@@ -145,6 +155,7 @@ const zh: AgencyDeckCopy = {
   title: "推荐客户，每个项目赚取 15%",
   lead: "适用于营销代理、网页工作室和 IT 公司。您的客户向我们订购网站、机器人或应用，您即可获得合同金额的 15%。简单明了，始终如一。",
   bigLabel: "按您推荐的每个项目的合同金额计算",
+  lifetime: (from, percent) => `订单总额达到 ${from} 后，此后每个项目 ${percent}%，终身有效。`,
   stepsTitle: "三步说明",
   steps: [
     { title: "您推荐客户", text: "把您的链接发给客户，或直接告诉我们：“我们有位客户需要网站”。" },
@@ -158,7 +169,7 @@ const zh: AgencyDeckCopy = {
   exampleNote: "项目越大，您的 15% 越多。金额以与客户签订的合同为准。",
   rulesTitle: "规则一览",
   rules: [
-    "始终按合同金额的 15% 计算。不按利润，不分档位，没有附加条款。",
+    "始终按合同金额的 15% 计算。不按利润，没有附加条款。",
     "不限数量，不限期限：无论推荐多少客户，每个项目都是 15%。",
     "客户全额付款后结算。",
     "您的客户归您：通过您的链接或由您直接提交的需求都记在您名下。此前已与我们合作的客户不计入。",
@@ -178,6 +189,7 @@ const uk: AgencyDeckCopy = {
   title: "Приводьте клієнтів — отримуйте 15% з кожного проєкту",
   lead: "Для маркетингових агенцій, вебстудій та IT-компаній. Ваш клієнт замовляє в нас сайт, бот або застосунок — ви отримуєте 15% від суми договору. Просто й завжди однаково.",
   bigLabel: "від суми кожного проєкту, який ви привели",
+  lifetime: (from, percent) => `Привели замовлень на ${from} — далі ${percent}% з кожного проєкту, назавжди.`,
   stepsTitle: "Як це працює — 3 кроки",
   steps: [
     { title: "Ви приводите клієнта", text: "Даєте йому своє посилання або пишете нам самі: «у нас клієнт, йому потрібен сайт»." },
@@ -191,7 +203,7 @@ const uk: AgencyDeckCopy = {
   exampleNote: "Що дорожчий проєкт, то більші ваші 15%. Сума — та, що в договорі з клієнтом.",
   rulesTitle: "Правила — коротко",
   rules: [
-    "Завжди 15% від суми договору. Не від прибутку, без східців і дрібного шрифту.",
+    "Завжди 15% від суми договору. Не від прибутку й без дрібного шрифту.",
     "Без ліміту й терміну: 15% з кожного проєкту, скільки б клієнтів ви не привели.",
     "Гроші — коли клієнт оплатив проєкт повністю.",
     "Ваш клієнт — ваш: заявку за вашим посиланням або від вас самих ми записуємо на вас. Клієнти, які вже працювали з нами, не зараховуються.",
@@ -211,6 +223,7 @@ const pl: AgencyDeckCopy = {
   title: "Przyprowadzaj klientów — zarabiaj 15% z każdego projektu",
   lead: "Dla agencji marketingowych, studiów webowych i firm IT. Twój klient zamawia u nas stronę, bota lub aplikację — Ty dostajesz 15% od kwoty umowy. Prosto i zawsze tak samo.",
   bigLabel: "od kwoty każdego projektu, który przyprowadzisz",
+  lifetime: (from, percent) => `Gdy Twoje zlecenia osiągną ${from}, dostajesz ${percent}% z każdego kolejnego projektu, na zawsze.`,
   stepsTitle: "Jak to działa — 3 kroki",
   steps: [
     { title: "Przyprowadzasz klienta", text: "Dajesz mu swój link albo piszesz do nas sam: „mamy klienta, potrzebuje strony”." },
@@ -224,7 +237,7 @@ const pl: AgencyDeckCopy = {
   exampleNote: "Im droższy projekt, tym więcej Twoich 15%. Kwota to ta z umowy z klientem.",
   rulesTitle: "Zasady w skrócie",
   rules: [
-    "Zawsze 15% od kwoty umowy. Nie od zysku, bez progów i drobnego druku.",
+    "Zawsze 15% od kwoty umowy. Nie od zysku i bez drobnego druku.",
     "Bez limitu i terminu: 15% z każdego projektu, niezależnie od liczby klientów.",
     "Pieniądze — gdy klient zapłaci za projekt w całości.",
     "Twój klient jest Twój: zgłoszenie z Twojego linku lub od Ciebie zapisujemy na Ciebie. Klienci, którzy już z nami pracowali, się nie liczą.",

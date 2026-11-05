@@ -224,12 +224,12 @@ test("автовыплата — только с оборота, только з
   const paid = [{ project_id: "p1", amount_usd: 4000 }];
   const half = [{ project_id: "p1", amount_usd: 2000 }];
 
-  const turnover = partnerAccrualOf({ ...project, partner_model: "turnover" }, paid, partner);
+  const turnover = partnerAccrualOf({ ...project, partner_model: "turnover" }, paid, partner, []);
   assert.equal(turnover?.amount_usd, 400, "4 000 $ × 10 % с оборота");
   assert.ok(autoPayoutDue(turnover));
-  assert.ok(!autoPayoutDue(partnerAccrualOf({ ...project, partner_model: "turnover" }, half, partner)), "оплачено наполовину");
-  assert.ok(!autoPayoutDue(partnerAccrualOf({ ...project, partner_model: "profit" }, paid, partner)), "от прибыли — по заявке");
-  assert.ok(!autoPayoutDue(partnerAccrualOf({ ...project, partner_model: "turnover", partner_void_reason: "self" }, paid, partner)));
+  assert.ok(!autoPayoutDue(partnerAccrualOf({ ...project, partner_model: "turnover" }, half, partner, [])), "оплачено наполовину");
+  assert.ok(!autoPayoutDue(partnerAccrualOf({ ...project, partner_model: "profit" }, paid, partner, [])), "от прибыли — по заявке");
+  assert.ok(!autoPayoutDue(partnerAccrualOf({ ...project, partner_model: "turnover", partner_void_reason: "self" }, paid, partner, [])));
   assert.ok(!autoPayoutDue(null));
 
   // Заведённая автовыплата сразу уходит из «доступно» — второй раз её не попросить.

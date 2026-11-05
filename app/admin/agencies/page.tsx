@@ -8,7 +8,7 @@ import { helpAnchor } from "@/lib/admin/help";
 import { pick } from "@/lib/admin/i18n";
 import { loadPeople } from "@/lib/admin/ledger";
 import { agencyMoney, type Split } from "@/lib/partners/agency";
-import { AGENCY_PERCENT, finderUntil, finderUntilDay, shortUrl } from "@/lib/partners/rules";
+import { AGENCY_PERCENT, LIFETIME_BONUS, LIFETIME_FROM_USD, finderUntil, finderUntilDay, shortUrl } from "@/lib/partners/rules";
 import { agencyPartners, agencyProjects, defaultSlugs, PARTNER_DESK } from "@/lib/partners/store";
 import { siteUrl } from "@/lib/seo";
 import { addAgency, setFinder } from "./actions";
@@ -116,6 +116,10 @@ export default async function AgenciesPage({ searchParams }: { searchParams: Pro
               <li className="flex gap-3">
                 <span className="w-12 shrink-0 font-mono text-lg font-semibold text-green">{AGENCY_PERCENT}%</span>
                 <span className="text-muted">{t.getsAgency(AGENCY_PERCENT)}</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="w-12 shrink-0 font-mono text-lg font-semibold text-green">{AGENCY_PERCENT + LIFETIME_BONUS}%</span>
+                <span className="text-muted">{t.getsLifetime(money(LIFETIME_FROM_USD), LIFETIME_BONUS, AGENCY_PERCENT + LIFETIME_BONUS)}</span>
               </li>
               <li className="flex gap-3">
                 <span className="w-12 shrink-0 font-mono text-lg font-semibold text-blue-soft">{AGENCY_FINDER_PERCENT}%</span>
@@ -299,7 +303,15 @@ export default async function AgenciesPage({ searchParams }: { searchParams: Pro
                       <span className="block text-faint">{t.inTerm(m.finderProjects)}</span>
                     ) : null}
                   </td>
-                  <td data-label={t.colTurnover} className={`${TD} font-mono text-xs`}>{money(m.turnover)}</td>
+                  <td data-label={t.colTurnover} className={`${TD} font-mono text-xs`}>
+                    {money(m.turnover)}
+                    {/* Пожизненный грейд: с 50 000 $ заказов — 20% (rules.ts, lifetimeOf). */}
+                    {m.lifetime.reached ? (
+                      <span className="block text-green">{t.lifetimeOn(AGENCY_PERCENT + LIFETIME_BONUS)}</span>
+                    ) : (
+                      <span className="block text-faint">{t.lifetimeLeft(money(m.lifetime.left), AGENCY_PERCENT + LIFETIME_BONUS)}</span>
+                    )}
+                  </td>
                   <td data-label={t.colFinder} className={`${TD} font-mono text-xs`}>{split(m.finder)}</td>
                   {desk ? (
                     <td data-label={t.colAgencyShare} className={`${TD} font-mono text-xs`}>{split(m.agency)}</td>

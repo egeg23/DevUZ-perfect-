@@ -41,7 +41,7 @@ function project(id: string, amount: number, extra: Partial<PartnerProject> = {}
 const paidFull = (ps: PartnerProject[]) => ps.map((p) => ({ project_id: p.id, amount_usd: p.amount_usd ?? 0 }));
 
 function accrue(ps: PartnerProject[], partner: { id: string; percent_override: number | null; accumulate?: boolean }, payments = paidFull(ps)) {
-  const base = ps.map((p) => partnerAccrualOf(p, payments, partner)).filter((a) => a !== null);
+  const base = ps.map((p) => partnerAccrualOf(p, payments, partner, [])).filter((a) => a !== null);
   return withPool(base, ps, partner);
 }
 
@@ -73,7 +73,7 @@ test("в копилке — только оплаченные целиком и 
     { project_id: "done", amount_usd: 6000 },
   ];
   const partner = { id: "a", percent_override: null, accumulate: true };
-  const base = ps.map((p) => partnerAccrualOf(p, payments, partner)).filter((a) => a !== null);
+  const base = ps.map((p) => partnerAccrualOf(p, payments, partner, [])).filter((a) => a !== null);
   const pool = poolProjects(ps, base, partner);
   assert.deepEqual(pool.map((p) => p.id), ["paid"]);
   assert.equal(poolAmount(pool), 2000);
@@ -92,12 +92,12 @@ test("ручной процент и личная ставка в копилке
 
 test("выплаченное по ставке копилки вниз не пересчитывается", () => {
   const settled = project("p1", 2000, { partner_payout_id: "po1", partner_bonus_percent: 14 });
-  const a = partnerAccrualOf(settled, paidFull([settled]), { id: "a", percent_override: null });
+  const a = partnerAccrualOf(settled, paidFull([settled]), { id: "a", percent_override: null }, []);
   assert.equal(a?.percent, 14);
   assert.equal(a?.amount_usd, 280);
   assert.ok(a?.boosted);
   // Процент, заданный владельцем на проекте, важнее зафиксированного.
-  const manual = partnerAccrualOf({ ...settled, partner_percent: 3 }, paidFull([settled]), { id: "a", percent_override: null });
+  const manual = partnerAccrualOf({ ...settled, partner_percent: 3 }, paidFull([settled]), { id: "a", percent_override: null }, []);
   assert.equal(manual?.percent, 3);
 });
 

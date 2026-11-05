@@ -1,5 +1,15 @@
 import { partnerCopy } from "@/content/partner-bot";
-import { AGENCY_PERCENT, DEFAULT_MODEL, PERK_TITLE, agencyUntilDay, clientUntilDay, isPayoutModel, partnerPercent } from "@/lib/partners/rules";
+import {
+  AGENCY_PERCENT,
+  DEFAULT_MODEL,
+  LIFETIME_BONUS,
+  PERK_TITLE,
+  agencyUntilDay,
+  clientUntilDay,
+  isPayoutModel,
+  lifetimeOf,
+  partnerPercent,
+} from "@/lib/partners/rules";
 import {
   attributeAgencyLead,
   attributeAgencyPartnerLead,
@@ -7,6 +17,7 @@ import {
   attributeLead,
   notifyPartner,
   partnerById,
+  partnerHistory,
   summarize,
   type Attribution,
 } from "@/lib/partners/store";
@@ -33,9 +44,12 @@ export async function attributeAndNotify(
     company: lead.company ?? null,
   });
   if (ownAgency) {
+    // С 50 000 $ заказов — 20% навсегда (rules.ts, lifetimeOf): новый проект уже после порога.
+    const lifetime = lifetimeOf(ownAgency.id, await partnerHistory([ownAgency.id]));
+    const percent = AGENCY_PERCENT + (lifetime.reached ? LIFETIME_BONUS : 0);
     await notifyPartner(
       ownAgency,
-      `🏢 Заказ записан на ваше агентство. ${AGENCY_PERCENT}% с суммы проекта — ваши, когда клиент оплатит проект целиком.`,
+      `🏢 Заказ записан на ваше агентство. ${percent}% с суммы проекта — ваши, когда клиент оплатит проект целиком.`,
     );
     return { partner: ownAgency, link: null, reason: null };
   }

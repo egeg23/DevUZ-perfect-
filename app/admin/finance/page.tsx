@@ -33,6 +33,7 @@ import { pick, type Picked } from "@/lib/admin/i18n";
 import { seesOwnerMoney } from "@/lib/admin/roles";
 import { loadExpenses, loadLedger, sharesOf } from "@/lib/admin/ledger";
 import { partnerAccrualOf, type PartnerAccrual } from "@/lib/partners/rules";
+import { partnerHistory } from "@/lib/partners/store";
 import { teamOf } from "@/lib/admin/team";
 
 export const dynamic = "force-dynamic";
@@ -114,11 +115,13 @@ export default async function FinancePage({
   for (const a of accruals) byProject.set(a.project_id, [...(byProject.get(a.project_id) ?? []), a]);
 
   // Партнёрская строка: кто привёл клиента, тому — процент от той же прибыли.
+  // Пожизненный грейд +5 — по всей истории партнёра, а не по видимым здесь проектам.
+  const history = await partnerHistory([...ledger.partners.keys()]);
   const partnerLines = new Map<string, PartnerAccrual>();
   for (const p of ledger.projects) {
     const partner = p.partner_id ? ledger.partners.get(p.partner_id) : undefined;
     if (!partner) continue;
-    const line = partnerAccrualOf(p, ledger.payments, partner);
+    const line = partnerAccrualOf(p, ledger.payments, partner, history);
     if (line) partnerLines.set(p.id, line);
   }
   const partnerTotal = sum([...partnerLines.values()].map((l) => l.amount_usd));

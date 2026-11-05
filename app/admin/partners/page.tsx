@@ -10,6 +10,8 @@ import { pick, type PanelLocale } from "@/lib/admin/i18n";
 import { partnerClientsDict } from "@/content/admin-panel/partner-clients";
 import { PartnerClientsBlock } from "@/components/admin/partner-clients";
 import {
+  AGENCY_PERCENT,
+  LIFETIME_BONUS,
   MIN_PAYOUT_USD,
   PARTNER_TIERS,
   poolAmount,
@@ -299,7 +301,7 @@ export default async function PartnersPage({
             </tr>
           </thead>
           <tbody>
-            {summaries.map(({ partner, links, balance, leads, projects, paidProjects, accruals, payouts }) => (
+            {summaries.map(({ partner, links, balance, leads, projects, paidProjects, accruals, payouts, lifetime }) => (
               <tr key={partner.id} className="border-b border-line-soft last:border-0 align-top">
                 <td data-label={t.colWho} className={TD}>
                   {/* Имя — в карточку партнёра: его клиенты и где каждый (app/admin/partners/[id]). */}
@@ -312,8 +314,13 @@ export default async function PartnersPage({
                       href="/admin/agencies"
                       className="ml-2 rounded border border-blue-soft/40 px-1.5 py-0.5 text-xs text-blue-soft hover:underline"
                     >
-                      {ta.partnerBadge}
+                      {ta.partnerBadge(AGENCY_PERCENT + (lifetime.reached ? LIFETIME_BONUS : 0))}
                     </Link>
+                  ) : lifetime.reached && partner.percent_override === null ? (
+                    // Пожизненный грейд блогера: 50 000 $ заказов (rules.ts, lifetimeOf).
+                    <span className="ml-2 rounded border border-green/40 px-1.5 py-0.5 text-xs text-green">
+                      {t.lifetimeBadge(LIFETIME_BONUS)}
+                    </span>
                   ) : null}
                   {partner.telegram_user_id && staffIds.has(partner.telegram_user_id) ? (
                     <span className="ml-2 rounded border border-gold/40 px-1.5 py-0.5 text-xs text-gold">{t.isStaff}</span>

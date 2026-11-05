@@ -61,8 +61,8 @@ import {
   stageProgress,
 } from "@/lib/admin/projects";
 import { teamOf } from "@/lib/admin/team";
-import { agencyCounts, partnerAccrualOf } from "@/lib/partners/rules";
-import { agenciesOf, listPartners, partnerById } from "@/lib/partners/store";
+import { LIFETIME_BONUS, agencyCounts, partnerAccrualOf } from "@/lib/partners/rules";
+import { agenciesOf, listPartners, partnerById, partnerHistory } from "@/lib/partners/store";
 
 export const dynamic = "force-dynamic";
 
@@ -151,8 +151,11 @@ export default async function ProjectPage({
   // молча подставила бы первого по алфавиту и сменила ведущего при сохранении.
   const leaders = people.filter((p) => p.is_active || p.id === project.owner_staff_id);
 
-  // Партнёрская строка: ставка — по сумме проекта (rules.ts, PARTNER_TIERS).
-  const partnerLine = partner ? partnerAccrualOf(project, payments, partner) : null;
+  // Партнёрская строка: ставка — по сумме проекта (rules.ts, PARTNER_TIERS),
+  // с 50 000 $ заказов партнёра — +5 навсегда (lifetimeOf, по его истории).
+  const partnerLine = partner
+    ? partnerAccrualOf(project, payments, partner, await partnerHistory([partner.id]))
+    : null;
   // Подключённые агентства — для выбора «Заказ агентства» в блоке «Партнёр».
   // В списке — агентства в сроке (12 месяцев с подтверждения) и то, что уже
   // стоит на проекте: проект, привязанный внутри срока, за агентством и остаётся.
@@ -561,6 +564,7 @@ export default async function ProjectPage({
                 <span className="text-xs text-faint">
                   {partnerLine.percent} % {partnerLine.model === "turnover" ? t.fromTurnover : t.fromProfit}
                   {partnerLine.manual ? t.manual : partner.kind === "agency" ? t.agencyFixed : t.byAmount}
+                  {partnerLine.lifetime ? t.lifetimeMark(LIFETIME_BONUS) : null}
                   {projectAgency ? t.agency(projectAgency.name) : ""}
                 </span>
                 <span className="font-mono">{money(partnerLine.amount_usd)}</span>
