@@ -39,6 +39,7 @@ import {
   voidReason,
   SLUG_RE,
   type PartnerAccrual,
+  type PartnerKind,
   type PayoutModel,
   type PartnerBalance,
   type PartnerProject,
@@ -77,6 +78,14 @@ export type Partner = {
   model_changed_at: string | null;
   /** Копилка: автовыплаты выключены, ставка — по общей сумме невыплаченного (rules.ts, withPool). */
   accumulate: boolean;
+  /** Человек по ссылке или агентство (15% с суммы проекта, rules.ts, AGENCY_PERCENT). */
+  kind: PartnerKind;
+  /** Как агентство пишет нам — по нему узнаются его заявки. */
+  contact: string | null;
+  website: string | null;
+  /** Кто из команды привёл агентство и когда: ему 5% с суммы его проектов 12 месяцев. */
+  brought_by: string | null;
+  brought_at: string | null;
 };
 
 export type PartnerLink = {
@@ -112,7 +121,7 @@ export type PartnerPayout = {
 };
 
 const PARTNER_COLUMNS =
-  "id, created_at, telegram_user_id, username, name, code, requisites, status, percent_override, note, payout_model, model_changed_at, accumulate";
+  "id, created_at, telegram_user_id, username, name, code, requisites, status, percent_override, note, payout_model, model_changed_at, accumulate, kind, contact, website, brought_by, brought_at";
 const LINK_COLUMNS = "id, created_at, partner_id, code, slug, target, label, perk, clicks, leads, is_default";
 const PAYOUT_COLUMNS =
   "id, created_at, partner_id, amount_usd, requisites, status, note, paid_at, decided_by, project_id";
@@ -134,6 +143,11 @@ function shapePartner(row: Record<string, unknown>): Partner {
     payout_model: isPayoutModel(row.payout_model) ? row.payout_model : DEFAULT_MODEL,
     model_changed_at: (row.model_changed_at as string | null) ?? null,
     accumulate: row.accumulate === true,
+    kind: row.kind === "agency" ? "agency" : "person",
+    contact: (row.contact as string | null) ?? null,
+    website: (row.website as string | null) ?? null,
+    brought_by: (row.brought_by as string | null) ?? null,
+    brought_at: (row.brought_at as string | null) ?? null,
   };
 }
 
@@ -1351,6 +1365,8 @@ export async function setPayoutModel(partner: Partner, model: string, now: Date 
   const db = serviceClient();
   if (!db) return { ok: false, reason: "offline" };
   if (!isPayoutModel(model)) return { ok: false, reason: "invalid" };
+  // Агентство — 15% с суммы проекта всегда: модели у него не выбирают.
+  if (partner.kind === "agency") return { ok: false, reason: "invalid" };
   if (model === partner.payout_model) return { ok: false, reason: "same" };
   if (!canSwitchModel(partner.model_changed_at, now)) return { ok: false, reason: "too_soon" };
 
@@ -1573,6 +1589,259 @@ export async function attributeAgencyLead(
     return null;
   }
   return { partner, agency };
+}
+
+/* ── Агентства — партнёры студии ───────────────────────────────────────── */
+
+export type AgencyAddFailure = "offline" | "invalid" | "duplicate" | "staff" | "failed";
+
+/**
+ * Завести агентство как партнёра студии: 15% с суммы каждого его проекта
+ * (rules.ts, AGENCY_PERCENT), а тому, кто привёл, — 5% с суммы его проектов
+ * 12 месяцев с этого дня (lib/admin/finance.ts, AGENCY_FINDER_PERCENT).
+ *
+ * Заводит любой из команды (владелец, 05.11.2026: «те кто привел агентство
+ * и завел его у нас»). Менеджер — только на себя: кто завёл, тот и привёл.
+ * Владелец и руководитель выбирают, кто привёл, или «никто» — агентство
+ * пришло само. Контакт обязателен: по нему узнаются заявки агентства с сайта
+ * и из бота. Одно агентство — одна запись: второй раз то же (по контакту
+ * или названию) не заводится, и агентство, которое уже подключил партнёр,
+ * тоже.
+ */
+export async function createAgencyPartner(
+  fields: { name: string; contact: string; website: string; note: string; broughtBy?: string | null },
+  staff: Staff,
+  ip: string,
+): Promise<{ ok: true; partner: Partner } | { ok: false; reason: AgencyAddFailure }> {
+  const db = serviceClient();
+  if (!db) return { ok: false, reason: "offline" };
+  const name = fields.name.trim().slice(0, 120);
+  const contact = fields.contact.trim().slice(0, 120);
+  if (name.length < 2 || contactKey(contact).length < 5) return { ok: false, reason: "invalid" };
+
+  let broughtBy: string | null = staff.id;
+  if (PARTNER_DESK.includes(staff.role) && fields.broughtBy !== undefined) {
+    broughtBy = fields.broughtBy;
+    if (broughtBy && broughtBy !== staff.id && !(await activeStaffId(db, broughtBy))) {
+      return { ok: false, reason: "staff" };
+    }
+  }
+
+  if (await agencyTaken(db, name, contact)) return { ok: false, reason: "duplicate" };
+
+  const code = await freeCode(db);
+  if (!code) return { ok: false, reason: "failed" };
+  const { data, error } = await db
+    .from("partners")
+    .insert({
+      kind: "agency",
+      name,
+      code,
+      contact,
+      website: fields.website.trim().slice(0, 200) || null,
+      note: fields.note.trim().slice(0, 1000) || null,
+      payout_model: "turnover",
+      brought_by: broughtBy,
+      brought_at: new Date().toISOString(),
+    })
+    .select(PARTNER_COLUMNS)
+    .maybeSingle();
+  if (error || !data) {
+    console.error("partners: не завёл агентство", error?.message);
+    return { ok: false, reason: error?.code === "23505" ? "duplicate" : "failed" };
+  }
+  const partner = shapePartner(data as Record<string, unknown>);
+
+  const slug = await freeSlug(db);
+  await db
+    .from("partner_links")
+    .insert({ partner_id: partner.id, code, ...(slug ? { slug } : {}), label: "Основная ссылка", is_default: true });
+
+  await record("partner.agency_created", {
+    actorStaffId: staff.id,
+    targetType: "partner",
+    targetId: partner.id,
+    ip,
+    meta: { name, contact, brought_by: broughtBy },
+  });
+  return { ok: true, partner };
+}
+
+async function activeStaffId(db: NonNullable<ReturnType<typeof serviceClient>>, id: string): Promise<boolean> {
+  const { data } = await db.from("staff").select("id, is_active").eq("id", id).maybeSingle();
+  return Boolean(data && data.is_active === true);
+}
+
+/** Это агентство уже есть: агентством-партнёром или агентством партнёра (не отклонённым). */
+async function agencyTaken(
+  db: NonNullable<ReturnType<typeof serviceClient>>,
+  name: string,
+  contact: string,
+): Promise<boolean> {
+  const key = contactKey(contact);
+  const nameKey = companyKey(name);
+  const same = (other: { name: string; contact: string | null }) =>
+    (key.length >= 5 && contactKey(other.contact) === key) ||
+    (nameKey.length >= 4 && companyKey(other.name) === nameKey);
+  const { data } = await db.from("partners").select("name, contact").eq("kind", "agency").limit(1000);
+  if ((data ?? []).some((row) => same({ name: String(row.name ?? ""), contact: (row.contact as string | null) ?? null }))) {
+    return true;
+  }
+  return (await agenciesOf("all")).some((a) => a.status !== "rejected" && same(a));
+}
+
+/**
+ * Кто привёл агентство — поправить. Только владелец: это 5% с суммы проектов
+ * агентства, деньги. Срок 12 месяцев не сдвигается: он от дня, когда
+ * агентство завели.
+ */
+export async function setAgencyFinder(
+  partnerId: string,
+  broughtBy: string | null,
+  admin: Staff,
+  ip: string,
+): Promise<{ ok: true } | { ok: false; reason: "offline" | "forbidden" | "gone" | "staff" | "failed" }> {
+  if (admin.role !== "admin") return { ok: false, reason: "forbidden" };
+  const db = serviceClient();
+  if (!db) return { ok: false, reason: "offline" };
+  if (broughtBy && !(await activeStaffId(db, broughtBy))) return { ok: false, reason: "staff" };
+  const { data: before } = await db
+    .from("partners")
+    .select("id, brought_by")
+    .eq("id", partnerId)
+    .eq("kind", "agency")
+    .maybeSingle();
+  if (!before) return { ok: false, reason: "gone" };
+  const from = (before.brought_by as string | null) ?? null;
+  if (from === broughtBy) return { ok: true };
+  const { error } = await db.from("partners").update({ brought_by: broughtBy }).eq("id", partnerId).eq("kind", "agency");
+  if (error) return { ok: false, reason: "failed" };
+  await record("partner.agency_finder", {
+    actorStaffId: admin.id,
+    targetType: "partner",
+    targetId: partnerId,
+    ip,
+    meta: { from, to: broughtBy },
+  });
+  return { ok: true };
+}
+
+/** Агентства-партнёры: все или те, кого привёл этот человек. */
+export async function agencyPartners(broughtBy: "all" | string): Promise<Partner[]> {
+  const db = serviceClient();
+  if (!db) return [];
+  let query = db.from("partners").select(PARTNER_COLUMNS).eq("kind", "agency").order("created_at", { ascending: false });
+  if (broughtBy !== "all") query = query.eq("brought_by", broughtBy);
+  const { data, error } = await query.limit(500);
+  if (error) {
+    console.error("partners: не прочитал агентства", error.message);
+    return [];
+  }
+  return (data ?? []).map((row) => shapePartner(row as Record<string, unknown>));
+}
+
+/**
+ * Заявка — от агентства-партнёра? Агентство пишет нам само: сходится его
+ * контакт или название. Тогда лид его — с оборота, без окна в 30 дней и без
+ * срока: 15% агентству идут, пока оно с нами. Важнее ссылки и агентства
+ * партнёра (attribute.ts): заказ пришёл от самого агентства.
+ */
+export async function attributeAgencyPartnerLead(
+  leadId: string,
+  lead: { contactHandle: string | null; company: string | null },
+): Promise<Partner | null> {
+  const db = serviceClient();
+  if (!db) return null;
+  if (!lead.contactHandle && !lead.company) return null;
+  const agency = (await agencyPartners("all")).find(
+    (a) => a.status === "active" && agencyMatches({ contact: a.contact, name: a.name }, lead),
+  );
+  if (!agency) return null;
+  const { error } = await db
+    .from("leads")
+    .update({
+      partner_id: agency.id,
+      partner_link_id: null,
+      partner_code: agency.code,
+      partner_void_reason: null,
+      partner_model: "turnover",
+      partner_agency_id: null,
+    })
+    .eq("id", leadId);
+  if (error) {
+    console.error("partners: не привязал заявку агентства", error.message);
+    return null;
+  }
+  return agency;
+}
+
+/** Проекты агентств — для вкладки «Агентства»: поля денег и кто ведёт. */
+export type AgencyProject = PartnerProject & {
+  created_at: string;
+  title: string;
+  client: string | null;
+};
+
+export async function agencyProjects(
+  agencyIds: readonly string[],
+): Promise<{ projects: AgencyProject[]; payments: PaymentMoney[] }> {
+  const db = serviceClient();
+  if (!db || !agencyIds.length) return { projects: [], payments: [] };
+  const { data, error } = await db
+    .from("projects")
+    .select(
+      "id, created_at, title, client, owner_staff_id, kind, amount_usd, tax_percent, dev_cost_usd, stage, partner_id, partner_percent, partner_void_reason, partner_model, partner_payout_id, partner_bonus_percent",
+    )
+    .in("partner_id", [...agencyIds])
+    .order("created_at", { ascending: false })
+    .limit(1000);
+  if (error) {
+    console.error("partners: не прочитал проекты агентств", error.message);
+    return { projects: [], payments: [] };
+  }
+  const projects = (data ?? []).map((row) => {
+    const r = row as Record<string, unknown>;
+    return {
+      id: String(r.id),
+      created_at: String(r.created_at),
+      title: String(r.title ?? ""),
+      client: (r.client as string | null) ?? null,
+      owner_staff_id: (r.owner_staff_id as string | null) ?? null,
+      kind: r.kind === "upsell" ? "upsell" : "new",
+      amount_usd: r.amount_usd === null || r.amount_usd === undefined ? null : Number(r.amount_usd),
+      tax_percent: Number(r.tax_percent ?? 0),
+      dev_cost_usd: r.dev_cost_usd === null || r.dev_cost_usd === undefined ? null : Number(r.dev_cost_usd),
+      stage: String(r.stage ?? ""),
+      partner_id: (r.partner_id as string | null) ?? null,
+      partner_percent: (r.partner_percent as number | null) ?? null,
+      partner_void_reason: (r.partner_void_reason as string | null) ?? null,
+      partner_model: (r.partner_model as string | null) ?? null,
+      partner_payout_id: (r.partner_payout_id as string | null) ?? null,
+      partner_bonus_percent: (r.partner_bonus_percent as number | null) ?? null,
+    } satisfies AgencyProject;
+  });
+  const ids = projects.map((p) => p.id);
+  const { data: paid } = ids.length
+    ? await db.from("project_payments").select("project_id, amount_usd").in("project_id", ids).limit(5000)
+    : { data: [] };
+  const payments = (paid ?? []).map((row) => ({
+    project_id: String(row.project_id),
+    amount_usd: Number(row.amount_usd ?? 0),
+  }));
+  return { projects, payments };
+}
+
+/** Короткие ссылки агентств: основная ссылка каждого — для отправки агентству. */
+export async function defaultSlugs(partnerIds: readonly string[]): Promise<Map<string, string>> {
+  const db = serviceClient();
+  if (!db || !partnerIds.length) return new Map();
+  const { data } = await db
+    .from("partner_links")
+    .select("partner_id, slug")
+    .in("partner_id", [...partnerIds])
+    .eq("is_default", true)
+    .limit(1000);
+  return new Map((data ?? []).map((row) => [String(row.partner_id), String(row.slug ?? "")] as const));
 }
 
 /* ── Клиенты, закреплённые вручную ──────────────────────────────────────── */

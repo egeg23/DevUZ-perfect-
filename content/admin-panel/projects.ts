@@ -270,6 +270,8 @@ export const projectCardDict = defineDict({
   ownerLeft: { ru: "Остаётся владельцу", uz: "Egasiga qoladi", pl: "Zostaje właścicielowi" },
   shareHead: { ru: "руководитель", uz: "rahbar", pl: "kierownik" },
   shareLeads: { ru: "ведёт", uz: "olib boradi", pl: "prowadzi" },
+  shareAgency: { ru: "привёл агентство", uz: "agentlikni olib kelgan", pl: "przyprowadził agencję" },
+  fromTurnoverTail: { ru: " · с суммы проекта, 12 месяцев", uz: " · loyiha summasidan, 12 oy", pl: " · od kwoty projektu, 12 miesięcy" },
   manual: { ru: " · вручную", uz: " · qo‘lda", pl: " · ręcznie" },
   byGradeTail: { ru: " · по грейду", uz: " · daraja bo‘yicha", pl: " · według poziomu" },
   sharePercentAria: { ru: "Процент по этой сделке", uz: "Shu bitim bo‘yicha foiz", pl: "Procent od tej transakcji" },
@@ -281,6 +283,7 @@ export const projectCardDict = defineDict({
   fromTurnover: { ru: "с оборота", uz: "aylanmadan", pl: "od obrotu" },
   fromProfit: { ru: "от прибыли", uz: "foydadan", pl: "od zysku" },
   byAmount: { ru: " · по сумме проекта", uz: " · loyiha summasi bo‘yicha", pl: " · według kwoty projektu" },
+  agencyFixed: { ru: " · агентство, всегда 15%", uz: " · agentlik, doim 15%", pl: " · agencja, zawsze 15%" },
   agency: {
     ru: (name: string) => ` · агентство «${name}»`,
     uz: (name: string) => ` · «${name}» agentligi`,

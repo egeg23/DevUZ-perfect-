@@ -51,7 +51,7 @@ import { pick, tr, type Msg, type Tr } from "@/lib/admin/i18n";
 import { categoryChoices, quoteFor } from "@/lib/admin/quote";
 import { t as siteText } from "@/lib/i18n";
 import { seesOwnerMoney } from "@/lib/admin/roles";
-import { gradeBookFor, loadPeople, paymentsFor, sharesFor, sharesOf } from "@/lib/admin/ledger";
+import { gradeBookFor, loadPeople, paymentsFor, sharesFor, sharesOf, withFinder } from "@/lib/admin/ledger";
 import {
   ALL_STAGES,
   STAGES,
@@ -163,7 +163,9 @@ export default async function ProjectPage({
   const paid = paidOf(project.id, payments);
   // Ставка ведущего с 01.11.2026 зависит от его сделок прошлого месяца (lib/admin/grade-month.ts).
   const book = await gradeBookFor(project.owner_staff_id);
-  const lines = accrualsOf(project, payments, earnersOf(people), sharesOf(project.id, shares), book);
+  // Проект агентства — ещё 5% с суммы тому, кто привёл агентство (lib/partners/rules.ts, agencyFinder).
+  const finders = partner ? new Map([[partner.id, partner]]) : new Map();
+  const lines = accrualsOf(withFinder(project, finders), payments, earnersOf(people), sharesOf(project.id, shares), book);
   const state = accrualState(project, paid);
   const profit = profitOf(project);
   const seesMoney = canSeeMoney(staff, project, team);
@@ -507,8 +509,8 @@ export default async function ProjectPage({
               <li key={`${a.staff_id}-${a.share}`} className="flex flex-wrap items-center gap-x-3 gap-y-1">
                 <span>{nameOf(a.staff_id)}</span>
                 <span className="text-xs text-faint">
-                  {a.share === "head" ? t.shareHead : t.shareLeads} · {a.percent} %
-                  {a.manual ? t.manual : t.byGradeTail}
+                  {a.share === "agency" ? t.shareAgency : a.share === "head" ? t.shareHead : t.shareLeads} · {a.percent} %
+                  {a.share === "agency" ? t.fromTurnoverTail : a.manual ? t.manual : t.byGradeTail}
                 </span>
                 <span className="font-mono">{money(a.amount_usd)}</span>
                 <span
@@ -518,9 +520,10 @@ export default async function ProjectPage({
                 >
                   {tr(ACCRUAL_TR[a.state], locale)}
                 </span>
-                {isAdmin ? (
+                {isAdmin && a.share !== "agency" ? (
                   // Процент по этой сделке — только закреплённым: строки здесь и
-                  // есть закреплённые, а постороннего сервер не примет.
+                  // есть закреплённые, а постороннего сервер не примет. 5% за
+                  // агентство — правило, а не грейд: ручного процента у них нет.
                   <form action={saveShare} className="flex items-center gap-2">
                     <input type="hidden" name="project" value={project.id} />
                     <input type="hidden" name="staff" value={a.staff_id} />
@@ -557,7 +560,7 @@ export default async function ProjectPage({
                 <span className="font-mono text-xs text-muted">{partner.code}</span>
                 <span className="text-xs text-faint">
                   {partnerLine.percent} % {partnerLine.model === "turnover" ? t.fromTurnover : t.fromProfit}
-                  {partnerLine.manual ? t.manual : t.byAmount}
+                  {partnerLine.manual ? t.manual : partner.kind === "agency" ? t.agencyFixed : t.byAmount}
                   {projectAgency ? t.agency(projectAgency.name) : ""}
                 </span>
                 <span className="font-mono">{money(partnerLine.amount_usd)}</span>

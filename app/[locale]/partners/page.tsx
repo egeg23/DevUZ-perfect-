@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { Container } from "@/components/ui/container";
+import { agencyDeckCopy } from "@/content/agency-deck";
 import { company } from "@/content/company";
 import { getDictionary } from "@/content/dictionaries";
 import { isLocale, localeHref, type Locale } from "@/lib/i18n";
@@ -48,6 +49,7 @@ export default async function PartnersPage({
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
   const t = getDictionary(locale).partners;
+  const agency = agencyDeckCopy(locale);
   const botUrl = `https://t.me/${company.telegram}?start=cabinet`;
 
   return (
@@ -71,6 +73,15 @@ export default async function PartnersPage({
           </a>
         </div>
         <p className="mt-3 text-sm text-faint">{t.ctaNote}</p>
+
+        {/* Агентствам — своя ставка и своя презентация (владелец, 05.11.2026). */}
+        <a
+          href={localeHref(locale, "partners/deck/agency")}
+          className="mt-8 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-green/40 bg-green/[0.06] px-5 py-4 transition-colors hover:border-green"
+        >
+          <span className="text-base leading-relaxed">{agency.teaser}</span>
+          <span className="font-semibold text-green">{agency.teaserCta} →</span>
+        </a>
 
         <section className="mt-16">
           <h2 className="font-display text-xl font-semibold sm:text-2xl">{t.howTitle}</h2>

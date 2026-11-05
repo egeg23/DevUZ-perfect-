@@ -238,7 +238,7 @@ export const moreSections: Record<string, HelpEntry> = {
         body: [
           "Dwa modele, partner wybiera sam w panelu partnera. «Od zysku netto» (kwota − podatek − koszt wytworzenia): do $2 500 — 10%, $2 501–5 000 — 15%, $5 001–10 000 — 20%, $10 001–30 000 — 25%, od $30 001 — 30%. «Od obrotu» (cała kwota umowy) przy tych samych progach: 6, 10, 14, 17, 20%. Próg każdego projektu zależy od jego własnej kwoty. W tabeli «Wszyscy partnerzy», w kolumnie «Stawka», widać model i kiedy go zmieniono.",
           "Model można zmienić najwyżej raz w tygodniu, a przy kliencie zostaje ten, który obowiązywał w dniu jego zgłoszenia: zmiana nie przelicza projektów, które już trwają. W karcie projektu przy «Partner» — «20 % od zysku» albo «14 % od obrotu». Procent ustawiony na projekcie jest ważniejszy niż indywidualna stawka partnera, a indywidualna — ważniejsza niż próg. Przy modelu „od zysku” wpisz koszt wytworzenia projektu — bez niego udział liczy się od kwoty pomniejszonej tylko o podatek.",
-          "Naliczenie jest zamrożone, dopóki klient nie opłaci projektu w całości — tak jak u pracowników.",
+          "Naliczenie jest zamrożone, dopóki klient nie opłaci projektu w całości — tak jak u pracowników. Agencja ma własną stawkę: zawsze 15% od kwoty projektu, bez modeli i skarbonki — jest na liście z oznaczeniem «agencja · 15%», szczegóły w zakładce [Agencje](/admin/agencies).",
           "Skarbonka. W panelu partnera jest przełącznik «Nie wypłacaj automatycznie» (w rosyjskiej wersji panelu — «Не забирать в автоматическом режиме»). Dopóki jest włączony, pieniądze za opłacone projekty nie idą do partnera od razu: nie ma automatycznych wypłat od obrotu, a stawka dla wszystkich opłaconych i jeszcze niewypłaconych projektów liczy się od ich łącznej kwoty — według tej samej tabeli. Trzy projekty po $2 000 to $6 000, więc dla wszystkich trzech jest 20% od zysku (14% od obrotu) zamiast 10% (6%). Studio dłużej trzyma pieniądze u siebie i inwestuje je w rozwój, a partner w efekcie dostaje więcej. Stawka nigdy nie jest niższa niż zwykła; projekt z procentem ustawionym ręcznie i partner z indywidualną stawką w skarbonce nie uczestniczą. W tabeli «Wszyscy partnerzy», w kolumnie «Stawka», taki partner ma zielony wiersz «skarbonka: $… · stawka …%». Wyłączył przełącznik — podwyżka znika, niewypłacone liczy się według zwykłego progu każdego projektu, a automatyczne wypłaty od obrotu wracają.",
         ],
       },
@@ -297,6 +297,91 @@ export const moreSections: Record<string, HelpEntry> = {
           "W tabeli «Wszyscy partnerzy», w kolumnie «Edycja», pod «zapisz» — «usuń». Rozwija się ostrzeżenie: linki partnera przestaną działać, panel i logowanie przez bota zostaną zamknięte; z jego projektów i zgłoszeń zniknie «kto przyprowadził» — naliczeń za nie już nie będzie; agencje i przypisani klienci zostaną usunięci. Przycisk **«Usuń na zawsze»**. Nie da się tego cofnąć — można tylko dodać partnera od nowa. Partner nie dostaje żadnej wiadomości.",
           "Partnera z wypłatami usunąć nie można: wypłata to pieniądze, które już wyszły albo czekają na decyzję, i ich historia nie może zniknąć. U takiego partnera zamiast przycisku jest wyjaśnienie; można go tylko zablokować. Usunięcie trafia do [Dziennika](/admin/audit). Partnerów z Telegramem pracownika tabela oznacza «pracownik studia» — to ich usuwaj: pracownik nie może być partnerem.",
         ],
+      },
+    ],
+  },
+
+  /* ── Агентства ──────────────────────────────────────────────────────── */
+  "/admin/agencies": {
+    what: "Agencje to partnerzy studia: agencja przyprowadza nam zlecenia swoich klientów i dostaje 15% od kwoty każdego takiego projektu. Kto z zespołu przyprowadził agencję i dodał ją tutaj, przez 12 miesięcy dostaje 5% od kwoty projektów agencji. Agencję może dodać każdy: zakładka jest przy sekcji «Partnerzy», a kto tej sekcji nie ma, widzi ją od razu w menu.",
+    items: [
+      {
+        id: "terms",
+        title: "Warunki: 15% dla agencji, 5% dla tego, kto przyprowadził",
+        body: [
+          "Agencja dostaje zawsze 15% od kwoty każdego swojego projektu: bez progów, bez wyboru modelu od zysku lub od obrotu i bez skarbonki, jak bywa u partnerów z linkiem. Kwota to ta, która stoi w projekcie, czyli w umowie.",
+          "Ten, kto przyprowadził agencję, dostaje 5% od kwoty każdego projektu agencji założonego w ciągu 12 miesięcy od dnia, w którym agencję tu dodano. Projekt założony później jest już bez 5%, a założony w terminie zostaje przy nim także potem. Projekt założony wcześniej niż agencja też jest bez 5%: nie przyszedł przez agencję. Termin widać w tabeli, w kolumnie «5% do».",
+          "5% dochodzi ponad wszystko inne. Jeśli projekt agencji prowadzisz Ty, Twój procent prowadzącego liczy się jak zwykle, a 5% idzie osobnym wierszem «przyprowadził agencję». Prowadzi ktoś inny: on ma swój procent, Ty swoje 5%.",
+          "Obie części są zamrożone, dopóki klient nie opłaci projektu w całości, jak wszystko w [Finansach](/admin/finance): częściowa wpłata to zamrożone, pełna to zarobione. Anulowany projekt nie daje nic.",
+        ],
+      },
+      {
+        id: "deck",
+        title: "Schemat «Jak to działa» i prezentacja dla agencji",
+        body: [
+          "Na górze zakładki — «Jak to działa — w skrócie»: droga zlecenia w trzech krokach i kto ile dostaje z jednego projektu, z przykładem na $2 000: agencja $300, osoba, która przyprowadziła, $100, reszta dla studia, a z niej prowadzący dostaje swój zwykły procent od zysku. Tu jest wszystko, łącznie z naszymi 5%: to schemat dla zespołu.",
+          "«Otwórz prezentację» — strona na stronie internetowej w sześciu językach (rosyjski, angielski, uzbecki, chiński, ukraiński, polski) dla samej agencji: duża liczba 15%, trzy kroki, przykład z paskami, zasady, co można przyprowadzić, i przycisk do Telegrama. Procentu osoby, która przyprowadziła, tam nie ma i nie będzie: to sprawa wewnętrzna, agencji tego nie pokazujemy. Wyślij link albo otwórz stronę, kliknij przycisk PDF u góry i prześlij plik. W tabeli każda agencja ma własny link «prezentacja»: z nim przycisk Telegrama na stronie prowadzi do bota z kodem tej agencji.",
+        ],
+      },
+      {
+        id: "add",
+        title: "Jak dodać agencję",
+        body: {
+          manager: [
+            "Blok «Dodaj agencję»: «Nazwa agencji», «Jak do nas pisze: @telegram, telefon lub e-mail» (obowiązkowo), «Strona» i «Notatka» (opcjonalnie). Przycisk «Dodaj agencję». Agencję przyprowadziłeś Ty: zapisuje się na Ciebie i przez 12 miesięcy od tego dnia 5% od kwoty jej projektów jest Twoje.",
+            "Dodawaj od razu, gdy umówisz się z agencją, a nie gdy przyjdzie pierwsze zlecenie: termin liczy się od dnia dodania agencji, a projekt założony wcześniej niż agencja nie wchodzi do 5%.",
+            "Jedna agencja to jeden wpis. Jeśli agencja z tym samym kontaktem lub nazwą jest już dodana przez Ciebie, kolegę lub partnera, panel odpowie «Ta agencja jest już dodana…» i drugiego wpisu nie będzie. Jeśli to pomyłka, napisz do właściciela: tylko on może zmienić, kto przyprowadził.",
+          ],
+          head: [
+            "Blok «Dodaj agencję»: «Nazwa agencji», «Jak do nas pisze: @telegram, telefon lub e-mail» (obowiązkowo), «Strona» i «Notatka» (opcjonalnie) oraz «Kto przyprowadził», czyli komu trafi 5%: domyślnie Ty, można wybrać pracownika albo «Nikt, przyszła sama». Przycisk «Dodaj agencję».",
+            "Dodawaj od razu, gdy umówisz się z agencją, a nie gdy przyjdzie pierwsze zlecenie: termin liczy się od dnia dodania agencji, a projekt założony wcześniej niż agencja nie wchodzi do 5%.",
+            "Jedna agencja to jeden wpis: tej samej agencji (ten sam kontakt lub nazwa) nie da się dodać drugi raz, tak samo jak agencji, którą już podłączył partner. Kto przyprowadził, później zmienia tylko właściciel.",
+          ],
+          admin: [
+            "Blok «Dodaj agencję»: «Nazwa agencji», «Jak do nas pisze: @telegram, telefon lub e-mail» (obowiązkowo), «Strona» i «Notatka» (opcjonalnie) oraz «Kto przyprowadził», czyli komu trafi 5%: domyślnie Ty, można wybrać pracownika albo «Nikt, przyszła sama». Przycisk «Dodaj agencję».",
+            "Dodawaj od razu, gdy umówisz się z agencją, a nie gdy przyjdzie pierwsze zlecenie: termin liczy się od dnia dodania agencji, a projekt założony wcześniej niż agencja nie wchodzi do 5%.",
+            "Jedna agencja to jeden wpis: tej samej agencji (ten sam kontakt lub nazwa) nie da się dodać drugi raz, tak samo jak agencji, którą już podłączył partner. Kto przyprowadził, zmieniasz w samej tabeli: w kolumnie «Kto przyprowadził» wybierz osobę i kliknij «zapisz». Termin 12 miesięcy się nie przesuwa — liczy się od dnia dodania agencji. Każda zmiana jest w [Dzienniku](/admin/audit).",
+          ],
+        },
+      },
+      {
+        id: "orders",
+        title: "Jak zlecenia agencji trafiają na nią",
+        body: {
+          manager: [
+            "Od razu po dodaniu agencja ma własny link, w tabeli: «link dla agencji». Wyślij go agencji: klient, który przyszedł nim na stronę lub do bota, zapisuje się na agencję tak samo jak klient partnera z linku.",
+            "Zgłoszenia, które agencja wysyła sama — ze strony, z czatu lub z bota — panel rozpoznaje po jej kontakcie lub nazwie i zapisuje na agencję, bez linku i bez terminu. Projekt z takiego zgłoszenia dziedziczy agencję, a 15% i 5% pojawiają się w projekcie same.",
+            "Zlecenie przyszło telefonem albo w prywatnej wiadomości do menedżera: poproś właściciela, żeby przypiął projekt do agencji, robi to w karcie projektu.",
+          ],
+          head: [
+            "Od razu po dodaniu agencja ma własny link, w tabeli: «link dla agencji». Wyślij go agencji: klient, który przyszedł nim na stronę lub do bota, zapisuje się na agencję tak samo jak klient partnera z linku.",
+            "Zgłoszenia, które agencja wysyła sama — ze strony, z czatu lub z bota — panel rozpoznaje po jej kontakcie lub nazwie i zapisuje na agencję, bez linku i bez terminu. Projekt z takiego zgłoszenia dziedziczy agencję, a 15% i 5% pojawiają się w projekcie same.",
+            "Zlecenie przyszło telefonem albo w prywatnej wiadomości do menedżera: poproś właściciela, żeby przypiął projekt do agencji, robi to w karcie projektu.",
+          ],
+          admin: [
+            "Od razu po dodaniu agencja ma własny link, w tabeli: «link dla agencji». Wyślij go agencji: klient, który przyszedł nim na stronę lub do bota, zapisuje się na agencję tak samo jak klient partnera z linku.",
+            "Zgłoszenia, które agencja wysyła sama — ze strony, z czatu lub z bota — panel rozpoznaje po jej kontakcie lub nazwie i zapisuje na agencję, bez linku i bez terminu. Projekt z takiego zgłoszenia dziedziczy agencję, a 15% i 5% pojawiają się w projekcie same.",
+            "Zlecenie przyszło telefonem albo w prywatnej wiadomości: przypnij projekt sam, w karcie projektu, blok «Partner», wybierz agencję. Na liście partnerów agencja ma oznaczenie «agencja · 15%».",
+          ],
+        },
+      },
+      {
+        id: "money",
+        title: "Gdzie widać pieniądze",
+        body: {
+          manager: [
+            "W tabeli «Moje agencje» są agencje, które przyprowadziłeś: ile projektów ma agencja, «Kwota projektów» i «5% za agencję», czyli ile zarobione, a ile zamrożone. Te same 5% widać wierszem «przyprowadził agencję» w Twoich [Finansach](/admin/finance): wchodzą do Twojego salda i są wypłacane razem z resztą.",
+            "Ile dostaje agencja, nie widzisz: to pieniądze dla osoby z zewnątrz, o wypłacie decyduje właściciel.",
+          ],
+          head: [
+            "W tabeli «Wszystkie agencje» są wszystkie agencje, kto przyprowadził każdą, ile ma projektów, «Kwota projektów», «5% za agencję» i «Dla agencji 15%». Twoje 5% i 5% Twojego zespołu są w [Finansach](/admin/finance), wierszem «przyprowadził agencję».",
+            "Agencja jest też na wspólnej liście [Partnerów](/admin/partners), z oznaczeniem «agencja · 15%»: tam są jej naliczenia i wnioski o wypłatę, jak u każdego partnera. O wypłacie decyduje właściciel.",
+          ],
+          admin: [
+            "W tabeli «Wszystkie agencje» są wszystkie agencje, kto przyprowadził każdą, ile ma projektów, «Kwota projektów», «5% za agencję» i «Dla agencji 15%». W [Finansach](/admin/finance) 5% to wiersz «przyprowadził agencję» u tego, kto przyprowadził; odejmuje się od tego, co zostaje studiu, jak każde naliczenie zespołu.",
+            "Agencja jest też na wspólnej liście [Partnerów](/admin/partners), z oznaczeniem «agencja · 15%»: tam są jej naliczenia, dane do przelewu i wnioski o wypłatę, jak u każdego partnera. O wypłacie decydujesz Ty.",
+          ],
+        },
       },
     ],
   },

@@ -62,6 +62,8 @@ export const AUDIT_ACTIONS = [
   "partner.model_changed",
   "partner.agency_requested",
   "partner.agency_decided",
+  "partner.agency_created",
+  "partner.agency_finder",
   "partner.client_claimed",
   "partner.client_lead",
   "lead.inn_set",
