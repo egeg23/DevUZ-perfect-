@@ -131,7 +131,7 @@ export default async function FinancePage({
     ? ledger.people.filter((p) => p.is_active && isFounder(p))
     : [];
   const pool = ownerMoney
-    ? foundersPool(ledger.projects, ledger.payments, accruals, expenses, bonuses)
+    ? foundersPool(ledger.projects, ledger.payments, accruals, expenses, bonuses, [...partnerLines.values()])
     : null;
   // Доля от «К делению» плюс возврат тому, кто платил за расход из своих
   // (владелец, 04.11.2026: «эта сумма должна встать к выплате обратно тому

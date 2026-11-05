@@ -329,3 +329,23 @@ test("каждый внёс свою часть — двумя строками,
   assert.deepEqual(payouts.map((p) => p.total), [700, 300]);
   assert.deepEqual([...paidBack(parts).entries()], [[OWNER, 70], [ALEX, 30]]);
 });
+
+test("доли партнёров и агентств вычитаются до деления 70/30", () => {
+  // Владелец, 05.11.2026: «Вычитать деньги до деления — да».
+  const paid = project({ id: "paid", amount_usd: 10_000, dev_cost_usd: 0, tax_percent: 0 });
+  const open = project({ id: "open", amount_usd: 2_000, dev_cost_usd: 0, tax_percent: 0 });
+  const payments: PaymentMoney[] = [{ project_id: "paid", amount_usd: 10_000 }];
+  // Агентству 15% с суммы: 1 500 с оплаченного, 300 с неоплаченного.
+  const partners = [
+    { project_id: "paid", amount_usd: 1_500 },
+    { project_id: "open", amount_usd: 300 },
+  ];
+  const pool = foundersPool([paid, open], payments, [], [expense(500)], [], partners);
+  assert.equal(pool.earned, 8_500);
+  assert.equal(pool.frozen, 1_700);
+  assert.equal(pool.pool, 8_000);
+  // Без партнёров — как было.
+  assert.equal(foundersPool([paid], payments, [], []).pool, 10_000);
+  // «Финансы» передают в котёл строки партнёров.
+  assert.match(read("app/admin/finance/page.tsx"), /foundersPool\(ledger\.projects, ledger\.payments, accruals, expenses, bonuses, \[\.\.\.partnerLines\.values\(\)\]\)/);
+});

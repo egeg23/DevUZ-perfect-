@@ -765,7 +765,7 @@ export const workSections: Record<string, HelpEntry> = {
           ],
           admin: [
             "Kafelki dla studia: «Z umów», «Zapłacone przez klientów», «Zysk netto» (z dopiskiem, ile projektów nie ma kosztu wytworzenia), «Naliczone zespołowi i partnerom», «Zostaje właścicielowi».",
-            "Tabela osób i «Według projektów» — z kolumnami podatku, kosztu wytworzenia, zysku i «Dla właściciela» (po odjęciu partnerów). «Udziały współzałożycieli» — co wpłynęło minus wydatki, jak to się dzieli i ile zwrócić temu, kto zapłacił za wydatek z własnych (udział + zwrot za wydatki = do wypłaty). «Wydatki studia» — ta sama lista co w [Wydatkach](/admin/expenses).",
+            "Tabela osób i «Według projektów» — z kolumnami podatku, kosztu wytworzenia, zysku i «Dla właściciela» (po odjęciu partnerów). «Udziały współzałożycieli» — co wpłynęło minus udziały partnerów i agencji i minus wydatki, jak to się dzieli i ile zwrócić temu, kto zapłacił za wydatek z własnych (udział + zwrot za wydatki = do wypłaty). «Wydatki studia» — ta sama lista co w [Wydatkach](/admin/expenses).",
           ],
         },
       },

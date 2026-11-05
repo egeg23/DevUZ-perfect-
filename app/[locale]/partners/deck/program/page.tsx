@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { Deck, Slide, SlideTitle, usd } from "@/components/partners/deck";
+import { agencyDeckCopy } from "@/content/agency-deck";
 import { company } from "@/content/company";
 import { deckCopy } from "@/content/partner-decks";
 import { isLocale, localeHref } from "@/lib/i18n";
 import { GRADES, gradeCap } from "@/lib/partners/grades";
-import { PARTNER_TIERS, tierPercent } from "@/lib/partners/rules";
+import { AGENCY_PERCENT, PARTNER_TIERS, tierPercent } from "@/lib/partners/rules";
 import { buildMetadata } from "@/lib/seo";
 
 /**
@@ -48,6 +49,7 @@ export default async function ProgramDeck({
   // middleware, и клиент, пришедший отсюда на сайт, засчитается партнёру.
   const d = deckCopy(locale);
   const t = d.program;
+  const agency = agencyDeckCopy(locale);
   const example = EXAMPLE.map((amount, i) => {
     const percent = tierPercent(amount, "turnover");
     return { name: t.exampleOrders[i] ?? "", amount, percent, share: Math.round((amount * percent) / 100) };
@@ -91,9 +93,9 @@ export default async function ProgramDeck({
         <SlideTitle>{t.gradesTitle}</SlideTitle>
         <p className="mt-4 max-w-3xl text-muted">{t.gradesLead}</p>
         <div className="mt-6 grid gap-8 lg:grid-cols-2">
-          {(["agency", "blogger"] as const).map((kind) => (
+          {(["blogger"] as const).map((kind) => (
             <div key={kind}>
-              <p className="font-display text-lg font-semibold">{kind === "agency" ? t.gradesAgency : t.gradesBlogger}</p>
+              <p className="font-display text-lg font-semibold">{t.gradesBlogger}</p>
               <table className="mt-3 w-full text-sm">
                 <tbody className="divide-y divide-white/10">
                   {GRADES[kind].map((g) => (
@@ -109,6 +111,19 @@ export default async function ProgramDeck({
               </table>
             </div>
           ))}
+          {/* Агентствам уровней нет: 15% с суммы проекта всегда (владелец,
+              05.11.2026: «Убирай надбавки, да») — их условия в своей презентации. */}
+          <div>
+            <p className="font-display text-lg font-semibold">{t.gradesAgency}</p>
+            <a
+              href={localeHref(locale, "partners/deck/agency")}
+              className="mt-3 flex flex-col gap-3 rounded-xl border border-green/40 bg-green/[0.06] px-5 py-5 transition-colors hover:border-green"
+            >
+              <span className="font-display text-5xl font-semibold text-green">{AGENCY_PERCENT}%</span>
+              <span className="text-sm leading-relaxed">{agency.teaser}</span>
+              <span className="text-sm font-semibold text-green">{agency.teaserCta} →</span>
+            </a>
+          </div>
         </div>
         <p className="mt-6 max-w-3xl text-xs leading-relaxed text-faint">{t.gradesNote(gradeCap("profit"), gradeCap("turnover"))}</p>
       </Slide>

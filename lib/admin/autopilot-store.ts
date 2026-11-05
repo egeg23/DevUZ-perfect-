@@ -19,7 +19,7 @@ import { dailyAllowance, firecrawlBalance, firecrawlKey } from "@/lib/firecrawl"
 import { AUTOPILOT, prepareOutreach, queueOutreach, type Prospect } from "@/lib/admin/outreach-store";
 import { tashkentMidnight, todayInTashkent } from "@/lib/admin/pulse";
 import type { Staff } from "@/lib/admin/session";
-import { MAIN_ACCOUNT, accountOf } from "@/lib/admin/work-accounts";
+import { MAIN_ACCOUNT, accountOf, takesAutopilot } from "@/lib/admin/work-accounts";
 import { esc, sendMessage } from "@/lib/qualify/telegram";
 import { serviceClient } from "@/lib/supabase";
 
@@ -180,12 +180,23 @@ async function releaseStale(db: Db, now: Date): Promise<void> {
     .is("autopilot_note", null);
 }
 
+/**
+ * Есть ли кому отправить «Здравствуйте» автопрогона: главный — только если
+ * AUTOPILOT_ON_MAIN, иначе живой дополнительный аккаунт без ограничения.
+ */
+export async function autopilotAccountReady(db: Db, now: Date = new Date()): Promise<boolean> {
+  if (takesAutopilot(MAIN_ACCOUNT)) return true;
+  const { data, error } = await db.from("tg_accounts").select("id, flood_until").eq("status", "active").limit(50);
+  if (error) return false;
+  return (data ?? []).some((row) => !row.flood_until || Date.parse(String(row.flood_until)) <= now.getTime());
+}
+
 /** Отказы модели и базы — не про карточку: её не помечаем, и проход останавливается. */
 const PASSING = new Set(["db", "no_key", "model_empty", "defect"]);
 const passing = (code: string) => PASSING.has(code) || code.startsWith("model_");
 
 export type AutopilotRun = {
-  skipped?: "off" | "hours" | "offline" | "no_key" | "full";
+  skipped?: "off" | "hours" | "offline" | "no_key" | "full" | "no_account";
   queued: number;
   dropped: string[];
   errors: string[];
@@ -206,6 +217,10 @@ export async function runAutopilot(now: Date = new Date()): Promise<AutopilotRun
   await ensureCampaigns(db);
   if (!prepareWindow(now)) return { ...run, skipped: "hours" };
   if (!process.env.ANTHROPIC_API_KEY) return { ...run, skipped: "no_key" };
+  // Писать некому: главный автопрогон не берёт, а дополнительные на паузе
+  // или ограничены. Готовить письма впрок нельзя — проверка по факту живёт
+  // три дня, а Firecrawl и модель тратятся сейчас.
+  if (!(await autopilotAccountReady(db, now))) return { ...run, skipped: "no_account" };
 
   await releaseStale(db, now);
   let need = toPrepare({ ...(await today(db, now)), target: settings.target });

@@ -20,11 +20,19 @@ test("надбавки 0 / 2 / 4 / 6 и потолок 36 % от прибыли,
   assert.equal(gradeCap("turnover"), 26);
 });
 
+test("агентствам уровней нет: у них 15% с суммы проекта всегда", () => {
+  // Владелец, 05.11.2026: «Убирай надбавки, да».
+  assert.deepEqual(Object.keys(GRADES), ["blogger"]);
+  const doc = read("kp/partner-grades.html");
+  assert.ok(!doc.includes("Грейды для агентств"), "в документе остались грейды агентств");
+  assert.ok(doc.includes("15% с суммы каждого проекта"), "в документе нет 15% агентствам");
+  const deck = read("app/[locale]/partners/deck/program/page.tsx");
+  assert.ok(!deck.includes('"agency", "blogger"'), "в презентации остались уровни агентств");
+  assert.match(deck, /AGENCY_PERCENT/);
+});
+
 test("уровень — по проектам или обороту за 12 месяцев", () => {
-  assert.equal(gradeOf("agency", 0, 0).key, "start");
-  assert.equal(gradeOf("agency", 1, 10_000).key, "proven");
-  assert.equal(gradeOf("agency", 5, 0).key, "key");
-  assert.equal(gradeOf("agency", 3, 80_000).key, "strategic");
+  assert.equal(gradeOf("blogger", 0, 0).key, "start");
   assert.equal(gradeOf("blogger", 1, 0).key, "author");
   // У «Автора» оборота в условии нет: один крупный проект — это один клиент.
   assert.equal(gradeOf("blogger", 1, 9_000).key, "author");
@@ -34,7 +42,7 @@ test("уровень — по проектам или обороту за 12 м�
 
 test("документ на бланке называет те же пороги", () => {
   const doc = read("kp/partner-grades.html");
-  for (const phrase of ["2 оплаченных проекта", "10 000 $", "30 000 $", "75 000 $", "7 оплативших клиентов", "+6 п.п.", "36 % от прибыли", "26 % с оборота"]) {
+  for (const phrase of ["3 оплативших клиента", "10 000 $", "30 000 $", "7 оплативших клиентов", "+6 п.п.", "36 % от прибыли", "26 % с оборота"]) {
     assert.ok(doc.includes(phrase), `в kp/partner-grades.html нет «${phrase}»`);
   }
 });
