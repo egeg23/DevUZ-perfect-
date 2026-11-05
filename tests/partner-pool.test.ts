@@ -8,7 +8,7 @@ import {
   partnerBalanceOf,
   poolAmount,
   poolProjects,
-  withPool,
+  applyPool,
   type PartnerProject,
 } from "@/lib/partners/rules";
 
@@ -42,7 +42,7 @@ const paidFull = (ps: PartnerProject[]) => ps.map((p) => ({ project_id: p.id, am
 
 function accrue(ps: PartnerProject[], partner: { id: string; percent_override: number | null; accumulate?: boolean }, payments = paidFull(ps)) {
   const base = ps.map((p) => partnerAccrualOf(p, payments, partner, [])).filter((a) => a !== null);
-  return withPool(base, ps, partner);
+  return applyPool(base, ps, partner);
 }
 
 test("три проекта по 2 000 $ в копилке — ступень 6 000 $ для всех трёх", () => {
@@ -77,7 +77,7 @@ test("в копилке — только оплаченные целиком и 
   const pool = poolProjects(ps, base, partner);
   assert.deepEqual(pool.map((p) => p.id), ["paid"]);
   assert.equal(poolAmount(pool), 2000);
-  const on = withPool(base, ps, partner);
+  const on = applyPool(base, ps, partner);
   assert.equal(on.find((a) => a.project_id === "paid")?.percent, 6, "2 000 $ — первая ступень, повышать нечего");
 });
 

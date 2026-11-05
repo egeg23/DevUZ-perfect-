@@ -154,15 +154,15 @@ test("оценка: живой микроблогер из Ташкента пр
 
 test("условия в первом сообщении — из правил партнёрской программы", () => {
   const t = programTerms();
-  assert.equal(t.profitFrom, Math.min(...PARTNER_TIERS.map((x) => x.profit)));
-  assert.equal(t.profitTo, Math.max(...PARTNER_TIERS.map((x) => x.profit)));
   assert.equal(t.turnoverFrom, Math.min(...PARTNER_TIERS.map((x) => x.turnover)));
   assert.equal(t.turnoverTo, Math.max(...PARTNER_TIERS.map((x) => x.turnover)));
   for (const lang of ["ru", "uz"] as const) {
     const text = pitchText({ name: "Dilnoza Karimova", handle: "dilnoza.biz" }, lang, "https://devuz.studio");
-    const allowed = new Set([t.profitFrom, t.profitTo, t.turnoverFrom, t.turnoverTo, MIN_PAYOUT_USD].map(String));
+    const allowed = new Set([t.turnoverFrom, t.turnoverTo, MIN_PAYOUT_USD].map(String));
     for (const n of text.match(/\d+/g) ?? []) assert.ok(allowed.has(n), `${lang}: число ${n} не из правил программы`);
     assert.match(text, /Dilnoza/);
+    // Модель одна — с суммы проекта (владелец, 05.11.2026): «от прибыли» не предлагаем.
+    assert.doesNotMatch(text, /прибыл|foyda/i, `${lang}: в приглашении осталась «прибыль»`);
     assert.match(text, new RegExp(`devuz\\.studio/${lang}/partners`));
     assert.doesNotMatch(text, /[—–]| - /, `${lang}: длинное тире в тексте живому человеку`);
   }
@@ -276,11 +276,12 @@ test("согласие: партнёр сам — только с провере
 test("агент: числа не из условий программы — повтор, второй промах — безопасная фраза и человек", async () => {
   const { agentTurn, programFacts, SAFE_REPLY } = await import("@/lib/bloggers/agent");
   const facts = programFacts("ru", "https://devuz.studio");
-  for (const t of PARTNER_TIERS) assert.match(facts, new RegExp(`${t.profit}% от прибыли или ${t.turnover}% от суммы`));
+  for (const t of PARTNER_TIERS) assert.match(facts, new RegExp(`: ${t.turnover}% от суммы`));
+  assert.doesNotMatch(facts, /прибыл/, "агент предложит модель «от прибыли», которой нет");
   const say = (text: string, intent = "question") =>
     async () => ({ content: [{ type: "tool_use", id: "x", name: "answer", input: { text, intent } }] }) as never;
   const input = { lang: "ru" as const, name: "", history: [{ role: "blogger" as const, text: "Сколько платите?" }], disclosed: false, audience: null, siteUrl: "https://devuz.studio" };
-  const good = await agentTurn(input, say("От 10 до 30% от прибыли проекта."));
+  const good = await agentTurn(input, say("От 6 до 20% от суммы проекта."));
   assert.equal(good.checked, true);
   let calls = 0;
   const bad = await agentTurn(input, async () => {

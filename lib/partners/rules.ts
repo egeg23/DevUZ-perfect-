@@ -47,8 +47,31 @@ export function isPayoutModel(value: unknown): value is PayoutModel {
   return typeof value === "string" && (PAYOUT_MODELS as readonly string[]).includes(value);
 }
 
-/** Модель, которой не выбирали, — «от прибыли»: так считалось до выбора. */
+/** Модель, которой не выбирали, — «от прибыли»: так считалось до выбора. Только для старых записей. */
 export const DEFAULT_MODEL: PayoutModel = "profit";
+
+/**
+ * Программа проще (владелец, 05.11.2026, на разбор «как отслеживать
+ * клиентов»: «Одну ссылку нет, но остальное да, делаем»): одна модель — с
+ * оборота, без копилки, без закрепления клиентов по ИНН и без агентств
+ * партнёра. Код и данные остаются: включить обратно — флагом.
+ *
+ * - PROFIT_MODEL: «от прибыли» не выбрать; у уже идущих проектов модель,
+ *   записанная на клиенте, не меняется.
+ * - POOL: копилки нет в кабинете, ставку она не поднимает.
+ * - CLIENT_CLAIMS, PARTNER_AGENCIES: новых закреплений и агентств партнёра не
+ *   принимаем; уже заведённые — видны и считаются, как раньше.
+ */
+export const PROFIT_MODEL = false;
+export const POOL = false;
+export const CLIENT_CLAIMS = false;
+export const PARTNER_AGENCIES = false;
+
+/** С какой моделью заводится новый партнёр. */
+export const NEW_MODEL: PayoutModel = PROFIT_MODEL ? DEFAULT_MODEL : "turnover";
+
+/** Модели, которые партнёр может выбрать в кабинете. */
+export const CHOOSABLE_MODELS: readonly PayoutModel[] = PROFIT_MODEL ? PAYOUT_MODELS : ["turnover"];
 
 /**
  * Ставки по сумме проекта: две колонки, одни пороги. `upTo` — включительно:
@@ -573,10 +596,22 @@ export function poolAmount(projects: readonly Pick<PartnerProject, "amount_usd">
 
 /**
  * Начисления с поднятой копилкой ставкой. Без тумблера — как есть.
+ * Копилка с 05.11.2026 выключена (`POOL`): начисления идут как есть.
+ */
+export function withPool<P extends PartnerProject>(
+  accruals: PartnerAccrual[],
+  projects: readonly P[],
+  partner: { percent_override: number | null; accumulate?: boolean },
+): PartnerAccrual[] {
+  return POOL ? applyPool(accruals, projects, partner) : accruals;
+}
+
+/**
+ * Расчёт копилки — остаётся на случай, если владелец её вернёт.
  * Ставка проекта в копилке — по общей сумме копилки, если она выше его
  * обычной ступени; сумма начисления пересчитывается от той же базы.
  */
-export function withPool<P extends PartnerProject>(
+export function applyPool<P extends PartnerProject>(
   accruals: PartnerAccrual[],
   projects: readonly P[],
   partner: { percent_override: number | null; accumulate?: boolean },

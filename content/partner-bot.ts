@@ -1,5 +1,5 @@
 import type { Locale } from "@/lib/i18n";
-import { MIN_PAYOUT_USD, MODEL_SWITCH_DAYS, PARTNER_TIERS, REF_TTL_DAYS, type PayoutModel } from "@/lib/partners/rules";
+import { MIN_PAYOUT_USD, PARTNER_TIERS, REF_TTL_DAYS, type PayoutModel } from "@/lib/partners/rules";
 import type { LinkFailure, PayoutFailure } from "@/lib/partners/store";
 
 /**
@@ -57,12 +57,13 @@ const usd = (n: number) => `${n.toLocaleString("ru-RU")} $`;
 
 /**
  * Таблица ставок строками — из той же таблицы, по которой считаются деньги:
- * «до 2 500 $ — 10 % прибыли / 6 % оборота».
+ * «до 2 500 $ — 6 % с суммы проекта». Модель одна — с оборота (владелец,
+ * 05.11.2026: «остальное да, делаем»; `PROFIT_MODEL` в rules.ts).
  */
-function tiers(upTo: (n: string) => string, over: (n: string) => string, profit: string, turnover: string): string[] {
+function tiers(upTo: (n: string) => string, over: (n: string) => string, turnover: string): string[] {
   return PARTNER_TIERS.map((t, i) => {
     const range = t.upTo === null ? over(usd(PARTNER_TIERS[i - 1]?.upTo ?? 0)) : upTo(usd(t.upTo));
-    return `• ${range} — <b>${t.profit} %</b> ${profit} / <b>${t.turnover} %</b> ${turnover}`;
+    return `• ${range} — <b>${t.turnover} %</b> ${turnover}`;
   });
 }
 
@@ -71,9 +72,8 @@ const ru: PartnerCopy = {
     [
       "🤝 <b>Партнёрская программа DevUz Studio</b>",
       "",
-      "Приводите клиентов — получаете процент с каждого их проекта, без ограничений по числу клиентов. Две модели на выбор: от чистой прибыли проекта или с оборота (суммы договора). Чем крупнее проект, тем выше процент:",
-      ...tiers((n) => `до ${n}`, (n) => `дороже ${n}`, "прибыли", "оборота"),
-      `Модель выбирается в кабинете и меняется не чаще раза в ${MODEL_SWITCH_DAYS} дней; за клиентом закрепляется та, что действовала в день его заявки.`,
+      "Приводите клиентов — получаете процент с суммы каждого их проекта (суммы договора), без ограничений по числу клиентов. Чем крупнее проект, тем выше процент:",
+      ...tiers((n) => `до ${n}`, (n) => `дороже ${n}`, "с суммы"),
       "",
       "<b>Ваша ссылка на сайт:</b>",
       link,
@@ -172,9 +172,8 @@ const en: PartnerCopy = {
     [
       "🤝 <b>DevUz Studio partner program</b>",
       "",
-      "Bring clients and earn a percentage of every project they order, with no limit on the number of clients. Two models to choose from: of the project's net profit or of turnover (the contract amount). The bigger the project, the higher the rate:",
-      ...tiers((n) => `up to ${n}`, (n) => `over ${n}`, "of profit", "of turnover"),
-      `You choose the model in your dashboard and can change it once every ${MODEL_SWITCH_DAYS} days; a client keeps the model that was active on the day of their request.`,
+      "Bring clients and earn a percentage of every project they order (of the contract amount), with no limit on the number of clients. The bigger the project, the higher the rate:",
+      ...tiers((n) => `up to ${n}`, (n) => `over ${n}`, "of the amount"),
       "",
       "<b>Your website link:</b>",
       link,
@@ -273,9 +272,8 @@ const uk: PartnerCopy = {
     [
       "🤝 <b>Партнерська програма DevUz Studio</b>",
       "",
-      "Приводьте клієнтів — отримуйте відсоток із кожного їхнього проєкту, без обмежень за кількістю клієнтів. Дві моделі на вибір: від чистого прибутку проєкту або з обороту (суми договору). Що більший проєкт, то вищий відсоток:",
-      ...tiers((n) => `до ${n}`, (n) => `понад ${n}`, "прибутку", "обороту"),
-      `Модель обирають у кабінеті, змінити її можна не частіше ніж раз на ${MODEL_SWITCH_DAYS} днів; за клієнтом закріплюється та, що діяла в день його заявки.`,
+      "Приводьте клієнтів — отримуйте відсоток із суми кожного їхнього проєкту (суми договору), без обмежень за кількістю клієнтів. Що більший проєкт, то вищий відсоток:",
+      ...tiers((n) => `до ${n}`, (n) => `понад ${n}`, "із суми"),
       "",
       "<b>Ваше посилання на сайт:</b>",
       link,
@@ -372,9 +370,8 @@ const pl: PartnerCopy = {
     [
       "🤝 <b>Program partnerski DevUz Studio</b>",
       "",
-      "Polecasz klientów — dostajesz procent od każdego ich projektu, bez limitu liczby klientów. Dwa modele do wyboru: od zysku netto z projektu lub od obrotu (wartości umowy). Im większy projekt, tym wyższy procent:",
-      ...tiers((n) => `do ${n}`, (n) => `powyżej ${n}`, "zysku", "obrotu"),
-      `Model wybierasz w panelu i możesz go zmieniać nie częściej niż raz na ${MODEL_SWITCH_DAYS} dni; do klienta przypisany jest ten, który obowiązywał w dniu jego zapytania.`,
+      "Polecasz klientów — dostajesz procent od wartości każdego ich projektu (wartości umowy), bez limitu liczby klientów. Im większy projekt, tym wyższy procent:",
+      ...tiers((n) => `do ${n}`, (n) => `powyżej ${n}`, "od wartości"),
       "",
       "<b>Twój link do strony:</b>",
       link,

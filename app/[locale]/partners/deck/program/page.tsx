@@ -22,7 +22,7 @@ import { buildMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
-/** Три заказа агентства в примере — у нижних границ цен «от» по услугам. */
+/** Три заказа клиентов в примере — у нижних границ цен «от» по услугам. */
 const EXAMPLE = [3_000, 8_000, 15_000];
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
@@ -70,18 +70,16 @@ export default async function ProgramDeck({
           <thead className="text-left text-xs uppercase tracking-wider text-faint">
             <tr>
               <th className="py-2 font-normal">{t.colRange}</th>
-              <th className="py-2 text-right font-normal">{t.colProfit}</th>
               <th className="py-2 text-right font-normal">{t.colTurnover}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/10">
             {PARTNER_TIERS.map((tier, i) => (
-              <tr key={tier.profit}>
+              <tr key={tier.turnover}>
                 <td className="py-3 text-muted">
                   {tier.upTo === null ? t.over(usd(locale, PARTNER_TIERS[i - 1]?.upTo ?? 0)) : t.upTo(usd(locale, tier.upTo))}
                 </td>
-                <td className="py-3 text-right font-display text-2xl font-semibold text-green">{tier.profit} %</td>
-                <td className="py-3 text-right font-display text-2xl font-semibold">{tier.turnover} %</td>
+                <td className="py-3 text-right font-display text-2xl font-semibold text-green">{tier.turnover} %</td>
               </tr>
             ))}
           </tbody>
@@ -132,7 +130,7 @@ export default async function ProgramDeck({
             </a>
           </div>
         </div>
-        <p className="mt-6 max-w-3xl text-xs leading-relaxed text-faint">{t.gradesNote(gradeCap("profit"), gradeCap("turnover"))}</p>
+        <p className="mt-6 max-w-3xl text-xs leading-relaxed text-faint">{t.gradesNote(gradeCap("turnover"))}</p>
       </Slide>
 
       <Slide>
@@ -152,7 +150,15 @@ export default async function ProgramDeck({
 
       <Slide accent>
         <SlideTitle>{t.agencyTitle}</SlideTitle>
-        <p className="mt-6 max-w-3xl text-lg leading-relaxed">{t.agencyText}</p>
+        {/* Партнёр агентство больше не подключает (PARTNER_AGENCIES, 05.11.2026):
+            у агентства свои условия — ссылка на них. */}
+        <p className="mt-6 max-w-3xl text-lg leading-relaxed">{t.agencyText(AGENCY_PERCENT)}</p>
+        <a
+          href={localeHref(locale, "partners/deck/agency")}
+          className="deck-noprint mt-6 inline-flex rounded-full border border-green/50 px-5 py-2.5 text-sm font-semibold text-green transition-colors hover:border-green"
+        >
+          {agency.teaserCta} →
+        </a>
       </Slide>
 
       <Slide>

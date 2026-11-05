@@ -25,7 +25,7 @@ import { AdminShell } from "@/components/admin/shell";
 import { LeadTimeline } from "@/components/admin/lead-timeline";
 import { buildTimeline, channelsOf, reminderEvents, stageEvents } from "@/lib/admin/lead-timeline";
 import { nextStepOf } from "@/lib/admin/next-step";
-import type { VoidReason } from "@/lib/partners/rules";
+import { CLIENT_CLAIMS, type VoidReason } from "@/lib/partners/rules";
 import { clientById, partnerById } from "@/lib/partners/store";
 import { partnerClientsDict } from "@/content/admin-panel/partner-clients";
 import { SubmitButton } from "@/components/admin/submit-button";
@@ -930,6 +930,9 @@ export default async function LeadPage({
             ) : null}
           </div>
         )}
+        {/* ИНН нужен только закреплению клиентов партнёром, а оно выключено
+            (CLIENT_CLAIMS, владелец 05.11.2026): поле — только у лида, где ИНН уже вписан. */}
+        {CLIENT_CLAIMS || lead.client_inn ? (
         <div id="inn" className="scroll-mt-24">
           <dt className="text-xs uppercase tracking-wider text-faint">{tc.innLabel}</dt>
           {mine ? (
@@ -965,6 +968,7 @@ export default async function LeadPage({
             <dd className="mt-1 font-mono text-sm">{lead.client_inn || "—"}</dd>
           )}
         </div>
+        ) : null}
         <Field label={t.niche} value={lead.niche} />
         <Field
           label={t.services}

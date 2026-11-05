@@ -341,7 +341,7 @@ export const workSections: Record<string, HelpEntry> = {
           ],
           admin: [
             "Edytujesz wszystko: etap (10 przycisków), kosztorys, kwotę i rodzaj transakcji w każdej chwili, **«Podatek, %»** (domyślnie 4) i **«Koszt wytworzenia, $»** — tylko Ty, żeby nikt nie podniósł sobie naliczenia, zaniżając koszt wytworzenia.",
-            "W wierszach naliczeń — procent od tej transakcji: «ustaw» albo powrót do «według poziomu». Blok **«Partner»**: kto polecił, procent dla partnera («według progu» — według kwoty projektu i modelu partnera: od zysku 10–30% albo od obrotu 6–20%), «Zlecenie agencji» — jeśli projekt przyszedł od agencji partnera — i «Nie zaliczać, powód».",
+            "W wierszach naliczeń — procent od tej transakcji: «ustaw» albo powrót do «według poziomu». Blok **«Partner»**: kto polecił, procent dla partnera («według progu» — według kwoty projektu: 6–20% od obrotu, przy starym projekcie „od zysku” — 10–30%), «Zlecenie agencji» — jeśli projekt przyszedł od agencji partnera — i «Nie zaliczać, powód».",
             "**«Płatności klienta»** → «Zapisz płatność»: kwota, data, tytuł płatności. Gdy wszystko jest opłacone, naliczenia zmieniają się na «zarobione», a partner dostaje wiadomość. Wpłaty z faktur do umowy zapisują się tu same — po Twoim oznaczeniu «Opłacona» albo po «Potwierdź płatność» w umowie; dopóki wpłata czeka na Ciebie, jest tu żółty wiersz z linkiem do umowy. «Zostaje właścicielowi» w karcie — bez odjęcia udziału partnera; dokładna liczba jest w [Finansach](/admin/finance).",
           ],
         },

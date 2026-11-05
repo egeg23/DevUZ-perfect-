@@ -211,7 +211,7 @@ const ru: CabinetCopy = {
       ? `Ваша модель — с оборота: от ${from} до ${to} % от суммы договора, чем крупнее проект, тем выше процент`
       : `Ваша модель — от чистой прибыли: от ${from} до ${to} % от прибыли проекта, чем крупнее проект, тем выше процент`,
   personalRate: (percent) => `Ваша персональная ставка — ${percent} % с каждого проекта клиента`,
-  tiersTitle: "Модель дохода",
+  tiersTitle: "Ваш процент",
   tierUpTo: (amount) => `до ${amount}`,
   tierOver: (amount) => `дороже ${amount}`,
   tiersNote: "Ступень — по сумме каждого проекта отдельно. Процент — с каждого проекта клиента, включая следующие.",
@@ -219,7 +219,7 @@ const ru: CabinetCopy = {
   modelNames: { profit: "От чистой прибыли", turnover: "С оборота" },
   modelHints: {
     profit: "Процент выше, но считается от прибыли: сумма договора минус налог и себестоимость. Точная сумма доли появится, когда студия внесёт себестоимость.",
-    turnover: "Процент ниже, но от всей суммы договора: доля известна сразу, как только подписан договор.",
+    turnover: "Процент — от всей суммы договора: доля известна сразу, как только подписан договор.",
   },
   modelCurrent: "сейчас",
   modelChoose: (name) => `Перейти на «${name}»`,
@@ -502,7 +502,7 @@ const en: CabinetCopy = {
       ? `Your model is turnover: ${from}–${to}% of the contract amount, the bigger the project, the higher the rate`
       : `Your model is net profit: ${from}–${to}% of the project's profit, the bigger the project, the higher the rate`,
   personalRate: (percent) => `Your personal rate is ${percent}% of every client project`,
-  tiersTitle: "Income model",
+  tiersTitle: "Your rate",
   tierUpTo: (amount) => `up to ${amount}`,
   tierOver: (amount) => `over ${amount}`,
   tiersNote: "The tier depends on each project's amount separately. The percentage applies to every project of the client, including the next ones.",
@@ -510,7 +510,7 @@ const en: CabinetCopy = {
   modelNames: { profit: "Of net profit", turnover: "Of turnover" },
   modelHints: {
     profit: "A higher percentage, but of profit: the contract amount minus tax and costs. The exact share appears once the studio enters its costs.",
-    turnover: "A lower percentage, but of the whole contract amount: your share is known as soon as the contract is signed.",
+    turnover: "A percentage of the whole contract amount: your share is known as soon as the contract is signed.",
   },
   modelCurrent: "current",
   modelChoose: (name) => `Switch to “${name}”`,
@@ -793,7 +793,7 @@ const uz: CabinetCopy = {
       ? `Sizning modelingiz — aylanmadan: shartnoma summasining ${from} dan ${to} % gacha, loyiha qanchalik yirik bo'lsa, foiz shunchalik yuqori`
       : `Sizning modelingiz — sof foydadan: loyiha foydasining ${from} dan ${to} % gacha, loyiha qanchalik yirik bo'lsa, foiz shunchalik yuqori`,
   personalRate: (percent) => `Sizning shaxsiy stavkangiz — mijozning har bir loyihasidan ${percent} %`,
-  tiersTitle: "Daromad modeli",
+  tiersTitle: "Sizning foizingiz",
   tierUpTo: (amount) => `${amount} gacha`,
   tierOver: (amount) => `${amount} dan yuqori`,
   tiersNote: "Pog'ona har bir loyiha summasiga qarab alohida. Foiz mijozning har bir loyihasidan, keyingilarini ham qo'shib.",
@@ -801,7 +801,7 @@ const uz: CabinetCopy = {
   modelNames: { profit: "Sof foydadan", turnover: "Aylanmadan" },
   modelHints: {
     profit: "Foiz yuqoriroq, lekin foydadan hisoblanadi: shartnoma summasi minus soliq va tannarx. Aniq ulush studiya tannarxni kiritganda paydo bo'ladi.",
-    turnover: "Foiz pastroq, lekin butun shartnoma summasidan: ulush shartnoma imzolanishi bilanoq ma'lum.",
+    turnover: "Foiz butun shartnoma summasidan: ulush shartnoma imzolanishi bilanoq ma'lum.",
   },
   modelCurrent: "hozir",
   modelChoose: (name) => `«${name}» ga o'tish`,
@@ -1083,7 +1083,7 @@ const zh: CabinetCopy = {
       ? `您的模式：按营业额——合同金额的 ${from}–${to}%，项目越大，比例越高`
       : `您的模式：按净利润——项目利润的 ${from}–${to}%，项目越大，比例越高`,
   personalRate: (percent) => `您的专属提成：每个客户项目的 ${percent}%`,
-  tiersTitle: "收益模式",
+  tiersTitle: "您的比例",
   tierUpTo: (amount) => `${amount} 以内`,
   tierOver: (amount) => `超过 ${amount}`,
   tiersNote: "档位按每个项目的金额分别确定。客户的每个项目都计算，包括后续项目。",
@@ -1091,7 +1091,7 @@ const zh: CabinetCopy = {
   modelNames: { profit: "按净利润", turnover: "按营业额" },
   modelHints: {
     profit: "比例更高，但按利润计算：合同金额减去税费和成本。工作室录入成本后才会显示确切金额。",
-    turnover: "比例较低，但按整个合同金额计算：合同一签署，分成即可知。",
+    turnover: "按整个合同金额计算：合同一签署，分成即可知。",
   },
   modelCurrent: "当前",
   modelChoose: (name) => `切换为“${name}”`,
@@ -1368,7 +1368,7 @@ const uk: CabinetCopy = {
       ? `Ваша модель — з обороту: від ${from} до ${to} % від суми договору, що більший проєкт, то вищий відсоток`
       : `Ваша модель — від чистого прибутку: від ${from} до ${to} % від прибутку проєкту, що більший проєкт, то вищий відсоток`,
   personalRate: (percent) => `Ваша персональна ставка — ${percent} % з кожного проєкту клієнта`,
-  tiersTitle: "Модель доходу",
+  tiersTitle: "Ваш відсоток",
   tierUpTo: (amount) => `до ${amount}`,
   tierOver: (amount) => `понад ${amount}`,
   tiersNote: "Щабель визначається за сумою кожного проєкту окремо. Відсоток — з кожного проєкту клієнта, зокрема й наступних.",
@@ -1376,7 +1376,7 @@ const uk: CabinetCopy = {
   modelNames: { profit: "Від чистого прибутку", turnover: "З обороту" },
   modelHints: {
     profit: "Відсоток вищий, але рахується від прибутку: сума договору мінус податок і собівартість. Точна сума частки з'явиться, коли студія внесе собівартість.",
-    turnover: "Відсоток нижчий, але від усієї суми договору: частку відомо одразу, щойно договір підписано.",
+    turnover: "Відсоток — від усієї суми договору: частку відомо одразу, щойно договір підписано.",
   },
   modelCurrent: "зараз",
   modelChoose: (name) => `Перейти на «${name}»`,
@@ -1659,7 +1659,7 @@ const pl: CabinetCopy = {
       ? `Twój model — od obrotu: od ${from} do ${to} % wartości umowy; im większy projekt, tym wyższy procent`
       : `Twój model — od zysku netto: od ${from} do ${to} % zysku z projektu; im większy projekt, tym wyższy procent`,
   personalRate: (percent) => `Twoja indywidualna stawka — ${percent} % od każdego projektu klienta`,
-  tiersTitle: "Model wynagrodzenia",
+  tiersTitle: "Twój procent",
   tierUpTo: (amount) => `do ${amount}`,
   tierOver: (amount) => `powyżej ${amount}`,
   tiersNote: "Próg liczy się osobno dla wartości każdego projektu. Procent — od każdego projektu klienta, także kolejnych.",
@@ -1667,7 +1667,7 @@ const pl: CabinetCopy = {
   modelNames: { profit: "Od zysku netto", turnover: "Od obrotu" },
   modelHints: {
     profit: "Wyższy procent, ale liczony od zysku: wartość umowy minus podatek i koszty własne. Dokładna kwota Twojego udziału pojawi się, gdy studio wprowadzi koszty własne.",
-    turnover: "Niższy procent, ale od całej wartości umowy: udział jest znany od razu po podpisaniu umowy.",
+    turnover: "Procent od całej wartości umowy: udział jest znany od razu po podpisaniu umowy.",
   },
   modelCurrent: "obecnie",
   modelChoose: (name) => `Przejdź na „${name}”`,

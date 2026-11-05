@@ -22,6 +22,8 @@ import {
   agencyUntilDay,
   linkUrl,
   shortUrl,
+  CLIENT_CLAIMS,
+  PARTNER_AGENCIES,
 } from "@/lib/partners/rules";
 import { listPromo } from "@/lib/partners/promo";
 import { agenciesOf, clientsOf, listPartners, staffTelegramIds, summarize } from "@/lib/partners/store";
@@ -206,6 +208,10 @@ export default async function PartnersPage({
       </section>
 
       {/* ── Агентства ─────────────────────────────────────────────────── */}
+      {/* С 05.11.2026 партнёр агентства не подключает (PARTNER_AGENCIES): блок —
+          только пока есть старые записи. */}
+      {PARTNER_AGENCIES || agencies.length ? (
+      <>
       <h2 className="mt-8 flex items-center gap-2 text-xs uppercase tracking-wider text-faint">
         {t.agenciesTitle}
         {pendingAgencies.length ? <span className="text-gold">{t.agenciesWaiting(pendingAgencies.length)}</span> : null}
@@ -279,9 +285,13 @@ export default async function PartnersPage({
           </tbody>
         </table>
       </section>
+      </>
+      ) : null}
 
       {/* ── Клиенты, закреплённые вручную ─────────────────────────────── */}
-      <PartnerClientsBlock clients={clients} partnerName={partnerName} locale={admin.panel_locale} cancel={cancelClientAction} />
+      {CLIENT_CLAIMS || clients.length ? (
+        <PartnerClientsBlock clients={clients} partnerName={partnerName} locale={admin.panel_locale} cancel={cancelClientAction} />
+      ) : null}
 
       {/* ── Партнёры ──────────────────────────────────────────────────── */}
       <h2 className="mt-8 text-xs uppercase tracking-wider text-faint">{t.allTitle}</h2>
