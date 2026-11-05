@@ -26,7 +26,7 @@ import path from "node:path";
 import { clientRows, logoBox } from "../../content/clients.ts";
 import { cases } from "../../content/cases.ts";
 import { services } from "../../content/services.ts";
-import { company } from "../../content/company.ts";
+import { company, proof } from "../../content/company.ts";
 import { BOX_NAME, BOX_OS, BOX_LAUNCH, named, boxLayerCount } from "../../content/box.ts";
 import { boxCopy } from "../../content/box-copy.ts";
 import { locales } from "../../lib/i18n.ts";
@@ -145,8 +145,8 @@ ${kick(`Студия из Ташкента · с ${company.foundedYear} года
 <h1>Мы можем<br><em>всё.</em></h1>
 <p class="lead">Сайты, магазины, 3D-сцены, ИИ-сотрудники, боты, приложения и админки. И свою операционную систему.</p>
 <div class="stats">
-  ${st(brands.length, `${pl(brands.length, "бренд", "бренда", "брендов")} в «Делали для»`)}
-  ${st(work.length, `${pl(work.length, "работа", "работы", "работ")} в кейсах на devuz.studio`)}
+  ${st(proof.projects, `${pl(proof.projects, "завершённый проект", "завершённых проекта", "завершённых проектов")}`)}
+  ${st(proof.staff, `${pl(proof.staff, "разработчик", "разработчика", "разработчиков")} в штате`)}
   ${st(`12<small>часов</small>`, "на бесплатный макет главной", "hi")}
 </div>
 ${tag("На фоне: макет для SamAuto, машина разбирается по прокрутке", "abs cap")}`);
@@ -160,35 +160,43 @@ const logoTiles = brands
   .join("");
 slide("brands", "brands", `
 ${kick("Делали для")}
-<h2>${brands.length} ${pl(brands.length, "бренд", "бренда", "брендов")}, для которых мы сделали сайт, макет или&nbsp;прототип</h2>
-<p class="lead" style="max-width:900px">Макет тоже работа: каждый собран под компанию, на её материалах и данных.</p>
-<div class="logos">${logoTiles}<div class="lg you">Следующим может быть ваш</div></div>`);
+<h2>${proof.projects} ${pl(proof.projects, "завершённый проект", "завершённых проекта", "завершённых проектов")}, среди&nbsp;которых</h2>
+<p class="lead" style="max-width:1200px">Бренды, с которыми мы работали уже как DevUz: сайты, макеты, прототипы. Остальное команда сделала до студии.</p>
+<div class="logos" style="--cols:${Math.max(7, Math.ceil((brands.length + 1) / 5))}">${logoTiles}<div class="lg you">Следующим может быть ваш</div></div>`);
 
-/* 3. Цифры */
-const bars = span
-  .map((k) => {
-    const v = byMonth.get(k) ?? 0;
-    return `<div class="bar ${v === peak ? "top" : ""}"><b>${v}</b><i style="height:${Math.max(3, Math.round((v / peak) * 100))}%"></i></div>`;
-  })
-  .join("");
-const mons = span.map((k) => `<span>${MONTHS[Number(k.slice(5)) - 1]}</span>`).join("");
-slide("numbers", "brands", `
-${kick("В цифрах")}
-<h2>Что уже сделано: только то, что можно проверить</h2>
-<div class="nums">
-  <div class="grid">
-    ${st(brands.length, `${pl(brands.length, "бренд", "бренда", "брендов")} в блоке «Делали для» на сайте`)}
-    ${st(work.length, `${pl(work.length, "работа", "работы", "работ")} в кейсах на devuz.studio, плюс ${demos} ${pl(demos, "своё демо", "своих демо", "своих демо")}`)}
-    ${st(bundles, `${pl(bundles, "макет собран", "макета собраны", "макетов собраны")} вручную, каждый своим кодом`)}
-    ${st(samFrames, "кадров в одной сцене по прокрутке у SamAuto")}
-    ${st(locales.length, `${pl(locales.length, "язык", "языка", "языков")} на сайте студии`)}
-    ${st(`12<small>ч</small>`, "на бесплатный макет главной", "hi")}
-  </div>
-  <div class="g chart">
-    <div class="hd"><h3>Работы в кейсах по месяцам</h3><span class="pill new">${span[0].slice(0, 4)}</span></div>
-    <div class="bars">${bars}</div>
-    <div class="mon">${mons}</div>
-    <p class="small src">По дате работы в кейсах на devuz.studio, без демо. ${MONTHS_FULL[Number(span.at(-1).slice(5)) - 1]}: ${byMonth.get(span.at(-1))} ${pl(byMonth.get(span.at(-1)), "работа", "работы", "работ")} за месяц.</p>
+/* 3. Что умеем — с упором на тендеры. Владелец, 05.11.2026: «у нас много работ
+   вне студии, лучше пойти через то, что мы можем. Особенно для тендеров. Что мы
+   делаем, порталы, код, на каких стеках». Стеки — content/services.ts (`tech`),
+   тендерные пункты — услуга it-tenders там же; сервер и выкатка — как устроены
+   наш сайт и сайт «Сияния Севера» на сервере клиники (CLAUDE.md). */
+const svc = (slug) => services.find((x) => x.slug === slug);
+const CAN = [
+  ["web-development", "Порталы и кабинеты", "Корпоративные сайты, порталы, личные кабинеты с ролями и журналом действий"],
+  ["mobile-apps", "Мобильные приложения", "iOS и Android из одной кодовой базы, со своей админкой"],
+  ["integrations-automation", "Интеграции", "Payme, Click, Octobank, 1С, iiko, SMS и Telegram: связываем то, что уже работает"],
+  ["ai-llm-rag", "ИИ и поиск по документам", "Ассистенты, которые отвечают по вашим данным и называют источник"],
+  ["marketplace-delivery", "Маркетплейсы и доставка", "Платформы на несколько ролей: покупатель, продавец, курьер, оператор"],
+  [null, "Сервер и выкатка", "На нашем сервере или на сервере заказчика: сборка в GitHub, а если новая версия не поднялась, сама возвращается прошлая", ["Docker", "GitHub Actions", "nginx", "PostgreSQL"]],
+];
+const tender = svc("it-tenders");
+const chips = (list) => `<div class="chips">${list.map((t) => `<span class="pill done">${esc(t)}</span>`).join("")}</div>`;
+slide("skills", "brands", `
+${kick("Что мы делаем")}
+<h2>От сайта до портала, и работаем по&nbsp;тендерам</h2>
+<div class="can">
+  <div class="list">${CAN.map(([slug, h, p, tech]) => `<div class="g card"><h3>${h}</h3><p>${p}</p>${chips(tech ?? svc(slug).tech)}</div>`).join("")}</div>
+  <div class="g tender">
+    <h3>${tender.title.ru}</h3>
+    <p class="sub">Работаем с двух сторон: заказчику пишем ТЗ и принимаем работу, генподрядчику даём команду разработки на субподряде.</p>
+    ${li([
+      "<b>ТЗ</b> по ГОСТ 34 или по форме заказчика и требования к подрядчикам",
+      "<b>Цена и сроки</b> для начальной цены контракта, на реальных трудозатратах",
+      "<b>Экспертиза чужого ТЗ</b> до подачи заявки: риски и то, что не уложится в срок",
+      "<b>Субподряд</b>: порталы, приложения и интеграции по ТЗ, договор и NDA",
+      "<b>Документы к сдаче</b>: руководства, программа и методика испытаний",
+      "<b>Приёмка по этапам</b> контракта и гарантийный срок",
+    ], "sm")}
+    ${chips([...tender.tech, "узбекский · русский · английский"])}
   </div>
 </div>`);
 
