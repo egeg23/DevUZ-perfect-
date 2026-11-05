@@ -2523,6 +2523,14 @@ export const uz: HelpCopy = {
           ],
         },
         {
+          id: "deck",
+          title: "«Qanday ishlaydi» sxemasi va agentlik uchun taqdimot",
+          body: [
+            "Bo‘lim tepasida — «Qanday ishlaydi — qisqacha»: buyurtmaning uch qadamli yo‘li va bitta loyihadan kim qancha olishi, $2 000 lik misol bilan: agentlikka $300, olib kelganga $100, qolgani — studiyaga, undan olib boruvchiga foydadan odatdagi foizi. Bu yerda hammasi, bizning 5% ham bor: bu jamoa uchun sxema.",
+            "«Taqdimotni ochish» — saytdagi olti tildagi (rus, ingliz, o‘zbek, xitoy, ukrain, polyak) sahifa, agentlikning o‘zi uchun: katta 15% raqami, uch qadam, chiziqli misol, qoidalar, nimalarni olib kelish mumkinligi va Telegram tugmasi. Olib kelgan odamning foizi u yerda yo‘q va bo‘lmaydi: bu ichki ma’lumot, agentlikka ko‘rsatmaymiz. Havolani yuboring yoki sahifani ochib, yuqoridagi PDF tugmasini bosing va faylni yuboring. Jadvalda har bir agentlikning o‘z «taqdimot» havolasi bor: u bilan sahifadagi Telegram tugmasi botga shu agentlik kodi bilan olib boradi.",
+          ],
+        },
+        {
           id: "add",
           title: "Agentlikni qanday qo‘shish kerak",
           body: {

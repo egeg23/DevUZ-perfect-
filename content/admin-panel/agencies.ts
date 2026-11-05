@@ -132,4 +132,47 @@ export const agenciesDict = defineDict({
     pl: "Nie udało się zapisać. Spróbuj jeszcze raz.",
   },
   partnerBadge: { ru: "агентство · 15%", uz: "agentlik · 15%", pl: "agencja · 15%" },
+
+  // «Как это работает — коротко»: схема для команды, со всеми процентами
+  // (владелец, 05.11.2026: «на дашборде пишем все»).
+  howTitle: { ru: "Как это работает — коротко", uz: "Qanday ishlaydi — qisqacha", pl: "Jak to działa — w skrócie" },
+  flow1: { ru: "Агентство приводит клиента", uz: "Agentlik mijoz olib keladi", pl: "Agencja przyprowadza klienta" },
+  flow2: { ru: "Студия делает проект", uz: "Studiya loyihani qiladi", pl: "Studio robi projekt" },
+  flow3: { ru: "Клиент оплатил проект целиком", uz: "Mijoz loyihani to‘liq to‘ladi", pl: "Klient zapłacił za projekt w całości" },
+  whoGets: { ru: "Кто сколько получает с проекта", uz: "Loyihadan kim qancha oladi", pl: "Kto ile dostaje z projektu" },
+  getsAgency: {
+    ru: (p: number) => `Агентству — ${p}% с суммы проекта. Всегда, без срока.`,
+    uz: (p: number) => `Agentlikka — loyiha summasidan ${p}%. Doim, muddatsiz.`,
+    pl: (p: number) => `Agencja — ${p}% od kwoty projektu. Zawsze, bez terminu.`,
+  },
+  getsFinder: {
+    ru: (p: number, months: number) => `Тому из команды, кто привёл агентство, — ${p}% с суммы проекта. ${months} месяцев с того дня, как завёл агентство.`,
+    uz: (p: number, months: number) => `Jamoadan agentlikni olib kelganga — loyiha summasidan ${p}%. Agentlik qo‘shilgan kundan ${months} oy.`,
+    pl: (p: number, months: number) => `Osoba z zespołu, która przyprowadziła agencję — ${p}% od kwoty projektu. Przez ${months} miesięcy od dnia dodania agencji.`,
+  },
+  getsOwner: {
+    ru: "Тому, кто ведёт проект, — его обычный процент от прибыли, как всегда. Ведёт тот же, кто привёл, — получает и то и другое.",
+    uz: "Loyihani olib boruvchiga — odatdagidek foydadan o‘z foizi. Olib kelgan odamning o‘zi olib borsa, ikkalasini ham oladi.",
+    pl: "Osoba prowadząca projekt — swój zwykły procent od zysku, jak zawsze. Jeśli prowadzi ta sama osoba, która przyprowadziła, dostaje jedno i drugie.",
+  },
+  exampleTitle: {
+    ru: (amount: string) => `Пример: проект на ${amount}`,
+    uz: (amount: string) => `Misol: ${amount} lik loyiha`,
+    pl: (amount: string) => `Przykład: projekt za ${amount}`,
+  },
+  exampleAgency: { ru: "агентству", uz: "agentlikka", pl: "agencja" },
+  exampleFinder: { ru: "тому, кто привёл", uz: "olib kelganga", pl: "kto przyprowadził" },
+  exampleRest: {
+    ru: "остальное — студии, из этого ведущему его процент от прибыли",
+    uz: "qolgani — studiyaga, undan olib boruvchiga foydadan o‘z foizi",
+    pl: "reszta — dla studia, z tego prowadzący dostaje swój procent od zysku",
+  },
+  deckTitle: { ru: "Презентация для агентства", uz: "Agentlik uchun taqdimot", pl: "Prezentacja dla agencji" },
+  deckAbout: {
+    ru: "Страница на сайте на шести языках: 15% агентству, три шага, пример и правила, вверху — кнопка PDF. Наших 5% там нет: это внутреннее, агентству его не показываем. Отправьте ссылку или скачайте PDF и пришлите файл.",
+    uz: "Saytdagi olti tildagi sahifa: agentlikka 15%, uch qadam, misol va qoidalar, yuqorida — PDF tugmasi. Bizning 5% u yerda yo‘q: bu ichki ma’lumot, agentlikka ko‘rsatmaymiz. Havolani yuboring yoki PDF ni yuklab olib, faylni yuboring.",
+    pl: "Strona na stronie internetowej w sześciu językach: 15% dla agencji, trzy kroki, przykład i zasady, u góry — przycisk PDF. Naszych 5% tam nie ma: to sprawa wewnętrzna, agencji tego nie pokazujemy. Wyślij link albo pobierz PDF i prześlij plik.",
+  },
+  deckOpen: { ru: "Открыть презентацию", uz: "Taqdimotni ochish", pl: "Otwórz prezentację" },
+  deckRow: { ru: "презентация", uz: "taqdimot", pl: "prezentacja" },
 });

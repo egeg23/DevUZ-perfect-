@@ -50,6 +50,9 @@ const RESULTS = {
 
 const day = (iso: string) => iso.slice(0, 10).split("-").reverse().join(".");
 
+/** Сумма проекта в примере схемы: кругло, чтобы доли считались в уме. */
+const EXAMPLE = 2_000;
+
 export default async function AgenciesPage({ searchParams }: { searchParams: Promise<{ r?: string }> }) {
   const staff = await requireSection("/admin/agencies");
   const locale = staff.panel_locale;
@@ -76,6 +79,8 @@ export default async function AgenciesPage({ searchParams }: { searchParams: Pro
       <span className="text-faint">—</span>
     );
   const now = Date.now();
+  const exampleAgency = Math.round((EXAMPLE * AGENCY_PERCENT) / 100);
+  const exampleFinder = Math.round((EXAMPLE * AGENCY_FINDER_PERCENT) / 100);
 
   return (
     <AdminShell staff={staff}>
@@ -84,6 +89,79 @@ export default async function AgenciesPage({ searchParams }: { searchParams: Pro
         {t.intro(AGENCY_PERCENT, AGENCY_FINDER_PERCENT, AGENCY_FINDER_MONTHS)}{" "}
         <HelpHint topic={helpAnchor("/admin/agencies", "terms")} label={t.helpTerms} />
       </p>
+
+      {/* ── Как это работает — схема для команды, со всеми процентами ── */}
+      <section className="mt-6 rounded-2xl border border-line bg-surface px-5 py-5">
+        <p className="text-xs uppercase tracking-wider text-faint">{t.howTitle}</p>
+        <ol className="mt-4 grid gap-2 sm:grid-cols-3">
+          {[t.flow1, t.flow2, t.flow3].map((step, i) => (
+            <li key={step} className="flex items-center gap-3 rounded-xl border border-line px-4 py-3 text-sm">
+              <span
+                aria-hidden
+                className={`flex size-8 shrink-0 items-center justify-center rounded-full font-semibold ${
+                  i === 2 ? "bg-green text-ink" : "bg-surface-2 text-text"
+                }`}
+              >
+                {i + 1}
+              </span>
+              {step}
+            </li>
+          ))}
+        </ol>
+
+        <div className="mt-5 grid gap-5 lg:grid-cols-2">
+          <div>
+            <p className="text-sm font-medium">{t.whoGets}</p>
+            <ul className="mt-3 flex flex-col gap-2 text-sm">
+              <li className="flex gap-3">
+                <span className="w-12 shrink-0 font-mono text-lg font-semibold text-green">{AGENCY_PERCENT}%</span>
+                <span className="text-muted">{t.getsAgency(AGENCY_PERCENT)}</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="w-12 shrink-0 font-mono text-lg font-semibold text-blue-soft">{AGENCY_FINDER_PERCENT}%</span>
+                <span className="text-muted">{t.getsFinder(AGENCY_FINDER_PERCENT, AGENCY_FINDER_MONTHS)}</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="w-12 shrink-0 font-mono text-lg font-semibold text-faint">+</span>
+                <span className="text-muted">{t.getsOwner}</span>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <p className="text-sm font-medium">{t.exampleTitle(money(EXAMPLE))}</p>
+            {/* Полоска — сумма проекта: зелёное — агентству, голубое — тому, кто привёл. */}
+            <div className="mt-3 flex h-5 overflow-hidden rounded-full bg-surface-2" aria-hidden>
+              <div className="h-full bg-green" style={{ width: `${AGENCY_PERCENT}%` }} />
+              <div className="h-full bg-blue-soft" style={{ width: `${AGENCY_FINDER_PERCENT}%` }} />
+            </div>
+            <ul className="mt-3 flex flex-col gap-1 text-sm">
+              <li>
+                <span className="font-mono text-green">{money(exampleAgency)}</span> <span className="text-muted">{t.exampleAgency}</span>
+              </li>
+              <li>
+                <span className="font-mono text-blue-soft">{money(exampleFinder)}</span> <span className="text-muted">{t.exampleFinder}</span>
+              </li>
+              <li className="text-faint">{t.exampleRest}</li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-line-soft pt-4">
+          <a
+            href={`/${locale}/partners/deck/agency`}
+            target="_blank"
+            rel="noreferrer"
+            className="rounded-lg bg-green/90 px-4 py-2 text-sm font-medium text-ink transition hover:bg-green"
+          >
+            {t.deckOpen}
+          </a>
+          <span className="font-mono text-xs text-muted">devuz.studio/{locale}/partners/deck/agency</span>
+          <p className="w-full text-xs text-faint">
+            <span className="text-muted">{t.deckTitle}.</span> {t.deckAbout}{" "}
+            <HelpHint topic={helpAnchor("/admin/agencies", "deck")} label={t.deckTitle} />
+          </p>
+        </div>
+      </section>
 
       {resultKey ? (
         <p
@@ -175,6 +253,14 @@ export default async function AgenciesPage({ searchParams }: { searchParams: Pro
                         {t.link}: devuz.studio/r/{slug}
                       </a>
                     ) : null}
+                    <a
+                      href={`/${locale}/partners/deck/agency?ref=${a.code}`}
+                      className="block text-xs text-blue-soft hover:underline"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {t.deckRow}
+                    </a>
                   </td>
                   <td data-label={t.colBrought} className={`${TD} text-xs`}>
                     {owner ? (

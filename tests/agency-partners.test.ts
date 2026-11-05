@@ -223,3 +223,39 @@ test("миграция: тип партнёра, контакт, кто прив
   assert.match(sql, /add column if not exists brought_at timestamptz/);
   assert.match(read("supabase/migrations/0177_agency_partners.down.sql"), /drop column if exists kind/);
 });
+
+/* ── Презентация: на сайте — только 15% агентства, в панели — всё ─────── */
+
+test("презентация на сайте: шесть языков, одни пункты, ставка из правил денег", async () => {
+  const { agencyDeckCopy } = await import("@/content/agency-deck");
+  const { locales } = await import("@/lib/i18n");
+  const ru = agencyDeckCopy("ru");
+  for (const locale of locales) {
+    const t = agencyDeckCopy(locale);
+    assert.deepEqual(Object.keys(t).sort(), Object.keys(ru).sort(), `${locale}: ключи разошлись`);
+    assert.equal(t.steps.length, 3, `${locale}: три шага`);
+    assert.equal(t.rules.length, ru.rules.length, `${locale}: правила`);
+    if (locale !== "ru") assert.notEqual(t.title, ru.title, `${locale}: не переведено`);
+    const text = JSON.stringify(t);
+    assert.ok(text.includes(`${AGENCY_PERCENT}%`), `${locale}: ставка агентства не та, что в правилах`);
+  }
+  const page = read("app/[locale]/partners/deck/agency/page.tsx");
+  assert.match(page, /noIndex: true/, "презентация попадёт в поиск");
+  assert.match(page, /Math\.round\(\(amount \* AGENCY_PERCENT\) \/ 100\)/, "пример не по правилам денег");
+});
+
+test("на клиентском сайте процента менеджера нет, в панели — есть", async () => {
+  const { agencyDeckCopy } = await import("@/content/agency-deck");
+  const { locales } = await import("@/lib/i18n");
+  const page = read("app/[locale]/partners/deck/agency/page.tsx");
+  assert.ok(!/AGENCY_FINDER/.test(page.replace(/\/\*\*[\s\S]*?\*\//g, "")), "страница для агентства берёт процент менеджера");
+  for (const locale of locales) {
+    const text = JSON.stringify(agencyDeckCopy(locale));
+    // «5%» отдельно, а не хвост «15%».
+    assert.ok(!new RegExp(`(^|[^\\d])${AGENCY_FINDER_PERCENT}\\s?%`).test(text), `${locale}: на сайте процент того, кто привёл`);
+  }
+  const panel = read("app/admin/agencies/page.tsx");
+  assert.match(panel, /t\.getsFinder\(AGENCY_FINDER_PERCENT, AGENCY_FINDER_MONTHS\)/);
+  assert.match(panel, /t\.getsAgency\(AGENCY_PERCENT\)/);
+  assert.match(panel, /\/partners\/deck\/agency/);
+});

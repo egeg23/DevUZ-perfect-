@@ -316,6 +316,14 @@ export const moreSections: Record<string, HelpEntry> = {
         ],
       },
       {
+        id: "deck",
+        title: "Schemat «Jak to działa» i prezentacja dla agencji",
+        body: [
+          "Na górze zakładki — «Jak to działa — w skrócie»: droga zlecenia w trzech krokach i kto ile dostaje z jednego projektu, z przykładem na $2 000: agencja $300, osoba, która przyprowadziła, $100, reszta dla studia, a z niej prowadzący dostaje swój zwykły procent od zysku. Tu jest wszystko, łącznie z naszymi 5%: to schemat dla zespołu.",
+          "«Otwórz prezentację» — strona na stronie internetowej w sześciu językach (rosyjski, angielski, uzbecki, chiński, ukraiński, polski) dla samej agencji: duża liczba 15%, trzy kroki, przykład z paskami, zasady, co można przyprowadzić, i przycisk do Telegrama. Procentu osoby, która przyprowadziła, tam nie ma i nie będzie: to sprawa wewnętrzna, agencji tego nie pokazujemy. Wyślij link albo otwórz stronę, kliknij przycisk PDF u góry i prześlij plik. W tabeli każda agencja ma własny link «prezentacja»: z nim przycisk Telegrama na stronie prowadzi do bota z kodem tej agencji.",
+        ],
+      },
+      {
         id: "add",
         title: "Jak dodać agencję",
         body: {
