@@ -154,6 +154,7 @@ export const ACTION_LABEL: Record<AuditAction, Tr> = {
   "lead.idle_snoozed": { ru: "ответил боту «Ещё в работе» по лиду без движения", uz: "harakatsiz lid bo‘yicha botga «Hali ishda» deb javob berdi", pl: "odpowiedział botowi «Nadal w toku» przy leadzie bez ruchu" },
   "lead.auto_lost": { ru: "бот закрыл лид «проиграли»: 21 день без движения", uz: "bot lidni «yutqazilgan» deb yopdi: 21 kun harakatsiz", pl: "bot zamknął leada jako «przegrany»: 21 dni bez ruchu" },
   "lead.sales_marked": { ru: "отметил ступень продажи: интерес, показ макета или названную цену", uz: "sotuv bosqichini belgiladi: qiziqish, maketni ko‘rsatish yoki aytilgan narx", pl: "oznaczył etap sprzedaży: zainteresowanie, pokaz makiety lub podaną cenę" },
+  "lead.sales_unmarked": { ru: "снял ступень продажи, отмеченную по ошибке", uz: "xato belgilangan sotuv bosqichini olib tashladi", pl: "zdjął etap sprzedaży oznaczony przez pomyłkę" },
   "lead.inn_set": { ru: "вписал ИНН компании в карточку лида", uz: "lid kartochkasiga kompaniya STIRini yozdi", pl: "wpisał NIP/INN firmy w karcie leada" },
   "partner.client_cancelled": { ru: "отменил закрепление клиента партнёра", uz: "hamkor mijozining biriktirilishini bekor qildi", pl: "anulował przypisanie klienta partnera" },
   "partner.payout_auto": { ru: "завелась выплата партнёру с оборота", uz: "hamkorga aylanmadan to‘lov yaratildi", pl: "utworzono wypłatę dla partnera od obrotu" },

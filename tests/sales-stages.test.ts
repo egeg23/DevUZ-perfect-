@@ -12,6 +12,7 @@ import {
   canMark,
   dealsOf,
   dropOf,
+  isUndoStage,
   myStagesOf,
   noShowDue,
   noShowKey,
@@ -315,4 +316,90 @@ test("без модели и без Firecrawl", () => {
     const src = read(f);
     assert.ok(!/anthropic|claude-|firecrawl|completeText|askModel/i.test(src), `${f}: модель или Firecrawl`);
   }
+});
+
+/* ── Цена до макета и снятие ступени нажатием ─────────────────────────── */
+
+// Владелец, 05.11.2026, на «Ход сделки» CREAT (creat.uz): «статусы сами
+// поменялись, хотя мы ещё макет им даже не делали». После «соберите» бот
+// сразу назвал цену (kind = 'price'), а «поздняя подразумевает ранние»
+// отметило «макет ушёл» и «показали макет».
+
+test("цена после «+» до макета: макет и показ сами не отмечаются", () => {
+  const [d] = dealsOf({
+    ...none,
+    prospects: [prospect({ id: "creat", replied_at: ago(3), proto_requested_at: ago(3), lead_id: "lc" })],
+    leads: [lead({ id: "lc" })],
+    prices: [{ lead_id: null, prospect_id: "creat", at: ago(3) }],
+  });
+  assert.ok(d?.at.priced, "цену бот правда назвал");
+  assert.ok(d?.at.interest && d?.at.replied);
+  assert.equal(d?.at.mockup, undefined, "макета не было");
+  assert.equal(d?.at.shown, undefined, "показа не было");
+});
+
+test("показ подразумевает макет, оплата — цену; макет и показ из оплаты не следуют", () => {
+  const deals = dealsOf({
+    ...none,
+    prospects: [prospect({ id: "s" }), prospect({ id: "p", lead_id: "lp" })],
+    leads: [lead({ id: "lp" })],
+    marks: [{ kind: "shown", lead_id: null, prospect_id: "s", staff_id: ME, created_at: ago(5), via: "live", amount_usd: null }],
+    payments: [{ lead_id: "lp", paid_on: "2026-10-14", amount_usd: 300 }],
+  });
+  const shown = deals.find((d) => d.key === "p:s");
+  const paid = deals.find((d) => d.key === "p:p");
+  assert.ok(shown?.at.mockup, "показали — значит, макет ушёл");
+  assert.ok(paid?.at.priced, "заплатил — цену называли");
+  assert.equal(paid?.at.mockup, undefined, "оплата без макета: макет не придумываем");
+  assert.equal(paid?.at.shown, undefined);
+});
+
+test("снятая ступень и всё после неё до снятия не считаются; позднее — снова", () => {
+  const base = {
+    ...none,
+    prospects: [prospect({ id: "u", replied_at: ago(50), proto_requested_at: ago(40), lead_id: "lu" })],
+    leads: [lead({ id: "lu" })],
+    mockups: [{ lead_id: "lu", prospect_id: null, sent_at: ago(30) }],
+    marks: [
+      { kind: "shown" as const, lead_id: "lu", prospect_id: null, staff_id: ME, created_at: ago(20), via: "video", amount_usd: null },
+      { kind: "undo" as const, undo_stage: "mockup", lead_id: "lu", prospect_id: null, staff_id: ME, created_at: ago(10) },
+    ],
+  };
+  const [d] = dealsOf(base);
+  assert.equal(d?.at.mockup, undefined, "макет снят");
+  assert.equal(d?.at.shown, undefined, "и показ после него");
+  assert.ok(d?.at.interest && d?.at.replied, "ранние ступени остаются");
+
+  // Макет правда ушёл после снятия — ступень вернулась сама.
+  const [again] = dealsOf({ ...base, mockups: [...base.mockups, { lead_id: "lu", prospect_id: null, sent_at: ago(2) }] });
+  assert.equal(again?.at.mockup, ago(2));
+  assert.equal(again?.at.shown, undefined, "показ до снятия так и не считается");
+});
+
+test("снятие цены убирает и названную сумму; «Написали» и оплату снять нельзя", () => {
+  const [d] = dealsOf({
+    ...none,
+    prospects: [prospect({ id: "c", replied_at: ago(9), lead_id: "lc2" })],
+    leads: [lead({ id: "lc2" })],
+    marks: [
+      { kind: "priced", lead_id: "lc2", prospect_id: null, staff_id: ME, created_at: ago(8), via: null, amount_usd: 900 },
+      { kind: "undo", undo_stage: "priced", lead_id: "lc2", prospect_id: null, staff_id: ME, created_at: ago(7) },
+      { kind: "undo", undo_stage: "written", lead_id: "lc2", prospect_id: null, staff_id: ME, created_at: ago(6) },
+    ],
+    payments: [{ lead_id: "lc2", paid_on: "2026-10-15", amount_usd: 900 }],
+  });
+  assert.equal(d?.own.priced, undefined);
+  assert.equal(d?.priceUsd, null);
+  assert.ok(d?.at.written, "«Написали» не снимается");
+  assert.ok(d?.at.paid, "оплата — деньги, нажатием не снимается");
+  assert.ok(!isUndoStage("written") && !isUndoStage("paid") && isUndoStage("mockup"));
+});
+
+test("снимает ступень тот же, кто отмечает: менеджер — свою сделку", () => {
+  const src = read("lib/admin/sales-stages-store.ts");
+  assert.match(src, /export async function undoStage[\s\S]*?markTarget\(db, leadId, prospectId, staff\)/);
+  assert.match(src, /kind: "undo",\s*undo_stage: input\.stage/);
+  assert.match(src, /record\("lead\.sales_unmarked"/);
+  const ui = read("components/admin/stage-undo.tsx");
+  assert.match(ui, /window\.confirm\(confirm\)/, "снимаем только после «точно?»");
 });
