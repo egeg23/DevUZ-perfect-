@@ -214,26 +214,24 @@ export function CabinetView({
         </section>
 
         {/* ── Навсегда +5 % ──────────────────────────────────────── */}
-        {/* С персональной ставкой надбавки нет: договорённость отдельная (rules.ts, lifetimeOf). */}
-        {partner.percent_override === null ? (
-          <section id="lifetime" className={`mt-6 scroll-mt-28 ${summary.lifetime.reached ? "rounded-xl border border-green/40 bg-green/[0.06] px-5 py-5" : CARD}`}>
-            <h2 className="font-display text-lg font-semibold">{t.lifetimeTitle(LIFETIME_BONUS)}</h2>
-            <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted">
-              {t.lifetimeLead(money(locale, LIFETIME_FROM_USD), LIFETIME_BONUS, AGENCY_PERCENT)}
-            </p>
-            <div className="mt-4 h-2.5 max-w-xl overflow-hidden rounded-full bg-white/10">
-              <div
-                className="h-full rounded-full bg-green"
-                style={{ width: `${Math.min(100, Math.round((summary.lifetime.total / LIFETIME_FROM_USD) * 100))}%` }}
-              />
-            </div>
-            <p className={`mt-3 text-sm ${summary.lifetime.reached ? "text-green" : "text-text"}`}>
-              {summary.lifetime.reached
-                ? t.lifetimeReached(money(locale, summary.lifetime.total), LIFETIME_BONUS)
-                : t.lifetimeLeft(money(locale, summary.lifetime.total), money(locale, summary.lifetime.left))}
-            </p>
-          </section>
-        ) : null}
+        {/* И с персональной ставкой: надбавка идёт и поверх неё (владелец, 06.11.2026; rules.ts, lifetimeOf). */}
+        <section id="lifetime" className={`mt-6 scroll-mt-28 ${summary.lifetime.reached ? "rounded-xl border border-green/40 bg-green/[0.06] px-5 py-5" : CARD}`}>
+          <h2 className="font-display text-lg font-semibold">{t.lifetimeTitle(LIFETIME_BONUS)}</h2>
+          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted">
+            {t.lifetimeLead(money(locale, LIFETIME_FROM_USD), LIFETIME_BONUS, AGENCY_PERCENT)}
+          </p>
+          <div className="mt-4 h-2.5 max-w-xl overflow-hidden rounded-full bg-white/10">
+            <div
+              className="h-full rounded-full bg-green"
+              style={{ width: `${Math.min(100, Math.round((summary.lifetime.total / LIFETIME_FROM_USD) * 100))}%` }}
+            />
+          </div>
+          <p className={`mt-3 text-sm ${summary.lifetime.reached ? "text-green" : "text-text"}`}>
+            {summary.lifetime.reached
+              ? t.lifetimeReached(money(locale, summary.lifetime.total), LIFETIME_BONUS)
+              : t.lifetimeLeft(money(locale, summary.lifetime.total), money(locale, summary.lifetime.left))}
+          </p>
+        </section>
 
         {/* ── Модель дохода ──────────────────────────────────────── */}
         {/* С 05.11.2026 модель одна — с оборота (rules.ts, CHOOSABLE_MODELS); у агентства

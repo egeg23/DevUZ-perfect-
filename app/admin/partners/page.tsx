@@ -327,8 +327,8 @@ export default async function PartnersPage({
                     >
                       {ta.partnerBadge(AGENCY_PERCENT + (lifetime.reached ? LIFETIME_BONUS : 0))}
                     </Link>
-                  ) : lifetime.reached && partner.percent_override === null ? (
-                    // Пожизненный грейд блогера: 50 000 $ заказов (rules.ts, lifetimeOf).
+                  ) : lifetime.reached ? (
+                    // Пожизненный грейд: 50 000 $ заказов, и поверх личной ставки (rules.ts, lifetimeOf).
                     <span className="ml-2 rounded border border-green/40 px-1.5 py-0.5 text-xs text-green">
                       {t.lifetimeBadge(LIFETIME_BONUS)}
                     </span>
