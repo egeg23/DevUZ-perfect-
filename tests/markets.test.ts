@@ -63,7 +63,7 @@ test("каждая площадка — со ссылкой https, описан�
 });
 
 test("«Скауту» на странице страны — тем же действием, что «Добавить группу»", () => {
-  const page = read("app/admin/markets/[slug]/page.tsx");
+  const page = read("components/admin/markets-view.tsx");
   assert.match(page, /addScoutChatAction/);
   assert.match(page, /parseChatInput\(item\.url\)/);
   assert.match(page, /rel="noreferrer"/, "чужая площадка не получает адрес панели");
