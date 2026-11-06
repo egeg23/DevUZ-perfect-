@@ -1052,6 +1052,24 @@ export const uz: HelpCopy = {
             "Telegram chatlarida «Skautga» tugmasi bor: guruh [«Skaut signallari»](/admin/scout)dagi «Skaut uchun guruhlar»ga tushadi va skaut unga o‘zi, navbati kelganda qo‘shiladi — kuniga 10 ta guruhdan ko‘p emas. Undan signallar odatdagidek keladi. Guruh skautda allaqachon bo‘lsa, sahifa shuni aytadi.",
           ],
         },
+        {
+          id: "tour",
+          title: "Ekrandagi o‘rgatish",
+          body: {
+            manager: [
+              "**«Ekranda ko‘rsatish: «Bozorlar»dan qanday foydalanish»** tugmasi bo‘lim tepasida — sakkiz qadamli qisqa o‘rgatish: bo‘lim qayerda, mamlakatni qanday tanlash, mamlakat sahifasida nima bor (misol uchun — Rossiya), maydon va «Skautga» tugmasi. Kerakli joy yoritiladi, qolgani qorong‘ilashadi, sahifadan sahifaga o‘rgatish o‘zi o‘tadi. «O‘tkazib yuborish» yoki Esc — yopish.",
+              "Sizga u bir marta o‘zi ko‘rsatiladi — yangi panel bilan tanishuvdan so‘ng darhol. Yana ko‘rish — shu tugma bilan yoki [«Sozlamalar»](/admin/settings) da.",
+            ],
+            head: [
+              "**«Ekranda ko‘rsatish: «Bozorlar»dan qanday foydalanish»** tugmasi bo‘lim tepasida — sakkiz qadamli qisqa o‘rgatish: bo‘lim qayerda, mamlakatni qanday tanlash, mamlakat sahifasida nima bor (misol uchun — Rossiya), maydon va «Skautga» tugmasi. Kerakli joy yoritiladi, qolgani qorong‘ilashadi, sahifadan sahifaga o‘rgatish o‘zi o‘tadi. «O‘tkazib yuborish» yoki Esc — yopish.",
+              "Menejerlarga u bir marta o‘zi ko‘rsatiladi — yangi panel bilan tanishuvdan so‘ng darhol; sizga — faqat tugma bilan, shu yerda yoki [«Sozlamalar»](/admin/settings) da.",
+            ],
+            admin: [
+              "**«Ekranda ko‘rsatish: «Bozorlar»dan qanday foydalanish»** tugmasi bo‘lim tepasida — sakkiz qadamli qisqa o‘rgatish: bo‘lim qayerda, mamlakatni qanday tanlash, mamlakat sahifasida nima bor (misol uchun — Rossiya), maydon va «Skautga» tugmasi. Kerakli joy yoritiladi, qolgani qorong‘ilashadi, sahifadan sahifaga o‘rgatish o‘zi o‘tadi. «O‘tkazib yuborish» yoki Esc — yopish.",
+              "Menejerlarga u bir marta o‘zi ko‘rsatiladi — yangi panel bilan tanishuvdan so‘ng darhol; sizga — faqat tugma bilan, shu yerda yoki [«Sozlamalar»](/admin/settings) da.",
+            ],
+          },
+        },
       ],
     },
 
@@ -2900,6 +2918,25 @@ export const uz: HelpCopy = {
           ],
         },
         {
+          id: "bloggers-keys",
+          title: "Instagram ulanishlari: qaysi kalitlar va ularni qayerdan olish",
+          roles: ["admin", "head"],
+          body: [
+            "**«Instagram ulanishlari»** bloki — Meta (Facebook va Instagram kompaniyasi) kalitlari, ularsiz agent yarim kuch bilan ishlaydi. Kalitni maydonga qo‘ying va **«Saqlash va tekshirish»** ni bosing: server uni sirlar omboriga qo‘yadi, u yerda u shifrlangan. Kalit ekranga qaytib chiqmaydi, faqat «kiritilgan» yoki «bo‘sh» ko‘rinadi, saqlashda bo‘sh maydon esa kalitni o‘zgartirmaydi. Agar kalit serverdagi .env faylida turgan bo‘lsa, u ombordan ustun, maydon yonida shu yozib qo‘yiladi. Jurnalga faqat qaysi kalit kiritilgani tushadi, qiymatisiz.",
+            "«1. Boshqa profillar raqamlari» — Facebook tokeni, u EA… bilan boshlanadi. U bilan agent blogerning aniq obunachilari, layklari, izohlari va qanchalik tez-tez yozishini ko‘radi (rasmiy Business Discovery kirishi); usiz — faqat qidiruv natijasidagi obunachilar soni. Token Graph API Explorer’da maslahatdagi huquqlar bilan olinadi va «Access Token Debugger» da 60 kungacha uzaytiriladi; havolali barcha qadamlar — «Qayerdan olish — qadamma-qadam» ostida. Studiya Instagram akkaunti raqamini yozish shart emas: tekshiruv uni token orqali o‘zi topadi va boshqa profil raqamlarini olishga urinib ko‘radi. Tekshiruvdan keyin blokda ishlayaptimi va token qaysi sanagacha amal qilishi yoziladi; tugashiga bir hafta qolganda qator sariq bo‘ladi — 3 va 4-qadamlarni takrorlang.",
+            "«2. Directda blogerlarga javoblar» — Meta dasturchi kabinetidagi Instagram ilovasi ID va siri. Vebhuk tekshiruv tokeni birinchi saqlashda o‘zi yaratiladi: uni, vebhuk manzilini va ikkita qaytish manzilini ilova sozlamalariga «Nusxalash» tugmasi bilan qo‘yishadi. Keyin «Direct yozishmasi» qatoridagi **«Studiya Instagramini ulash»** ni bosing. Meta ilovani tasdiqlamaguncha agent xabarlarni faqat tester akkauntlardan oladi; boshqa profillar raqamlari uchun tasdiq shart emas. Hammasi kiritilgan va tekshiruvdan o‘tgan bo‘lsa, blok bitta qatorga yig‘iladi.",
+          ],
+        },
+        {
+          id: "bloggers-access",
+          title: "Bo‘lim kimga ochiq",
+          roles: ["admin"],
+          body: [
+            "Varaqning pastida — **«Bo‘lim kimga ochiq»** bloki: belgilar bilan rahbarlar va menejerlar. Odatiy holatda bo‘lim sizga va rahbarga ochiq. Belgilangan menejerga «SI xodimlar» bo‘limi — «Blogerlar» varag‘i ochiladi: u birinchi xabarlarni yuboradi, javoblarni belgilaydi va suhbatni o‘zi olib borishi mumkin. Kalitlar, agent sozlamalari, qidiruv va hamkor qo‘shish menejerga ko‘rinmaydi.",
+            "Bu har bir xodimdagi [«Jamoa»](/admin/team) → «Bo‘limlar» dagi o‘sha belgi: bu yerda qo‘yilsa — u yerda ham turadi, va aksincha. **«Kirishni saqlash»** dan keyin bo‘lim odamga paneldagi keyingi o‘tishda ochiladi, jurnalda esa «xodimga panelning qaysi bo‘limlari ochiqligini o‘zgartirdi» qatori qoladi.",
+          ],
+        },
+        {
           id: "bloggers-invite",
           title: "Botdagi «Работа с блогерами» taklifi",
           body: [
@@ -3036,15 +3073,15 @@ export const uz: HelpCopy = {
           title: "«Meniki»: til, menyu, telefon va bot",
           body: {
             manager: [
-              "**«Meniki»** bloki faqat sizga tegishlisini, barcha qurilmalaringizda o‘zgartiradi. **«Panel va yo‘riqnoma tili»** — RU, UZ yoki PL, sarlavhadagi xuddi shu almashtirgich; bot xabarlari hozircha ruscha. **«Menyu ko‘rinishi»** — «Yangi menyu» tumbleri: yoqilgan — chapda belgilar qatori, «Yana», yorliqlar va qidiruv, o‘chirilgan — barcha bo‘limlar bir qatorda, avvalgidek. **«Shu qurilmadagi bildirishnomalar»** — bot sizga Telegramda yozadigan matn bilan push; har bir telefon va kompyuterda alohida yoqiladi, [Bosh sahifa](/admin/hq)dagi kartochka kabi. Menyu tumbleri yonida — **«Panel bilan tanishuvni yana ko‘rsatish»**: 03.11.2026 yangilanishidan keyin birinchi kirishdagi o‘sha 7 qadam (ko‘rinish o‘zgardi, funksiyalar o‘sha).",
+              "**«Meniki»** bloki faqat sizga tegishlisini, barcha qurilmalaringizda o‘zgartiradi. **«Panel va yo‘riqnoma tili»** — RU, UZ yoki PL, sarlavhadagi xuddi shu almashtirgich; bot xabarlari hozircha ruscha. **«Menyu ko‘rinishi»** — «Yangi menyu» tumbleri: yoqilgan — chapda belgilar qatori, «Yana», yorliqlar va qidiruv, o‘chirilgan — barcha bo‘limlar bir qatorda, avvalgidek. **«Shu qurilmadagi bildirishnomalar»** — bot sizga Telegramda yozadigan matn bilan push; har bir telefon va kompyuterda alohida yoqiladi, [Bosh sahifa](/admin/hq)dagi kartochka kabi. Menyu tumbleri yonida — **«Panel bilan tanishuvni yana ko‘rsatish»**: 03.11.2026 yangilanishidan keyin birinchi kirishdagi o‘sha 7 qadam (ko‘rinish o‘zgardi, funksiyalar o‘sha). O‘sha yerda — **«Ekranda ko‘rsatish: «Bozorlar»dan qanday foydalanish»**: [«Bozorlar»](/admin/markets) bo‘limi bo‘yicha qisqa o‘rgatish.",
               "**«Bot menga nimalarni yuboradi»** sizga botning nechta turdagi xabarlari kelishini ko‘rsatadi. Belgilarni rahbar yoki egasi «Jamoa»da qo‘yadi: ortiqcha yoki yetishmayotgan narsa bo‘lsa, ulardan so‘rang. Baza javob bermasa, qator shuni aytadi, «hammasi keladi» deb yozmaydi.",
             ],
             head: [
-              "**«Meniki»** bloki faqat sizga tegishlisini, barcha qurilmalaringizda o‘zgartiradi. **«Panel va yo‘riqnoma tili»** — RU, UZ yoki PL, sarlavhadagi xuddi shu almashtirgich; bot xabarlari hozircha ruscha. **«Menyu ko‘rinishi»** — «Yangi menyu» tumbleri: yoqilgan — chapda belgilar qatori, «Yana», yorliqlar va qidiruv, o‘chirilgan — barcha bo‘limlar bir qatorda, avvalgidek. **«Shu qurilmadagi bildirishnomalar»** — bot sizga Telegramda yozadigan matn bilan push; har bir telefon va kompyuterda alohida yoqiladi, [Bosh sahifa](/admin/hq)dagi kartochka kabi. Menyu tumbleri yonida — **«Panel bilan tanishuvni yana ko‘rsatish»**: 03.11.2026 yangilanishidan keyin birinchi kirishdagi o‘sha 7 qadam (ko‘rinish o‘zgardi, funksiyalar o‘sha).",
+              "**«Meniki»** bloki faqat sizga tegishlisini, barcha qurilmalaringizda o‘zgartiradi. **«Panel va yo‘riqnoma tili»** — RU, UZ yoki PL, sarlavhadagi xuddi shu almashtirgich; bot xabarlari hozircha ruscha. **«Menyu ko‘rinishi»** — «Yangi menyu» tumbleri: yoqilgan — chapda belgilar qatori, «Yana», yorliqlar va qidiruv, o‘chirilgan — barcha bo‘limlar bir qatorda, avvalgidek. **«Shu qurilmadagi bildirishnomalar»** — bot sizga Telegramda yozadigan matn bilan push; har bir telefon va kompyuterda alohida yoqiladi, [Bosh sahifa](/admin/hq)dagi kartochka kabi. Menyu tumbleri yonida — **«Panel bilan tanishuvni yana ko‘rsatish»**: 03.11.2026 yangilanishidan keyin birinchi kirishdagi o‘sha 7 qadam (ko‘rinish o‘zgardi, funksiyalar o‘sha). O‘sha yerda — **«Ekranda ko‘rsatish: «Bozorlar»dan qanday foydalanish»**: [«Bozorlar»](/admin/markets) bo‘limi bo‘yicha qisqa o‘rgatish.",
               "**«Bot menga nimalarni yuboradi»** sizga botning nechta turdagi xabarlari kelishini ko‘rsatadi, yonidagi havola esa [Jamoa](/admin/team)ga, ismingiz ostidagi belgilarga olib boradi. Baza javob bermasa, qator shuni aytadi, «hammasi keladi» deb yozmaydi.",
             ],
             admin: [
-              "**«Meniki»** bloki faqat sizga tegishlisini, barcha qurilmalaringizda o‘zgartiradi. **«Panel va yo‘riqnoma tili»** — RU, UZ yoki PL, sarlavhadagi xuddi shu almashtirgich; bot xabarlari hozircha ruscha. **«Menyu ko‘rinishi»** — «Yangi menyu» tumbleri: yoqilgan — chapda belgilar qatori, «Yana», yorliqlar va qidiruv, o‘chirilgan — barcha bo‘limlar bir qatorda, avvalgidek. **«Shu qurilmadagi bildirishnomalar»** — bot sizga Telegramda yozadigan matn bilan push; har bir telefon va kompyuterda alohida yoqiladi, [Bosh sahifa](/admin/hq)dagi kartochka kabi. Menyu tumbleri yonida — **«Panel bilan tanishuvni yana ko‘rsatish»**: 03.11.2026 yangilanishidan keyin birinchi kirishdagi o‘sha 7 qadam (ko‘rinish o‘zgardi, funksiyalar o‘sha).",
+              "**«Meniki»** bloki faqat sizga tegishlisini, barcha qurilmalaringizda o‘zgartiradi. **«Panel va yo‘riqnoma tili»** — RU, UZ yoki PL, sarlavhadagi xuddi shu almashtirgich; bot xabarlari hozircha ruscha. **«Menyu ko‘rinishi»** — «Yangi menyu» tumbleri: yoqilgan — chapda belgilar qatori, «Yana», yorliqlar va qidiruv, o‘chirilgan — barcha bo‘limlar bir qatorda, avvalgidek. **«Shu qurilmadagi bildirishnomalar»** — bot sizga Telegramda yozadigan matn bilan push; har bir telefon va kompyuterda alohida yoqiladi, [Bosh sahifa](/admin/hq)dagi kartochka kabi. Menyu tumbleri yonida — **«Panel bilan tanishuvni yana ko‘rsatish»**: 03.11.2026 yangilanishidan keyin birinchi kirishdagi o‘sha 7 qadam (ko‘rinish o‘zgardi, funksiyalar o‘sha). O‘sha yerda — **«Ekranda ko‘rsatish: «Bozorlar»dan qanday foydalanish»**: [«Bozorlar»](/admin/markets) bo‘limi bo‘yicha qisqa o‘rgatish.",
               "**«Bot menga nimalarni yuboradi»** sizga botning nechta turdagi xabarlari kelishini ko‘rsatadi, yonidagi havola esa [Jamoa](/admin/team)ga, ismingiz ostidagi belgilarga olib boradi. Baza javob bermasa, qator shuni aytadi, «hammasi keladi» deb yozmaydi.",
             ],
           },

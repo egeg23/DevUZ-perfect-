@@ -40,6 +40,7 @@ export function SubmitButton({
   tone = "primary",
   name,
   value,
+  formAction,
 }: {
   children: React.ReactNode;
   /**
@@ -53,6 +54,8 @@ export function SubmitButton({
   /** Две кнопки в одной форме — какая нажата, форма узнаёт по name/value. */
   name?: string;
   value?: string;
+  /** Вторая кнопка формы со своим действием (например, «Проверить ещё раз» рядом с «Сохранить»). */
+  formAction?: (form: FormData) => void | Promise<void>;
 }) {
   const { pending } = useFormStatus();
   const t = usePanelDict(panelButtonsDict);
@@ -62,6 +65,7 @@ export function SubmitButton({
       type="submit"
       name={name}
       value={value}
+      formAction={formAction}
       disabled={pending}
       // aria-busy — для читалки экрана: она видит не цвет, а состояние.
       aria-busy={pending}

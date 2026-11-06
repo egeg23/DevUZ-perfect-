@@ -4,12 +4,13 @@ import { AdminShell } from "@/components/admin/shell";
 import { AppPush } from "@/components/admin/app-push";
 import { LocaleSwitch } from "@/components/admin/locale-switch";
 import { NavToggle } from "@/components/admin/nav-menu";
+import { MarketsTourAgain } from "@/components/admin/markets-tour";
 import { TourAgain } from "@/components/admin/panel-tour";
 import { settingsDict } from "@/content/admin-panel/settings";
 import { requireSection } from "@/lib/admin/guard";
 import { pick } from "@/lib/admin/i18n";
 import { notifyOffOf, offSummary } from "@/lib/admin/notify-prefs";
-import { tunesNotices } from "@/lib/admin/roles";
+import { opens, tunesNotices } from "@/lib/admin/roles";
 import { settingsFor, type SettingLink } from "@/lib/admin/settings";
 
 export const dynamic = "force-dynamic";
@@ -69,6 +70,8 @@ export default async function SettingsPage() {
               <NavToggle classic={Boolean(staff.nav_classic)} />
               {/* Знакомство с новой панелью — ещё раз (components/admin/panel-tour.tsx). */}
               {staff.nav_classic ? null : <TourAgain />}
+              {/* Обучение по «Рынкам» (components/admin/markets-tour.tsx). */}
+              {opens(staff, "/admin/markets") ? <MarketsTourAgain /> : null}
             </div>
           </li>
           <li className={ROW}>

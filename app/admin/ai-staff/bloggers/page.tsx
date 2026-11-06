@@ -14,6 +14,7 @@ import {
   toggleAgent,
 } from "@/app/admin/ai-staff/bloggers/actions";
 import { AiStaffTabs } from "@/app/admin/ai-staff/tabs";
+import { BloggerKeys, BloggersAccess, type AccessMember } from "@/components/admin/blogger-keys";
 import { BloggerSend } from "@/components/admin/blogger-send";
 import { HelpHint } from "@/components/admin/help-link";
 import { AdminShell } from "@/components/admin/shell";
@@ -23,8 +24,11 @@ import { bloggersDict } from "@/content/admin-panel/ai-staff-bloggers";
 import { requireSection } from "@/lib/admin/guard";
 import { helpAnchor } from "@/lib/admin/help";
 import { PANEL_INTL, pick, type Picked } from "@/lib/admin/i18n";
+import { opens, sectionAccess } from "@/lib/admin/roles";
+import { listTeam } from "@/lib/admin/team";
 import { studioIg } from "@/lib/bloggers/direct";
 import { discoveryConfig } from "@/lib/bloggers/discovery";
+import { keysState, loadKeysCheck, verifyToken } from "@/lib/bloggers/keys-store";
 import { directUrl, leftToday, mailtoUrl } from "@/lib/bloggers/rules";
 import * as store from "@/lib/bloggers/store";
 import { firecrawlKey } from "@/lib/firecrawl";
@@ -42,7 +46,7 @@ const BTN = "rounded-md border border-line px-2.5 py-1 text-xs text-muted hover:
  * кого агент нашёл и как оценил, кому пора отправить первое сообщение, кто
  * ответил и кого завести партнёром. Владельцу и руководителю.
  */
-export default async function BloggersPage({ searchParams }: { searchParams: Promise<{ n?: string; j?: string; a?: string; d?: string }> }) {
+export default async function BloggersPage({ searchParams }: { searchParams: Promise<{ n?: string; j?: string; a?: string; d?: string; k?: string; f?: string; w?: string }> }) {
   const staff = await requireSection("/admin/ai-staff");
   const t = pick(bloggersDict, staff.panel_locale);
   const title = pick(aiStaffDict, staff.panel_locale).title;
@@ -66,8 +70,24 @@ export default async function BloggersPage({ searchParams }: { searchParams: Pro
   ]);
   const manualLeft = leftToday(settings.directDaily, sent.manual);
   // Менеджер по галочке владельца отправляет тексты и отмечает ответы;
-  // настройки, поиск, оценка и партнёр — владельцу и руководителю.
+  // настройки, ключи, поиск, оценка и партнёр — владельцу и руководителю.
   const desk = staff.role === "admin" || staff.role === "head";
+  // Ключи Meta — владельцу и руководителю; кому открыт раздел — только владельцу.
+  const [keys, verify, keysCheck, team] = await Promise.all([
+    desk ? keysState() : null,
+    desk ? verifyToken() : null,
+    desk ? loadKeysCheck() : null,
+    staff.role === "admin" ? listTeam() : [],
+  ]);
+  const access: AccessMember[] = team
+    .filter((m) => m.is_active && (m.role === "head" || m.role === "manager"))
+    .map((m) => ({
+      id: m.id,
+      name: m.display_name || m.username || "—",
+      role: m.role,
+      open: opens({ role: m.role, section_access: sectionAccess(m.section_access) }, "/admin/ai-staff"),
+    }))
+    .sort((a, b) => (a.role === b.role ? a.name.localeCompare(b.name) : a.role === "head" ? -1 : 1));
   const intl = PANEL_INTL[staff.panel_locale];
 
   return (
@@ -173,6 +193,8 @@ export default async function BloggersPage({ searchParams }: { searchParams: Pro
           </form>
           ) : null}
         </section>
+
+        {desk && keys ? <BloggerKeys locale={staff.panel_locale} state={keys} verify={verify} check={keysCheck} result={{ k: q.k, f: q.f, w: q.w }} /> : null}
 
         <section className={CARD}>
           <div className="mb-3 flex flex-wrap items-center gap-2">
@@ -295,6 +317,8 @@ export default async function BloggersPage({ searchParams }: { searchParams: Pro
             </div>
           </details>
         ) : null}
+
+        {staff.role === "admin" ? <BloggersAccess locale={staff.panel_locale} members={access} result={q.k} /> : null}
       </div>
     </AdminShell>
   );

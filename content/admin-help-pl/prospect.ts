@@ -133,6 +133,24 @@ export const prospectSections: Record<string, HelpEntry> = {
           "Przy czatach w Telegramie jest przycisk «Do skauta»: grupa trafia do «Grupy dla skauta» na stronie [«Sygnały skauta»](/admin/scout), a skaut sam do niej dołączy, gdy przyjdzie kolej — nie więcej niż 10 grup dziennie. Sygnały z niej przyjdą jak zwykle. Jeśli grupa jest już u skauta, strona to powie.",
         ],
       },
+      {
+        id: "tour",
+        title: "Szkolenie na ekranie",
+        body: {
+          manager: [
+            "Przycisk **«Pokaż na ekranie, jak korzystać z „Rynków”»** na górze działu to krótkie szkolenie z ośmiu kroków: gdzie jest dział, jak wybrać kraj, co jest na stronie kraju (na przykład Rosja), platforma i przycisk «Do skauta». Potrzebne miejsce jest podświetlone, reszta przyciemniona, a między stronami szkolenie przechodzi samo. «Pomiń» albo Esc — zamknąć.",
+            "Tobie pokazuje się samo raz — zaraz po poznaniu nowego panelu. Obejrzeć ponownie — tym samym przyciskiem albo w [«Ustawienia»](/admin/settings).",
+          ],
+          head: [
+            "Przycisk **«Pokaż na ekranie, jak korzystać z „Rynków”»** na górze działu to krótkie szkolenie z ośmiu kroków: gdzie jest dział, jak wybrać kraj, co jest na stronie kraju (na przykład Rosja), platforma i przycisk «Do skauta». Potrzebne miejsce jest podświetlone, reszta przyciemniona, a między stronami szkolenie przechodzi samo. «Pomiń» albo Esc — zamknąć.",
+            "Menedżerom pokazuje się samo raz — zaraz po poznaniu nowego panelu; tobie — tylko przyciskiem, tutaj albo w [«Ustawienia»](/admin/settings).",
+          ],
+          admin: [
+            "Przycisk **«Pokaż na ekranie, jak korzystać z „Rynków”»** na górze działu to krótkie szkolenie z ośmiu kroków: gdzie jest dział, jak wybrać kraj, co jest na stronie kraju (na przykład Rosja), platforma i przycisk «Do skauta». Potrzebne miejsce jest podświetlone, reszta przyciemniona, a między stronami szkolenie przechodzi samo. «Pomiń» albo Esc — zamknąć.",
+            "Menedżerom pokazuje się samo raz — zaraz po poznaniu nowego panelu; tobie — tylko przyciskiem, tutaj albo w [«Ustawienia»](/admin/settings).",
+          ],
+        },
+      },
     ],
   },
 

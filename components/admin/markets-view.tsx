@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { addScoutChatAction } from "@/app/admin/scout/actions";
 import { PRIORITY_TONE } from "@/components/admin/market-tone";
+import { MarketsTourAgain } from "@/components/admin/markets-tour";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { marketsDict } from "@/content/admin-panel/markets";
 import { MARKETS, marketOf, resourcesByKind, type MarketPriority, type ResourceCost } from "@/content/markets";
@@ -28,10 +29,14 @@ export function MarketsIndex({ locale }: { locale: PanelLocale }) {
 
       <h1 className="text-lg font-semibold">{t.title}</h1>
       <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted">{t.lead}</p>
+      {/* Обучение по «Рынкам» на экране (components/admin/markets-tour.tsx). */}
+      <div className="mt-3">
+        <MarketsTourAgain />
+      </div>
 
       <ul className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        {markets.map((market) => (
-          <li key={market.slug}>
+        {markets.map((market, index) => (
+          <li key={market.slug} data-tour={index === 0 ? "market-main" : undefined}>
             <Link
               href={`/admin/markets/${market.slug}`}
               className="flex h-full flex-col rounded-xl border border-line bg-surface px-5 py-4 transition hover:border-green/40"
@@ -69,6 +74,10 @@ export function MarketView({ slug, locale, result: g }: { slug: string; locale: 
   const market = marketOf(slug);
   const back = `/admin/markets/${slug}`;
   const result = g && g in SCOUT_RESULT ? SCOUT_RESULT[g as keyof typeof SCOUT_RESULT] : null;
+  // Первая площадка и первая кнопка «Скауту» — места подсветки обучения.
+  const groups = market ? resourcesByKind(market) : [];
+  const firstPlace = groups[0]?.items[0]?.url ?? null;
+  const firstScout = groups.find((group) => group.kind === "telegram")?.items.find((item) => parseChatInput(item.url))?.url ?? null;
   return (
     <>
 
@@ -105,7 +114,9 @@ export function MarketView({ slug, locale, result: g }: { slug: string; locale: 
               {t[`priority_${market.priority}`]}
             </span>
           </h1>
-          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted">{market.why[locale]}</p>
+          <p data-tour="market-why" className="mt-2 max-w-3xl text-sm leading-relaxed text-muted">
+            {market.why[locale]}
+          </p>
 
           {result ? (
             <p
@@ -118,7 +129,7 @@ export function MarketView({ slug, locale, result: g }: { slug: string; locale: 
             </p>
           ) : null}
 
-          <section className="mt-5 rounded-xl border border-line bg-surface px-5 py-4">
+          <section data-tour="market-start" className="mt-5 rounded-xl border border-line bg-surface px-5 py-4">
             <h2 className="text-sm font-semibold">{t.start}</h2>
             <ol className="mt-2 list-decimal space-y-1.5 pl-5 text-sm leading-relaxed text-muted">
               {market.tips.map((tip, index) => (
@@ -127,7 +138,7 @@ export function MarketView({ slug, locale, result: g }: { slug: string; locale: 
             </ol>
           </section>
 
-          {resourcesByKind(market).map((group) => (
+          {groups.map((group) => (
             <section key={group.kind} className="mt-6">
               <h2 className="text-sm font-semibold">
                 {t[`kind_${group.kind}`]} <span className="font-mono text-xs font-normal text-faint">{group.items.length}</span>
@@ -136,7 +147,11 @@ export function MarketView({ slug, locale, result: g }: { slug: string; locale: 
                 {group.items.map((item) => {
                   const chat = group.kind === "telegram" ? parseChatInput(item.url) : null;
                   return (
-                    <li key={item.url} className="flex flex-col rounded-xl border border-line bg-surface px-4 py-3">
+                    <li
+                      key={item.url}
+                      data-tour={item.url === firstPlace ? "market-place" : undefined}
+                      className="flex flex-col rounded-xl border border-line bg-surface px-4 py-3"
+                    >
                       <span className="flex flex-wrap items-center gap-2">
                         <a
                           href={item.url}
@@ -156,7 +171,12 @@ export function MarketView({ slug, locale, result: g }: { slug: string; locale: 
                         <span className="text-faint">{t.how}</span> {item.how[locale]}
                       </span>
                       {chat ? (
-                        <form action={addScoutChatAction} className="mt-3" title={t.toScoutHint}>
+                        <form
+                          action={addScoutChatAction}
+                          className="mt-3 self-start"
+                          title={t.toScoutHint}
+                          data-tour={item.url === firstScout ? "market-scout" : undefined}
+                        >
                           <input type="hidden" name="chat" value={item.url} />
                           <input type="hidden" name="note" value={`${market.name.ru}: ${item.name}`.slice(0, 200)} />
                           <input type="hidden" name="back" value={back} />

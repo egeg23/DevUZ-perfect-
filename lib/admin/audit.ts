@@ -52,6 +52,8 @@ export const AUDIT_ACTIONS = [
   // (lib/scout/extra-chats-store.ts).
   "scout.chat_added",
   "scout.chat_removed",
+  // Ключи «Блогеров» вставили в блоке «Подключения Instagram» (только имена ключей, без значений).
+  "ai_staff.key_saved",
   "staff.invited",
   "staff.disabled",
   "staff.role_changed",
