@@ -1002,18 +1002,28 @@ export const uz: HelpCopy = {
           ],
         },
         {
+          id: "groups",
+          title: "Skaut uchun guruhlar — o‘zingiznikini qo‘shing",
+          body: [
+            "«Skaut uchun guruhlar» bloki — skaut asosiylaridan tashqari o‘qiydigan Telegram guruh va kanallari. Har kim qo‘sha oladi: «Guruh manzili yoki taklif havolasi» maydoniga @group, t.me/group ko‘rinishidagi manzilni yoki t.me/+… havolasini qo‘ying, xohlasangiz — izoh (mamlakat, guruh nima haqida), va «Guruh qo‘shish» tugmasini bosing. Skaut bot va shaxsiy akkauntni o‘qimaydi — maydon bunday manzilni qabul qilmaydi. Bitta guruh ro‘yxatga bir marta tushadi.",
+            "Keyin skaut guruhga ishchi akkauntdan o‘zi qo‘shiladi: kuniga 10 ta urinishdan ko‘p emas, urinishlar orasida bir-ikki soat va faqat Toshkent vaqti bilan 08:00 dan 22:00 gacha. Tirik odam shunday qo‘shiladi, tez-tez qo‘shilish esa Telegram uchun akkauntni cheklashga sabab bo‘ladi, biz esa shu akkauntdan mijozlar bilan ham yozishamiz. Guruhlar qo‘shilish tartibida boradi. Forma ostida bugun nechta urinish bo‘lgani, nechta guruh kutayotgani va keyingi qo‘shilish qachonligi ko‘rinadi; Telegram kutishni so‘rasa — pauza muddati ham o‘sha yerda.",
+            "Guruh holati: «qo‘shilishni kutmoqda»; «o‘qiyapmiz» — «skaut qo‘shildi» yoki «qo‘lda qo‘shilingan» belgisi bilan (skaut akkauntidan o‘zingiz qo‘shilsangiz — u buni sezadi); «ariza adminda» — guruh yopiq, tasdiqni kutyapmiz; «qo‘shilib bo‘lmaydi» — manzil yo‘q, havola eskirgan, akkaunt guruhda bloklangan yoki guruh bot tekshiruvidan o‘tishni so‘raydi, unda faqat qo‘lda qo‘shilish mumkin. Telegram ko‘rsatgan sabab holat ostida ko‘rinadi. Yangi guruhni skaut qo‘shilgandan keyin darhol, qayta ishga tushirmasdan o‘qiydi.",
+            "«Olib tashlash» — siz qo‘shgan guruhlarda; rahbar va egasi istalganini olib tashlaydi. Olib tashlangan guruhga skaut qo‘shilmaydi va eng yaqin qayta ishga tushishdan keyin uni o‘qimay qo‘yadi; kim qo‘shgani va kim olib tashlagani amallar jurnalida yozilib qoladi.",
+          ],
+        },
+        {
           id: "health",
           title: "Skaut ishlayaptimi",
           body: {
             manager: [
-              "Tepadagi tilla rangli ogohlantirish — nimadir noto‘g‘ri: skaut jim, birorta chatni o‘qimayapti yoki model ishlamayapti. «Akkaunt berilgan 29 ta chatdan 12 tasini o‘qiyapti» ogohlantirishi — chatlarning bir qismi o‘qilmayapti. Ikkala holatda ham egasiga ayting: bu paneldan tuzatilmaydi.",
+              "Tepadagi tilla rangli ogohlantirish — nimadir noto‘g‘ri: skaut jim, birorta chatni o‘qimayapti yoki model ishlamayapti. «Akkaunt berilgan 29 ta chatdan 12 tasini o‘qiyapti» ogohlantirishi — chatlarning bir qismi hozircha o‘qilmayapti: [«Skaut uchun guruhlar»](#scout-groups)dagi guruhlarga skaut o‘zi, bir-ikki soatda bittadan qo‘shiladi. Skaut jim, model ishlamayapti yoki ogohlantirish bir necha kun ketmasa — egasiga ayting: bu paneldan tuzatilmaydi.",
             ],
             head: [
-              "Tepadagi tilla rangli ogohlantirish — nosozlik: «Skaut N daqiqadan beri jim» (jarayon to‘xtagan), «birorta ham chatni o‘qimayapti» yoki «Model ishlamayapti». «O‘qilmayapti» ro‘yxati bilan «Akkaunt berilgan Y ta chatdan X tasini o‘qiyapti» — ishchi akkaunt bu chatlarga qo‘shilmagan. Egasi tuzatadi.",
+              "Tepadagi tilla rangli ogohlantirish — nosozlik: «Skaut N daqiqadan beri jim» (jarayon to‘xtagan), «birorta ham chatni o‘qimayapti» yoki «Model ishlamayapti». «O‘qilmayapti» ro‘yxati bilan «Akkaunt berilgan Y ta chatdan X tasini o‘qiyapti» — ishchi akkaunt bu chatlarga hali qo‘shilmagan. [«Skaut uchun guruhlar»](#scout-groups)dagi guruhlarga u o‘zi, bir-ikki soatda bittadan qo‘shiladi; nosozliklarni va serverda berilgan chatlarni egasi tuzatadi.",
             ],
             admin: [
               "«Skaut N daqiqadan beri jim» — serverdagi jarayon yiqilgan yoki to‘xtatilgan: `systemctl status devuz-scout`. «Model ishlamayapti» — kalitda yoki undagi pulda muammo.",
-              "«Akkaunt berilgan Y ta chatdan X tasini o‘qiyapti» va «O‘qilmayapti» ro‘yxati — ishchi akkaunt bu chatlarga qo‘shilmagan yoki manzil ochilmagan. Ishchi akkauntdan qo‘lda qo‘shilish kerak: paneldan bu qilinmaydi.",
+              "«Akkaunt berilgan Y ta chatdan X tasini o‘qiyapti» va «O‘qilmayapti» ro‘yxati — ishchi akkaunt bu chatlarga qo‘shilmagan yoki manzil ochilmagan. [«Skaut uchun guruhlar»](#scout-groups)dagi guruhlarga u o‘zi, kuniga 10 tadan ko‘p emas qo‘shiladi; serverdagi SCOUT_CHATS chatlariga — ishchi akkauntdan qo‘lda.",
               "«Mexanizm butun: … Ishlab chiqish so‘rovlari hali bo‘lmagan» — bu chatlardagi jimlik, nosozlik emas.",
             ],
           },

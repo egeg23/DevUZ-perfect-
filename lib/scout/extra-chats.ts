@@ -1,40 +1,62 @@
+import { TASHKENT_OFFSET_MS } from "@/lib/admin/pulse";
+
 /**
- * Чаты скаута из базы — поверх SCOUT_CHATS на сервере.
+ * Группы для скаута — таблица scout_chats поверх SCOUT_CHATS на сервере.
  *
  * Владелец, 06.11.2026: «Давай прокачаем скаута. Найди от 50 групп, где в
- * теории могут искать исполнителей по айтишке… выведи удобным списком прямо
- * через бота нашего в тг… подпишемся на эти паблики». Список SCOUT_CHATS
- * живёт в `.env` сервера, и каждая новая группа — правка руками на боевой
- * машине. Поэтому новые чаты лежат строкой stats_snapshots с ключом
- * `scout-chats`: `{ chats: [{ name: "handle", id?, error?, added?, note? }] }`.
+ * теории могут искать исполнителей по айтишке…», и следом: «В разделе
+ * находки скаута сделай возможность добавлять группы для отслеживания
+ * всем. Чтобы и менеджеры и мы прямо там могли добавлять группы и скаут их
+ * мониторил. В день самостоятельно не более 10 подписок на группы с
+ * интервалом 1-2 часа».
  *
- * Вступать скаут по-прежнему не умеет (`chats()` в scout/runner.mjs): в чат
- * входит человек, руками и не за один день. Чат из списка, в котором аккаунт
- * не состоит, всё равно стоит в фильтре — вступили, и сообщения пошли без
- * перезапуска (lib/scout/chats.ts).
+ * Группу добавляет человек в «Сигналах скаута» (app/admin/scout). Скаут
+ * (scout/runner.mjs) вступает в неё сам — не больше JOIN_DAILY_CAP за день
+ * по Ташкенту, с паузой от JOIN_GAP_MIN_MS до JOIN_GAP_MAX_MS и только днём
+ * (JOIN_FROM_HOUR–JOIN_TO_HOUR): массовое вступление — повод для Telegram
+ * ограничить аккаунт, а главный аккаунт ещё и переписывается с клиентами.
  *
- * Адрес по имени — сетевой resolveUsername, а на него у Telegram тесный
- * лимит: пять выкаток за день — полторы сотни запросов. Поэтому за один
- * запуск разбирается не больше RESOLVE_PER_START новых адресов, а номер,
- * который Telegram вернул, записывается обратно в список: со следующего
- * запуска чат открывается по номеру, без сети.
+ * Адрес по имени — сетевой resolveUsername, на него у Telegram тесный лимит.
+ * Поэтому при старте разбирается не больше RESOLVE_PER_START новых адресов,
+ * а номер, который вернул Telegram, пишется в строку: дальше чат
+ * открывается по номеру, без сети.
  */
-
-export const EXTRA_CHATS_KEY = "scout-chats";
 
 /** Сколько новых адресов разбирать за один запуск скаута. */
 export const RESOLVE_PER_START = 8;
 
-export type ExtraChat = {
-  /** Адрес без @ и без t.me/. */
-  name: string;
-  /** Номер чата, который вернул Telegram: дальше открываем по нему. */
-  id?: string | null;
-  /** Адрес не открылся насовсем (нет такого, закрыт): больше не пробуем. */
+/** Сколько групп скаут вступает сам за день по Ташкенту. */
+export const JOIN_DAILY_CAP = 10;
+/** Пауза между вступлениями: от часа до двух. */
+export const JOIN_GAP_MIN_MS = 60 * 60_000;
+export const JOIN_GAP_MAX_MS = 120 * 60_000;
+/** Вступает только днём по Ташкенту, как живой человек. */
+export const JOIN_FROM_HOUR = 8;
+export const JOIN_TO_HOUR = 22;
+/** Не удалось вступить по временной причине — следующая попытка не раньше. */
+export const RETRY_AFTER_MS = 6 * 3600_000;
+
+export type ChatStatus = "pending" | "joined" | "request" | "error";
+export const CHAT_STATUSES: readonly ChatStatus[] = ["pending", "joined", "request", "error"];
+
+export type ScoutChat = {
+  id: string;
+  handle: string | null;
+  invite: string | null;
+  title?: string | null;
+  chat_id: string | null;
+  status: ChatStatus;
   error?: string | null;
-  added?: string;
-  note?: string;
+  note?: string | null;
+  added_by?: string | null;
+  added_at?: string;
+  tried_at?: string | null;
+  joined_at?: string | null;
+  joined_via?: "scout" | "manual" | null;
 };
+
+const HANDLE_RE = /^[A-Za-z0-9_]{4,32}$/;
+const INVITE_RE = /^[A-Za-z0-9_-]{8,64}$/;
 
 /** «@JS_Jobs», «https://t.me/js_jobs», «t.me/s/js_jobs» → «js_jobs». */
 export function chatHandle(raw: string): string {
@@ -47,56 +69,54 @@ export function chatHandle(raw: string): string {
     .trim();
 }
 
-export function parseExtraChats(payload: unknown): ExtraChat[] {
-  const list = (payload as { chats?: unknown } | null)?.chats;
-  if (!Array.isArray(list)) return [];
-  const out: ExtraChat[] = [];
-  const seen = new Set<string>();
-  for (const item of list) {
-    const raw = item as Record<string, unknown> | null;
-    const name = typeof raw?.name === "string" ? chatHandle(raw.name) : "";
-    if (!name || seen.has(name.toLowerCase())) continue;
-    seen.add(name.toLowerCase());
-    out.push({
-      name,
-      id: typeof raw?.id === "string" && /^-?\d+$/.test(raw.id) ? raw.id : null,
-      error: typeof raw?.error === "string" ? raw.error : null,
-      ...(typeof raw?.added === "string" ? { added: raw.added } : {}),
-      ...(typeof raw?.note === "string" ? { note: raw.note } : {}),
-    });
-  }
-  return out;
+/**
+ * Что человек вставил в поле: адрес группы или ссылку-приглашение.
+ * null — ни то, ни другое (бот, личный аккаунт по номеру телефона, мусор).
+ */
+export function parseChatInput(raw: string): { handle: string } | { invite: string } | null {
+  const text = raw.trim();
+  if (!text) return null;
+  const invite = text.match(/(?:t(?:elegram)?\.me\/)?(?:\+|joinchat\/)([A-Za-z0-9_-]{8,64})\s*$/i);
+  if (invite && (text.includes("+") || /joinchat\//i.test(text))) return { invite: invite[1] };
+  const handle = chatHandle(text);
+  if (!HANDLE_RE.test(handle)) return null;
+  // Бота скаут не читает: у бота нет ленты сообщений.
+  if (/bot$/i.test(handle)) return null;
+  return { handle };
 }
 
 export type WatchPlan = {
-  /** Что отдать openChats: SCOUT_CHATS, номера из базы и порция новых адресов. */
+  /** Что отдать openChats: SCOUT_CHATS, номера из таблицы и порция новых адресов. */
   names: string[];
   /** Адреса, которые разбираются в этот запуск. */
   resolving: string[];
-  /** Ещё не разобраны — подождут следующего запуска. */
+  /** Ещё не разобраны — подождут следующего запуска или вступления. */
   waiting: string[];
 };
 
-export function watchPlan(env: readonly string[], extra: readonly ExtraChat[], perStart = RESOLVE_PER_START): WatchPlan {
+export function watchPlan(env: readonly string[], chats: readonly ScoutChat[], perStart = RESOLVE_PER_START): WatchPlan {
   const taken = new Set(env.map((item) => chatHandle(item).toLowerCase()));
   const names = [...env];
   const resolving: string[] = [];
   const waiting: string[] = [];
-  for (const chat of extra) {
-    if (chat.error) continue;
-    if (taken.has(chat.name.toLowerCase()) || (chat.id && taken.has(chat.id))) continue;
-    if (chat.id) {
-      taken.add(chat.id);
-      names.push(chat.id);
+  for (const chat of chats) {
+    if (chat.status === "error") continue;
+    const handle = chat.handle?.toLowerCase() ?? null;
+    if ((handle && taken.has(handle)) || (chat.chat_id && taken.has(chat.chat_id))) continue;
+    if (chat.chat_id) {
+      taken.add(chat.chat_id);
+      names.push(chat.chat_id);
       continue;
     }
+    // Закрытую группу по ссылке без номера не открыть: сначала вступление.
+    if (!chat.handle || !handle) continue;
     if (resolving.length < perStart) {
-      resolving.push(chat.name);
-      names.push(chat.name);
+      resolving.push(chat.handle);
+      names.push(chat.handle);
     } else {
-      waiting.push(chat.name);
+      waiting.push(chat.handle);
     }
-    taken.add(chat.name.toLowerCase());
+    taken.add(handle);
   }
   return { names, resolving, waiting };
 }
@@ -104,34 +124,145 @@ export function watchPlan(env: readonly string[], extra: readonly ExtraChat[], p
 /** Ошибка, после которой адрес пробовать ещё раз бессмысленно. FLOOD_WAIT и сеть — не такие. */
 export function lastingFailure(reason: string): boolean {
   if (/flood|wait|timeout|network|disconnect|ECONN|socket/i.test(reason)) return false;
-  return /USERNAME_INVALID|USERNAME_NOT_OCCUPIED|No user has|Cannot find any entity|CHANNEL_PRIVATE|CHANNEL_INVALID/i.test(reason);
+  return /USERNAME_INVALID|USERNAME_NOT_OCCUPIED|No user has|Cannot find any entity|CHANNEL_PRIVATE|CHANNEL_INVALID|INVITE_HASH_EXPIRED|INVITE_HASH_INVALID/i.test(
+    reason,
+  );
 }
 
+/** Что делать с ответом Telegram на вступление. */
+export type JoinOutcome =
+  | { kind: "joined" }
+  | { kind: "request" }
+  | { kind: "error"; reason: string }
+  | { kind: "pause"; ms: number; reason: string }
+  | { kind: "retry"; reason: string };
+
+export function joinOutcome(error: unknown): JoinOutcome {
+  const reason = (error instanceof Error ? error.message : String(error ?? "")).slice(0, 200);
+  if (/USER_ALREADY_PARTICIPANT/i.test(reason)) return { kind: "joined" };
+  if (/INVITE_REQUEST_SENT/i.test(reason)) return { kind: "request" };
+  const flood = reason.match(/FLOOD_WAIT_?(\d+)|wait of (\d+) seconds/i);
+  if (flood) return { kind: "pause", ms: Number(flood[1] ?? flood[2]) * 1000, reason };
+  if (/CHANNELS_TOO_MUCH|FROZEN_METHOD_INVALID|PEER_FLOOD|USER_RESTRICTED/i.test(reason)) {
+    return { kind: "pause", ms: 24 * 3600_000, reason };
+  }
+  if (lastingFailure(reason) || /USER_BANNED_IN_CHANNEL|CHAT_INVALID/i.test(reason)) return { kind: "error", reason };
+  return { kind: "retry", reason };
+}
+
+/** Начало сегодняшнего дня по Ташкенту, мс. */
+export function tashkentDayStart(now: Date): number {
+  const shifted = now.getTime() + TASHKENT_OFFSET_MS;
+  return shifted - (shifted % 86_400_000) - TASHKENT_OFFSET_MS;
+}
+
+/** Пауза после вступления — своя у каждого, но та же после перезапуска: от номера строки. */
+export function gapAfter(id: string): number {
+  let hash = 0;
+  for (const char of id) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+  return JOIN_GAP_MIN_MS + (hash % (JOIN_GAP_MAX_MS - JOIN_GAP_MIN_MS + 1));
+}
+
+export type JoinState = {
+  /** Сколько попыток вступить скаут сделал сегодня по Ташкенту (вступил, заявка, отказ). */
+  triedToday: number;
+  /** Последняя попытка: когда и какая строка. Пауза считается от неё. */
+  last: { id: string; at: string } | null;
+  /** До какого момента Telegram просил не вступать (FLOOD_WAIT и т. п.). */
+  pausedUntil: number | null;
+};
+
 /**
- * Список с тем, что узнали в этот запуск: номера открывшихся адресов и
- * отметка у тех, что не откроются никогда. null — менять нечего.
+ * Можно ли вступать сейчас; если нет — когда станет можно (мс) или null,
+ * если сегодня уже нельзя (предел выбран или окно закрылось).
+ *
+ * Предел — на попытки, а не на удачи: каждое вступление и каждая неудача —
+ * запрос в Telegram, а ограничение аккаунт получает за частоту запросов.
  */
-export function withResolved(
-  extra: readonly ExtraChat[],
-  opened: readonly { name: string; id: string }[],
-  failed: readonly { name: string; reason: string }[] = [],
-): ExtraChat[] | null {
-  const ids = new Map(opened.map((chat) => [chat.name.toLowerCase(), chat.id]));
-  const lost = new Map(failed.filter((f) => lastingFailure(f.reason)).map((f) => [f.name.toLowerCase(), f.reason]));
-  let changed = false;
-  const next = extra.map((chat) => {
-    const key = chat.name.toLowerCase();
-    const id = ids.get(key);
-    if (!chat.id && id && /^-?\d+$/.test(id)) {
-      changed = true;
-      return { ...chat, id };
+export function nextJoinAt(state: JoinState, now: Date): number | null {
+  const t = now.getTime();
+  const dayStart = tashkentDayStart(now);
+  const opens = dayStart + JOIN_FROM_HOUR * 3600_000;
+  const closes = dayStart + JOIN_TO_HOUR * 3600_000;
+  let at = Math.max(t, opens);
+  if (state.pausedUntil) at = Math.max(at, state.pausedUntil);
+  if (state.last) at = Math.max(at, new Date(state.last.at).getTime() + gapAfter(state.last.id));
+  if (state.triedToday >= JOIN_DAILY_CAP || at >= closes) return null;
+  return at;
+}
+
+/** Когда снова заглядывать, если сегодня уже нельзя: завтра в начале окна. */
+export function tomorrowOpens(now: Date): number {
+  return tashkentDayStart(now) + 86_400_000 + JOIN_FROM_HOUR * 3600_000;
+}
+
+type RosterView = {
+  opened: readonly { name: string; id: string }[];
+  failed: readonly { name: string; reason: string }[];
+  outside: readonly { name: string; id: string }[];
+  rosterUnknown: boolean;
+};
+
+export type ChatPatch = Partial<Pick<ScoutChat, "chat_id" | "status" | "error" | "joined_at" | "joined_via">>;
+
+/**
+ * Что узнали при старте скаута — обратно в строки: номер чата, «уже
+ * состою» (вступили руками или одобрили заявку), «не откроется никогда».
+ * FLOOD_WAIT и сеть адрес не губят — попробуем в следующий раз.
+ */
+export function rosterPatches(chats: readonly ScoutChat[], roster: RosterView, now: Date): { id: string; patch: ChatPatch }[] {
+  const key = (name: string) => (/^-?\d+$/.test(name) ? name : chatHandle(name).toLowerCase());
+  const opened = new Map(roster.opened.map((chat) => [key(chat.name), chat.id]));
+  const failed = new Map(roster.failed.map((chat) => [key(chat.name), chat.reason]));
+  const outside = new Set(roster.outside.map((chat) => chat.id));
+  const out: { id: string; patch: ChatPatch }[] = [];
+  for (const chat of chats) {
+    if (chat.status === "error") continue;
+    const handle = chat.handle?.toLowerCase() ?? null;
+    const id = (handle && opened.get(handle)) || (chat.chat_id && opened.get(chat.chat_id)) || null;
+    const patch: ChatPatch = {};
+    if (id) {
+      if (id !== chat.chat_id) patch.chat_id = id;
+      const member = !roster.rosterUnknown && !outside.has(id);
+      if (member && chat.status !== "joined") {
+        patch.status = "joined";
+        patch.error = null;
+        patch.joined_at = now.toISOString();
+        // Заявку отправлял скаут — одобрили её, вступление его.
+        patch.joined_via = chat.status === "request" ? "scout" : "manual";
+      } else if (!member && !roster.rosterUnknown && chat.status === "joined") {
+        // Вышли или исключили: снова в очередь, вступит заново или скажет почему нет.
+        patch.status = "pending";
+        patch.joined_at = null;
+      }
+    } else {
+      const reason = (handle && failed.get(handle)) || null;
+      if (reason && lastingFailure(reason)) {
+        patch.status = "error";
+        patch.error = reason.slice(0, 200);
+      }
     }
-    const reason = lost.get(key);
-    if (!chat.id && !chat.error && reason) {
-      changed = true;
-      return { ...chat, error: reason.slice(0, 200) };
-    }
-    return chat;
-  });
-  return changed ? next : null;
+    if (Object.keys(patch).length) out.push({ id: chat.id, patch });
+  }
+  return out;
+}
+
+/** Следующая группа на вступление: по порядку добавления, без недавних неудач. */
+export function nextToJoin(chats: readonly ScoutChat[], now: Date): ScoutChat | null {
+  const t = now.getTime();
+  return (
+    chats
+      .filter((chat) => chat.status === "pending")
+      .filter((chat) => !chat.tried_at || t - new Date(chat.tried_at).getTime() >= RETRY_AFTER_MS)
+      .sort((a, b) => (a.added_at ?? "").localeCompare(b.added_at ?? ""))[0] ?? null
+  );
+}
+
+/** Ссылка на группу для людей: публичный адрес — t.me/адрес, закрытая — t.me/+ключ. */
+export function chatUrl(chat: Pick<ScoutChat, "handle" | "invite">): string {
+  return chat.handle ? `https://t.me/${chat.handle}` : `https://t.me/+${chat.invite ?? ""}`;
+}
+
+export function isInvite(value: string | null | undefined): boolean {
+  return Boolean(value && INVITE_RE.test(value));
 }

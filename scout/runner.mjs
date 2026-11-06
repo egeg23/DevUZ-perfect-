@@ -16,8 +16,14 @@ import { probeTunnel, startProxyBridge } from "./http-proxy-bridge.mjs";
 import { directWebSocket } from "@/lib/egress.mjs";
 import { createBuffer } from "@/lib/scout/buffer";
 import { openChats } from "@/lib/scout/chats";
-import { watchPlan, withResolved } from "@/lib/scout/extra-chats";
-import { loadExtraChats, saveExtraChats } from "@/lib/scout/extra-chats-store";
+import { joinOutcome, nextJoinAt, nextToJoin, rosterPatches, tomorrowOpens, watchPlan } from "@/lib/scout/extra-chats";
+import {
+  joinState,
+  loadJoinPause,
+  loadScoutChats,
+  saveJoinPause,
+  updateScoutChat,
+} from "@/lib/scout/extra-chats-store";
 import { classify } from "@/lib/scout/classify";
 import { DROP_LABEL } from "@/lib/scout/digest";
 import { EMPTY_PULSE, accumulate, writePulse } from "@/lib/scout/health";
@@ -113,11 +119,13 @@ function env(name, required = true) {
 }
 
 /**
- * Список чатов, за которыми следим.
+ * Список чатов с сервера, за которыми следим.
  *
- * Только чтение уже вступивших чатов. Вступать скрипт не умеет намеренно:
+ * Группы, которые команда добавляет в «Сигналах скаута», лежат в базе
+ * (scout_chats) и подмешиваются при старте. Вступает в них скаут сам, но
+ * не больше JOIN_DAILY_CAP в день и с паузой час-два (startJoiner ниже):
  * массовое вступление — как раз то поведение, по которому аккаунт получает
- * ограничение. В чаты человек входит сам, руками и не за один день.
+ * ограничение.
  */
 function chats() {
   const raw = (process.env.SCOUT_CHATS || "").trim();
@@ -253,28 +261,30 @@ async function live() {
     process.exit(1);
   }
 
-  // SCOUT_CHATS с сервера и чаты из базы (stats_snapshots «scout-chats»):
+  // SCOUT_CHATS с сервера и группы из базы (scout_chats, «Сигналы скаута»):
   // новые адреса — порцией за запуск, разобранные — номером из базы.
-  const extra = await loadExtraChats().catch(() => []);
+  const extra = await loadScoutChats().catch(() => []);
   const plan = watchPlan(chats(), extra);
   const watched = plan.names;
   const roster = await openChats(client, watched);
   if (extra.length) {
     console.log(
-      `scout: чатов в базе ${extra.length}, адресов разобрал сейчас ${plan.resolving.length}` +
+      `scout: групп в базе ${extra.length}, адресов разобрал сейчас ${plan.resolving.length}` +
         `${plan.waiting.length ? `, ждут следующего запуска ${plan.waiting.length}` : ""}`,
     );
-    const learned = withResolved(extra, roster.opened, roster.failed);
-    if (learned && !(await saveExtraChats(learned).catch(() => false))) {
-      console.error("scout: не записал номера чатов в базу — разберу адреса заново при следующем запуске");
+    // Номер, «уже состою» (вступили руками, одобрили заявку), «не откроется» — обратно в строки.
+    let unsaved = 0;
+    for (const { id, patch } of rosterPatches(extra, roster, new Date())) {
+      if (!(await updateScoutChat(id, patch).catch(() => false))) unsaved += 1;
     }
+    if (unsaved) console.error(`scout: не записал в базу ${unsaved} строк групп — узнаю заново при следующем запуске`);
   }
 
   for (const chat of roster.failed) {
     console.error(`scout: не открыл ${chat.name} — пропускаю (${chat.reason})`);
   }
 
-  if (!roster.opened.length) {
+  if (!roster.opened.length && !extra.length) {
     console.error("scout: не открылся ни один чат из SCOUT_CHATS — читать нечего");
     process.exit(1);
   }
@@ -282,9 +292,9 @@ async function live() {
   if (roster.rosterUnknown) {
     console.error("scout: не свериться со списком диалогов — не знаю, где аккаунт состоит");
   } else if (roster.outside.length) {
-    // Не ошибка и не повод останавливаться: вступает человек, руками и не
-    // за один день. Номера таких чатов остаются в фильтре — вступит позже,
-    // и сообщения пойдут без перезапуска.
+    // Не ошибка и не повод останавливаться: в группы из базы скаут вступит
+    // сам, по одной в час-два, в остальные — человек. Номера таких чатов
+    // остаются в фильтре — вступили, и сообщения пойдут без перезапуска.
     console.error(
       `scout: аккаунт не состоит в ${roster.outside.length} чатах, оттуда ничего не придёт: ` +
         roster.outside.map((chat) => chat.name).join(", "),
@@ -323,6 +333,12 @@ async function live() {
     // Названия — в пульс, чтобы панель показала, куда вступать.
     unread: [...roster.outside.map((chat) => chat.name), ...roster.failed.map((chat) => chat.name)],
   };
+  /**
+   * Номера чатов, сообщения из которых разбираем. Множество, а не фильтр
+   * библиотеки: тот собирается один раз при подписке, а скаут вступает в
+   * группы на ходу — новая группа должна читаться без перезапуска.
+   */
+  const watching = new Set(roster.opened.map((chat) => chat.id));
   await writePulse({ ...pulse, at: new Date().toISOString() });
   setInterval(() => {
     void writePulse({ ...pulse, at: new Date().toISOString() });
@@ -390,12 +406,29 @@ async function live() {
     startWorker: (options) => startWorker({ ...options, Api, NewMessage, othersAlive }),
   });
 
+  // Вступление в группы из «Сигналов скаута» — с главного, он же читает.
+  startJoiner({
+    client,
+    Api,
+    watching,
+    canJoin: () => mainUntil <= Date.now(),
+    onJoined: (name) => {
+      pulse = {
+        ...pulse,
+        chatsReading: pulse.chatsReading + 1,
+        unread: pulse.unread.filter((item) => item !== name),
+      };
+    },
+  });
+
   let warnedNoChat = false;
   client.addEventHandler((event) => {
     const message = event.message;
     if (!message?.message) return;
     // Свои сообщения не разбираем: оператор отвечает из этого же аккаунта.
     if (message.out) return;
+    // Только чаты, за которыми следим: личка и прочие группы — мимо.
+    if (!watching.has(String(message.chatId ?? ""))) return;
 
     const shaped = shape(message);
     if (!shaped) {
@@ -407,7 +440,7 @@ async function live() {
       return;
     }
     buffer.push(shaped);
-  }, new NewMessage({ chats: roster.opened.map((chat) => chat.id) }));
+  }, new NewMessage({}));
 
   const stop = async (signal) => {
     console.log(`scout: ${signal}, дочитываю накопленное`);
@@ -419,6 +452,117 @@ async function live() {
   };
   process.on("SIGINT", () => void stop("SIGINT"));
   process.on("SIGTERM", () => void stop("SIGTERM"));
+}
+
+/** Как часто скаут смотрит, пора ли вступать в следующую группу. */
+const JOIN_TICK_MS = 10 * 60_000;
+/** Первая проверка после старта: дать соединению и разбору чатов устояться. */
+const JOIN_FIRST_MS = 3 * 60_000;
+
+/**
+ * Вступление в группы, которые команда добавила в «Сигналах скаута».
+ *
+ * Владелец, 06.11.2026: «В день самостоятельно не более 10 подписок на
+ * группы с интервалом 1-2 часа». Предел, паузу и окно (днём по Ташкенту)
+ * решает lib/scout/extra-chats.ts по базе: попытки считаются по tried_at,
+ * поэтому перезапуск (каждая выкатка) не обнуляет ни счёт, ни паузу.
+ * Ограниченный главный аккаунт не вступает. Проверку ботом при входе
+ * (капчу) скаут не проходит — такую группу отдаёт человеку.
+ */
+function startJoiner({ client, Api, watching, canJoin, onJoined }) {
+  let busy = false;
+  /** До этого момента в базу не ходим: известно, что раньше нельзя. */
+  let quietUntil = 0;
+
+  const tick = async () => {
+    if (busy || Date.now() < quietUntil || !canJoin()) return;
+    busy = true;
+    try {
+      const now = new Date();
+      const state = await joinState(now, await loadJoinPause());
+      const at = nextJoinAt(state, now);
+      if (at === null) {
+        quietUntil = tomorrowOpens(now);
+        return;
+      }
+      if (at > now.getTime()) {
+        quietUntil = at;
+        return;
+      }
+      const chat = nextToJoin(await loadScoutChats(), now);
+      if (!chat) {
+        quietUntil = Date.now() + 30 * 60_000;
+        return;
+      }
+      // Попытка — в базу до запроса: упадём посередине, она всё равно посчитана.
+      if (!(await updateScoutChat(chat.id, { tried_at: now.toISOString() }))) return;
+      const name = chat.handle ?? `+${chat.invite}`;
+      const result = await joinOne(client, Api, chat);
+      const stamp = new Date().toISOString();
+      if (result.kind === "joined" || result.kind === "request") {
+        const id = result.entity ? String(await client.getPeerId(result.entity).catch(() => "")) : "";
+        if (id) watching.add(id);
+        await updateScoutChat(chat.id, {
+          status: result.kind,
+          error: null,
+          ...(id ? { chat_id: id } : {}),
+          ...(result.entity?.title ? { title: String(result.entity.title).slice(0, 200) } : {}),
+          ...(result.kind === "joined" ? { joined_at: stamp, joined_via: result.manual ? "manual" : "scout" } : {}),
+        });
+        if (result.kind === "joined") onJoined(chat.handle ?? id);
+        console.log(`scout: ${result.kind === "joined" ? "вступил в" : "отправил заявку в"} ${name}${id ? ` (${id})` : ""}`);
+      } else if (result.kind === "pause") {
+        await saveJoinPause(Date.now() + result.ms, result.reason);
+        await updateScoutChat(chat.id, { error: result.reason });
+        console.error(`scout: Telegram просит не вступать ${Math.round(result.ms / 60_000)} мин (${result.reason})`);
+      } else if (result.kind === "error") {
+        await updateScoutChat(chat.id, { status: "error", error: result.reason });
+        console.error(`scout: в ${name} не вступить (${result.reason})`);
+      } else {
+        await updateScoutChat(chat.id, { error: result.reason });
+        console.error(`scout: не вступил в ${name}, попробую позже (${result.reason})`);
+      }
+    } catch (error) {
+      console.error(`scout: вступление сорвалось — ${error?.message ?? error}`);
+    } finally {
+      busy = false;
+    }
+  };
+
+  setTimeout(() => {
+    void tick();
+    setInterval(() => void tick(), JOIN_TICK_MS);
+  }, JOIN_FIRST_MS);
+}
+
+/** Одна попытка: адрес — JoinChannel, ссылка-приглашение — ImportChatInvite. */
+async function joinOne(client, Api, chat) {
+  const botCheck = { kind: "error", reason: "группа просит пройти проверку бота — вступите руками" };
+  try {
+    if (chat.invite) {
+      const check = await client.invoke(new Api.messages.CheckChatInvite({ hash: chat.invite }));
+      if (check?.className === "ChatInviteAlready") return { kind: "joined", manual: true, entity: check.chat };
+      const result = await client.invoke(new Api.messages.ImportChatInvite({ hash: chat.invite }));
+      if (result?.className === "messages.ChatInviteJoinResultWebView") return botCheck;
+      const updates = result?.updates ?? result;
+      return { kind: "joined", entity: updates?.chats?.[0] ?? null };
+    }
+    const entity = await client.getEntity(chat.handle);
+    if (entity?.className !== "Channel") return { kind: "error", reason: "по адресу не группа и не канал" };
+    // Уже состоит (вступили руками): запрос на вступление не тратим.
+    if (!entity.left) return { kind: "joined", manual: true, entity };
+    const result = await client.invoke(new Api.channels.JoinChannel({ channel: entity }));
+    if (result?.className === "messages.ChatInviteJoinResultWebView") return botCheck;
+    return { kind: "joined", entity };
+  } catch (error) {
+    const outcome = joinOutcome(error);
+    // Заявка ушла: номер группы знаем по адресу — сообщения пойдут, как одобрят.
+    if (outcome.kind === "request" && chat.handle) {
+      const entity = await client.getEntity(chat.handle).catch(() => null);
+      return { ...outcome, entity };
+    }
+    return outcome;
+  }
 }
 
 /**

@@ -83,18 +83,28 @@ export const prospectSections: Record<string, HelpEntry> = {
         ],
       },
       {
+        id: "groups",
+        title: "Grupy dla skauta — dodaj własną",
+        body: [
+          "Blok «Grupy dla skauta» — grupy i kanały w Telegramie, które skaut czyta poza podstawowymi. Dodać może każdy: wklej w pole «Adres grupy lub link z zaproszeniem» adres w rodzaju @group, t.me/group albo link t.me/+…, opcjonalnie notatkę (kraj, o czym jest grupa), i naciśnij «Dodaj grupę». Bota i konta prywatnego skaut nie czyta — pole tego nie przyjmie. Jedna grupa trafia na listę tylko raz.",
+          "Potem skaut sam dołącza do grupy z konta firmowego: nie więcej niż 10 prób dziennie, między próbami godzina-dwie i tylko od 08:00 do 22:00 czasu Taszkentu. Tak dołącza żywy człowiek, a częste dołączanie to dla Telegrama powód, by ograniczyć konto, z którego piszemy też z klientami. Grupy idą w kolejności dodania. Pod formularzem widać, ile było prób dzisiaj, ile grup czeka i kiedy następne dołączenie; jeśli Telegram poprosił o przerwę — termin też tam.",
+          "Stan grupy: «czeka na dołączenie»; «czytamy» — z dopiskiem «dołączył skaut» albo «dołączono ręcznie» (dołączyłeś z konta skauta sam — on to zauważy); «prośba u admina» — grupa zamknięta, czekamy na zatwierdzenie; «nie da się dołączyć» — adresu nie ma, link wygasł, konto ma bana w grupie albo grupa każe przejść weryfikację bota, wtedy dołączyć można tylko ręcznie. Powód od Telegrama widać pod stanem. Nową grupę skaut czyta od razu po dołączeniu, bez restartu.",
+          "«Usuń» — przy grupach, które dodałeś Ty; kierownik i właściciel usuwają dowolne. Do usuniętej grupy skaut nie dołącza i przestaje ją czytać po najbliższym restarcie; kto dodał i kto usunął, zostaje zapisane w dzienniku działań.",
+        ],
+      },
+      {
         id: "health",
         title: "Czy skaut działa",
         body: {
           manager: [
-            "Złoty pasek na górze — coś jest nie tak: skaut milczy, nie czyta żadnego czatu albo AI jest niedostępne. Pasek «Konto czyta 12 z 29 zadanych czatów» — część czatów nie jest czytana. W obu przypadkach powiedz właścicielowi: z panelu tego się nie naprawi.",
+            "Złoty pasek na górze — coś jest nie tak: skaut milczy, nie czyta żadnego czatu albo AI jest niedostępne. Pasek «Konto czyta 12 z 29 zadanych czatów» — część czatów na razie nie jest czytana: do grup z [«Grupy dla skauta»](#scout-groups) skaut dołączy sam, po jednej co godzinę-dwie. Skaut milczy, AI jest niedostępne albo pasek nie znika przez kilka dni — powiedz właścicielowi: z panelu tego się nie naprawi.",
           ],
           head: [
-            "Złoty pasek na górze — awaria: «Skaut milczy od N min» (proces zatrzymany), «nie czyta żadnego czatu» albo «Model jest niedostępny». «Konto czyta X z Y zadanych czatów» z listą «Nieczytane:» — konto firmowe nie dołączyło do tych czatów. Naprawia właściciel.",
+            "Złoty pasek na górze — awaria: «Skaut milczy od N min» (proces zatrzymany), «nie czyta żadnego czatu» albo «Model jest niedostępny». «Konto czyta X z Y zadanych czatów» z listą «Nieczytane:» — konto firmowe jeszcze nie dołączyło do tych czatów. Do grup z [«Grupy dla skauta»](#scout-groups) dołączy samo, po jednej co godzinę-dwie; awarie i czaty zadane na serwerze naprawia właściciel.",
           ],
           admin: [
             "«Skaut milczy od N min» — proces na serwerze padł albo został zatrzymany: `systemctl status devuz-scout`. «Model jest niedostępny» — problem z kluczem albo ze środkami na nim.",
-            "«Konto czyta X z Y zadanych czatów» i lista «Nieczytane:» — konto firmowe nie dołączyło do tych czatów albo adres się nie otworzył. Dołączyć trzeba ręcznie z konta firmowego: z panelu się tego nie zrobi.",
+            "«Konto czyta X z Y zadanych czatów» i lista «Nieczytane:» — konto firmowe nie dołączyło do tych czatów albo adres się nie otworzył. Do grup z [«Grupy dla skauta»](#scout-groups) dołącza samo, nie więcej niż 10 dziennie; do czatów z SCOUT_CHATS na serwerze — ręcznie z konta firmowego.",
             "«Mechanizm jest sprawny: … Zapytań o development jeszcze nie było» — to cisza na czatach, a nie awaria.",
           ],
         },

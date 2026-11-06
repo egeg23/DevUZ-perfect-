@@ -48,6 +48,10 @@ export const AUDIT_ACTIONS = [
   "order.nudged",
   "prospect.audited",
   "signal.status_changed",
+  // Группы для скаута: человек добавил или убрал группу в «Сигналах скаута»
+  // (lib/scout/extra-chats-store.ts).
+  "scout.chat_added",
+  "scout.chat_removed",
   "staff.invited",
   "staff.disabled",
   "staff.role_changed",
