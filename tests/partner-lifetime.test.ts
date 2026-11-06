@@ -115,10 +115,18 @@ test("блогер: +5 к ступени его модели", () => {
   assert.equal(profit?.percent, tierPercent(4_000, "profit") + LIFETIME_BONUS);
 });
 
-test("процент владельца на проекте и персональная ставка — без надбавки", () => {
+test("процент владельца на проекте — без надбавки, личная ставка — с надбавкой", () => {
   const ps = [project(55_000), project(4_000, { partner_percent: 12 }), project(4_000)];
   assert.equal(partnerAccrualOf(ps[1], [], BLOGGER, ps)?.percent, 12, "процент на проекте главнее");
-  assert.equal(partnerAccrualOf(ps[2], [], { ...BLOGGER, percent_override: 9 }, ps)?.percent, 9, "персональная ставка");
+  // Владелец, 06.11.2026: «10% с оборота + … 50000$ … становится 15% бессрочно».
+  assert.equal(
+    partnerAccrualOf(ps[2], [], { ...BLOGGER, percent_override: 10 }, ps)?.percent,
+    10 + LIFETIME_BONUS,
+    "личная ставка 10% после порога — 15%",
+  );
+  // До порога личная ставка как есть.
+  const early = [project(20_000), project(4_000)];
+  assert.equal(partnerAccrualOf(early[1], [], { ...BLOGGER, percent_override: 10 }, early)?.percent, 10);
   // У агентства персональной ставки нет — надбавка идёт.
   assert.equal(
     partnerAccrualOf(ps[2], [], { ...AGENCY, percent_override: 9 }, ps)?.percent,
