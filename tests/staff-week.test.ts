@@ -67,6 +67,8 @@ test("разовый отчёт владельца: 30.10 в 15:00 — эта н
   assert.equal(extraReportAt(tk("2026-10-30T18:59:00")), at, "свип молчал — ещё можно");
   assert.equal(extraReportAt(tk("2026-10-30T19:00:00")), null);
   assert.equal(extraReportAt(tk("2026-11-06T15:00:00")), null, "следующая пятница — нет, разовый");
+  // Владелец, 06.11.2026: «Пришли отчет по сотрудникам за неделю мне и Александру сейчас».
+  assert.ok(extraReportAt(tk("2026-11-06T17:10:00")), "06.11 — с 16:30, пока выкатка не доехала");
 
   const range = weekRangeUntil(at!);
   assert.equal(range.from, tk("2026-10-26T00:00:00").getTime(), "с понедельника");

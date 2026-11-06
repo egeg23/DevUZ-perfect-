@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-import { esc, sendDocument, sendPhotoFile } from "@/lib/qualify/telegram";
+import { esc, sendDocument, sendMessage, sendPhotoFile } from "@/lib/qualify/telegram";
 import { serviceClient } from "@/lib/supabase";
 
 /**
@@ -22,11 +22,27 @@ import { serviceClient } from "@/lib/supabase";
  * payload без самих файлов: в базе не держим лишнего. Список — только ключи,
  * файлы читаются той строкой, которую взяли. Окна «ночью бот молчит» нет:
  * строку кладут по слову человека, и уходит она тогда, когда он попросил.
+ *
+ * Текстом — `{ kind: "text", name, text }` (владелец, 06.11.2026: «выведи
+ * удобным списком прямо через бота нашего в тг, пусть поочерёдно пришлёт мне
+ * ссылки» — группы для скаута): каждая строка — отдельное сообщение, по
+ * порядку, ссылки в нём Telegram делает нажимаемыми сам. Между сообщениями —
+ * пауза: больше одного в секунду в один чат Telegram не пускает. Проход не
+ * дольше PASS_BUDGET_MS: остальные строки уйдут следующим проходом свипа.
  */
 
 export const OUTBOX_PREFIX = "client-outbox:";
 
-export type OutboxItem = { kind: "photo" | "document"; name: string; b64?: string; file?: string; caption?: string };
+export type OutboxItem =
+  | { kind: "photo" | "document"; name: string; b64?: string; file?: string; caption?: string }
+  | { kind: "text"; name: string; text: string };
+
+/** Предел текста одного сообщения: Telegram берёт до 4096 знаков. */
+export const OUTBOX_TEXT_MAX = 3500;
+/** Пауза между сообщениями в один чат. */
+export const OUTBOX_GAP_MS = 1100;
+/** Сколько один проход свипа тратит на исходящую почту. */
+export const PASS_BUDGET_MS = 25_000;
 
 /** Файл с диска — только из kp/send/, без выхода наверх. */
 export const OUTBOX_DIR = "kp/send/";
@@ -47,8 +63,10 @@ export function isOutboxPayload(value: unknown): value is OutboxPayload {
     v.items.length > 0 &&
     v.items.every((i) => {
       const it = i as Record<string, unknown>;
+      if (typeof it.name !== "string") return false;
+      if (it.kind === "text") return typeof it.text === "string" && it.text.trim().length > 0 && it.text.length <= OUTBOX_TEXT_MAX;
       const body = typeof it.b64 === "string" || (typeof it.file === "string" && outboxFile(it.file) !== null);
-      return (it.kind === "photo" || it.kind === "document") && typeof it.name === "string" && body;
+      return (it.kind === "photo" || it.kind === "document") && body;
     })
   );
 }
@@ -56,9 +74,16 @@ export function isOutboxPayload(value: unknown): value is OutboxPayload {
 export async function sendClientOutbox(): Promise<number> {
   const db = serviceClient();
   if (!db) return 0;
-  const { data: rows } = await db.from("stats_snapshots").select("key").like("key", `${OUTBOX_PREFIX}%`).limit(3);
+  const { data: rows } = await db
+    .from("stats_snapshots")
+    .select("key")
+    .like("key", `${OUTBOX_PREFIX}%`)
+    .order("key")
+    .limit(3);
   let sent = 0;
+  const started = Date.now();
   for (const row of rows ?? []) {
+    if (Date.now() - started > PASS_BUDGET_MS) break;
     const key = String(row.key);
     const name = key.slice(OUTBOX_PREFIX.length);
     const sending = `client-outbox-sending:${name}`;
@@ -70,7 +95,13 @@ export async function sendClientOutbox(): Promise<number> {
       continue;
     }
     const done: { name: string; ok: boolean }[] = [];
-    for (const item of payload.items) {
+    for (const [index, item] of payload.items.entries()) {
+      if (index > 0) await new Promise((resolve) => setTimeout(resolve, OUTBOX_GAP_MS));
+      if (item.kind === "text") {
+        // Без пуша и колокольчика: это пачка ссылок по просьбе, а не уведомление.
+        done.push({ name: item.name, ok: await sendMessage(payload.chat, esc(item.text), { mirror: false }) });
+        continue;
+      }
       const file = item.file ? outboxFile(item.file) : null;
       const raw = file
         ? await readFile(path.join(process.cwd(), file)).catch(() => null)

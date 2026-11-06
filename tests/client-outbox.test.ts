@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
-import { OUTBOX_PREFIX, isOutboxPayload, outboxFile } from "@/lib/admin/client-outbox";
+import { OUTBOX_GAP_MS, OUTBOX_PREFIX, OUTBOX_TEXT_MAX, isOutboxPayload, outboxFile } from "@/lib/admin/client-outbox";
 
 const read = (file: string) => readFileSync(new URL(`../${file}`, import.meta.url), "utf8");
 
@@ -29,9 +29,21 @@ test("строка исходящей почты: чат и хотя бы оди
 
 test("один проход берёт строку, после отправки файлов в базе не остаётся", () => {
   const src = read("lib/admin/client-outbox.ts");
-  assert.match(src, /\.select\("key"\)\.like\("key", `\$\{OUTBOX_PREFIX\}%`\)/, "список — только ключи");
+  assert.match(src, /\.select\("key"\)\s*\.like\("key", `\$\{OUTBOX_PREFIX\}%`\)/, "список — только ключи");
   assert.match(src, /update\(\{ key: sending \}\)\.eq\("key", key\)/, "взять — условно, переименованием ключа");
   assert.match(src, /payload: \{ chat: payload\.chat, note: payload\.note \?\? null, done, at:/, "после — без файлов");
   assert.match(read("app/api/reminders/sweep/route.ts"), /await sendClientOutbox\(\)/);
   assert.match(read("next.config.ts"), /"\/api\/reminders\/sweep": \["\.\/kp\/send\/\*\*\/\*"\]/, "файлы kp/send едут в образ свипа");
+});
+
+test("текстом — по сообщению на строку, по порядку и с паузой", () => {
+  // Владелец, 06.11.2026: «пусть поочерёдно пришлёт мне ссылки» — группы для скаута.
+  assert.ok(isOutboxPayload({ chat: 1, items: [{ kind: "text", name: "01", text: "1/54 · https://t.me/js_jobs" }] }));
+  assert.equal(isOutboxPayload({ chat: 1, items: [{ kind: "text", name: "01", text: "  " }] }), false);
+  assert.equal(isOutboxPayload({ chat: 1, items: [{ kind: "text", name: "01", text: "x".repeat(OUTBOX_TEXT_MAX + 1) }] }), false);
+  assert.equal(isOutboxPayload({ chat: 1, items: [{ kind: "text", text: "без имени" }] }), false);
+  assert.ok(OUTBOX_GAP_MS >= 1000, "не больше одного сообщения в секунду в один чат");
+  const src = read("lib/admin/client-outbox.ts");
+  assert.match(src, /\.order\("key"\)/, "строки — по порядку имён");
+  assert.match(src, /sendMessage\(payload\.chat, esc\(item\.text\), \{ mirror: false \}\)/, "текст экранируется, без пуша");
 });
