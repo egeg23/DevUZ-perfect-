@@ -16,9 +16,11 @@ import type { Dictionary } from "@/content/dictionaries";
  * Лента продублирована, как у стека: вторая копия въезжает, когда первая
  * уходит. Копия скрыта от экранного чтения — бренд называется один раз.
  */
-export function ClientsSection({ dict }: { dict: Dictionary }) {
+export function ClientsSection({ dict, bare = false }: { dict: Dictionary; bare?: boolean }) {
+  // `bare` — на главной «Стекло»: без черты сверху, лента лежит прямо на
+  // гаснущем городе первого экрана (между разделами там нет границ).
   return (
-    <section aria-labelledby="clients-title" className="border-t border-line py-12 sm:py-14">
+    <section aria-labelledby="clients-title" className={bare ? "py-10 sm:py-12" : "border-t border-line py-12 sm:py-14"}>
       <Container>
         <h2
           id="clients-title"

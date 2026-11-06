@@ -1,25 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { CompileScene } from "@/components/hero/compile-scene";
-import { CalculatorSection } from "@/components/sections/calculator";
-import { BoxHero } from "@/components/sections/box-hero";
-import { CasesSection } from "@/components/sections/cases";
-import { ClientsSection } from "@/components/sections/clients";
-import { ContactSection } from "@/components/sections/contact";
-import { DevuzShowcase } from "@/components/sections/devuz-showcase";
-import { FaqSection } from "@/components/sections/faq";
-import { MarketingSection } from "@/components/sections/marketing";
-import { ProtoReel } from "@/components/sections/proto-reel";
-import { ProcessSection } from "@/components/sections/process";
-import { ScaleSection } from "@/components/sections/scale";
-import { ServicesSection } from "@/components/sections/services";
-import { StackSection } from "@/components/sections/stack";
-import { StudioFilm } from "@/components/sections/studio-film";
-import { cases } from "@/content/cases";
-import { company } from "@/content/company";
+import { GlassHome } from "@/components/home/glass-home";
 import { getDictionary } from "@/content/dictionaries";
-import { isLocale, t, type Locale } from "@/lib/i18n";
+import { isLocale, type Locale } from "@/lib/i18n";
 import { faqSchema, jsonLdGraph } from "@/lib/schema";
 import { buildMetadata } from "@/lib/seo";
 
@@ -50,24 +34,13 @@ export default async function HomePage({
   const locale = raw as Locale;
   const dict = getDictionary(locale);
 
+  // Главная «Стекло» (владелец, 06.11.2026: «Давай начнем с главной»): первый
+  // экран с ИИ-сотрудником, «Делали для», работы, продукты, прототип за 12
+  // часов с заявкой и вопросы. Прежние блоки главной живут на своих
+  // страницах: услуги, калькулятор, маркетинг, кейсы, DevUz Box.
   return (
     <>
-      <CompileScene locale={locale} dict={dict} />
-      <ClientsSection dict={dict} />
-      {/* DevUz Box: хиро коробки сразу за логотипами (владелец, 02.11.2026). */}
-      <BoxHero locale={locale} dict={dict} />
-      <ProtoReel locale={locale} proto={cases.find((c) => c.slug === "samauto")?.prototype} />
-      <ScaleSection locale={locale} />
-      <StudioFilm locale={locale} />
-      <ServicesSection locale={locale} dict={dict} />
-      <CalculatorSection locale={locale} dict={dict} />
-      <MarketingSection locale={locale} />
-      <DevuzShowcase locale={locale} dict={dict} />
-      <CasesSection locale={locale} dict={dict} />
-      <ProcessSection dict={dict} />
-      <StackSection dict={dict} />
-      <FaqSection dict={dict} />
-      <ContactSection locale={locale} dict={dict} />
+      <GlassHome locale={locale} dict={dict} />
 
       <script
         type="application/ld+json"

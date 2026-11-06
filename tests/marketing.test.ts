@@ -92,12 +92,12 @@ test("чужое агентство на сайте не названо", () => 
   }
 });
 
-test("страница в меню, в подвале, на главной и в карте сайта", () => {
+test("страница в меню, в подвале и в карте сайта", () => {
   const header = read("components/layout/header.tsx");
   assert.match(header, /\{ href: localeHref\(locale, "marketing"\), label: dict\.nav\.marketing \}/);
   assert.match(header, /label: dict\.nav\.contacts, mobileOnly: true/);
   assert.match(read("components/layout/footer.tsx"), /localeHref\(locale, "marketing"\)/);
-  assert.match(read("app/[locale]/page.tsx"), /<MarketingSection locale=\{locale\} \/>/);
+  // С главной «Стекло» (06.11.2026) блок маркетинга ушёл: страница — в меню и в подвале.
   const sitemap = read("app/sitemap.ts");
   assert.match(sitemap, /path: MARKETING_PATH/);
   assert.match(sitemap, /articleEntries/);

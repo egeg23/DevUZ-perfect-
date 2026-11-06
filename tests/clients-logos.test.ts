@@ -65,8 +65,11 @@ test("«Делали для»: размер по площади, ни один �
 });
 
 test("«Делали для»: сразу под первым экраном и подписано на каждом языке сайта", () => {
-  const page = readFileSync("app/[locale]/page.tsx", "utf8");
-  assert.match(page, /<CompileScene[^>]*\/>\s*<ClientsSection/);
+  assert.match(readFileSync("app/[locale]/page.tsx", "utf8"), /<GlassHome /);
+  // Главная «Стекло»: лента — сразу за первым экраном, без черты сверху.
+  const home = readFileSync("components/home/glass-home.tsx", "utf8");
+  assert.match(home, /<\/section>\s*(?:\{\/\*[^]*?\*\/\}\s*)?<div className=\{s\.clients\}>\s*<ClientsSection dict=\{dict\} bare \/>/);
+  assert.ok(home.indexOf("<ClientsSection") < home.indexOf('id="works"'), "лента ниже работ");
   for (const locale of locales) {
     const title = getDictionary(locale).clients.title;
     assert.ok(title.trim(), locale);
