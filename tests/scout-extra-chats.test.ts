@@ -204,6 +204,8 @@ test("скаут берёт группы из базы, вступает сам 
   assert.match(runner, /nextJoinAt\(state, now\)/, "предел и паузу решает extra-chats");
   assert.match(runner, /tried_at: now\.toISOString\(\)/, "попытка пишется до запроса");
   assert.match(runner, /canJoin: \(\) => mainUntil <= Date\.now\(\)/, "ограниченный главный не вступает");
+  // Панель говорит о паузе то же, что делает скаут.
+  assert.match(read("app/admin/scout/page.tsx"), /Math\.max\(joinPause \?\? 0, mainLimit \?\? 0\)/);
   assert.match(runner, /watching\.add\(id\)/);
   assert.match(runner, /watching\.has\(String\(message\.chatId/);
   assert.doesNotMatch(runner, /NewMessage\(\{ chats:/, "фильтр библиотеки собирается один раз — новую группу не увидит");

@@ -12,6 +12,7 @@ import { pick } from "@/lib/admin/i18n";
 import { SIGNAL_STATUSES, listSignals, scoutCounts } from "@/lib/admin/scout";
 import { diagnose, readPulse, unreadChats } from "@/lib/scout/health";
 import { joinState, listScoutChats, loadJoinPause, staffNames } from "@/lib/scout/extra-chats-store";
+import { mainLimitUntil } from "@/lib/admin/account-ban-store";
 
 export const dynamic = "force-dynamic";
 
@@ -41,13 +42,17 @@ export default async function ScoutPage({
   const t = pick(scoutDict, locale);
   const statusLabel = pick(signalStatusDict, locale);
 
-  const [counts, signals, pulse, groups, pause] = await Promise.all([
+  const [counts, signals, pulse, groups, joinPause, mainLimit] = await Promise.all([
     scoutCounts(),
     listSignals(status),
     readPulse(),
     listScoutChats().catch(() => null),
     loadJoinPause().catch(() => null),
+    mainLimitUntil().catch(() => null),
   ]);
+  // Ограниченный главный аккаунт не вступает (scout/runner.mjs, canJoin) —
+  // и строка о следующем вступлении говорит то же.
+  const pause = Math.max(joinPause ?? 0, mainLimit ?? 0) || null;
   const [joins, names] = await Promise.all([
     groups ? joinState(new Date(), pause).catch(() => null) : Promise.resolve(null),
     staffNames((groups ?? []).map((chat) => chat.added_by).filter((id): id is string => Boolean(id))),
