@@ -1356,6 +1356,10 @@ export const MARKETS: readonly Market[] = [
 ];
 
 /** Страна по адресу страницы. */
+/** Сколько стран и площадок — для обучения по «Рынкам» (components/admin/markets-tour.tsx). */
+export const MARKET_COUNT = MARKETS.length;
+export const PLACE_COUNT = MARKETS.reduce((sum, market) => sum + market.resources.length, 0);
+
 export function marketOf(slug: string): Market | null {
   return MARKETS.find((market) => market.slug === slug) ?? null;
 }

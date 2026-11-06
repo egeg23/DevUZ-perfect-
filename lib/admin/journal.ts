@@ -72,6 +72,7 @@ export const ACTION_LABEL: Record<AuditAction, Tr> = {
   "signal.status_changed": { ru: "разобрал сигнал поиска", uz: "qidiruv signalini ko‘rib chiqdi", pl: "obsłużył sygnał z wyszukiwania" },
   "scout.chat_added": { ru: "добавил группу для скаута", uz: "skaut uchun guruh qo‘shdi", pl: "dodał grupę dla skauta" },
   "scout.chat_removed": { ru: "убрал группу скаута", uz: "skaut guruhini olib tashladi", pl: "usunął grupę skauta" },
+  "ai_staff.key_saved": { ru: "вставил ключи Instagram для «Блогеров»", uz: "«Blogerlar» uchun Instagram kalitlarini kiritdi", pl: "wkleił klucze Instagrama dla „Blogerów”" },
   "staff.invited": { ru: "завёл сотрудника", uz: "xodim qo‘shdi", pl: "dodał pracownika" },
   "staff.disabled": { ru: "отключил сотрудника", uz: "xodimni o‘chirdi", pl: "wyłączył pracownika" },
   "staff.role_changed": { ru: "сменил роль сотрудника", uz: "xodim rolini o‘zgartirdi", pl: "zmienił rolę pracownika" },

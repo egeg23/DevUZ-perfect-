@@ -128,6 +128,11 @@
 
 ## Что нужно от владельца
 
+С 06.11.2026 ключи вставляются в самой вкладке «Блогеры» → «Подключения
+Instagram» (владелец или руководитель): там же шаги по-русски, узбекски и
+польски, адреса вебхука и возврата с кнопкой «Скопировать» и проверка у
+Meta. Ниже — то же коротко.
+
 1. **Instagram-аккаунт студии — профессиональный и привязан к странице
    Facebook.** В приложении Instagram: Настройки → Тип аккаунта →
    «Перейти на профессиональный» (Бизнес); затем Meta Business Suite
@@ -136,7 +141,9 @@
 2. **Приложение Meta с Business Discovery.** developers.facebook.com → Мои
    приложения → то же приложение, что для Instagram клиентов сервиса, или
    новое типа «Бизнес» → продукт «Instagram» с входом через Facebook → права
-   `instagram_basic`, `pages_show_list`, `pages_read_engagement`.
+   `instagram_basic`, `instagram_manage_insights`, `pages_show_list`,
+   `pages_read_engagement`, `business_management`, `ads_read`
+   (business_discovery сверено 06.11.2026).
    В Graph API Explorer получить долгий токен страницы и id Instagram-аккаунта
    студии и положить в хранилище секретов: `BLOGGERS_FB_TOKEN`,
    `BLOGGERS_IG_USER_ID`. Без них агент оценивает только по выдаче поиска.

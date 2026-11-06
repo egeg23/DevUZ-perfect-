@@ -355,6 +355,20 @@ export function accessFromForm(role: Role, checked: readonly string[]): SectionA
 }
 
 /**
+ * Одна галочка раздела, остальные как были: совпала с ролью — отличия нет.
+ * Для блока «Кому открыт раздел» во вкладке «Блогеры» — то же, что
+ * `accessFromForm` в «Команда» → «Разделы», но по одному разделу.
+ */
+export function withSection(role: Role, access: SectionAccess, href: string, on: boolean): SectionAccess {
+  const out: Record<string, boolean> = { ...access };
+  const section = SECTIONS.find((s) => s.href === href);
+  if (!section || ALWAYS_OPEN.includes(href)) return out;
+  if (on === section.roles.includes(role)) delete out[href];
+  else out[href] = on;
+  return out;
+}
+
+/**
  * Видит и правит чужое: все лиды, чужие напоминания, статистику команды.
  *
  * Руководитель здесь наравне с администратором — его работа и есть чужие

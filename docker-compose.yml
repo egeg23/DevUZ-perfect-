@@ -142,6 +142,10 @@ services:
       AI_STAFF_IG_VERIFY_TOKEN: ${AI_STAFF_IG_VERIFY_TOKEN:-}
       AI_STAFF_IG_PUBLIC: ${AI_STAFF_IG_PUBLIC:-}
       AI_STAFF_IG_TESTERS: ${AI_STAFF_IG_TESTERS:-}
+      # Цифры профилей блогеров (lib/bloggers/discovery.ts): обычно — в хранилище
+      # секретов, их вставляют в «Подключения Instagram» во вкладке «Блогеры».
+      BLOGGERS_IG_USER_ID: ${BLOGGERS_IG_USER_ID:-}
+      BLOGGERS_FB_TOKEN: ${BLOGGERS_FB_TOKEN:-}
       # ИИ на прототипах (lib/proto/ai.ts) — по умолчанию Haiku.
       PROTO_AI_MODEL: ${PROTO_AI_MODEL:-}
       PROMO_MODEL: ${PROMO_MODEL:-}

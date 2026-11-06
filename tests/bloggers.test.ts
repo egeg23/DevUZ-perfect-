@@ -196,8 +196,14 @@ test("доступ: раздел — владельцу и руководите�
   for (const m of actions.matchAll(/export async function (\w+)\([^)]*\)[^{]*\{\n([^\n]*)/g)) {
     // Рабочие действия — всем, кому открыт раздел (и менеджеру по галочке);
     // настройки, поиск, оценка, Instagram и партнёр — по роли.
+    // Кому открыт раздел — только владелец (он выдаёт галочки, 06.11.2026).
     const work = ["markSent", "skipBlogger", "restoreBlogger", "markReplied", "markDeclined", "holdAgent"].includes(m[1]);
-    assert.match(m[2], work ? /await requireSection\(SECTION\)/ : /await requireRole\("admin", "head"\)/, `${m[1]}: первой строкой — проверка доступа`);
+    const owner = m[1] === "saveBloggersAccess";
+    assert.match(
+      m[2],
+      work ? /await requireSection\(SECTION\)/ : owner ? /await requireAdmin\(\)/ : /await requireRole\("admin", "head"\)/,
+      `${m[1]}: первой строкой — проверка доступа`,
+    );
   }
   assert.match(read("app/admin/ai-staff/bloggers/page.tsx"), /const staff = await requireSection\("\/admin\/ai-staff"\)/);
 });

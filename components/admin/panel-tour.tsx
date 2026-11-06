@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 
 import { usePanelDict } from "@/components/admin/panel-locale";
 import { tourDict } from "@/content/admin-panel/tour";
-import { TOUR_VERSION } from "@/lib/admin/panel-tour";
+import { TOUR_DONE_EVENT, TOUR_VERSION } from "@/lib/admin/panel-tour";
 
 /**
  * Знакомство с новой панелью — 7 шагов при первом заходе (владелец,
@@ -75,6 +75,7 @@ export function PanelTour() {
             try {
               localStorage.setItem(LOCAL, "1");
             } catch {}
+            window.dispatchEvent(new Event(TOUR_DONE_EVENT));
           } else setOpen(true);
         })
         .catch(() => {});
@@ -105,6 +106,8 @@ export function PanelTour() {
       try {
         localStorage.setItem(LOCAL, "1");
       } catch {}
+      // Следующее обучение (например, «Рынки») ждёт, пока закроют это.
+      window.dispatchEvent(new Event(TOUR_DONE_EVENT));
       fetch("/admin/tour", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

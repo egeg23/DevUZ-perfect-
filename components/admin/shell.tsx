@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
 
 import { signOut } from "@/app/admin/actions";
-import { ROLE_BADGE, homeOf, navOf } from "@/lib/admin/roles";
+import { ROLE_BADGE, homeOf, navOf, opens } from "@/lib/admin/roles";
 import { findable, parentsOf, railOf, tabsOf } from "@/lib/admin/nav";
 import { initials } from "@/lib/admin/hq";
 import type { Staff } from "@/lib/admin/session";
@@ -19,6 +19,8 @@ import { TaskPulse } from "@/components/admin/task-alerts";
 import { NavProgress } from "@/components/admin/nav-progress";
 import { KeepPlace } from "@/components/admin/keep-place";
 import { PanelTour } from "@/components/admin/panel-tour";
+import { MarketsTour } from "@/components/admin/markets-tour";
+import { MARKET_COUNT, PLACE_COUNT } from "@/content/markets";
 import { SectionTabs } from "@/components/admin/section-tabs";
 import { Bell } from "@/components/admin/bell";
 
@@ -111,6 +113,11 @@ export function AdminShell({
         <Suspense fallback={null}>
           <KeepPlace />
         </Suspense>
+        {/* Обучение по «Рынкам»: менеджеру — само один раз, остальным — кнопкой
+            в «Рынках» и «Настройках» (components/admin/markets-tour.tsx). */}
+        {opens(staff, "/admin/markets") ? (
+          <MarketsTour auto={staff.role === "manager"} classic={Boolean(staff.nav_classic)} countries={MARKET_COUNT} places={PLACE_COUNT} />
+        ) : null}
         {staff.nav_classic ? (
           <>
             {/* Шапка липкая: на телефоне список лидов длинный, и уходить наверх
