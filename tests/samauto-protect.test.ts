@@ -53,8 +53,12 @@ test("кейс SamAuto: первым, прототип — кнопкой со �
   assert.match(casePage, /href=\{live\.href\}/, "на странице кейса нет кнопки прототипа");
   assert.match(card, /proto-glow/, "карточка прототипа не выделена");
   assert.match(read("app/globals.css"), /@media \(prefers-reduced-motion: reduce\) \{\s*\.proto-glow::before/, "рамка крутится и при «меньше движения»");
-  const home = read("app/[locale]/page.tsx");
-  assert.ok(home.indexOf("<ProtoReel") > home.indexOf("<CompileScene") && home.indexOf("<ProtoReel") < home.indexOf("<ScaleSection"), "ролик не сразу под первым экраном");
+  // Главная «Стекло» (06.11.2026): ролик — в первой, большой карточке «Работ студии».
+  const glass = read("components/home/glass-home.tsx");
+  assert.match(glass, /\{ slug: "samauto", img: "\/cases\/samauto\/poster-16\.webp", video: "\/cases\/samauto\/teaser-16\.mp4", kind: "big"/, "SamAuto не первой карточкой с роликом");
+  const cardVideo = read("components/home/card-video.tsx");
+  assert.match(cardVideo, /preload="none"/, "ролик в карточке грузится до того, как его увидели");
+  assert.match(cardVideo, /prefers-reduced-motion: reduce/);
   const reel = read("components/sections/proto-reel.tsx");
   assert.match(reel, /preload="none"/, "ролик грузится до того, как его увидели");
   assert.match(reel, /prefers-reduced-motion: reduce/);

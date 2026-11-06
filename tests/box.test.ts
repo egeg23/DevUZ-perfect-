@@ -150,9 +150,13 @@ test("DevUz Box: подписей столько, сколько слоёв в �
   assert.ok(statSync("public/box/trio.webp").size <= 160_000, "trio.webp тяжелее 160 КБ");
 });
 
-test("DevUz Box: хиро сразу за «Делали для», кнопка ведёт на /box, страница с метаданными и в карте сайта", async () => {
-  const home = read("app/[locale]/page.tsx");
-  assert.match(home, /<CompileScene[^>]*\/>\s*<ClientsSection[^>]*\/>\s*(?:\{\/\*[^]*?\*\/\}\s*)?<BoxHero/, "BoxHero не сразу за ClientsSection");
+test("DevUz Box: на главной в «Продуктах студии» кнопкой на /box, страница с метаданными и в карте сайта", async () => {
+  // Главная «Стекло» (владелец, 06.11.2026): коробка — первым продуктом студии,
+  // «Посмотреть» ведёт на промо-страницу; хиро коробки живёт на самой /box.
+  assert.match(read("app/[locale]/page.tsx"), /<GlassHome locale=\{locale\} dict=\{dict\} \/>/);
+  const glass = read("components/home/glass-home.tsx");
+  assert.match(glass, /href=\{localeHref\(locale, BOX_PATH\)\}[^>]*>\s*\{dict\.box\.hero\.button\}/, "нет кнопки на /box");
+  assert.match(glass, /\{dict\.box\.hero\.badge\}/, "нет «Планируется к запуску»");
   const hero = read("components/sections/box-hero.tsx");
   assert.match(hero, /localeHref\(locale, BOX_PATH\)/);
   assert.match(hero, /copy\.button/);
