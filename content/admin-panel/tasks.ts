@@ -49,6 +49,21 @@ export const tasksDict = defineDict({
     pl: "Możesz zaznaczyć kilka osób — każda dostanie własne zadanie.",
   },
   self: { ru: (name: string) => `${name} (себе)`, uz: (name: string) => `${name} (o‘zimga)`, pl: (name: string) => `${name} (sobie)` },
+  willGet: {
+    ru: (names: string) => `Получат: ${names}.`,
+    uz: (names: string) => `Oladi: ${names}.`,
+    pl: (names: string) => `Otrzymają: ${names}.`,
+  },
+  willGetNobody: {
+    ru: "Никто не отмечен — отметьте, кому задача.",
+    uz: "Hech kim belgilanmagan — vazifa kimga ekanini belgilang.",
+    pl: "Nikt nie jest zaznaczony — zaznacz, komu zlecasz zadanie.",
+  },
+  selfToo: {
+    ru: "Вам тоже уйдёт своя копия. Не нужна — снимите галочку «себе».",
+    uz: "Sizga ham o‘z nusxasi ketadi. Kerak bo‘lmasa — «o‘zimga» belgisini olib tashlang.",
+    pl: "Ty też dostaniesz własną kopię. Niepotrzebna — odznacz «sobie».",
+  },
   fieldTitle: { ru: "Что сделать", uz: "Nima qilish kerak", pl: "Co zrobić" },
   fieldBody: { ru: "Подробнее (необязательно)", uz: "Batafsil (ixtiyoriy)", pl: "Szczegóły (opcjonalnie)" },
   fieldDue: { ru: "Срок", uz: "Muddat", pl: "Termin" },

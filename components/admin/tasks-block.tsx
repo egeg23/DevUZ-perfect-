@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createTaskAction, editTaskAction, taskAction } from "@/app/admin/tasks/actions";
 import { HelpHint } from "@/components/admin/help-link";
 import { MockupOrderFields } from "@/components/admin/mockup-order-fields";
+import { PickedAssignees } from "@/components/admin/picked-assignees";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { TaskAlertsButton } from "@/components/admin/task-alerts";
 import { taskNoticeDict, tasksDict } from "@/content/admin-panel/tasks";
@@ -101,6 +102,122 @@ function Hidden({ ctx, task }: { ctx: RowContext; task: Task }) {
 }
 
 /**
+ * Кнопки задачи — взять, сделано, не сделано, перенести срок, отменить.
+ * Те же в списке и на странице одной задачи (туда ведут бот и пуш).
+ */
+function TaskActions({ task, ctx }: { task: Task; ctx: RowContext }) {
+  const { t, me, now } = ctx;
+  const open = isOpen(task.status);
+  const assignee = task.assignee_id === me;
+  const creator = task.creator_id === me;
+  if (!open || !(assignee || creator)) return null;
+  return (
+      <form action={taskAction} className="mt-2 flex flex-wrap items-center gap-2">
+        <Hidden ctx={ctx} task={task} />
+        {assignee && task.status === "new" ? (
+          <SubmitButton name="action" value="take" base={BUTTON} pendingLabel={t.take}>
+            {t.take}
+          </SubmitButton>
+        ) : null}
+        {assignee && task.status === "in_work" ? (
+          <>
+            <SubmitButton name="action" value="done" base={BUTTON} pendingLabel={t.done}>
+              {t.done}
+            </SubmitButton>
+            <SubmitButton name="action" value="failed" base={BUTTON} tone="quiet" pendingLabel={t.failed}>
+              {t.failed}
+            </SubmitButton>
+          </>
+        ) : null}
+        <details className="w-full sm:w-auto">
+          <summary className="cursor-pointer list-none text-xs text-muted hover:text-text">
+            {task.due_at ? t.move : t.setDue} ▾
+          </summary>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            {(
+              [
+                ["1h", t.move1h],
+                ["tomorrow", t.moveTomorrow],
+                ["3d", t.move3d],
+                ["week", t.moveWeek],
+              ] as const
+            ).map(([value, label]) => (
+              <SubmitButton key={value} name="action" value={value} base={BUTTON} tone="quiet" pendingLabel={label}>
+                {label}
+              </SubmitButton>
+            ))}
+            <span className="flex flex-wrap items-center gap-2">
+              <input
+                type="datetime-local"
+                name="due_at"
+                defaultValue={localInputValue(
+                  new Date(Math.max(task.due_at ? Date.parse(task.due_at) : 0, now.getTime()) + 3_600_000),
+                )}
+                className="rounded-lg border border-line bg-ink px-2 py-1 text-xs"
+              />
+              <SubmitButton name="action" value="custom" base={BUTTON} tone="quiet" pendingLabel={t.moveTo}>
+                {t.moveTo}
+              </SubmitButton>
+            </span>
+          </div>
+        </details>
+        {creator ? (
+          <SubmitButton name="action" value="cancel" base={`${BUTTON} ml-auto`} tone="quiet" pendingLabel={t.cancel}>
+            {t.cancel}
+          </SubmitButton>
+        ) : null}
+      </form>
+  );
+}
+
+/**
+ * Кнопки на странице одной задачи (/admin/tasks/<id>): туда ведут бот, пуш и
+ * «Требует внимания». Раньше там была только история, и взять, закрыть,
+ * перенести или «Изменить» можно было лишь из общего списка.
+ */
+export function TaskCardControls({
+  staff,
+  locale,
+  task,
+  names,
+  projects,
+  people,
+  projectOptions,
+  notice,
+  now,
+}: {
+  staff: Pick<Staff, "id">;
+  locale: PanelLocale;
+  task: Task;
+  names: Map<string, string>;
+  projects: Map<string, string>;
+  people: { id: string; display_name: string }[];
+  projectOptions: { id: string; label: string }[];
+  notice?: string;
+  now: Date;
+}) {
+  const ctx: RowContext = {
+    t: pick(tasksDict, locale),
+    me: staff.id,
+    names,
+    projects,
+    now,
+    back: `/admin/tasks/${task.id}`,
+    keep: {},
+    people,
+    projectOptions,
+  };
+  const open = isOpen(task.status);
+  return (
+    <div className="mt-4">
+      <Notice code={notice} locale={locale} />
+      <TaskActions task={task} ctx={ctx} />
+      {open && task.creator_id === staff.id ? <EditForm task={task} ctx={ctx} /> : null}
+    </div>
+  );
+}
+
+/**
  * Одна задача. Какие кнопки — решает, кто смотрит: исполнитель берёт и
  * закрывает, поставивший отменяет, срок переносят оба. Остальным — только
  * посмотреть (так задачу видят в карточке проекта).
@@ -145,63 +262,7 @@ function TaskRow({ task, ctx }: { task: Task; ctx: RowContext }) {
         ) : null}
       </p>
       {task.mockup ? <OrderLine task={task} ctx={ctx} /> : null}
-      {open && (assignee || creator) ? (
-        <form action={taskAction} className="mt-2 flex flex-wrap items-center gap-2">
-          <Hidden ctx={ctx} task={task} />
-          {assignee && task.status === "new" ? (
-            <SubmitButton name="action" value="take" base={BUTTON} pendingLabel={t.take}>
-              {t.take}
-            </SubmitButton>
-          ) : null}
-          {assignee && task.status === "in_work" ? (
-            <>
-              <SubmitButton name="action" value="done" base={BUTTON} pendingLabel={t.done}>
-                {t.done}
-              </SubmitButton>
-              <SubmitButton name="action" value="failed" base={BUTTON} tone="quiet" pendingLabel={t.failed}>
-                {t.failed}
-              </SubmitButton>
-            </>
-          ) : null}
-          <details className="w-full sm:w-auto">
-            <summary className="cursor-pointer list-none text-xs text-muted hover:text-text">
-              {task.due_at ? t.move : t.setDue} ▾
-            </summary>
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              {(
-                [
-                  ["1h", t.move1h],
-                  ["tomorrow", t.moveTomorrow],
-                  ["3d", t.move3d],
-                  ["week", t.moveWeek],
-                ] as const
-              ).map(([value, label]) => (
-                <SubmitButton key={value} name="action" value={value} base={BUTTON} tone="quiet" pendingLabel={label}>
-                  {label}
-                </SubmitButton>
-              ))}
-              <span className="flex flex-wrap items-center gap-2">
-                <input
-                  type="datetime-local"
-                  name="due_at"
-                  defaultValue={localInputValue(
-                    new Date(Math.max(task.due_at ? Date.parse(task.due_at) : 0, now.getTime()) + 3_600_000),
-                  )}
-                  className="rounded-lg border border-line bg-ink px-2 py-1 text-xs"
-                />
-                <SubmitButton name="action" value="custom" base={BUTTON} tone="quiet" pendingLabel={t.moveTo}>
-                  {t.moveTo}
-                </SubmitButton>
-              </span>
-            </div>
-          </details>
-          {creator ? (
-            <SubmitButton name="action" value="cancel" base={`${BUTTON} ml-auto`} tone="quiet" pendingLabel={t.cancel}>
-              {t.cancel}
-            </SubmitButton>
-          ) : null}
-        </form>
-      ) : null}
+      <TaskActions task={task} ctx={ctx} />
       {open && creator && ctx.people ? <EditForm task={task} ctx={ctx} /> : null}
       {hasHistory(steps) ? (
         <details className="mt-2">
@@ -667,6 +728,7 @@ export function TasksView({
             </div>
             <span className="text-faint">{t.dueHint}</span>
           </fieldset>
+          <PickedAssignees people={options} selfId={staff.id} locale={locale} />
           <div>
             <SubmitButton base="rounded-lg px-4 py-2 text-sm" pendingLabel={t.submit}>
               {t.submit}

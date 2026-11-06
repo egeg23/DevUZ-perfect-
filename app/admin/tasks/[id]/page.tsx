@@ -1,11 +1,11 @@
 import Link from "next/link";
 
 import { AdminShell } from "@/components/admin/shell";
-import { TaskStepList } from "@/components/admin/tasks-block";
+import { TaskCardControls, TaskStepList } from "@/components/admin/tasks-block";
 import { taskCardDict, tasksDict } from "@/content/admin-panel/tasks";
 import { requireSection } from "@/lib/admin/guard";
 import { pick } from "@/lib/admin/i18n";
-import { taskCard } from "@/lib/admin/task-store";
+import { taskCard, taskPeople, taskProjects } from "@/lib/admin/task-store";
 import { formatDue, isOverdue } from "@/lib/admin/tasks";
 
 // Задача — как она есть сейчас: срок и шаги меняются из бота в любой момент.
@@ -16,13 +16,23 @@ export const dynamic = "force-dynamic";
  * внимания» на «Главной» — в конкретную задачу, а не в общий список
  * (владелец, 14.10.2026). Видит тот же, кто видит её в «Истории задач».
  */
-export default async function TaskCardPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function TaskCardPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ t?: string }>;
+}) {
   const staff = await requireSection("/admin/tasks");
-  const { id } = await params;
+  const [{ id }, { t: notice }] = await Promise.all([params, searchParams]);
   const locale = staff.panel_locale;
   const t = pick(tasksDict, locale);
   const c = pick(taskCardDict, locale);
-  const card = await taskCard(id, { id: staff.id, role: staff.role });
+  const [card, people, projectOptions] = await Promise.all([
+    taskCard(id, { id: staff.id, role: staff.role }),
+    taskPeople().catch(() => []),
+    taskProjects().catch(() => []),
+  ]);
   const now = new Date();
 
   return (
@@ -71,6 +81,19 @@ export default async function TaskCardPage({ params }: { params: Promise<{ id: s
                   ) : null}
                 </p>
                 {task.body ? <p className="mt-3 whitespace-pre-wrap text-sm text-text">{task.body}</p> : null}
+                {/* Те же кнопки, что в списке: сюда ведут бот и пуш (владелец, 06.11.2026:
+                    «Менеджеры не могут редактировать задачи почему-то»). */}
+                <TaskCardControls
+                  staff={staff}
+                  locale={locale}
+                  task={task}
+                  names={card.names}
+                  projects={card.projects}
+                  people={people}
+                  projectOptions={projectOptions}
+                  notice={notice}
+                  now={now}
+                />
                 <h2 className="mt-5 text-xs font-medium uppercase tracking-wider text-faint">{c.history}</h2>
                 <TaskStepList t={t} steps={card.steps} names={card.names} projects={card.projects} />
               </>

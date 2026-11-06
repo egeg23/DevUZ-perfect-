@@ -24,6 +24,7 @@ import {
   saveJoinPause,
   updateScoutChat,
 } from "@/lib/scout/extra-chats-store";
+import { SAVED_GAP_MS, finishSaved, takeSaved } from "@/lib/scout/saved-outbox";
 import { classify } from "@/lib/scout/classify";
 import { DROP_LABEL } from "@/lib/scout/digest";
 import { EMPTY_PULSE, accumulate, writePulse } from "@/lib/scout/health";
@@ -406,6 +407,9 @@ async function live() {
     startWorker: (options) => startWorker({ ...options, Api, NewMessage, othersAlive }),
   });
 
+  // Сообщения себе в «Избранное» (ссылки на группы для ручного вступления).
+  startSavedOutbox(client);
+
   // Вступление в группы из «Сигналов скаута» — с главного, он же читает.
   startJoiner({
     client,
@@ -452,6 +456,53 @@ async function live() {
   };
   process.on("SIGINT", () => void stop("SIGINT"));
   process.on("SIGTERM", () => void stop("SIGTERM"));
+}
+
+/** Как часто скаут смотрит, нет ли строк себе в «Избранное». */
+const SAVED_TICK_MS = 5 * 60_000;
+
+/**
+ * «Избранное» главного аккаунта — сообщения себе из базы
+ * (lib/scout/saved-outbox.ts): владелец, 06.11.2026, «Перешли все сообщения
+ * на аккаунт скаута». Пишет только себе ("me"), по одной строке за проход.
+ */
+function startSavedOutbox(client) {
+  let busy = false;
+  /** Одна строка: тексты по порядку. false — что-то не записалось, дальше не идём. */
+  const one = async () => {
+    const row = await takeSaved();
+    if (!row) return false;
+    let sent = 0;
+    for (const [index, text] of row.texts.entries()) {
+      if (index > 0) await new Promise((resolve) => setTimeout(resolve, SAVED_GAP_MS));
+      try {
+        await client.sendMessage("me", { message: text, linkPreview: false });
+        sent += 1;
+      } catch (error) {
+        console.error(`избранное: не записал ${index + 1}/${row.texts.length} (${row.name}) —`, error?.errorMessage ?? error?.message ?? error);
+        break;
+      }
+    }
+    await finishSaved(row.name, sent, row.texts.length);
+    console.log(`избранное: ${row.name} — записал ${sent} из ${row.texts.length}`);
+    return sent === row.texts.length;
+  };
+  const tick = async () => {
+    if (busy) return;
+    busy = true;
+    try {
+      // До трёх строк за проход: вся пачка ссылок ложится за четверть часа.
+      for (let round = 0; round < 3 && (await one()); round += 1);
+    } catch (error) {
+      console.error(`избранное: сорвалось — ${error?.message ?? error}`);
+    } finally {
+      busy = false;
+    }
+  };
+  setTimeout(() => {
+    void tick();
+    setInterval(() => void tick(), SAVED_TICK_MS);
+  }, 90_000);
 }
 
 /** Как часто скаут смотрит, пора ли вступать в следующую группу. */

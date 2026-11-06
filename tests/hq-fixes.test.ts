@@ -85,7 +85,7 @@ test("якоря есть там, куда ведут ссылки", () => {
   assert.match(read("components/admin/autopilot-panel.tsx"), /id="autopilot"/);
   // Задача — своя карточка с историей, видна тому же, кто видит её в истории.
   const card = read("app/admin/tasks/[id]/page.tsx");
-  assert.match(card, /const card = await taskCard\(id, \{ id: staff\.id, role: staff\.role \}\);/);
+  assert.match(card, /taskCard\(id, \{ id: staff\.id, role: staff\.role \}\)/);
   assert.match(read("lib/admin/task-store.ts"), /if \(!seesTask\(task, viewer, ownerIds\)\) return null;/);
 });
 
