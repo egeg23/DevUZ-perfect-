@@ -1031,6 +1031,30 @@ export const uz: HelpCopy = {
       ],
     },
 
+    "/admin/markets": {
+      what: "O‘zbekistondan tashqarida mijozlarni qayerdan qidirish kerak: har bir mamlakat bo‘yicha — frilans birjalari, studiyalar kataloglari, e’lonlar taxtalari, tenderlar, xaritalar va Telegram chatlari, havolalar bilan va har bir maydonda qanday ishlash kerakligi bilan. Studiya MDH va AQShga chiqyapti, bu bo‘lim esa har bir mamlakatda nimadan boshlash kerakligi haqida qisqacha ma’lumot.",
+      items: [
+        {
+          id: "start",
+          title: "Mamlakatni qanday tanlash kerak",
+          body: [
+            "«Bozorlar» bo‘limi — [«Sovuq aloqalar»](/admin/prospect) bo‘limining yorlig‘i. Birinchi sahifada — mamlakatlar kartochkalari: bayroq, nomi, belgi, u yerda dasturchini qanday qidirishlari va nechta maydon to‘plangani. Kartochkani bosing — mamlakat sahifasi ochiladi.",
+            "Belgi — studiya birinchi navbatda qayerga chiqishini ko‘rsatadi: «asosiy bozor» (Rossiya, Qozog‘iston, AQSh) — asosiy kuch shu yerga; «sinab ko‘ramiz» — qidiramiz, lekin kamroq; «imkon bo‘lganda» — sabab bo‘lganda kiramiz. O‘zbekiston ham ro‘yxatda — «imkon bo‘lganda» belgisi bilan.",
+            "Havolalar 06.11.2026 da tekshirilgan. Ba’zi saytlar (Upwork, Clutch, Avito, OLX) robotlarni kiritmaydi, odamga esa ochiladi. Maydon yopilgan yoki ko‘chgan bo‘lsa — rahbarga ayting: ro‘yxat kodda tuzatiladi va uni tuzatishadi.",
+          ],
+        },
+        {
+          id: "country",
+          title: "Mamlakat sahifasi va «Skautga» tugmasi",
+          body: [
+            "Tepada — bu mamlakatda dasturchini qanday qidirishlari, qaysi tilda yozish kerakligi va Toshkent bilan vaqt farqi. Pastda — «Nimadan boshlash kerak»: boshlashga arziydigan uch-to‘rt qadam. Ro‘yxatga qaytmaslik uchun tepada mamlakatlar almashtirgichi bor.",
+            "Keyin maydonlar turlari bo‘yicha: frilans birjalari, studiyalar kataloglari va reytinglari, e’lonlar taxtalari, tenderlar, xaritalar va kompaniyalar ma’lumotnomalari, Telegram chatlari, hamjamiyatlar. Har birida — havola, bu qanday maydon, unda mijozlarni qanday qidirish kerak va qancha turadi: «bepul», «qisman pullik» (joylashish bepul, takliflar yoki reklama — pullik) yoki «pullik». Pullik maydonlarda ro‘yxatdan o‘tish va to‘lash — faqat rahbar bilan kelishgandan keyin.",
+            "Telegram chatlarida «Skautga» tugmasi bor: guruh [«Skaut signallari»](/admin/scout)dagi «Skaut uchun guruhlar»ga tushadi va skaut unga o‘zi, navbati kelganda qo‘shiladi — kuniga 10 ta guruhdan ko‘p emas. Undan signallar odatdagidek keladi. Guruh skautda allaqachon bo‘lsa, sahifa shuni aytadi.",
+          ],
+        },
+      ],
+    },
+
     /* ── Касания ──────────────────────────────────────────────────────── */
     "/admin/prospect": {
       what: "Sovuq aloqalar: kompaniyalarni topamiz, saytlarini tekshiramiz, birinchi bo‘lib salom yozamiz, javob berganga esa menejer yoki jamoa matni bo‘yicha qisqa xat ketadi: uning saytida nima noto‘g‘ri va shu sababli qancha yo‘qotishi haqida tezislar, agar bo‘lsa, uning nishasidagi loyihamiz va 12 soatda yangi sayt prototipini yig‘ib berish taklifi. Studiyaning ishchi akkaunti yuboradi, mijoz javoblarini model olib boradi, odam kerak bo‘lganda esa yozgan odamni chaqiradi. Aloqadan kelgan lid darhol sizniki, navbatsiz.",

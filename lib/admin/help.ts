@@ -129,6 +129,8 @@ export const PAGE_TOPICS: readonly { prefix: string; section: string; item: stri
   { prefix: "/admin/learn/", section: "/admin/learn", item: "courses" },
   // Карточка одной задачи — к пункту про историю: туда ведёт «просрочено» с «Главной».
   { prefix: "/admin/tasks/", section: "/admin/tasks", item: "history" },
+  // Страница страны в «Рынках» — к пункту про площадки.
+  { prefix: "/admin/markets/", section: "/admin/markets", item: "country" },
 ];
 
 /** Куда ведёт «Как пользоваться разделом» с этой страницы. null — страница без инструкции. */

@@ -112,6 +112,30 @@ export const prospectSections: Record<string, HelpEntry> = {
     ],
   },
 
+  "/admin/markets": {
+    what: "Gdzie szukać klientów poza Uzbekistanem: w każdym kraju — giełdy freelance, katalogi agencji, tablice ogłoszeń, przetargi, mapy i czaty w Telegramie, z linkami i tym, jak pracować na każdej platformie. Studio wchodzi do WNP i USA, a ten dział to ściąga, od czego zacząć w każdym kraju.",
+    items: [
+      {
+        id: "start",
+        title: "Jak wybrać kraj",
+        body: [
+          "Dział «Rynki» to zakładka działu [«Zimne kontakty»](/admin/prospect). Na pierwszej stronie są karty krajów: flaga, nazwa, etykieta, jak tam szuka się wykonawcy i ile zebrano platform. Kliknij kartę — otworzy się strona kraju.",
+          "Etykieta mówi, dokąd studio idzie w pierwszej kolejności: «rynek główny» (Rosja, Kazachstan, USA) — tu główne siły; «próbujemy» — szukamy, ale mniej; «przy okazji» — wchodzimy, gdy jest powód. Uzbekistan też jest na liście — z etykietą «przy okazji».",
+          "Linki sprawdzone 06.11.2026. Część stron (Upwork, Clutch, Avito, OLX) nie wpuszcza robotów, człowiekowi się otwierają. Platforma się zamknęła albo przeniosła — powiedz kierownikowi: lista jest w kodzie i zostanie poprawiona.",
+        ],
+      },
+      {
+        id: "country",
+        title: "Strona kraju i przycisk «Do skauta»",
+        body: [
+          "Na górze — jak w tym kraju szuka się wykonawcy, w jakim języku pisać i różnica czasu z Taszkentem. Niżej — «Od czego zacząć»: trzy-cztery kroki, od których warto zacząć. Na górze jest przełącznik krajów, żeby nie wracać do listy.",
+          "Dalej platformy według rodzaju: giełdy freelance, katalogi i rankingi agencji, tablice ogłoszeń, przetargi, mapy i katalogi firm, czaty w Telegramie, społeczności. Przy każdej — link, co to za platforma, jak na niej szukać klientów i ile kosztuje: «bezpłatnie», «częściowo płatne» (zamieszczenie za darmo, odpowiedzi albo promocja — płatne) albo «płatne». Rejestrować się na płatnych platformach i płacić — tylko po uzgodnieniu z kierownikiem.",
+          "Przy czatach w Telegramie jest przycisk «Do skauta»: grupa trafia do «Grupy dla skauta» na stronie [«Sygnały skauta»](/admin/scout), a skaut sam do niej dołączy, gdy przyjdzie kolej — nie więcej niż 10 grup dziennie. Sygnały z niej przyjdą jak zwykle. Jeśli grupa jest już u skauta, strona to powie.",
+        ],
+      },
+    ],
+  },
+
   /* ── Касания ──────────────────────────────────────────────────────── */
   "/admin/prospect": {
     what: "Zimne kontakty: znajdujemy firmy, sprawdzamy ich strony, najpierw piszemy samo powitanie, a temu, kto odpowie, idzie krótka wiadomość według tekstu menedżera albo zespołu: tezy o tym, co jest nie tak na jego stronie i ile na tym traci, nasz projekt z jego branży, jeśli jest, i propozycja zbudowania prototypu nowej strony w 12 godzin. Wysyła konto firmowe studia, odpowiedzi klienta prowadzi AI, a gdy potrzebny jest człowiek — woła tego, kto pisał. Lead z kontaktu jest od razu Twój, bez kolejki.",

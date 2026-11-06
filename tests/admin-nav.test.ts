@@ -68,7 +68,7 @@ test("вкладки: редкие разделы — над страницей 
   const family = (who: Parameters<typeof tabsOf>[0], href: string) =>
     tabsOf(who).find((f) => f[0].href === href)?.map((s) => s.href);
   const admin = { role: "admin" as const };
-  assert.deepEqual(family(admin, "/admin/prospect"), ["/admin/prospect", "/admin/scout", "/admin/talks", "/admin/accounts"]);
+  assert.deepEqual(family(admin, "/admin/prospect"), ["/admin/prospect", "/admin/scout", "/admin/talks", "/admin/markets", "/admin/accounts"]);
   assert.deepEqual(family(admin, "/admin/mockups"), ["/admin/mockups", "/admin/proto"]);
   assert.deepEqual(family(admin, "/admin/projects"), ["/admin/projects", "/admin/contracts"]);
   assert.deepEqual(family(admin, "/admin/finance"), ["/admin/finance", "/admin/expenses"]);
@@ -79,7 +79,7 @@ test("вкладки: редкие разделы — над страницей 
   assert.deepEqual(family(admin, "/admin/audit"), ["/admin/audit", "/admin/usage"]);
   // Менеджеру — только положенное: без «Аккаунтов», «Прототипов», «Расходов».
   const manager = { role: "manager" as const };
-  assert.deepEqual(family(manager, "/admin/prospect"), ["/admin/prospect", "/admin/scout", "/admin/talks"]);
+  assert.deepEqual(family(manager, "/admin/prospect"), ["/admin/prospect", "/admin/scout", "/admin/talks", "/admin/markets"]);
   assert.equal(family(manager, "/admin/mockups"), undefined, "одна вкладка — не выбор");
   assert.equal(family(manager, "/admin/finance"), undefined);
   // Вкладка у вкладки не бывает, и родитель — раздел из списка.
@@ -94,7 +94,7 @@ test("вкладки: редкие разделы — над страницей 
 test("закрыт раздел — его вкладка встаёт в меню сама, а не теряется", () => {
   const who = { role: "manager" as const, section_access: { "/admin/prospect": false } };
   const prospect = menuOf(who).find((g) => g.group === "prospect");
-  assert.deepEqual(prospect?.sections.map((s) => s.href), ["/admin/scout", "/admin/talks"]);
+  assert.deepEqual(prospect?.sections.map((s) => s.href), ["/admin/scout", "/admin/talks", "/admin/markets"]);
   assert.equal(tabsOf(who).find((f) => f[0].href === "/admin/prospect"), undefined);
 });
 
