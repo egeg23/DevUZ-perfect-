@@ -62,7 +62,9 @@ export function Header({ locale, dict }: { locale: Locale; dict: Dictionary }) {
   return (
     <header
       className={cn(
-        "fixed inset-x-0 top-0 z-50 transition-all duration-500",
+        // translate-y — под полосу минуты на скидку (components/chat/minute-offer.tsx):
+        // сдвиг transform, страница под шапкой не прыгает.
+        "fixed inset-x-0 top-0 z-50 translate-y-[var(--minute-bar,0px)] transition-all duration-500",
         scrolled
           ? "border-b border-line bg-ink/85 backdrop-blur-xl"
           : "border-b border-transparent",
