@@ -16,6 +16,8 @@ import { probeTunnel, startProxyBridge } from "./http-proxy-bridge.mjs";
 import { directWebSocket } from "@/lib/egress.mjs";
 import { createBuffer } from "@/lib/scout/buffer";
 import { openChats } from "@/lib/scout/chats";
+import { watchPlan, withResolved } from "@/lib/scout/extra-chats";
+import { loadExtraChats, saveExtraChats } from "@/lib/scout/extra-chats-store";
 import { classify } from "@/lib/scout/classify";
 import { DROP_LABEL } from "@/lib/scout/digest";
 import { EMPTY_PULSE, accumulate, writePulse } from "@/lib/scout/health";
@@ -251,8 +253,22 @@ async function live() {
     process.exit(1);
   }
 
-  const watched = chats();
+  // SCOUT_CHATS с сервера и чаты из базы (stats_snapshots «scout-chats»):
+  // новые адреса — порцией за запуск, разобранные — номером из базы.
+  const extra = await loadExtraChats().catch(() => []);
+  const plan = watchPlan(chats(), extra);
+  const watched = plan.names;
   const roster = await openChats(client, watched);
+  if (extra.length) {
+    console.log(
+      `scout: чатов в базе ${extra.length}, адресов разобрал сейчас ${plan.resolving.length}` +
+        `${plan.waiting.length ? `, ждут следующего запуска ${plan.waiting.length}` : ""}`,
+    );
+    const learned = withResolved(extra, roster.opened, roster.failed);
+    if (learned && !(await saveExtraChats(learned).catch(() => false))) {
+      console.error("scout: не записал номера чатов в базу — разберу адреса заново при следующем запуске");
+    }
+  }
 
   for (const chat of roster.failed) {
     console.error(`scout: не открыл ${chat.name} — пропускаю (${chat.reason})`);
