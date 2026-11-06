@@ -134,7 +134,16 @@ test("стекло без размытия на телефоне, движени
   const video = read("components/home/card-video.tsx");
   assert.match(video, /preload="none"/);
   assert.match(video, /saveData/);
-  // Вертикальный ролик — компьютеру (карточка почти квадратная), широкий — остальным.
-  assert.match(video, /desk\.matches \? tall : wide/);
-  for (const f of ["poster-9.webp", "teaser-9.mp4"]) assert.ok(existsSync(`public/cases/samauto/${f}`), f);
+  assert.match(video, /big\.matches \? desk : wide/);
+  // Все четыре работы — живыми превью 60 к/с (владелец, 06.11.2026).
+  const home = read("components/home/glass-home.tsx");
+  for (const slug of ["samauto", "engelberg", "jiguli", "karomat"]) {
+    assert.match(home, new RegExp(`slug: "${slug}", img: "/cases/${slug}/poster-16\\.webp", video: "/cases/${slug}/teaser-16\\.mp4"`), `${slug} без ролика`);
+    for (const v of ["16", "9"]) {
+      const f = `public/cases/${slug}/teaser-${v}.mp4`;
+      assert.ok(existsSync(f), f);
+      assert.ok(statSync(f).size < 3 * 1048576, `${f} тяжелее 3 МБ`);
+      assert.ok(existsSync(`public/cases/${slug}/poster-${v}.webp`), `${slug} poster-${v}`);
+    }
+  }
 });
