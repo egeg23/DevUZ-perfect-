@@ -15,11 +15,11 @@ export const scoutDict = defineDict({
   healthHelp: { ru: "Что значит это состояние", uz: "Bu holat nimani anglatadi", pl: "Co oznacza ten stan" },
   unread: {
     ru: (reading: number, watched: number, unread: number) =>
-      `Аккаунт читает ${reading} ${plural("ru", reading, "чат", "чата", "чатов")} из ${watched} заданных: в ${unread} он не состоит или адрес не открылся. Вступать нужно руками — из панели это не делается.`,
+      `Аккаунт читает ${reading} ${plural("ru", reading, "чат", "чата", "чатов")} из ${watched} заданных: в ${unread} он не состоит или адрес не открылся. В группы из списка «Группы для скаута» он вступит сам, по очереди; в остальные — руками с аккаунта скаута.`,
     uz: (reading: number, watched: number, unread: number) =>
-      `Akkaunt berilgan ${watched} ta chatdan ${reading} tasini o‘qiyapti: ${unread} tasida u a’zo emas yoki manzil ochilmadi. Qo‘shilish qo‘lda qilinadi — paneldan buni qilib bo‘lmaydi.`,
+      `Akkaunt berilgan ${watched} ta chatdan ${reading} tasini o‘qiyapti: ${unread} tasida u a’zo emas yoki manzil ochilmadi. «Skaut uchun guruhlar» ro‘yxatidagi guruhlarga u o‘zi navbat bilan qo‘shiladi; qolganlariga — skaut akkauntidan qo‘lda.`,
     pl: (reading: number, watched: number, unread: number) =>
-      `Konto czyta ${reading} z ${watched} ${plural("pl", watched, "zadanego czatu", "zadanych czatów", "zadanych czatów")}: w ${unread} nie jest członkiem albo adres się nie otworzył. Dołączyć trzeba ręcznie — z panelu się tego nie zrobi.`,
+      `Konto czyta ${reading} z ${watched} ${plural("pl", watched, "zadanego czatu", "zadanych czatów", "zadanych czatów")}: w ${unread} nie jest członkiem albo adres się nie otworzył. Do grup z listy «Grupy dla skauta» dołączy sam, po kolei; do pozostałych — ręcznie z konta skauta.`,
   },
   unreadList: { ru: "Не читаются:", uz: "O‘qilmayapti:", pl: "Nieczytane:" },
   howItWorks: { ru: "Как работает скаут", uz: "Skaut qanday ishlaydi", pl: "Jak działa skaut" },
@@ -63,6 +63,101 @@ export const scoutDict = defineDict({
   },
 });
 
+/**
+ * «Группы для скаута» — на той же странице (владелец, 06.11.2026: «добавлять
+ * группы для отслеживания всем… В день самостоятельно не более 10 подписок
+ * на группы с интервалом 1-2 часа»). Названия групп и ошибки Telegram —
+ * данные, не переводятся.
+ */
+export const scoutGroupsDict = defineDict({
+  title: { ru: "Группы для скаута", uz: "Skaut uchun guruhlar", pl: "Grupy dla skauta" },
+  lead: {
+    ru: "Добавьте группу или канал в Telegram, где ищут исполнителей. Скаут вступит в неё сам — не больше 10 в день, с паузой час-два и только днём, — и начнёт читать.",
+    uz: "Telegramda ijrochi qidiradigan guruh yoki kanalni qo‘shing. Skaut unga o‘zi qo‘shiladi — kuniga 10 tadan ko‘p emas, bir-ikki soat oraliq bilan va faqat kunduzi — va o‘qishni boshlaydi.",
+    pl: "Dodaj grupę lub kanał w Telegramie, gdzie szuka się wykonawców. Skaut sam do niej dołączy — nie więcej niż 10 dziennie, z przerwą godzinę-dwie i tylko w dzień — i zacznie czytać.",
+  },
+  today: {
+    ru: (tried: number, cap: number) => `Сегодня попыток вступить: ${tried} из ${cap}.`,
+    uz: (tried: number, cap: number) => `Bugun qo‘shilishga urinishlar: ${cap} tadan ${tried} ta.`,
+    pl: (tried: number, cap: number) => `Dziś prób dołączenia: ${tried} z ${cap}.`,
+  },
+  next: {
+    ru: (at: string) => `Следующее вступление — не раньше ${at}.`,
+    uz: (at: string) => `Keyingi qo‘shilish — ${at} dan oldin emas.`,
+    pl: (at: string) => `Następne dołączenie — nie wcześniej niż ${at}.`,
+  },
+  nextNow: {
+    ru: "Следующее вступление — в ближайшие 10 минут.",
+    uz: "Keyingi qo‘shilish — yaqin 10 daqiqada.",
+    pl: "Następne dołączenie — w ciągu najbliższych 10 minut.",
+  },
+  tomorrow: {
+    ru: "Сегодня скаут больше не вступает — продолжит завтра с 08:00 по Ташкенту.",
+    uz: "Bugun skaut boshqa qo‘shilmaydi — ertaga Toshkent vaqti bilan 08:00 dan davom etadi.",
+    pl: "Dziś skaut już nie dołącza — kontynuuje jutro od 08:00 czasu Taszkentu.",
+  },
+  paused: {
+    ru: (at: string) => `Telegram попросил подождать: вступления на паузе до ${at}.`,
+    uz: (at: string) => `Telegram kutishni so‘radi: qo‘shilishlar ${at} gacha to‘xtatilgan.`,
+    pl: (at: string) => `Telegram poprosił o przerwę: dołączanie wstrzymane do ${at}.`,
+  },
+  queue: {
+    ru: (n: number) => `В очереди на вступление: ${n}.`,
+    uz: (n: number) => `Qo‘shilish navbatida: ${n} ta.`,
+    pl: (n: number) => `W kolejce do dołączenia: ${n}.`,
+  },
+  addLabel: { ru: "Адрес группы или ссылка-приглашение", uz: "Guruh manzili yoki taklif havolasi", pl: "Adres grupy lub link z zaproszeniem" },
+  addPlaceholder: { ru: "@group, t.me/group или t.me/+…", uz: "@group, t.me/group yoki t.me/+…", pl: "@group, t.me/group lub t.me/+…" },
+  noteLabel: { ru: "Заметка — необязательно", uz: "Izoh — ixtiyoriy", pl: "Notatka — opcjonalnie" },
+  notePlaceholder: { ru: "страна, о чём группа", uz: "mamlakat, guruh nima haqida", pl: "kraj, o czym jest grupa" },
+  add: { ru: "Добавить группу", uz: "Guruh qo‘shish", pl: "Dodaj grupę" },
+  adding: { ru: "Добавляю…", uz: "Qo‘shilmoqda…", pl: "Dodaję…" },
+  added: {
+    ru: "Группа добавлена — скаут вступит в неё в свою очередь.",
+    uz: "Guruh qo‘shildi — skaut navbati kelganda unga qo‘shiladi.",
+    pl: "Grupa dodana — skaut dołączy do niej, gdy przyjdzie jej kolej.",
+  },
+  bad: {
+    ru: "Это не адрес группы. Нужен @адрес, t.me/адрес или ссылка t.me/+…; бота и личный аккаунт скаут не читает.",
+    uz: "Bu guruh manzili emas. @manzil, t.me/manzil yoki t.me/+… havolasi kerak; skaut bot va shaxsiy akkauntni o‘qimaydi.",
+    pl: "To nie jest adres grupy. Potrzebny @adres, t.me/adres albo link t.me/+…; bota i konta prywatnego skaut nie czyta.",
+  },
+  exists: { ru: "Эта группа уже в списке.", uz: "Bu guruh allaqachon ro‘yxatda.", pl: "Ta grupa jest już na liście." },
+  failed: { ru: "Не получилось — попробуйте ещё раз.", uz: "Bo‘lmadi — yana urinib ko‘ring.", pl: "Nie udało się — spróbuj jeszcze raz." },
+  removed: { ru: "Группа убрана из списка.", uz: "Guruh ro‘yxatdan olib tashlandi.", pl: "Grupa usunięta z listy." },
+  notRemoved: {
+    ru: "Убрать не получилось: убирает тот, кто добавил, руководитель или владелец.",
+    uz: "Olib tashlab bo‘lmadi: uni qo‘shgan odam, rahbar yoki egasi olib tashlaydi.",
+    pl: "Nie udało się usunąć: usuwa ten, kto dodał, kierownik albo właściciel.",
+  },
+  remove: { ru: "Убрать", uz: "Olib tashlash", pl: "Usuń" },
+  colGroup: { ru: "Группа", uz: "Guruh", pl: "Grupa" },
+  colStatus: { ru: "Состояние", uz: "Holati", pl: "Stan" },
+  colAdded: { ru: "Кто добавил", uz: "Kim qo‘shgan", pl: "Kto dodał" },
+  viaScout: { ru: "вступил скаут", uz: "skaut qo‘shildi", pl: "dołączył skaut" },
+  viaManual: { ru: "вступили руками", uz: "qo‘lda qo‘shilingan", pl: "dołączono ręcznie" },
+  fromList: { ru: "из первого списка", uz: "birinchi ro‘yxatdan", pl: "z pierwszej listy" },
+  all: {
+    ru: (n: number) => `Все группы (${n})`,
+    uz: (n: number) => `Barcha guruhlar (${n})`,
+    pl: (n: number) => `Wszystkie grupy (${n})`,
+  },
+  empty: { ru: "Групп пока нет — добавьте первую.", uz: "Hozircha guruhlar yo‘q — birinchisini qo‘shing.", pl: "Na razie brak grup — dodaj pierwszą." },
+  noDb: {
+    ru: "Список групп не загрузился — база не ответила.",
+    uz: "Guruhlar ro‘yxati yuklanmadi — baza javob bermadi.",
+    pl: "Lista grup się nie wczytała — baza nie odpowiedziała.",
+  },
+});
+
+/** Состояние группы. Ключ — `scout_chats.status`. */
+export const scoutChatStatusDict = defineDict({
+  pending: { ru: "ждёт вступления", uz: "qo‘shilishni kutmoqda", pl: "czeka na dołączenie" },
+  joined: { ru: "читаем", uz: "o‘qiyapmiz", pl: "czytamy" },
+  request: { ru: "заявка у админа", uz: "ariza adminda", pl: "prośba u admina" },
+  error: { ru: "не вступить", uz: "qo‘shilib bo‘lmaydi", pl: "nie da się dołączyć" },
+});
+
 /** Статус сигнала. Ключ — `scout_signals.status`. */
 export const signalStatusDict = defineDict({
   new: { ru: "новые", uz: "yangi", pl: "nowe" },
@@ -87,9 +182,9 @@ export const scoutHealthDict = defineDict({
     pl: (minutes: number) => `Skaut milczy od ${minutes} min. Proces padł albo został zatrzymany — sprawdź systemd.`,
   },
   noChats: {
-    ru: "Скаут жив, но не читает ни одного чата: аккаунт в них не состоит или адреса не открылись. Вступать нужно руками.",
-    uz: "Skaut ishlayapti, lekin birorta ham chatni o‘qimayapti: akkaunt ularga a’zo emas yoki manzillar ochilmadi. Qo‘shilish qo‘lda qilinadi.",
-    pl: "Skaut działa, ale nie czyta żadnego czatu: konto nie jest w nich członkiem albo adresy się nie otworzyły. Dołączyć trzeba ręcznie.",
+    ru: "Скаут жив, но не читает ни одного чата: аккаунт в них не состоит или адреса не открылись. В группы из «Сигналов скаута» он вступит сам, по очереди; в остальные — руками.",
+    uz: "Skaut ishlayapti, lekin birorta ham chatni o‘qimayapti: akkaunt ularga a’zo emas yoki manzillar ochilmadi. «Skaut signallari»dagi guruhlarga u o‘zi navbat bilan qo‘shiladi; qolganlariga — qo‘lda.",
+    pl: "Skaut działa, ale nie czyta żadnego czatu: konto nie jest w nich członkiem albo adresy się nie otworzyły. Do grup z «Sygnałów skauta» dołączy sam, po kolei; do pozostałych — ręcznie.",
   },
   modelDown: {
     ru: (passed: number) =>

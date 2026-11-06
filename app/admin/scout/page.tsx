@@ -3,6 +3,7 @@ import Link from "next/link";
 import { changeSignalStatus } from "./actions";
 import { AdminShell } from "@/components/admin/shell";
 import { HelpHint } from "@/components/admin/help-link";
+import { ScoutGroups } from "@/components/admin/scout-groups";
 import { helpAnchor } from "@/lib/admin/help";
 import { when } from "@/components/admin/lead-table";
 import { scoutDict, signalStatusDict } from "@/content/admin-panel/scout";
@@ -10,6 +11,8 @@ import { requireSection } from "@/lib/admin/guard";
 import { pick } from "@/lib/admin/i18n";
 import { SIGNAL_STATUSES, listSignals, scoutCounts } from "@/lib/admin/scout";
 import { diagnose, readPulse, unreadChats } from "@/lib/scout/health";
+import { joinState, listScoutChats, loadJoinPause, staffNames } from "@/lib/scout/extra-chats-store";
+import { mainLimitUntil } from "@/lib/admin/account-ban-store";
 
 export const dynamic = "force-dynamic";
 
@@ -31,18 +34,28 @@ function daysLeft(expiresAt: string): number {
 export default async function ScoutPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; r?: string }>;
+  searchParams: Promise<{ status?: string; r?: string; g?: string }>;
 }) {
   const staff = await requireSection("/admin/scout");
-  const { status, r } = await searchParams;
+  const { status, r, g } = await searchParams;
   const locale = staff.panel_locale;
   const t = pick(scoutDict, locale);
   const statusLabel = pick(signalStatusDict, locale);
 
-  const [counts, signals, pulse] = await Promise.all([
+  const [counts, signals, pulse, groups, joinPause, mainLimit] = await Promise.all([
     scoutCounts(),
     listSignals(status),
     readPulse(),
+    listScoutChats().catch(() => null),
+    loadJoinPause().catch(() => null),
+    mainLimitUntil().catch(() => null),
+  ]);
+  // Ограниченный главный аккаунт не вступает (scout/runner.mjs, canJoin) —
+  // и строка о следующем вступлении говорит то же.
+  const pause = Math.max(joinPause ?? 0, mainLimit ?? 0) || null;
+  const [joins, names] = await Promise.all([
+    groups ? joinState(new Date(), pause).catch(() => null) : Promise.resolve(null),
+    staffNames((groups ?? []).map((chat) => chat.added_by).filter((id): id is string => Boolean(id))),
   ]);
 
   // Пустая лента одинаково выглядит при мёртвом скауте и при тишине в чатах.
@@ -58,6 +71,7 @@ export default async function ScoutPage({
 
       {r ? (
         <p
+          data-result={r === "ok" ? "ok" : "warn"}
           className={`mt-4 rounded-xl border px-4 py-2.5 text-sm ${
             r === "ok"
               ? "border-green/30 bg-green/10 text-green"
@@ -93,6 +107,8 @@ export default async function ScoutPage({
           ) : null}
         </p>
       ) : null}
+
+      <ScoutGroups staff={staff} locale={locale} chats={groups} state={joins} names={names} result={g} back={back} />
 
       <p className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-faint">
         <span className="inline-flex items-center gap-1.5">

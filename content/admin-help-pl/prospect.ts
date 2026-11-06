@@ -83,21 +83,55 @@ export const prospectSections: Record<string, HelpEntry> = {
         ],
       },
       {
+        id: "groups",
+        title: "Grupy dla skauta — dodaj własną",
+        body: [
+          "Blok «Grupy dla skauta» — grupy i kanały w Telegramie, które skaut czyta poza podstawowymi. Dodać może każdy: wklej w pole «Adres grupy lub link z zaproszeniem» adres w rodzaju @group, t.me/group albo link t.me/+…, opcjonalnie notatkę (kraj, o czym jest grupa), i naciśnij «Dodaj grupę». Bota i konta prywatnego skaut nie czyta — pole tego nie przyjmie. Jedna grupa trafia na listę tylko raz.",
+          "Potem skaut sam dołącza do grupy z konta firmowego: nie więcej niż 10 prób dziennie, między próbami godzina-dwie i tylko od 08:00 do 22:00 czasu Taszkentu. Tak dołącza żywy człowiek, a częste dołączanie to dla Telegrama powód, by ograniczyć konto, z którego piszemy też z klientami. Grupy idą w kolejności dodania. Pod formularzem widać, ile było prób dzisiaj, ile grup czeka i kiedy następne dołączenie; jeśli Telegram poprosił o przerwę albo ograniczył konto firmowe — dołączania nie ma, a do kiedy, też jest tam napisane.",
+          "Stan grupy: «czeka na dołączenie»; «czytamy» — z dopiskiem «dołączył skaut» albo «dołączono ręcznie» (dołączyłeś z konta skauta sam — on to zauważy); «prośba u admina» — grupa zamknięta, czekamy na zatwierdzenie; «nie da się dołączyć» — adresu nie ma, link wygasł, konto ma bana w grupie albo grupa każe przejść weryfikację bota, wtedy dołączyć można tylko ręcznie. Powód od Telegrama widać pod stanem. Nową grupę skaut czyta od razu po dołączeniu, bez restartu.",
+          "«Usuń» — przy grupach, które dodałeś Ty; kierownik i właściciel usuwają dowolne. Do usuniętej grupy skaut nie dołącza i przestaje ją czytać po najbliższym restarcie; kto dodał i kto usunął, zostaje zapisane w dzienniku działań.",
+        ],
+      },
+      {
         id: "health",
         title: "Czy skaut działa",
         body: {
           manager: [
-            "Złoty pasek na górze — coś jest nie tak: skaut milczy, nie czyta żadnego czatu albo AI jest niedostępne. Pasek «Konto czyta 12 z 29 zadanych czatów» — część czatów nie jest czytana. W obu przypadkach powiedz właścicielowi: z panelu tego się nie naprawi.",
+            "Złoty pasek na górze — coś jest nie tak: skaut milczy, nie czyta żadnego czatu albo AI jest niedostępne. Pasek «Konto czyta 12 z 29 zadanych czatów» — część czatów na razie nie jest czytana: do grup z [«Grupy dla skauta»](#scout-groups) skaut dołączy sam, po jednej co godzinę-dwie. Skaut milczy, AI jest niedostępne albo pasek nie znika przez kilka dni — powiedz właścicielowi: z panelu tego się nie naprawi.",
           ],
           head: [
-            "Złoty pasek na górze — awaria: «Skaut milczy od N min» (proces zatrzymany), «nie czyta żadnego czatu» albo «Model jest niedostępny». «Konto czyta X z Y zadanych czatów» z listą «Nieczytane:» — konto firmowe nie dołączyło do tych czatów. Naprawia właściciel.",
+            "Złoty pasek na górze — awaria: «Skaut milczy od N min» (proces zatrzymany), «nie czyta żadnego czatu» albo «Model jest niedostępny». «Konto czyta X z Y zadanych czatów» z listą «Nieczytane:» — konto firmowe jeszcze nie dołączyło do tych czatów. Do grup z [«Grupy dla skauta»](#scout-groups) dołączy samo, po jednej co godzinę-dwie; awarie i czaty zadane na serwerze naprawia właściciel.",
           ],
           admin: [
             "«Skaut milczy od N min» — proces na serwerze padł albo został zatrzymany: `systemctl status devuz-scout`. «Model jest niedostępny» — problem z kluczem albo ze środkami na nim.",
-            "«Konto czyta X z Y zadanych czatów» i lista «Nieczytane:» — konto firmowe nie dołączyło do tych czatów albo adres się nie otworzył. Dołączyć trzeba ręcznie z konta firmowego: z panelu się tego nie zrobi.",
+            "«Konto czyta X z Y zadanych czatów» i lista «Nieczytane:» — konto firmowe nie dołączyło do tych czatów albo adres się nie otworzył. Do grup z [«Grupy dla skauta»](#scout-groups) dołącza samo, nie więcej niż 10 dziennie; do czatów z SCOUT_CHATS na serwerze — ręcznie z konta firmowego.",
             "«Mechanizm jest sprawny: … Zapytań o development jeszcze nie było» — to cisza na czatach, a nie awaria.",
           ],
         },
+      },
+    ],
+  },
+
+  "/admin/markets": {
+    what: "Gdzie szukać klientów poza Uzbekistanem: w każdym kraju — giełdy freelance, katalogi agencji, tablice ogłoszeń, przetargi, mapy i czaty w Telegramie, z linkami i tym, jak pracować na każdej platformie. Studio wchodzi do WNP i USA, a ten dział to ściąga, od czego zacząć w każdym kraju.",
+    items: [
+      {
+        id: "start",
+        title: "Jak wybrać kraj",
+        body: [
+          "Dział «Rynki» to zakładka działu [«Zimne kontakty»](/admin/prospect). Na pierwszej stronie są karty krajów: flaga, nazwa, etykieta, jak tam szuka się wykonawcy i ile zebrano platform. Kliknij kartę — otworzy się strona kraju.",
+          "Etykieta mówi, dokąd studio idzie w pierwszej kolejności: «rynek główny» (Rosja, Kazachstan, USA) — tu główne siły; «próbujemy» — szukamy, ale mniej; «przy okazji» — wchodzimy, gdy jest powód. Uzbekistan też jest na liście — z etykietą «przy okazji».",
+          "Linki sprawdzone 06.11.2026. Część stron (Upwork, Clutch, Avito, OLX) nie wpuszcza robotów, człowiekowi się otwierają. Platforma się zamknęła albo przeniosła — powiedz kierownikowi: lista jest w kodzie i zostanie poprawiona.",
+        ],
+      },
+      {
+        id: "country",
+        title: "Strona kraju i przycisk «Do skauta»",
+        body: [
+          "Na górze — jak w tym kraju szuka się wykonawcy, w jakim języku pisać i różnica czasu z Taszkentem. Niżej — «Od czego zacząć»: trzy-cztery kroki, od których warto zacząć. Na górze jest przełącznik krajów, żeby nie wracać do listy.",
+          "Dalej platformy według rodzaju: giełdy freelance, katalogi i rankingi agencji, tablice ogłoszeń, przetargi, mapy i katalogi firm, czaty w Telegramie, społeczności. Przy każdej — link, co to za platforma, jak na niej szukać klientów i ile kosztuje: «bezpłatnie», «częściowo płatne» (zamieszczenie za darmo, odpowiedzi albo promocja — płatne) albo «płatne». Rejestrować się na płatnych platformach i płacić — tylko po uzgodnieniu z kierownikiem.",
+          "Przy czatach w Telegramie jest przycisk «Do skauta»: grupa trafia do «Grupy dla skauta» na stronie [«Sygnały skauta»](/admin/scout), a skaut sam do niej dołączy, gdy przyjdzie kolej — nie więcej niż 10 grup dziennie. Sygnały z niej przyjdą jak zwykle. Jeśli grupa jest już u skauta, strona to powie.",
+        ],
       },
     ],
   },

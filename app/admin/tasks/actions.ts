@@ -32,10 +32,10 @@ type NoticeCode = keyof typeof taskNoticeDict;
 
 const TASKS = "/admin/tasks";
 
-/** Вернуться можно только в панель: в раздел «Задачи» или в карточку проекта. */
+/** Вернуться можно только в панель: в раздел «Задачи», на страницу задачи или в карточку проекта. */
 function backPath(formData: FormData): string {
   const raw = String(formData.get("back") ?? "");
-  return /^\/admin\/projects\/[0-9a-f-]{36}$/i.test(raw) ? raw : TASKS;
+  return /^\/admin\/(projects|tasks)\/[0-9a-f-]{36}$/i.test(raw) ? raw : TASKS;
 }
 
 function back(formData: FormData, code: NoticeCode): never {

@@ -456,7 +456,7 @@ export const uz: HelpCopy = {
             "**«Menga»** — sizga qo‘yilgan vazifalar: tepada eng yaqin muddat, pastroqda — uzoqroqlari, muddatsiz vazifalar — eng oxirida. Yangisi «yangi» deb belgilangan va **«Ishga olish»** tugmasini kutadi: shunda qo‘ygan odam vazifani ko‘rganingiz va qabul qilganingizni biladi. Olingani — «ishda», ostida **«Bajarildi»** va **«Bajarilmadi»**. Muddati o‘tgan vazifa qizil rang bilan ajratilgan va «muddati o‘tgan» deb belgilangan.",
             "**«Muddatni ko‘chirish»** variantlarni ochadi: «+1 soat», «Ertaga 18:00», «+3 kun», «Bir hafta» — yoki «Shu sanaga» tugmasi bilan o‘z sanangiz va vaqtingiz. «+1 soat», «+3 kun» va «Bir hafta» muddatdan hisoblanadi, agar u o‘tib ketgan yoki muddat bo‘lmagan bo‘lsa — hozirgi paytdan, toki yangi muddat o‘tmishda qolmasin. Muddatsiz vazifada bu joyda xuddi shu variantlar bilan **«Muddat belgilash»** turadi. Muddatni ijrochi ham, qo‘ygan odam ham ko‘chiradi — ikkinchi tomonga bot yangi muddatni darhol yozadi. Har bir ko‘chirish vazifa tarixida qoladi: eski muddat, yangisi va kim ko‘chirgani.",
             "**«Men qo‘yganlar»** — siz boshqalarga qo‘ygan vazifalar va ular hozir qanday holatda: «yangi» (hali olinmagan), «ishda», «bajarildi», «bajarilmadi», «muddati o‘tgan». Yopilganlari bu yerda yana bir hafta ko‘rinadi. «Bajarildi» va «Bajarilmadi» ni faqat vazifa kimda bo‘lsa, o‘sha bosadi — shuning uchun «bajarildi» doim ijrochining o‘zi bajarganini bildiradi. Siz muddatni ko‘chirishingiz yoki vazifa xato qo‘yilgan yoki endi kerak bo‘lmasa, **«Vazifani bekor qilish»** ni bosishingiz mumkin: vazifa «bekor qilingan» bo‘ladi, ijrochiga xabar boradi, uning Telegramidagi tugmalar «🚫 Задача отменена» ga almashadi.",
-            "**«Vazifa qo‘yish»** — blok pastida: «Kimga» (belgilar: bir kishi yoki bir nechta), «Nima qilish kerak», «Batafsil (ixtiyoriy)», «Loyiha (ixtiyoriy)» va «Muddat» — «bugun 18:00 gacha», «ertaga» va «3 kundan keyin» (ikkalasi ham 18:00 gacha), «muddatsiz» yoki «boshqa sana». Vaqt hamma joyda Toshkent vaqti. Loyiha [«Loyihalar»](/admin/projects) bo‘limidagi ochiq loyihalardan tanlanadi: avval u yerda mijoz loyihasi qo‘shiladi, keyin unga vazifalarni biriktirish mumkin. Loyihani ham, muddatni ham ko‘rsatish shart emas. Bir nechta kishi belgilansa, har biriga xuddi shu matn, muddat va loyiha bilan o‘z vazifasi qo‘yiladi: har kim uni o‘zi ishga oladi va yopadi, muddat har biriniki alohida ko‘chiriladi, «Men qo‘yganlar» da esa kim boshlagani va kim hali boshlamagani ko‘rinadi. Ro‘yxatda o‘zingiz darhol belgilangansiz — vazifa sizga bo‘lmasa, belgini olib tashlang. Vazifa qo‘yilishi bilan bot ijrochiga darhol Telegramda yozadi — belgilanganlarning har biriga. O‘zingizga qo‘ygan vazifa darhol «ishda» — uni olish shart emas, bot ham u haqda yozmaydi. Kim nimani qo‘ygani, olgani, yopgani, ko‘chirgani va bekor qilgani amallar jurnaliga yoziladi.",
+            "**«Vazifa qo‘yish»** — blok pastida: «Kimga» (belgilar: bir kishi yoki bir nechta), «Nima qilish kerak», «Batafsil (ixtiyoriy)», «Loyiha (ixtiyoriy)» va «Muddat» — «bugun 18:00 gacha», «ertaga» va «3 kundan keyin» (ikkalasi ham 18:00 gacha), «muddatsiz» yoki «boshqa sana». Vaqt hamma joyda Toshkent vaqti. Loyiha [«Loyihalar»](/admin/projects) bo‘limidagi ochiq loyihalardan tanlanadi: avval u yerda mijoz loyihasi qo‘shiladi, keyin unga vazifalarni biriktirish mumkin. Loyihani ham, muddatni ham ko‘rsatish shart emas. Bir nechta kishi belgilansa, har biriga xuddi shu matn, muddat va loyiha bilan o‘z vazifasi qo‘yiladi: har kim uni o‘zi ishga oladi va yopadi, muddat har biriniki alohida ko‘chiriladi, «Men qo‘yganlar» da esa kim boshlagani va kim hali boshlamagani ko‘rinadi. Ro‘yxatda o‘zingiz darhol belgilangansiz — vazifa sizga bo‘lmasa, belgini olib tashlang. Tugma ustida vazifa kimga ketishi ismlar bilan ko‘rinadi; siz ham, hamkasbingiz ham belgilangan bo‘lsa, o‘sha yerda sizga ham o‘z nusxasi ketishi haqida ogohlantirish chiqadi. Bitta vazifa sahifasida, unga bot tugmasi va telefondagi bildirishnoma olib boradi, ro‘yxatdagi tugmalarning o‘zi bor: «Ishga olish», «Bajarildi», «Bajarilmadi», muddatni ko‘chirish, vazifani qo‘ygan odamga esa — «Tahrirlash». Vazifa qo‘yilishi bilan bot ijrochiga darhol Telegramda yozadi — belgilanganlarning har biriga. O‘zingizga qo‘ygan vazifa darhol «ishda» — uni olish shart emas, bot ham u haqda yozmaydi. Kim nimani qo‘ygani, olgani, yopgani, ko‘chirgani va bekor qilgani amallar jurnaliga yoziladi.",
           ],
         },
         {
@@ -1002,21 +1002,55 @@ export const uz: HelpCopy = {
           ],
         },
         {
+          id: "groups",
+          title: "Skaut uchun guruhlar — o‘zingiznikini qo‘shing",
+          body: [
+            "«Skaut uchun guruhlar» bloki — skaut asosiylaridan tashqari o‘qiydigan Telegram guruh va kanallari. Har kim qo‘sha oladi: «Guruh manzili yoki taklif havolasi» maydoniga @group, t.me/group ko‘rinishidagi manzilni yoki t.me/+… havolasini qo‘ying, xohlasangiz — izoh (mamlakat, guruh nima haqida), va «Guruh qo‘shish» tugmasini bosing. Skaut bot va shaxsiy akkauntni o‘qimaydi — maydon bunday manzilni qabul qilmaydi. Bitta guruh ro‘yxatga bir marta tushadi.",
+            "Keyin skaut guruhga ishchi akkauntdan o‘zi qo‘shiladi: kuniga 10 ta urinishdan ko‘p emas, urinishlar orasida bir-ikki soat va faqat Toshkent vaqti bilan 08:00 dan 22:00 gacha. Tirik odam shunday qo‘shiladi, tez-tez qo‘shilish esa Telegram uchun akkauntni cheklashga sabab bo‘ladi, biz esa shu akkauntdan mijozlar bilan ham yozishamiz. Guruhlar qo‘shilish tartibida boradi. Forma ostida bugun nechta urinish bo‘lgani, nechta guruh kutayotgani va keyingi qo‘shilish qachonligi ko‘rinadi; Telegram kutishni so‘rasa yoki ishchi akkauntni cheklasa — qo‘shilish bo‘lmaydi va qachongacha ekani ham o‘sha yerda yozilgan.",
+            "Guruh holati: «qo‘shilishni kutmoqda»; «o‘qiyapmiz» — «skaut qo‘shildi» yoki «qo‘lda qo‘shilingan» belgisi bilan (skaut akkauntidan o‘zingiz qo‘shilsangiz — u buni sezadi); «ariza adminda» — guruh yopiq, tasdiqni kutyapmiz; «qo‘shilib bo‘lmaydi» — manzil yo‘q, havola eskirgan, akkaunt guruhda bloklangan yoki guruh bot tekshiruvidan o‘tishni so‘raydi, unda faqat qo‘lda qo‘shilish mumkin. Telegram ko‘rsatgan sabab holat ostida ko‘rinadi. Yangi guruhni skaut qo‘shilgandan keyin darhol, qayta ishga tushirmasdan o‘qiydi.",
+            "«Olib tashlash» — siz qo‘shgan guruhlarda; rahbar va egasi istalganini olib tashlaydi. Olib tashlangan guruhga skaut qo‘shilmaydi va eng yaqin qayta ishga tushishdan keyin uni o‘qimay qo‘yadi; kim qo‘shgani va kim olib tashlagani amallar jurnalida yozilib qoladi.",
+          ],
+        },
+        {
           id: "health",
           title: "Skaut ishlayaptimi",
           body: {
             manager: [
-              "Tepadagi tilla rangli ogohlantirish — nimadir noto‘g‘ri: skaut jim, birorta chatni o‘qimayapti yoki model ishlamayapti. «Akkaunt berilgan 29 ta chatdan 12 tasini o‘qiyapti» ogohlantirishi — chatlarning bir qismi o‘qilmayapti. Ikkala holatda ham egasiga ayting: bu paneldan tuzatilmaydi.",
+              "Tepadagi tilla rangli ogohlantirish — nimadir noto‘g‘ri: skaut jim, birorta chatni o‘qimayapti yoki model ishlamayapti. «Akkaunt berilgan 29 ta chatdan 12 tasini o‘qiyapti» ogohlantirishi — chatlarning bir qismi hozircha o‘qilmayapti: [«Skaut uchun guruhlar»](#scout-groups)dagi guruhlarga skaut o‘zi, bir-ikki soatda bittadan qo‘shiladi. Skaut jim, model ishlamayapti yoki ogohlantirish bir necha kun ketmasa — egasiga ayting: bu paneldan tuzatilmaydi.",
             ],
             head: [
-              "Tepadagi tilla rangli ogohlantirish — nosozlik: «Skaut N daqiqadan beri jim» (jarayon to‘xtagan), «birorta ham chatni o‘qimayapti» yoki «Model ishlamayapti». «O‘qilmayapti» ro‘yxati bilan «Akkaunt berilgan Y ta chatdan X tasini o‘qiyapti» — ishchi akkaunt bu chatlarga qo‘shilmagan. Egasi tuzatadi.",
+              "Tepadagi tilla rangli ogohlantirish — nosozlik: «Skaut N daqiqadan beri jim» (jarayon to‘xtagan), «birorta ham chatni o‘qimayapti» yoki «Model ishlamayapti». «O‘qilmayapti» ro‘yxati bilan «Akkaunt berilgan Y ta chatdan X tasini o‘qiyapti» — ishchi akkaunt bu chatlarga hali qo‘shilmagan. [«Skaut uchun guruhlar»](#scout-groups)dagi guruhlarga u o‘zi, bir-ikki soatda bittadan qo‘shiladi; nosozliklarni va serverda berilgan chatlarni egasi tuzatadi.",
             ],
             admin: [
               "«Skaut N daqiqadan beri jim» — serverdagi jarayon yiqilgan yoki to‘xtatilgan: `systemctl status devuz-scout`. «Model ishlamayapti» — kalitda yoki undagi pulda muammo.",
-              "«Akkaunt berilgan Y ta chatdan X tasini o‘qiyapti» va «O‘qilmayapti» ro‘yxati — ishchi akkaunt bu chatlarga qo‘shilmagan yoki manzil ochilmagan. Ishchi akkauntdan qo‘lda qo‘shilish kerak: paneldan bu qilinmaydi.",
+              "«Akkaunt berilgan Y ta chatdan X tasini o‘qiyapti» va «O‘qilmayapti» ro‘yxati — ishchi akkaunt bu chatlarga qo‘shilmagan yoki manzil ochilmagan. [«Skaut uchun guruhlar»](#scout-groups)dagi guruhlarga u o‘zi, kuniga 10 tadan ko‘p emas qo‘shiladi; serverdagi SCOUT_CHATS chatlariga — ishchi akkauntdan qo‘lda.",
               "«Mexanizm butun: … Ishlab chiqish so‘rovlari hali bo‘lmagan» — bu chatlardagi jimlik, nosozlik emas.",
             ],
           },
+        },
+      ],
+    },
+
+    "/admin/markets": {
+      what: "O‘zbekistondan tashqarida mijozlarni qayerdan qidirish kerak: har bir mamlakat bo‘yicha — frilans birjalari, studiyalar kataloglari, e’lonlar taxtalari, tenderlar, xaritalar va Telegram chatlari, havolalar bilan va har bir maydonda qanday ishlash kerakligi bilan. Studiya MDH va AQShga chiqyapti, bu bo‘lim esa har bir mamlakatda nimadan boshlash kerakligi haqida qisqacha ma’lumot.",
+      items: [
+        {
+          id: "start",
+          title: "Mamlakatni qanday tanlash kerak",
+          body: [
+            "«Bozorlar» bo‘limi — [«Sovuq aloqalar»](/admin/prospect) bo‘limining yorlig‘i. Birinchi sahifada — mamlakatlar kartochkalari: bayroq, nomi, belgi, u yerda dasturchini qanday qidirishlari va nechta maydon to‘plangani. Kartochkani bosing — mamlakat sahifasi ochiladi.",
+            "Belgi — studiya birinchi navbatda qayerga chiqishini ko‘rsatadi: «asosiy bozor» (Rossiya, Qozog‘iston, AQSh) — asosiy kuch shu yerga; «sinab ko‘ramiz» — qidiramiz, lekin kamroq; «imkon bo‘lganda» — sabab bo‘lganda kiramiz. O‘zbekiston ham ro‘yxatda — «imkon bo‘lganda» belgisi bilan.",
+            "Havolalar 06.11.2026 da tekshirilgan. Ba’zi saytlar (Upwork, Clutch, Avito, OLX) robotlarni kiritmaydi, odamga esa ochiladi. Maydon yopilgan yoki ko‘chgan bo‘lsa — rahbarga ayting: ro‘yxat kodda tuzatiladi va uni tuzatishadi.",
+          ],
+        },
+        {
+          id: "country",
+          title: "Mamlakat sahifasi va «Skautga» tugmasi",
+          body: [
+            "Tepada — bu mamlakatda dasturchini qanday qidirishlari, qaysi tilda yozish kerakligi va Toshkent bilan vaqt farqi. Pastda — «Nimadan boshlash kerak»: boshlashga arziydigan uch-to‘rt qadam. Ro‘yxatga qaytmaslik uchun tepada mamlakatlar almashtirgichi bor.",
+            "Keyin maydonlar turlari bo‘yicha: frilans birjalari, studiyalar kataloglari va reytinglari, e’lonlar taxtalari, tenderlar, xaritalar va kompaniyalar ma’lumotnomalari, Telegram chatlari, hamjamiyatlar. Har birida — havola, bu qanday maydon, unda mijozlarni qanday qidirish kerak va qancha turadi: «bepul», «qisman pullik» (joylashish bepul, takliflar yoki reklama — pullik) yoki «pullik». Pullik maydonlarda ro‘yxatdan o‘tish va to‘lash — faqat rahbar bilan kelishgandan keyin.",
+            "Telegram chatlarida «Skautga» tugmasi bor: guruh [«Skaut signallari»](/admin/scout)dagi «Skaut uchun guruhlar»ga tushadi va skaut unga o‘zi, navbati kelganda qo‘shiladi — kuniga 10 ta guruhdan ko‘p emas. Undan signallar odatdagidek keladi. Guruh skautda allaqachon bo‘lsa, sahifa shuni aytadi.",
+          ],
         },
       ],
     },
