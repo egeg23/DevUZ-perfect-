@@ -37,7 +37,8 @@ const TIMEOUT_MS = 12_000;
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0 Safari/537.36";
 
 export type SourceResult =
-  | { ok: true; phrases: Array<{ phrase: string; value: number }> }
+  /** `asked` — фраза шире исходной, по которой нашлись данные (лесенка broaderQueries). */
+  | { ok: true; phrases: Array<{ phrase: string; value: number }>; asked?: string }
   | { ok: false; reason: string };
 
 export type KeywordResearch = {
@@ -88,7 +89,22 @@ export async function googleTrendsRelated(
   query: string,
   wait: (ms: number) => Promise<void> = (ms) => new Promise((done) => setTimeout(done, ms)),
   geo: string = TRENDS_GEO,
+  times: readonly string[] = [TRENDS_TIME],
 ): Promise<SourceResult> {
+  let last: SourceResult = { ok: false, reason: "Trends недоступен" };
+  // Период за периодом: редкий за год запрос за пять лет набирает данные.
+  for (const time of times) {
+    last = await trendsOver(query, wait, geo, time);
+    if (last.ok || !trendsEmpty(last)) return last;
+  }
+  return last;
+}
+
+/** Период Trends по умолчанию и запасной — для редкого запроса. */
+export const TRENDS_TIME = "today 12-m";
+export const TRENDS_LONG = "today 5-y";
+
+async function trendsOver(query: string, wait: (ms: number) => Promise<void>, geo: string, time: string): Promise<SourceResult> {
   let last: SourceResult = { ok: false, reason: "Trends недоступен" };
   // Два круга по дорогам. «Слишком часто» (429) — частый ответ Trends на
   // первый заход: 4 октября статья в 16:00 вышла без его данных именно так.
@@ -96,7 +112,7 @@ export async function googleTrendsRelated(
   for (let round = 0; round < 2; round += 1) {
     if (round > 0) await wait(TRENDS_RETRY_MS);
     for (const road of trendsRoads()) {
-      last = await trendsVia(query, road, geo);
+      last = await trendsVia(query, road, geo, time);
       // Ответ по существу (данные или «запрос редкий») — дальше не идём;
       // отказ Google или обрыв — пробуем следующую дорогу.
       if (last.ok || !/Trends ответил|Trends недоступен/.test(last.reason)) return last;
@@ -109,7 +125,7 @@ export async function googleTrendsRelated(
 /** Пауза перед вторым кругом, когда Trends ответил «слишком часто». */
 export const TRENDS_RETRY_MS = 8_000;
 
-async function trendsVia(query: string, road: Fetcher, geo: string = TRENDS_GEO): Promise<SourceResult> {
+async function trendsVia(query: string, road: Fetcher, geo: string = TRENDS_GEO, time: string = TRENDS_TIME): Promise<SourceResult> {
   try {
     const home = await timed(`https://trends.google.com/trends/?geo=${geo}&hl=ru`, { headers: { "user-agent": UA } }, road);
     const cookie = home.headers
@@ -118,7 +134,7 @@ async function trendsVia(query: string, road: Fetcher, geo: string = TRENDS_GEO)
       .join("; ");
     const headers = { "user-agent": UA, cookie, "accept-language": "ru-RU,ru;q=0.9" };
 
-    const req = { comparisonItem: [{ keyword: query, geo, time: "today 12-m" }], category: 0, property: "" };
+    const req = { comparisonItem: [{ keyword: query, geo, time }], category: 0, property: "" };
     const explore = await timed(
       `https://trends.google.com/trends/api/explore?hl=ru&tz=-300&req=${encodeURIComponent(JSON.stringify(req))}`,
       { headers },
@@ -207,7 +223,7 @@ export async function wordstatTop(query: string, region: number = WORDSTAT_UZ): 
  * потом Trends; без повторов и без самого запроса.
  */
 export function mergeRelated(query: string, ...sources: SourceResult[]): string[] {
-  const seen = new Set([query.toLowerCase().trim()]);
+  const seen = new Set([query.toLowerCase().trim(), ...sources.flatMap((s) => (s.ok && s.asked ? [s.asked.toLowerCase().trim()] : []))]);
   const out: string[] = [];
   for (const source of sources) {
     if (!source.ok) continue;
@@ -222,10 +238,67 @@ export function mergeRelated(query: string, ...sources: SourceResult[]): string[
   return out;
 }
 
+/**
+ * Лесенка запросов: исходный, без слов места, короче на слово.
+ *
+ * Владелец, 07.11.2026: «Для всех статей мы должны использовать гугл трендс
+ * и Яндекс вордстат запросы». За 30 дней до этого из 94 версий статей
+ * Вордстат дал данные 25 раз, Trends — 17, и почти все отказы были не
+ * блокировкой, а «по Узбекистану запросов нет» (58) и «запрос редкий» (73):
+ * точная фраза статьи в маленьком регионе почти никем не набирается. Фраза
+ * шире — «продвижение стоматологии» вместо «продвижение стоматологии в
+ * Ташкенте» — данные даёт, и сопутствующие запросы к ней — те же по смыслу.
+ * Короче двух слов не режем: «сайт» — уже не тема статьи.
+ */
+const PLACE = /^(в|во|по|на|для|uchun|ташкент\p{L}*|узбекистан\p{L}*|toshkent\p{L}*|o[‘'’`ʻ]?zbekiston\p{L}*|москв\p{L}*|росси\p{L}*|казахстан\p{L}*|алмат\p{L}*)$/iu;
+
+export function broaderQueries(query: string, max = 2): string[] {
+  const words = query.trim().split(/\s+/).filter(Boolean);
+  const base = words.join(" ").toLowerCase();
+  const out: string[] = [];
+  const add = (w: readonly string[]) => {
+    const q = w.join(" ");
+    if (w.length >= 2 && q.toLowerCase() !== base && !out.includes(q)) out.push(q);
+  };
+  const bare = words.filter((w) => !PLACE.test(w));
+  add(bare);
+  let cur = bare.length >= 2 ? bare : words;
+  while (cur.length > 2 && out.length < max) {
+    cur = cur.slice(0, -1);
+    add(cur);
+  }
+  return out.slice(0, max);
+}
+
+/** «Данных нет» — повод спросить шире; 403, 429, обрыв — нет: это сбой, лесенка его не лечит. */
+export function wordstatEmpty(r: SourceResult): boolean {
+  return !r.ok && /запросов нет/.test(r.reason);
+}
+export function trendsEmpty(r: SourceResult): boolean {
+  return !r.ok && /редкий|нет данных/.test(r.reason);
+}
+
+/** Первая ступень лесенки, где источник дал данные; сбой — сразу назад. */
+export async function firstWithData(
+  ladder: readonly string[],
+  ask: (query: string, step: number) => Promise<SourceResult>,
+  empty: (r: SourceResult) => boolean,
+): Promise<SourceResult> {
+  let last: SourceResult = { ok: false, reason: "нечего спрашивать" };
+  for (const [step, query] of ladder.entries()) {
+    last = await ask(query, step);
+    if (last.ok) return step === 0 ? last : { ...last, asked: query };
+    if (!empty(last)) return last;
+  }
+  return last;
+}
+
 export async function keywordResearch(query: string, region: KeywordRegion = UZ_REGION): Promise<KeywordResearch> {
+  const ladder = [query, ...broaderQueries(query)];
   const [wordstat, trends] = await Promise.all([
-    wordstatTop(query, region.wordstat),
-    googleTrendsRelated(query, undefined, region.trends),
+    firstWithData(ladder, (q) => wordstatTop(q, region.wordstat), wordstatEmpty),
+    // Исходную фразу Trends смотрит и за пять лет, шире — за год.
+    firstWithData(ladder, (q, step) => googleTrendsRelated(q, undefined, region.trends, step === 0 ? [TRENDS_TIME, TRENDS_LONG] : [TRENDS_TIME]), trendsEmpty),
   ]);
   return { query, trends, wordstat, related: mergeRelated(query, wordstat, trends) };
 }
