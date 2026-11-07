@@ -50,21 +50,24 @@ const day = (value: string) => {
   return value;
 };
 
+/** Заголовки запроса к Google Ads API — общие для автопилота и планировщика ключевых слов. */
+export async function googleHeaders(creds: GoogleCreds): Promise<Record<string, string>> {
+  return {
+    Authorization: `Bearer ${await creds.accessToken()}`,
+    // С сентября 2026 доступ привязан к проекту Google Cloud, а заголовок
+    // необязателен; пока он задан — шлём, как просит страница REST auth.
+    ...(creds.developerToken ? { "developer-token": creds.developerToken } : {}),
+    "Content-Type": "application/json",
+    ...(creds.loginCustomerId ? { "login-customer-id": creds.loginCustomerId.replace(/-/g, "") } : {}),
+  };
+}
+
 export function googleConnector(creds: GoogleCreds, opts: { fetchImpl?: Fetch } = {}): AdsConnector {
   const fetchImpl: Fetch = opts.fetchImpl ?? ((url, init) => fetch(url, init));
   const cid = id(creds.customerId.replace(/-/g, ""));
   const budgets = new Map<string, string>();
 
-  async function headers() {
-    return {
-      Authorization: `Bearer ${await creds.accessToken()}`,
-      // С сентября 2026 доступ привязан к проекту Google Cloud, а заголовок
-      // необязателен; пока он задан — шлём, как просит страница REST auth.
-      ...(creds.developerToken ? { "developer-token": creds.developerToken } : {}),
-      "Content-Type": "application/json",
-      ...(creds.loginCustomerId ? { "login-customer-id": creds.loginCustomerId.replace(/-/g, "") } : {}),
-    };
-  }
+  const headers = () => googleHeaders(creds);
 
   async function query<T = Record<string, unknown>>(gaql: string): Promise<T[]> {
     const res = await fetchImpl(`${GOOGLE_ADS_API}/customers/${cid}/googleAds:searchStream`, {

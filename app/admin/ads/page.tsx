@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { addAccountAction, addMemberAction, createWorkspaceAction, removeMemberAction } from "@/app/ads/actions";
+import { AdsGoogle } from "@/components/admin/ads-google";
 import { AdminShell } from "@/components/admin/shell";
 import { BTN, CARD, H2, INPUT, platformLabel, resultLine, statusLabel } from "@/components/ads/board";
 import { adsDict } from "@/content/admin-panel/ads";
@@ -17,9 +18,9 @@ export const dynamic = "force-dynamic";
  * для обкатки. Сам кабинет аккаунта — /admin/ads/[account], тот же, что
  * видит агентство на /ads.
  */
-export default async function AdsAdminPage({ searchParams }: { searchParams: Promise<{ w?: string; r?: string }> }) {
+export default async function AdsAdminPage({ searchParams }: { searchParams: Promise<{ w?: string; r?: string; g?: string }> }) {
   const staff = await requireSection("/admin/ads");
-  const { w, r } = await searchParams;
+  const { w, r, g } = await searchParams;
   const t = pick(adsDict, staff.panel_locale);
   const [workspaces, flagOn] = await Promise.all([listWorkspaces(), adsEnabled()]);
   const current = w ? await workspaceById(w) : null;
@@ -31,6 +32,9 @@ export default async function AdsAdminPage({ searchParams }: { searchParams: Pro
       <p className="mt-1 max-w-3xl text-sm text-muted">{t.intro}</p>
       {!flagOn ? <p className="mt-2 text-xs text-faint">{t.flagOff}</p> : null}
       {result ? <p className={`mt-3 text-sm ${result.tone === "ok" ? "text-green" : "text-gold"}`}>{result.text}</p> : null}
+
+      {/* Ключи приложения Google и планировщик ключевых слов для статей (lib/seo/keyword-planner.ts). */}
+      <AdsGoogle staff={staff} locale={staff.panel_locale} result={g} />
 
       <div className="mt-6 grid gap-4 lg:grid-cols-[280px_1fr]">
         <section className={CARD}>

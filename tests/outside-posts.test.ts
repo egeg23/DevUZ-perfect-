@@ -80,7 +80,7 @@ test("темы: ключи не повторяются, кейсы есть на
     for (const slug of t.cases) assert.ok(caseBySlug(slug), `${t.key}: нет кейса ${slug}`);
     if (t.kind === "case") assert.ok(t.cases.length, `${t.key}: кейс без кейса`);
   }
-  assert.deepEqual({ ...OUTSIDE_REGION }, { wordstat: 225, trends: "RU", label: "Россия" });
+  assert.deepEqual({ ...OUTSIDE_REGION }, { wordstat: 225, trends: "RU", geo: 2643, label: "Россия" });
   assert.match(read("lib/outside/run.ts"), /keywordResearch\(topic\.query, OUTSIDE_REGION\)/);
   // Регион по умолчанию у статей сайта — прежний, Узбекистан.
   assert.match(read("lib/seo/keywords.ts"), /region: KeywordRegion = UZ_REGION/);
