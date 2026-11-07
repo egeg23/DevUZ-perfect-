@@ -2088,6 +2088,17 @@ export const uz: HelpCopy = {
             "«Ulash» tugmasi uchun ilova kalitlari kerak: `YANDEX_DIRECT_CLIENT_ID` va `YANDEX_DIRECT_CLIENT_SECRET`, `GOOGLE_ADS_CLIENT_ID` va `GOOGLE_ADS_CLIENT_SECRET`. Ularni qanday olish va Yandex hamda Google’ga nima topshirish — `docs/ads-autopilot/api-access.md` da qadamma-qadam. Model sarfi `model_usage` da `ads-negatives` va `ads-copy` belgilari bilan ko‘rinadi.",
           ],
         },
+        {
+          id: "google",
+          title: "Google: kalitlar va kalit so‘zlar rejalashtiruvchisi",
+          roles: ["admin", "head"],
+          body: [
+            "Google Ads kalit so‘zlar rejalashtiruvchisi iborani Google’da oyiga necha marta qidirishlarini aytadi. 07.11.2026 dan u Trends va Wordstat bilan birga har bir maqola uchun uchinchi manba: sayt maqolalari O‘zbekistonni, platformalardagi maqolalar Rossiyani ko‘radi. Eng ko‘p qidirilgan iboralarni model birinchi bo‘lib oladi. Ulanmagan bo‘lsa — maqolalar avvalgidek, usiz chiqadi.",
+            "Google’da bir marta nima qilish kerak (egasi): console.cloud.google.com da — loyiha, unda «Google Ads API» → Enable. «OAuth consent screen»: turi External, holati In production, brending — nom, logotip, pochta, sayt https://devuz.studio, siyosat https://devuz.studio/ru/privacy, domen devuz.studio → «Verify branding». «Credentials» → «OAuth client ID» → Web application, Authorized redirect URI ga — **«Google ilovasi kalitlari»** blokidagi manzil (**«Nusxa olish»** tugmasi). Client ID va sirni shu blokka qo‘ying va **«Saqlash»**ni bosing.",
+            "Kirish darajasi: «Google Ads API» → «Overview» → «Upgrade access level» → «Apply for access», avval Explorer, keyin Basic. Rejalashtiruvchini Google faqat Basic dan ochadi; daraja pastroq bo‘lsa, **«Tekshirish»** shuni aytadi. Brend tekshiruvidan keyin Basic odatda bir necha daqiqada beriladi.",
+            "Kabinet: chapda kabinet yarating (studiya), 10 raqamli raqam bilan Google reklama kabinetini qo‘shing (u ads.google.com tepasida) va undagi «Ulash»ni bosing — shu kabinetga kirish huquqi bor akkaunt bilan kiring. Keyin **«Kalit so‘zlar rejalashtiruvchisi»** blokida uni tanlang (bittasi bo‘lsa, o‘zi olinadi) va **«Tekshirish»**ni bosing: «ishlaydi» deb javob berishi va eng ko‘p nima qidirilishini ko‘rsatishi kerak. Avtopilot bu kabinetda o‘zi hech narsani o‘zgartirmaydi, faqat taklif qiladi.",
+          ],
+        },
       ],
     },
 

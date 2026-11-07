@@ -100,7 +100,7 @@ export function isPlatform(value: unknown): value is Platform {
 }
 
 /** Регион Вордстата и Trends для статей площадок: Россия, читатель там. */
-export const OUTSIDE_REGION = { wordstat: 225, trends: "RU", label: "Россия" } as const;
+export const OUTSIDE_REGION = { wordstat: 225, trends: "RU", geo: 2643, label: "Россия" } as const;
 
 /* ── Факты и ссылки ────────────────────────────────────────────────────── */
 

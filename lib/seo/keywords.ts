@@ -1,4 +1,5 @@
 import { directDispatcher, roadFetch } from "@/lib/egress.mjs";
+import { plannerIdeas } from "@/lib/seo/keyword-planner-store";
 import { appSecret } from "@/lib/secrets";
 
 /**
@@ -30,8 +31,13 @@ export const TRENDS_GEO = "UZ";
  * и Trends «RU» (владелец, 07.11.2026: «Делаем по твоей рекомендации» — на
  * «тема из Вордстата и Trends, регион — по рынку площадки»).
  */
-export type KeywordRegion = { wordstat: number; trends: string };
-export const UZ_REGION: KeywordRegion = { wordstat: WORDSTAT_UZ, trends: TRENDS_GEO };
+export type KeywordRegion = {
+  wordstat: number;
+  trends: string;
+  /** Страна в планировщике Google Ads (lib/seo/keyword-planner.ts): 2000 + цифровой код ISO. */
+  geo?: number;
+};
+export const UZ_REGION: KeywordRegion = { wordstat: WORDSTAT_UZ, trends: TRENDS_GEO, geo: 2860 };
 
 const TIMEOUT_MS = 12_000;
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0 Safari/537.36";
@@ -45,6 +51,12 @@ export type KeywordResearch = {
   query: string;
   trends: SourceResult;
   wordstat: SourceResult;
+  /**
+   * Планировщик ключевых слов Google Ads — поиски в Google по стране (с
+   * 07.11.2026, владелец: «Подключаем, аккаунт гугл адс у меня есть»). Не
+   * подключён — `ok: false` с причиной, статья идёт с двумя источниками.
+   */
+  planner?: SourceResult;
   /** Сопутствующие запросы для модели: оба источника, без повторов. */
   related: string[];
 };
@@ -219,7 +231,8 @@ export async function wordstatTop(query: string, region: number = WORDSTAT_UZ): 
 }
 
 /**
- * Сопутствующие запросы для модели: сначала Вордстат (там цифры показов),
+ * Сопутствующие запросы для модели в порядке источников: keywordResearch
+ * ставит первым планировщик Google Ads, потом Вордстат (там цифры показов),
  * потом Trends; без повторов и без самого запроса.
  */
 export function mergeRelated(query: string, ...sources: SourceResult[]): string[] {
@@ -295,10 +308,13 @@ export async function firstWithData(
 
 export async function keywordResearch(query: string, region: KeywordRegion = UZ_REGION): Promise<KeywordResearch> {
   const ladder = [query, ...broaderQueries(query)];
-  const [wordstat, trends] = await Promise.all([
+  const [wordstat, trends, planner] = await Promise.all([
     firstWithData(ladder, (q) => wordstatTop(q, region.wordstat), wordstatEmpty),
     // Исходную фразу Trends смотрит и за пять лет, шире — за год.
     firstWithData(ladder, (q, step) => googleTrendsRelated(q, undefined, region.trends, step === 0 ? [TRENDS_TIME, TRENDS_LONG] : [TRENDS_TIME]), trendsEmpty),
+    // Планировщик идеи даёт и по редкой фразе — лесенка ему не нужна.
+    region.geo ? plannerIdeas(query, region.geo) : Promise.resolve<SourceResult>({ ok: false, reason: "у региона нет страны для планировщика" }),
   ]);
-  return { query, trends, wordstat, related: mergeRelated(query, wordstat, trends) };
+  // Планировщик первым: у него поиски в Google — там в Узбекистане и ищут.
+  return { query, trends, wordstat, planner, related: mergeRelated(query, planner, wordstat, trends) };
 }

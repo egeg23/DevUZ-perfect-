@@ -1,5 +1,5 @@
 import { open, seal, tokenKey } from "@/lib/ads/crypto";
-import { googleConnector } from "@/lib/ads/connectors/google";
+import { googleConnector, type GoogleCreds } from "@/lib/ads/connectors/google";
 import { seedStubState, stubConnector, type StubState } from "@/lib/ads/connectors/stub";
 import { yandexConnector } from "@/lib/ads/connectors/yandex";
 import { refreshGoogle } from "@/lib/ads/oauth";
@@ -292,11 +292,29 @@ export async function connectorFor(account: Account): Promise<AdsConnector | nul
     return yandexConnector({ token: creds.token, clientLogin: account.external_id || undefined }, { sandbox: account.sandbox });
   }
 
+  const creds = await googleCredsFor(account);
+  return creds ? googleConnector(creds) : null;
+}
+
+/**
+ * Вход в кабинет Google Ads: номер кабинета, токен разработчика и свежий
+ * access token по сохранённому refresh token. Отдельно от коннектора: им же
+ * ходит планировщик ключевых слов (lib/seo/keyword-planner.ts) — тот же
+ * вход, что у автопилота, без второго подключения.
+ */
+export async function googleCredsFor(account: Account): Promise<GoogleCreds | null> {
+  if (account.platform !== "google" || !account.external_id) return null;
+  const db = serviceClient();
+  const key = await tokenKey();
+  if (!db || !key) return null;
+  const { data } = await db.from("ads_accounts").select("credentials_enc").eq("id", account.id).maybeSingle();
+  const sealed = (data as { credentials_enc: string | null } | null)?.credentials_enc;
+  if (!sealed) return null;
   const creds = open<GoogleStored>(sealed, key);
+  if (!creds?.refresh_token) return null;
   const developerToken = (await appSecret("GOOGLE_ADS_DEVELOPER_TOKEN")) ?? "";
-  if (!creds?.refresh_token || !account.external_id) return null;
   let cached = creds;
-  return googleConnector({
+  return {
     customerId: account.external_id,
     loginCustomerId: creds.login_customer_id ?? (await appSecret("GOOGLE_ADS_LOGIN_CUSTOMER_ID")) ?? undefined,
     developerToken,
@@ -307,7 +325,15 @@ export async function connectorFor(account: Account): Promise<AdsConnector | nul
       await db.from("ads_accounts").update({ credentials_enc: seal(cached, key) }).eq("id", account.id);
       return cached.access_token!;
     },
-  });
+  };
+}
+
+/** Подключённые кабинеты Google — кандидаты для планировщика ключевых слов. */
+export async function googleAccounts(): Promise<Account[]> {
+  const db = serviceClient();
+  if (!db) return [];
+  const { data } = await db.from("ads_accounts").select("*").eq("platform", "google").order("created_at");
+  return (data ?? []).map((r) => toAccount(r as Record<string, unknown>)).filter((a) => a.has_credentials);
 }
 
 /* ── Предложения, журнал, тесты ────────────────────────────────────────── */

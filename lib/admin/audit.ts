@@ -58,6 +58,9 @@ export const AUDIT_ACTIONS = [
   "outside.published",
   "outside.skipped",
   "outside.publisher_set",
+  // «Реклама»: ключи приложения Google (только имена полей) и кабинет планировщика ключевых слов.
+  "ads.app_keys_saved",
+  "ads.planner_set",
   "staff.invited",
   "staff.disabled",
   "staff.role_changed",

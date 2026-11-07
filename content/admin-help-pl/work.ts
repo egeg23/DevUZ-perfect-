@@ -603,6 +603,17 @@ export const workSections: Record<string, HelpEntry> = {
           "Przycisk «Połącz» potrzebuje kluczy aplikacji: `YANDEX_DIRECT_CLIENT_ID` i `YANDEX_DIRECT_CLIENT_SECRET`, `GOOGLE_ADS_CLIENT_ID` i `GOOGLE_ADS_CLIENT_SECRET`. Jak je zdobyć i co złożyć w Yandex i Google — krok po kroku w `docs/ads-autopilot/api-access.md`. Zużycie modelu widać w `model_usage` z etykietami `ads-negatives` i `ads-copy`.",
         ],
       },
+      {
+        id: "google",
+        title: "Google: klucze i planer słów kluczowych",
+        roles: ["admin", "head"],
+        body: [
+          "Planer słów kluczowych Google Ads mówi, ile razy w miesiącu fraza jest wyszukiwana w Google. Od 07.11.2026 to trzecie źródło dla każdego artykułu obok Trends i Wordstatu: artykuły strony patrzą na Uzbekistan, artykuły na platformach — na Rosję. Frazy z największą liczbą wyszukiwań model dostaje jako pierwsze. Niepodłączony — artykuły idą jak dawniej, bez niego.",
+          "Co zrobić w Google raz (właściciel): w console.cloud.google.com — projekt, w nim «Google Ads API» → Enable. «OAuth consent screen»: typ External, status In production, branding — nazwa, logo, e-mail, strona https://devuz.studio, polityka https://devuz.studio/ru/privacy, domena devuz.studio → «Verify branding». «Credentials» → «OAuth client ID» → Web application, w Authorized redirect URI — adres z bloku **«Klucze aplikacji Google»** (przycisk **«Kopiuj»**). Client ID i sekret wklej w ten sam blok i kliknij **«Zapisz»**.",
+          "Poziom dostępu: «Google Ads API» → «Overview» → «Upgrade access level» → «Apply for access», najpierw Explorer, potem Basic. Planer Google udostępnia dopiero od Basic; dopóki poziom jest niższy, **«Sprawdź»** tak właśnie powie. Po weryfikacji marki Basic zwykle przyznawany jest w kilka minut.",
+          "Konto: po lewej załóż przestrzeń (studio), dodaj konto reklamowe Google z numerem z 10 cyfr (jest na górze ads.google.com) i kliknij przy nim «Połącz» — zaloguj się kontem, które ma dostęp do tego konta reklamowego. Potem w bloku **«Planer słów kluczowych»** wybierz je (jeśli jest jedno, bierze się samo) i kliknij **«Sprawdź»**: powinno odpowiedzieć „działa” i pokazać, co wyszukuje się najczęściej. Autopilot na tym koncie sam nic nie zmienia, tylko proponuje.",
+        ],
+      },
     ],
   },
 
