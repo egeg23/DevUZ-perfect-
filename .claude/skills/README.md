@@ -22,6 +22,33 @@
 | `ig-*` (13 навыков) | [Jakeschincariol/instagram-agent-skill](https://github.com/Jakeschincariol/instagram-agent-skill) `d03c56b` | ведение Instagram, см. ниже |
 | `tt-*` (12 навыков) | [solutionsystempro/tiktok-agent-skill](https://github.com/solutionsystempro/tiktok-agent-skill) `29c7920` | ведение TikTok, см. ниже |
 
+### Дизайн — 12 репозиториев «которые чинят UI от ИИ»
+
+Владелец, 08.11.2026 (скрин «12 GitHub repos that fix AI-generated UI»):
+«Пока установи к нам эти скилы». Все MIT или Apache-2.0, лицензии рядом.
+
+| Навык | Откуда | Зачем нам |
+|---|---|---|
+| `ui-ux-pro-max` | был раньше (см. выше) | стили, палитры, шрифты |
+| `design-md` | [google-labs-code/design.md](https://github.com/google-labs-code/design.md) `1ed38aa` + [VoltAgent/awesome-design-md](https://github.com/VoltAgent/awesome-design-md) `fcc7028` | формат DESIGN.md и 84 системы брендов (Apple, Stripe, Linear…) — обёртка наша |
+| `od-*` (11) | [nexu-io/open-design](https://github.com/nexu-io/open-design) `87a4f91` | creative-director, design-brief, design-review, motion-design, motion-lab, shader-dev, frame-liquid-bg-hero, threejs, web-design-guidelines, color-expert, marketing-psychology — из 171 взяты про сайты и движение, повторы (gsap, taste, impeccable, emil) не брали |
+| `taste-skill` | [leonxlnx/taste-skill](https://github.com/leonxlnx/taste-skill) `f6b7657` | «вкус» вместо типового вида: ручки разнообразия, движения и плотности, шаблоны первого экрана |
+| `impeccable` | [pbakaus/impeccable](https://github.com/pbakaus/impeccable) `687bc38` | язык дизайна и проходы critique, audit, polish |
+| `emil-*` (13) | [emilkowalski/skills](https://github.com/emilkowalski/skills) `c8a7962` | анимации и мелочи интерфейса; имена с `emil-`, чтобы не путать с нашими; Swift, Expo и Sonner не брали |
+| `hallmark` | [Nutlope/hallmark](https://github.com/nutlope/hallmark) `407fa68` | новые страницы и разбор «не похоже ли на ИИ», `scripts/sloplint.mjs` |
+| `gsap-*` (8) | [greensock/gsap-skills](https://github.com/greensock/gsap-skills) `aed9cfd` | официальные навыки GSAP: ScrollTrigger, таймлайны, скорость |
+| `scroll-world` | [oso95/scroll-world](https://github.com/oso95/scroll-world) `71cc36d` | пролёт по 3D-миру брендом по прокрутке (как наши сцены кадрами) |
+
+React Bits ([DavidHDev/react-bits](https://github.com/DavidHDev/react-bits)) и
+Canvas UI ([DavidHDev/canvas-ui](https://github.com/DavidHDev/canvas-ui)) — не
+навыки, а библиотеки готовых анимированных компонентов (сотни мегабайт).
+В репозиторий не копируем: нужный компонент ставится по одному командой со
+страницы компонента (`npx shadcn@latest add …` или `npx jsrepo add …`) и
+дальше живёт как наш код.
+
+Тексты, которые эти навыки помогают писать, проходят наши правила: без
+длинных тире и штампов, числа только свои.
+
 ## YouTube: `yt-*`
 
 Владелец, 19.10.2026: «берем 1 который ты советуешь, устанавливаем его к
