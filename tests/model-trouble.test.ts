@@ -145,6 +145,8 @@ test("модель выбирается на каждый узел отдель�
     "тендерный разбор": ["lib/razbor/tender-run.ts", "RAZBOR_MODEL", "claude-sonnet-5-5"],
     "разборы на других языках": ["lib/razbor/foreign-run.ts", "RAZBOR_MODEL", "claude-sonnet-5-5"],
     "статьи о маркетинге": ["lib/marketing/articles-run.ts", "ARTICLE_MODEL", "claude-haiku-4-5"],
+    // Статьи на площадках (vc.ru, Дзен, Tenchat) — так же недорого (владелец, 07.11.2026).
+    "статьи на площадках": ["lib/outside/write.ts", "OUTSIDE_MODEL", "claude-haiku-4-5"],
     // ИИ на прототипах — открыт клиентам, значит самой дешёвой моделью.
     "ИИ на прототипах": ["lib/proto/ai.ts", "PROTO_AI_MODEL", "claude-haiku-4-5"],
     // Напоминания об акции после макета — недорогой моделью (владелец, 13.10.2026).

@@ -1972,6 +1972,49 @@ export const uz: HelpCopy = {
     },
 
     /* ── Reklama ──────────────────────────────────────────────────────── */
+    "/admin/outside": {
+      what: "vc.ru, Dzen va Tenchat uchun maqola qoralamalari: haftada bir marta model har bir platformaga bittadan yozadi, odam ularni studiyaning platformadagi akkauntidan e’lon qiladi va havolani shu yerga qo‘yadi. Rossiya va MDHda biznes egalari o‘qiydigan joylarda studiya haqida yozilishi va shu maqolalardan saytimizga odamlar hamda havolalar kelishi uchun kerak.",
+      items: [
+        {
+          id: "how",
+          title: "Bu qanday ishlaydi",
+          body: [
+            "Haftada bir marta, Toshkent vaqti bilan kunduzi (11:00 dan), har bir platforma uchun qoralama tayyorlanadi. Mavzu — koddagi ro‘yxatdan, uning so‘rovi Rossiya bo‘yicha Wordstat va Google Trends bilan solishtiriladi: bu platformalarni asosan o‘sha yerda o‘qishadi. Arzon model yozadi, saytimizdagi keyslarimiz faktlari bo‘yicha.",
+            "Qoralama shu yerda paydo bo‘lishidan oldin uni kod tekshiradi: so‘rov sarlavhada va birinchi xatboshida turadi, uzun tire va neyrotarmoq shtamplari yo‘q, narxlar, foizlar va keyslarda yo‘q raqamlar yo‘q, havolalar faqat saytimizga va keyslarimizga, ikkitadan ko‘p emas (Tenchatda — bitta). Uch urinishda o‘tmasa — qoralama bo‘lmaydi, egasiga nima chiqmagani haqida qator keladi.",
+            "Qoralamalar to‘planib qolmaydi: platforma yangisini faqat avvalgisi e’lon qilingan yoki o‘tkazib yuborilgandan keyin oladi. Bir haftada uch platformada — uch xil mavzu, va bitta mavzu har bir platformada o‘z matni bilan yoziladi: vc.ru da tahlil, Dzenda oddiy tilda, Tenchatda qisqa post.",
+            "Robot emas, odam e’lon qiladi: bu platformalarda dastur orqali e’lon qilishning ochiq yo‘li yo‘q, akkauntga o‘zi kiradigan robot esa ularning qoidalarini buzadi va akkaunt bloklanadi.",
+          ],
+        },
+        {
+          id: "publish",
+          title: "Qanday e’lon qilish kerak",
+          body: [
+            "**«E’lon qilinishini kutmoqda»** blokida qoralama yonida — platforma, so‘rov va tugmalar. **«Sarlavhadan nusxa olish»** — muharrirdagi sarlavha maydoniga. **«Nusxa olish»** — butun matn: vc.ru va Dzen uchun bezagi bilan (sarlavhachalar, ro‘yxatlar va havolalar o‘zicha qo‘yiladi), Tenchat uchun — oddiy matn. Muharrir matnni noto‘g‘ri qo‘ysa — **«Bezaksiz nusxa olish»**.",
+            "**«vc.runi ochish»** (yoki boshqa platforma) uni yangi oynada ochadi: studiya akkauntiga kiring, yangi nashrni boshlang, sarlavha va matnni qo‘ying, rasm qo‘shing va e’lon qiling. **«Matnni ko‘rsatish»** — qoralamani oldindan o‘qish; to‘g‘ridan-to‘g‘ri platforma muharririda tuzatish mumkin.",
+            "E’londan keyin maqola manzilini brauzer qatoridan nusxa oling, **«E’lon qilingan maqola havolasi»** maydoniga qo‘ying va **«E’lon qildim»**ni bosing. Havola faqat shu platforma manzilidan va faqat https bilan qabul qilinadi. **«O‘tkazib yuborish»** — qoralama yaramasa: platforma keyingi hafta yangisini oladi.",
+            "Matndagi havolalar saytimizga Metrika belgilari bilan olib boradi (belgida — platforma nomi): [Trafik](/admin/traffic)da har bir platformadan nechta odam kelgani ko‘rinadi.",
+          ],
+        },
+        {
+          id: "links",
+          title: "E’lon qilinganlar va havola tekshiruvi",
+          body: [
+            "**«E’lon qilinganlar»** blokida — maqolalar havolasi bilan, kim va qachon e’lon qilgani. «E’lon qildim»dan 10 daqiqa o‘tib, keyin esa haftada bir marta kod maqola sahifasini o‘zi ochadi va unda devuz.studio ga havolani qidiradi.",
+            "Maqola ostidagi qator: «qidiruvda vazn beradi» — oddiy havola, u saytga Google va Yandexda yordam beradi; «nofollow deb belgilagan» — platforma qidiruv tizimlaridan havolani hisobga olmaslikni so‘ragan: vazn yo‘q, lekin odamlar u orqali o‘tadi, bunday platformalar uchun bu odatiy hol; «havola topilmadi» — uni moderatsiyada olib tashlashgan yoki maqola faqat kirgandan keyin ko‘rinadi; «sahifa ochilmadi» — maqola o‘chirilgan yoki platforma tekshiruvni kiritmaydi.",
+            "Bo‘lim tepasida — 30 kunda nechta maqola e’lon qilingani va nechta qoralama o‘tkazib yuborilgani.",
+          ],
+        },
+        {
+          id: "publisher",
+          title: "Kim e’lon qiladi",
+          roles: ["admin", "head"],
+          body: [
+            "Pastda — **«Kim e’lon qiladi»**: qoralamalar tayyor bo‘lganda bot «📝 Статьи на площадки» kartochkasini kimga yuborishi. Hech kim tanlanmasa — kartochka egasi va rahbarga boradi, agar ularda «Jamoa»da «Hisobotlar» belgisi olib tashlanmagan bo‘lsa.",
+            "Ro‘yxatda — shu bo‘lim ochiq bo‘lganlar. U egasi va rahbarga ochiq; e’lon qiladigan menejerga egasi uni [Jamoa](/admin/team) → «Bo‘limlar» belgisi bilan ochadi. Platformalardagi akkauntlar studiya nomiga ochiladi; login va parol — e’lon qiladigan odamda, panelga ular kiritilmaydi.",
+          ],
+        },
+      ],
+    },
     "/admin/ads": {
       what: "Google Ads va Yandex Direct’dagi reklama avtopiloti — studiyaning marketologlar va agentliklar uchun yangi xizmati. Kuniga bir marta u reklama kabinetining hisobotlarini olib, uchta narsani taklif qiladi: minus-so‘zlar, byudjetni qayta taqsimlash va e’lonlar testi, — har biri sababi va raqamlari bilan. Odatiy holatda o‘zi hech narsani o‘zgartirmaydi: «Qabul qilish» va «Rad etish» tugmalari bilan inson hal qiladi. Egasi va rahbarlar ko‘radi, menejerlar — yo‘q.",
       items: [

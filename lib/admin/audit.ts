@@ -54,6 +54,10 @@ export const AUDIT_ACTIONS = [
   "scout.chat_removed",
   // Ключи «Блогеров» вставили в блоке «Подключения Instagram» (только имена ключей, без значений).
   "ai_staff.key_saved",
+  // Статьи на площадках (lib/outside/store.ts): опубликовал, пропустил, кто публикует.
+  "outside.published",
+  "outside.skipped",
+  "outside.publisher_set",
   "staff.invited",
   "staff.disabled",
   "staff.role_changed",

@@ -487,6 +487,49 @@ export const workSections: Record<string, HelpEntry> = {
 
   /* ── Договоры ─────────────────────────────────────────────────────── */
   /* ── Reklamy ──────────────────────────────────────────────────────── */
+  "/admin/outside": {
+    what: "Szkice artykułów dla vc.ru, Dzen i Tenchat: raz w tygodniu model pisze po jednym na platformę, człowiek publikuje je z konta studia na platformie i wkleja tu link. Potrzebne, żeby o studiu pisano tam, gdzie czytają właściciele firm w Rosji i WNP, i żeby z tych artykułów przychodzili ludzie i linki do naszej strony.",
+    items: [
+      {
+        id: "how",
+        title: "Jak to działa",
+        body: [
+          "Raz w tygodniu, w dzień czasu taszkenckiego (od 11:00), dla każdej platformy przygotowuje się szkic. Temat jest z listy w kodzie, a zapytanie do niego sprawdza się w Wordstacie i Google Trends dla Rosji: tam głównie czyta się te platformy. Pisze tani model, na podstawie faktów z naszych case studies na stronie.",
+          "Zanim szkic pojawi się tutaj, sprawdza go kod: zapytanie stoi w tytule i pierwszym akapicie, nie ma długich myślników ani klisz sieci neuronowych, nie ma cen, procentów i liczb, których nie ma w case studies, linki prowadzą tylko do naszej strony i naszych case studies, nie więcej niż dwa (w Tenchat — jeden). Nie przeszedł w trzech próbach — szkicu nie ma, a właściciel dostaje wiadomość, co nie wyszło.",
+          "Szkice się nie gromadzą: platforma dostaje nowy dopiero, gdy poprzedni jest opublikowany albo pominięty. W jednym tygodniu trzy platformy mają trzy różne tematy, a jeden temat na każdej platformie pisze się własnym tekstem: na vc.ru analiza, w Dzen prostym językiem, w Tenchat krótki post.",
+          "Publikuje człowiek, a nie robot: te platformy nie mają otwartego sposobu publikowania programem, a robot, który sam loguje się na konto, łamie ich regulamin i konto zostaje zablokowane.",
+        ],
+      },
+      {
+        id: "publish",
+        title: "Jak opublikować",
+        body: [
+          "W bloku **«Czekają na publikację»** przy szkicu są platforma, zapytanie i przyciski. **«Kopiuj tytuł»** — do pola tytułu w edytorze. **«Kopiuj»** — cały tekst: dla vc.ru i Dzen z formatowaniem (śródtytuły, listy i linki wkleją się tak, jak są), dla Tenchat — zwykłym tekstem. Jeśli edytor wkleił tekst krzywo — **«Kopiuj bez formatowania»**.",
+          "**«Otwórz vc.ru»** (albo inną platformę) otwiera ją w nowej karcie: zaloguj się na konto studia, zacznij nową publikację, wklej tytuł i tekst, dodaj obrazek i opublikuj. **«Pokaż tekst»** — przeczytać szkic wcześniej; poprawić można od razu w edytorze platformy.",
+          "Po publikacji skopiuj adres artykułu z paska przeglądarki, wklej go w **«Link do opublikowanego artykułu»** i kliknij **«Opublikowałem»**. Link jest przyjmowany tylko z adresu tej platformy i tylko https. **«Pomiń»** — jeśli szkic się nie nadaje: platforma dostanie nowy w przyszłym tygodniu.",
+          "Linki w tekście prowadzą na naszą stronę z oznaczeniami dla Metryki (w oznaczeniu — nazwa platformy): w [Ruchu](/admin/traffic) widać, ile osób przyszło z każdej platformy.",
+        ],
+      },
+      {
+        id: "links",
+        title: "Opublikowane i sprawdzanie linku",
+        body: [
+          "W bloku **«Opublikowane»** są artykuły z linkiem do nich, kto i kiedy opublikował. 10 minut po „Opublikowałem”, a potem raz w tygodniu kod sam otwiera stronę artykułu i szuka na niej linku do devuz.studio.",
+          "Wiersz pod artykułem: „przekazuje moc w wyszukiwarce” — zwykły link, pomaga stronie w Google i Yandex; „oznaczyła go nofollow” — platforma poprosiła wyszukiwarki, żeby nie liczyły linku: mocy nie ma, ale ludzie z niego przechodzą, dla takich platform to normalne; „nie znaleźliśmy linku” — usunięto go podczas moderacji albo artykuł widać dopiero po zalogowaniu; „strona nie otworzyła się” — artykuł usunięto albo platforma nie wpuszcza sprawdzania.",
+          "Na górze działu — ile artykułów opublikowano w 30 dni i ile szkiców pominięto.",
+        ],
+      },
+      {
+        id: "publisher",
+        title: "Kto publikuje",
+        roles: ["admin", "head"],
+        body: [
+          "Na dole — **«Kto publikuje»**: komu bot wysyła kartę «📝 Статьи на площадки», gdy szkice są gotowe. Nikt nie wybrany — karta idzie do właściciela i kierownika, jeśli w «Zespole» nie mają odznaczonego pola «Raporty».",
+          "Na liście są ci, którzy mają dostęp do tego działu. Jest on otwarty dla właściciela i kierownika; menedżerowi, który będzie publikował, właściciel otwiera go zaznaczeniem w [Zespole](/admin/team) → «Działy». Konta na platformach zakłada się na studio; login i hasło ma ten, kto publikuje, do panelu się ich nie wpisuje.",
+        ],
+      },
+    ],
+  },
   "/admin/ads": {
     what: "Autopilot reklam w Google Ads i Yandex Direct — nowa usługa studia dla marketerów i agencji. Raz na dobę pobiera raporty konta reklamowego i proponuje trzy rzeczy: wykluczające słowa kluczowe, przesunięcie budżetu i testy reklam, — każdą z powodem i liczbami. Domyślnie sam niczego nie zmienia: decyduje człowiek przyciskami «Akceptuj» i «Odrzuć». Widzą to właściciel i kierownicy, menedżerowie — nie.",
     items: [
