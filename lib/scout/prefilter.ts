@@ -54,7 +54,11 @@ export type PrefilterVerdict = {
  */
 const TOPIC_PATTERNS: Record<string, RegExp> = {
   магазин: word(
-    "интернет-?магазин\\p{L}*|онлайн-?магазин\\p{L}*|маркетплейс\\p{L}*|e-?commerce|do'?kon\\p{L}*",
+    "интернет-?магазин\\p{L}*|онлайн-?магазин\\p{L}*|маркетплейс\\p{L}*|e-?commerce|do'?kon\\p{L}*|д[ўу]кон\\p{L}*|" +
+      // Английский (владелец, 07.11.2026: «А на узбекском и английском мы
+      // умеем выцеплять скаутом заявки?»): «online store» и «Shopify store»
+      // уходили «не по теме».
+      "online\\s+(?:store|shop)s?|web\\s*-?\\s*shops?|e-?shops?|shopify|woocommerce",
   ),
   /**
    * `apps?` и `applications?` — целиком, а не `app\\p{L}*`: левая граница не
@@ -154,8 +158,14 @@ const DEMAND = [
     "ким\\s+[қк]илади|ким\\s+ясайди|[қк]анча\\s+туради|нархи\\s+[қк]анча|маслаҳат\\s+беринг|маслахат\\s+беринг",
   ),
   // Английский встречается реже, но встречается — и целиком проходил мимо.
-  word("need|needs|needed|recommend\\p{L}*"),
-  phrase("looking\\s+for|who\\s+can|how\\s+much"),
+  word("need|needs|needed|recommend\\p{L}*|want|wants|hiring|hire|require[sd]?|budget"),
+  phrase(
+    "looking\\s+for|searching\\s+for|who\\s+can|how\\s+much|(?:any|some)\\s*(?:one|body)\\s+(?:can|could|here)|" +
+      "can\\s+(?:any|some)\\s*(?:one|body)|is\\s+there\\s+(?:any|some)\\s*(?:one|body)",
+  ),
+  // «Kimdir landing page qilib bera oladimi?» — вопрос, а не реклама:
+  // реклама говорит «qilib beramiz» (SUPPLY), заказчик — «bera oladimi».
+  phrase("bera\\s+oladi(?:mi|gan)|beradimi|kimdir|kim\\s+bor|бера\\s+олади(?:ми|ган)|берадими|кимдир"),
 ];
 
 /**
@@ -169,7 +179,10 @@ const SUPPLY = [
     "(?:дела[юе]м?|разрабатыва\\p{L}+|созда[юёе]\\p{L}*|пишем|пишу|вёрстк\\p{L}+|верстк\\p{L}+|верста\\p{L}+)" +
       "\\s+(?:вам\\s+)?(?:сайт|лендинг|магазин|приложени|бот)",
   ),
-  word("предлага[юе]м?|портфолио|расцен\\p{L}+|резюме|freelance|фриланс"),
+  word("предлага[юе]м?|портфолио|расцен\\p{L}+|резюме|фриланс"),
+  // «Freelance» само по себе не реклама: «We need a freelance developer» —
+  // заказчик. Исполнитель говорит о себе: «I'm a freelance…», «hire me».
+  phrase("i\\s*(?:'m|am)\\s+(?:a\\s+)?freelance|freelance\\s+(?:web\\s+)?(?:developer|designer)\\s+(?:here|available)|hire\\s+me|available\\s+for\\s+(?:work|projects?|hire)|dm\\s+me\\s+for"),
   // «Любой сложности» пишут только исполнители: «сайты любой сложности».
   // Покупатель так не говорит. Ловит рекламу, у которой нет глагола
   // «делаем», — «Разработка сайтов любой сложности. Нужен сайт? Пишите!»
@@ -181,7 +194,7 @@ const SUPPLY = [
   word("услуги"),
   phrase("от\\s+\\d+\\s*\\$?\\s*(?:за|/)\\s*(?:сайт|проект|час)"),
   phrase("xizmat\\s+ko'?rsatamiz|bizning\\s+jamoa|(?:yasab|qilib)\\s+beramiz|(?:ясаб|[қк]илиб)\\s+берамиз"),
-  phrase("we\\s+(?:build|develop|make|create)|our\\s+(?:team|studio|agency)"),
+  phrase("we\\s+(?:build|develop|make|create|offer)|our\\s+(?:team|studio|agency|services)|i\\s+(?:build|develop|make|create)\\s"),
   word("portfolio"),
 ];
 

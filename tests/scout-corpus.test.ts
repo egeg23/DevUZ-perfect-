@@ -99,3 +99,27 @@ test("шум и предложение по-прежнему не доходят
     "эти сообщения ушли бы в модель за деньги",
   );
 });
+
+// Владелец, 07.11.2026: «А на узбекском и английском мы умеем выцеплять
+// скаутом заявки?» — английский спрос и узбекское «bera oladimi?» уходили
+// мимо, «freelance» в заказе считался рекламой.
+test("скаут: узбекский и английский спрос проходит, реклама на них — нет", () => {
+  const demand = [
+    "Kimdir landing page qilib bera oladimi?",
+    "Онлайн дўкон учун сайт қилиб берадиган одам керак",
+    "Looking for a developer to build an online store",
+    "We need a freelance developer for a landing page",
+    "Anyone can build a Shopify store? budget $500",
+    "I want to create a mobile app for my business",
+    "Searching for someone to make a telegram bot",
+  ];
+  for (const text of demand) assert.equal(prefilter(text).pass, true, text);
+  const supply = [
+    "We build websites and mobile apps, DM me",
+    "Sayt qilib beramiz, arzon narxda",
+    "Our agency offers website design services",
+    "I build Shopify stores fast",
+    "Do you want a website? We create landing pages",
+  ];
+  for (const text of supply) assert.equal(prefilter(text).pass, false, text);
+});
