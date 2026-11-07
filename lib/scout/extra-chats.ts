@@ -258,6 +258,54 @@ export function nextToJoin(chats: readonly ScoutChat[], now: Date): ScoutChat | 
   );
 }
 
+/**
+ * Как часто скаут сверяет свои диалоги с группами из базы. Владелец,
+ * 07.11.2026: «Я кстати там вступил в новые группы со скаута, проверь» — до
+ * этого вступление руками скаут замечал только при перезапуске (по
+ * RESOLVE_PER_START адресов) или когда очередь вступления доходила до
+ * группы, по одной в час-два, и всё это время из неё ничего не читал.
+ */
+export const DIALOG_SYNC_MS = 20 * 60_000;
+
+/** Группа или канал из списка диалогов аккаунта. */
+export type DialogView = { id: string; usernames: readonly string[]; title?: string | null };
+
+/**
+ * Группы, которые в базе ещё ждут вступления или одобрения заявки, а в
+ * диалогах аккаунта уже есть: вступили руками (или одобрили заявку скаута).
+ * Сверка по номеру и по адресу; закрытую группу по ссылке без номера
+ * узнать не по чему — её отметит очередь вступления (ChatInviteAlready).
+ * Список диалогов сетевого resolveUsername не тратит.
+ */
+export function dialogPatches(
+  chats: readonly ScoutChat[],
+  dialogs: readonly DialogView[],
+  now: Date,
+): { id: string; chatId: string; patch: ChatPatch & { title?: string } }[] {
+  const byId = new Map(dialogs.map((dialog) => [dialog.id, dialog]));
+  const byName = new Map<string, DialogView>();
+  for (const dialog of dialogs) {
+    for (const name of dialog.usernames) if (name) byName.set(name.toLowerCase(), dialog);
+  }
+  const out: { id: string; chatId: string; patch: ChatPatch & { title?: string } }[] = [];
+  for (const chat of chats) {
+    if (chat.status !== "pending" && chat.status !== "request") continue;
+    const dialog = (chat.chat_id && byId.get(chat.chat_id)) || (chat.handle && byName.get(chat.handle.toLowerCase())) || null;
+    if (!dialog) continue;
+    const patch: ChatPatch & { title?: string } = {
+      status: "joined",
+      error: null,
+      joined_at: now.toISOString(),
+      // Заявку отправлял скаут — одобрили её, вступление его.
+      joined_via: chat.status === "request" ? "scout" : "manual",
+    };
+    if (dialog.id !== chat.chat_id) patch.chat_id = dialog.id;
+    if (!chat.title && dialog.title) patch.title = dialog.title.slice(0, 200);
+    out.push({ id: chat.id, chatId: dialog.id, patch });
+  }
+  return out;
+}
+
 /** Ссылка на группу для людей: публичный адрес — t.me/адрес, закрытая — t.me/+ключ. */
 export function chatUrl(chat: Pick<ScoutChat, "handle" | "invite">): string {
   return chat.handle ? `https://t.me/${chat.handle}` : `https://t.me/+${chat.invite ?? ""}`;
