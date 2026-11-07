@@ -203,6 +203,18 @@ export const SECTIONS: readonly Section[] = [
   // Владельцу и руководителю: решения о чужих рекламных деньгах и доступ к
   // кабинетам агентств — не работа менеджера.
   { href: "/admin/ads", label: { ru: "Реклама", uz: "Reklama", pl: "Reklamy" }, roles: WITH_HEAD, group: "marketing", parent: "/admin/traffic" },
+  // Статьи на площадках — черновики для vc.ru, Дзена и Tenchat раз в неделю
+  // (lib/outside/). Владелец, 07.11.2026: «Хочу автоматизировать статьи на тех
+  // площадках, где ты написал», на план — «Делаем по твоей рекомендации».
+  // Владельцу и руководителю; менеджеру, который публикует, владелец
+  // открывает галочкой в «Команде».
+  {
+    href: "/admin/outside",
+    label: { ru: "Статьи на площадках", uz: "Platformalardagi maqolalar", pl: "Artykuły na platformach" },
+    roles: WITH_HEAD,
+    group: "marketing",
+    aka: ["vc.ru", "Дзен", "Tenchat", "Dzen"],
+  },
   // Финансы — всем, но каждому своё: менеджер видит свои проекты и баланс,
   // руководитель — команду, владелец — всё. Границу держит страница.
   { href: "/admin/contracts", label: { ru: "Договоры", uz: "Shartnomalar", pl: "Umowy" }, roles: EVERYONE, group: "money", parent: "/admin/projects" },

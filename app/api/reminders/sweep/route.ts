@@ -47,6 +47,7 @@ import { runTenderShift } from "@/lib/razbor/tender-run";
 import { runForeignPass } from "@/lib/razbor/foreign-run";
 import { writeWantedLetters } from "@/lib/admin/letter-later";
 import { runMarketingArticles } from "@/lib/marketing/articles-run";
+import { runOutsidePosts } from "@/lib/outside/run";
 import { sendShiftReports, warnAboutSilentShifts } from "@/lib/admin/shift-reports";
 import { sendScoutDigest } from "@/lib/scout/digest";
 import { promoteStrongSignals } from "@/lib/scout/promote";
@@ -570,6 +571,13 @@ async function sweep(): Promise<Response> {
   after(async () => {
     const articles = await runMarketingArticles(new Date()).catch((error) => ({ errors: [String(error)] }));
     if (articles.errors.length) console.error("статьи о маркетинге:", articles.errors.join("; "));
+  });
+
+  // Статьи на площадках (vc.ru, Дзен, Tenchat): черновики раз в неделю, днём;
+  // на каждом проходе — проверка одной-двух опубликованных (lib/outside/run.ts).
+  after(async () => {
+    const outside = await runOutsidePosts(new Date()).catch((error) => ({ errors: [String(error)] }));
+    if (outside.errors.length) console.error("статьи на площадках:", outside.errors.join("; "));
   });
 
   // Отчёты плановых смен — владельцу. У смены нет токена бота, у свипа есть.

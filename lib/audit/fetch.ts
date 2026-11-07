@@ -233,10 +233,13 @@ function once(
  * идёт по редиректам (картинка отвечает 302 на 127.0.0.1 — и мы там), а имя
  * резолвит заново, уже после нашей проверки.
  */
-export async function safeBytes(raw: string, opts: { maxBytes: number; accept?: string }): Promise<{ status: number; bytes: Buffer }> {
+export async function safeBytes(
+  raw: string,
+  opts: { maxBytes: number; accept?: string; browser?: boolean },
+): Promise<{ status: number; bytes: Buffer }> {
   let url = normalizeUrl(raw);
   for (let hop = 0; ; hop++) {
-    const result = await once(url, await resolveSafely(url), { maxBytes: opts.maxBytes, accept: opts.accept ?? "*/*" });
+    const result = await once(url, await resolveSafely(url), { maxBytes: opts.maxBytes, accept: opts.accept ?? "*/*", browser: opts.browser });
     const location = result.headers.location;
     if (result.status >= 300 && result.status < 400 && location && hop < MAX_REDIRECTS) {
       url = normalizeUrl(new URL(location, url).href);
