@@ -119,7 +119,7 @@ export const prospectSections: Record<string, HelpEntry> = {
         id: "start",
         title: "Jak wybrać kraj",
         body: [
-          "Dział «Rynki» to zakładka działu [«Zimne kontakty»](/admin/prospect). Na pierwszej stronie są karty krajów: flaga, nazwa, etykieta, jak tam szuka się wykonawcy i ile zebrano platform. Kliknij kartę — otworzy się strona kraju.",
+          "Dział «Rynki» otwiera się z menu: w nowym menu — «Więcej» → «Rynki», w menu w jednym wierszu — przyciskiem «Rynki»; to także zakładka działu [«Zimne kontakty»](/admin/prospect). Wyszukiwarka (Ctrl+K) znajdzie go też po słowach «kraje», «platformy». Na pierwszej stronie są karty krajów: flaga, nazwa, etykieta, jak tam szuka się wykonawcy i ile zebrano platform. Kliknij kartę — otworzy się strona kraju.",
           "Etykieta mówi, dokąd studio idzie w pierwszej kolejności: «rynek główny» (Rosja, Kazachstan, USA) — tu główne siły; «próbujemy» — szukamy, ale mniej; «przy okazji» — wchodzimy, gdy jest powód. Uzbekistan też jest na liście — z etykietą «przy okazji».",
           "Linki sprawdzone 06.11.2026. Część stron (Upwork, Clutch, Avito, OLX) nie wpuszcza robotów, człowiekowi się otwierają. Platforma się zamknęła albo przeniosła — powiedz kierownikowi: lista jest w kodzie i zostanie poprawiona.",
         ],
