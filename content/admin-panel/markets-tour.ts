@@ -32,9 +32,9 @@ export const marketsTourDict = defineDict({
 
   m2_title: { ru: "Где он лежит", uz: "U qayerda", pl: "Gdzie to jest" },
   m2_body: {
-    ru: "Откройте «Холодные касания» — «Рынки» там вкладкой, рядом с «Сигналы скаута». Всё про поиск клиентов теперь в одном месте.",
-    uz: "«Sovuq aloqalar»ni oching — «Bozorlar» u yerda vkladka bo‘lib, «Skaut signallari» yonida turibdi. Mijoz qidirishga oid hamma narsa endi bir joyda.",
-    pl: "Otwórz „Zimne kontakty” — „Rynki” są tam zakładką, obok „Sygnały skauta”. Wszystko o szukaniu klientów jest teraz w jednym miejscu.",
+    ru: "«Рынки» — в меню «Ещё» и вкладкой в «Холодных касаниях», рядом с «Сигналы скаута». Поиск находит их и по слову «страны». Всё про поиск клиентов теперь в одном месте.",
+    uz: "«Bozorlar» — «Yana» menyusida va «Sovuq aloqalar»da vkladka bo‘lib, «Skaut signallari» yonida. Qidiruv ularni «davlatlar» so‘zi bilan ham topadi. Mijoz qidirishga oid hamma narsa endi bir joyda.",
+    pl: "„Rynki” są w menu „Więcej” i zakładką w „Zimnych kontaktach”, obok „Sygnały skauta”. Wyszukiwarka znajdzie je też po słowie „kraje”. Wszystko o szukaniu klientów jest teraz w jednym miejscu.",
   },
 
   m3_title: { ru: "Начните с главных стран", uz: "Asosiy mamlakatlardan boshlang", pl: "Zacznij od głównych krajów" },

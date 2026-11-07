@@ -26,7 +26,8 @@ function tabbed(section: Section, open: readonly Section[]): boolean {
  */
 export function menuOf(who: Viewer): MenuGroup[] {
   const open = navOf(who);
-  const shown = open.filter((s) => !tabbed(s, open) && !s.corner);
+  // `menu` — вкладка, которую ставим и в меню своей группой («Рынки»).
+  const shown = open.filter((s) => (s.menu || !tabbed(s, open)) && !s.corner);
   return NAV_GROUPS.map((group) => ({ group, sections: shown.filter((s) => s.group === group) })).filter(
     (g) => g.sections.length > 0,
   );
@@ -77,7 +78,7 @@ export function findable(section: Section, groupLabel: string, locale: PanelLoca
     href: section.href,
     label: section.label[locale],
     group: groupLabel,
-    other: PANEL_LOCALES.filter((l) => l !== locale).map((l) => section.label[l]),
+    other: [...PANEL_LOCALES.filter((l) => l !== locale).map((l) => section.label[l]), ...(section.aka ?? [])],
   };
 }
 

@@ -88,6 +88,7 @@ export const navGroupDict = defineDict({
   leads: { ru: "Лиды", uz: "Lidlar", pl: "Leady" },
   prospect: { ru: "Холодные касания", uz: "Sovuq aloqalar", pl: "Zimne kontakty" },
   mockups: { ru: "Макеты", uz: "Maketlar", pl: "Makiety" },
+  markets: { ru: "Рынки", uz: "Bozorlar", pl: "Rynki" },
   money: { ru: "Деньги", uz: "Pul", pl: "Pieniądze" },
   marketing: { ru: "Маркетинг", uz: "Marketing", pl: "Marketing" },
   team: { ru: "Команда", uz: "Jamoa", pl: "Zespół" },

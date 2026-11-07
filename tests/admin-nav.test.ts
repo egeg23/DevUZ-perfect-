@@ -43,7 +43,8 @@ test("группы и вкладки не меняют, что кому откр
     const who = { role };
     const menu = menuOf(who);
     const flat = menu.flatMap((g) => g.sections.map((s) => s.href));
-    const tabs = tabsOf(who).flatMap((family) => family.slice(1).map((s) => s.href));
+    // Вкладка с `menu` («Рынки») — и в меню, и вкладкой нарочно; остальные — в одном месте.
+    const tabs = tabsOf(who).flatMap((family) => family.slice(1).filter((s) => !s.menu).map((s) => s.href));
     const corner = navOf(who).filter((s) => s.corner).map((s) => s.href);
     assert.equal(new Set([...flat, ...tabs]).size, flat.length + tabs.length, `${role}: раздел и в меню, и вкладкой`);
     assert.deepEqual([...flat, ...tabs, ...corner].sort(), navOf(who).map((s) => s.href).sort(), `${role}: разделы в меню не те`);
@@ -54,9 +55,10 @@ test("группы и вкладки не меняют, что кому откр
       `${role}: группы не по порядку`,
     );
   }
-  // У владельца разделов больше двадцати — а пунктов в меню 18 (17 и «Входящие»), остальное вкладками.
+  // У владельца разделов больше двадцати — а пунктов в меню 19 (17, «Входящие»
+  // и «Рынки» — вкладка, которая стоит и в меню), остальное вкладками.
   assert.ok(navOf({ role: "admin" }).length > 20);
-  assert.equal(menuOf({ role: "admin" }).flatMap((g) => g.sections).length, 18);
+  assert.equal(menuOf({ role: "admin" }).flatMap((g) => g.sections).length, 19);
   assert.equal(menuOf({ role: "admin" }).length, NAV_GROUPS.length);
 });
 
@@ -86,15 +88,36 @@ test("вкладки: редкие разделы — над страницей 
   for (const s of SECTIONS.filter((x) => x.parent)) {
     const parent = SECTIONS.find((x) => x.href === s.parent);
     assert.ok(parent && !parent.parent, `${s.href}: родитель ${s.parent}`);
-    assert.equal(s.group, parent!.group, `${s.href}: группа не родителя`);
+    // Вкладка и в меню («Рынки») — своей группой, иначе она бы потерялась в родительской.
+    if (!s.menu) assert.equal(s.group, parent!.group, `${s.href}: группа не родителя`);
   }
   assert.equal(parentsOf(admin)["/admin/contracts"], "/admin/projects");
+});
+
+/**
+ * Владелец, 07.11.2026: «А где раздел «страны»? Не вижу его что-то». «Рынки»
+ * были только вкладкой «Холодных касаний» — теперь ещё и в меню, а поиск
+ * находит их по «странам».
+ */
+test("«Рынки» — и вкладкой «Холодных касаний», и в меню; поиск находит по «страны»", () => {
+  for (const role of ["manager", "head", "admin"] as const) {
+    const { rail, more } = railOf({ role });
+    assert.ok(!rail.some((s) => s.href === "/admin/markets"), `${role}: полоса — шесть ежедневных`);
+    assert.deepEqual(more.find((g) => g.group === "markets")?.sections.map((s) => s.href), ["/admin/markets"], role);
+    assert.ok(tabsOf({ role }).find((f) => f[0].href === "/admin/prospect")?.some((s) => s.href === "/admin/markets"), role);
+  }
+  const markets = SECTIONS.find((s) => s.href === "/admin/markets")!;
+  for (const word of ["страны", "площадки", "davlat", "kraje"]) {
+    const hits = findSections(word, [findable(markets, "Рынки", "ru")]);
+    assert.equal(hits[0]?.href, "/admin/markets", word);
+  }
 });
 
 test("закрыт раздел — его вкладка встаёт в меню сама, а не теряется", () => {
   const who = { role: "manager" as const, section_access: { "/admin/prospect": false } };
   const prospect = menuOf(who).find((g) => g.group === "prospect");
-  assert.deepEqual(prospect?.sections.map((s) => s.href), ["/admin/scout", "/admin/talks", "/admin/markets"]);
+  assert.deepEqual(prospect?.sections.map((s) => s.href), ["/admin/scout", "/admin/talks"]);
+  assert.deepEqual(menuOf(who).find((g) => g.group === "markets")?.sections.map((s) => s.href), ["/admin/markets"]);
   assert.equal(tabsOf(who).find((f) => f[0].href === "/admin/prospect"), undefined);
 });
 
@@ -189,7 +212,7 @@ test("полоса иконок: шесть ежедневных по выбор
   );
   assert.deepEqual(
     more.map((g) => g.group),
-    ["money", "marketing", "team", "reports", "help"],
+    ["markets", "money", "marketing", "team", "reports", "help"],
   );
   // Ничего не потерялось: полоса и «Ещё» вместе — ровно меню человека.
   for (const who of [{ role: "admin" as const }, { role: "manager" as const }, { role: "head" as const }]) {

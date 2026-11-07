@@ -1038,7 +1038,7 @@ export const uz: HelpCopy = {
           id: "start",
           title: "Mamlakatni qanday tanlash kerak",
           body: [
-            "«Bozorlar» bo‘limi — [«Sovuq aloqalar»](/admin/prospect) bo‘limining yorlig‘i. Birinchi sahifada — mamlakatlar kartochkalari: bayroq, nomi, belgi, u yerda dasturchini qanday qidirishlari va nechta maydon to‘plangani. Kartochkani bosing — mamlakat sahifasi ochiladi.",
+            "«Bozorlar» bo‘limi menyudan ochiladi: yangi menyuda — «Yana» → «Bozorlar», bir qatorli menyuda — «Bozorlar» tugmasi; u [«Sovuq aloqalar»](/admin/prospect) bo‘limining yorlig‘i ham. Qidiruv (Ctrl+K) uni «davlatlar», «platformalar» so‘zlari bilan ham topadi. Birinchi sahifada — mamlakatlar kartochkalari: bayroq, nomi, belgi, u yerda dasturchini qanday qidirishlari va nechta maydon to‘plangani. Kartochkani bosing — mamlakat sahifasi ochiladi.",
             "Belgi — studiya birinchi navbatda qayerga chiqishini ko‘rsatadi: «asosiy bozor» (Rossiya, Qozog‘iston, AQSh) — asosiy kuch shu yerga; «sinab ko‘ramiz» — qidiramiz, lekin kamroq; «imkon bo‘lganda» — sabab bo‘lganda kiramiz. O‘zbekiston ham ro‘yxatda — «imkon bo‘lganda» belgisi bilan.",
             "Havolalar 06.11.2026 da tekshirilgan. Ba’zi saytlar (Upwork, Clutch, Avito, OLX) robotlarni kiritmaydi, odamga esa ochiladi. Maydon yopilgan yoki ko‘chgan bo‘lsa — rahbarga ayting: ro‘yxat kodda tuzatiladi va uni tuzatishadi.",
           ],
