@@ -255,3 +255,8 @@ test("вступили руками — скаут узнаёт по своим 
   assert.match(runner, /startDialogSync\(/);
   assert.match(runner, /DIALOG_SYNC_MS/);
 });
+
+test("заявка на вступление текстом gramjs — «заявка», а не повтор", () => {
+  const out = joinOutcome(new Error("You have successfully requested to join this chat or channel. (caused by channels.JoinChannel)"));
+  assert.equal(out.kind, "request");
+});
