@@ -198,6 +198,18 @@ test("проверка ссылки: передаёт ли вес, nofollow, ugc
   assert.ok(checkDue({ ...row, link_checked_at: at(11).toISOString() }, at(11 + 60 * 24 * 7)));
 });
 
+test("правка, а не новый текст: прошлый черновик и замечания уходят модели, последние попытки — Sonnet", async () => {
+  const { ATTEMPTS, modelFor, OUTSIDE_FIX_MODEL, OUTSIDE_MODEL } = await import("@/lib/outside/write");
+  assert.equal(ATTEMPTS, 4);
+  assert.deepEqual([0, 1, 2, 3].map(modelFor), [OUTSIDE_MODEL, OUTSIDE_MODEL, OUTSIDE_FIX_MODEL, OUTSIDE_FIX_MODEL]);
+  const prompt = draftPrompt(topic, "dzen", { notes: ["Длинное тире: «там — All-on-6»"], previous: { title: "Старый заголовок", body: "Старый текст" } });
+  assert.match(prompt, /Исправь только это, остальное оставь слово в слово/);
+  assert.match(prompt, /Заголовок: Старый заголовок\nТекст:\nСтарый текст/);
+  // Просим уже, чем проверяем: длина с запасом от границы.
+  for (const p of PLATFORMS) assert.ok(PLATFORM[p].target[0] > PLATFORM[p].min && PLATFORM[p].target[1] < PLATFORM[p].max, p);
+  assert.match(draftPrompt(topic, "vcru"), /от 4500 до 6500 знаков/);
+});
+
 test("подсказка модели: факты только из кейсов, макет — так и называть, ссылки списком", () => {
   const prompt = draftPrompt(topic, "vcru", { related: ["купить пикап"], notes: ["Текст 100 знаков"] });
   assert.match(prompt, /Факты о наших работах — единственное, что ты о них знаешь/);

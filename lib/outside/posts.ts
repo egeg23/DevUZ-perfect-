@@ -31,9 +31,14 @@ export type PlatformSpec = {
   home: string;
   /** Адреса, с которых принимается ссылка на опубликованную статью. */
   hosts: readonly string[];
-  /** Длина текста, знаков. */
+  /** Длина текста, знаков: границы проверки. */
   min: number;
   max: number;
+  /**
+   * Сколько просить у модели — уже, чем границы: 07.11.2026 первый черновик
+   * для vc.ru вышел на 8131 знак при пределе 8000, когда просили «до 8000».
+   */
+  target: readonly [number, number];
   titleMax: number;
   /** Подзаголовков «## » — от и до. */
   headings: readonly [number, number];
@@ -52,6 +57,7 @@ export const PLATFORM: Record<Platform, PlatformSpec> = {
     hosts: ["vc.ru"],
     min: 3500,
     max: 8000,
+    target: [4500, 6500],
     titleMax: 120,
     headings: [2, 8],
     links: 2,
@@ -65,6 +71,7 @@ export const PLATFORM: Record<Platform, PlatformSpec> = {
     hosts: ["dzen.ru", "zen.yandex.ru"],
     min: 2500,
     max: 6000,
+    target: [3000, 4500],
     titleMax: 100,
     headings: [2, 8],
     links: 2,
@@ -78,6 +85,7 @@ export const PLATFORM: Record<Platform, PlatformSpec> = {
     hosts: ["tenchat.ru"],
     min: 700,
     max: 2200,
+    target: [900, 1600],
     titleMax: 90,
     headings: [0, 0],
     links: 1,
