@@ -19,6 +19,7 @@ import {
   RETRY_AFTER_MS,
   chatHandle,
   chatUrl,
+  dialogPatches,
   gapAfter,
   joinOutcome,
   lastingFailure,
@@ -224,4 +225,33 @@ test("добавить группу — любой из команды, убра
   assert.match(migration, /create table if not exists public\.scout_chats/);
   assert.match(migration, /unique index[^;]*lower\(handle\)[^;]*removed_at is null/i, "одна группа — одна строка");
   assert.match(migration, /enable row level security/i);
+});
+
+test("вступили руками — скаут узнаёт по своим диалогам, без перезапуска", () => {
+  const now = new Date("2026-11-07T14:00:00Z");
+  const chats = [
+    row({ id: "a", handle: "Php_Jobs", status: "pending" }),
+    row({ id: "b", handle: null, invite: "AbCdEfGhIj", chat_id: "-1007", status: "request" }),
+    row({ id: "c", handle: "js_jobs", status: "pending" }),
+    row({ id: "d", handle: "done_chat", status: "joined", chat_id: "-1009" }),
+  ];
+  const dialogs = [
+    { id: "-1005", usernames: ["php_jobs"], title: "PHP Jobs" },
+    { id: "-1007", usernames: [], title: "Закрытая" },
+    { id: "-1009", usernames: ["done_chat"], title: "Уже" },
+  ];
+  const out = dialogPatches(chats, dialogs, now);
+  assert.deepEqual(
+    out.map((item) => [item.id, item.chatId, item.patch.joined_via]),
+    [
+      ["a", "-1005", "manual"],
+      ["b", "-1007", "scout"],
+    ],
+  );
+  assert.equal(out[0].patch.chat_id, "-1005");
+  assert.equal(out[0].patch.title, "PHP Jobs");
+  assert.equal(out[1].patch.chat_id, undefined);
+  const runner = readFileSync("scout/runner.mjs", "utf8");
+  assert.match(runner, /startDialogSync\(/);
+  assert.match(runner, /DIALOG_SYNC_MS/);
 });

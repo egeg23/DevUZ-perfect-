@@ -16,7 +16,16 @@ import { probeTunnel, startProxyBridge } from "./http-proxy-bridge.mjs";
 import { directWebSocket } from "@/lib/egress.mjs";
 import { createBuffer } from "@/lib/scout/buffer";
 import { openChats } from "@/lib/scout/chats";
-import { joinOutcome, nextJoinAt, nextToJoin, rosterPatches, tomorrowOpens, watchPlan } from "@/lib/scout/extra-chats";
+import {
+  DIALOG_SYNC_MS,
+  dialogPatches,
+  joinOutcome,
+  nextJoinAt,
+  nextToJoin,
+  rosterPatches,
+  tomorrowOpens,
+  watchPlan,
+} from "@/lib/scout/extra-chats";
 import {
   joinState,
   loadJoinPause,
@@ -425,6 +434,19 @@ async function live() {
     },
   });
 
+  // Вступили руками — читаем без перезапуска и не ждём очереди вступления.
+  startDialogSync({
+    client,
+    watching,
+    onJoined: (name) => {
+      pulse = {
+        ...pulse,
+        chatsReading: pulse.chatsReading + 1,
+        unread: pulse.unread.filter((item) => item !== name),
+      };
+    },
+  });
+
   let warnedNoChat = false;
   client.addEventHandler((event) => {
     const message = event.message;
@@ -584,6 +606,49 @@ function startJoiner({ client, Api, watching, canJoin, onJoined }) {
     void tick();
     setInterval(() => void tick(), JOIN_TICK_MS);
   }, JOIN_FIRST_MS);
+}
+
+/**
+ * Сверка диалогов главного аккаунта с группами из базы раз в DIALOG_SYNC_MS:
+ * вступили руками (или одобрили заявку) — строка «вступили», номер — в
+ * чтение. Один список диалогов, без resolveUsername; когда ждущих нет — в
+ * Telegram не ходим.
+ */
+function startDialogSync({ client, watching, onJoined }) {
+  let busy = false;
+  const tick = async () => {
+    if (busy) return;
+    busy = true;
+    try {
+      const waiting = (await loadScoutChats().catch(() => [])).filter((chat) => chat.status === "pending" || chat.status === "request");
+      if (!waiting.length) return;
+      const dialogs = await client.getDialogs({ limit: 500 });
+      const view = [];
+      for (const dialog of dialogs) {
+        const entity = dialog.entity;
+        if (!entity || entity.left || (!dialog.isGroup && !dialog.isChannel)) continue;
+        const id = String(await client.getPeerId(entity).catch(() => ""));
+        if (!id) continue;
+        const usernames = [entity.username, ...(entity.usernames ?? []).map((item) => item?.username)].filter(Boolean);
+        view.push({ id, usernames, title: entity.title ?? null });
+      }
+      for (const { id, chatId, patch } of dialogPatches(waiting, view, new Date())) {
+        if (!(await updateScoutChat(id, patch).catch(() => false))) continue;
+        watching.add(chatId);
+        const name = waiting.find((chat) => chat.id === id)?.handle ?? chatId;
+        onJoined(name);
+        console.log(`scout: уже состою в ${name} (${chatId}) — вступили руками, читаю`);
+      }
+    } catch (error) {
+      console.error(`scout: сверка диалогов сорвалась — ${error?.message ?? error}`);
+    } finally {
+      busy = false;
+    }
+  };
+  setTimeout(() => {
+    void tick();
+    setInterval(() => void tick(), DIALOG_SYNC_MS);
+  }, 60_000);
 }
 
 /** Одна попытка: адрес — JoinChannel, ссылка-приглашение — ImportChatInvite. */
