@@ -40,7 +40,12 @@ test("цели стоят там, где человек делает шаг к �
   // На телефоне текст героя стоит под шапкой, а не по центру экрана, и
   // плашка минуты без пояснения: иначе она закрывала кнопки первого экрана.
   assert.match(hero, /justify-start pt-\[6\.25rem\] md:justify-center/);
-  assert.match(read("components/chat/minute-offer.tsx"), /hidden text-\[0\.78rem\] leading-snug text-muted sm:block">\{dict\.chat\.minuteText\}/);
+  // Полоса минуты — наверху во всю ширину (06.11.2026), на телефоне без пояснения.
+  const minuteBar = read("components/chat/minute-offer.tsx");
+  assert.match(minuteBar, /hidden text-\[0\.78rem\] leading-snug text-muted lg:inline">\{" · "\}\{dict\.chat\.minuteText\}/);
+  assert.match(minuteBar, /fixed inset-x-0 top-0 z-\[60\]/);
+  assert.match(read("components/chat/chat-widget.tsx"), /setProperty\("--minute-bar"/);
+  assert.match(read("components/layout/header.tsx"), /translate-y-\[var\(--minute-bar,0px\)\]/);
   assert.match(read("components/layout/metrika-hits.tsx"), /document\.addEventListener\("click", onClick, true\)/);
   for (const name of Object.keys(GOALS)) assert.match(name, /^[a-z_]+$/, `${name}: идентификатор цели — латиницей`);
 });

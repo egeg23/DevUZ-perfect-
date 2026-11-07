@@ -32,15 +32,22 @@ import s from "./glass.module.css";
  * `PROMO`: на главной своих чисел нет.
  */
 
-/** Работы на главной: какой кейс, какой кадр и как его кадрировать. */
+/**
+ * Работы на главной — все четыре живыми превью, ролики кейсов 60 к/с
+ * (владелец, 06.11.2026: «сделай все 60 fps анимированные превью»).
+ *
+ * `desk` — какой ролик на компьютере: почти квадратной карточке SamAuto и
+ * Жигулей лучше вертикальный (-9), широкой Karomat и Engelberg — широкий
+ * (-16); на планшете и телефоне карточки широкие, там всегда -16.
+ * Кадрирование: `m` — на телефоне и планшете, `d` — на компьютере
+ * (положение кадра и масштаб, .vid в glass.module.css). SamAuto чуть
+ * крупнее от низа на широком кадре: лампа шоурума уходит за верхний край.
+ */
 const WORKS = [
-  // SamAuto — с роликом прототипа (раньше стоял на главной отдельным блоком):
-  // пикап разбирается на детали. Кадрирование — в .vid (glass.module.css):
-  // лампа шоурума сверху уходит за край, машина остаётся целиком.
-  { slug: "samauto", img: "/cases/samauto/poster-16.webp", video: "/cases/samauto/teaser-16.mp4", kind: "big", style: {} },
-  { slug: "engelberg", img: "/cases/engelberg/poster-16.webp", kind: "", style: {} },
-  { slug: "jiguli", img: "/cases/jiguli/poster-9.webp", kind: "", style: { objectPosition: "50% 40%" } },
-  { slug: "karomat", img: "/cases/karomat/poster-16.webp", kind: "wide", style: { objectPosition: "50% 45%" } },
+  { slug: "samauto", img: "/cases/samauto/poster-16.webp", video: "/cases/samauto/teaser-16.mp4", kind: "big", desk: "-9", m: ["50% 70%", 1.1], d: ["50% 66%", 1] },
+  { slug: "engelberg", img: "/cases/engelberg/poster-16.webp", video: "/cases/engelberg/teaser-16.mp4", kind: "", desk: "-16", m: ["50% 50%", 1], d: ["40% 50%", 1] },
+  { slug: "jiguli", img: "/cases/jiguli/poster-16.webp", video: "/cases/jiguli/teaser-16.mp4", kind: "", desk: "-9", m: ["50% 50%", 1], d: ["50% 45%", 1] },
+  { slug: "karomat", img: "/cases/karomat/poster-16.webp", video: "/cases/karomat/teaser-16.mp4", kind: "wide", desk: "-16", m: ["50% 45%", 1], d: ["50% 45%", 1] },
 ] as const;
 
 /** Прототип на первом экране — настоящий кейс клиники. */
@@ -188,19 +195,18 @@ export function GlassHome({ locale, dict }: { locale: Locale; dict: Dictionary }
               if (!item) return null;
               return (
                 <Reveal key={w.slug} delay={i * 80} className={cn(s.cell, w.kind === "big" && s.big, w.kind === "wide" && s.wide)}>
-                  <Link href={localeHref(locale, `cases/${item.slug}`)} className={cn(s.w, "video" in w && s.vid)}>
-                    {"video" in w ? (
-                      <CardVideo
-                        wide={w.video}
-                        tall={w.video.replace("-16.", "-9.")}
-                        posterWide={w.img}
-                        posterTall={w.img.replace("-16.", "-9.")}
-                        label={item.name}
-                      />
-                    ) : (
-                      // eslint-disable-next-line @next/next/no-img-element -- обложка кейса с кадрированием
-                      <img src={w.img} alt={item.name} loading="lazy" decoding="async" style={w.style as CSSProperties} />
-                    )}
+                  <Link
+                    href={localeHref(locale, `cases/${item.slug}`)}
+                    className={cn(s.w, s.vid)}
+                    style={{ "--pos-m": w.m[0], "--sc-m": w.m[1], "--pos-d": w.d[0], "--sc-d": w.d[1] } as CSSProperties}
+                  >
+                    <CardVideo
+                      wide={w.video}
+                      desk={w.video.replace("-16.", `${w.desk}.`)}
+                      posterWide={w.img}
+                      posterDesk={w.img.replace("-16.", `${w.desk}.`)}
+                      label={item.name}
+                    />
                     <span className={cn(s.cap, s.glass)}>
                       <b className={s.serif}>{item.name}</b>
                       <span>{t(item.category, locale)}</span>

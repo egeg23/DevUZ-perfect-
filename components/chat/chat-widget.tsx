@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { ChatPanel } from "@/components/chat/chat-panel";
-import { MinuteBubble, useMinute, useMinuteLeft, useTelegramMinuteLinks } from "@/components/chat/minute-offer";
+import { MINUTE_BAR_HEIGHT, MinuteBar, useMinute, useMinuteLeft, useTelegramMinuteLinks } from "@/components/chat/minute-offer";
 import type { Dictionary } from "@/content/dictionaries";
 import { cn } from "@/lib/cn";
 import type { Locale } from "@/lib/i18n";
@@ -17,16 +17,19 @@ import { goal } from "@/lib/visit/goal";
  * всплывающее окно поверх ещё не прочитанного заголовка раздражает и его
  * закрывают не глядя, вместе с шансом на разговор.
  *
- * Исключение — минута на скидку. Пока идёт таймер первой минуты, кнопка и
- * плашка с таймером видны сразу, поверх первого экрана: минута, которую
- * человек не видит, прошла бы, пока он читает заголовок. Кончилась —
- * кнопка снова ждёт прокрутки.
+ * Исключение — минута на скидку. Пока идёт таймер первой минуты, кнопка
+ * с таймером видна сразу, а полоса минуты стоит на самом верху страницы во
+ * всю ширину: минута, которую человек не видит, прошла бы, пока он читает
+ * заголовок. Шапка сайта на это время опускается под полосу
+ * (`--minute-bar`, сдвиг transform — страница не прыгает). Кончилась или
+ * закрыли крестиком — полосы нет, шапка на месте, кнопка снова ждёт
+ * прокрутки.
  */
 export function ChatWidget({ locale, dict }: { locale: Locale; dict: Dictionary }) {
   const [open, setOpen] = useState(false);
   const [ready, setReady] = useState(false);
   const [prefill, setPrefill] = useState<string | undefined>();
-  /** Плашку минуты закрыли крестиком — таймер остаётся на кнопке. */
+  /** Полосу минуты закрыли крестиком — таймер остаётся на кнопке. */
   const [bubbleHidden, setBubbleHidden] = useState(false);
   const minute = useMinute();
   const left = useMinuteLeft(minute);
@@ -34,6 +37,17 @@ export function ChatWidget({ locale, dict }: { locale: Locale; dict: Dictionary 
 
   useEffect(() => startMinute(), []);
   useTelegramMinuteLinks(locale);
+
+  const barShown = running && !bubbleHidden;
+  useEffect(() => {
+    // Шапка (components/layout/header.tsx) сдвигается на высоту полосы.
+    const root = document.documentElement;
+    if (barShown) root.style.setProperty("--minute-bar", `${MINUTE_BAR_HEIGHT}px`);
+    else root.style.removeProperty("--minute-bar");
+    return () => {
+      root.style.removeProperty("--minute-bar");
+    };
+  }, [barShown]);
 
   useEffect(() => {
     // Появляется только после сцены сборки. Иначе на телефоне кнопка чата
@@ -89,14 +103,9 @@ export function ChatWidget({ locale, dict }: { locale: Locale; dict: Dictionary 
   }, [open]);
 
   return (
-    <div
-      className={cn(
-        "fixed bottom-5 right-4 z-50 flex flex-col items-end gap-3 transition-all duration-500 sm:right-6",
-        ready || running ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-6 opacity-0",
-      )}
-    >
-      {running && !open && !bubbleHidden ? (
-        <MinuteBubble
+    <>
+      {barShown ? (
+        <MinuteBar
           locale={locale}
           dict={dict}
           state={minute}
@@ -105,7 +114,12 @@ export function ChatWidget({ locale, dict }: { locale: Locale; dict: Dictionary 
           onHide={() => setBubbleHidden(true)}
         />
       ) : null}
-
+    <div
+      className={cn(
+        "fixed bottom-5 right-4 z-50 flex flex-col items-end gap-3 transition-all duration-500 sm:right-6",
+        ready || running ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-6 opacity-0",
+      )}
+    >
       {open ? (
         <div className="w-[min(24rem,calc(100vw-2rem))] shadow-[0_30px_90px_rgba(0,0,0,.7)]">
           <ChatPanel locale={locale} dict={dict} compact prefill={prefill} />
@@ -136,5 +150,6 @@ export function ChatWidget({ locale, dict }: { locale: Locale; dict: Dictionary 
         )}
       </button>
     </div>
+    </>
   );
 }

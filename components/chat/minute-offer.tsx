@@ -60,13 +60,21 @@ export function useTelegramMinuteLinks(locale: Locale): void {
   }, [locale]);
 }
 
+/** Высота полосы минуты: на неё опускается шапка сайта (`--minute-bar`). */
+export const MINUTE_BAR_HEIGHT = 40;
+
 /**
- * Плашка над кнопкой чата, пока идёт минута.
+ * Полоса минуты на скидку — на самом верху страницы, во всю ширину
+ * (владелец, 06.11.2026: «Плашка пусть будет вверху полоской, на самом
+ * верху страницы вдоль всей длины страницы»). До этого плашкой над кнопкой
+ * чата она закрывала первый экран: на компьютере переписку ИИ-сотрудника,
+ * на телефоне кнопки.
  *
- * Обещание, которое не видно, не работает: таймер крупно, полоса убывает, и
- * рядом — оба способа успеть: написать здесь или в Telegram.
+ * Обещание, которое не видно, не работает: таймер, убывающая полоска снизу
+ * и оба способа успеть — написать здесь или в Telegram. На телефоне — без
+ * пояснения и с одной иконкой Telegram: полоса в одну строку.
  */
-export function MinuteBubble({
+export function MinuteBar({
   locale,
   dict,
   state,
@@ -87,54 +95,54 @@ export function MinuteBubble({
   return (
     <div
       role="status"
-      className="w-[min(20rem,calc(100vw-2rem))] rounded-2xl border border-gold/40 bg-surface p-4 shadow-[0_24px_70px_rgba(0,0,0,.65)]"
+      className="fixed inset-x-0 top-0 z-[60] border-b border-gold/30 bg-[linear-gradient(90deg,#1d170c,#120f0a_50%,#1d170c)] text-text"
+      style={{ height: MINUTE_BAR_HEIGHT }}
     >
-      <div className="flex items-start gap-3">
-        <span aria-hidden="true" className="text-lg leading-none">
+      <div className="mx-auto flex h-full w-full max-w-[1320px] items-center gap-3 px-4 sm:px-8 lg:px-12">
+        <span aria-hidden="true" className="text-base leading-none">
           🎁
         </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-[0.9rem] font-semibold leading-snug">{dict.chat.minuteTitle}</p>
-          {/* На телефоне — без пояснения: плашка вдвое ниже и не закрывает
-              кнопки первого экрана. Что делать, говорят сами кнопки рядом. */}
-          <p className="mt-1 hidden text-[0.78rem] leading-snug text-muted sm:block">{dict.chat.minuteText}</p>
-        </div>
+        <button
+          type="button"
+          onClick={onChat}
+          className="min-w-0 flex-1 truncate text-left text-[0.84rem]"
+        >
+          <span className="font-semibold">{dict.chat.minuteTitle}</span>
+          {/* На телефоне — без пояснения: полоса в одну строку и не толкает
+              первый экран. Что делать, говорят кнопки рядом. */}
+          <span className="hidden text-[0.78rem] leading-snug text-muted lg:inline">{" · "}{dict.chat.minuteText}</span>
+        </button>
+        <span className="shrink-0 font-mono text-[0.95rem] tabular-nums text-gold" aria-hidden="true">
+          {clock(left)}
+        </span>
+        <button
+          type="button"
+          onClick={onChat}
+          className="hidden shrink-0 whitespace-nowrap rounded-md bg-green px-3 py-1 text-[0.76rem] font-semibold text-ink transition-opacity hover:opacity-90 sm:block"
+        >
+          {dict.chat.minuteChat}
+        </button>
+        <a
+          href={telegramMinuteUrl(company.telegramUrl, state.token, locale)}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={dict.chat.minuteTelegram}
+          className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border border-blue-soft/40 bg-blue/10 px-2.5 py-1 text-[0.76rem] font-medium text-blue-soft transition-colors hover:border-blue-soft hover:bg-blue/20"
+        >
+          <span aria-hidden="true">✈</span>
+          <span className="hidden sm:inline">{dict.chat.minuteTelegram}</span>
+        </a>
         <button
           type="button"
           onClick={onHide}
           aria-label={dict.chat.minuteHide}
-          className="-mr-1 -mt-1 shrink-0 rounded-md px-1.5 py-0.5 text-faint transition-colors hover:text-text"
+          className="shrink-0 rounded-md px-1.5 py-0.5 text-faint transition-colors hover:text-text"
         >
           ✕
         </button>
       </div>
-
-      <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
-        <span className="font-mono text-2xl tabular-nums text-gold" aria-hidden="true">
-          {clock(left)}
-        </span>
-        <div className="ml-auto flex gap-2">
-          <button
-            type="button"
-            onClick={onChat}
-            className="rounded-lg bg-green px-3 py-2 text-[0.78rem] font-semibold text-ink transition-opacity hover:opacity-90"
-          >
-            {dict.chat.minuteChat}
-          </button>
-          <a
-            href={telegramMinuteUrl(company.telegramUrl, state.token, locale)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 rounded-lg border border-blue-soft/40 bg-blue/10 px-3 py-2 text-[0.78rem] font-medium text-blue-soft transition-colors hover:border-blue-soft hover:bg-blue/20"
-          >
-            <span aria-hidden="true">✈</span>
-            {dict.chat.minuteTelegram}
-          </a>
-        </div>
-      </div>
-
-      <div className="mt-3 h-1 overflow-hidden rounded-full bg-surface-2" aria-hidden="true">
-        <div className="h-full rounded-full bg-gold transition-[width] duration-300 ease-linear" style={{ width: `${share}%` }} />
+      <div className="absolute inset-x-0 bottom-0 h-[2px]" aria-hidden="true">
+        <div className="h-full bg-gold transition-[width] duration-300 ease-linear" style={{ width: `${share}%` }} />
       </div>
     </div>
   );
