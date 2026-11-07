@@ -140,7 +140,9 @@ export type JoinOutcome =
 export function joinOutcome(error: unknown): JoinOutcome {
   const reason = (error instanceof Error ? error.message : String(error ?? "")).slice(0, 200);
   if (/USER_ALREADY_PARTICIPANT/i.test(reason)) return { kind: "joined" };
-  if (/INVITE_REQUEST_SENT/i.test(reason)) return { kind: "request" };
+  // gramjs отдаёт и код, и текст: «You have successfully requested to join…»
+  // (uzsellerclub, 07.11.2026 — заявка ушла, а строка осталась «ждёт»).
+  if (/INVITE_REQUEST_SENT|successfully requested to join/i.test(reason)) return { kind: "request" };
   const flood = reason.match(/FLOOD_WAIT_?(\d+)|wait of (\d+) seconds/i);
   if (flood) return { kind: "pause", ms: Number(flood[1] ?? flood[2]) * 1000, reason };
   if (/CHANNELS_TOO_MUCH|FROZEN_METHOD_INVALID|PEER_FLOOD|USER_RESTRICTED/i.test(reason)) {
