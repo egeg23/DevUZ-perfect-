@@ -1,0 +1,11 @@
+# Карта кода graphify: только наш код, без чужих навыков, макетов и картинок.
+.claude/
+public/
+scripts/protos/
+scripts/blender/
+content/proto-bundles/
+content/mockup-plans.json
+docs/
+kp/
+supabase/migrations/
+graphify-out/

@@ -2486,3 +2486,20 @@ MAKSIMOV EGOR ANDREEVICH в «Капиталбанке», UZS, открыт 16.0
   постоянно — строкой в Setup script отдельного окружения для разбора.
 - Версии закреплены: REA 6.7.0, Ghidra 12.1.3 (REA принимает 12.1.x).
   Меняя версию — `claude mcp get rea` (`Connected`) и `rea doctor --json`.
+
+## graphify
+
+Карта кода — Graphify (github.com/Graphify-Labs/graphify, владелец,
+08.11.2026: «Установи брат и используем всегда»). В каждой сессии
+разработки хук `.claude/hooks/graphify-start.sh` ставит `graphifyy`
+(версия закреплена в скрипте) и в фоне строит `graphify-out/` (~45 с, без
+модели — только разбор кода). Что в карту не идёт (навыки, макеты,
+картинки, миграции, docs) — `.graphifyignore`. `graphify-out/` в git не
+кладём: строится в каждой сессии заново.
+
+Rules:
+- When graphify-out/graph.json exists, run `graphify query "<question>"` before your first grep, search or source-file read for a codebase question, and put this rule in every subagent prompt that explores code. Read raw files only for lines the graph or an earlier read already located. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts.
+- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
+- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
+- Карты ещё нет (сборка идёт — `graphify-out/.build.log`) — ищи как обычно. Полный `/graphify` с моделью по документам не запускать без слова владельца: это тратит токены.
+- Хуки PreToolUse подсказывают про карту, но не блокируют; `graphify claude install --project` заново перепишет `.claude/settings.json` без проверки «есть ли graphify» — после него вернуть обёртку `if command -v graphify`.
