@@ -18,6 +18,7 @@ import { createBuffer } from "@/lib/scout/buffer";
 import { openChats } from "@/lib/scout/chats";
 import {
   DIALOG_SYNC_MS,
+  chatHandle,
   dialogPatches,
   joinOutcome,
   nextJoinAt,
@@ -30,6 +31,7 @@ import {
   joinState,
   loadJoinPause,
   loadScoutChats,
+  removedScoutChats,
   saveJoinPause,
   updateScoutChat,
 } from "@/lib/scout/extra-chats-store";
@@ -447,6 +449,25 @@ async function live() {
     },
   });
 
+  // Убранные из «Сигналов скаута» группы не читаем (и из них не выходим):
+  // при старте и раз в DIALOG_SYNC_MS, без перезапуска. Адрес из SCOUT_CHATS
+  // тоже — по номеру, который дал разбор при старте.
+  const byHandle = new Map(roster.opened.map((chat) => [chatHandle(String(chat.name)).toLowerCase(), chat.id]));
+  const muted = new Set();
+  const refreshMuted = async () => {
+    const removed = await removedScoutChats().catch(() => null);
+    if (!removed) return;
+    const ids = new Set(removed.ids);
+    for (const handle of removed.handles) if (byHandle.has(handle)) ids.add(byHandle.get(handle));
+    for (const id of ids) {
+      if (!muted.has(id)) console.log(`scout: группа ${id} убрана из «Сигналов скаута» — не читаю`);
+      muted.add(id);
+      watching.delete(id);
+    }
+  };
+  await refreshMuted();
+  setInterval(() => void refreshMuted(), DIALOG_SYNC_MS);
+
   let warnedNoChat = false;
   client.addEventHandler((event) => {
     const message = event.message;
@@ -455,6 +476,7 @@ async function live() {
     if (message.out) return;
     // Только чаты, за которыми следим: личка и прочие группы — мимо.
     if (!watching.has(String(message.chatId ?? ""))) return;
+    if (muted.has(String(message.chatId ?? ""))) return;
 
     const shaped = shape(message);
     if (!shaped) {
