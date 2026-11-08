@@ -21,6 +21,7 @@
 | `yt-*` (11 навыков) | [Jakeschincariol/youtube-agent-skill](https://github.com/Jakeschincariol/youtube-agent-skill) `a2feb21` | ведение YouTube-канала, см. ниже |
 | `ig-*` (13 навыков) | [Jakeschincariol/instagram-agent-skill](https://github.com/Jakeschincariol/instagram-agent-skill) `d03c56b` | ведение Instagram, см. ниже |
 | `tt-*` (12 навыков) | [solutionsystempro/tiktok-agent-skill](https://github.com/solutionsystempro/tiktok-agent-skill) `29c7920` | ведение TikTok, см. ниже |
+| `graphify` | [Graphify-Labs/graphify](https://github.com/Graphify-Labs/graphify) 0.9.104, Apache-2.0 | карта кода: `graphify query "<вопрос>"`, `path`, `explain` до grep; ставит и строит хук `.claude/hooks/graphify-start.sh`, правила — раздел «graphify» в CLAUDE.md |
 
 ### Дизайн — 12 репозиториев «которые чинят UI от ИИ»
 

@@ -24,3 +24,6 @@ scripts/protos/dilrabo/*.png
 
 # Код сайта клиента до макета (scripts/protos/site-before.mjs): их код, в открытый репозиторий не кладём
 scripts/protos/*/.before/
+
+# Карта кода graphify — строится в каждой сессии заново
+graphify-out/

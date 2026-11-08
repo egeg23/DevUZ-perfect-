@@ -30,6 +30,10 @@ on:
       - "scripts/rea/**"
       # Навыки сессий разработки (.claude/skills) сайт не читает.
       - ".claude/skills/**"
+      # Хуки сессий разработки и карта кода graphify — тоже.
+      - ".claude/hooks/**"
+      - ".claude/settings.json"
+      - ".graphifyignore"
       # Панель SIA на Strapi ставится на сервер бюро, не на наш (scripts/protos/sia/strapi).
       - "scripts/protos/sia/strapi/**"
       # Сайт клиники «Сияние Севера» живёт на её сервере (syanie-app.yml).
