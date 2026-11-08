@@ -52,6 +52,24 @@ export async function listScoutChats(): Promise<ScoutChat[] | null> {
   return (data ?? []).map((row) => asChat(row as Record<string, unknown>));
 }
 
+/**
+ * Убранные группы — номер и адрес. Скаут перестаёт их читать без
+ * перезапуска и из группы не выходит (владелец, 08.11.2026: «Удали из
+ * скаута группы — там спам один. Не выходи из них, а просто не учитывай
+ * от туда сообщения»). null — база не ответила, ничего не меняем.
+ */
+export async function removedScoutChats(): Promise<{ ids: string[]; handles: string[] } | null> {
+  const db = serviceClient();
+  if (!db) return null;
+  const { data, error } = await db.from("scout_chats").select("handle, chat_id").not("removed_at", "is", null).limit(1000);
+  if (error) return null;
+  const rows = (data ?? []) as { handle: string | null; chat_id: string | null }[];
+  return {
+    ids: rows.map((row) => row.chat_id).filter((id): id is string => Boolean(id)),
+    handles: rows.map((row) => row.handle?.toLowerCase()).filter((h): h is string => Boolean(h)),
+  };
+}
+
 /** То же для скаута: база не ответила — пустой список, читаем SCOUT_CHATS. */
 export async function loadScoutChats(): Promise<ScoutChat[]> {
   return (await listScoutChats()) ?? [];

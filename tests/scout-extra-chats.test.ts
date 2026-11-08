@@ -260,3 +260,13 @@ test("заявка на вступление текстом gramjs — «зая�
   const out = joinOutcome(new Error("You have successfully requested to join this chat or channel. (caused by channels.JoinChannel)"));
   assert.equal(out.kind, "request");
 });
+
+// Владелец, 08.11.2026: «Удали из скаута группы — там спам один. Не выходи
+// из них, а просто не учитывай от туда сообщения».
+test("убранная группа: скаут её не читает, из неё не выходит", () => {
+  const runner = readFileSync("scout/runner.mjs", "utf8");
+  assert.match(runner, /removedScoutChats\(/);
+  assert.match(runner, /muted\.has\(String\(message\.chatId/);
+  assert.match(runner, /watching\.delete\(id\)/);
+  assert.doesNotMatch(runner, /LeaveChannel|leaveChat|DeleteChatUser/);
+});

@@ -70,6 +70,7 @@ export const ACTION_LABEL: Record<AuditAction, Tr> = {
   "partner.promo_deleted": { ru: "удалил промо-материал партнёров", uz: "hamkorlar promo-materialini o‘chirdi", pl: "usunął materiał promocyjny partnerów" },
   "prospect.audited": { ru: "проверил сайты для холодного касания", uz: "sovuq aloqa uchun saytlarni tekshirdi", pl: "sprawdził strony pod zimny kontakt" },
   "signal.status_changed": { ru: "разобрал сигнал поиска", uz: "qidiruv signalini ko‘rib chiqdi", pl: "obsłużył sygnał z wyszukiwania" },
+  "scout.settings_saved": { ru: "поменял режим скаута", uz: "skaut rejimini o‘zgartirdi", pl: "zmienił tryb skauta" },
   "scout.chat_added": { ru: "добавил группу для скаута", uz: "skaut uchun guruh qo‘shdi", pl: "dodał grupę dla skauta" },
   "scout.chat_removed": { ru: "убрал группу скаута", uz: "skaut guruhini olib tashladi", pl: "usunął grupę skauta" },
   "ai_staff.key_saved": { ru: "вставил ключи Instagram для «Блогеров»", uz: "«Blogerlar» uchun Instagram kalitlarini kiritdi", pl: "wkleił klucze Instagrama dla „Blogerów”" },

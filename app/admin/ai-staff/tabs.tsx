@@ -1,18 +1,20 @@
 import Link from "next/link";
 
 import { bloggersDict } from "@/content/admin-panel/ai-staff-bloggers";
+import { scoutTabDict } from "@/content/admin-panel/ai-staff-scout";
 import { pick, type PanelLocale } from "@/lib/admin/i18n";
 import type { Role } from "@/lib/admin/roles";
 
 /**
  * Вкладки раздела «ИИ-сотрудники». Клиенты сервиса — деньги и подписки —
- * только владельцу; «Блогеры» — всем, кто видит раздел.
+ * только владельцу; «Блогеры» и «Скаут» — всем, кто видит раздел.
  */
-export function AiStaffTabs({ role, locale, current }: { role: Role; locale: PanelLocale; current: "clients" | "bloggers" }) {
+export function AiStaffTabs({ role, locale, current }: { role: Role; locale: PanelLocale; current: "clients" | "bloggers" | "scout" }) {
   const t = pick(bloggersDict, locale);
   const tabs = [
     ...(role === "admin" ? [{ id: "clients" as const, href: "/admin/ai-staff", label: t.tabClients }] : []),
     { id: "bloggers" as const, href: "/admin/ai-staff/bloggers", label: t.tabBloggers },
+    { id: "scout" as const, href: "/admin/ai-staff/scout", label: pick(scoutTabDict, locale).tab },
   ];
   return (
     <nav className="flex gap-1 border-b border-line">

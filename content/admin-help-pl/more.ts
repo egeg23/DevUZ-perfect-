@@ -614,6 +614,14 @@ export const moreSections: Record<string, HelpEntry> = {
         ],
       },
       {
+        id: "scout",
+        title: "Skaut: grupy i jak wybiera wiadomości",
+        body: [
+          "Zakładka **«Skaut»** to ustawienia skauta, który czyta grupy w Telegramie i wyłapuje wiadomości, w których ktoś szuka wykonawcy. Znalezione trafia do [Sygnałów skauta](/admin/scout), mocne staje się leadem. Na dole zakładki jest **«Grupy dla skauta»**, ten sam blok co w „Sygnałach skauta”: grupę może dodać każdy, usunąć ten, kto dodał, kierownik i właściciel. Z usuniętej grupy skaut nie wychodzi, po prostu w ciągu 20 minut przestaje brać z niej wiadomości.",
+          "Blok **«Jak wybierać wiadomości»** ma dwa tryby. **«Automatycznie»**: skaut sam rozpoznaje temat (strona, sklep, aplikacja, bot, automatyzacja) i prośbę „potrzebuję, szukam, kto zrobi” po rosyjsku, uzbecku i angielsku, a reklamy wykonawców odrzuca. **«Według słów»**: dalej trafiają tylko wiadomości z co najmniej jednym słowem z twojej listy. Słowo łapie się od początku, więc „stron” znajdzie „strona” i „stronę”. W obu trybach model potem odróżnia zlecenie od reklamy, więc cudze ogłoszenia nie trafiają do listy. Tryb i słowa zmienia właściciel i kierownik, skaut przechodzi na nowe w ciągu 5 minut, bez restartu.",
+        ],
+      },
+      {
         id: "bloggers-agent",
         title: "Blogerzy: co agent robi sam",
         body: [

@@ -1,4 +1,6 @@
-import { prefilter } from "@/lib/scout/prefilter";
+import { prefilter, wordsFilter } from "@/lib/scout/prefilter";
+import type { ScoutSettings } from "@/lib/scout/settings";
+import { loadScoutSettings } from "@/lib/scout/settings-store";
 import { esc, sendMessage } from "@/lib/qualify/telegram";
 import { serviceClient } from "@/lib/supabase";
 import { siteUrl } from "@/lib/seo";
@@ -445,6 +447,8 @@ export type ScoutIo = {
   markFailed: (id: string, attempts: number) => Promise<void>;
   /** Заглушённые чаты — их сообщения до модели не доходят. */
   muted?: () => Promise<Set<number>>;
+  /** Режим отбора: «автоматически» или «по словам» (вкладка «Скаут» в «ИИ-сотрудниках»). */
+  settings?: () => Promise<ScoutSettings>;
 };
 
 const liveIo: ScoutIo = {
@@ -453,6 +457,7 @@ const liveIo: ScoutIo = {
   markSent: markNotified,
   markFailed: markNotifyFailed,
   muted: () => loadMutedChats(),
+  settings: () => loadScoutSettings(),
 };
 
 export async function processBatch(
@@ -480,11 +485,15 @@ export async function processBatch(
   // Шумные чаты — раньше отсева и тем более модели: платить за разбор
   // сообщений, из которых две недели не вышло ни одного запроса, незачем.
   const muted = (await io.muted?.().catch(() => new Set<number>())) ?? new Set<number>();
+  const settings = (await io.settings?.().catch(() => null)) ?? null;
+  const words = settings?.mode === "words" ? settings.words : [];
   const judged = messages.map((message) => ({
     message,
     verdict: muted.has(message.chatId)
       ? { pass: false, reason: "noisy_chat" as const, topics: [] as string[] }
-      : prefilter(message.text),
+      : words.length
+        ? wordsFilter(message.text, words)
+        : prefilter(message.text),
   }));
 
   for (const item of judged) {
