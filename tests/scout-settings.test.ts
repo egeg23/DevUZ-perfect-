@@ -9,7 +9,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
-import { wordsFilter } from "@/lib/scout/prefilter";
+import { prefilter, wordsFilter } from "@/lib/scout/prefilter";
 import { matchedWord, parseWords, settingsOf } from "@/lib/scout/settings";
 import { mayTuneScout } from "@/lib/scout/settings-store";
 
@@ -47,4 +47,14 @@ test("режим меняют владелец и руководитель; ск
   assert.match(tabs, /\/admin\/ai-staff\/scout/);
   const page = readFileSync("app/admin/ai-staff/scout/page.tsx", "utf8");
   assert.match(page, /<ScoutGroups/);
+});
+
+// Владелец, 08.11.2026: «То где есть хештеги в тексте — тоже пропускаем, это спам 100%».
+test("хэштег — спам в обоих режимах; C#, #1 и якорь ссылки — нет", () => {
+  assert.equal(prefilter("Нужен сайт для магазина #сайт #ташкент").reason, "spam");
+  assert.equal(prefilter("Ищу разработчика сайта #работа").reason, "spam");
+  assert.equal(wordsFilter("Нужен сайт срочно #webdesign", ["сайт"]).reason, "spam");
+  assert.equal(prefilter("Нужен сайт на C# и .NET, кто сделает?").pass, true);
+  assert.equal(prefilter("Нужен сайт как у #1 в нише, кто сделает?").pass, true);
+  assert.equal(prefilter("Нужен сайт как example.com/page#top, кто сделает?").pass, true);
 });
