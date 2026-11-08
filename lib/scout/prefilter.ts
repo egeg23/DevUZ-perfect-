@@ -243,7 +243,17 @@ function looksLikeSupply(text: string): boolean {
   return PRICE_LIST.test(text) && !ASKS_FOR_PRICE_LIST.test(text);
 }
 
+/**
+ * Хэштег — реклама, а не заказ (владелец, 08.11.2026: «То где есть хештеги
+ * в тексте — тоже пропускаем, это спам 100%»). Человек, которому нужен
+ * сайт, хэштеги не ставит; их ставят объявления и рассылки. «C#», «#1» и
+ * якорь в ссылке хэштегом не считаются: перед «#» не буква, не цифра и не
+ * «/», после — хотя бы одна буква.
+ */
+export const HASHTAG = /(?<![\p{L}\p{N}/&#])#[\p{N}_]*\p{L}[\p{L}\p{N}_]*/u;
+
 const SPAM = [
+  HASHTAG,
   word("инвестиц\\p{L}*|заработок|крипт\\p{L}*|казино|ставк\\p{L}+|подписывайтесь"),
   phrase("переходи\\s+по\\s+ссылке|доход\\s+\\d+\\s*%"),
   /(?:https?:\/\/\S+\s*){3,}/i,
@@ -278,6 +288,7 @@ export function wordsFilter(text: string, words: readonly string[]): PrefilterVe
   const clean = text.trim();
   if (clean.length < MIN_LENGTH) return { pass: false, reason: "too_short", topics: [] };
   if (clean.length > MAX_LENGTH) return { pass: false, reason: "too_long", topics: [] };
+  if (HASHTAG.test(clean)) return { pass: false, reason: "spam", topics: [] };
   const word = matchedWord(clean, words);
   return word ? { pass: true, reason: "candidate", topics: [word] } : { pass: false, reason: "no_word", topics: [] };
 }
