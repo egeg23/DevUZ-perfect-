@@ -1,3 +1,5 @@
+import { matchedWord } from "@/lib/scout/settings";
+
 /**
  * Дешёвый отсев до обращения к модели.
  *
@@ -43,7 +45,7 @@ export type PrefilterVerdict = {
   /** Стоит ли тратить на сообщение вызов модели. */
   pass: boolean;
   /** Почему решили так — попадает в журнал скаута. */
-  reason: "too_short" | "too_long" | "no_topic" | "no_demand" | "supply" | "spam" | "candidate" | "noisy_chat";
+  reason: "too_short" | "too_long" | "no_topic" | "no_demand" | "supply" | "spam" | "candidate" | "noisy_chat" | "no_word";
   /** Совпавшие темы: сайт, магазин, приложение, автоматизация. */
   topics: string[];
 };
@@ -266,6 +268,19 @@ const SPAM = [
  */
 const MIN_LENGTH = 8;
 const MAX_LENGTH = 4000;
+
+/**
+ * Режим «По словам» (вкладка «Скаут» в «ИИ-сотрудниках»): вместо темы и
+ * спроса — хотя бы одно слово владельца. Границы длины те же; модель
+ * дальше всё равно отличает заказ от рекламы.
+ */
+export function wordsFilter(text: string, words: readonly string[]): PrefilterVerdict {
+  const clean = text.trim();
+  if (clean.length < MIN_LENGTH) return { pass: false, reason: "too_short", topics: [] };
+  if (clean.length > MAX_LENGTH) return { pass: false, reason: "too_long", topics: [] };
+  const word = matchedWord(clean, words);
+  return word ? { pass: true, reason: "candidate", topics: [word] } : { pass: false, reason: "no_word", topics: [] };
+}
 
 export function prefilter(text: string): PrefilterVerdict {
   const clean = text.trim();

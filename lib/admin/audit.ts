@@ -52,6 +52,8 @@ export const AUDIT_ACTIONS = [
   // (lib/scout/extra-chats-store.ts).
   "scout.chat_added",
   "scout.chat_removed",
+  // Режим скаута «автоматически / по словам» и слова (вкладка «Скаут» в «ИИ-сотрудниках»).
+  "scout.settings_saved",
   // Ключи «Блогеров» вставили в блоке «Подключения Instagram» (только имена ключей, без значений).
   "ai_staff.key_saved",
   // Статьи на площадках (lib/outside/store.ts): опубликовал, пропустил, кто публикует.

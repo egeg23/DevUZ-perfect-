@@ -2936,6 +2936,14 @@ export const uz: HelpCopy = {
           ],
         },
         {
+          id: "scout",
+          title: "Skaut: guruhlar va xabarlarni qanday saralashi",
+          body: [
+            "**«Skaut»** yorlig‘i — Telegram guruhlarini o‘qiydigan va ijrochi qidirilayotgan xabarlarni ushlaydigan skaut sozlamalari. Topilgani [Skaut signallari](/admin/scout)ga tushadi, kuchlisi lidga aylanadi. Yorliq pastida — **«Skaut uchun guruhlar»**, «Skaut signallari»dagi o‘sha blok: guruhni har kim qo‘sha oladi, olib tashlashni qo‘shgan odam, rahbar va egasi qiladi. Olib tashlangan guruhdan skaut chiqmaydi, faqat 20 daqiqa ichida undan xabar olishni to‘xtatadi.",
+            "**«Xabarlarni qanday saralash»** blokida ikki rejim bor. **«Avtomatik»**: skaut mavzuni (sayt, do‘kon, ilova, bot, avtomatlashtirish) va «kerak, qidiryapman, kim qiladi» iltimosini rus, o‘zbek va ingliz tillarida o‘zi ko‘radi, ijrochilar reklamasini tashlab yuboradi. **«So‘zlar bo‘yicha»**: faqat ro‘yxatingizdagi kamida bitta so‘z bor xabarlar o‘tadi. So‘z boshidan ushlanadi, shuning uchun «sayt» «saytga» va «saytni»ni ham topadi. Ikkala rejimda ham keyin model buyurtmani reklamadan ajratadi, begona e’lonlar lentaga tushmaydi. Rejim va so‘zlarni egasi va rahbar o‘zgartiradi, skaut 5 daqiqa ichida qayta ishga tushmasdan yangisiga o‘tadi.",
+          ],
+        },
+        {
           id: "bloggers-agent",
           title: "Blogerlar: agent o‘zi nima qiladi",
           body: [

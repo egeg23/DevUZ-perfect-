@@ -125,6 +125,7 @@ export const PAGE_TOPICS: readonly { prefix: string; section: string; item: stri
   // Карточка партнёра (app/admin/partners/[id]) — к пункту про его клиентов.
   { prefix: "/admin/partners/", section: "/admin/partners", item: "card" },
   { prefix: "/admin/prospect/", section: "/admin/prospect", item: "texts" },
+  { prefix: "/admin/ai-staff/scout", section: "/admin/ai-staff", item: "scout" },
   { prefix: "/admin/ai-staff/", section: "/admin/ai-staff", item: "bloggers-agent" },
   { prefix: "/admin/learn/", section: "/admin/learn", item: "courses" },
   // Карточка одной задачи — к пункту про историю: туда ведёт «просрочено» с «Главной».

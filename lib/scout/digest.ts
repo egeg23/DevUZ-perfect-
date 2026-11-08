@@ -70,6 +70,7 @@ export const DROP_LABEL: Record<string, string> = {
   too_long: "длинно",
   no_topic: "не по теме",
   no_demand: "без спроса",
+  no_word: "нет заданных слов",
   supply: "предложение",
   spam: "спам",
 };
