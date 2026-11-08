@@ -2487,6 +2487,29 @@ MAKSIMOV EGOR ANDREEVICH в «Капиталбанке», UZS, открыт 16.0
 - Версии закреплены: REA 6.7.0, Ghidra 12.1.3 (REA принимает 12.1.x).
   Меняя версию — `claude mcp get rea` (`Connected`) и `rea doctor --json`.
 
+## Игры — всегда через Claude Code Game Studios
+
+Решение владельца, 08.11.2026: «Для игр всегда используем Claude Code Game
+Studios… разверни его для всех игровых проектов наших… Для роблокс».
+
+- Студия — [Donchitos/Claude-Code-Game-Studios](https://github.com/Donchitos/Claude-Code-Game-Studios)
+  (MIT): 49 агентов, 74 навыка, хуки и правила. Любая работа над игрой — через
+  неё: `/adopt` для уже начатой игры, `/start` для новой, дальше `/help`,
+  `/dev-story`, `/code-review`, `/story-done`.
+- **Где стоит**: репозиторий `egeg23/Test-repos`, ветка
+  `claude/roblox-squish-factory` (PR #59), в корне — облачная сессия
+  начинается там, иначе агенты и хуки не загрузятся. Игры: `roblox-squish/`
+  («Сквиш-фабрика», активная) и `roblox-school/`; активная —
+  `engine.code_root` в `project.yaml`.
+- **Под Roblox дописано нами** (в шаблоне только Godot, Unity, Unreal):
+  агент `roblox-specialist`, правило `roblox-code.md`, движок `Roblox` в
+  `yaml-helper.sh` (папка кода, выбор специалиста, допустимые значения) и в
+  `.claude/scripts/test-run.sh` (запускает `tools/test.sh` игры),
+  `docs/engine-reference/roblox/`. Обновляя студию — перенести правки (поиск
+  по «DevUz»).
+- **Новая игра** — та же студия в корне её репозитория (или новая папка
+  `roblox-<имя>/` рядом и `engine.code_root` на неё), не заново с шаблона.
+
 ## «Макет для …» — одна строка, дальше по эталону
 
 Владелец, 08.11.2026: «Чтобы я каждый раз не расписывал промпт заново, а
