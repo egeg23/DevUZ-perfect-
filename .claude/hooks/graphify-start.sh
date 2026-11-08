@@ -14,5 +14,6 @@ if ! command -v graphify >/dev/null 2>&1; then
 fi
 
 mkdir -p graphify-out
-nohup graphify update . >graphify-out/.build.log 2>&1 </dev/null &
+# Карта кода, потом — отдельная карта дизайна для макетов (design-graph.sh).
+nohup bash -c 'graphify update . >graphify-out/.build.log 2>&1; bash .claude/hooks/design-graph.sh build' </dev/null >/dev/null 2>&1 &
 exit 0
