@@ -3063,17 +3063,17 @@ test("Sunday Event Agency: выбор, сайт и панель на ru и uz �
   assert.notEqual(stamped.pages["uz/panel"], site.pages["uz/panel"], "отпечаток не поставился в узбекской панели");
 });
 
-test("Sunday: сайт 1 000 $ вместо 3 900 $, девять допов на 2 000 $, всё не больше 3 000 $", async () => {
+test("Sunday: сайт 500 $ вместо 3 900 $, девять допов вместе 500 $, всё 1 000 $", async () => {
   const plan = await import("../scripts/protos/sunday/plan.mjs");
-  /* Навык mockup: «сайт 1 000 $, с допами — не больше 3 000 $». */
-  assert.equal(plan.BASE.promo, 1000);
+  /* Владелец, 09.11.2026: «Цена 500$ за сайт + сделай что бы все допы стоили еще 500$ вместо 3000». */
+  assert.equal(plan.BASE.promo, 500);
   assert.equal(plan.BASE.price, 3900);
   assert.equal(plan.OFFER_HOURS, 48);
   assert.equal(plan.ADDONS.length, 9);
-  assert.equal(plan.ADDONS.reduce((s: number, a: { price: number }) => s + a.price, 0), 2000);
-  assert.equal(plan.ALL, 3000);
+  assert.equal(plan.ADDONS.reduce((s: number, a: { price: number }) => s + a.price, 0), 500);
+  assert.equal(plan.ALL, 1000);
   for (const a of plan.ADDONS) for (const l of ["ru", "uz"] as const) assert.ok(a[l].t && a[l].e && a[l].who, `${a.id}: нет текста на ${l}`);
   for (const a of plan.ADDONS) assert.doesNotMatch(a.uz.t + a.uz.e + a.uz.who, /[А-Яа-яЁё]/, `${a.id}: кириллица в узбекском`);
   const site = bundlePages("sunday")!;
-  for (const html of [site.html, site.pages.uz]) for (const re of [/3\s900\s\$/, /1\s000\s\$/, /3\s000\s\$/]) assert.match(html, re, "на первой странице не та цена");
+  for (const html of [site.html, site.pages.uz]) for (const re of [/3\s900\s\$/, />500\s\$/, /1\s000\s\$/]) assert.match(html, re, "на первой странице не та цена");
 });
