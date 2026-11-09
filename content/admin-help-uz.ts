@@ -703,14 +703,17 @@ export const uz: HelpCopy = {
             manager: [
               "Mijoz qo‘ng‘iroq qildi, tavsiya bo‘yicha keldi yoki shaxsan uchrashdingiz — uni ro‘yxat ostidagi **«Lidni qo‘lda qo‘shish»** tugmasi bilan yozib qo‘ying. «Mijoz ismi» va «Telefon, Telegram yoki pochta» kerak; «Kompaniya», «Mijozga nima kerak» va «Mijoz qayerdan» — xohishga ko‘ra, lekin yozilgan hamma narsa keyin [kartochkada](#leads-card) ko‘rinadi. Kontaktsiz lid qo‘shilmaydi: aks holda mijoz bilan bog‘lanib bo‘lmaydi.",
               "Lid darhol sizniki, navbatsiz: «ishda» holati, ariza raqami, 4 soatdan keyin esa «Взят в работу — что дальше?» eslatmasi. Kartochkada «Qayerdan yozgan» qatorida «panelda qo‘lda qo‘shilgan» bo‘ladi. Uni hamkasbga berish — har qanday lid kabi: [«Berishni so‘rash»](#leads-transfer).",
+              "Forma tepasida — **«Bu kim»**: «Mijoz», «Agentlik» yoki «Bloger». Odatda «Mijoz». Agentlik va bloger mijozlarni o‘zlari olib keladi, shuning uchun lidlar ro‘yxatida ularda belgi bor, kartochkada esa maslahat: agentlikni [«Agentliklar»](/admin/agencies)ga kiriting, uning 15% i o‘sha yerda hisoblanadi. Blogerni hamkor sifatida rahbar va egasi kiritadi.",
             ],
             head: [
               "Mijoz qo‘ng‘iroq qildi, tavsiya bo‘yicha keldi yoki shaxsan uchrashdingiz — uni ro‘yxat ostidagi **«Lidni qo‘lda qo‘shish»** tugmasi bilan yozib qo‘ying. «Mijoz ismi» va «Telefon, Telegram yoki pochta» kerak; «Kompaniya», «Mijozga nima kerak» va «Mijoz qayerdan» — xohishga ko‘ra, lekin yozilgan hamma narsa keyin [kartochkada](#leads-card) ko‘rinadi.",
               "Formada sizda **«Lid kimga»** bor: «O‘zimga» yoki istalgan xodim. Lid darhol tanlangan odamda «ishda» bo‘ladi, navbatsiz, ariza raqami va 4 soatdan keyin «Взят в работу — что дальше?» eslatmasi bilan; boshqaga bersangiz — unga darhol Telegramga kartochka havolasi bilan «Вам добавили лид» keladi. Menejerlar tanlay olmaydi: ular lidni faqat o‘zlariga qo‘shadi.",
+              "Forma tepasida — **«Bu kim»**: «Mijoz», «Agentlik» yoki «Bloger». Odatda «Mijoz». Agentlik va bloger mijozlarni o‘zlari olib keladi, shuning uchun lidlar ro‘yxatida ularda belgi bor, kartochkada esa maslahat: agentlikni [«Agentliklar»](/admin/agencies)ga kiriting, uning 15% i o‘sha yerda hisoblanadi. Blogerni hamkor sifatida rahbar va egasi kiritadi.",
             ],
             admin: [
               "Mijoz qo‘ng‘iroq qildi, tavsiya bo‘yicha keldi yoki shaxsan uchrashdingiz — uni ro‘yxat ostidagi **«Lidni qo‘lda qo‘shish»** tugmasi bilan yozib qo‘ying. «Mijoz ismi» va «Telefon, Telegram yoki pochta» kerak; «Kompaniya», «Mijozga nima kerak» va «Mijoz qayerdan» — xohishga ko‘ra, lekin yozilgan hamma narsa keyin [kartochkada](#leads-card) ko‘rinadi.",
               "Formada **«Lid kimga»** bor: «O‘zimga» yoki istalgan xodim. Lid darhol tanlangan odamda «ishda» bo‘ladi, navbatsiz, ariza raqami va 4 soatdan keyin «Взят в работу — что дальше?» eslatmasi bilan; boshqaga bersangiz — unga darhol Telegramga havola bilan «Вам добавили лид» keladi. Kim qo‘shgani — [jurnalda](/admin/audit). Menejerlar lidni faqat o‘zlariga qo‘shadi, rahbar — siz kabi.",
+              "Forma tepasida — **«Bu kim»**: «Mijoz», «Agentlik» yoki «Bloger». Odatda «Mijoz». Agentlik va bloger mijozlarni o‘zlari olib keladi, shuning uchun lidlar ro‘yxatida ularda belgi bor, kartochkada esa maslahat: agentlikni [«Agentliklar»](/admin/agencies)ga kiriting, uning 15% i o‘sha yerda hisoblanadi. Blogerni hamkor sifatida rahbar va egasi kiritadi.",
             ],
           },
         },

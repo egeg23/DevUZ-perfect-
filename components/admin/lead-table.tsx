@@ -1,7 +1,9 @@
 import Link from "next/link";
 
 import { budgetDict, homeDict, priorityDict, statusDict } from "@/content/admin-panel/home";
+import { leadPartyDict } from "@/content/admin-panel/lead-add";
 import { partnerClientsDict } from "@/content/admin-panel/partner-clients";
+import { partyOf } from "@/lib/admin/lead-party";
 import { PANEL_INTL, pick, type PanelLocale, type Tr } from "@/lib/admin/i18n";
 import type { LeadRow } from "@/lib/admin/leads";
 import { stepState, type NextStep } from "@/lib/admin/next-step";
@@ -118,6 +120,11 @@ export function LeadTable({
                 <span className="block">{lead.contact_name || "—"}</span>
                 {lead.company ? (
                   <span className="block text-xs text-faint">{lead.company}</span>
+                ) : null}
+                {partyOf(lead.party) !== "client" ? (
+                  <span className="mt-1 mr-1 inline-block rounded bg-blue/15 px-1.5 py-0.5 text-xs text-blue-soft" data-lead-party>
+                    {pick(leadPartyDict, locale)[partyOf(lead.party) as "agency" | "blogger"]}
+                  </span>
                 ) : null}
                 {lead.source === "partner" ? (
                   <span className="mt-1 inline-block rounded bg-gold/15 px-1.5 py-0.5 text-xs text-gold">

@@ -1,6 +1,7 @@
 import { record } from "@/lib/admin/audit";
 import { AUTO_REMINDER_HOURS, createReminder, handleOf } from "@/lib/admin/ownership";
 import { staffById, type Staff } from "@/lib/admin/session";
+import { partyOf, type LeadParty } from "@/lib/admin/lead-party";
 import { approves } from "@/lib/admin/transfers";
 import { newRequestNo } from "@/lib/qualify/engine";
 import { esc, sendMessage } from "@/lib/qualify/telegram";
@@ -28,6 +29,8 @@ export type ManualLeadForm = {
   contact: string;
   need: string;
   from: string;
+  /** «Кто это»: клиент, агентство или блогер (lib/admin/lead-party.ts). Пусто — клиент. */
+  party?: string;
 };
 
 export type ContactKind = "telegram" | "phone" | "email" | "none";
@@ -39,6 +42,7 @@ export type ManualLead = {
   kind: ContactKind;
   need: string;
   from: string;
+  party: LeadParty;
 };
 
 export type ManualLeadError = "no_name" | "no_contact";
@@ -77,11 +81,14 @@ export function parseManualLead(form: ManualLeadForm): { ok: true; lead: ManualL
       kind,
       need: form.need.trim().slice(0, 2000),
       from: form.from.trim().slice(0, 200),
+      party: partyOf(form.party),
     },
   };
 }
 
 const UNKNOWN = "не выяснено — лид добавлен вручную";
+
+const PARTY_NOTE: Record<LeadParty, string> = { client: "клиент", agency: "агентство", blogger: "блогер" };
 
 /**
  * Строка лида. Квалификации ещё не было, поэтому оценки — средние, как у
@@ -98,6 +105,7 @@ export function manualLeadRow(
   const who = lead.company ? `${lead.name}, ${lead.company}` : lead.name;
   return {
     source: "manual",
+    party: lead.party,
     request_no: requestNo,
     locale: "ru",
     contact_name: lead.name,
@@ -130,6 +138,7 @@ export function manualLeadRow(
     },
     notes: [
       `Добавлен вручную: ${addedBy.display_name}.`,
+      `Кто это: ${PARTY_NOTE[lead.party]}.`,
       `Откуда клиент: ${lead.from || "не указали"}.`,
       lead.need ? `\nЧто нужно: ${lead.need}` : "",
     ]
@@ -187,7 +196,7 @@ export async function addManualLead(
     targetType: "lead",
     targetId: id,
     ip,
-    meta: { assignee: assignee.id, contact_kind: parsed.lead.kind, assigned_to: handleOf(assignee) },
+    meta: { assignee: assignee.id, contact_kind: parsed.lead.kind, party: parsed.lead.party, assigned_to: handleOf(assignee) },
   });
 
   // Как у взятого лида: забытый всплывёт сам.
