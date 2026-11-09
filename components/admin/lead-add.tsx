@@ -1,7 +1,8 @@
 import { addLead } from "@/app/admin/actions";
 import { HelpHint } from "@/components/admin/help-link";
 import { SubmitButton } from "@/components/admin/submit-button";
-import { leadAddDict } from "@/content/admin-panel/lead-add";
+import { leadAddDict, leadPartyDict } from "@/content/admin-panel/lead-add";
+import { LEAD_PARTIES } from "@/lib/admin/lead-party";
 import { helpAnchor } from "@/lib/admin/help";
 import { pick, type PanelLocale } from "@/lib/admin/i18n";
 
@@ -38,6 +39,7 @@ export function LeadAdd({
   notice?: string;
 }) {
   const t = pick(leadAddDict, locale);
+  const tp = pick(leadPartyDict, locale);
   const error = notice && Object.hasOwn(ERROR_KEYS, notice) ? t[ERROR_KEYS[notice as keyof typeof ERROR_KEYS]] : null;
   const others = assignees.filter((a) => a.id !== selfId);
 
@@ -49,6 +51,21 @@ export function LeadAdd({
         <HelpHint topic={helpAnchor("/admin", "add")} label={t.help} />
       </p>
       <form action={addLead} className="mt-3 grid gap-3 sm:grid-cols-2">
+        {/* «Кто это»: клиент, агентство или блогер (lib/admin/lead-party.ts). */}
+        <fieldset className="sm:col-span-2">
+          <legend className="text-xs text-faint">{tp.party}</legend>
+          <div className="mt-1 flex flex-wrap gap-2" data-lead-party>
+            {LEAD_PARTIES.map((party) => (
+              <label
+                key={party}
+                className="cursor-pointer rounded-lg border border-line px-3 py-1.5 text-sm text-muted transition has-[:checked]:border-green/60 has-[:checked]:bg-green/10 has-[:checked]:text-text"
+              >
+                <input type="radio" name="party" value={party} defaultChecked={party === "client"} className="sr-only" />
+                {tp[party]}
+              </label>
+            ))}
+          </div>
+        </fieldset>
         <label className="block text-xs text-faint">
           {t.name}
           <input name="name" required maxLength={120} placeholder={t.namePlaceholder} className={INPUT} />

@@ -52,6 +52,8 @@ export const LIST_COLUMNS = [
   "partner_void_reason",
   // Лид от партнёра, пока ничей, — наверху списка и выделен (миграция 0077).
   "partner_pin",
+  // Кто это: клиент, агентство или блогер (миграция 0183, lib/admin/lead-party.ts).
+  "party",
 ].join(", ");
 
 export const DETAIL_COLUMNS = [
@@ -119,6 +121,8 @@ export type LeadRow = {
   partner_void_reason: string | null;
   /** Приоритетный лид от партнёра, ещё ничей (lib/partners/priority-lead.ts). */
   partner_pin?: boolean | null;
+  /** Кто это: client, agency, blogger (lib/admin/lead-party.ts). */
+  party?: string | null;
 };
 
 export type LeadDetail = LeadRow & {

@@ -28,6 +28,9 @@ import { nextStepOf } from "@/lib/admin/next-step";
 import { CLIENT_CLAIMS, type VoidReason } from "@/lib/partners/rules";
 import { clientById, partnerById } from "@/lib/partners/store";
 import { partnerClientsDict } from "@/content/admin-panel/partner-clients";
+import { leadPartyDict } from "@/content/admin-panel/lead-add";
+import { PARTY_HOME, partyOf } from "@/lib/admin/lead-party";
+import { opens } from "@/lib/admin/roles";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { HelpHint } from "@/components/admin/help-link";
 import { helpAnchor } from "@/lib/admin/help";
@@ -165,6 +168,7 @@ export default async function LeadPage({
   // Клиент, закреплённый партнёром вручную по ИНН: «Клиент партнёра Имя
   // (закреплён 01.10)» — менеджер видит, что это не просто заявка.
   const tc = pick(partnerClientsDict, staff.panel_locale);
+  const tpy = pick(leadPartyDict, staff.panel_locale);
   const claim = lead.partner_client_id ? await clientById(lead.partner_client_id) : null;
   const claimLabel =
     partner && claim ? tc.leadClient(partner.name, claim.created_at.slice(5, 10).split("-").reverse().join(".")) : null;
@@ -886,6 +890,21 @@ export default async function LeadPage({
       <dl className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         <Field label={t.who} value={lead.contact_name} />
         <Field label={t.company} value={lead.company} />
+        {/* «Кто это»: агентство и блогер приводят клиентов сами — куда их завести (lib/admin/lead-party.ts). */}
+        {partyOf(lead.party) !== "client" ? (
+          <div data-lead-party>
+            <dt className="text-xs uppercase tracking-wider text-faint">{tpy.party}</dt>
+            <dd className="mt-1 text-sm">{tpy[partyOf(lead.party) as "agency" | "blogger"]}</dd>
+            <dd className="mt-1 text-xs leading-relaxed text-muted">
+              {partyOf(lead.party) === "agency" ? tpy.hintAgency : tpy.hintBlogger}{" "}
+              {opens(staff, PARTY_HOME[partyOf(lead.party) as "agency" | "blogger"]) ? (
+                <Link href={PARTY_HOME[partyOf(lead.party) as "agency" | "blogger"]} className="text-blue-soft hover:underline">
+                  {partyOf(lead.party) === "agency" ? tpy.openAgencies : tpy.openPartners} →
+                </Link>
+              ) : null}
+            </dd>
+          </div>
+        ) : null}
         {/* Ничей лид — поле «Промокод или кто привёл»: клиент назвал промокод
             менеджеру (lib/partners/store.ts, assignLeadPartner). */}
         {mine && !lead.partner_id ? (

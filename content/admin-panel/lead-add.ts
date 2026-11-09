@@ -60,3 +60,26 @@ export const leadAddDict = defineDict({
     pl: "Lead się nie zapisał. Spróbuj ponownie; jeśli to się powtórzy, napisz do właściciela.",
   },
 });
+
+/**
+ * «Кто это» у лида (lib/admin/lead-party.ts). Владелец, 09.11.2026: «сделай
+ * возможность выбрать: клиент / агентство или блоггер».
+ */
+export const leadPartyDict = defineDict({
+  party: { ru: "Кто это", uz: "Bu kim", pl: "Kto to jest" },
+  client: { ru: "Клиент", uz: "Mijoz", pl: "Klient" },
+  agency: { ru: "Агентство", uz: "Agentlik", pl: "Agencja" },
+  blogger: { ru: "Блогер", uz: "Bloger", pl: "Bloger" },
+  hintAgency: {
+    ru: "Агентство приводит клиентов само. Заведите его в «Агентствах»: там считаются его 15% и ваши 5% за то, что привели.",
+    uz: "Agentlik mijozlarni o‘zi olib keladi. Uni «Agentliklar»ga kiriting: uning 15% i va olib kelganingiz uchun sizning 5% ingiz o‘sha yerda hisoblanadi.",
+    pl: "Agencja sama przyprowadza klientów. Dodaj ją w „Agencje”: tam liczy się jej 15% i Twoje 5% za to, że ją przyprowadziłeś.",
+  },
+  hintBlogger: {
+    ru: "Блогер приводит клиентов сам. Чтобы ему считался процент, его заводят партнёром: руководитель или владелец, в «Партнёрах».",
+    uz: "Bloger mijozlarni o‘zi olib keladi. Unga foiz hisoblanishi uchun uni hamkor sifatida rahbar yoki egasi «Hamkorlar»da kiritadi.",
+    pl: "Bloger sam przyprowadza klientów. Żeby liczył mu się procent, dodaje się go jako partnera: kierownik albo właściciel, w „Partnerzy”.",
+  },
+  openAgencies: { ru: "Открыть «Агентства»", uz: "«Agentliklar»ni ochish", pl: "Otwórz „Agencje”" },
+  openPartners: { ru: "Открыть «Партнёры»", uz: "«Hamkorlar»ni ochish", pl: "Otwórz „Partnerzy”" },
+});
