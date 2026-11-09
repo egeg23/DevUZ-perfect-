@@ -1,0 +1,84 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>DevUz · 2 · Самарканд</title>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=Prata&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="base.css"><script src="logos.js"></script>
+<style>
+/* 2 «Самарканд»: глубокая бирюза куполов Регистана и тёплое золото. Еле видный узор гирих вместо точек. Своё, узнаваемое, не «ещё одна синяя студия». */
+:root { --bg0:#03100f; --bg1:#06272a; --bg2:#0b5354; --acc:#3fd6c8; --gold:#e9c77f;
+  --ink:#effaf6; --soft:#bcd8d2; --muted:#8db3ac; --line:rgba(170,240,225,.14); --pill:rgba(160,235,220,.32);
+  --btn:linear-gradient(180deg,#fff8e6,#efd08e); --btn-ink:#1d1504; --btn-shadow:0 10px 40px rgba(233,199,127,.32); }
+#f1 { background:
+  radial-gradient(70% 55% at 50% 100%, rgba(120,235,220,.45) 0%, rgba(30,170,160,.32) 35%, rgba(6,40,42,0) 70%),
+  linear-gradient(180deg, var(--bg0) 0%, var(--bg1) 45%, var(--bg2) 82%, #13807c 100%); }
+#f1 .girih { position:absolute; inset:0; opacity:.09;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='%23bff3ea' stroke-width='1'%3E%3Cpath d='M28 8 L33 23 L48 28 L33 33 L28 48 L23 33 L8 28 L23 23 Z'/%3E%3Cpath d='M14 14 L42 42 M42 14 L14 42' stroke-opacity='.35'/%3E%3C/g%3E%3C/svg%3E");
+  background-size:56px 56px; -webkit-mask:radial-gradient(60% 60% at 50% 45%, #000 25%, transparent 80%); mask:radial-gradient(60% 60% at 50% 45%, #000 25%, transparent 80%); }
+.trust { position:absolute; left:0; right:0; top:178px; text-align:center; font-size:15px; color:var(--soft); letter-spacing:.02em; }
+.trust b { color:var(--gold); font-weight:600; }
+#f1 h1 { position:absolute; left:250px; right:250px; top:220px; text-align:center; font-family:"Prata",serif; font-weight:400; font-size:76px; line-height:1.08; letter-spacing:-.02em; }
+#f1 h1 em { font-style:normal; background:linear-gradient(90deg,#7ff0e2,#e9c77f); -webkit-background-clip:text; color:transparent; }
+#f1 .lead { position:absolute; left:400px; right:400px; top:500px; text-align:center; font-size:19px; line-height:1.5; color:var(--soft); }
+#f1 .actions { position:absolute; left:0; right:0; top:610px; display:flex; justify-content:center; align-items:center; gap:22px; }
+#f1 .actions .plus { font-size:15px; color:var(--soft); } #f1 .actions .plus b { font-size:22px; color:var(--gold); }
+.card3d { position:absolute; border-radius:14px; overflow:hidden; border:1px solid rgba(190,245,235,.35); box-shadow:0 30px 80px rgba(0,20,20,.6); }
+.card3d img { display:block; width:100%; height:auto; }
+.c1 { left:-60px; top:610px; width:420px; transform:perspective(1200px) rotateY(24deg) rotateX(8deg) rotateZ(-4deg); }
+.c2 { right:-120px; top:96px; width:330px; transform:perspective(1200px) rotateY(-26deg) rotateX(10deg) rotateZ(4deg); }
+.ph { position:absolute; width:150px; border-radius:22px; overflow:hidden; border:4px solid #0a2b2c; box-shadow:0 30px 70px rgba(0,20,20,.7); }
+.ph img { display:block; width:100%; height:auto; }
+.p1 { left:64px; top:260px; transform:rotate(-10deg); }
+.p2 { right:120px; top:520px; transform:rotate(9deg); }
+.line { position:absolute; border:1.5px dashed rgba(233,199,127,.4); border-radius:28px; }
+.ln1 { left:190px; top:420px; width:220px; height:150px; border-right:none; border-bottom:none; }
+.ln2 { right:250px; top:300px; width:200px; height:200px; border-left:none; border-top:none; }
+/* кадр 2: продукты */
+#f2 { background:linear-gradient(180deg,#13807c 0%, var(--bg2) 12%, var(--bg1) 45%, var(--bg0) 100%); }
+#f2 h2 { position:absolute; left:0; right:0; top:90px; text-align:center; font-family:"Prata"; font-weight:400; font-size:54px; letter-spacing:-.01em; }
+#f2 .l2 { position:absolute; left:360px; right:360px; top:170px; text-align:center; font-size:18px; line-height:1.5; color:var(--soft); }
+.prods { position:absolute; left:var(--edge); right:var(--edge); top:270px; display:grid; grid-template-columns:1.25fr 1fr 1fr; gap:24px; }
+.p { position:relative; border-radius:20px; padding:28px; background:linear-gradient(180deg,rgba(120,235,220,.1),rgba(6,40,42,.35)); border:1px solid var(--line); height:540px; overflow:hidden; }
+.p .k { font-size:13px; letter-spacing:.08em; text-transform:uppercase; color:var(--gold); }
+.p h3 { margin-top:10px; font-size:30px; font-weight:700; letter-spacing:-.03em; }
+.p p { margin-top:10px; font-size:16px; line-height:1.5; color:var(--soft); }
+.p .price { position:absolute; left:28px; bottom:28px; font-size:16px; color:var(--soft); } .p .price b { color:var(--ink); }
+.p .boximg { position:absolute; left:5%; bottom:58px; width:90%; height:auto; -webkit-mask:linear-gradient(180deg,transparent 0%,#000 22%,#000 82%,transparent 100%); mask:linear-gradient(180deg,transparent 0%,#000 22%,#000 82%,transparent 100%); }
+.chat { margin-top:26px; display:flex; flex-direction:column; gap:10px; }
+.bub { max-width:85%; padding:12px 14px; border-radius:16px; font-size:15px; line-height:1.4; }
+.in { background:rgba(255,255,255,.09); align-self:flex-start; border-bottom-left-radius:4px; }
+.out { background:linear-gradient(180deg,#2fbfb2,#168f86); align-self:flex-end; border-bottom-right-radius:4px; }
+.inp { margin-top:28px; display:flex; height:54px; border-radius:14px; background:rgba(2,14,14,.6); border:1px solid var(--pill); align-items:center; padding:0 6px 0 16px; color:var(--muted); font-size:15px; }
+.inp span:last-child { margin-left:auto; height:42px; padding:0 16px; display:flex; align-items:center; border-radius:10px; background:var(--gold); color:#1d1504; font-weight:600; }
+.meter { margin-top:22px; display:grid; gap:10px; font-size:14px; color:var(--soft); }
+.meter div { display:flex; justify-content:space-between; padding:10px 12px; border-radius:10px; background:rgba(255,255,255,.05); }
+</style></head><body>
+<section class="f" id="f1">
+  <div class="girih"></div>
+  <nav class="nav"><div class="brand"><img src="../../../public/brand/logo-square-1200.png" alt="">DevUz</div>
+    <div class="links"><span class="box"><i></i>AI офис</span><span>Работы</span><span>Услуги</span><span>Цены</span><span>Партнёрам</span></div>
+    <div class="right"><span class="btn btn-g">Обсудить проект</span></div></nav>
+  <div class="card3d c1"><img src="../../../public/cases/cargo-pro/shot-1-desktop.webp" alt=""></div>
+  <div class="card3d c2"><img src="../../../public/cases/oson-apteka/shot-1-desktop.webp" alt=""></div>
+  <div class="ph p1"><img src="../../../public/cases/cargo-pro/shot-1-mobile.webp" alt=""></div>
+  <div class="ph p2"><img src="../../../public/cases/syanie-severa/shot-1-mobile.webp" alt=""></div>
+  <div class="line ln1"></div><div class="line ln2"></div>
+  <div class="trust"><b>600+ проектов</b> · 65 разработчиков · 53 страны</div>
+  <h1>Сайты и ИИ‑сотрудники, которые <em>приносят заявки</em></h1>
+  <p class="lead">Покажем ваш новый сайт до оплаты: прототип за 12 часов, бесплатно. Понравится, доведём до запуска.</p>
+  <div class="actions"><span class="btn btn-p">Получить прототип</span><span class="plus"><b>12 ч</b> до вашего прототипа</span></div>
+  <span class="tag">Вариант 2 · кадр 1</span>
+</section>
+<section class="f" id="f2">
+  <h2>Продукты студии</h2>
+  <p class="l2">Кроме сайтов на заказ, у нас есть свои продукты: ими пользуемся сами и подключаем клиентам.</p>
+  <div class="prods">
+    <div class="p"><div class="k">Планируется к запуску</div><h3>DevUz Box</h3><p>ИИ‑офис в коробке: своё ядро, данные не уходят из офиса.</p><img class="boximg" src="../../../public/home/box-pro.webp" alt=""><div class="price"><b>Посмотреть</b> →</div></div>
+    <div class="p"><div class="k">Работает сейчас</div><h3>ИИ‑сотрудник</h3><p>Отвечает покупателям в Telegram и на сайте по вашему прайсу.</p>
+      <div class="chat"><div class="bub in">Доставка в Чирчик есть?</div><div class="bub out">Да, на следующий день. Оформить?</div></div>
+      <div class="price">От <b>490 000 сум</b> в месяц · 14 дней бесплатно</div></div>
+    <div class="p"><div class="k">Бесплатно</div><h3>Проверка сайта</h3><p>Введите адрес: за 60 секунд покажем, что видит покупатель и что видит поисковик.</p>
+      <div class="inp"><span>ваш-сайт.uz</span><span>Проверить</span></div>
+      <div class="meter"><div><span>Открывается на телефоне</span><span>3,8 с</span></div><div><span>Кнопка заявки</span><span>не найдена</span></div><div><span>Поиск видит страниц</span><span>4 из 19</span></div></div>
+      <div class="price">Пример отчёта</div></div>
+  </div>
+  <span class="tag">Вариант 2 · кадр 2</span>
+</section>
+</body></html>
