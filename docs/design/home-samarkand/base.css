@@ -1,0 +1,20 @@
+/* Общий каркас кадров. Цвета — только переменными: палитру задаёт каждый вариант в своём :root. */
+:root { --edge:72px; }
+* { box-sizing:border-box; margin:0; padding:0; }
+body { background:var(--bg0); color:var(--ink); font-family:"Onest",system-ui,sans-serif; -webkit-font-smoothing:antialiased; }
+.f { position:relative; width:1440px; height:900px; overflow:hidden; }
+.nav { position:absolute; inset:0 0 auto 0; height:80px; display:flex; align-items:center; gap:36px; padding:0 var(--edge); z-index:9; }
+.brand { display:flex; align-items:center; gap:10px; font-weight:700; font-size:21px; letter-spacing:-.02em; }
+.brand img { width:30px; height:30px; border-radius:8px; }
+.links { display:flex; align-items:center; gap:26px; font-size:15px; color:var(--soft); }
+.links .box { display:inline-flex; align-items:center; gap:8px; padding:6px 12px; border:1px solid var(--pill); border-radius:999px; color:var(--ink); }
+.links .box i { width:7px; height:7px; border-radius:50%; background:var(--acc); box-shadow:0 0 10px var(--acc); }
+.right { margin-left:auto; }
+.btn { display:inline-flex; align-items:center; gap:10px; height:52px; padding:0 26px; border-radius:999px; font:600 16px "Onest"; white-space:nowrap; }
+.btn-p { background:var(--btn); color:var(--btn-ink); box-shadow:var(--btn-shadow); }
+.btn-g { color:var(--ink); border:1px solid var(--pill); }
+.nav .btn { height:42px; padding:0 20px; font-size:15px; }
+.logo { display:inline-block; background:currentColor; -webkit-mask:var(--src) center/contain no-repeat; mask:var(--src) center/contain no-repeat; }
+.num b { display:block; font-size:44px; font-weight:700; letter-spacing:-.03em; line-height:1; }
+.num span { display:block; margin-top:8px; font-size:14px; color:var(--muted); }
+.tag { position:absolute; right:24px; bottom:18px; font-size:12px; color:var(--muted); opacity:.6; z-index:9; }
