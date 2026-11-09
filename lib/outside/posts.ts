@@ -7,7 +7,8 @@ import { aiMarkers, dashSpots } from "@/lib/proto/plain-text";
 import { siteUrl } from "@/lib/seo";
 
 /**
- * Статьи на чужих площадках — vc.ru, Дзен, Tenchat.
+ * Статьи на чужих площадках — vc.ru, Дзен, Tenchat руками; Telegraph,
+ * ВКонтакте и Telegram-канал сами.
  *
  * Владелец, 07.11.2026: «Хочу автоматизировать статьи на тех площадках, где
  * ты написал», на план — «Делаем по твоей рекомендации». Открытого способа
@@ -18,15 +19,30 @@ import { siteUrl } from "@/lib/seo";
  * одной кнопкой в редактор площадки, публикует и вставляет ссылку в
  * панель. Дальше код сам смотрит, жива ли статья и стоит ли ссылка на нас.
  *
+ * Владелец, 09.11.2026: «Я хочу минимизировать ручной труд на статьях… Я
+ * прям правда не смогу на 25 ресурсов каждый день что-то выкладывать», на
+ * «где есть официальный способ — публикует код» — «Делаем, Postiz тоже
+ * подключи». Там, где публиковать программой можно по правилам площадки, —
+ * публикует код: Telegraph своим открытым API (без регистрации), ВКонтакте
+ * и Telegram-канал — через Postiz (его API, площадки подключает человек
+ * один раз в самом Postiz). Тот же черновик, та же проверка; не вышло —
+ * черновик остаётся «Ждут публикации», и его публикует человек.
+ *
  * Здесь — то, что не ходит ни в сеть, ни в базу: площадки, проверки текста,
  * ссылки, расписание. Запись — store.ts, сама неделя — run.ts.
  */
 
-export const PLATFORMS = ["vcru", "dzen", "tenchat"] as const;
+export const PLATFORMS = ["vcru", "dzen", "tenchat", "telegraph", "vk", "telegram"] as const;
 export type Platform = (typeof PLATFORMS)[number];
+
+/** Как черновик попадает на площадку: человеком, открытым API Telegraph или через Postiz. */
+export type Via = "hand" | "telegraph" | "postiz";
 
 export type PlatformSpec = {
   name: string;
+  via: Via;
+  /** Площадка в Postiz (`__type` и `identifier` канала) — у тех, что идут через него. */
+  postiz?: "vk" | "telegram";
   /** Куда ведёт «Открыть площадку» — главная, редактор открывается оттуда после входа. */
   home: string;
   /** Адреса, с которых принимается ссылка на опубликованную статью. */
@@ -53,6 +69,7 @@ export type PlatformSpec = {
 export const PLATFORM: Record<Platform, PlatformSpec> = {
   vcru: {
     name: "vc.ru",
+    via: "hand",
     home: "https://vc.ru",
     hosts: ["vc.ru"],
     min: 3500,
@@ -67,6 +84,7 @@ export const PLATFORM: Record<Platform, PlatformSpec> = {
   },
   dzen: {
     name: "Дзен",
+    via: "hand",
     home: "https://dzen.ru",
     hosts: ["dzen.ru", "zen.yandex.ru"],
     min: 2500,
@@ -81,6 +99,7 @@ export const PLATFORM: Record<Platform, PlatformSpec> = {
   },
   tenchat: {
     name: "Tenchat",
+    via: "hand",
     home: "https://tenchat.ru",
     hosts: ["tenchat.ru"],
     min: 700,
@@ -93,7 +112,61 @@ export const PLATFORM: Record<Platform, PlatformSpec> = {
     style:
       "Tenchat — деловая соцсеть, это пост, а не статья. Одна мысль из практики от лица студии: ситуация, вывод, что сделать. Без подзаголовков, три-шесть коротких абзацев, ссылка одна, в конце.",
   },
+  telegraph: {
+    name: "Telegraph",
+    via: "telegraph",
+    home: "https://telegra.ph",
+    hosts: ["telegra.ph"],
+    min: 2500,
+    max: 6000,
+    target: [3000, 4500],
+    titleMax: 100,
+    headings: [2, 8],
+    links: 2,
+    utm: "telegraph",
+    style:
+      "Telegraph — отдельная страница-статья без ленты и подписчиков: её находят поиском и открывают по ссылке из Telegram. Пиши как понятную инструкцию для владельца бизнеса: что сделать по шагам и как проверить, что получилось. Подзаголовки «## », короткие абзацы, можно список.",
+  },
+  vk: {
+    name: "ВКонтакте",
+    via: "postiz",
+    postiz: "vk",
+    home: "https://vk.com",
+    hosts: ["vk.com", "m.vk.com"],
+    min: 600,
+    max: 2500,
+    target: [800, 1600],
+    titleMax: 90,
+    headings: [0, 0],
+    links: 1,
+    utm: "vk",
+    style:
+      "ВКонтакте — пост в сообществе студии, его листают в ленте с телефона. Заголовок станет первой строкой поста. Одна мысль из практики: ситуация, что с ней делать, что проверить у себя. Без подзаголовков, три-шесть коротких абзацев, ссылка одна, в конце.",
+  },
+  telegram: {
+    name: "Telegram-канал",
+    via: "postiz",
+    postiz: "telegram",
+    home: "https://t.me",
+    hosts: ["t.me"],
+    min: 400,
+    max: 2000,
+    target: [600, 1400],
+    titleMax: 90,
+    headings: [0, 0],
+    links: 1,
+    utm: "telegram",
+    style:
+      "Telegram-канал студии — короткий пост, его читают с телефона между делами. Заголовок станет первой строкой жирным. Одна мысль и один совет, который можно сделать сегодня. Без подзаголовков, два-пять коротких абзацев, ссылка одна, в конце.",
+  },
 };
+
+/** Площадки, которые публикуются сами (без человека). */
+export const AUTO_PLATFORMS = PLATFORMS.filter((p) => PLATFORM[p].via !== "hand");
+
+export function isAuto(platform: Platform): boolean {
+  return PLATFORM[platform].via !== "hand";
+}
 
 export function isPlatform(value: unknown): value is Platform {
   return typeof value === "string" && (PLATFORMS as readonly string[]).includes(value);
@@ -301,6 +374,82 @@ export function toPlain(body: string, platform: Platform, topicKey: string): str
     .join("\n\n");
 }
 
+/* ── Как текст уходит на площадку сам ──────────────────────────────────── */
+
+/** Узел страницы Telegraph: строка или тег с детьми (api.telegra.ph, `Node`). */
+export type TelegraphNode = string | { tag: string; attrs?: { href: string }; children?: TelegraphNode[] };
+
+/** Строка с разметкой → узлы Telegraph: текст, **жирный**, ссылки с метками. */
+function inlineNodes(text: string, platform: Platform, topicKey: string): TelegraphNode[] {
+  const out: TelegraphNode[] = [];
+  const plain = (chunk: string) => {
+    chunk.split(/\*\*(.+?)\*\*/g).forEach((part, i) => {
+      if (!part) return;
+      out.push(i % 2 ? { tag: "b", children: [part] } : part);
+    });
+  };
+  let at = 0;
+  for (const m of text.matchAll(LINK)) {
+    plain(text.slice(at, m.index));
+    out.push({ tag: "a", attrs: { href: withUtm(m[2], platform, topicKey) }, children: [m[1]] });
+    at = (m.index ?? 0) + m[0].length;
+  }
+  plain(text.slice(at));
+  return out;
+}
+
+/**
+ * Текст → страница Telegraph. Своего h2 у Telegraph нет (теги: h3, h4, p,
+ * ul, li, a, b…), поэтому подзаголовок — h3. Строки HTML сюда не попадают:
+ * узлы — данные, Telegraph сам их экранирует.
+ */
+export function toTelegraphNodes(body: string, platform: Platform, topicKey: string): TelegraphNode[] {
+  const out: TelegraphNode[] = [];
+  let list: TelegraphNode[] = [];
+  const flush = () => {
+    if (list.length) out.push({ tag: "ul", children: list });
+    list = [];
+  };
+  for (const block of blocksOf(body)) {
+    if (block.kind === "li") {
+      list.push({ tag: "li", children: inlineNodes(block.text, platform, topicKey) });
+      continue;
+    }
+    flush();
+    out.push({ tag: block.kind === "h" ? "h3" : "p", children: inlineNodes(block.text, platform, topicKey) });
+  }
+  flush();
+  return out;
+}
+
+/**
+ * Пост для Postiz. Он принимает HTML и сам переводит его в то, что берёт
+ * площадка: Telegram оставляет ссылки и жирный, ВКонтакте — только текст,
+ * поэтому ВКонтакте ссылка пишется адресом в скобках, как в Tenchat.
+ * Заголовок — первой строкой поста (у постов заголовка нет).
+ */
+export function postizContent(title: string, body: string, platform: Platform, topicKey: string): string {
+  const head = `<p><strong>${escHtml(title)}</strong></p>`;
+  if (platform === "telegram") return `${head}\n${toHtml(body, platform, topicKey)}`;
+  const paragraphs = toPlain(body, platform, topicKey)
+    .split(/\n\n+/)
+    .map((p) => `<p>${escHtml(p)}</p>`);
+  return [head, ...paragraphs].join("\n");
+}
+
+/** Тело запроса Postiz «опубликовать сейчас» (POST /public/v1/posts). */
+export function postizRequest(platform: Platform, channelId: string, content: string, now: Date) {
+  const type = PLATFORM[platform].postiz;
+  if (!type) throw new Error(`${platform} не идёт через Postiz`);
+  return {
+    type: "now",
+    date: now.toISOString(),
+    shortLink: false,
+    tags: [],
+    posts: [{ integration: { id: channelId }, value: [{ content, image: [] }], settings: { __type: type } }],
+  };
+}
+
 /* ── Неделя ────────────────────────────────────────────────────────────── */
 
 /** Черновики готовятся с 11:00 до 19:59 по Ташкенту: карточка приходит днём. */
@@ -334,10 +483,12 @@ export function pickTopics(
   written: readonly Written[],
   waiting: readonly Platform[],
   topics: readonly OutsideTopic[] = OUTSIDE_TOPICS,
+  /** Кому писать на этой неделе: площадка, которая публикуется сама, — только когда подключена. */
+  platforms: readonly Platform[] = PLATFORMS,
 ): Partial<Record<Platform, OutsideTopic>> {
   const taken = new Set<string>();
   const out: Partial<Record<Platform, OutsideTopic>> = {};
-  for (const platform of PLATFORMS) {
+  for (const platform of platforms) {
     if (waiting.includes(platform)) continue;
     const done = new Set(written.filter((w) => w.platform === platform).map((w) => w.topic_key));
     const topic = topics.find((t) => !done.has(t.key) && !taken.has(t.key));
@@ -412,14 +563,23 @@ export function checkDue(row: { published_at: string | null; link_checked_at: st
 export type CardLine = { platform: Platform; title: string };
 
 /** Текст карточки в бот (HTML Telegram): что готово, что ждёт с прошлых недель. */
-export function weekCardText(made: readonly CardLine[], waiting: readonly CardLine[], esc: (s: string) => string): string {
+export function weekCardText(
+  made: readonly CardLine[],
+  waiting: readonly CardLine[],
+  esc: (s: string) => string,
+  /** Ушли сами: Telegraph, ВКонтакте, Telegram-канал. */
+  auto: readonly CardLine[] = [],
+): string {
   const line = (l: CardLine) => `• ${esc(PLATFORM[l.platform].name)}: «${esc(l.title)}»`;
   const parts = ["📝 <b>Статьи на площадки</b>"];
+  if (auto.length) parts.push("", "Ушли сами, делать ничего не нужно:", ...auto.map(line));
   if (made.length) parts.push("", "Готовы на эту неделю:", ...made.map(line));
   if (waiting.length) parts.push("", "Ещё не опубликованы:", ...waiting.map(line));
-  parts.push(
-    "",
-    "В «Статьях на площадках»: «Скопировать», вставить в редактор площадки, опубликовать и вставить ссылку на статью. Новый черновик площадке — когда опубликован или пропущен прошлый.",
-  );
+  if (made.length || waiting.length) {
+    parts.push(
+      "",
+      "В «Статьях на площадках»: «Скопировать», вставить в редактор площадки, опубликовать и вставить ссылку на статью. Новый черновик площадке — когда опубликован или пропущен прошлый.",
+    );
+  }
   return parts.join("\n");
 }

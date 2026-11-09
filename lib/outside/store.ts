@@ -1,7 +1,7 @@
 import { record } from "@/lib/admin/audit";
 import { opens } from "@/lib/admin/roles";
 import type { Staff } from "@/lib/admin/session";
-import { LINK_STATES, isPlatform, publishedUrl, type LinkState, type Platform } from "@/lib/outside/posts";
+import { LINK_STATES, isPlatform, publishedUrl, type LinkState, type Platform, type Via } from "@/lib/outside/posts";
 import { serviceClient } from "@/lib/supabase";
 
 /**
@@ -12,7 +12,8 @@ import { serviceClient } from "@/lib/supabase";
  * слот недели не сгорает.
  */
 
-export type PostStatus = "ready" | "published" | "skipped";
+/** 'sent' — отдан в Postiz, ссылку на вышедший пост свип заберёт потом (миграция 0182). */
+export type PostStatus = "ready" | "sent" | "published" | "skipped";
 
 export type OutsidePost = {
   id: string;
@@ -30,10 +31,16 @@ export type OutsidePost = {
   link_checked_at: string | null;
   link_state: LinkState | null;
   link_rel: string | null;
+  /** Как ушла сама: Telegraph или Postiz; null — руками. */
+  via: Exclude<Via, "hand"> | null;
+  external_id: string | null;
+  sent_at: string | null;
+  /** Почему сама не вышла — черновик тогда публикует человек. */
+  publish_error: string | null;
 };
 
 const COLUMNS =
-  "id, platform, topic_key, query, title, body, status, created_at, published_url, published_at, published_by, skipped_at, link_checked_at, link_state, link_rel";
+  "id, platform, topic_key, query, title, body, status, created_at, published_url, published_at, published_by, skipped_at, link_checked_at, link_state, link_rel, via, external_id, sent_at, publish_error";
 
 function asPost(row: Record<string, unknown>): OutsidePost | null {
   if (!isPlatform(row.platform)) return null;
@@ -45,7 +52,7 @@ function asPost(row: Record<string, unknown>): OutsidePost | null {
     query: String(row.query ?? ""),
     title: String(row.title ?? ""),
     body: String(row.body ?? ""),
-    status: row.status === "published" || row.status === "skipped" ? row.status : "ready",
+    status: row.status === "published" || row.status === "skipped" || row.status === "sent" ? row.status : "ready",
     created_at: String(row.created_at ?? ""),
     published_url: typeof row.published_url === "string" ? row.published_url : null,
     published_at: typeof row.published_at === "string" ? row.published_at : null,
@@ -54,16 +61,26 @@ function asPost(row: Record<string, unknown>): OutsidePost | null {
     link_checked_at: typeof row.link_checked_at === "string" ? row.link_checked_at : null,
     link_state: state,
     link_rel: typeof row.link_rel === "string" ? row.link_rel : null,
+    via: row.via === "telegraph" || row.via === "postiz" ? row.via : null,
+    external_id: typeof row.external_id === "string" ? row.external_id : null,
+    sent_at: typeof row.sent_at === "string" ? row.sent_at : null,
+    publish_error: typeof row.publish_error === "string" ? row.publish_error : null,
   };
 }
+
+/** Колонки до миграции 0182 — на случай, если код выкатили раньше неё. */
+const COLUMNS_0181 =
+  "id, platform, topic_key, query, title, body, status, created_at, published_url, published_at, published_by, skipped_at, link_checked_at, link_state, link_rel";
 
 /** Все статьи, новые сверху. null — таблицы нет или база не ответила. */
 export async function listPosts(limit = 200): Promise<OutsidePost[] | null> {
   const db = serviceClient();
   if (!db) return null;
-  const { data, error } = await db.from("outside_posts").select(COLUMNS).order("created_at", { ascending: false }).limit(limit);
+  const query = (columns: string) => db.from("outside_posts").select(columns).order("created_at", { ascending: false }).limit(limit);
+  let { data, error } = await query(COLUMNS);
+  if (error) ({ data, error } = await query(COLUMNS_0181));
   if (error) return null;
-  return (data ?? []).map((r) => asPost(r as Record<string, unknown>)).filter((p): p is OutsidePost => Boolean(p));
+  return ((data ?? []) as unknown as Record<string, unknown>[]).map(asPost).filter((p): p is OutsidePost => Boolean(p));
 }
 
 export type NewPost = {
@@ -76,12 +93,63 @@ export type NewPost = {
   model: string;
 };
 
-/** Новый черновик. Строка — ошибка базы. */
-export async function savePost(post: NewPost): Promise<string | null> {
+/** Новый черновик: номер строки или ошибка базы. */
+export async function savePost(post: NewPost): Promise<{ id: string } | { error: string }> {
   const db = serviceClient();
-  if (!db) return "база недоступна";
-  const { error } = await db.from("outside_posts").insert({ ...post, status: "ready" });
-  return error ? error.message : null;
+  if (!db) return { error: "база недоступна" };
+  const { data, error } = await db.from("outside_posts").insert({ ...post, status: "ready" }).select("id").single();
+  if (error || !data) return { error: error?.message ?? "строка не вернулась" };
+  return { id: String(data.id) };
+}
+
+/* ── Сами: Telegraph и Postiz ──────────────────────────────────────────── */
+
+/** Telegraph ответил ссылкой — статья вышла. Ссылка — только с адреса площадки. */
+export async function markAutoPublished(id: string, platform: Platform, via: "telegraph" | "postiz", raw: string, now = new Date()): Promise<boolean> {
+  const url = publishedUrl(platform, raw);
+  const db = serviceClient();
+  if (!url || !db) return false;
+  const { error } = await db
+    .from("outside_posts")
+    .update({ status: "published", via, published_url: url, published_at: now.toISOString(), publish_error: null })
+    .eq("id", id)
+    .in("status", ["ready", "sent"]);
+  return !error;
+}
+
+/** Отдан в Postiz: ждём, когда площадка опубликует, — номер поста в Postiz. */
+export async function markAutoSent(id: string, externalId: string, now = new Date()): Promise<boolean> {
+  const db = serviceClient();
+  if (!db) return false;
+  const { error } = await db
+    .from("outside_posts")
+    .update({ status: "sent", via: "postiz", external_id: externalId.slice(0, 100), sent_at: now.toISOString(), publish_error: null })
+    .eq("id", id)
+    .eq("status", "ready");
+  return !error;
+}
+
+/**
+ * Сама не вышла: черновик возвращается в «Ждут публикации» с причиной —
+ * дальше его публикует человек, как vc.ru.
+ */
+export async function markAutoFailed(id: string, reason: string): Promise<void> {
+  const db = serviceClient();
+  if (!db) return;
+  await db
+    .from("outside_posts")
+    .update({ status: "ready", publish_error: reason.slice(0, 300) })
+    .eq("id", id)
+    .in("status", ["ready", "sent"]);
+}
+
+/** Отданные в Postiz и ещё без ссылки — их свип сверяет с Postiz. */
+export async function sentPosts(limit = 20): Promise<OutsidePost[]> {
+  const db = serviceClient();
+  if (!db) return [];
+  const { data, error } = await db.from("outside_posts").select(COLUMNS).eq("status", "sent").order("sent_at", { ascending: true }).limit(limit);
+  if (error) return [];
+  return (data ?? []).map((r) => asPost(r as Record<string, unknown>)).filter((p): p is OutsidePost => Boolean(p));
 }
 
 async function readyPost(id: string): Promise<OutsidePost | null> {

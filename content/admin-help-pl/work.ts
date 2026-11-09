@@ -520,6 +520,16 @@ export const workSections: Record<string, HelpEntry> = {
         ],
       },
       {
+        id: "auto",
+        title: "Publikuje się samo: Telegraph, VKontakte, kanał Telegram",
+        roles: ["admin", "head"],
+        body: [
+          "Blok **«Publikuje się samo»** to platformy, na których wolno publikować programem według ich regulaminu. Dostają szkic raz w tygodniu, jak vc.ru, przechodzą to samo sprawdzenie kodem i wychodzą bez człowieka: artykuł od razu pojawia się w **«Opublikowane»** z dopiskiem «wyszedł sam», a link do nas kod sprawdza tak samo jak u pozostałych. Jeśli się nie uda (platforma nie odpowiedziała, kanał odłączono), szkic wraca do **«Czekają na publikację»** z powodem i publikuje się go ręcznie.",
+          "**Telegraph** (telegra.ph, strony-artykuły Telegrama) nie wymaga rejestracji: konto studia kod zakłada sam przy pierwszym artykule, jego klucz leży w sejfie sekretów. Nic nie trzeba robić.",
+          "**VKontakte i kanał Telegram** idą przez Postiz, serwis publikacji odroczonych z oficjalnym połączeniem z platformami. Jeden raz: zarejestrować się na postiz.com, kliknąć «Add Channel» i zalogować się do społeczności VKontakte i kanału Telegram studia, potem Settings → Developers → Public API → skopiować klucz i wkleić go w **«Klucz API Postiz»**, przycisk **«Zapisz i sprawdź»**. Klucz zapisuje się tylko wtedy, gdy Postiz go przyjął; z powrotem panel pokazuje tylko «ustawiony» albo «pusty», do dziennika działań trafia bez wartości. Wiersz pod polem mówi, jakie kanały widzi Postiz i które nasze platformy publikują się same. Platforma bez kanału w Postiz nie dostaje szkicu.",
+        ],
+      },
+      {
         id: "publisher",
         title: "Kto publikuje",
         roles: ["admin", "head"],

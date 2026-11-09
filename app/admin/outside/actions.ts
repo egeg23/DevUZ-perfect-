@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { requestIp, requireSection } from "@/lib/admin/guard";
+import { savePostizKey } from "@/lib/outside/auto-store";
 import { markPublished, setPublisher, skipPost } from "@/lib/outside/store";
 
 /** Результат — `?r=` на странице раздела; экран остаётся на месте (KeepPlace). */
@@ -29,4 +30,11 @@ export async function publisherOutsideAction(formData: FormData) {
   const staff = await requireSection("/admin/outside");
   const chosen = String(formData.get("publisher") ?? "").trim();
   back(await setPublisher(staff, chosen || null, await requestIp()));
+}
+
+/** «Сохранить и проверить» ключ Postiz — руководитель и владелец (проверка в savePostizKey). */
+export async function postizKeyOutsideAction(formData: FormData) {
+  const staff = await requireSection("/admin/outside");
+  const result = await savePostizKey(staff, String(formData.get("key") ?? ""), await requestIp());
+  back(result === "ok" ? "keyok" : result === "bad" ? "keybad" : result);
 }

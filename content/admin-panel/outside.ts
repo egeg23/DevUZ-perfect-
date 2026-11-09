@@ -2,14 +2,15 @@ import { defineDict } from "@/lib/admin/i18n";
 
 /**
  * «Статьи на площадках» (/admin/outside): черновики для vc.ru, Дзена и
- * Tenchat. Тексты самих статей — русские данные и не переводятся.
+ * Tenchat и то, что публикуется само (Telegraph, ВКонтакте, Telegram-канал).
+ * Тексты самих статей — русские данные и не переводятся.
  */
 export const outsideDict = defineDict({
   title: { ru: "Статьи на площадках", uz: "Platformalardagi maqolalar", pl: "Artykuły na platformach" },
   lead: {
-    ru: "Раз в неделю здесь появляется по черновику для vc.ru, Дзена и Tenchat. Публиковать программой эти площадки не дают, поэтому публикует человек: «Скопировать», вставить в редактор площадки, опубликовать и вставить сюда ссылку на статью.",
-    uz: "Har hafta bu yerda vc.ru, Dzen va Tenchat uchun bittadan qoralama paydo bo‘ladi. Bu platformalar dastur orqali e’lon qilishga ruxsat bermaydi, shuning uchun odam e’lon qiladi: «Nusxa olish», platforma muharririga qo‘yish, e’lon qilish va maqola havolasini shu yerga qo‘yish.",
-    pl: "Raz w tygodniu pojawia się tu po jednym szkicu dla vc.ru, Dzen i Tenchat. Te platformy nie pozwalają publikować programem, więc publikuje człowiek: „Kopiuj”, wkleić do edytora platformy, opublikować i wkleić tu link do artykułu.",
+    ru: "Раз в неделю здесь появляется по черновику для vc.ru, Дзена и Tenchat. Публиковать программой эти площадки не дают, поэтому публикует человек: «Скопировать», вставить в редактор площадки, опубликовать и вставить сюда ссылку на статью. Telegraph, ВКонтакте и Telegram-канал публикуются сами, их статьи сразу попадают в «Опубликованные».",
+    uz: "Har hafta bu yerda vc.ru, Dzen va Tenchat uchun bittadan qoralama paydo bo‘ladi. Bu platformalar dastur orqali e’lon qilishga ruxsat bermaydi, shuning uchun odam e’lon qiladi: «Nusxa olish», platforma muharririga qo‘yish, e’lon qilish va maqola havolasini shu yerga qo‘yish. Telegraph, VKontakte va Telegram-kanal o‘zi e’lon qilinadi, ularning maqolalari darhol «E’lon qilinganlar»ga tushadi.",
+    pl: "Raz w tygodniu pojawia się tu po jednym szkicu dla vc.ru, Dzen i Tenchat. Te platformy nie pozwalają publikować programem, więc publikuje człowiek: „Kopiuj”, wkleić do edytora platformy, opublikować i wkleić tu link do artykułu. Telegraph, VKontakte i kanał Telegram publikują się same, ich artykuły od razu trafiają do „Opublikowane”.",
   },
   off: {
     ru: "Раздел ещё не включён: в базе нет таблицы статей. Скажите владельцу.",
@@ -95,6 +96,63 @@ export const outsideDict = defineDict({
     uz: (n: number) => `Jami o‘tkazib yuborilgan: ${n}`,
     pl: (n: number) => `Pominięto łącznie: ${n}`,
   },
+  autoTitle: { ru: "Публикуется само", uz: "O‘zi e’lon qilinadi", pl: "Publikuje się samo" },
+  autoLead: {
+    ru: "Telegraph, ВКонтакте и Telegram-канал студии получают свой черновик раз в неделю и публикуются без человека: у них есть официальный способ публиковать программой. Не вышло — черновик появится выше, в «Ждут публикации», с причиной.",
+    uz: "Telegraph, VKontakte va studiyaning Telegram-kanali haftada bir marta o‘z qoralamasini oladi va odamsiz e’lon qilinadi: ularda dastur orqali e’lon qilishning rasmiy yo‘li bor. Chiqmasa, qoralama yuqorida, «E’lon qilinishini kutmoqda»da sababi bilan paydo bo‘ladi.",
+    pl: "Telegraph, VKontakte i kanał Telegram studia dostają swój szkic raz w tygodniu i publikują się bez człowieka: mają oficjalny sposób publikowania programem. Jeśli się nie uda, szkic pojawi się wyżej, w „Czekają na publikację”, z powodem.",
+  },
+  telegraph: {
+    ru: (ready: boolean) => `Telegraph: публикуется сам, регистрация не нужна. Аккаунт студии: ${ready ? "заведён" : "заведётся с первой статьёй"}.`,
+    uz: (ready: boolean) => `Telegraph: o‘zi e’lon qilinadi, ro‘yxatdan o‘tish shart emas. Studiya akkaunti: ${ready ? "ochilgan" : "birinchi maqola bilan ochiladi"}.`,
+    pl: (ready: boolean) => `Telegraph: publikuje się sam, rejestracja nie jest potrzebna. Konto studia: ${ready ? "założone" : "założy się przy pierwszym artykule"}.`,
+  },
+  postizKey: { ru: "Ключ API Postiz", uz: "Postiz API kaliti", pl: "Klucz API Postiz" },
+  keySet: { ru: "задано", uz: "kiritilgan", pl: "ustawiony" },
+  keyEmpty: { ru: "пусто", uz: "bo‘sh", pl: "pusty" },
+  keyPlaceholder: {
+    ru: "Новый ключ. Пусто — проверить сохранённый",
+    uz: "Yangi kalit. Bo‘sh — saqlanganini tekshirish",
+    pl: "Nowy klucz. Puste — sprawdzić zapisany",
+  },
+  saveCheck: { ru: "Сохранить и проверить", uz: "Saqlash va tekshirish", pl: "Zapisz i sprawdź" },
+  postizHow: {
+    ru: "Ключ: Postiz → Settings → Developers → Public API. Каналы ВКонтакте и Telegram подключаются там же, кнопкой «Add Channel», входом в аккаунт площадки. Ключ хранится в хранилище секретов, обратно показываем только «задано» или «пусто».",
+    uz: "Kalit: Postiz → Settings → Developers → Public API. VKontakte va Telegram kanallari o‘sha yerda «Add Channel» tugmasi bilan, platforma akkauntiga kirib ulanadi. Kalit sirlar omborida saqlanadi, qaytib faqat «kiritilgan» yoki «bo‘sh» ko‘rsatiladi.",
+    pl: "Klucz: Postiz → Settings → Developers → Public API. Kanały VKontakte i Telegram podłącza się tam przyciskiem „Add Channel”, logując się na konto platformy. Klucz leży w sejfie sekretów, z powrotem pokazujemy tylko „ustawiony” albo „pusty”.",
+  },
+  openPostiz: { ru: "Открыть Postiz", uz: "Postizni ochish", pl: "Otwórz Postiz" },
+  checkOk: {
+    ru: (n: number, ours: string, date: string) => `Проверено ${date}: каналов в Postiz ${n}${ours ? `, публикуются сами: ${ours}` : ", но ВКонтакте и Telegram среди них нет: подключите их в Postiz"}.`,
+    uz: (n: number, ours: string, date: string) => `${date} tekshirildi: Postizda kanallar ${n}${ours ? `, o‘zi e’lon qilinadi: ${ours}` : ", lekin ular orasida VKontakte va Telegram yo‘q: ularni Postizda ulang"}.`,
+    pl: (n: number, ours: string, date: string) => `Sprawdzono ${date}: kanałów w Postiz ${n}${ours ? `, publikują się same: ${ours}` : ", ale nie ma wśród nich VKontakte i Telegram: podłącz je w Postiz"}.`,
+  },
+  checkFail: {
+    ru: (reason: string, date: string) => `Проверка ${date} не прошла: ${reason}. Ключ не сохранён.`,
+    uz: (reason: string, date: string) => `${date} tekshiruv o‘tmadi: ${reason}. Kalit saqlanmadi.`,
+    pl: (reason: string, date: string) => `Sprawdzenie ${date} nie przeszło: ${reason}. Klucz nie został zapisany.`,
+  },
+  autoFailed: {
+    ru: (reason: string) => `Сама не вышла: ${reason}. Опубликуйте руками, как обычно.`,
+    uz: (reason: string) => `O‘zi chiqmadi: ${reason}. Odatdagidek qo‘lda e’lon qiling.`,
+    pl: (reason: string) => `Nie wyszło samo: ${reason}. Opublikuj ręcznie, jak zwykle.`,
+  },
+  sentLine: {
+    ru: (date: string) => `отдана в Postiz ${date}: ссылка появится здесь, когда пост выйдет`,
+    uz: (date: string) => `${date} Postizga berildi: post chiqqanda havola shu yerda paydo bo‘ladi`,
+    pl: (date: string) => `przekazany do Postiz ${date}: link pojawi się tu, gdy post wyjdzie`,
+  },
+  publishedAuto: {
+    ru: (date: string) => `вышла сама, ${date}`,
+    uz: (date: string) => `o‘zi chiqdi, ${date}`,
+    pl: (date: string) => `wyszedł sam, ${date}`,
+  },
+  r_keyok: { ru: "Ключ Postiz проверен.", uz: "Postiz kaliti tekshirildi.", pl: "Klucz Postiz sprawdzony." },
+  r_keybad: {
+    ru: "Postiz не принял ключ или не ответил: ниже написано почему. Сохранённый ключ не менялся.",
+    uz: "Postiz kalitni qabul qilmadi yoki javob bermadi: sababi pastda yozilgan. Saqlangan kalit o‘zgarmadi.",
+    pl: "Postiz nie przyjął klucza albo nie odpowiedział: niżej jest napisane dlaczego. Zapisany klucz się nie zmienił.",
+  },
   r_ok: { ru: "Готово.", uz: "Tayyor.", pl: "Gotowe." },
   r_bad: {
     ru: "Ссылка не с этой площадки или не https. Скопируйте адрес статьи из строки браузера.",
@@ -119,4 +177,7 @@ export const platformDict = defineDict({
   vcru: { ru: "vc.ru", uz: "vc.ru", pl: "vc.ru" },
   dzen: { ru: "Дзен", uz: "Dzen", pl: "Dzen" },
   tenchat: { ru: "Tenchat", uz: "Tenchat", pl: "Tenchat" },
+  telegraph: { ru: "Telegraph", uz: "Telegraph", pl: "Telegraph" },
+  vk: { ru: "ВКонтакте", uz: "VKontakte", pl: "VKontakte" },
+  telegram: { ru: "Telegram-канал", uz: "Telegram-kanal", pl: "Kanał Telegram" },
 });
