@@ -157,6 +157,13 @@ services:
       # Ключ Вордстата — API-ключ Яндекс Облака (AQVN…) или OAuth-токен:
       # запросы по Узбекистану перед каждой статьёй.
       WORDSTAT_TOKEN: ${WORDSTAT_TOKEN:-}
+      # Статьи на площадках сами (lib/outside/): ключ Postiz обычно — в
+      # хранилище секретов, его вставляют в «Статьях на площадках»;
+      # POSTIZ_API_URL — только для своего Postiz вместо облака. Ключ
+      # Telegraph заводится сам при первой статье.
+      POSTIZ_API_KEY: ${POSTIZ_API_KEY:-}
+      POSTIZ_API_URL: ${POSTIZ_API_URL:-}
+      TELEGRAPH_TOKEN: ${TELEGRAPH_TOKEN:-}
 
       # Автопилот рекламы (docs/ads-autopilot/design.md). Можно и в хранилище
       # секретов вместо .env. ADS_AUTOPILOT=1 — фоновые проходы включены;

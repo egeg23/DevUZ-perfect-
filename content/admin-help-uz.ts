@@ -2005,6 +2005,16 @@ export const uz: HelpCopy = {
           ],
         },
         {
+          id: "auto",
+          title: "O‘zi e’lon qilinadi: Telegraph, VKontakte, Telegram-kanal",
+          roles: ["admin", "head"],
+          body: [
+            "**«O‘zi e’lon qilinadi»** bloki — o‘z qoidalariga ko‘ra dastur orqali e’lon qilish mumkin bo‘lgan platformalar. Ular vc.ru kabi haftada bir marta qoralama oladi, kodning o‘sha tekshiruvidan o‘tadi va odamsiz chiqadi: maqola darhol **«E’lon qilinganlar»**da «o‘zi chiqdi» belgisi bilan paydo bo‘ladi, bizga havolani kod boshqalardagidek tekshiradi. Chiqmasa (platforma javob bermadi, kanal uzildi), qoralama sababi bilan **«E’lon qilinishini kutmoqda»**ga qaytadi va uni qo‘lda e’lon qilishadi.",
+            "**Telegraph** (telegra.ph — Telegramning maqola sahifalari) ro‘yxatdan o‘tishni talab qilmaydi: studiya akkauntini kod birinchi maqola bilan o‘zi ochadi, uning kaliti sirlar omborida turadi. Hech narsa qilish shart emas.",
+            "**VKontakte va Telegram-kanal** Postiz orqali chiqadi — bu platformalarga rasmiy ulanishi bor kechiktirilgan e’lonlar xizmati. Bir marta: postiz.com da ro‘yxatdan o‘tish, «Add Channel» tugmasini bosib studiyaning VKontakte hamjamiyatiga va Telegram-kanaliga kirish, keyin Settings → Developers → Public API → kalitdan nusxa olib, uni **«Postiz API kaliti»** maydoniga qo‘yish, **«Saqlash va tekshirish»** tugmasi. Kalit faqat Postiz uni qabul qilsa saqlanadi; panel qaytib faqat «kiritilgan» yoki «bo‘sh» ko‘rsatadi, harakatlar jurnaliga qiymatsiz yoziladi. Maydon ostidagi qator Postiz qaysi kanallarni ko‘rishini va bizning qaysi platformalarimiz o‘zi e’lon qilinishini aytadi. Postizda kanali yo‘q platforma qoralama olmaydi.",
+          ],
+        },
+        {
           id: "publisher",
           title: "Kim e’lon qiladi",
           roles: ["admin", "head"],

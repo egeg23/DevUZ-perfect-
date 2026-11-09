@@ -14,6 +14,7 @@ import { caseBySlug } from "@/content/cases";
 import { OUTSIDE_TOPICS, type OutsideTopic } from "@/content/outside-topics";
 import { opens, SECTIONS } from "@/lib/admin/roles";
 import {
+  AUTO_PLATFORMS,
   OUTSIDE_REGION,
   PLATFORM,
   PLATFORMS,
@@ -24,14 +25,19 @@ import {
   ourLinkOn,
   outsideProblems,
   pickTopics,
+  postizContent,
+  postizRequest,
   publishedUrl,
   toHtml,
   toPlain,
+  toTelegraphNodes,
   weekCardText,
   weekOf,
   withUtm,
   type Platform,
 } from "@/lib/outside/posts";
+import { checkOf } from "@/lib/outside/auto-store";
+import { channelFor, parseChannels, postizReason, releaseOf } from "@/lib/outside/postiz";
 import { draftPrompt } from "@/lib/outside/write";
 import { siteUrl } from "@/lib/seo";
 
@@ -67,7 +73,7 @@ test("раздел «Статьи на площадках» — владельц
   assert.ok(opens({ role: "manager", section_access: { "/admin/outside": true } }, "/admin/outside"));
   assert.match(read("app/admin/outside/page.tsx"), /requireSection\("\/admin\/outside"\)/);
   const actions = read("app/admin/outside/actions.ts");
-  assert.equal(actions.match(/requireSection\("\/admin\/outside"\)/g)?.length, 3);
+  assert.equal(actions.match(/requireSection\("\/admin\/outside"\)/g)?.length, 4);
   // «Кто публикует» — руководитель и владелец, проверяет сервер.
   assert.match(read("lib/outside/store.ts"), /if \(!mayChoosePublisher\(staff\)\) return "forbidden";/);
 });
@@ -132,10 +138,10 @@ test("ссылки — только наш сайт, все работы и ке
   assert.doesNotMatch(plain, /\*\*|##/);
 });
 
-test("неделя: три площадки — три разные темы, тема на площадку один раз, неопубликованный черновик новую не получает", () => {
+test("неделя: у каждой площадки своя тема, тема на площадку один раз, неопубликованный черновик новую не получает", () => {
   const first = pickTopics([], []);
   const keys = PLATFORMS.map((p) => first[p]?.key);
-  assert.equal(new Set(keys).size, 3);
+  assert.equal(new Set(keys).size, PLATFORMS.length);
   const written = PLATFORMS.map((p) => ({ platform: p, topic_key: first[p]!.key }));
   const second = pickTopics(written, ["dzen"]);
   assert.equal(second.dzen, undefined, "у Дзена неопубликованный черновик");
@@ -240,4 +246,112 @@ test("миграция, журнал и инструкция на трёх яз�
   for (const file of ["content/admin-help-ru.ts", "content/admin-help-uz.ts", "content/admin-help-pl/work.ts"]) {
     assert.match(read(file), /"\/admin\/outside": \{/, file);
   }
+});
+
+/* ── Публикуется само: Telegraph, ВКонтакте и Telegram через Postiz (09.11.2026) ── */
+
+test("сами публикуются только площадки с официальным способом: Telegraph — своим API, ВКонтакте и Telegram — через Postiz", () => {
+  assert.deepEqual([...AUTO_PLATFORMS], ["telegraph", "vk", "telegram"]);
+  for (const p of ["vcru", "dzen", "tenchat"] as const) assert.equal(PLATFORM[p].via, "hand", p);
+  assert.equal(PLATFORM.telegraph.via, "telegraph");
+  assert.equal(PLATFORM.vk.postiz, "vk");
+  assert.equal(PLATFORM.telegram.postiz, "telegram");
+  // Посты — без подзаголовков и с одной ссылкой, как Tenchat.
+  for (const p of ["vk", "telegram"] as const) {
+    assert.deepEqual([...PLATFORM[p].headings], [0, 0], p);
+    assert.equal(PLATFORM[p].links, 1, p);
+  }
+  // Площадка, которая публикуется сама, получает тему, только если подключена.
+  const only = pickTopics([], [], undefined, ["vcru", "telegraph"]);
+  assert.deepEqual(Object.keys(only).sort(), ["telegraph", "vcru"]);
+  const run = read("lib/outside/run.ts");
+  assert.match(run, /via === "postiz" && channelFor\(channels, p\)/);
+  assert.match(run, /for \(const platform of active\)/);
+});
+
+test("Telegraph: страница из узлов, подзаголовок h3, ссылки с метками Метрики, HTML строкой не уходит", () => {
+  const body = `Абзац с **жирным** и <script>.\n\n## Подзаголовок\n\n• один\n• два [кейс SamAuto](${siteUrl}/ru/cases/samauto)`;
+  const nodes = toTelegraphNodes(body, "telegraph", "auto-dealer-site");
+  assert.deepEqual(nodes[0], { tag: "p", children: ["Абзац с ", { tag: "b", children: ["жирным"] }, " и <script>."] });
+  assert.deepEqual(nodes[1], { tag: "h3", children: ["Подзаголовок"] });
+  const list = nodes[2] as { tag: string; children: { tag: string; children: unknown[] }[] };
+  assert.equal(list.tag, "ul");
+  const link = list.children[1].children[1] as { tag: string; attrs: { href: string }; children: string[] };
+  assert.equal(link.tag, "a");
+  assert.match(link.attrs.href, /\/ru\/cases\/samauto\?utm_source=telegraph&utm_medium=article&utm_campaign=auto-dealer-site$/);
+  const tg = read("lib/outside/telegraph.ts");
+  assert.match(tg, /saveAppSecret\(TELEGRAPH_KEY, made\.access_token\)/, "ключ аккаунта — в хранилище");
+  assert.doesNotMatch(tg, /console\.(log|info)/, "ключ не печатается");
+});
+
+test("Postiz: Telegram получает ссылки и жирный, ВКонтакте — текст с адресом в скобках; запрос «сейчас» на канал площадки", () => {
+  const body = `Первый абзац.\n\nСмотрите [кейс SamAuto](${siteUrl}/ru/cases/samauto).`;
+  const tg = postizContent("Сайт <для> автосалона", body, "telegram", "auto-dealer-site");
+  assert.match(tg, /^<p><strong>Сайт &lt;для&gt; автосалона<\/strong><\/p>/);
+  assert.match(tg, /<a href="[^"]+utm_source=telegram[^"]*">кейс SamAuto<\/a>/);
+  const vk = postizContent("Сайт для автосалона", body, "vk", "auto-dealer-site");
+  assert.doesNotMatch(vk, /<a /, "ВКонтакте Postiz снимает теги: ссылка — адресом");
+  assert.match(vk, /кейс SamAuto \(https:\/\/[^)]+utm_source=vk/);
+  const req = postizRequest("vk", "ch-1", vk, new Date("2026-11-09T08:00:00Z"));
+  assert.equal(req.type, "now");
+  assert.equal(req.date, "2026-11-09T08:00:00.000Z");
+  assert.deepEqual(req.posts[0].integration, { id: "ch-1" });
+  assert.deepEqual(req.posts[0].settings, { __type: "vk" });
+  assert.throws(() => postizRequest("vcru", "ch-1", vk, new Date()));
+});
+
+test("Postiz: каналы, выключенный канал не берём, что стало с постом, ошибка словами", () => {
+  const channels = parseChannels([
+    { id: "a", name: "DevUz VK", identifier: "vk", disabled: true },
+    { id: "b", name: "DevUz VK 2", identifier: "vk", disabled: false },
+    { id: "c", name: "DevUz", identifier: "telegram" },
+    { id: 5, identifier: "x" },
+  ]);
+  assert.equal(channels.length, 3);
+  assert.equal(channelFor(channels, "vk")?.id, "b");
+  assert.equal(channelFor(channels, "telegram")?.id, "c");
+  assert.equal(channelFor(channels, "vcru"), null);
+  assert.deepEqual(checkOf(channels, new Date("2026-11-09T08:00:00Z")).ready, ["vk", "telegram"]);
+  const data = {
+    posts: [
+      { id: "p1", state: "PUBLISHED", releaseURL: "https://vk.com/wall-1_2" },
+      { id: "p2", state: "ERROR", error: "token expired" },
+      { id: "p3", state: "QUEUE", releaseURL: null },
+    ],
+  };
+  assert.deepEqual(releaseOf(data, "p1"), { state: "published", url: "https://vk.com/wall-1_2", error: null });
+  assert.equal(releaseOf(data, "p2")?.state, "error");
+  assert.equal(releaseOf(data, "p3")?.state, "waiting");
+  assert.equal(releaseOf(data, "nope"), null);
+  assert.match(postizReason(401, ""), /не принял ключ/);
+  // Ссылки с площадок, которые публикуются сами, — только их адреса.
+  assert.equal(publishedUrl("telegraph", "https://telegra.ph/Sajt-dlya-avtosalona-11-09"), "https://telegra.ph/Sajt-dlya-avtosalona-11-09");
+  assert.equal(publishedUrl("vk", "https://vk.com/wall-1_2"), "https://vk.com/wall-1_2");
+  assert.equal(publishedUrl("telegram", "https://t.me/devuz/12"), "https://t.me/devuz/12");
+  assert.equal(publishedUrl("telegram", "https://vk.com/wall-1_2"), null);
+});
+
+test("не вышло само — черновик человеку с причиной; ключ Postiz пишется только после проверки и без значения в журнал", () => {
+  const run = read("lib/outside/run.ts");
+  assert.match(run, /await markAutoFailed\(id, reason\)/);
+  assert.match(run, /SENT_GIVE_UP_MS = 3 \* 86_400_000/);
+  assert.match(run, /if \(!sent\.length\) return 0;/, "к Postiz — только когда есть отданные");
+  const store = read("lib/outside/auto-store.ts");
+  assert.ok(store.indexOf("await postizChannels(key || undefined)") < store.indexOf("saveAppSecret(POSTIZ_KEY, key)"), "сначала Postiz принял ключ, потом запись");
+  assert.match(store, /if \(!mayChoosePublisher\(staff\)\) return "forbidden";/);
+  assert.match(store, /meta: \{ new_key: Boolean\(key\), channels: check\.channels\.length, ready: check\.ready \}/);
+  assert.match(read("lib/admin/audit.ts"), /"outside\.postiz_key_saved"/);
+  assert.match(read("lib/admin/journal.ts"), /"outside\.postiz_key_saved"/);
+  // Ключ — в поле пароля, без автозаполнения.
+  assert.match(read("components/admin/outside-view.tsx"), /name="key"\s+type="password"\s+autoComplete="off"/);
+  const sql = read("supabase/migrations/0182_outside_auto.sql");
+  assert.match(sql, /platform in \('vcru', 'dzen', 'tenchat', 'telegraph', 'vk', 'telegram'\)/);
+  assert.match(sql, /status in \('ready', 'sent', 'published', 'skipped'\)/);
+});
+
+test("карточка недели: что ушло само — отдельно, без просьбы копировать, когда руками делать нечего", () => {
+  const onlyAuto = weekCardText([], [], (s) => s, [{ platform: "telegraph", title: "Как проверить сайт" }]);
+  assert.match(onlyAuto, /Ушли сами, делать ничего не нужно:\n• Telegraph: «Как проверить сайт»/);
+  assert.doesNotMatch(onlyAuto, /Скопировать/);
+  assert.match(weekCardText([{ platform: "vcru", title: "X" }], [], (s) => s), /Скопировать/);
 });

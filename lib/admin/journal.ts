@@ -77,6 +77,7 @@ export const ACTION_LABEL: Record<AuditAction, Tr> = {
   "outside.published": { ru: "опубликовал статью на площадке", uz: "platformada maqola e’lon qildi", pl: "opublikował artykuł na platformie" },
   "outside.skipped": { ru: "пропустил черновик статьи на площадку", uz: "platforma uchun maqola qoralamasini o‘tkazib yubordi", pl: "pominął szkic artykułu na platformę" },
   "outside.publisher_set": { ru: "выбрал, кто публикует статьи на площадках", uz: "platformalarda maqolalarni kim e’lon qilishini tanladi", pl: "wybrał, kto publikuje artykuły na platformach" },
+  "outside.postiz_key_saved": { ru: "сохранил или проверил ключ Postiz", uz: "Postiz kalitini saqladi yoki tekshirdi", pl: "zapisał albo sprawdził klucz Postiz" },
   "ads.app_keys_saved": { ru: "вставил ключи приложения Google", uz: "Google ilovasi kalitlarini kiritdi", pl: "wkleił klucze aplikacji Google" },
   "ads.planner_set": { ru: "выбрал кабинет для планировщика ключевых слов", uz: "kalit so‘zlar rejalashtiruvchisi uchun kabinet tanladi", pl: "wybrał konto dla planera słów kluczowych" },
   "staff.invited": { ru: "завёл сотрудника", uz: "xodim qo‘shdi", pl: "dodał pracownika" },
