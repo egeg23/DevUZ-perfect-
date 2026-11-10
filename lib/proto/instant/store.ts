@@ -120,7 +120,8 @@ export async function saveInstantProto(
         name: build.site.name,
         source: build.site.source,
         locale: build.site.locale,
-        instant: { tg: String(who.tgId), username: who.username, staff: who.staffId, site: build.site },
+        // Сборка сотрудника — тестовая: в «Макетах» с пометкой, лида нет.
+        instant: { tg: String(who.tgId), username: who.username, staff: who.staffId, test: Boolean(who.staffId), site: build.site },
       },
       html: build.html,
       stamp: build.stamp,

@@ -60,7 +60,7 @@ export async function mockupList(locale: PanelLocale): Promise<MockupRow[]> {
     const { data, error } = await db
       .from("protos")
       .select(
-        "id, token, niche, locale, name, source, created_at, opens, opened_at, prospect_id, auto, closed_at, auto_closed_at, owner_staff_id, created_by, lock:facts->>lock, lockAt:facts->>lockAt, open:facts->>open, promo:facts->promo",
+        "id, token, niche, locale, name, source, created_at, opens, opened_at, prospect_id, auto, closed_at, auto_closed_at, owner_staff_id, created_by, lock:facts->>lock, lockAt:facts->>lockAt, open:facts->>open, promo:facts->promo, instantTg:facts->instant->>tg, instantTest:facts->instant->>test",
       )
       .neq("status", "draft")
       .order("created_at", { ascending: false })
@@ -92,6 +92,7 @@ export async function mockupList(locale: PanelLocale): Promise<MockupRow[]> {
       rows.push({
         ref: `p:${id}`,
         kind: "proto",
+        bot: row.instantTg ? (row.instantTest === "true" ? "test" : "client") : null,
         name: String(row.name),
         site: String(row.source || "") || null,
         url: protoUrl(String(row.token)),

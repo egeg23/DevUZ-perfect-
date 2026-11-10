@@ -58,7 +58,7 @@ import { BROADCAST_NOTE, broadcastTurn } from "@/lib/admin/bot-users";
 import { NO_MORE_WAIT, TIDY_CALLBACK, parseTidyCallback } from "@/lib/admin/lead-tidy";
 import { answerTidy } from "@/lib/admin/lead-tidy-store";
 import { findStaffByTelegram, issueLoginToken, staffByTelegramId, type Staff } from "@/lib/admin/session";
-import { INSTANT_CB, INSTANT_START, handleInstantButton, handleInstantText, startInstant, type Ctx as InstantCtx } from "@/lib/proto/instant/bot";
+import { INSTANT_CB, INSTANT_START, handleInstantButton, handleInstantText, instantOpenFor, startInstant, type Ctx as InstantCtx } from "@/lib/proto/instant/bot";
 import { realDeps as instantDeps } from "@/lib/proto/instant/bot-deps";
 import {
   APP_CODE_NONE,
@@ -554,6 +554,7 @@ async function instantCtx(chatId: number, from: TelegramUser | undefined, locale
     username: from?.username ?? null,
     locale: locale === "uz" ? "uz" : "ru",
     staffId: staff?.id ?? null,
+    role: staff?.role ?? null,
   };
 }
 
@@ -891,8 +892,15 @@ async function handleClient(message: NonNullable<Update["message"]>) {
     }
 
     // «Макет в боте»: ссылка t.me/<бот>?start=maket с сайта и из рекламы.
+    // Пока поток закрыт (MOCKUP_BOT_OPEN), остальным — обычный холодный старт.
     if (payload === INSTANT_START) {
-      await startInstant(await instantCtx(chat.id, message.from, locale), instantDeps());
+      const ictx = await instantCtx(chat.id, message.from, locale);
+      if (instantOpenFor(ictx)) {
+        await startInstant(ictx, instantDeps());
+        return;
+      }
+      if (!existing) startSession(chat.id, locale);
+      await sendMessage(chat.id, copy.welcome);
       return;
     }
 
@@ -969,9 +977,13 @@ async function handleClient(message: NonNullable<Update["message"]>) {
   }
 
   // «Макет в боте» командой: /maket (и /mockup), по-узбекски — та же.
+  // Пока поток закрыт, остальным это неизвестная команда, как раньше.
   if (/^\/(maket|mockup)(@\w+)?$/i.test(text)) {
-    await startInstant(await instantCtx(chat.id, message.from, locale), instantDeps());
-    return;
+    const ictx = await instantCtx(chat.id, message.from, locale);
+    if (instantOpenFor(ictx)) {
+      await startInstant(ictx, instantDeps());
+      return;
+    }
   }
 
   if (text.startsWith("/")) {

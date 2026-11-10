@@ -6,6 +6,7 @@
  */
 import { routeNewLead } from "@/lib/admin/lead-queue-store";
 import { CIRCLE_NICHE_RU } from "@/lib/admin/sales-after-reply";
+import { MOCKUP_BOT_OPEN } from "@/lib/proto/instant/limits";
 import { readClientSite } from "@/lib/proto/instant/read";
 import { claimBuild, dropFlow, flowOf, instantCounts, saveFlow, saveInstantProto, setProtoLead } from "@/lib/proto/instant/store";
 import type { Deps, LeadInput } from "@/lib/proto/instant/bot";
@@ -112,5 +113,6 @@ export function realDeps(): Deps {
     setLead: setProtoLead,
     protoUrl,
     now: () => new Date(),
+    open: MOCKUP_BOT_OPEN,
   };
 }

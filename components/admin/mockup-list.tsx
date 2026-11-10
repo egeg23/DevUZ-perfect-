@@ -193,6 +193,7 @@ export function MockupList({ rows, team, orders = [] }: { rows: MockupView[]; te
                       <span className="font-medium text-text">{row.name}</span>
                       {row.site ? <span className="font-mono text-xs text-blue-soft">{row.site}</span> : null}
                       {row.kind === "showcase" ? <span className="text-xs text-faint">{t.tagShowcase}</span> : null}
+                      {row.bot ? <span className="text-xs text-faint">{row.bot === "test" ? t.tagBotTest : t.tagBot}</span> : null}
                     </p>
                     <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">
                       <span>

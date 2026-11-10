@@ -22,7 +22,7 @@ import plans from "@/content/mockup-plans.json" with { type: "json" };
 import { OFFER_MS, announceText } from "@/lib/admin/mockup-offer";
 import { CIRCLE_NICHES, CIRCLE_NICHE_RU, isCircleNiche, type CircleNiche } from "@/lib/admin/sales-after-reply";
 import { buildInstant, type InstantBuild } from "@/lib/proto/instant/build";
-import { DAILY_CAP, limitVerdict, siteUrlOf } from "@/lib/proto/instant/limits";
+import { DAILY_CAP, limitVerdict, mayUseInstant, siteUrlOf } from "@/lib/proto/instant/limits";
 import { readClientSite, siteFromAnswers, type ReadResult } from "@/lib/proto/instant/read";
 import type { Flow } from "@/lib/proto/instant/store";
 import { instantReady, type InstantLocale, type InstantNiche, type InstantSite } from "@/lib/proto/instant/types";
@@ -37,8 +37,10 @@ export type Ctx = {
   tgId: number;
   username: string | null;
   locale: InstantLocale;
-  /** id сотрудника, если пишет сотрудник: без лимита. */
+  /** id сотрудника, если пишет сотрудник: без лимита, макет тестовый, без лида. */
   staffId: string | null;
+  /** Роль сотрудника по базе: пока поток закрыт, пускаем только admin и head. */
+  role: string | null;
 };
 
 type Btn = { text: string; callback_data: string } | { text: string; url: string };
@@ -61,6 +63,8 @@ export type Deps = {
   setLead: (protoId: string, leadId: string) => Promise<void>;
   protoUrl: (token: string) => string;
   now: () => Date;
+  /** MOCKUP_BOT_OPEN; в тестах — оба положения. */
+  open?: boolean;
 };
 
 export type LeadInput = {
@@ -208,7 +212,11 @@ async function allowed(ctx: Ctx, deps: Deps): Promise<boolean> {
   return true;
 }
 
+/** Поток открыт этому человеку? Нет — вызывающий ведёт себя как раньше. */
+export const instantOpenFor = (ctx: Pick<Ctx, "role">, open?: boolean) => mayUseInstant(ctx.role, open);
+
 export async function startInstant(ctx: Ctx, deps: Deps): Promise<void> {
+  if (!instantOpenFor(ctx, deps.open)) return;
   if (!(await allowed(ctx, deps))) return;
   await deps.saveFlow(ctx.chatId, fresh(ctx, "url"));
   await deps.send(ctx.chatId, T[ctx.locale].ask, [[{ text: T[ctx.locale].nosite, callback_data: `${INSTANT_CB}:nosite` }]]);
@@ -225,6 +233,10 @@ export async function handleInstantText(
   const flow = await deps.flowOf(chatId);
   if (!flow) return false;
   const ctx = await makeCtx();
+  if (!instantOpenFor(ctx, deps.open)) {
+    await deps.dropFlow(chatId);
+    return false;
+  }
   const t = T[flow.locale];
   const value = text.trim().slice(0, 1500);
   switch (flow.stage) {
@@ -273,6 +285,7 @@ export async function handleInstantText(
 
 /** Кнопка потока: «Сайта нет» или ниша. */
 export async function handleInstantButton(ctx: Ctx, parts: readonly string[], deps: Deps): Promise<void> {
+  if (!instantOpenFor(ctx, deps.open)) return;
   const flow = (await deps.flowOf(ctx.chatId)) ?? null;
   if (!flow) {
     await startInstant(ctx, deps);
@@ -289,7 +302,7 @@ export async function handleInstantButton(ctx: Ctx, parts: readonly string[], de
   if (!instantReady(niche)) {
     await deps.dropFlow(ctx.chatId);
     await deps.send(ctx.chatId, t.soon);
-    await deps.lead({ ctx, name: ctx.username ? `@${ctx.username}` : "", niche, site: flow.url, link: null, phone: null, why: "soon" });
+    if (!ctx.staffId) await deps.lead({ ctx, name: ctx.username ? `@${ctx.username}` : "", niche, site: flow.url, link: null, phone: null, why: "soon" });
     return;
   }
   const next: Flow = { ...flow, niche };
@@ -361,7 +374,7 @@ export async function runBuild(ctx: Ctx, flow: Flow, deps: Deps): Promise<void> 
     await step("check", true);
     await deps.dropFlow(ctx.chatId);
     await deps.send(ctx.chatId, T[locale].failed);
-    await deps.lead({ ctx, name, niche, site: flow.url, link: null, phone: build.site.phone, why: "failed" });
+    if (!ctx.staffId) await deps.lead({ ctx, name, niche, site: flow.url, link: null, phone: build.site.phone, why: "failed" });
     return;
   }
   const saved = await deps.save(build, ctx);
@@ -369,7 +382,7 @@ export async function runBuild(ctx: Ctx, flow: Flow, deps: Deps): Promise<void> 
     await step("check", true);
     await deps.dropFlow(ctx.chatId);
     await deps.send(ctx.chatId, T[locale].failed);
-    await deps.lead({ ctx, name, niche, site: flow.url, link: null, phone: build.site.phone, why: "failed" });
+    if (!ctx.staffId) await deps.lead({ ctx, name, niche, site: flow.url, link: null, phone: build.site.phone, why: "failed" });
     return;
   }
   await step("done");
@@ -377,6 +390,8 @@ export async function runBuild(ctx: Ctx, flow: Flow, deps: Deps): Promise<void> 
   const link = deps.protoUrl(saved.token);
   await deps.send(ctx.chatId, T[locale].ready(build.site.name), [[{ text: T[locale].openBtn, url: link }]]);
   await deps.send(ctx.chatId, priceText(locale, deps.now()));
+  // Сборка сотрудника — тестовая: лида в очередь менеджерам нет.
+  if (ctx.staffId) return;
   const leadId = await deps.lead({ ctx, name, niche, site: flow.url, link, phone: build.site.phone, why: "built" });
   if (leadId) await deps.setLead(saved.id, leadId);
 }

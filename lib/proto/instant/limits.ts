@@ -8,6 +8,24 @@
  */
 export const DAILY_CAP = 30;
 
+/**
+ * Кому открыт поток. Владелец, 10.11.2026: «Пока что открой доступ только мне
+ * и Александру с этой функцией, пусть бот пришлет нам уведомление, хочу
+ * посмотреть как это выглядит. Для всех пока не открываем.»
+ *
+ * false — только активные сотрудники с ролью admin и head (по базе, не по
+ * нику), без лимита и без лида в очередь: их макеты — тестовые. true — всем
+ * клиентам с лимитами ниже. Остальным бот ведёт себя как раньше: /maket —
+ * неизвестная команда.
+ */
+export const MOCKUP_BOT_OPEN = false;
+export const PILOT_ROLES: readonly string[] = ["admin", "head"];
+
+/** Пускать ли в поток. */
+export function mayUseInstant(role: string | null, open = MOCKUP_BOT_OPEN): boolean {
+  return open || (role !== null && PILOT_ROLES.includes(role));
+}
+
 /** Сколько ждём, пока идёт одна сборка: второй запрос того же человека — «уже собираем». */
 export const RUN_HOLD_MS = 5 * 60_000;
 

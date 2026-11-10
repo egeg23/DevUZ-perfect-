@@ -7,9 +7,10 @@ import { PROMO } from "@/lib/admin/mockup-offer";
 import { INBOUND_SOURCES } from "@/lib/admin/sales-stages";
 import { handleInstantButton, handleInstantText, priceText, startInstant, type Ctx, type Deps } from "@/lib/proto/instant/bot";
 import { INSTANT_SOURCE, instantLeadInput } from "@/lib/proto/instant/bot-deps";
-import { DAILY_CAP, limitVerdict, siteUrlOf, tashkentDayStart } from "@/lib/proto/instant/limits";
+import { DAILY_CAP, MOCKUP_BOT_OPEN, limitVerdict, mayUseInstant, siteUrlOf, tashkentDayStart } from "@/lib/proto/instant/limits";
 import type { Flow } from "@/lib/proto/instant/store";
 import { emptySite } from "@/lib/proto/instant/types";
+import { PILOT_NEWS, PILOT_TEXT } from "@/lib/proto/instant/announce-store";
 import { STEPS, stepCaption, widgetHtml, widgetState } from "@/lib/proto/instant/widget";
 
 /**
@@ -18,7 +19,8 @@ import { STEPS, stepCaption, widgetHtml, widgetState } from "@/lib/proto/instant
  * виджета — после настоящих шагов сборки; в конце цена и лид.
  */
 
-const ctx: Ctx = { chatId: 77, tgId: 77, username: "client_demo", locale: "ru", staffId: null };
+const ctx: Ctx = { chatId: 77, tgId: 77, username: "client_demo", locale: "ru", staffId: null, role: null };
+const owner: Ctx = { chatId: 5, tgId: 5, username: "owner_demo", locale: "ru", staffId: "s-admin", role: "admin" };
 
 function fake(over: Partial<Deps> = {}, counts = { mine: 0, today: 0, link: null as string | null }) {
   const log: string[] = [];
@@ -76,6 +78,7 @@ function fake(over: Partial<Deps> = {}, counts = { mine: 0, today: 0, link: null
     },
     protoUrl: (t) => `https://devuz.studio/proto/${t}`,
     now: () => new Date("2026-11-10T10:00:00Z"),
+    open: true,
     ...over,
   };
   return { deps, log, sent, leads, flow: () => flow };
@@ -224,4 +227,40 @@ test("адрес сайта: домен да, Instagram и ник — нет", (
   assert.equal(siteUrlOf("instagram.com/clinic"), null);
   assert.equal(siteUrlOf("привет"), null);
   assert.equal(siteUrlOf("https://user:pw@clinic.uz"), null);
+});
+
+test("пилот: пока поток закрыт, клиенту и менеджеру — как раньше, ничего не уходит", async () => {
+  assert.equal(MOCKUP_BOT_OPEN, false, "владелец, 10.11.2026: «Для всех пока не открываем»");
+  assert.ok(mayUseInstant("admin") && mayUseInstant("head"));
+  assert.ok(!mayUseInstant("manager") && !mayUseInstant(null));
+  for (const who of [ctx, { ...ctx, staffId: "s-m", role: "manager" }]) {
+    const f = fake({ open: false });
+    await startInstant(who, f.deps);
+    await handleInstantButton(who, ["im", "n", "stomatologiya"], f.deps);
+    assert.equal(f.sent.length, 0);
+    assert.equal(f.flow(), null);
+  }
+});
+
+test("пилот: Егору и Александру — без лимита, макет тестовый, лида нет", async () => {
+  const f = fake({ open: false }, { mine: 3, today: 99, link: "old" });
+  await startInstant(owner, f.deps);
+  assert.match(f.sent[0].html, /Пришлите адрес/);
+  await handleInstantText(owner.chatId, async () => owner, "dentanur.example", f.deps);
+  await handleInstantButton(owner, ["im", "n", "stomatologiya"], f.deps);
+  assert.ok(f.log.includes("save:0"), "проверки те же, что в боевом");
+  assert.ok(f.sent.some((m) => /Готово/.test(m.html)));
+  assert.deepEqual(f.leads, [], "тестовая сборка лида не заводит");
+  assert.ok(!f.log.includes("setLead"));
+  const soon = fake({ open: false });
+  await startInstant(owner, soon.deps);
+  await handleInstantButton(owner, ["im", "nosite"], soon.deps);
+  await handleInstantButton(owner, ["im", "n", "mebel"], soon.deps);
+  assert.deepEqual(soon.leads, []);
+});
+
+test("пилот: уведомление Егору и Александру — один раз, как запустить", () => {
+  assert.equal(PILOT_NEWS, "instant-pilot:v1");
+  assert.match(PILOT_TEXT, /\/maket/);
+  assert.match(PILOT_TEXT, /тестовый, из бота/);
 });
