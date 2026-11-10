@@ -20,6 +20,8 @@
  * (lib/proto/instant/check).
  */
 import assets from "@/content/proto-instant/nek-assets.json" with { type: "json" };
+import media from "@/content/proto-instant/stomatologiya-media.json" with { type: "json" };
+import { PROTO_BASE } from "@/lib/proto/pages";
 import { dzIntroSolo } from "@/lib/proto/dz-video.mjs";
 import { mockupTermsUrl } from "@/lib/proto/booking";
 import { LIMITS, type InstantLocale, type InstantSite } from "@/lib/proto/instant/types";
@@ -36,7 +38,18 @@ export const DENTAL_PHOTOS = [
 type Pair = { ru: string; uz: string };
 const P = (ru: string, uz: string): Pair => ({ ru, uz });
 
+/** Пролёт ниши: кадры и ключевые кадры (scripts/protos/instant/scene.py). */
+const IMG = "/protos/_niche/stomatologiya";
+
 const C = {
+  fly: P("Пролёт по клинике", "Klinika bo‘ylab parvoz"),
+  flyKick: P("Макет DevUz Studio", "DevUz Studio maketi"),
+  flySee: P("Смотреть сайт", "Saytni ko‘rish"),
+  flyNote: P("Кадры для примера: клиника поставит свои фото.", "Kadrlar namuna uchun: klinika o‘z rasmlarini qo‘yadi."),
+  scroll: P("Листайте", "Aylantiring"),
+  ch2: [P("Спокойный визит", "Xotirjam tashrif"), P("начинается с порога", "ostonadan boshlanadi")],
+  ch4: [P("Чистый кабинет", "Toza kabinet"), P("и внимание к деталям", "va mayda narsalarga e’tibor")],
+  ch5: [P("Запись", "Yozilish"), P("в два нажатия", "ikki bosishda")],
   nav: [P("Услуги", "Xizmatlar"), P("Реставрация", "Restavratsiya"), P("Врачи", "Shifokorlar"), P("Вопросы", "Savollar"), P("Контакты", "Kontaktlar")],
   sections: P("Разделы", "Bo‘limlar"),
   book: P("Записаться", "Yozilish"),
@@ -410,6 +423,41 @@ ${follow ? `<div><h4>${t(C.foot.follow)}</h4>${follow}</div>` : ""}
     },
   };
 
+  // Пролёт по прокрутке — сцена первой страницы Nek на нейтральных кадрах ниши.
+  // Главы — слова клиента: имя, город, его услуги. Кадров ещё нет — пролёта нет.
+  const fly = media.n > 1;
+  const top3 = services.slice(0, 2).map((x) => x.name).join(", ");
+  const chapters: { at: number; a: string; b: string }[] = [
+    { at: 0.06, a: site.name, b: site.city ?? t(C.kick) },
+    { at: 0.3, a: t(C.ch2[0]), b: t(C.ch2[1]) },
+    { at: 0.52, a: top3 || t(C.kick), b: site.tagline ?? t(C.calmSub) },
+    { at: 0.74, a: t(C.ch4[0]), b: t(C.ch4[1]) },
+    { at: 0.94, a: t(C.ch5[0]), b: t(C.ch5[1]) },
+  ];
+  const pic = (k: number, lazy: boolean) =>
+    `<picture><source media="(max-width: 899px)" srcset="${IMG}/k${k}-9.webp"><img src="${IMG}/k${k}-16.webp" width="1600" height="893" alt=""${lazy ? ' loading="lazy"' : ""}></picture>`;
+  const flySec = fly
+    ? `<section class="hs" id="fly" aria-label="${t(C.fly)}"><div class="hs-st">
+<picture><source media="(max-width: 899px)" srcset="${IMG}/poster-9.webp"><img class="hs-a" src="${IMG}/poster-16.webp" width="1920" height="1080" alt="" fetchpriority="high"></picture>
+<canvas aria-hidden="true"></canvas>
+<video muted playsinline preload="none" disablepictureinpicture aria-hidden="true"></video>
+<div class="hs-shade" aria-hidden="true"></div>
+<div class="hs-sign" aria-hidden="true">${logo ? `<img src="${esc(logo)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : ""}<b>${name}</b></div>
+<div class="hs-ch">${chapters
+        .map((c, i) =>
+          i === 0
+            ? `<div class="cp first" data-cp="0"><span class="kick"><i></i>${t(C.flyKick)}</span><h1>${esc(c.a)} <em>${esc(c.b)}</em></h1></div>`
+            : `<div class="cp" data-cp="${i}"><span class="kick"><i></i><span class="n">0${i + 1}</span></span><p class="cp-h">${esc(c.a)} <em>${esc(c.b)}</em></p></div>`,
+        )
+        .join("")}</div>
+<div class="hs-end"><a class="btn btn-a" href="#top">${t(C.flySee)}${ICON.arrow}</a><small>${t(C.flyNote)}</small></div>
+<div class="hs-load" id="hs-load" aria-hidden="true"><span id="hs-n">0</span>%<i id="hs-b"></i></div>
+<div class="hs-hint" aria-hidden="true"><span>${t(C.scroll)}</span><i></i></div>
+</div></section>
+<section class="calm" aria-label="${t(C.fly)}"><div class="wrap">${chapters.map((c, i) => `<figure>${pic(i + 1, i > 0)}<figcaption>${esc(c.a)} ${esc(c.b)}</figcaption></figure>`).join("")}</div></section>`
+    : "";
+  const land = { root: PROTO_BASE, img: IMG, n: media.n, vn: media.vn, fps: media.fps, ch: chapters.map((c) => ({ at: c.at })) };
+
   const close = t(C.close);
   return `<!doctype html>
 <html lang="${l}">
@@ -434,13 +482,18 @@ ${follow ? `<div><h4>${t(C.foot.follow)}</h4>${follow}</div>` : ""}
 .tgc dt{color:var(--mu)}
 .tgc dd{margin:0;font-weight:700;overflow-wrap:anywhere}
 .hero h1{overflow-wrap:anywhere}
-@media(max-width:560px){.logo span{display:inline;max-width:50vw;overflow:hidden;text-overflow:ellipsis}}</style>
+@media(max-width:560px){.logo span{display:inline;max-width:50vw;overflow:hidden;text-overflow:ellipsis}}
+.hs-sign{position:absolute;left:50%;top:13%;transform:translateX(-50%);display:flex;align-items:center;gap:14px;color:var(--ink);font:700 clamp(18px,2.4vw,34px)/1 var(--hd);letter-spacing:.06em;white-space:nowrap;transition:opacity .5s,transform .8s;pointer-events:none}
+.hs-sign img{height:clamp(28px,3.4vw,52px);width:auto}
+.hs.moved .hs-sign{opacity:0;transform:translateX(-50%) scale(1.15)}
+@media(max-width:899px){.hs-sign{top:24%;font-size:20px}}</style>
 </head>
 <body>
 ${dzIntroSolo(l)}
 <a class="vh" href="#services">${t(C.toServices)}</a>
 ${header}
 <main>
+${flySec}
 ${hero}
 ${velo}
 ${svcSec}
@@ -459,6 +512,7 @@ ${footer}
 <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="shh"><div class="sh-bg" data-close></div><div class="box"><div class="bh"><b id="shh"></b><button type="button" class="x" data-close aria-label="${close}">${ICON.close}</button></div><div class="bb" id="shb"></div></div></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script type="application/json" id="im-data">${json(data)}</script>
+${fly ? `<script type="application/json" id="im-land">${json(land)}</script>\n<script>\n${assets.scene}</script>` : ""}
 <script>
 ${assets.js}</script>
 </body>

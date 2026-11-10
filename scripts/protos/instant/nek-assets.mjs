@@ -39,7 +39,24 @@ const JS_SWAPS = [
 const CSS_SWAPS = [
   ["141 74 139", "var(--orchid-rgb)"],
   ["43 29 51", "var(--ink-rgb)"],
+  ["30 18 36", "var(--ink-rgb)"],
 ];
+
+/*
+ * Пролёт по прокрутке — та же сцена, что у первой страницы Nek (land.js):
+ * кадры под шифром, мягкий догон, смесь соседних кадров, видео телефону.
+ * Берётся только сам пролёт, без конструктора цены; данные — из #im-land.
+ */
+const SCENE_FROM = "var hs=$('.hs');";
+const SCENE_TO = "var cfg=get('nk-cfg-1',{}),boxes";
+function sceneJs() {
+  const land = strip(read("land.js")).replace(/\n\s*\n/g, "\n");
+  const a = land.indexOf(SCENE_FROM);
+  const b = land.indexOf(SCENE_TO);
+  if (a < 0 || b < 0 || b < a) throw new Error("land.js Nek изменился: не нашлась сцена пролёта");
+  const helpers = "var d=document,w=window,$=function(s,r){return(r||d).querySelector(s)},$$=function(s,r){return[].slice.call((r||d).querySelectorAll(s))};var D=JSON.parse($('#im-land').textContent);var RM=w.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;function cl(x){return x<0?0:x>1?1:x}function pad(n,k){n=String(n);while(n.length<(k||2))n='0'+n;return n}";
+  return `(function(){'use strict';${helpers}\n${land.slice(a, b).trim()}\n})();`;
+}
 
 export function nekAssets() {
   let css = strip(read("site.css")).replace(/\n\s*/g, "");
@@ -52,7 +69,7 @@ export function nekAssets() {
     if (!js.includes(from)) throw new Error(`site.js Nek изменился: не нашлось «${from}»`);
     js = js.split(from).join(to);
   }
-  return { css, js };
+  return { css, js, scene: sceneJs() };
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

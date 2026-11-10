@@ -117,6 +117,8 @@ export async function saveInstantProto(
       source: build.site.source,
       facts: {
         niche: `instant-${build.site.niche}`,
+        // Ключ пролёта ниши (SCENES в lib/proto/promo.ts): отдаёт маршрут promo/scene.
+        scene: `instant-${build.site.niche}`,
         name: build.site.name,
         source: build.site.source,
         locale: build.site.locale,

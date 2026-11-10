@@ -79,6 +79,7 @@ function fake(over: Partial<Deps> = {}, counts = { mine: 0, today: 0, link: null
     protoUrl: (t) => `https://devuz.studio/proto/${t}`,
     now: () => new Date("2026-11-10T10:00:00Z"),
     open: true,
+    pace: async () => undefined,
     ...over,
   };
   return { deps, log, sent, leads, flow: () => flow };
@@ -263,4 +264,16 @@ test("пилот: уведомление Егору и Александру — 
   assert.equal(PILOT_NEWS, "instant-pilot:v1");
   assert.match(PILOT_TEXT, /\/maket/);
   assert.match(PILOT_TEXT, /тестовый, из бота/);
+});
+
+test("виджет: имя, цвет и услуги клиента в состоянии, не больше 1024 байт, только textContent", () => {
+  const long = Array.from({ length: 10 }, (_, i) => `Очень длинное название услуги номер ${i} для проверки`);
+  const st = JSON.parse(widgetState("services", false, { name: "Дента Нур", color: "#1B7F6A", services: long }));
+  assert.equal(st.n, "Дента Нур");
+  assert.equal(st.c, "#1b7f6a");
+  assert.ok(st.s.length <= 4);
+  assert.ok(Buffer.byteLength(widgetState("done", false, { name: "я".repeat(500), services: long })) <= 1024);
+  assert.equal(JSON.parse(widgetState("brand", false, { color: "red;}" })).c, undefined, "чужой цвет не проходит");
+  const html = widgetHtml("ru");
+  assert.ok(html.includes("textContent=s.n") && html.includes("e.textContent=list"), "данные клиента не разметкой");
 });

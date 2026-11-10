@@ -26,7 +26,10 @@ import { DAILY_CAP, limitVerdict, mayUseInstant, siteUrlOf } from "@/lib/proto/i
 import { readClientSite, siteFromAnswers, type ReadResult } from "@/lib/proto/instant/read";
 import type { Flow } from "@/lib/proto/instant/store";
 import { instantReady, type InstantLocale, type InstantNiche, type InstantSite } from "@/lib/proto/instant/types";
-import { stepCaption, widgetHtml, widgetState, type BuildStep } from "@/lib/proto/instant/widget";
+import { stepCaption, widgetHtml, widgetState, type BuildStep, type WidgetInfo } from "@/lib/proto/instant/widget";
+
+/** Сколько виден каждый шаг сборки в виджете. */
+export const STEP_SHOW_MS = 1200;
 import { esc } from "@/lib/proto/instant/safe";
 
 export const INSTANT_CB = "im";
@@ -57,7 +60,9 @@ export type Deps = {
   dropFlow: (chatId: number) => Promise<void>;
   claimBuild: (chatId: number, flow: Flow) => Promise<boolean>;
   counts: (tgId: number) => Promise<{ mine: number; today: number; link: string | null } | null>;
-  read: (url: string, niche: InstantNiche, locale: InstantLocale, onStep: (s: BuildStep) => Promise<void>) => Promise<ReadResult>;
+  read: (url: string, niche: InstantNiche, locale: InstantLocale, onStep: (s: BuildStep, site?: InstantSite) => Promise<void>) => Promise<ReadResult>;
+  /** Пауза между шагами виджета: сборка идёт миллисекунды, а человек должен успеть увидеть шаг. */
+  pace?: (ms: number) => Promise<void>;
   save: (build: InstantBuild, ctx: Ctx) => Promise<{ id: string; token: string } | null>;
   lead: (input: LeadInput) => Promise<string | null>;
   setLead: (protoId: string, leadId: string) => Promise<void>;
@@ -337,9 +342,17 @@ export async function runBuild(ctx: Ctx, flow: Flow, deps: Deps): Promise<void> 
   const widget = await deps.sendWidget(ctx.chatId, { html: widgetHtml(locale), chatData: widgetState("read"), caption: stepCaption(locale, "read") });
   // Приложение без виджетов (или метод не принят) — тот же ход обычным сообщением.
   const status = widget === null ? await deps.send(ctx.chatId, stepCaption(locale, "read")) : null;
+  let info: WidgetInfo = {};
+  const learn = (x: InstantSite) => {
+    info = { name: x.name, color: x.color, services: x.services.map((v) => v.name) };
+  };
+  const pace = deps.pace ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
   const step = async (s: BuildStep, failed = false) => {
+    // Постановка поверх настоящих шагов (владелец, 10.11.2026: «показывай
+    // прям интерактивно… как ты собираешь»): каждый шаг виден не меньше секунды.
+    if (!failed && s !== "read") await pace(STEP_SHOW_MS);
     if (widget) {
-      await deps.editWidget(ctx.chatId, widget, widgetState(s, failed));
+      await deps.editWidget(ctx.chatId, widget, widgetState(s, failed, info));
       await deps.editCaption(ctx.chatId, widget, stepCaption(locale, s, failed));
     } else if (status) {
       await deps.edit(ctx.chatId, status, stepCaption(locale, s, failed));
@@ -350,10 +363,14 @@ export async function runBuild(ctx: Ctx, flow: Flow, deps: Deps): Promise<void> 
   if (flow.nosite) {
     const a = flow.answers;
     site = siteFromAnswers({ niche, locale, name: a.name ?? "", phone: a.phone ?? "", address: a.address ?? "", services: a.services ?? "" });
+    learn(site);
     await step("brand");
     await step("services");
   } else if (flow.url) {
-    const res = await deps.read(flow.url, niche, locale, (s) => step(s));
+    const res = await deps.read(flow.url, niche, locale, (s, partial) => {
+      if (partial) learn(partial);
+      return step(s);
+    });
     if (!res.ok) {
       await step("read", true);
       await deps.saveFlow(ctx.chatId, { ...flow, stage: "url", url: null });

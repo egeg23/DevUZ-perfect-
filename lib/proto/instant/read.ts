@@ -141,7 +141,8 @@ export type ReadResult =
 export type ReadDeps = {
   collect?: (url: string) => Promise<Collected | { error: string }>;
   ask?: AskRead;
-  onStep?: (step: ReadStep) => Promise<void> | void;
+  /** Шаг сделан; `site` — что уже узнали (виджет показывает имя, цвет и услуги). */
+  onStep?: (step: ReadStep, site?: InstantSite) => Promise<void> | void;
 };
 
 export async function readClientSite(
@@ -156,7 +157,6 @@ export async function readClientSite(
   if ("error" in page) return { ok: false, why: "open" };
   const f = page.facts;
 
-  await deps.onStep?.("brand");
   const site: InstantSite = {
     // Источник — адрес сайта целиком: по нему раз в месяц ищем наш макет у клиента (trace-month).
     ...emptySite(niche, locale, f.name, page.page.url),
@@ -170,7 +170,7 @@ export async function readClientSite(
     color: page.colors[0] ?? null,
   };
 
-  await deps.onStep?.("services");
+  await deps.onStep?.("brand", site);
   const source = [page.title ?? "", page.text, ...page.headings].join("\n").slice(0, READ_TEXT_MAX);
   const answer = source.trim() ? await (deps.ask ?? askHaiku)(source) : null;
   const reply = answer ? checkReply(jsonOf(answer), [page.title ?? "", page.text, ...page.headings, f.about ?? ""].join("\n")) : null;
@@ -186,6 +186,7 @@ export async function readClientSite(
     site.doctors = reply.doctors;
     site.perks = reply.perks;
   }
+  await deps.onStep?.("services", site);
   if (!site.name.trim()) return { ok: false, why: "empty" };
   return { ok: true, site, usedModel: Boolean(reply) };
 }

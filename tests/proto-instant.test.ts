@@ -141,3 +141,20 @@ test("макет в боте: шаблон — стили и скрипт сай
     assert.ok(!html.includes(nek), nek);
   }
 });
+
+test("макет в боте: пролёт ниши — кадры шифром, ключ отдаёт маршрут, имя клиента на табличке", async () => {
+  const { readdirSync, statSync } = await import("node:fs");
+  const media = (await import("@/content/proto-instant/stomatologiya-media.json", { with: { type: "json" } })).default;
+  assert.ok(media.n > 100, "кадры пролёта есть");
+  const d = readdirSync("public/protos/_niche/stomatologiya/seq/d");
+  assert.equal(d.length, media.n);
+  assert.ok(d.every((f) => f.endsWith(".bin")), "в public только шифр");
+  assert.ok(statSync("public/protos/_niche/stomatologiya/seq/m.bin").size > 0);
+  const { SCENES } = await import("@/lib/proto/promo");
+  assert.equal(SCENES["instant-stomatologiya"], "SCENE_KEY_INSTANT_STOMATOLOGIYA");
+  const { html } = buildInstant(example, SEED);
+  assert.ok(html.includes('class="hs"') && html.includes('id="im-land"'));
+  assert.match(html, /<div class="hs-sign"[^>]*>.*Белая Лилия/);
+  assert.ok(html.includes("/protos/_niche/stomatologiya/poster-16.webp"));
+  assert.ok(!/\/protos\/nek\//.test(html), "кадров Nek нет");
+});
