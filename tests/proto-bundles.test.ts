@@ -3137,6 +3137,13 @@ test("Nek Dental Studio: выбор, сайт и панель на en, ka и ru 
     assert.equal(files.length, n, `${set}: кадров не столько, сколько в media.json`);
     assert.ok(files.every((f) => f.endsWith(".bin")), `${set}: кадр лежит открытым`);
   }
+  /* Телефону — одно видео под тем же шифром: кадры по одному он распаковывать
+     не успевал (владелец, 11.11.2026: «пролаг», «стало хуже»). */
+  assert.deepEqual(readdirSync("public/protos/nek/seq").sort(), ["d", "m", "m.bin"], "в seq лишнее или нет видео телефона");
+  const land = (await import("node:fs")).readFileSync("scripts/protos/nek/land.js", "utf8");
+  assert.match(land, /seq\/m\.bin/, "телефон не берёт видео");
+  assert.match(land, /vd\.seeking/, "перемотка не ждёт прошлую");
+  assert.ok(site.html.includes("<video muted playsinline"), "нет видео в пролёте");
   assert.deepEqual(readdirSync("public/protos/nek").filter((f) => /\.(mp4|png|jpe?g)$/.test(f)), [], "открытый ролик или кадр в public");
   const stamped = stampedBundle("nek", SEED)!;
   assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
