@@ -22,12 +22,14 @@ async function bundleFor(request: Request, token: string): Promise<string | null
   if (!db) return null;
   const { data } = await db.from("protos").select("id, status, facts, closed_at").eq("token", token).maybeSingle();
   if (!data || data.status === "draft") return null;
-  const facts = data.facts as { bundle?: unknown; lock?: unknown; lockAt?: unknown } | null;
-  if (typeof facts?.bundle !== "string") return null;
+  const facts = data.facts as { bundle?: unknown; scene?: unknown; lock?: unknown; lockAt?: unknown } | null;
+  // «Макет в боте» (lib/proto/instant): своей сборки нет, пролёт — ниши.
+  const name = typeof facts?.bundle === "string" ? facts.bundle : typeof facts?.scene === "string" ? facts.scene : null;
+  if (!name) return null;
   const lock = activeLock(facts);
   const closed = Boolean(data.closed_at);
   if ((lock || closed) && !(await accessBy(request.headers.get("cookie"), { id: String(data.id), lock, closed }, token))) return null;
-  return facts.bundle;
+  return name;
 }
 
 /** Ролик макета: ответ 404 не подтверждает, что ролик есть. */

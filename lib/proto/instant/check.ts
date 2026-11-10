@@ -47,7 +47,8 @@ export function instantProblems(raw: string, site: InstantSite): InstantProblem[
   if (/<iframe/i.test(raw)) out.push({ code: "net", text: "Встроенная чужая страница." });
   for (const p of pageProblems(raw, sitePool(site))) out.push(p);
   // Ловушки не видны в числах: в шаблоне стоят как [[t:N]] — убрать до счёта.
-  const text = visibleText(raw).replace(/\[\[t:\d+\]\]/g, " ");
+  // Счётчик загрузки пролёта («0%») — не утверждение о клинике.
+  const text = visibleText(raw.replace(/<div class="hs-load"[\s\S]*?<\/div>/, " ")).replace(/\[\[t:\d+\]\]/g, " ");
   const extra = unsupportedNumbers(text, "", sitePool(site));
   if (extra.length) out.push({ code: "numbers", text: `Числа не из данных клиента: ${extra.slice(0, 5).join(", ")}` });
   return out;

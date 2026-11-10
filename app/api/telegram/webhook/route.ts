@@ -58,6 +58,8 @@ import { BROADCAST_NOTE, broadcastTurn } from "@/lib/admin/bot-users";
 import { NO_MORE_WAIT, TIDY_CALLBACK, parseTidyCallback } from "@/lib/admin/lead-tidy";
 import { answerTidy } from "@/lib/admin/lead-tidy-store";
 import { findStaffByTelegram, issueLoginToken, staffByTelegramId, type Staff } from "@/lib/admin/session";
+import { INSTANT_CB, INSTANT_START, handleInstantButton, handleInstantText, instantOpenFor, startInstant, type Ctx as InstantCtx } from "@/lib/proto/instant/bot";
+import { realDeps as instantDeps } from "@/lib/proto/instant/bot-deps";
 import {
   APP_CODE_NONE,
   APP_START_NO_REQUEST,
@@ -540,6 +542,22 @@ function localeOf(from?: TelegramUser): Locale {
   return matchLocale(from?.language_code ?? null);
 }
 
+/**
+ * Кто собирает «Макет в боте» (lib/proto/instant/bot): язык макета — узбекский
+ * для узбекского Telegram, иначе русский; сотрудник — без лимита.
+ */
+async function instantCtx(chatId: number, from: TelegramUser | undefined, locale: Locale): Promise<InstantCtx> {
+  const staff = from?.id ? await staffByTelegramId(from.id).catch(() => null) : null;
+  return {
+    chatId,
+    tgId: from?.id ?? chatId,
+    username: from?.username ?? null,
+    locale: locale === "uz" ? "uz" : "ru",
+    staffId: staff?.id ?? null,
+    role: staff?.role ?? null,
+  };
+}
+
 /** Контакт, по которому менеджер напишет в ответ. */
 function handleOf(from: TelegramUser | undefined, chatId: number): string {
   if (from?.username) return `@${from.username}`;
@@ -873,6 +891,19 @@ async function handleClient(message: NonNullable<Update["message"]>) {
       return;
     }
 
+    // «Макет в боте»: ссылка t.me/<бот>?start=maket с сайта и из рекламы.
+    // Пока поток закрыт (MOCKUP_BOT_OPEN), остальным — обычный холодный старт.
+    if (payload === INSTANT_START) {
+      const ictx = await instantCtx(chat.id, message.from, locale);
+      if (instantOpenFor(ictx)) {
+        await startInstant(ictx, instantDeps());
+        return;
+      }
+      if (!existing) startSession(chat.id, locale);
+      await sendMessage(chat.id, copy.welcome);
+      return;
+    }
+
     // «Получить код в боте» из установленного приложения панели: код
     // приходит сотруднику, нажавшему ссылку, — и только в личку.
     if (isAppStart(payload)) {
@@ -945,12 +976,26 @@ async function handleClient(message: NonNullable<Update["message"]>) {
     return;
   }
 
+  // «Макет в боте» командой: /maket (и /mockup), по-узбекски — та же.
+  // Пока поток закрыт, остальным это неизвестная команда, как раньше.
+  if (/^\/(maket|mockup)(@\w+)?$/i.test(text)) {
+    const ictx = await instantCtx(chat.id, message.from, locale);
+    if (instantOpenFor(ictx)) {
+      await startInstant(ictx, instantDeps());
+      return;
+    }
+  }
+
   if (text.startsWith("/")) {
     await sendMessage(chat.id, copy.unknown);
     return;
   }
 
   if (!text) return;
+
+  // Идёт «Макет в боте» — адрес сайта и ответы без сайта разбирает его поток,
+  // и сотруднику тоже: он проверяет, как это выглядит у клиента.
+  if (await handleInstantText(chat.id, () => instantCtx(chat.id, message.from, locale), text, instantDeps())) return;
 
   // Сотрудник пишет боту обычный текст — помощник, а не первичка; называет
   // себя сотрудником, а в «Команде» его нет — короткий ответ и строка
@@ -1566,6 +1611,18 @@ async function handleButton(query: NonNullable<Update["callback_query"]>) {
 
   const chatId = query.message?.chat.id;
   const parts = query.data.split(":");
+
+  // «Макет в боте»: «Сайта нет» и выбор ниши — только в своей личке.
+  if (parts[0] === INSTANT_CB) {
+    if (chatId === undefined || chatId !== query.from?.id) {
+      await answerCallback(query.id, "Недоступно");
+      return;
+    }
+    await answerCallback(query.id, "");
+    const locale = sessionFor(chatId)?.locale ?? localeOf(query.from);
+    await handleInstantButton(await instantCtx(chatId, query.from, locale), parts, instantDeps());
+    return;
+  }
 
   // Язык присланного кружка: только личка того, кто его прислал.
   if (parts[0] === CIRCLE_CALLBACK) {

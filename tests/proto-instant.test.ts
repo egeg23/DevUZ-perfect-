@@ -9,6 +9,8 @@ import { DENTAL_PHOTOS } from "@/lib/proto/instant/dental";
 import { imageUrl } from "@/lib/proto/instant/safe";
 import { emptySite, instantReady, type InstantSite } from "@/lib/proto/instant/types";
 import { tails } from "../scripts/protos/instant/tails.mjs";
+import { nekAssets } from "../scripts/protos/instant/nek-assets.mjs";
+import assetsFile from "@/content/proto-instant/nek-assets.json" with { type: "json" };
 import { EXAMPLE } from "../scripts/protos/instant/preview-data.mjs";
 
 /**
@@ -73,7 +75,7 @@ test("макет в боте: пустое — без блока, цен не п
   assert.deepEqual(problems, []);
   assert.ok(!html.includes('id="team"'), "врачей нет — блока нет");
   assert.ok(!html.includes('id="about"'));
-  assert.ok(html.includes("Цену уточняйте при записи"));
+  assert.ok(html.includes("Стоимость врач назовёт после осмотра"));
   assert.ok(!/\bсум\b/.test(html));
   assert.ok(html.includes(DENTAL_PHOTOS[0]), "своих фото нет — нейтральные фото ниши");
 });
@@ -114,7 +116,7 @@ test("макет в боте: без сети, кроме шрифтов", () =>
   assert.ok(!/<script[^>]+src=/i.test(html));
   assert.ok(!/<iframe/i.test(html));
   const links = [...html.matchAll(/<link[^>]+href="([^"]+)"/g)].map((m) => new URL(m[1]).host);
-  assert.ok(links.every((h) => h === "fonts.googleapis.com"));
+  assert.ok(links.every((h) => h === "fonts.googleapis.com" || h === "fonts.gstatic.com"));
 });
 
 test("макет в боте: шаблон есть только у стоматологии, фото ниши лежат в репозитории", () => {
@@ -128,4 +130,31 @@ test("макет в боте: длинные списки режутся, дуб
   assert.equal(normalizeSite(many).services.length, 12);
   const dup = { ...example, services: [{ name: "Чистка", price: null }, { name: "чистка", price: null }] };
   assert.equal(normalizeSite(dup).services.length, 1);
+});
+
+test("макет в боте: шаблон — стили и скрипт сайта нашего макета Nek, свежие", () => {
+  assert.deepEqual(assetsFile, nekAssets(), "node scripts/protos/instant/nek-assets.mjs");
+  const { html } = buildInstant(example, SEED);
+  assert.ok(html.includes(assetsFile.css.slice(0, 200)), "стили Nek на странице");
+  assert.ok(html.includes('id="im-data"'));
+  for (const nek of ["Nek Dental", "Tbilisi", "Тбилиси", "Ваке", "Paliashvili", "/protos/nek/", "100doc", "+995"]) {
+    assert.ok(!html.includes(nek), nek);
+  }
+});
+
+test("макет в боте: пролёт ниши — кадры шифром, ключ отдаёт маршрут, имя клиента на табличке", async () => {
+  const { readdirSync, statSync } = await import("node:fs");
+  const media = (await import("@/content/proto-instant/stomatologiya-media.json", { with: { type: "json" } })).default;
+  assert.ok(media.n > 100, "кадры пролёта есть");
+  const d = readdirSync("public/protos/_niche/stomatologiya/seq/d");
+  assert.equal(d.length, media.n);
+  assert.ok(d.every((f) => f.endsWith(".bin")), "в public только шифр");
+  assert.ok(statSync("public/protos/_niche/stomatologiya/seq/m.bin").size > 0);
+  const { SCENES } = await import("@/lib/proto/promo");
+  assert.equal(SCENES["instant-stomatologiya"], "SCENE_KEY_INSTANT_STOMATOLOGIYA");
+  const { html } = buildInstant(example, SEED);
+  assert.ok(html.includes('class="hs"') && html.includes('id="im-land"'));
+  assert.match(html, /<div class="hs-sign"[^>]*>.*Белая Лилия/);
+  assert.ok(html.includes("/protos/_niche/stomatologiya/poster-16.webp"));
+  assert.ok(!/\/protos\/nek\//.test(html), "кадров Nek нет");
 });

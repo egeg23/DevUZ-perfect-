@@ -14,6 +14,7 @@ export const leadChannelDict = defineDict({
   telegram: { ru: "бот в Telegram", uz: "Telegramdagi bot", pl: "bot w Telegramie" },
   form: { ru: "форма на сайте", uz: "saytdagi forma", pl: "formularz na stronie" },
   box: { ru: "лист ожидания DevUz Box", uz: "DevUz Box kutish ro‘yxati", pl: "lista oczekujących DevUz Box" },
+  mockup: { ru: "макет в боте", uz: "botdagi maket", pl: "makieta w bocie" },
   showcase: { ru: "витрина — бриф по заказу", uz: "vitrina — buyurtma brifi", pl: "witryna — brief zamówienia" },
   outreach: { ru: "наше холодное касание", uz: "bizning sovuq aloqamiz", pl: "nasz zimny kontakt" },
   manual: { ru: "добавлен вручную в панели", uz: "panelda qo‘lda qo‘shilgan", pl: "dodany ręcznie w panelu" },

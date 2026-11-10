@@ -32,6 +32,8 @@ export const mockupsDict = defineDict({
   niche: { ru: "Ниша", uz: "Nisha", pl: "Branża" },
   made: { ru: "Сделан", uz: "Yaratilgan", pl: "Zrobiona" },
   tagShowcase: { ru: "витрина", uz: "vitrina", pl: "witryna" },
+  tagBot: { ru: "макет в боте", uz: "botdagi maket", pl: "makieta w bocie" },
+  tagBotTest: { ru: "тестовый, из бота", uz: "test, botdan", pl: "testowa, z bota" },
   accessOpen: { ru: "открыт по ссылке", uz: "havola orqali ochiq", pl: "otwarta przez link" },
   accessClosed: { ru: "по паролю", uz: "parol bilan", pl: "na hasło" },
   accessPublic: { ru: "открыт всем", uz: "hammaga ochiq", pl: "otwarta dla wszystkich" },

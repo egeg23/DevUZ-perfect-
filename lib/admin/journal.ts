@@ -115,6 +115,7 @@ export const ACTION_LABEL: Record<AuditAction, Tr> = {
   "contract.link_issued": { ru: "выпустил ссылку на договор для заказчика", uz: "buyurtmachi uchun shartnoma havolasini chiqardi", pl: "wygenerował link do umowy dla zamawiającego" },
   "razbor.published": { ru: "опубликовал разбор", uz: "tahlilni e’lon qildi", pl: "opublikował analizę" },
   "proto.build": { ru: "собрал прототип", uz: "prototip yig‘di", pl: "zbudował prototyp" },
+  "proto.instant": { ru: "макет собран в боте", uz: "maket botda yig‘ildi", pl: "makieta zbudowana w bocie" },
   "proto.sent": { ru: "отправил прототип клиенту", uz: "prototipni mijozga yubordi", pl: "wysłał prototyp klientowi" },
   "mockup.code": { ru: "выдал пароль к макету на сутки", uz: "maketga bir sutkalik parol berdi", pl: "wydał hasło do makiety na dobę" },
   "mockup.auto_closed": {
