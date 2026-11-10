@@ -25,6 +25,7 @@ const WITH_TEASER = [
   "gazmetprod",
   "hop",
   "tirex",
+  "nek-dental",
 ];
 
 test("у кейсов со сценой в первом экране — ролик и постер в двух форматах", () => {

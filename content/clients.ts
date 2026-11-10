@@ -50,6 +50,7 @@ export const clientRows: readonly (readonly Client[])[] = [
     c("medikor", "Medikor", 2.675, "webp"),
     c("cosmoworld", "Cosmo World", 3.441),
     c("karomat", "Karomat", 1.694, "webp"),
+    c("nek-dental", "Nek Dental Studio", 1.975, "webp"),
   ],
   [
     c("apollo", "Apollo Travel", 3.15, "webp"),

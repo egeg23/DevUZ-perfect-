@@ -2907,6 +2907,51 @@ export const cases: Case[] = [
       { value: "6", label: { ru: "сценариев Telegram-бота для гостей", en: "Telegram bot scenarios for guests", uz: "Telegram-bot ssenariysi mehmonlar uchun", zh: "种面向客人的 Telegram 机器人场景", uk: "сценаріїв Telegram-бота для гостей", pl: "scenariuszy bota w Telegramie dla gości" } },
     ],
   },
+  // Макет 10.11.2026 (владелец: «Сделай кейс и добавь логотип в «Делали
+  // для», в кейсах 60 фпс превью анимации»). Факты — scripts/protos/nek:
+  // README.md, SOURCES.md, docs/research/nek.md. Нашей цены по макету нет.
+  {
+    slug: "nek-dental",
+    name: "Nek Dental Studio",
+    monogram: "NEK",
+    date: "2026-11-10",
+    shots: 4,
+    prototype: { href: "/proto/vAzZLUEW1olezGKHBe-SBDg4H_XVUKhHRAcStaDV7Go", teaser: "/cases/nek-dental/teaser" },
+    tier: 2,
+    niches: ["стоматология", "художественная реставрация", "брекеты", "отбеливание зубов", "стоматологическая клиника", "dental clinic", "dental restoration", "dental tourism", "stomatologiya", "tish klinikasi", "牙科诊所"],
+    forNiches: ["stomatologiya"],
+    accent: "violet",
+    category: {
+      ru: "Премиум-макет сайта стоматологии: пролёт через клинику, сайт на трёх языках и панель",
+      en: "Premium dental clinic site mock-up: a fly-through of the clinic, a site in three languages and a panel",
+      uz: "Stomatologiya saytining premium maketi: klinika bo‘ylab parvoz, uch tilli sayt va panel",
+      zh: "牙科诊所高端网站样稿：穿越诊所的镜头、三种语言的网站和管理后台",
+      uk: "Преміум-макет сайту стоматології: проліт крізь клініку, сайт трьома мовами і панель",
+      pl: "Makieta premium strony gabinetu stomatologicznego: przelot przez klinikę, strona w trzech językach i panel",
+    },
+    summary: {
+      ru: "Стоматология в Тбилиси, в районе Ваке: художественная реставрация, брекеты, отбеливание, импланты и протезирование. Своего сайта у клиники нет, только Instagram и Facebook. Макет: пролёт камеры от их ресепшена до зуба после реставрации, сайт на английском, грузинском и русском с записью в WhatsApp и панель, где пациент видит статус своей записи.",
+      en: "A dental clinic in Tbilisi's Vake district: artistic restoration, braces, whitening, implants and prosthetics. The clinic has no website, only Instagram and Facebook. The mock-up: a camera flight from their reception to a restored tooth, a site in English, Georgian and Russian with booking to WhatsApp, and a panel where the patient sees the status of their booking.",
+      uz: "Tbilisining Vake tumanidagi stomatologiya: badiiy restavratsiya, breketlar, oqartirish, implantlar va protezlash. Klinikaning o‘z sayti yo‘q, faqat Instagram va Facebook bor. Maket: kamera ularning qabulxonasidan restavratsiyadan keyingi tishgacha uchadi, WhatsApp’ga yozilish bilan ingliz, gruzin va rus tillaridagi sayt hamda bemor yozilish holatini ko‘radigan panel.",
+      zh: "位于第比利斯 Vake 区的牙科诊所：美学修复、牙套矫正、美白、种植和修复。诊所没有自己的网站，只有 Instagram 和 Facebook。样稿：镜头从诊所前台一路飞到修复后的牙齿，英语、格鲁吉亚语和俄语三种语言的网站可通过 WhatsApp 预约，后台中患者能看到预约状态。",
+      uk: "Стоматологія в Тбілісі, в районі Ваке: художня реставрація, брекети, відбілювання, імпланти й протезування. Власного сайту в клініки немає, лише Instagram і Facebook. Макет: проліт камери від їхньої рецепції до зуба після реставрації, сайт англійською, грузинською й російською із записом у WhatsApp і панель, де пацієнт бачить статус свого запису.",
+      pl: "Gabinet stomatologiczny w tbiliskiej dzielnicy Vake: odbudowa estetyczna, aparaty ortodontyczne, wybielanie, implanty i protetyka. Klinika nie ma własnej strony, tylko Instagram i Facebook. Makieta: przelot kamery od ich recepcji do odbudowanego zęba, strona po angielsku, gruzińsku i rosyjsku z zapisem przez WhatsApp oraz panel, w którym pacjent widzi status wizyty.",
+    },
+    description: {
+      ru: "У Nek Dental Studio сильный интерьер: стена из камня полосами, белый знак-цветок, бирюзовые бархатные кресла, огромные бумажные цветы и фиолетовые кресла в кабинете. Но сайта нет, и пациент из поиска не находит ни услуг, ни записи. Макет открывается пролётом по прокрутке, как у «Сияния Севера»: камера с их ресепшена влетает сквозь лепестки знака, проходит лаунж, входит в кабинет и заканчивает на зубе после художественной реставрации. Кадры нарисованы по их фото из Instagram и лежат на сервере только шифром. На сайте их слова: «эстетика стоматологии в деталях», восемь услуг, слои реставрации ползунком (форма, дентин, эмаль, прозрачный край), забота до процедуры, их фото, команда, отзывы и вопросы. Запись в два нажатия: день и время, дальше WhatsApp на их номер с готовым текстом. Для пациентов из-за границы: даты поездки и услуга одной заявкой. В панели запись с сайта приходит первой строкой; администратор подтверждает время, и пациент видит это на сайте в «Моей записи». Расписание по врачам, роли: администратор не видит выручку.",
+      en: "Nek Dental Studio has a strong interior: a striped stone wall, a white flower sign, teal velvet armchairs, giant paper flowers and purple chairs in the treatment room. But there is no website, so a patient searching online finds neither the services nor a way to book. The mock-up opens with a scroll-driven fly-through, as for Syanie Severa: the camera flies from their reception through the petals of the sign, across the lounge, into the treatment room, and ends on a tooth after artistic restoration. The frames are drawn from their Instagram photos and stored on the server only encrypted. The site uses their own words, «the aesthetics of dentistry lie in the details»: eight services, the layers of a restoration on a slider (shape, dentin, enamel, translucent edge), care before the procedure, their photos, the team, reviews and questions. Booking takes two taps: a day and a time, then WhatsApp to their number with a ready text. For patients from abroad, the trip dates and the service go in one request. In the panel a booking from the site comes first; the administrator confirms the time and the patient sees it on the site in «My booking». Schedule by doctor, roles: the administrator does not see revenue.",
+      uz: "Nek Dental Studio’ning interyeri kuchli: chiziqli tosh devor, oq gul belgi, firuza rang baxmal kreslolar, katta qog‘oz gullar va kabinetda binafsha kreslolar. Lekin sayt yo‘q, qidiruvdan kelgan bemor na xizmatlarni, na yozilishni topadi. Maket «Siyanie Severa»dagidek aylantirishda parvoz bilan ochiladi: kamera qabulxonadan belgi gulbarglari orasidan uchib o‘tadi, launjdan o‘tib kabinetga kiradi va badiiy restavratsiyadan keyingi tishda tugaydi. Kadrlar ularning Instagram suratlari asosida chizilgan va serverda faqat shifrlangan holda turadi. Saytda ularning so‘zlari: «stomatologiya estetikasi detallarda», sakkiz xizmat, slayderda restavratsiya qatlamlari (shakl, dentin, emal, shaffof chet), muolajadan oldingi g‘amxo‘rlik, ularning suratlari, jamoa, sharhlar va savollar. Yozilish ikki bosishda: kun va vaqt, keyin tayyor matn bilan ularning raqamiga WhatsApp. Chet eldan kelgan bemorlar uchun safar sanalari va xizmat bitta arizada. Panelda saytdan yozilish birinchi qatorda keladi; administrator vaqtni tasdiqlaydi, bemor buni saytda «Mening yozilishim»da ko‘radi. Shifokorlar bo‘yicha jadval, rollar: administrator tushumni ko‘rmaydi.",
+      zh: "Nek Dental Studio 的室内设计很出色：条纹石墙、白色花朵标志、青绿色丝绒扶手椅、巨大的纸花，以及诊室里的紫色牙椅。但诊所没有网站，在网上搜索的患者既找不到服务项目，也无法预约。样稿与 Syanie Severa 一样，以滚动驱动的飞行镜头开场：镜头从前台穿过标志的花瓣，飞过休息区进入诊室，最后停在美学修复后的牙齿上。画面依据诊所 Instagram 照片绘制，在服务器上仅以加密形式存放。网站使用诊所自己的话「牙科之美在于细节」：八项服务、可用滑块查看的修复层次（形态、牙本质、牙釉质、透明切缘）、治疗前的关怀、诊所照片、团队、评价和常见问题。预约只需两步：选择日期和时间，然后带着预填文本打开诊所号码的 WhatsApp。海外患者可在一次申请中提交行程日期和所需服务。后台中，网站上的预约排在第一行；管理员确认时间后，患者在网站的「我的预约」中即可看到。按医生排班，设有角色：管理员看不到营收。",
+      uk: "У Nek Dental Studio сильний інтер'єр: стіна з каменю смугами, білий знак-квітка, бірюзові оксамитові крісла, величезні паперові квіти і фіолетові крісла в кабінеті. Але сайту немає, і пацієнт із пошуку не знаходить ні послуг, ні запису. Макет відкривається прольотом під час гортання, як у «Сяйва Півночі»: камера з їхньої рецепції влітає крізь пелюстки знака, проходить лаунж, заходить до кабінету і закінчує на зубі після художньої реставрації. Кадри намальовані за їхніми фото з Instagram і лежать на сервері лише зашифрованими. На сайті їхні слова: «естетика стоматології в деталях», вісім послуг, шари реставрації повзунком (форма, дентин, емаль, прозорий край), турбота до процедури, їхні фото, команда, відгуки і запитання. Запис у два натискання: день і час, далі WhatsApp на їхній номер із готовим текстом. Для пацієнтів з-за кордону: дати поїздки й послуга однією заявкою. У панелі запис із сайту приходить першим рядком; адміністратор підтверджує час, і пацієнт бачить це на сайті в «Моєму записі». Розклад за лікарями, ролі: адміністратор не бачить виручки.",
+      pl: "Nek Dental Studio ma mocne wnętrze: ścianę z kamienia w pasy, biały znak w kształcie kwiatu, turkusowe aksamitne fotele, ogromne papierowe kwiaty i fioletowe fotele w gabinecie. Ale strony nie ma, więc pacjent z wyszukiwarki nie znajdzie ani usług, ani zapisu. Makieta otwiera się przelotem przy przewijaniu, jak u Syanie Severa: kamera z recepcji wlatuje między płatki znaku, przechodzi przez poczekalnię do gabinetu i kończy na zębie po odbudowie estetycznej. Kadry narysowano na podstawie ich zdjęć z Instagrama i na serwerze leżą wyłącznie zaszyfrowane. Na stronie ich słowa, «estetyka stomatologii tkwi w szczegółach»: osiem usług, warstwy odbudowy na suwaku (kształt, zębina, szkliwo, przezierny brzeg), opieka przed zabiegiem, ich zdjęcia, zespół, opinie i pytania. Zapis w dwóch kliknięciach: dzień i godzina, potem WhatsApp na ich numer z gotowym tekstem. Dla pacjentów z zagranicy: daty podróży i usługa w jednym zgłoszeniu. W panelu zapis ze strony przychodzi jako pierwszy; administrator potwierdza godzinę, a pacjent widzi to na stronie w «Mojej wizycie». Grafik według lekarzy, role: administrator nie widzi przychodu.",
+    },
+    tech: ["HTML", "CSS", "JavaScript", "Canvas", "WebCrypto", "nano banana"],
+    metrics: [
+      { value: "3", label: { ru: "языка сайта: английский, грузинский, русский", en: "site languages: English, Georgian, Russian", uz: "sayt tili: ingliz, gruzin, rus", zh: "种网站语言：英语、格鲁吉亚语、俄语", uk: "мови сайту: англійська, грузинська, російська", pl: "języki strony: angielski, gruziński, rosyjski" } },
+      { value: "5", label: { ru: "сцен пролёта: ресепшен, знак, лаунж, кабинет, зуб", en: "fly-through scenes: reception, sign, lounge, room, tooth", uz: "parvoz sahnasi: qabulxona, belgi, launj, kabinet, tish", zh: "段飞行场景：前台、标志、休息区、诊室、牙齿", uk: "сцен прольоту: рецепція, знак, лаунж, кабінет, зуб", pl: "scen przelotu: recepcja, znak, poczekalnia, gabinet, ząb" } },
+      { value: "8", label: { ru: "услуг их словами из Instagram и каталога", en: "services in their own words from Instagram and the directory", uz: "xizmat ularning so‘zlari bilan, Instagram va katalogdan", zh: "项服务，用诊所在 Instagram 和目录中的原话", uk: "послуг їхніми словами з Instagram і каталогу", pl: "usług ich słowami z Instagrama i katalogu" } },
+    ],
+  },
   {
     slug: "samist-auto",
     name: "SAMIST AUTO",
@@ -3204,7 +3249,11 @@ export function coverRank(item: Pick<Case, "prototype" | "teaser" | "shots">): 0
  * которых только скрины, ниже». Внутри группы — по дате, как в casesByDate:
  * сортировка устойчивая.
  */
-export const casesOnSite: readonly Case[] = [...casesByDate].sort((a, b) => coverRank(a) - coverRank(b));
+/** SamAuto — первым на сайте, что бы ни вышло свежее (владелец, 21.10.2026). */
+const PINNED = "samauto";
+export const casesOnSite: readonly Case[] = [...casesByDate].sort(
+  (a, b) => Number(b.slug === PINNED) - Number(a.slug === PINNED) || coverRank(a) - coverRank(b),
+);
 
 /**
  * Дата под языком сайта: «2 октября 2026» или «август 2026», если известен

@@ -111,6 +111,9 @@ https://devuz.studio/sia-cms/admin.
   и в раздел кейсов тоже»): Oson Apteka, SAMIST AUTO, Optimal Prime, Cargo
   Pro Group, AutoPepe, Agora; в кейсы — они и CZECHFARM, FinTax, Cosmo
   World, Neoline (`content/cases.ts`, снимки — `public/cases/<slug>/`).
+  10.11.2026 — 41: Nek Dental Studio (владелец: «Сделай кейс и добавь
+  логотип в „Делали для“, в кейсах 60 фпс превью анимации»), кейс с роликом
+  60 к/с; SamAuto на сайте закреплён первым (`PINNED` в `content/cases.ts`).
 - Держит `tests/clients-logos.test.ts`; снимки — `docs/screens/clients/`.
 
 ## Главная — «Стекло»
