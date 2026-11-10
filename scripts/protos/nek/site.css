@@ -235,6 +235,7 @@ h1,h2,h3{margin:0;font-family:var(--hd);font-weight:700;line-height:1.08;letter-
 .chatb{position:fixed;right:16px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:30;display:inline-flex;align-items:center;gap:8px;padding:12px 18px;min-height:48px;border-radius:999px;border:0;background:var(--teal);color:#fff;font-weight:700;cursor:pointer;box-shadow:var(--sh2)}
 .chatb svg{width:20px;height:20px}
 .chatb.off{display:none}
+.chatb.ping::after{content:"";position:absolute;top:6px;right:8px;width:10px;height:10px;border-radius:50%;background:var(--peach);box-shadow:0 0 0 2px #fff}
 .dock{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:31;display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:8px;border-radius:999px;transition:transform .4s,opacity .3s}
 @media(min-width:900px){.dock{display:none}.cfgb,.chatb{bottom:24px}}
 .chat{position:fixed;z-index:50;right:16px;bottom:calc(84px + env(safe-area-inset-bottom));width:min(380px,100% - 32px);height:min(520px,70vh);border-radius:var(--r);display:flex;flex-direction:column;overflow:hidden;background:#fff}

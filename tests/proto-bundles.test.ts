@@ -3109,6 +3109,15 @@ test("Nek Dental Studio: выбор, сайт и панель на en, ka и ru 
     if (lang !== "ru") assert.doesNotMatch(page.replace(/<script(?! type="application\/json")[\s\S]*?<\/script>/g, "").replace(/<style>[\s\S]*?<\/style>/g, ""), /[А-Яа-яЁё]/, `${path}: кириллица не на русской странице`);
     if (kind === "panel") {
       assert.ok(page.includes("nk-demo-1"), `${path}: панель не видит записи с сайта`);
+      /* Владелец, 11.11.2026: «Админка только на Английском… Добавь туда все
+         мессенджеры, Wazzup… Сделай возможность переключения языка». */
+      const pd = JSON.parse(page.match(/<script type="application\/json" id="pn-data">([\s\S]*?)<\/script>/)![1]);
+      assert.deepEqual(pd.langs.map((x: { l: string }) => x.l), ["en", "ka", "ru"], `${path}: нет переключателя языка`);
+      assert.equal(pd.langs.find((x: { on: boolean }) => x.on).l, lang, `${path}: язык панели не отмечен`);
+      for (const x of pd.langs) assert.ok(x.h.endsWith("/panel"), `${path}: язык ведёт не в панель`);
+      for (const k of ["tab_msg", "tab_con", "c_wz_t", "c_tg_t", "c_crm_t", "c_rem_t"]) assert.ok(pd.ui[k], `${path}: нет подписи ${k}`);
+      assert.ok(/Wazzup/.test(pd.ui.c_wz_t) && /amoCRM/.test(pd.ui.c_crm_t) && /Bitrix24/.test(pd.ui.c_crm_t), `${path}: нет Wazzup или CRM`);
+      assert.deepEqual([...new Set(pd.threads.map((x: { ch: string }) => x.ch))].sort(), ["instagram", "telegram", "viber", "whatsapp"], `${path}: не все мессенджеры`);
       continue;
     }
     assert.match(page, /\bIDLE=3000\b/, `${path}: шапка не по правилу 3 секунд`);
