@@ -53,6 +53,31 @@ export const prospectSections: Record<string, HelpEntry> = {
   },
 
   /* ── Поиск ────────────────────────────────────────────────────────── */
+  "/admin/tenders": {
+    what: "Skaut czyta platformy zamówień w Uzbekistanie i zostawia tylko loty, które możemy wziąć: strona, aplikacja, bot, system informacyjny, utrzymanie oprogramowania. Tu jest lista takich lotów z terminem składania ofert i przyciskami.",
+    items: [
+      {
+        id: "how",
+        title: "Jak skaut szuka przetargów",
+        body: [
+          "Co 30 minut skaut czyta otwarte listy lotów na platformach: etender.uzex.uz, xarid.uzex.uz, Hayot Birja (XT-Xarid) i Tender.asia. Tylko to, co platforma pokazuje każdemu odwiedzającemu bez logowania: skaut nie ma loginów ani podpisu elektronicznego i nie obchodzi captchy.",
+          "Czy lot jest nasz, decyduje kod po nazwie, bez modelu: potrzebny jest temat (strona, aplikacja, bot, system informacyjny, CRM, automatyzacja, platforma, AI) i praca (opracowanie, stworzenie, rozbudowa, utrzymanie). Zakup komputerów, kartridży i gotowych licencji jest odrzucany. Na etender loty z kategorii „Oprogramowanie i jego tworzenie” i „Usługi IT” przechodzą od razu, bez sprawdzania nazwy.",
+          "Nowe loty trafiają linijką na kanał skauta — ten sam, na który przychodzą sygnały z grup: platforma, nazwa, zamawiający, cena, termin i link do lotu. W jednym przejściu na kanał idzie najwyżej osiem, reszta — jedną linijką „jeszcze N” z linkiem tutaj.",
+          "Linijka «Ostatnie przejście» na górze pokazuje, kiedy skaut czytał platformy, ile lotów jest na każdej i ile z nich naszych. Platforma nie odpowiedziała — jest podświetlona, pozostałe czytają się normalnie.",
+        ],
+      },
+      {
+        id: "work",
+        title: "Co zrobić z lotem",
+        body: [
+          "Otwórz lot przyciskiem «Otwórz lot» — tam jest specyfikacja, warunki i dokumenty. Pasuje — naciśnij **«Biorę»**: lot trafia do zakładki «Biorę» z Twoim imieniem i koledzy widzą, że ktoś już się nim zajmuje. Złożyłeś ofertę na platformie — **«Złożone»**. Nie pasuje — **«Nie nasze»**, lot znika z nowych.",
+          "Nowe są ułożone według terminu: u którego przyjmowanie ofert kończy się wcześniej, ten wyżej. Zostały dwa dni lub mniej — termin jest podświetlony. Loty, w których przyjmowanie skończyło się ponad dobę temu, same znikają z «Nowe».",
+          "Ofertę składa się na samej platformie, podpisem elektronicznym firmy — z panelu się jej nie złoży. Jak czytać specyfikację zamówienia IT — w analizach przetargów na stronie studia.",
+        ],
+      },
+    ],
+  },
+
   "/admin/scout": {
     what: "Robot-skaut całą dobę czyta otwarte czaty w Telegramie i znajduje ludzi, którzy właśnie teraz szukają programisty. Najmocniejsze znaleziska sam zamienia w leady, resztę wysyła na kanał «Devuz Scout». Tutaj widać, co znalazł i czy w ogóle działa.",
     items: [

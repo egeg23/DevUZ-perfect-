@@ -975,6 +975,32 @@ export const uz: HelpCopy = {
     },
 
     /* ── Поиск ────────────────────────────────────────────────────────── */
+    /* ── Tenderlar ─────────────────────────────────────────────────── */
+    "/admin/tenders": {
+      what: "Skaut O‘zbekiston xarid maydonchalarini o‘qiydi va faqat biz ola oladigan lotlarni qoldiradi: sayt, ilova, bot, axborot tizimi, dasturiy ta’minotni qo‘llab-quvvatlash. Bu yerda — shunday lotlar tasmasi, ariza muddati va tugmalar bilan.",
+      items: [
+        {
+          id: "how",
+          title: "Skaut tenderlarni qanday qidiradi",
+          body: [
+            "Har 30 daqiqada skaut maydonchalardagi ochiq lotlar ro‘yxatini o‘qiydi: etender.uzex.uz, xarid.uzex.uz, Hayot Birja (XT-Xarid) va Tender.asia. Faqat maydoncha har qanday tashrif buyuruvchiga kirishsiz ko‘rsatadigan narsa: skautda login va ERI yo‘q, kapchani aylanib o‘tmaydi.",
+            "Lot biznikimi — buni kod nomiga qarab, modelsiz hal qiladi: mavzu (sayt, ilova, bot, axborot tizimi, CRM, avtomatlashtirish, platforma, sun’iy intellekt) va ish (ishlab chiqish, yaratish, takomillashtirish, qo‘llab-quvvatlash) kerak. Kompyuter, kartrij va tayyor litsenziya xaridi chiqarib tashlanadi. Etender’da «Dasturiy ta’minot» va «IT xizmatlari» toifalaridagi lotlar nomini tekshirmasdan darhol o‘tadi.",
+            "Yangi lotlar skaut kanaliga qator bo‘lib keladi — guruhlardan signallar keladigan kanalning o‘ziga: maydoncha, nomi, buyurtmachi, narx, muddat va lotga havola. Bir o‘tishda kanalga sakkiztadan ko‘p ketmaydi, qolganlari — bu yerga havola bilan bitta «yana N» qatori.",
+            "Yuqoridagi «Oxirgi o‘tish» qatori skaut maydonchalarni qachon o‘qiganini, har birida nechta lot va ulardan nechtasi bizniki ekanini ko‘rsatadi. Maydoncha javob bermasa — u ajratib ko‘rsatiladi, qolganlari odatdagidek o‘qiladi.",
+          ],
+        },
+        {
+          id: "work",
+          title: "Lot bilan nima qilish kerak",
+          body: [
+            "Lotni «Lotni ochish» tugmasi bilan oching — u yerda TZ, shartlar va hujjatlar. Mos kelsa — **«Olaman»** ni bosing: lot ismingiz bilan «Olaman» yorlig‘iga o‘tadi va hamkasblar u bilan shug‘ullanilayotganini ko‘radi. Maydonchada ariza topshirdingiz — **«Topshirildi»**. Mos kelmasa — **«Bizniki emas»**, lot yangilardan yo‘qoladi.",
+            "Yangilar muddat bo‘yicha turadi: qaysi biriga ariza qabuli tezroq tugasa, o‘sha yuqorida. Ikki kun yoki kamroq qolgan bo‘lsa — muddat ajratiladi. Qabuli bir kundan ko‘proq oldin tugagan lotlar «Yangi» dan o‘zi chiqib ketadi.",
+            "Ariza maydonchaning o‘zida, kompaniya ERI bilan topshiriladi — paneldan topshirib bo‘lmaydi. IT xaridi TZ’sini qanday o‘qish — studiya saytidagi tender tahlillarida.",
+          ],
+        },
+      ],
+    },
+
     "/admin/scout": {
       what: "Skaut-robot kechayu kunduz Telegramdagi ochiq chatlarni o‘qiydi va hozir dasturchi qidirayotgan odamlarni topadi. Kuchli topilmalarni o‘zi lidga aylantiradi, qolganlarini «Devuz Scout» kanaliga yuboradi. Bu yerda u nima topgani va ishlayotgani ko‘rinadi.",
       items: [

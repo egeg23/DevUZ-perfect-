@@ -62,6 +62,7 @@ export const AUDIT_ACTIONS = [
   "outside.publisher_set",
   // Ключ Postiz сохранили или проверили (lib/outside/auto-store.ts): без значения ключа.
   "outside.postiz_key_saved",
+  "scout.tender_status",
   // «Реклама»: ключи приложения Google (только имена полей) и кабинет планировщика ключевых слов.
   "ads.app_keys_saved",
   "ads.planner_set",

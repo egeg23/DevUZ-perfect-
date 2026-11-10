@@ -52,6 +52,8 @@ import { sendShiftReports, warnAboutSilentShifts } from "@/lib/admin/shift-repor
 import { sendScoutDigest } from "@/lib/scout/digest";
 import { promoteStrongSignals } from "@/lib/scout/promote";
 import { purgeExpiredSignals, resendUnnotifiedSignals } from "@/lib/scout/store";
+import { readAllSources } from "@/lib/scout/tender-sources";
+import { runTenderScan } from "@/lib/scout/tender-store";
 import { esc, sendWithButtons, telegramReachable } from "@/lib/qualify/telegram";
 import { serviceClient } from "@/lib/supabase";
 import { banSweep } from "@/lib/admin/account-ban-sweep";
@@ -571,6 +573,15 @@ async function sweep(): Promise<Response> {
   after(async () => {
     const articles = await runMarketingArticles(new Date()).catch((error) => ({ errors: [String(error)] }));
     if (articles.errors.length) console.error("статьи о маркетинге:", articles.errors.join("; "));
+  });
+
+  // Тендеры скаута: раз в 30 минут — открытые списки лотов etender и xarid
+  // UZEX, наши (сайт, приложение, бот, ИС) — в scout_tenders и строкой в канал
+  // скаута (lib/scout/tender-store.ts). После ответа таймеру: площадки
+  // отвечают по 1–4 секунды, а страниц и карточек за проход — десяток.
+  after(async () => {
+    const tenders = await runTenderScan(new Date(), () => readAllSources(new Date())).catch((error) => ({ errors: [String(error)] }));
+    if (tenders.errors.length) console.error("тендеры:", tenders.errors.join("; "));
   });
 
   // Статьи на площадках (vc.ru, Дзен, Tenchat): черновики раз в неделю, днём;
