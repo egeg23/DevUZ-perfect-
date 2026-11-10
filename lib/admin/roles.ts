@@ -157,6 +157,17 @@ export const SECTIONS: readonly Section[] = [
   // это заказы магазина, не заявки клиентов.
   { href: "/admin/prospect", label: { ru: "Холодные касания", uz: "Sovuq aloqalar", pl: "Zimne kontakty" }, roles: EVERYONE, group: "prospect" },
   { href: "/admin/scout", label: { ru: "Сигналы скаута", uz: "Skaut signallari", pl: "Sygnały skauta" }, roles: EVERYONE, group: "prospect", parent: "/admin/prospect" },
+  // Тендеры — ещё одна функция скаута (владелец, 10.11.2026: «Делаем Парсинг
+  // тендеров»): лоты xarid/etender UZEX, Hayot Birja и Tender.asia, которые
+  // скаут отобрал как наши (lib/scout/tender-*.ts). Всем — подать может любой.
+  {
+    href: "/admin/tenders",
+    label: { ru: "Тендеры", uz: "Tenderlar", pl: "Przetargi" },
+    roles: EVERYONE,
+    group: "prospect",
+    parent: "/admin/prospect",
+    aka: ["Закупки", "Госзакупки", "Лоты", "Xaridlar", "Davlat xaridlari", "Zamówienia publiczne"],
+  },
   // Разбор переписки — уроки из разговоров касаний. Всем, а не только
   // владельцу: урок нужен тому, кто пишет следующее письмо.
   { href: "/admin/talks", label: { ru: "Разбор переписки", uz: "Yozishmalar tahlili", pl: "Analiza rozmów" }, roles: EVERYONE, group: "prospect", parent: "/admin/prospect" },
