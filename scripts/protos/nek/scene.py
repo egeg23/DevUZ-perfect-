@@ -1,40 +1,42 @@
-"""Пролёт Nek Dental Studio: 4 ролика Higgsfield → кадры прокрутки → шифр.
+"""Пролёт Nek Dental Studio: 8 роликов Higgsfield → кадры прокрутки → шифр.
 
-SCENE_KEY=<64 hex> python3 -I scene.py <папка с v1.mp4..v4.mp4> <папка с k1.png..k5.png>
+SCENE_KEY=<64 hex> python3 -I scene.py <папка h: v1..v4.mp4, k1..k5.png> <папка v: то же, 9:16>
 
-Ролики — MiniMax H3, 2K (2560×1440), 6 с, 24 к/с, 10.11.2026, кадр начала и
-кадр конца — ключевые кадры Nano Banana 2.1 4K по их фото (SOURCES.md):
+Ролики — MiniMax H3, 2K, 10 с, 24 к/с, 10.11.2026, кадр начала и кадр конца —
+ключевые кадры Nano Banana 2.1 4K по их фото (SOURCES.md), отдельно 16:9 и
+9:16:
   v1 ресепшен со знаком → знак-цветок крупно;
   v2 сквозь лепестки знака → лаунж с бирюзовыми креслами;
   v3 лаунж → кабинет с фиолетовым креслом;
   v4 кабинет темнеет → реставрированный зуб на фиолетовом.
-Последний кадр ролика совпадает с первым следующего, поэтому стык
-выбрасывается. Берём каждый STEP-й кадр. Компьютеру — 1600×900 (d/),
-телефону — окно 9:16 за точкой интереса, 720×1280 (m/): ролики под телефон
-отдельно не снимали, широкий кадр 2K даёт окно 810×1440, этого хватает.
-В public кадры лежат только шифром, как у SamAuto и Optimal Prime: AES-256-GCM,
-файл = 12 байт nonce + шифр. Ключ — `SCENE_KEY_NEK` в хранилище секретов,
-макет получает его маршрутом app/proto/[token]/promo/scene. Открыты только
-постеры (первый кадр) и ключевые кадры для спокойной версии без движения.
+Владелец, 10.11.2026, про первую версию (6 с, каждый 4-й кадр, 158 кадров):
+«Переходы абсолютно не плавные… слайдшоу какое-то». Поэтому ролики по 10 с
+с медленной камерой и каждый второй кадр: около 480 кадров на пролёт, а
+land.js ещё смешивает соседние. Реже STEP=2 не делать.
+Последний кадр ролика совпадает с первым следующего, стык выбрасывается.
+Компьютеру — 1280×720 (d/), телефону — 720×1280 из вертикальных роликов (m/).
+В public кадры лежат только шифром, как у SamAuto и Optimal Prime:
+AES-256-GCM, файл = 12 байт nonce + шифр. Ключ — `SCENE_KEY_NEK` в хранилище
+секретов, макет получает его маршрутом app/proto/[token]/promo/scene. Открыты
+только постеры (первый кадр) и ключевые кадры для версии без движения.
 """
 import io, json, os, subprocess, sys, tempfile
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from PIL import Image
 
-STEP = 4
+STEP = 2
 KEY = bytes.fromhex(os.environ.get("SCENE_KEY", "0" * 64))
 assert len(KEY) == 32, "ключ — 32 байта"
 HERE = os.path.dirname(os.path.abspath(__file__))
 PUB = os.path.join(HERE, "../../../public/protos/nek")
-VID, KF = sys.argv[1], sys.argv[2]
-
-# Центр окна телефона по ширине кадра: начало и конец каждого ролика.
-FOCUS = [(0.36, 0.5), (0.5, 0.42), (0.42, 0.58), (0.58, 0.5)]
+SRC = {"d": sys.argv[1], "m": sys.argv[2]}
+SIZE = {"d": (1280, 720), "m": (720, 1280)}
+Q = {"d": 74, "m": 70}
 
 
 def frames(path):
     tmp = tempfile.mkdtemp()
-    subprocess.run(["ffmpeg", "-v", "error", "-i", path, os.path.join(tmp, "%04d.png")], check=True)
+    subprocess.run(["ffmpeg", "-v", "error", "-i", path, "-q:v", "2", os.path.join(tmp, "%04d.jpg")], check=True)
     return [os.path.join(tmp, f) for f in sorted(os.listdir(tmp))]
 
 
@@ -50,62 +52,54 @@ def webp(im, q):
     return b.getvalue()
 
 
-def phone(im, fx):
-    w = round(im.height * 9 / 16)
-    x = max(0, min(im.width - w, round(fx * im.width - w / 2)))
-    return im.crop((x, 0, x + w, im.height)).resize((720, 1280), Image.LANCZOS)
+def sequence(kind):
+    seq = []
+    for v in range(4):
+        fs = frames(os.path.join(SRC[kind], f"v{v + 1}.mp4"))
+        seq += fs[1:] if v else fs
+    pick = seq[::STEP]
+    if pick[-1] != seq[-1]:
+        pick.append(seq[-1])
+    return pick
 
 
-seq = []  # (кадр, центр окна телефона)
-for v in range(4):
-    fs = frames(os.path.join(VID, f"v{v + 1}.mp4"))
-    if v:
-        fs = fs[1:]
-    a, b = FOCUS[v]
-    for i, f in enumerate(fs):
-        k = i / max(1, len(fs) - 1)
-        seq.append((f, a + (b - a) * (3 * k * k - 2 * k ** 3)))
-pick = seq[::STEP]
-if pick[-1] != seq[-1]:
-    pick.append(seq[-1])
+picks = {k: sequence(k) for k in ("d", "m")}
+n = min(len(p) for p in picks.values())
+# Число кадров у двух наборов одно: главы стоят на тех же долях сцены.
+for k, p in picks.items():
+    picks[k] = [p[round(i * (len(p) - 1) / (n - 1))] for i in range(n)]
 
 if os.environ.get("PREVIEW"):
-    ks = [round(i * (len(pick) - 1) / 11) for i in range(12)]
-    sheet = Image.new("RGB", (4 * 466, 3 * 262 + 3 * 0))
-    sheetm = Image.new("RGB", (12 * 148, 262))
-    for n, i in enumerate(ks):
-        im = Image.open(pick[i][0]).convert("RGB")
-        sheet.paste(im.resize((466, 262)), ((n % 4) * 466, (n // 4) * 262))
-        sheetm.paste(phone(im, pick[i][1]).resize((148, 262)), (n * 148, 0))
-    sheet.save(os.environ["PREVIEW"] + "-d.jpg", quality=80)
-    sheetm.save(os.environ["PREVIEW"] + "-m.jpg", quality=80)
-    print(len(pick), "кадров", file=sys.stderr)
+    ks = [round(i * (n - 1) / 11) for i in range(12)]
+    for k, (w, h) in (("d", (320, 180)), ("m", (148, 262))):
+        sheet = Image.new("RGB", (12 * w, h))
+        for j, i in enumerate(ks):
+            sheet.paste(Image.open(picks[k][i]).convert("RGB").resize((w, h)), (j * w, 0))
+        sheet.save(os.environ["PREVIEW"] + f"-{k}.jpg", quality=80)
+    print(n, "кадров", file=sys.stderr)
     sys.exit(0)
 
-for sub in ("seq/d", "seq/m"):
-    d = os.path.join(PUB, sub)
+total = 0
+for k in ("d", "m"):
+    d = os.path.join(PUB, "seq", k)
     os.makedirs(d, exist_ok=True)
     for f in os.listdir(d):
         os.remove(os.path.join(d, f))
+    for i, f in enumerate(picks[k]):
+        data = webp(Image.open(f).convert("RGB").resize(SIZE[k], Image.LANCZOS), Q[k])
+        total += len(data)
+        seal(data, os.path.join(d, f"f{i:03d}.bin"))
+    first = Image.open(picks[k][0]).convert("RGB")
+    if k == "d":
+        first.resize((1920, 1080), Image.LANCZOS).save(os.path.join(PUB, "poster-16.webp"), "WEBP", quality=84, method=6)
+    else:
+        first.resize((720, 1280), Image.LANCZOS).save(os.path.join(PUB, "poster-9.webp"), "WEBP", quality=84, method=6)
 
-for n, (f, fx) in enumerate(pick):
-    im = Image.open(f).convert("RGB")
-    seal(webp(im.resize((1600, 900), Image.LANCZOS), 80), os.path.join(PUB, f"seq/d/f{n:03d}.bin"))
-    seal(webp(phone(im, fx), 78), os.path.join(PUB, f"seq/m/f{n:03d}.bin"))
-    if n == 0:
-        im.resize((1920, 1080), Image.LANCZOS).save(os.path.join(PUB, "poster-16.webp"), "WEBP", quality=84, method=6)
-        phone(im, fx).save(os.path.join(PUB, "poster-9.webp"), "WEBP", quality=84, method=6)
-    print(n, end=" ", file=sys.stderr, flush=True)
-
-# Ключевые кадры открыто: спокойная версия без движения и картинки сайта.
+# Ключевые кадры открыто: версия без движения и картинки сайта.
 for i in range(1, 6):
-    im = Image.open(os.path.join(KF, f"k{i}.png")).convert("RGB")
-    im.resize((1600, round(1600 * im.height / im.width)), Image.LANCZOS).save(os.path.join(PUB, f"k{i}-16.webp"), "WEBP", quality=82, method=6)
-    w = round(im.height * 9 / 16)
-    fx = [0.36, 0.5, 0.42, 0.58, 0.5][i - 1]
-    x = max(0, min(im.width - w, round(fx * im.width - w / 2)))
-    im.crop((x, 0, x + w, im.height)).resize((720, 1280), Image.LANCZOS).save(os.path.join(PUB, f"k{i}-9.webp"), "WEBP", quality=80, method=6)
+    Image.open(os.path.join(SRC["d"], f"k{i}.png")).convert("RGB").resize((1600, 893), Image.LANCZOS).save(os.path.join(PUB, f"k{i}-16.webp"), "WEBP", quality=82, method=6)
+    Image.open(os.path.join(SRC["m"], f"k{i}.png")).convert("RGB").resize((720, 1290), Image.LANCZOS).save(os.path.join(PUB, f"k{i}-9.webp"), "WEBP", quality=80, method=6)
 
 with open(os.path.join(HERE, "media.json"), "w") as f:
-    json.dump({"n": len(pick)}, f)
-print("\nкадров", len(pick), "× 2", file=sys.stderr)
+    json.dump({"n": n}, f)
+print("кадров", n, "× 2,", round(total / 1048576, 1), "МБ", file=sys.stderr)
