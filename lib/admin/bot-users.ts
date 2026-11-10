@@ -92,7 +92,21 @@ export type BotSubs = {
   fresh: Record<SubWindow, { now: number; prev: number }>;
   /** Были в боте в окне: писали или нажимали кнопки. */
   active: Record<SubWindow, number>;
+  /**
+   * Подписались сегодня — с полуночи по Ташкенту, и за весь вчерашний день
+   * (владелец, 10.11.2026: «выведи для меня и руководителей сколько
+   * подписалось на бота нашего за сегодня»).
+   */
+  today: { now: number; yesterday: number; active: number };
 };
+
+const DAY_MS = 24 * 60 * 60_000;
+const TASHKENT_MS = 5 * 60 * 60_000;
+
+/** Полночь сегодняшнего дня по Ташкенту — моментом времени. */
+export function tashkentDayStart(now: Date): number {
+  return Math.floor((now.getTime() + TASHKENT_MS) / DAY_MS) * DAY_MS - TASHKENT_MS;
+}
 
 /** Счёт подписчиков правилами, без базы: сотрудники не считаются нигде. */
 export function botSubs(users: readonly BotUser[], marks: Marks, now: Date): BotSubs {
@@ -115,7 +129,43 @@ export function botSubs(users: readonly BotUser[], marks: Marks, now: Date): Bot
     active[key] = seen;
   }
   const blocked = people.filter((u) => u.blocked_at).length;
-  return { total: people.length - blocked, blocked, fresh, active };
+  const start = tashkentDayStart(now);
+  const today = { now: 0, yesterday: 0, active: 0 };
+  for (const u of people) {
+    const first = time(u.first_at);
+    if (first >= start && first <= at) today.now += 1;
+    else if (first >= start - DAY_MS && first < start) today.yesterday += 1;
+    if (time(u.last_at) >= start) today.active += 1;
+  }
+  return { total: people.length - blocked, blocked, fresh, active, today };
+}
+
+/** С этого часа по Ташкенту — сводка подписчиков за день; до 21:00 (ночью бот молчит). */
+export const SUBS_REPORT_HOUR = 20;
+
+/** Отметка «сводку получил» в team_news_sent. */
+export function subsNewsKey(day: string): string {
+  return `bot-subs:${day}`;
+}
+
+const signed = (n: number) => (n > 0 ? `+${n}` : String(n));
+
+/**
+ * Сводка подписчиков владельцу и руководителю раз в день (владелец,
+ * 10.11.2026: «Мне отчет по подписчикам и Александру раз в день
+ * присылай»). Те же числа, что «Подписчики бота» на «Главной».
+ */
+export function subsReportText(day: string, subs: BotSubs): string {
+  const date = day.split("-").reverse().join(".");
+  const diff = subs.today.now - subs.today.yesterday;
+  return [
+    `👥 <b>Подписчики бота · ${date}</b>`,
+    `Подписались сегодня: <b>${subs.today.now}</b> (вчера ${subs.today.yesterday}, ${signed(diff)})`,
+    `Были в боте сегодня: ${subs.today.active}`,
+    `Новые за 7 дней: ${subs.fresh.week.now} (неделей раньше ${subs.fresh.week.prev})`,
+    `Новые за 30 дней: ${subs.fresh.month.now}`,
+    `Сейчас в боте: <b>${subs.total}</b>${subs.blocked ? ` · заблокировали: ${subs.blocked}` : ""}`,
+  ].join("\n");
 }
 
 /**

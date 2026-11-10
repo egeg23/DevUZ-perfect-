@@ -15,6 +15,7 @@ import { runNoShowWeek } from "@/lib/admin/sales-stages-store";
 import { refreshXp } from "@/lib/admin/levels-store";
 import { runSilence } from "@/lib/admin/silence-store";
 import { sendStaffReport } from "@/lib/admin/staff-report-store";
+import { sendBotSubsReport } from "@/lib/admin/bot-subs-report-store";
 import { sendHelperStats } from "@/lib/admin/helper-stats-store";
 import { sendStaffWeek } from "@/lib/admin/staff-week-store";
 import { runTraceMonth } from "@/lib/proto/trace-month-store";
@@ -320,6 +321,8 @@ async function sweep(): Promise<Response> {
     // Кто сколько спросил помощника в боте — каждый день с 18:00
     // (lib/admin/helper-stats-store).
     await sendHelperStats(new Date()).catch((error) => console.error("помощник, сводка:", error));
+    // Подписчики бота за день — с 20:00 (lib/admin/bot-subs-report-store).
+    await sendBotSubsReport(new Date()).catch((error) => console.error("подписчики бота, сводка:", error));
   });
   after(async () => {
     // Дожим касаний — первым: он ограничен рабочими часами и тремя

@@ -182,6 +182,11 @@ export function HqSide({
             <span className="font-mono text-4xl font-semibold leading-none tracking-tight tabular-nums text-text">{subs.total}</span>
             <span className="text-xs text-muted">{ts.now}</span>
           </p>
+          <p className="mt-3 flex flex-wrap items-baseline gap-x-2 gap-y-1 rounded-lg bg-green/10 px-3 py-2">
+            <span className="font-mono text-2xl font-semibold leading-none tabular-nums text-green">{subs.today.now}</span>
+            <span className="text-xs font-medium text-text">{ts.today}</span>
+            <span className="text-[0.7rem] text-faint">{ts.yesterday(subs.today.yesterday)}</span>
+          </p>
           <table className="mt-4 w-full text-xs">
             <caption className="sr-only">{ts.caption}</caption>
             <thead>

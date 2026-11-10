@@ -65,3 +65,32 @@ test("блок — на «Главной» владельцу и руковод�
     assert.match(read(help), /id: "bot-subs",\s*roles: \["admin", "head"\]/, help);
   }
 });
+
+test("«подписались сегодня» — с полуночи по Ташкенту, и сводка раз в день владельцу и руководителю", async () => {
+  const { subsReportText, tashkentDayStart, SUBS_REPORT_HOUR } = await import("@/lib/admin/bot-users");
+  // 10:00 UTC = 15:00 по Ташкенту, полночь по Ташкенту = 19:00 UTC накануне.
+  assert.equal(new Date(tashkentDayStart(NOW)).toISOString(), "2026-10-24T19:00:00.000Z");
+  const users = [
+    user(1, 2, 1), // сегодня
+    user(2, 14, 14), // 20:00 UTC накануне = 01:00 по Ташкенту — тоже сегодня
+    user(3, 16, 3), // 18:00 UTC накануне = 23:00 вчера по Ташкенту; заходил сегодня
+    user(4, 30, 30), // вчера
+    user(5, 24 * 5, 24 * 5),
+    user(9, 1, 1), // сотрудник
+  ];
+  const s = botSubs(users, marks, NOW);
+  assert.deepEqual(s.today, { now: 2, yesterday: 2, active: 3 });
+  const text = subsReportText("2026-10-25", s);
+  assert.match(text, /Подписчики бота · 25\.10\.2026/);
+  assert.match(text, /Подписались сегодня: <b>2<\/b> \(вчера 2, 0\)/);
+  assert.match(text, /Сейчас в боте: <b>5<\/b>/);
+  assert.equal(SUBS_REPORT_HOUR, 20);
+
+  const store = read("lib/admin/bot-subs-report-store.ts");
+  assert.match(store, /\.in\("role", \["admin", "head"\]\)/, "только владелец и руководитель");
+  assert.match(store, /\[\], "reports"\)/, "под галочкой «Отчёты»");
+  assert.match(store, /hour >= QUIET_FROM_HOUR/, "ночью не шлём");
+  assert.match(store, /team_news_sent/, "раз в день");
+  assert.match(read("app/api/reminders/sweep/route.ts"), /sendBotSubsReport\(new Date\(\)\)/);
+  assert.match(read("components/admin/hq-side.tsx"), /subs\.today\.now/);
+});
