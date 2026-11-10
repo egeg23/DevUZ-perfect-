@@ -1,0 +1,4 @@
+# Страницы собирает CF_PROD=1 node gen.mjs (в GitHub и в тестах), кадры —
+# копия public/protos/chechfarm: в git их нет.
+*
+!.gitignore

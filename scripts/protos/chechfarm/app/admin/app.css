@@ -1,0 +1,60 @@
+/* Панель CZECHFARM: цвета сайта (бумага, бирюза, золото), плотно и просто. */
+:root{--paper:#f5f3ee;--ink:#071a18;--teal:#0b5a53;--mint:#e5f4f0;--gold:#b98a3a;--line:rgb(7 26 24 / .12);--mute:rgb(7 26 24 / .6);--red:#b4232c;--r:12px}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--paper);color:var(--ink)}
+a{color:var(--teal)}
+button,input,select,textarea{font:inherit;color:inherit}
+.boot{padding:40px;text-align:center;color:var(--mute)}
+.shell{display:grid;grid-template-columns:230px 1fr;min-height:100vh}
+.side{background:var(--ink);color:var(--mint);padding:20px 12px;display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh;overflow:auto}
+.side .brand{font-weight:700;letter-spacing:.06em;padding:4px 12px 16px}
+.side .brand small{display:block;font-weight:400;letter-spacing:.2em;font-size:11px;color:#e5c98f}
+.side a{color:inherit;text-decoration:none;padding:9px 12px;border-radius:9px;display:flex;justify-content:space-between;gap:8px}
+.side a[aria-current]{background:rgb(229 244 240 / .12)}
+.side a .n{background:#e5c98f;color:var(--ink);border-radius:999px;padding:0 8px;font-size:12px;font-weight:700}
+.side .me{margin-top:auto;padding:12px;font-size:13px;color:rgb(229 244 240 / .7)}
+.side .me button{margin-top:8px}
+main{padding:28px clamp(16px,3vw,40px);max-width:1180px;width:100%}
+h1{font-size:26px;margin:0 0 18px}
+h2{font-size:18px;margin:26px 0 10px}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.grid{display:grid;gap:14px}.g2{grid-template-columns:repeat(2,minmax(0,1fr))}.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.stat b{display:block;font-size:30px}.stat span{color:var(--mute);font-size:13px}
+.btn{display:inline-flex;align-items:center;gap:6px;min-height:38px;padding:7px 14px;border-radius:999px;border:1px solid var(--line);background:#fff;cursor:pointer}
+.btn.pri{background:var(--teal);border-color:var(--teal);color:#fff}
+.btn.warn{color:var(--red)}
+.btn:disabled{opacity:.5;cursor:default}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.sp{flex:1}
+label.f{display:grid;gap:4px;font-size:13px;color:var(--mute)}
+label.f input,label.f select,label.f textarea,input.i,select.i{width:100%;min-height:38px;padding:7px 10px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink)}
+textarea{min-height:90px;resize:vertical}
+table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;font-size:14px}
+th{background:var(--mint);font-weight:600;font-size:13px}
+tr.click{cursor:pointer}tr.click:hover td{background:#fbfaf7}
+.pill{display:inline-block;padding:1px 10px;border-radius:999px;font-size:12px;background:var(--mint);color:var(--teal);white-space:nowrap}
+.pill.new{background:#fdf1da;color:#7a5410}.pill.done{background:#e7efe9;color:#2e6b3e}.pill.spam{background:#f3e2e3;color:var(--red)}.pill.off{background:#eee;color:#777}
+.note{color:var(--mute);font-size:13px}
+.err{color:var(--red);font-size:13px}
+.hist{display:grid;gap:6px;font-size:13px}
+.hist div{display:grid;grid-template-columns:130px 1fr;gap:10px}
+.msg{padding:8px 12px;border-radius:10px;background:var(--mint);max-width:80%}
+.msg.out{background:#fdf1da;margin-left:auto}
+.lang-tabs{display:flex;gap:6px;margin-bottom:8px}
+.lang-tabs button[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.thumb{width:56px;height:56px;object-fit:cover;border-radius:8px;background:var(--mint)}
+.login{max-width:380px;margin:12vh auto;display:grid;gap:12px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:999px;max-width:90vw;z-index:10}
+.toast.bad{background:var(--red)}
+.burger{display:none}
+@media (max-width:860px){
+  .shell{grid-template-columns:1fr}
+  .side{position:fixed;inset:0 30% 0 0;z-index:5;transform:translateX(-100%);transition:transform .2s}
+  .side.open{transform:none}
+  .burger{display:inline-flex;margin-bottom:12px}
+  .g2,.g4{grid-template-columns:1fr 1fr}
+  table.resp thead{display:none}table.resp tr{display:grid;border-bottom:1px solid var(--line)}table.resp td{border:0;padding:4px 12px}
+}
+@media (max-width:520px){.g2,.g4{grid-template-columns:1fr}.hist div{grid-template-columns:1fr}}
+.side .btn{color:var(--ink)}
