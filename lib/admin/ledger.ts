@@ -285,7 +285,7 @@ export async function loadLedger(scope: "all" | readonly string[]): Promise<Ledg
   return { offline: false, projects, payments, payouts, people, shares, partners };
 }
 
-/** Проект с тем, кто привёл его агентство (5% с суммы), если проект в его 12 месяцах. */
+/** Проект с тем, кто привёл его партнёра — агентство или блогера (5% с суммы), если проект в его 12 месяцах. */
 export function withFinder<P extends { partner_id: string | null; created_at?: string | null }>(
   project: P,
   partners: ReadonlyMap<string, Pick<Partner, "id" | "kind" | "brought_by" | "brought_at">>,
@@ -295,7 +295,7 @@ export function withFinder<P extends { partner_id: string | null; created_at?: s
 }
 
 /**
- * Проекты агентств, которых привели люди круга. Для «всех» — пусто: все
+ * Проекты партнёров (агентств и блогеров), которых привели люди круга. Для «всех» — пусто: все
  * проекты и так в выборке.
  */
 async function agencyProjectsOf(scope: "all" | readonly string[]): Promise<Project[]> {
@@ -305,7 +305,6 @@ async function agencyProjectsOf(scope: "all" | readonly string[]): Promise<Proje
   const { data, error } = await db
     .from("partners")
     .select("id")
-    .eq("kind", "agency")
     .in("brought_by", [...scope])
     .limit(500);
   if (error || !data?.length) return [];

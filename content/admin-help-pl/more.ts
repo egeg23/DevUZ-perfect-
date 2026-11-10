@@ -321,8 +321,16 @@ export const moreSections: Record<string, HelpEntry> = {
         body: [
           "Agencja dostaje zawsze 15% od kwoty każdego swojego projektu: bez progów tabeli, jakie mają partnerzy z linkiem. Kwota to ta, która stoi w projekcie, czyli w umowie.",
           "Ten, kto przyprowadził agencję, dostaje 5% od kwoty każdego projektu agencji założonego w ciągu 12 miesięcy od dnia, w którym agencję tu dodano. Projekt założony później jest już bez 5%, a założony w terminie zostaje przy nim także potem. Projekt założony wcześniej niż agencja też jest bez 5%: nie przyszedł przez agencję. Termin widać w tabeli, w kolumnie «5% do».",
-          "5% dochodzi ponad wszystko inne. Jeśli projekt agencji prowadzisz Ty, Twój procent prowadzącego liczy się jak zwykle, a 5% idzie osobnym wierszem «przyprowadził agencję». Prowadzi ktoś inny: on ma swój procent, Ty swoje 5%.",
+          "5% dochodzi ponad wszystko inne. Jeśli projekt agencji prowadzisz Ty, Twój procent prowadzącego liczy się jak zwykle, a 5% idzie osobnym wierszem «przyprowadził partnera». Prowadzi ktoś inny: on ma swój procent, Ty swoje 5%.",
           "Obie części są zamrożone, dopóki klient nie opłaci projektu w całości, jak wszystko w [Finansach](/admin/finance): częściowa wpłata to zamrożone, pełna to zarobione. Anulowany projekt nie daje nic.",
+        ],
+      },
+      {
+        id: "partners",
+        title: "Partnerzy-blogerzy: te same 5% i ile przynieśli",
+        body: [
+          "Od 10.11.2026 te same 5% od kwoty projektów przez 12 miesięcy dostaje też ten, kto przyprowadził partnera-blogera, nie tylko agencję. Kto przyprowadził partnera, zaznacza właściciel w kolumnie «Kto przyprowadził»; 12 miesięcy liczy się od dnia dodania partnera. Przyprowadziłeś partnera, a ciebie tam nie ma — powiedz właścicielowi.",
+          "W tabeli są wszystkie agencje i partnerzy, których przyprowadziłeś (u kierownika i właściciela — wszyscy): ile projektów przyniósł każdy, «Kwota projektów» z umów, «Zapłacone przez klientów» — ile klienci już zapłacili, i twoje 5%. Nad tabelą — suma dla wszystkich twoich.",
         ],
       },
       {
@@ -389,15 +397,15 @@ export const moreSections: Record<string, HelpEntry> = {
         title: "Gdzie widać pieniądze",
         body: {
           manager: [
-            "W tabeli «Moje agencje» są agencje, które przyprowadziłeś: ile projektów ma agencja, «Kwota projektów» i «5% za agencję», czyli ile zarobione, a ile zamrożone. Te same 5% widać wierszem «przyprowadził agencję» w Twoich [Finansach](/admin/finance): wchodzą do Twojego salda i są wypłacane razem z resztą.",
+            "W tabeli «Moje agencje i partnerzy — ci, których przyprowadziłeś» są agencje, które przyprowadziłeś: ile projektów ma agencja, «Kwota projektów» i «5% dla tego, kto przyprowadził», czyli ile zarobione, a ile zamrożone. Te same 5% widać wierszem «przyprowadził partnera» w Twoich [Finansach](/admin/finance): wchodzą do Twojego salda i są wypłacane razem z resztą.",
             "Ile dostaje agencja, nie widzisz: to pieniądze dla osoby z zewnątrz, o wypłacie decyduje właściciel.",
           ],
           head: [
-            "W tabeli «Wszystkie agencje» są wszystkie agencje, kto przyprowadził każdą, ile ma projektów, «Kwota projektów», «5% za agencję» i «Dla agencji 15%». Twoje 5% i 5% Twojego zespołu są w [Finansach](/admin/finance), wierszem «przyprowadził agencję».",
+            "W tabeli «Wszystkie agencje i partnerzy» są wszystkie agencje, kto przyprowadził każdą, ile ma projektów, «Kwota projektów», «5% dla tego, kto przyprowadził» i «Dla agencji 15%». Twoje 5% i 5% Twojego zespołu są w [Finansach](/admin/finance), wierszem «przyprowadził partnera».",
             "Agencja jest też na wspólnej liście [Partnerów](/admin/partners), z oznaczeniem «agencja · 15%»: tam są jej naliczenia i wnioski o wypłatę, jak u każdego partnera. O wypłacie decyduje właściciel.",
           ],
           admin: [
-            "W tabeli «Wszystkie agencje» są wszystkie agencje, kto przyprowadził każdą, ile ma projektów, «Kwota projektów», «5% za agencję» i «Dla agencji 15%». W [Finansach](/admin/finance) 5% to wiersz «przyprowadził agencję» u tego, kto przyprowadził; odejmuje się od tego, co zostaje studiu, jak każde naliczenie zespołu.",
+            "W tabeli «Wszystkie agencje i partnerzy» są wszystkie agencje, kto przyprowadził każdą, ile ma projektów, «Kwota projektów», «5% dla tego, kto przyprowadził» i «Dla agencji 15%». W [Finansach](/admin/finance) 5% to wiersz «przyprowadził partnera» u tego, kto przyprowadził; odejmuje się od tego, co zostaje studiu, jak każde naliczenie zespołu.",
             "Agencja jest też na wspólnej liście [Partnerów](/admin/partners), z oznaczeniem «agencja · 15%»: tam są jej naliczenia, dane do przelewu i wnioski o wypłatę, jak u każdego partnera. O wypłacie decydujesz Ty.",
           ],
         },

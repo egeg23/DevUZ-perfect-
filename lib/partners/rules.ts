@@ -898,8 +898,10 @@ export function finderUntilDay(broughtAt: string | null): string {
 }
 
 /**
- * Кому 5% с этого проекта: тому, кто привёл агентство, если проект —
- * агентства и заведён в его 12 месяцах (с дня, как агентство завели, до
+ * Кому 5% с этого проекта: тому, кто привёл партнёра — агентство или блогера
+ * (владелец, 10.11.2026, про партнёра, которого привёл Эльдар: «по нашему
+ * правилу ему должно падать 5% с оборота»), если проект — этого партнёра и
+ * заведён в 12 месяцах того, кто привёл (с дня, как партнёра завели, до
  * того же дня через год). Проект, заведённый до агентства, — не его: его
  * привели не через агентство. Срок вышел — новые проекты без 5%, уже
  * заведённые в сроке остаются ему.
@@ -908,7 +910,7 @@ export function agencyFinder(
   project: { partner_id: string | null; created_at?: string | null },
   partner: { id: string; kind?: PartnerKind; brought_by?: string | null; brought_at?: string | null } | null | undefined,
 ): string | null {
-  if (!partner || partner.kind !== "agency" || !partner.brought_by) return null;
+  if (!partner || !partner.brought_by) return null;
   if (project.partner_id !== partner.id || !project.created_at || !partner.brought_at) return null;
   const at = new Date(project.created_at).getTime();
   const from = new Date(partner.brought_at).getTime();

@@ -20,6 +20,8 @@ export type AgencyMoney = {
   projects: number;
   /** Сумма их договоров. */
   turnover: number;
+  /** Сколько клиенты уже заплатили по ним — деньги, которые партнёр принёс. */
+  paid: number;
   /** 15% агентству. */
   agency: Split;
   /** 5% тому, кто привёл, — только проекты в его 12 месяцах. */
@@ -38,6 +40,7 @@ export function agencyMoney(
   const out: AgencyMoney = {
     projects: 0,
     turnover: 0,
+    paid: 0,
     agency: { earned: 0, frozen: 0 },
     finder: { earned: 0, frozen: 0 },
     finderProjects: 0,
@@ -48,6 +51,7 @@ export function agencyMoney(
     if (project.partner_id !== agency.id || project.stage === "cancelled") continue;
     out.projects += 1;
     out.turnover += Math.max(0, project.amount_usd ?? 0);
+    out.paid += paidOf(project.id, payments);
 
     const line = partnerAccrualOf(project, payments, agency, projects);
     if (line && line.state !== "void") out.agency[line.state] += line.amount_usd;

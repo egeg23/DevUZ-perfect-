@@ -2,7 +2,9 @@ import { record } from "@/lib/admin/audit";
 import type { Staff } from "@/lib/admin/session";
 import { esc, sendMessage } from "@/lib/qualify/telegram";
 import { siteUrl } from "@/lib/seo";
-import { SOURCE_LABEL, type SourceResult, type TenderLot, type TenderSource } from "@/lib/scout/tender-sources";
+import { PRICE_RULE, promoteTenders } from "@/lib/scout/tender-lead";
+import { tenderRu } from "@/lib/scout/tender-ru";
+import { SOURCE_LABEL, mergeLots, withContact, type SourceResult, type TenderLot, type TenderSource } from "@/lib/scout/tender-sources";
 import { serviceClient } from "@/lib/supabase";
 
 /**
@@ -13,6 +15,9 @@ import { serviceClient } from "@/lib/supabase";
  * повтор не задваивает) и новые шлёт строкой в канал скаута, тот же, что
  * сигналы из групп. Итог прохода — `stats_snapshots` «tender-scan»: его
  * показывает раздел «Тендеры».
+ *
+ * С 10.11.2026 новый лот ещё и лид менеджеру (lib/scout/tender-lead.ts): у
+ * новых лотов etender контакт дочитывается из карточки, потом `promoteTenders`.
  */
 
 export const SCAN_KEY = "tender-scan";
@@ -41,6 +46,12 @@ export type TenderRow = {
   status: TenderStatus;
   taken_by: string | null;
   taken_at: string | null;
+  title_ru?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  contact_person?: string | null;
+  customer_inn?: string | null;
+  lead_id?: string | null;
 };
 
 export type ScanState = {
@@ -80,11 +91,14 @@ export function tenderNotice(lot: TenderLot): string {
     `🏛 <b>Тендер</b> · ${esc(SOURCE_LABEL[lot.source])}${lot.kind ? ` · ${esc(lot.kind)}` : ""}`,
     "",
     `<b>${esc(lot.title.slice(0, 300))}</b>`,
+    lot.titleRu && lot.titleRu !== lot.title ? `🇷🇺 ${esc(lot.titleRu)}` : "",
     lot.customer ? `Заказчик: ${esc(lot.customer)}` : "",
     lot.region ? `Регион: ${esc(lot.region)}` : "",
     lot.price ? `Стартовая цена: ${esc(priceText(lot.price, lot.currency))}` : "",
     lot.deadline ? `Приём заявок до: ${esc(tashkentShort(lot.deadline))} (Ташкент)` : "",
+    lot.contact?.phone ? `Телефон заказчика: ${esc(lot.contact.phone)}` : "",
     "",
+    `⚠️ ${esc(PRICE_RULE)}`,
     `Лот: ${lot.url}`,
     `В панели: ${siteUrl}/admin/tenders`,
   ]
@@ -133,6 +147,10 @@ async function saveLots(lots: TenderLot[]): Promise<TenderLot[] | null> {
           published_at: lot.publishedAt,
           deadline: lot.deadline,
           topics: lot.topics,
+          phone: lot.contact?.phone ?? null,
+          email: lot.contact?.email ?? null,
+          contact_person: lot.contact?.person ?? null,
+          customer_inn: lot.contact?.inn ?? null,
         })),
         { onConflict: "source,external_id", ignoreDuplicates: true },
       )
@@ -142,6 +160,25 @@ async function saveLots(lots: TenderLot[]): Promise<TenderLot[] | null> {
     fresh.push(...chunk.filter((lot) => added.has(`${lot.source}:${lot.externalId}`)));
   }
   return fresh;
+}
+
+/** Контакт и русская фраза, дочитанные после записи, — в строку лота. */
+async function saveExtras(lots: TenderLot[]): Promise<void> {
+  const db = serviceClient();
+  if (!db) return;
+  for (const lot of lots) {
+    const patch: Record<string, unknown> = {};
+    if (lot.contact) Object.assign(patch, { phone: lot.contact.phone, email: lot.contact.email, contact_person: lot.contact.person, customer_inn: lot.contact.inn });
+    if (lot.titleRu) patch.title_ru = lot.titleRu.slice(0, 400);
+    if (!Object.keys(patch).length) continue;
+    await db.from("scout_tenders").update(patch).eq("source", lot.source).eq("external_id", lot.externalId);
+  }
+}
+
+/** Новый лот: контакт заказчика и что он хочет по-русски. */
+export async function enrichLot(lot: TenderLot): Promise<TenderLot> {
+  const withPhone = await withContact(lot);
+  return { ...withPhone, titleRu: await tenderRu(withPhone.title).catch(() => null) };
 }
 
 async function markNotified(lots: TenderLot[]): Promise<void> {
@@ -163,6 +200,8 @@ export async function runTenderScan(
     const channel = process.env.TELEGRAM_SCOUT_CHANNEL_ID;
     return channel ? Boolean(await sendMessage(channel, text)) : false;
   },
+  toLeads: (now: Date) => Promise<{ errors: string[] }> = promoteTenders,
+  enrich: (lot: TenderLot) => Promise<TenderLot> = enrichLot,
 ): Promise<{ ran: boolean; added: number; errors: string[] }> {
   const db = serviceClient();
   if (!db) return { ran: false, added: 0, errors: [] };
@@ -170,8 +209,15 @@ export async function runTenderScan(
   await writeScan({ at: now.toISOString(), sources: [], added: 0 });
 
   const results = await read();
-  const lots = results.flatMap((result) => result.lots);
-  const fresh = await saveLots(lots);
+  const lots = mergeLots(results.flatMap((result) => result.lots));
+  const saved = await saveLots(lots);
+  // Новым лотам — контакт, которого не было в списке площадки, и русская фраза.
+  let fresh: TenderLot[] | null = saved;
+  if (saved?.length) {
+    fresh = [];
+    for (const lot of saved) fresh.push(await enrich(lot));
+    await saveExtras(fresh.filter((lot, index) => lot.contact !== saved[index].contact || Boolean(lot.titleRu)));
+  }
   const errors = results.map((result) => result.error).filter((error): error is string => Boolean(error));
   if (fresh === null) errors.push("scout_tenders: таблица не ответила (миграция 0184 применена?)");
 
@@ -185,6 +231,9 @@ export async function runTenderScan(
   if ((fresh?.length ?? 0) > toSend.length) {
     await notify(`🏛 Ещё ${(fresh?.length ?? 0) - toSend.length} новых тендеров — в разделе: ${siteUrl}/admin/tenders`);
   }
+
+  // Новые наши лоты — лидами в очередь менеджеров.
+  errors.push(...(await toLeads(now).catch((error) => ({ errors: [String(error)] }))).errors);
 
   await writeScan({
     at: now.toISOString(),

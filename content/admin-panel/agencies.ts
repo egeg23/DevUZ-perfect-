@@ -46,21 +46,54 @@ export const agenciesDict = defineDict({
   nobody: { ru: "Никто, пришло само", uz: "Hech kim, o‘zi kelgan", pl: "Nikt, przyszła sama" },
   add: { ru: "Завести агентство", uz: "Agentlik qo‘shish", pl: "Dodaj agencję" },
   adding: { ru: "Завожу…", uz: "Qo‘shyapman…", pl: "Dodaję…" },
-  listAll: { ru: "Все агентства", uz: "Barcha agentliklar", pl: "Wszystkie agencje" },
-  listMine: { ru: "Мои агентства", uz: "Mening agentliklarim", pl: "Moje agencje" },
+  listAll: { ru: "Все агентства и партнёры", uz: "Barcha agentliklar va hamkorlar", pl: "Wszystkie agencje i partnerzy" },
+  listMine: {
+    ru: "Мои агентства и партнёры — кого привели вы",
+    uz: "Mening agentliklarim va hamkorlarim — siz olib kelganlar",
+    pl: "Moje agencje i partnerzy — ci, których przyprowadziłeś",
+  },
+  personsNote: {
+    ru: (finder: number, months: number) =>
+      `Те же ${finder}% ${months} месяцев идут и за партнёра-блогера, которого вы привели: кто привёл партнёра, отмечает владелец в колонке «Кто привёл». Ниже — сколько проектов принёс каждый, на какую сумму и сколько клиенты уже заплатили.`,
+    uz: (finder: number, months: number) =>
+      `Xuddi shu ${finder}% ${months} oy davomida siz olib kelgan bloger-hamkor uchun ham beriladi: hamkorni kim olib kelganini egasi «Kim olib kelgan» ustunida belgilaydi. Quyida — har biri nechta loyiha olib kelgani, qancha summaga va mijozlar allaqachon qancha to‘lagani.`,
+    pl: (finder: number, months: number) =>
+      `Te same ${finder}% przez ${months} miesięcy należą się też za partnera-blogera, którego przyprowadziłeś: kto przyprowadził partnera, zaznacza właściciel w kolumnie «Kto przyprowadził». Niżej — ile projektów przyniósł każdy, na jaką kwotę i ile klienci już zapłacili.`,
+  },
+  kindAgency: { ru: "агентство", uz: "agentlik", pl: "agencja" },
+  kindPerson: { ru: "партнёр", uz: "hamkor", pl: "partner" },
+  colPaid: { ru: "Оплачено клиентами", uz: "Mijozlar to‘lagan", pl: "Zapłacone przez klientów" },
+  totals: {
+    ru: (projects: number, turnover: string, paid: string, finder: string) =>
+      `Всего: проектов ${projects} на ${turnover}, клиенты заплатили ${paid}, 5% тому, кто привёл, — ${finder}.`,
+    uz: (projects: number, turnover: string, paid: string, finder: string) =>
+      `Jami: ${projects} ta loyiha ${turnover} ga, mijozlar ${paid} to‘lagan, olib kelganga 5% — ${finder}.`,
+    pl: (projects: number, turnover: string, paid: string, finder: string) =>
+      `Razem: projektów ${projects} na ${turnover}, klienci zapłacili ${paid}, 5% dla tego, kto przyprowadził — ${finder}.`,
+  },
+  lifetimePlusOn: {
+    ru: (bonus: number) => `+${bonus}% навсегда`,
+    uz: (bonus: number) => `+${bonus}% umrbod`,
+    pl: (bonus: number) => `+${bonus}% na zawsze`,
+  },
+  lifetimePlusLeft: {
+    ru: (left: string, bonus: number) => `до +${bonus}%: ещё ${left}`,
+    uz: (left: string, bonus: number) => `+${bonus}% gacha: yana ${left}`,
+    pl: (left: string, bonus: number) => `do +${bonus}%: jeszcze ${left}`,
+  },
   emptyAll: { ru: "Агентств пока нет.", uz: "Hozircha agentliklar yo‘q.", pl: "Na razie nie ma agencji." },
   emptyMine: {
-    ru: "Вы ещё не завели ни одного агентства.",
-    uz: "Siz hali birorta agentlik qo‘shmadingiz.",
-    pl: "Nie dodano jeszcze żadnej agencji.",
+    ru: "Вы ещё не привели ни одного агентства или партнёра. Привели партнёра-блогера — скажите владельцу, он отметит вас в «Кто привёл».",
+    uz: "Siz hali birorta agentlik yoki hamkor olib kelmadingiz. Bloger-hamkorni olib kelgan bo‘lsangiz — egasiga ayting, u sizni «Kim olib kelgan» da belgilaydi.",
+    pl: "Nie przyprowadziłeś jeszcze żadnej agencji ani partnera. Przyprowadziłeś partnera-blogera — powiedz właścicielowi, zaznaczy cię w «Kto przyprowadził».",
   },
-  colAgency: { ru: "Агентство", uz: "Agentlik", pl: "Agencja" },
+  colAgency: { ru: "Агентство или партнёр", uz: "Agentlik yoki hamkor", pl: "Agencja lub partner" },
   colBrought: { ru: "Кто привёл", uz: "Kim olib kelgan", pl: "Kto przyprowadził" },
   colUntil: { ru: "5% до", uz: "5% gacha", pl: "5% do" },
   colProjects: { ru: "Проекты", uz: "Loyihalar", pl: "Projekty" },
   colTurnover: { ru: "Сумма проектов", uz: "Loyihalar summasi", pl: "Kwota projektów" },
-  colFinder: { ru: "5% за агентство", uz: "Agentlik uchun 5%", pl: "5% za agencję" },
-  colAgencyShare: { ru: "Доля агентства", uz: "Agentlik ulushi", pl: "Udział agencji" },
+  colFinder: { ru: "5% тому, кто привёл", uz: "Olib kelganga 5%", pl: "5% dla tego, kto przyprowadził" },
+  colAgencyShare: { ru: "Доля партнёра", uz: "Hamkor ulushi", pl: "Udział partnera" },
   lifetimeOn: {
     ru: (p: number) => `${p}% навсегда`,
     uz: (p: number) => `${p}% umrbod`,

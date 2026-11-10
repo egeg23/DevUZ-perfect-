@@ -8,10 +8,19 @@ import { defineDict } from "@/lib/admin/i18n";
 export const tendersDict = defineDict({
   title: { ru: "Тендеры", uz: "Tenderlar", pl: "Przetargi" },
   lead: {
-    ru: "Скаут раз в 30 минут читает площадки закупок и оставляет только наши лоты: сайт, приложение, бот, информационная система, сопровождение ПО. Новые приходят строкой в канал скаута.",
-    uz: "Skaut har 30 daqiqada xarid maydonchalarini o‘qiydi va faqat bizning lotlarni qoldiradi: sayt, ilova, bot, axborot tizimi, dasturiy ta’minotni qo‘llab-quvvatlash. Yangilari skaut kanaliga qator bo‘lib keladi.",
-    pl: "Skaut co 30 minut czyta platformy zamówień i zostawia tylko nasze loty: strona, aplikacja, bot, system informacyjny, utrzymanie oprogramowania. Nowe trafiają linijką na kanał skauta.",
+    ru: "Скаут раз в 30 минут читает площадки закупок и оставляет только то, что делает студия: сайт, приложение, бот, ИИ, CRM, платформа, информационная система. Каждый новый лот приходит в бот лидом — его берут, как обычный лид.",
+    uz: "Skaut har 30 daqiqada xarid maydonchalarini o‘qiydi va faqat studiya qiladigan ishlarni qoldiradi: sayt, ilova, bot, sun’iy intellekt, CRM, platforma, axborot tizimi. Har bir yangi lot botga lid bo‘lib keladi — uni oddiy lid kabi olishadi.",
+    pl: "Skaut co 30 minut czyta platformy zamówień i zostawia tylko to, co robi studio: strona, aplikacja, bot, AI, CRM, platforma, system informacyjny. Każdy nowy lot trafia do bota jako lead — bierze się go jak zwykły lead.",
   },
+  priceRule: {
+    ru: "Перед подачей заявки — связаться с Егором или Александром и запросить цену. Без согласованной цены не подаём.",
+    uz: "Ariza topshirishdan oldin — Yegor yoki Aleksandr bilan bog‘lanib, narxni so‘rang. Kelishilgan narxsiz topshirmaymiz.",
+    pl: "Przed złożeniem oferty — skontaktuj się z Jegorem lub Aleksandrem i zapytaj o cenę. Bez uzgodnionej ceny nie składamy.",
+  },
+  contact: { ru: "Контакт", uz: "Aloqa", pl: "Kontakt" },
+  inRussian: { ru: "По-русски", uz: "Ruschada", pl: "Po rosyjsku" },
+  inn: { ru: "ИНН", uz: "STIR", pl: "NIP" },
+  leadCard: { ru: "Карточка лида", uz: "Lid kartasi", pl: "Karta leada" },
   done: { ru: "Готово.", uz: "Tayyor.", pl: "Gotowe." },
   failed: { ru: "Не получилось.", uz: "Bo‘lmadi.", pl: "Nie udało się." },
   notReady: {
