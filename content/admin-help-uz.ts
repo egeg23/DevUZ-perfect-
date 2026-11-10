@@ -1642,6 +1642,16 @@ export const uz: HelpCopy = {
           ],
         },
         {
+          id: "bot-mockup",
+          title: "Botdagi maket: mijoz o‘zi yig‘adi",
+          body: [
+            "10.11.2026 dan mijoz maketni o‘zi, studiya botining shaxsiy chatida yig‘ishi mumkin: /maket buyrug‘i yoki t.me/<bot>?start=maket havolasi. U sayt manzilini yuboradi (yoki «Sayt yo‘q» tugmasini bosib, to‘rtta savolga javob beradi), sohasini tugma bilan tanlaydi va bir-ikki daqiqada bot maket havolasini va qo‘shimchalari bilan sayt narxini yuboradi. Yig‘ish jarayonini mijoz qadamma-qadam ko‘radi: saytni o‘qiyapmiz, logotip va ranglar, xizmatlar va narxlar, yig‘yapmiz, tekshiryapmiz, tayyor.",
+            "Dizayn va bloklar bizning sohaga mos tayyor shablonimiz, model faqat mijoz saytini o‘qiydi: nomi, logotipi, ranglari, xizmatlari, narxlari, shifokorlari, manzili. Uning saytida yo‘q narsa maketda paydo bo‘lmaydi. Hozircha shablon faqat stomatologiya uchun bor; boshqa soha mijozi «tayyorlanmoqda» javobini oladi va sizga lid bo‘lib keladi.",
+            "Bunday maket bu ro‘yxatda o‘zi paydo bo‘ladi, darhol mijozga yuborilgan holatda, qoidalari o‘sha: shartlar, iz, havola bo‘yicha 24 soat, keyin parol. Lid issiq lidlar navbatiga «botdagi maket» manbasi bilan keladi, izohda soha, sayt va maket havolasi bor. Mijozga lid kartochkasidan javob berish mumkin.",
+            "Cheklovlar: bitta Telegram akkaunt bitta maket, hammaga kuniga 30 tadan ko‘p emas. Xodimlar cheklovsiz yig‘adi: mijoz nimani ko‘rishini tekshirish uchun.",
+          ],
+        },
+        {
           id: "shown",
           title: "«Maketni ko‘rsatdim» — to‘g‘ridan-to‘g‘ri ro‘yxatda",
           body: [

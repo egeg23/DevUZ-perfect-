@@ -852,6 +852,44 @@ export async function sendLead(
  * Длинные ответы режутся по границе абзаца и уходят несколькими сообщениями:
  * обрезать реплику менеджера на полуслове хуже, чем прислать две.
  */
+/**
+ * Сообщение с HTML-виджетом (Bot API 10.4, sendWidget): только личка с ботом.
+ * Виджет статичный, без запросов к боту: состояние пишет только бот
+ * (editWidgetData). Подпись — запасной путь для приложения без виджетов, она
+ * меняется вместе с шагами (editCaption). Зеркало пуша — как у остальных
+ * сообщений: клиенту оно не идёт, только личке сотрудника.
+ * Номер сообщения или null: метода нет, код не принят — шлите обычным текстом.
+ */
+export async function sendWidget(
+  chatId: number | string,
+  input: { html: string; chatData: string; caption: string },
+): Promise<number | null> {
+  mirrorToPush(chatId, input.caption);
+  const result = await callRaw("sendWidget", {
+    chat_id: chatId,
+    html: input.html,
+    chat_data: input.chatData,
+    caption: input.caption,
+    parse_mode: "HTML",
+  });
+  return result.ok ? (result.messageId ?? 0) : null;
+}
+
+/** Новое состояние виджета: виджет перерисуется сам. */
+export async function editWidgetData(chatId: number | string, messageId: number, chatData: string): Promise<boolean> {
+  return call("editMessageWidgetData", { chat_id: chatId, message_id: messageId, chat_data: chatData });
+}
+
+/** Подпись сообщения с виджетом, фото или файлом. */
+export async function editCaption(chatId: number | string, messageId: number, caption: string): Promise<boolean> {
+  return call("editMessageCaption", { chat_id: chatId, message_id: messageId, caption, parse_mode: "HTML" });
+}
+
+/** Переписать текст сообщения без кнопок (статус сборки, когда виджета нет). */
+export async function editText(chatId: number | string, messageId: number, text: string): Promise<boolean> {
+  return call("editMessageText", { chat_id: chatId, message_id: messageId, text, parse_mode: "HTML", link_preview_options: { is_disabled: true } });
+}
+
 export async function sendPlain(chatId: number | string, text: string): Promise<boolean> {
   const chunks = splitForTelegram(text.trim());
   let ok = true;

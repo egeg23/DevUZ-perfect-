@@ -156,6 +156,7 @@ export const AUDIT_ACTIONS = [
   "razbor.edited",
   "razbor.deleted",
   "proto.build",
+  "proto.instant",
   "proto.sent",
   // Пароль на сутки к макету из раздела «Макеты» (lib/admin/mockups-store.ts):
   // кто выдал и к какому макету. Сам пароль в журнал не пишется.

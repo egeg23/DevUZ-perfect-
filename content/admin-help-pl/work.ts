@@ -125,6 +125,16 @@ export const workSections: Record<string, HelpEntry> = {
         ],
       },
       {
+        id: "bot-mockup",
+        title: "Makieta w bocie: klient buduje sam",
+        body: [
+          "Od 10.11.2026 klient może sam zbudować makietę w prywatnym czacie z botem studia: komenda /maket albo link t.me/<bot>?start=maket. Wysyła adres strony (albo naciska przycisk bez strony i odpowiada na cztery pytania), wybiera branżę przyciskiem, a po minucie lub dwóch bot przysyła link do makiety i cenę strony z dodatkami. Postęp budowy klient widzi krok po kroku: czytamy stronę, logo i kolory, usługi i ceny, budujemy, sprawdzamy, gotowe.",
+          "Projekt i bloki to nasz gotowy szablon branży, model tylko czyta stronę klienta: nazwę, logo, kolory, usługi, ceny, lekarzy, adres. Czego nie ma na jego stronie, tego nie ma na makiecie. Na razie szablon jest tylko dla stomatologii; klient z innej branży dostaje odpowiedź, że szablon jest w przygotowaniu, i trafia do was jako lead.",
+          "Taka makieta pojawia się na tej liście sama, od razu jako wysłana klientowi, z tymi samymi zasadami: warunki, odcisk, 24 godziny przez link, potem hasło. Lead trafia do kolejki ciepłych leadów ze źródłem «makieta w bocie», w notatce jest branża, strona i link do makiety. Odpowiedzieć klientowi można z karty leada.",
+          "Limity: jedno konto Telegram to jedna makieta, dla wszystkich nie więcej niż 30 dziennie. Pracownicy budują bez limitu: tak można zobaczyć, co zobaczy klient.",
+        ],
+      },
+      {
         id: "shown",
         title: "«Pokazałem makietę» — prosto na liście",
         body: [

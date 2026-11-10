@@ -199,7 +199,7 @@ h1,h2,h3{margin:0;font-family:"Cormorant",Georgia,"Times New Roman",serif;font-w
 .top.hide{transform:translateY(-130%);opacity:0;pointer-events:none}
 .top-in{width:min(1200px,100% - 24px);margin:0 auto;display:flex;align-items:center;gap:16px;padding:8px 8px 8px 14px;border-radius:999px}
 .logo{display:inline-flex;align-items:center;gap:10px;text-decoration:none;min-width:0}
-.logo img{height:34px;width:auto;max-width:150px;object-fit:contain}
+.logo img{height:34px;width:auto;max-width:110px;object-fit:contain}
 .logo b{font:700 16px/1.1 "Manrope",system-ui,sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:46vw}
 .mk{display:inline-grid;place-items:center;width:36px;height:36px;border-radius:50%;background:var(--ac);color:#fff;font:700 14px/1 "Manrope",system-ui,sans-serif;letter-spacing:.02em;flex:none}
 .nav{display:none;gap:24px;margin:0 auto}
@@ -310,7 +310,7 @@ export function dentalHtml(site: InstantSite): string {
     tel ? `<a class="btn btn-l ${cls}" href="${esc(tel)}">${ICON.phone}<span>${esc(c.call)}</span></a>` : "";
 
   const mark = logo
-    ? `<img src="${esc(logo)}" alt="${name}" referrerpolicy="no-referrer">`
+    ? `<img src="${esc(logo)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">`
     : `<span class="mk" aria-hidden="true">${esc(initials(site.name))}</span>`;
   const services = site.services.slice(0, LIMITS.services);
   const doctors = site.doctors.slice(0, LIMITS.doctors);
@@ -322,7 +322,7 @@ export function dentalHtml(site: InstantSite): string {
   ].join("");
 
   const header = `<header class="top"><div class="top-in glass">
-<a class="logo" href="#top" aria-label="${name}">${mark}${logo ? "" : `<b>${name}</b>`}</a>
+<a class="logo" href="#top" aria-label="${name}">${mark}<b>${name}</b></a>
 <nav class="nav" aria-label="${esc(c.nav.join(", "))}">${nav}</nav>
 ${bookBtn("btn-s", c.book)}
 </div></header>`;

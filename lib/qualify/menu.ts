@@ -20,6 +20,7 @@ import { serviceClient } from "@/lib/supabase";
 
 const PUBLIC_RU: BotCommand[] = [
   { command: "start", description: "Начать разговор" },
+  { command: "maket", description: "Макет вашего сайта за пару минут" },
   { command: "ref", description: "Партнёрская программа: ссылка и баланс" },
   { command: "payout", description: "Заявка на выплату партнёру" },
   { command: "cabinet", description: "Кабинет партнёра на сайте" },
@@ -29,6 +30,7 @@ const PUBLIC_RU: BotCommand[] = [
 
 const PUBLIC_EN: BotCommand[] = [
   { command: "start", description: "Start a conversation" },
+  { command: "maket", description: "A mockup of your website in a couple of minutes" },
   { command: "ref", description: "Partner program: your link and balance" },
   { command: "payout", description: "Partner payout request" },
   { command: "cabinet", description: "Partner dashboard on the website" },
@@ -38,6 +40,7 @@ const PUBLIC_EN: BotCommand[] = [
 
 const PUBLIC_UK: BotCommand[] = [
   { command: "start", description: "Почати розмову" },
+  { command: "maket", description: "Макет вашого сайту за пару хвилин" },
   { command: "ref", description: "Партнерська програма: посилання й баланс" },
   { command: "payout", description: "Заявка на виплату партнеру" },
   { command: "cabinet", description: "Кабінет партнера на сайті" },
@@ -47,6 +50,7 @@ const PUBLIC_UK: BotCommand[] = [
 
 const PUBLIC_PL: BotCommand[] = [
   { command: "start", description: "Rozpocznij rozmowę" },
+  { command: "maket", description: "Makieta Twojej strony w kilka minut" },
   { command: "ref", description: "Program partnerski: link i saldo" },
   { command: "payout", description: "Wniosek o wypłatę dla partnera" },
   { command: "cabinet", description: "Panel partnera na stronie" },
