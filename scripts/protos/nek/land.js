@@ -24,7 +24,7 @@ $$('.rise,.tilt,.pop,.slide').forEach(function(e){if(io&&!RM)io.observe(e);else 
 
 /* ── Пролёт: кадры роликов по прокрутке ───────────────────────────────
    Кадры зашифрованы (AES-GCM, 12 байт nonce + шифр), ключ отдаёт только
-   открытый макет: app/proto/[token]/promo/scene. Компьютеру — 1600×900,
+   открытый макет: app/proto/[token]/promo/scene. Компьютеру — 1280×720,
    телефону — свои ролики 9:16. Кадр едет за прокруткой мягким догоном,
    соседние кадры смешиваются. */
 var hs=$('.hs');
@@ -41,11 +41,11 @@ if(hs&&!RM){
   function warm(c){for(var k=-4;k<=AHEAD;k++)img(c+k*dir);trim(c)}
   function ok(g){return g&&g.complete&&g.naturalWidth}
   function near(i){var g=img(i);if(ok(g))return g;for(var k=1;k<F;k++){var a=cache[i-k],b=cache[i+k];if(ok(a))return a;if(ok(b))return b}for(k=1;k<F;k++){if(url[i-k])return img(i-k);if(url[i+k])return img(i+k)}return null}
-  function put(g){var cw=cv.width,ch=cv.height,s=Math.max(cw/g.naturalWidth,ch/g.naturalHeight),gw=g.naturalWidth*s,gh=g.naturalHeight*s;cx.drawImage(g,(cw-gw)*.5,(ch-gh)*.5,gw,gh)}
+  function blit(g){var cw=cv.width,ch=cv.height,s=Math.max(cw/g.naturalWidth,ch/g.naturalHeight),gw=g.naturalWidth*s,gh=g.naturalHeight*s;cx.drawImage(g,(cw-gw)*.5,(ch-gh)*.5,gw,gh)}
   /* Между двумя кадрами — их смесь: соседний кадр ложится поверх с долей
      прозрачности, и движение идёт без ступеней даже при медленной прокрутке. */
   function draw(){var f=cur*(F-1),i=Math.floor(f),t=f-i,key=Math.round(f*50);if(key===last)return;warm(i);var g=near(i);if(!ok(g))return;last=key;
-    cx.globalAlpha=1;put(g);var h=t>.02&&g===cache[i]?cache[i+1]:null;if(ok(h)){cx.globalAlpha=t;put(h);cx.globalAlpha=1}}
+    cx.globalAlpha=1;blit(g);var h=t>.02&&g===cache[i]?cache[i+1]:null;if(ok(h)){cx.globalAlpha=t;blit(h);cx.globalAlpha=1}}
   /* Глава видна вокруг своей доли сцены: появляется и уходит движением. */
   function paint(p){
     for(var i=0;i<cps.length;i++){var at=D.ch[i].at,o=i===0?cl(1-(p-.02)/.08):i===cps.length-1&&p>at?1:cl(1-Math.abs(p-at)/.085);cps[i].style.setProperty('--o',o.toFixed(3))}
