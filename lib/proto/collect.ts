@@ -33,6 +33,8 @@ export type Collected = {
    */
   text: string;
   title: string | null;
+  /** Цвета с их страницы (theme-color и стили в разметке), частые первыми: сырьё для фирменного цвета. */
+  colors: string[];
   page: { url: string; status: number; ttfbMs: number };
 };
 
@@ -110,6 +112,28 @@ export function servicesPagePath(html: string, base: URL): string | null {
     if (SERVICES_LINK.test(label) || SERVICES_PATH.test(href.pathname)) return href.href;
   }
   return null;
+}
+
+/**
+ * Цвета страницы: theme-color первым, дальше #rrggbb из стилей в разметке по
+ * частоте. Серые и почти белые/чёрные не берём: фирменный цвет — не фон.
+ */
+export function pageColors(html: string): string[] {
+  const count = new Map<string, number>();
+  const theme = attr(html, /<meta[^>]+name=["']theme-color["'][^>]+content=["'](#[0-9a-f]{6})["']/i);
+  for (const m of html.matchAll(/#([0-9a-f]{6})\b/gi)) {
+    const hex = `#${m[1].toLowerCase()}`;
+    count.set(hex, (count.get(hex) ?? 0) + 1);
+  }
+  const colorful = (hex: string) => {
+    const n = parseInt(hex.slice(1), 16);
+    const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    return max - min > 40 && max > 50 && min < 225;
+  };
+  const sorted = [...count.entries()].filter(([hex]) => colorful(hex)).sort((a, b) => b[1] - a[1]).map(([hex]) => hex);
+  const out = theme && colorful(theme.toLowerCase()) ? [theme.toLowerCase(), ...sorted] : sorted;
+  return [...new Set(out)].slice(0, 5);
 }
 
 export async function collectFacts(input: {
@@ -213,6 +237,7 @@ export async function collectFacts(input: {
     small,
     text: text.slice(0, TEXT_MAX),
     title,
+    colors: pageColors(html),
     page: { url: page.finalUrl, status: page.status, ttfbMs: page.ttfbMs },
   };
 }
