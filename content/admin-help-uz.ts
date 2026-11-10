@@ -977,15 +977,15 @@ export const uz: HelpCopy = {
     /* ── Поиск ────────────────────────────────────────────────────────── */
     /* ── Tenderlar ─────────────────────────────────────────────────── */
     "/admin/tenders": {
-      what: "Skaut O‘zbekiston xarid maydonchalarini o‘qiydi va faqat biz ola oladigan lotlarni qoldiradi: sayt, ilova, bot, axborot tizimi, dasturiy ta’minotni qo‘llab-quvvatlash. Bu yerda — shunday lotlar tasmasi, ariza muddati va tugmalar bilan.",
+      what: "Skaut O‘zbekiston xarid maydonchalarini o‘qiydi va faqat studiya qiladigan ishlarni qoldiradi: sayt, ilova, bot, sun’iy intellekt, CRM, platforma, axborot tizimi. Har bir shunday lot botga lid bo‘lib keladi, bu yerda esa — ularning tasmasi ariza muddati, buyurtmachi aloqasi va tugmalar bilan.",
       items: [
         {
           id: "how",
           title: "Skaut tenderlarni qanday qidiradi",
           body: [
-            "Har 30 daqiqada skaut maydonchalardagi ochiq lotlar ro‘yxatini o‘qiydi: etender.uzex.uz, xarid.uzex.uz, Hayot Birja (XT-Xarid) va Tender.asia. Faqat maydoncha har qanday tashrif buyuruvchiga kirishsiz ko‘rsatadigan narsa: skautda login va ERI yo‘q, kapchani aylanib o‘tmaydi.",
-            "Lot biznikimi — buni kod nomiga qarab, modelsiz hal qiladi: mavzu (sayt, ilova, bot, axborot tizimi, CRM, avtomatlashtirish, platforma, sun’iy intellekt) va ish (ishlab chiqish, yaratish, takomillashtirish, qo‘llab-quvvatlash) kerak. Kompyuter, kartrij va tayyor litsenziya xaridi chiqarib tashlanadi. Etender’da «Dasturiy ta’minot» va «IT xizmatlari» toifalaridagi lotlar nomini tekshirmasdan darhol o‘tadi.",
-            "Yangi lotlar skaut kanaliga qator bo‘lib keladi — guruhlardan signallar keladigan kanalning o‘ziga: maydoncha, nomi, buyurtmachi, narx, muddat va lotga havola. Bir o‘tishda kanalga sakkiztadan ko‘p ketmaydi, qolganlari — bu yerga havola bilan bitta «yana N» qatori.",
+            "Har 30 daqiqada skaut maydonchalardagi ochiq lotlar ro‘yxatini o‘qiydi: etender.uzex.uz, xarid.uzex.uz, Hayot Birja (XT-Xarid) va Tender.asia. Faqat maydoncha har qanday tashrif buyuruvchiga kirishsiz ko‘rsatadigan narsa: skautda login va ERI yo‘q, kapchani aylanib o‘tmaydi. Maydonchadagi va Tender.asia’dagi bir xil lot — bitta qator: Tender.asia’dagi aloqa maydoncha lotiga qo‘shiladi.",
+            "Lot biznikimi — buni kod nomiga qarab, modelsiz hal qiladi: mavzu (sayt, ilova, bot, axborot tizimi, CRM, avtomatlashtirish, platforma, sun’iy intellekt) va ish (ishlab chiqish, yaratish, takomillashtirish, qo‘llab-quvvatlash) kerak. Maydonchaning IT toifasida ham mavzusiz lot olinmaydi. Hech qachon bizniki emas: kiberxavfsizlik, antiviruslar, 1C, litsenziyalar, serverlar va bulut, videokuzatuv, yong‘in tizimlari, kompyuter va kartrijlar.",
+            "Har bir yangi lot lidga aylanadi va saytdagi ariza bilan bir xil [lidlar navbati](#leads-queue) bo‘yicha yuradi: kunduzi — navbat bilan, kechasi — ertalab. Botdagi kartada — maydoncha, muddat, lotga havola, buyurtmachining telefoni, pochtasi va mas’ul shaxsi (maydoncha ko‘rsatsa) hamda majburiy shart: «Перед подачей заявки — связаться с Егором или Александром и запросить цену». O‘sha lot skaut kanaliga ham qator bo‘lib ketadi, bir o‘tishda sakkiztadan ko‘p emas.",
             "Yuqoridagi «Oxirgi o‘tish» qatori skaut maydonchalarni qachon o‘qiganini, har birida nechta lot va ulardan nechtasi bizniki ekanini ko‘rsatadi. Maydoncha javob bermasa — u ajratib ko‘rsatiladi, qolganlari odatdagidek o‘qiladi.",
           ],
         },
@@ -993,6 +993,7 @@ export const uz: HelpCopy = {
           id: "work",
           title: "Lot bilan nima qilish kerak",
           body: [
+            "**Kelishilgan narxsiz ariza topshirmaymiz**: lid-tenderni oldingiz — avval Yegor yoki Aleksandrga qaysi lot va qanday muddatda ekanini yozing va narxni oling. Bu shart bo‘lim tepasida, botdagi lid kartasida va uning izohlarining birinchi qatorida turadi. Lot yonidagi «Lid kartasi» undan yaratilgan lidga olib boradi.",
             "Lotni «Lotni ochish» tugmasi bilan oching — u yerda TZ, shartlar va hujjatlar. Mos kelsa — **«Olaman»** ni bosing: lot ismingiz bilan «Olaman» yorlig‘iga o‘tadi va hamkasblar u bilan shug‘ullanilayotganini ko‘radi. Maydonchada ariza topshirdingiz — **«Topshirildi»**. Mos kelmasa — **«Bizniki emas»**, lot yangilardan yo‘qoladi.",
             "Yangilar muddat bo‘yicha turadi: qaysi biriga ariza qabuli tezroq tugasa, o‘sha yuqorida. Ikki kun yoki kamroq qolgan bo‘lsa — muddat ajratiladi. Qabuli bir kundan ko‘proq oldin tugagan lotlar «Yangi» dan o‘zi chiqib ketadi.",
             "Ariza maydonchaning o‘zida, kompaniya ERI bilan topshiriladi — paneldan topshirib bo‘lmaydi. IT xaridi TZ’sini qanday o‘qish — studiya saytidagi tender tahlillarida.",

@@ -54,15 +54,15 @@ export const prospectSections: Record<string, HelpEntry> = {
 
   /* ── Поиск ────────────────────────────────────────────────────────── */
   "/admin/tenders": {
-    what: "Skaut czyta platformy zamówień w Uzbekistanie i zostawia tylko loty, które możemy wziąć: strona, aplikacja, bot, system informacyjny, utrzymanie oprogramowania. Tu jest lista takich lotów z terminem składania ofert i przyciskami.",
+    what: "Skaut czyta platformy zamówień w Uzbekistanie i zostawia tylko to, co robi studio: strona, aplikacja, bot, AI, CRM, platforma, system informacyjny. Każdy taki lot trafia do bota jako lead, a tutaj jest ich lista z terminem składania ofert, kontaktem zamawiającego i przyciskami.",
     items: [
       {
         id: "how",
         title: "Jak skaut szuka przetargów",
         body: [
-          "Co 30 minut skaut czyta otwarte listy lotów na platformach: etender.uzex.uz, xarid.uzex.uz, Hayot Birja (XT-Xarid) i Tender.asia. Tylko to, co platforma pokazuje każdemu odwiedzającemu bez logowania: skaut nie ma loginów ani podpisu elektronicznego i nie obchodzi captchy.",
-          "Czy lot jest nasz, decyduje kod po nazwie, bez modelu: potrzebny jest temat (strona, aplikacja, bot, system informacyjny, CRM, automatyzacja, platforma, AI) i praca (opracowanie, stworzenie, rozbudowa, utrzymanie). Zakup komputerów, kartridży i gotowych licencji jest odrzucany. Na etender loty z kategorii „Oprogramowanie i jego tworzenie” i „Usługi IT” przechodzą od razu, bez sprawdzania nazwy.",
-          "Nowe loty trafiają linijką na kanał skauta — ten sam, na który przychodzą sygnały z grup: platforma, nazwa, zamawiający, cena, termin i link do lotu. W jednym przejściu na kanał idzie najwyżej osiem, reszta — jedną linijką „jeszcze N” z linkiem tutaj.",
+          "Co 30 minut skaut czyta otwarte listy lotów na platformach: etender.uzex.uz, xarid.uzex.uz, Hayot Birja (XT-Xarid) i Tender.asia. Tylko to, co platforma pokazuje każdemu odwiedzającemu bez logowania: skaut nie ma loginów ani podpisu elektronicznego i nie obchodzi captchy. Ten sam lot z platformy i z Tender.asia to jedna linijka: kontakt z Tender.asia dopisuje się do lotu platformy.",
+          "Czy lot jest nasz, decyduje kod po nazwie, bez modelu: potrzebny jest temat (strona, aplikacja, bot, system informacyjny, CRM, automatyzacja, platforma, AI) i praca (opracowanie, stworzenie, rozbudowa, utrzymanie). Nawet w kategorii IT platformy lot bez tematu nie jest brany. Nigdy nie nasze: cyberbezpieczeństwo, antywirusy, 1C, licencje, serwery i chmura, monitoring wizyjny, systemy przeciwpożarowe, komputery i kartridże.",
+          "Każdy nowy lot staje się leadem i idzie tą samą [kolejką leadów](#leads-queue), co zgłoszenie ze strony: w dzień — po kolei, w nocy — rano. W karcie w bocie jest platforma, termin, link do lotu, telefon, e-mail i osoba odpowiedzialna zamawiającego, jeśli platforma je pokazuje, oraz obowiązkowy warunek: «Перед подачей заявки — связаться с Егором или Александром и запросить цену». Ten sam lot trafia też linijką na kanał skauta, najwyżej osiem w jednym przejściu.",
           "Linijka «Ostatnie przejście» na górze pokazuje, kiedy skaut czytał platformy, ile lotów jest na każdej i ile z nich naszych. Platforma nie odpowiedziała — jest podświetlona, pozostałe czytają się normalnie.",
         ],
       },
@@ -70,6 +70,7 @@ export const prospectSections: Record<string, HelpEntry> = {
         id: "work",
         title: "Co zrobić z lotem",
         body: [
+          "**Bez uzgodnionej ceny oferty nie składamy**: wziąłeś lead-przetarg — najpierw napisz do Jegora lub Aleksandra, jaki to lot i w jakim terminie, i uzyskaj cenę. Ten warunek stoi na górze sekcji, w karcie leada w bocie i w pierwszej linijce jego notatek. «Karta leada» przy locie prowadzi do leada, który z niego powstał.",
           "Otwórz lot przyciskiem «Otwórz lot» — tam jest specyfikacja, warunki i dokumenty. Pasuje — naciśnij **«Biorę»**: lot trafia do zakładki «Biorę» z Twoim imieniem i koledzy widzą, że ktoś już się nim zajmuje. Złożyłeś ofertę na platformie — **«Złożone»**. Nie pasuje — **«Nie nasze»**, lot znika z nowych.",
           "Nowe są ułożone według terminu: u którego przyjmowanie ofert kończy się wcześniej, ten wyżej. Zostały dwa dni lub mniej — termin jest podświetlony. Loty, w których przyjmowanie skończyło się ponad dobę temu, same znikają z «Nowe».",
           "Ofertę składa się na samej platformie, podpisem elektronicznym firmy — z panelu się jej nie złoży. Jak czytać specyfikację zamówienia IT — w analizach przetargów na stronie studia.",

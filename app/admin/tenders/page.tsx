@@ -38,6 +38,8 @@ export default async function TendersPage({ searchParams }: { searchParams: Prom
         {t.lead} <HelpHint topic={helpAnchor("/admin/tenders", "how")} label={t.howItWorks} />
       </p>
 
+      <p className="mt-3 max-w-3xl rounded-xl border border-gold/30 bg-gold/10 px-4 py-2.5 text-sm font-medium text-gold">⚠️ {t.priceRule}</p>
+
       {r ? (
         <p data-result={r === "ok" ? "ok" : "warn"} className={`mt-4 rounded-xl border px-4 py-2.5 text-sm ${r === "ok" ? "border-green/30 bg-green/10 text-green" : "border-gold/30 bg-gold/10 text-gold"}`}>
           {r === "ok" ? t.done : t.failed}
@@ -97,8 +99,18 @@ export default async function TendersPage({ searchParams }: { searchParams: Prom
                       {row.price ? <span><span className="text-faint">{t.price}: </span>{priceText(row.price, row.currency)}</span> : null}
                       {row.taken_by ? <span><span className="text-faint">{t.takenBy}: </span>{names.get(row.taken_by) ?? "—"}</span> : null}
                     </div>
+                    {row.phone || row.email || row.contact_person || row.customer_inn ? (
+                      <div className="mt-1 flex flex-wrap gap-x-5 gap-y-1 text-xs text-muted">
+                        <span className="text-faint">{t.contact}:</span>
+                        {row.contact_person ? <span>{row.contact_person}</span> : null}
+                        {row.phone ? <a href={`tel:${row.phone}`} className="text-blue-soft hover:underline">{row.phone}</a> : null}
+                        {row.email ? <a href={`mailto:${row.email}`} className="text-blue-soft hover:underline">{row.email}</a> : null}
+                        {row.customer_inn ? <span>{t.inn} {row.customer_inn}</span> : null}
+                      </div>
+                    ) : null}
                     <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-line-soft pt-3">
                       <a href={row.url} target="_blank" rel="noreferrer" className="mr-2 text-xs text-blue-soft hover:underline">{t.open} ↗</a>
+                      {row.lead_id ? <Link href={`/admin/leads/${row.lead_id}`} className="mr-2 text-xs text-blue-soft hover:underline">{t.leadCard}</Link> : null}
                       {TENDER_STATUSES.map((value) => (
                         <form key={value} action={tenderStatusAction}>
                           <input type="hidden" name="tender" value={row.id} />

@@ -52,8 +52,11 @@ const TOPICS: Record<string, RegExp[]> = {
         "dasturiy ta[’'ʼ`]?minot\\p{L}*|дастурий таъминот\\p{L}*|dasturiy mahsulot\\p{L}*|elektron xizmat\\p{L}*|" +
         "веб-?платформ\\p{L}*|онлайн-?платформ\\p{L}*|software",
     ),
+    // «Разработка … системы», «tizimini ishlab chiqish»: работа и система через слово-два.
+    stem("(?:разработ|создани|внедрени)\\p{L}* (?:\\p{L}+ ){0,2}систем\\p{L}*|tizim\\p{L}* (?:\\p{L}+ ){0,2}(?:ishlab chiq|yarat|joriy et)\\p{L}*"),
     // «ПО» словом не ловим: в названиях лотов это почти всегда предлог «услуги по …».
-    whole("crm|erp|1с|1c"),
+    // 1С — не наше (владелец, 10.11.2026: «Берем только сайты и все что делает наша студия»).
+    whole("crm|erp"),
   ],
   платформа: [
     stem("raqamli platforma\\p{L}*|tahliliy platforma\\p{L}*|veb-?platforma\\p{L}*|onlayn platforma\\p{L}*|цифров\\p{L}* платформ\\p{L}*|аналитическ\\p{L}* платформ\\p{L}*"),
@@ -96,6 +99,30 @@ const NOT_OURS = stem(
     "bulutli infratuzilma\\p{L}*|облачн\\p{L}* инфраструктур\\p{L}*|хостинг\\p{L}*|hosting\\p{L}*|rfid",
 );
 
+/**
+ * Никогда не наше, даже со словом «разработка» или «услуга»: студия этого не
+ * делает (владелец, 10.11.2026: «Берем только сайты и все что делает наша
+ * студия»). Кибербезопасность, антивирусы, 1С, облако и серверы, оборудование
+ * банков, видеонаблюдение, пожарные системы, контроль доступа, консалтинг и
+ * регламенты, RFID.
+ */
+const NEVER = new RegExp(
+  `${LEFT}(?:` +
+    [
+      "кибер\\p{L}*|kiber\\p{L}*|информационн\\p{L}* безопасност\\p{L}*|axborot xavfsizlig\\p{L}*|ахборот хавфсизлиг\\p{L}*",
+      "антивирус\\p{L}*|antivirus\\p{L}*|(?:siem|dlp|xdr|edr|soc|1с|1c)(?![\\p{L}\\p{N}])",
+      "эмбоссер\\p{L}*|embosser\\p{L}*|zaxira nusxa\\p{L}*|резервн\\p{L}* копировани\\p{L}*",
+      "virtual server\\p{L}*|виртуальн\\p{L}* сервер\\p{L}*|iaas(?![\\p{L}\\p{N}])|bulutli infratuzilma\\p{L}*|облачн\\p{L}* инфраструктур\\p{L}*",
+      "хостинг\\p{L}*|hosting\\p{L}*|ma[’'ʼ`]?lumotlar markaz\\p{L}*|центр\\p{L}* обработки данных|дата-?центр\\p{L}*",
+      "видеонаблюдени\\p{L}*|videokuzatuv\\p{L}*|видеокузатув\\p{L}*|пожарн\\p{L}*|yong[‘'ʻ`]?in\\p{L}*|ёнғин\\p{L}*",
+      "скуд(?![\\p{L}\\p{N}])|контрол\\p{L}* доступа|lisenziya\\p{L}*|litsenziya\\p{L}*|лицензи\\p{L}*|server qurilma\\p{L}*",
+      // Консалтинг, регламенты, ISO, пользовательская документация — бумага, не разработка.
+      "konsalting\\p{L}*|консалтинг\\p{L}*|reglament\\p{L}*|регламент\\p{L}*|iso \\d{4,5}|foydalanuvchi hujjat\\p{L}*|пользовательск\\p{L}* документаци\\p{L}*|rfid",
+    ].join("|") +
+    ")",
+  "iu",
+);
+
 export type TenderVerdict = {
   /** Наш ли лот. */
   ours: boolean;
@@ -111,24 +138,26 @@ const SUPPLY = stem("yetkazib berish\\p{L}*|етказиб бериш\\p{L}*|п�
 /**
  * Решение по названию лота (и описанию, если площадка его отдаёт).
  *
- * `itCategory` — площадка сама отнесла лот к ПО и IT-услугам (etender):
- * тема тогда не нужна, но перепродажа (лицензии, серверы, облако) и
- * поставка готового без работы отсекаются так же.
+ * `itCategory` — площадка сама отнесла лот к ПО и IT-услугам: «услуга»
+ * там подразумевается, но тема студии нужна всё равно (с 10.11.2026: IT-категория
+ * без темы — это и антивирус, и поддержка чужого биллинга). Перепродажа
+ * (лицензии, серверы, облако) и поставка готового без разработки отсекаются.
  */
 export function tenderVerdict(title: string, extra = "", itCategory = false): TenderVerdict {
   const text = `${title} ${extra}`.replace(/\s+/g, " ").trim();
   const topics = Object.entries(TOPICS)
     .filter(([, list]) => list.some((re) => re.test(text)))
     .map(([name]) => name);
+  if (NEVER.test(text)) return { ours: false, topics, reason: "not_ours" };
+  if (!topics.length) return { ours: false, topics, reason: "no_topic" };
   if (itCategory) {
     // Здесь «услуга» работой не считается: «услуга по предоставлению
     // виртуальных серверов» — аренда, а не разработка. Нужна именно разработка.
     const dev = DEV.test(text);
     if (NOT_OURS.test(text) && !dev) return { ours: false, topics, reason: "not_ours" };
     if (SUPPLY.test(text) && !dev && !topics.some((topic) => SELF_WORK.has(topic))) return { ours: false, topics, reason: "not_ours" };
-    return { ours: true, topics: topics.length ? topics : ["IT"], reason: "ours" };
+    return { ours: true, topics, reason: "ours" };
   }
-  if (!topics.length) return { ours: false, topics, reason: "no_topic" };
   // Железо и лицензии отсекаются, только если в названии нет работы:
   // «Разработка сайта и поставка сервера» — всё равно наше.
   const work = WORK.test(text);

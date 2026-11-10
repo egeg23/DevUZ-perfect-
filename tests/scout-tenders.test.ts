@@ -3,7 +3,24 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
 import { tenderVerdict } from "@/lib/scout/tender-match";
-import { HAYOT_ON, currencyOf, parseEtender, parseHayot, tashkentIso, xaridAuction, xaridCompetition } from "@/lib/scout/tender-sources";
+import { PRICE_RULE, leadFromTender, servicesOfTopics, studioTender, tenderHeading, type TenderLeadRow } from "@/lib/scout/tender-lead";
+import {
+  HAYOT_ON,
+  TENDERASIA_ON,
+  currencyOf,
+  emailOf,
+  etenderContact,
+  lotKeyOfUrl,
+  mergeLots,
+  parseEtender,
+  parseHayot,
+  parseTenderAsia,
+  personOf,
+  phoneOf,
+  tashkentIso,
+  xaridAuction,
+  xaridCompetition,
+} from "@/lib/scout/tender-sources";
 import { SCAN_EVERY_MS, scanDue, tenderNotice } from "@/lib/scout/tender-store";
 
 // Владелец, 10.11.2026: «Делаем Парсинг тендеров. Это еще одна функция скаута».
@@ -39,9 +56,23 @@ test("тендеры: наше — тема и работа, не железо �
   for (const title of notOurs) assert.equal(tenderVerdict(title).ours, false, title);
 });
 
-test("тендеры: IT-категория площадки — без темы, но без перепродажи", () => {
-  assert.equal(tenderVerdict("\"Тоза макон\" биллинг тизимини техник қўллаб-қувватлаш", "", true).ours, true);
+test("тендеры: только то, что делает студия — тема нужна и в IT-категории", () => {
+  // Владелец, 10.11.2026: «Берем только сайты и все что делает наша студия».
+  assert.equal(tenderVerdict("Mobil ilova ishlab chiqish xizmati", "", true).ours, true);
+  assert.equal(tenderVerdict("Разработка информационной системы учёта обращений", "", true).ours, true);
+  assert.equal(tenderVerdict("“UMS” MChJ kompaniyasining korporativ ma’lumotlarni saqlash axborot tizimi va hisobotlarini avtomatlashtirish uchun tahliliy platformani xarid qilish", "", true).ours, true);
   for (const resale of [
+    "\"Тоза макон\" биллинг тизимини техник қўллаб-қувватлаш",
+    "Kiber tahdidlarni kengaytirilgan aniqlash va ularga javob berish dasturiy ta’minoti xizmati",
+    "Сопровождение и доработка 1С: Бухгалтерия",
+    "Внедрение системы видеонаблюдения на объекте",
+    "Bank Protsessing markazidagi embosser qurilmalariga o‘rnatilgan dasturiy ta’minotni qo‘llab-quvvatlash",
+    "Разработка сайта и продление лицензии антивируса",
+    // Живые лоты etender, 10.11.2026.
+    "Vazirlik markaziy apparatida ISO 9001 va ISO 37001 xalqaro standartlari boʻyicha boshqaruv tizimlarini ishlab chiqish, joriy etish va sertifikatlarini olishga tayyorlash uchun konsalting tashkiloti",
+    "“Hududlarning investitsiyaviy jozibadorligi reytingi” axborot tizimi reglamentini takomillashtirish boʻyicha yirik xalqaro reyting agentligi konsalting xizmatini koʻrsatish",
+    "Ko‘p o‘lchovli ma’lumotlarni tahlil qilish dasturiy ta’minoti uchun foydalanuvchi hujjatlarini sinovdan o‘tkazish, tasdiqlash va ishlab chiqish xizmatlarini ko‘rsatish",
+    "Bankning asosiy vositalari va mulkini hisobga olish va nazorat qilish uchun RFID yorliq tizimi",
     "Kerio Control va Kerio Connect lisenziyalari muddatini uzaytirish",
     "Ijrochining ma’lumotlar markazida “Sovuq zahira” rejimida virtual serverlar taqdim etish xizmati",
     "Bulutli infratuzilmani (IaaS) taqdim etish xizmatlar",
@@ -84,8 +115,8 @@ test("тендеры: Hayot Birja — смотрит позиции лота и 
   assert.equal(lots.length, 1);
   assert.equal(lots[0].url, "https://xt-xarid.uz/procedure/9/core");
   assert.match(lots[0].title, /разработке программного обеспечения/);
-  // robots.txt площадки закрывает /rpc/ — включаем только по слову владельца.
-  assert.equal(HAYOT_ON, false);
+  // Владелец, 10.11.2026: «Включай Hayot… Включаю все».
+  assert.equal(HAYOT_ON, true);
 });
 
 test("тендеры: xarid — конкурс с прошедшим сроком мимо, аукцион ПО — наш", () => {
@@ -108,7 +139,9 @@ test("тендеры: проход раз в 30 минут, строка в ка
   assert.equal(scanDue(null, now), true);
   assert.equal(scanDue({ at: new Date(now.getTime() - SCAN_EVERY_MS + 60_000).toISOString(), sources: [], added: 0 }, now), false);
   assert.equal(scanDue({ at: new Date(now.getTime() - SCAN_EVERY_MS).toISOString(), sources: [], added: 0 }, now), true);
-  const line = tenderNotice({ source: "etender", externalId: "523525", url: "https://etender.uzex.uz/lot/523525", title: "CRM tizimi uchun TZ <yozish>", customer: "UZAUTO", region: null, kind: "Отбор", price: 1700000000, currency: "UZS", publishedAt: null, deadline: "2026-11-17T11:13:35.000Z", topics: ["система"] });
+  const line = tenderNotice({ source: "etender", externalId: "523525", url: "https://etender.uzex.uz/lot/523525", title: "CRM tizimi uchun TZ <yozish>", customer: "UZAUTO", region: null, kind: "Отбор", price: 1700000000, currency: "UZS", publishedAt: null, deadline: "2026-11-17T11:13:35.000Z", topics: ["система"], contact: { phone: "+998781417777", email: null, person: null, inn: null } });
+  assert.match(line, /\+998781417777/);
+  assert.ok(line.includes(PRICE_RULE), "условие про цену — и в канале");
   assert.match(line, /etender\.uzex\.uz/);
   assert.match(line, /1 700 000 000 UZS/);
   assert.match(line, /17\.11, 16:13/);
@@ -116,9 +149,95 @@ test("тендеры: проход раз в 30 минут, строка в ка
   assert.match(line, /https:\/\/etender\.uzex\.uz\/lot\/523525/);
 });
 
-test("тендеры: Tender.asia не читаем, раздел — по галочкам, проход — в свипе", () => {
+test("тендеры: контакт заказчика — телефон +998, почта, ответственный", () => {
+  assert.equal(phoneOf("781417777"), "+998781417777");
+  assert.equal(phoneOf("+99879 223 24 01"), "+998792232401");
+  assert.equal(phoneOf("+998781509339 (597)"), "+998781509339");
+  assert.equal(phoneOf("998995907032"), "+998995907032");
+  assert.equal(phoneOf("нет"), null);
+  const organizer = "Bo'lim boshlig'i Tojiyev Abduqodir 781509339 xarid@example.uz";
+  assert.equal(emailOf(organizer), "xarid@example.uz");
+  assert.equal(personOf(organizer), "Bo'lim boshlig'i Tojiyev Abduqodir");
+  assert.deepEqual(
+    etenderContact({ delivering_phone: "781417777", contacts: '[{"Job_title":"Direktor","Fullname":"Ivanov I"}]', customer_tin: 200000001 }),
+    { phone: "+998781417777", email: null, person: "Ivanov I, Direktor", inn: "200000001" },
+  );
+  const now = new Date("2026-11-10T12:00:00Z");
+  const lot = xaridCompetition(
+    { id: 7, end_date_submitting_offers: "2026-11-20T18:00:00", category_name: "Продукты программные и услуги по разработке программного обеспечения" },
+    { competition_description: "Разработка официального сайта", customer_phone: "+998781509339 (597)", organizer_name: organizer, customer_inn: "206900001" },
+    now,
+  );
+  assert.deepEqual(lot?.contact, { phone: "+998781509339", email: "xarid@example.uz", person: "Bo'lim boshlig'i Tojiyev Abduqodir", inn: "206900001" });
+});
+
+test("тендеры: Tender.asia — лот наших площадок под их ключом, контакт дописывается", () => {
+  assert.deepEqual(lotKeyOfUrl("https://etender.uzex.uz/lot/523525"), { source: "etender", externalId: "523525" });
+  assert.deepEqual(lotKeyOfUrl("https://xarid.uzex.uz/auction/detail/423103"), { source: "xarid", externalId: "a423103" });
+  assert.deepEqual(lotKeyOfUrl("https://xt-xarid.uz/procedure/9450020/core"), { source: "hayot", externalId: "9450020" });
+  assert.equal(lotKeyOfUrl("https://example.uz/x"), null);
+  const now = new Date("2026-11-10T12:00:00Z");
+  const [lot, other] = parseTenderAsia(
+    [
+      { id: "abc", name: "ПГЗ из Агенства №1", end_date: "2026-11-26T12:00:00Z", type: "Отбор", company: "Bank", company_inn: "312251994", contact_person: "Karimov A", phone: null, url: "https://xt-xarid.uz/procedure/9450020/core", lots: [{ name: "Разработка мобильного приложения", category_code: "62" }] },
+      { id: "def", name: "Создание веб-сайта", end_date: "2026-11-20T12:00:00Z", phone: "998995907032", email: "Info@Example.uz", url: "https://mc.uz/t/1", lots: [] },
+      { id: "old", name: "Создание сайта", end_date: "2026-11-01T12:00:00Z", url: "https://mc.uz/t/2" },
+      { id: "no", name: "Мед натуральный", end_date: "2026-11-20T12:00:00Z", url: "https://mc.uz/t/3" },
+    ],
+    now,
+  );
+  assert.equal(lot.source, "hayot");
+  assert.equal(lot.externalId, "9450020");
+  assert.match(lot.title, /мобильного приложения/);
+  assert.equal(other.source, "tenderasia");
+  assert.deepEqual(other.contact, { phone: "+998995907032", email: "info@example.uz", person: null, inn: null });
+  const merged = mergeLots([{ ...lot, contact: { phone: null, email: null, person: null, inn: "312251994" } }, { ...lot, contact: { phone: "+998712000000", email: null, person: "Karimov A", inn: null } }]);
+  assert.equal(merged.length, 1);
+  assert.deepEqual(merged[0].contact, { phone: "+998712000000", email: null, person: "Karimov A", inn: "312251994" });
+});
+
+test("тендеры: лид менеджеру — контакт, услуги и условие «сначала цена у Егора или Александра»", () => {
+  const row: TenderLeadRow = {
+    id: "00000000-0000-0000-0000-000000000001",
+    created_at: "2026-11-10T12:00:00Z",
+    source: "etender",
+    url: "https://etender.uzex.uz/lot/523525",
+    title: "Разработка мобильного приложения и сайта",
+    customer: "Bank",
+    region: "Ташкент",
+    kind: "Отбор",
+    price: 1700000000,
+    currency: "UZS",
+    deadline: "2026-11-17T11:13:35.000Z",
+    topics: ["сайт", "приложение"],
+    phone: "+998781417777",
+    email: null,
+    contact_person: "Ivanov I",
+    customer_inn: "200000001",
+  };
+  const lead = leadFromTender(row);
+  assert.equal(lead.contact_kind, "phone");
+  assert.equal(lead.contact_handle, "+998781417777");
+  assert.equal(lead.contact_name, "Ivanov I");
+  assert.deepEqual(lead.services.sort(), ["mobile-apps", "web-development"]);
+  assert.ok(lead.notes.split("\n")[0].includes(PRICE_RULE), "условие — первой строкой заметок");
+  assert.match(PRICE_RULE, /Егором или Александром/);
+  assert.match(tenderHeading(row), /Егором или Александром/);
+  assert.match(tenderHeading(row), /17\.11, 16:13/);
+  const noContact = leadFromTender({ ...row, phone: null, email: null, contact_person: null });
+  assert.equal(noContact.contact_kind, "none");
+  assert.equal(noContact.contact_handle, row.url);
+  assert.deepEqual(servicesOfTopics(["бот", "ии"]), ["integrations-automation"]);
+  // Лот, сохранённый до сужения отбора, лидом не становится.
+  assert.equal(studioTender("Kerio Control lisenziyalari muddatini uzaytirish"), false);
+  assert.equal(studioTender(row.title), true);
+});
+
+test("тендеры: все площадки включены, раздел — по галочкам, проход и лиды — в свипе", () => {
+  assert.equal(TENDERASIA_ON, true);
   const sources = readFileSync("lib/scout/tender-sources.ts", "utf8");
-  assert.doesNotMatch(sources, /tender\.asia\/api/, "соглашение Tender.asia (п. 3.9) запрещает парсинг");
+  assert.match(sources, /jobs\.push\(readTenderAsia\(now\)\)/);
+  assert.match(readFileSync("lib/scout/tender-store.ts", "utf8"), /promoteTenders/);
   assert.match(readFileSync("app/admin/tenders/page.tsx", "utf8"), /requireSection\("\/admin\/tenders"\)/);
   assert.match(readFileSync("app/admin/tenders/actions.ts", "utf8"), /requireSection\("\/admin\/tenders"\)/);
   assert.match(readFileSync("app/api/reminders/sweep/route.ts", "utf8"), /runTenderScan\(/);

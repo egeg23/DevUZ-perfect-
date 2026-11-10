@@ -12,6 +12,10 @@ import { tenderVerdict } from "@/lib/scout/tender-match";
  * Каждая площадка — свой разбор в общий вид `TenderLot`. Не ответила или
  * сменила формат — пустой список и причина словами; остальные площадки
  * читаются как обычно.
+ *
+ * Контакт заказчика (телефон, почта, ответственный, ИНН) — то, что площадка
+ * сама печатает в карточке лота: тендер уходит менеджеру лидом (владелец,
+ * 10.11.2026: «вытащи номер телефона / юзернейм или все что возможно»).
  */
 
 export type TenderSource = "xarid" | "etender" | "hayot" | "tenderasia";
@@ -29,7 +33,11 @@ export type TenderLot = {
   publishedAt: string | null;
   deadline: string | null;
   topics: string[];
+  contact: TenderContact | null;
 };
+
+/** Контакт заказчика из карточки лота. */
+export type TenderContact = { phone: string | null; email: string | null; person: string | null; inn: string | null };
 
 export type SourceResult = { source: TenderSource; lots: TenderLot[]; seen: number; error: string | null };
 
@@ -81,6 +89,45 @@ export function currencyOf(raw: unknown): string | null {
   return value.length <= 10 ? value : null;
 }
 
+/**
+ * Телефон в виде +998…: площадки пишут «781417777», «+99879 223 24 01»,
+ * «+998781509339 (597)», «998995907032». Первый номер в строке; добавочный —
+ * мимо.
+ */
+export function phoneOf(raw: unknown): string | null {
+  if (typeof raw !== "string" && typeof raw !== "number") return null;
+  // Скобок в номере нет: «(597)» после номера — добавочный.
+  const match = String(raw).match(/\+?\d[\d\s-]{7,17}\d/);
+  if (!match) return null;
+  const digits = match[0].replace(/\D/g, "");
+  if (digits.length === 9) return `+998${digits}`;
+  if (digits.length === 12 && digits.startsWith("998")) return `+${digits}`;
+  return digits.length >= 10 && digits.length <= 15 ? `+${digits}` : null;
+}
+
+export function emailOf(raw: unknown): string | null {
+  if (typeof raw !== "string") return null;
+  const match = raw.match(/[\w.+-]+@[\w-]+(?:\.[\w-]+)+/);
+  return match ? match[0].toLowerCase().slice(0, 200) : null;
+}
+
+/** Ответственный: «Bo'lim boshlig'i Tojiyev Abduqodir 781509339 xarid@brb.uz» — без номера и почты. */
+export function personOf(raw: unknown): string | null {
+  if (typeof raw !== "string") return null;
+  return text(raw.replace(/[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g, " ").replace(/\+?\d[\d\s()-]{5,}/g, " "), 200);
+}
+
+function innOf(raw: unknown): string | null {
+  const value = typeof raw === "number" ? String(raw) : typeof raw === "string" ? raw.trim() : "";
+  return /^\d{9}(?:\d{5})?$/.test(value) ? value : null;
+}
+
+/** Контакт, если в нём хоть что-то есть. */
+export function contactOf(parts: Partial<TenderContact>): TenderContact | null {
+  const contact = { phone: parts.phone ?? null, email: parts.email ?? null, person: parts.person ?? null, inn: parts.inn ?? null };
+  return contact.phone || contact.email || contact.person || contact.inn ? contact : null;
+}
+
 function num(raw: unknown): number | null {
   const value = typeof raw === "string" ? Number(raw.replace(/\s/g, "")) : typeof raw === "number" ? raw : NaN;
   return Number.isFinite(value) && value > 0 ? value : null;
@@ -124,6 +171,8 @@ export function parseEtender(rows: unknown, itCategory = false): { lots: TenderL
       publishedAt: tashkentIso(row.start_date),
       deadline: tashkentIso(row.end_date),
       topics: verdict.topics,
+      // Телефон и ответственный — в карточке лота (etenderContact), здесь только ИНН.
+      contact: contactOf({ inn: innOf(row.seller_tin) }),
     });
   }
   return { lots, total };
@@ -135,6 +184,40 @@ async function etenderPage(from: number, extra: Record<string, unknown> = {}): P
     headers: { "content-type": "application/json; charset=utf-8" },
     body: JSON.stringify({ From: from, To: from + ETENDER_PAGE - 1, System_Id: 0, ...extra }),
   });
+}
+
+/** Контакт из карточки лота etender (GetTrade): телефон, ответственный, ИНН. */
+export function etenderContact(detail: Record<string, unknown> | null, inn: string | null = null): TenderContact | null {
+  if (!detail) return null;
+  let people: Record<string, unknown>[] = [];
+  try {
+    const raw = typeof detail.contacts === "string" ? JSON.parse(detail.contacts) : detail.contacts;
+    if (Array.isArray(raw)) people = raw as Record<string, unknown>[];
+  } catch {
+    people = [];
+  }
+  const person = people[0] ? text([people[0].Fullname, people[0].Job_title].filter(Boolean).join(", "), 200) : null;
+  return contactOf({
+    phone: phoneOf(detail.delivering_phone) ?? phoneOf(detail.customer_phone),
+    email: emailOf(detail.customer_email ?? detail.email),
+    person,
+    inn: innOf(detail.customer_tin) ?? inn,
+  });
+}
+
+/**
+ * Дочитать контакт лота, если площадка не отдала его в списке: etender —
+ * по вызову на лот, поэтому только для новых лотов, не для всех подряд.
+ */
+export async function withContact(lot: TenderLot): Promise<TenderLot> {
+  if (lot.source !== "etender" || lot.contact?.phone) return lot;
+  try {
+    const detail = (await getJson(`https://apietender.uzex.uz/api/common/GetTrade/${encodeURIComponent(lot.externalId)}/0`)) as Record<string, unknown> | null;
+    const found = etenderContact(detail && typeof detail === "object" ? detail : null, lot.contact?.inn ?? null);
+    return found ? { ...lot, contact: { ...found, email: found.email ?? lot.contact?.email ?? null, person: found.person ?? lot.contact?.person ?? null } } : lot;
+  } catch {
+    return lot;
+  }
 }
 
 export async function readEtender(): Promise<SourceResult> {
@@ -164,10 +247,10 @@ export async function readEtender(): Promise<SourceResult> {
  * отборов, запросов предложений; новые сверху. У площадки предел частоты
  * (429 после 3-4 запросов подряд) — между списками пауза `HAYOT_GAP_MS`.
  *
- * Выключено (`HAYOT_ON = false`): в robots.txt площадки закрыт обход /rpc/,
- * включаем по слову владельца (или после их разрешения).
+ * Включено по слову владельца (10.11.2026: «Включай Hayot… Включаю все»),
+ * хотя robots.txt площадки закрывает /rpc/: три запроса в полчаса с паузой.
  */
-export const HAYOT_ON = false;
+export const HAYOT_ON = true;
 const HAYOT_API = "https://api.xt-xarid.uz/rpc";
 const HAYOT_LISTS = ["ref_tender_public", "ref_selection_public", "ref_request_proposals_public"] as const;
 const HAYOT_GAP_MS = 12_000;
@@ -205,6 +288,8 @@ export function parseHayot(rows: unknown): TenderLot[] {
       publishedAt: tashkentIso(row.publicated_at) ?? tashkentIso(row.created_at),
       deadline: tashkentIso(row.close_at),
       topics: verdict.topics,
+      // Телефона в открытом списке нет — его иногда приносит Tender.asia.
+      contact: contactOf({ inn: innOf(meta.company_inn) }),
     });
   }
   return lots;
@@ -274,6 +359,12 @@ export function xaridCompetition(row: XaridRow, detail: XaridRow | null, now: Da
     publishedAt: tashkentIso(detail?.published_date),
     deadline,
     topics: verdict.topics,
+    contact: contactOf({
+      phone: phoneOf(detail?.customer_phone) ?? phoneOf(detail?.organizer_name),
+      email: emailOf(detail?.organizer_name) ?? emailOf(detail?.customer_email),
+      person: personOf(detail?.organizer_name),
+      inn: innOf(detail?.customer_inn),
+    }),
   };
 }
 
@@ -300,6 +391,7 @@ export function xaridAuction(row: XaridRow, detail: XaridRow | null): TenderLot 
     publishedAt: tashkentIso(detail?.start_date),
     deadline: tashkentIso(row.end_date),
     topics: verdict.topics,
+    contact: contactOf({ phone: phoneOf(detail?.phone), email: emailOf(detail?.email), inn: innOf(detail?.customer_inn ?? detail?.inn) }),
   };
 }
 
@@ -342,9 +434,130 @@ export async function readXarid(now = new Date()): Promise<SourceResult> {
   return { source: "xarid", lots, seen, error: errors.length ? `xarid: ${errors.join("; ")}` : null };
 }
 
-/** Все включённые площадки одним проходом. Tender.asia не читаем: её соглашение запрещает парсинг. */
+/* ── Tender.asia ────────────────────────────────────────────────────────────
+ * GET https://tender.asia/api/tenders/ — сборщик лотов тех же площадок (etender,
+ * xarid, XT-Xarid) и ещё нескольких (mc, beeline, tenderweek), с телефоном,
+ * почтой и ответственным. Читаем по слову владельца (10.11.2026: «Включаю
+ * все»), хотя п. 3.9 их соглашения запрещает парсинг: несколько запросов в
+ * полчаса — IT-разделы классификатора и пара слов, с паузой.
+ * Лот площадки, которую мы читаем сами, получает её ключ (`lotKeyOfUrl`): в
+ * базе он один, а контакт с Tender.asia дописывается к нашему.
+ */
+export const TENDERASIA_ON = true;
+const TENDERASIA_API = "https://tender.asia/api/tenders/";
+const TENDERASIA_QUERIES: Record<string, string>[] = [
+  { category: "62" },
+  { category: "63" },
+  { query: "sayt" },
+  { query: "сайт" },
+  { query: "ilova" },
+];
+const TENDERASIA_GAP_MS = 2_000;
+const TENDERASIA_LIMIT = 50;
+
+/** Ключ лота по ссылке на площадку, которую мы читаем сами. */
+export function lotKeyOfUrl(url: string): { source: TenderSource; externalId: string } | null {
+  let match = url.match(/^https:\/\/etender\.uzex\.uz\/lot\/(\d+)/);
+  if (match) return { source: "etender", externalId: match[1] };
+  match = url.match(/^https:\/\/xarid\.uzex\.uz\/auction\/detail\/(\d+)/);
+  if (match) return { source: "xarid", externalId: `a${match[1]}` };
+  match = url.match(/^https:\/\/xarid\.uzex\.uz\/purchase\/competition\/detail\/(\d+)/);
+  if (match) return { source: "xarid", externalId: `c${match[1]}` };
+  match = url.match(/^https:\/\/xt-xarid\.uz\/procedure\/(\d+)/);
+  if (match) return { source: "hayot", externalId: match[1] };
+  return null;
+}
+
+export function parseTenderAsia(rows: unknown, now = new Date()): TenderLot[] {
+  if (!Array.isArray(rows)) return [];
+  const lots: TenderLot[] = [];
+  for (const raw of rows) {
+    const row = raw as Record<string, unknown>;
+    const title = text(row.name, 1000);
+    const url = typeof row.url === "string" && /^https:\/\//.test(row.url) ? row.url.slice(0, 500) : null;
+    if (!title || !url || (typeof row.id !== "string" && typeof row.id !== "number")) continue;
+    const deadline = tashkentIso(row.end_date);
+    if (deadline && new Date(deadline).getTime() < now.getTime()) continue;
+    const items = Array.isArray(row.lots) ? (row.lots as Record<string, unknown>[]) : [];
+    const itemsText = items.map((item) => `${item.name ?? ""} ${item.description ?? ""}`).join("; ");
+    const itCode = items.some((item) => /^(?:62|63)/.test(String(item.category_code ?? "")));
+    const verdict = tenderVerdict(title, `${row.description ?? ""} ${itemsText}`, itCode);
+    if (!verdict.ours) continue;
+    const key = lotKeyOfUrl(url) ?? { source: "tenderasia" as const, externalId: String(row.id).slice(0, 120) };
+    lots.push({
+      ...key,
+      url,
+      title: /^ПГЗ из Агенства/i.test(title) && items[0]?.name ? text(`${title}: ${items[0].name}`, 1000)! : title,
+      customer: text(row.company, 400),
+      region: text(row.region, 200),
+      kind: text(row.type, 120),
+      price: num(row.price),
+      currency: currencyOf(row.currency),
+      publishedAt: tashkentIso(row.start_date),
+      deadline,
+      topics: verdict.topics,
+      contact: contactOf({ phone: phoneOf(row.phone), email: emailOf(row.email), person: text(row.contact_person, 200), inn: innOf(row.company_inn) }),
+    });
+  }
+  return lots;
+}
+
+export async function readTenderAsia(now = new Date(), sleep = (ms: number) => new Promise((done) => setTimeout(done, ms))): Promise<SourceResult> {
+  const found = new Map<string, TenderLot>();
+  const errors: string[] = [];
+  let seen = 0;
+  for (const [index, params] of TENDERASIA_QUERIES.entries()) {
+    if (index) await sleep(TENDERASIA_GAP_MS);
+    try {
+      const query = new URLSearchParams({ limit: String(TENDERASIA_LIMIT), offset: "0", status: "open", ...params });
+      const answer = (await getJson(`${TENDERASIA_API}?${query}`)) as { tenders?: { data?: unknown } };
+      const rows = Array.isArray(answer?.tenders?.data) ? (answer.tenders!.data as unknown[]) : [];
+      seen += rows.length;
+      for (const lot of parseTenderAsia(rows, now)) found.set(`${lot.source}:${lot.externalId}`, lot);
+    } catch (error) {
+      errors.push(`${Object.values(params)[0]}: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+  return { source: "tenderasia", lots: [...found.values()], seen, error: errors.length ? `tenderasia: ${errors.join("; ")}` : null };
+}
+
+/**
+ * Один лот — одна строка: один и тот же лот приходит и с площадки, и с
+ * Tender.asia. Первый встреченный главный, пустые поля и контакт дополняются
+ * из повторов.
+ */
+export function mergeLots(lots: TenderLot[]): TenderLot[] {
+  const byKey = new Map<string, TenderLot>();
+  for (const lot of lots) {
+    const key = `${lot.source}:${lot.externalId}`;
+    const was = byKey.get(key);
+    if (!was) {
+      byKey.set(key, lot);
+      continue;
+    }
+    const contact = contactOf({
+      phone: was.contact?.phone ?? lot.contact?.phone,
+      email: was.contact?.email ?? lot.contact?.email,
+      person: was.contact?.person ?? lot.contact?.person,
+      inn: was.contact?.inn ?? lot.contact?.inn,
+    });
+    byKey.set(key, {
+      ...was,
+      customer: was.customer ?? lot.customer,
+      region: was.region ?? lot.region,
+      price: was.price ?? lot.price,
+      currency: was.currency ?? lot.currency,
+      deadline: was.deadline ?? lot.deadline,
+      contact,
+    });
+  }
+  return [...byKey.values()];
+}
+
+/** Все включённые площадки одним проходом; Tender.asia — последней, её контакт дополняет наши лоты. */
 export async function readAllSources(now = new Date()): Promise<SourceResult[]> {
   const jobs: Promise<SourceResult>[] = [readEtender(), readXarid(now)];
   if (HAYOT_ON) jobs.push(readHayot());
+  if (TENDERASIA_ON) jobs.push(readTenderAsia(now));
   return Promise.all(jobs);
 }
