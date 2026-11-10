@@ -38,6 +38,7 @@ export type TenderLeadRow = {
   source: TenderSource;
   url: string;
   title: string;
+  title_ru?: string | null;
   customer: string | null;
   region: string | null;
   kind: string | null;
@@ -89,6 +90,7 @@ export function leadFromTender(row: TenderLeadRow): QualifyToolInput {
   const unknown = "не выяснено — открытый тендер, разговора ещё не было";
   const deadline = tashkent(row.deadline);
   const price = money(row.price, row.currency);
+  const ru = row.title_ru && row.title_ru !== row.title ? row.title_ru : null;
   return {
     contact_name: contactName.slice(0, 200),
     company: (row.customer ?? "").slice(0, 400),
@@ -105,7 +107,7 @@ export function leadFromTender(row: TenderLeadRow): QualifyToolInput {
     intent: "interested",
     summary: {
       client: row.customer ?? contactName,
-      request: `Тендер: ${row.title}`.slice(0, 400),
+      request: `Тендер: ${ru ?? row.title}`.slice(0, 400),
       niche: "госзакупки и тендеры",
       expertise: unknown,
       budget: price ? `стартовая цена лота ${price}` : unknown,
@@ -115,6 +117,7 @@ export function leadFromTender(row: TenderLeadRow): QualifyToolInput {
     },
     notes: [
       `⚠️ ${PRICE_RULE}`,
+      ru ? `Название на площадке: ${row.title.slice(0, 300)}` : "",
       `Лот: ${row.url}`,
       `Площадка: ${where}${row.kind ? ` · ${row.kind}` : ""}`,
       price ? `Стартовая цена: ${price}` : "",
@@ -141,6 +144,7 @@ export function leadFromTender(row: TenderLeadRow): QualifyToolInput {
 export function tenderHeading(row: TenderLeadRow): string {
   return [
     `🏛 <b>Тендер</b> · ${esc(SOURCE_LABEL[row.source])}${row.kind ? ` · ${esc(row.kind)}` : ""}`,
+    row.title_ru && row.title_ru !== row.title ? `🇷🇺 Что хотят: ${esc(row.title_ru)}` : "",
     `⚠️ <b>${esc(PRICE_RULE)}</b>`,
     row.deadline ? `Приём заявок до: ${esc(tashkent(row.deadline))} (Ташкент)` : "",
     `Лот: ${esc(row.url)}`,
@@ -163,7 +167,7 @@ export async function promoteTenders(now: Date = new Date()): Promise<TenderLead
   const since = new Date(now.getTime() - FRESH_DAYS * 86_400_000).toISOString();
   const { data, error } = await db
     .from("scout_tenders")
-    .select("id, created_at, source, url, title, customer, region, kind, price, currency, deadline, topics, phone, email, contact_person, customer_inn")
+    .select("id, created_at, source, url, title, title_ru, customer, region, kind, price, currency, deadline, topics, phone, email, contact_person, customer_inn")
     .is("lead_at", null)
     .eq("status", "new")
     .gte("created_at", since)

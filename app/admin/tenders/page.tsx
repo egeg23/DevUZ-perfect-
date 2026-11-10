@@ -94,6 +94,9 @@ export default async function TendersPage({ searchParams }: { searchParams: Prom
                       ) : null}
                     </div>
                     <p className="mt-2 text-sm font-medium leading-relaxed">{row.title}</p>
+                    {row.title_ru && row.title_ru !== row.title ? (
+                      <p className="mt-1 text-sm leading-relaxed text-muted"><span className="text-faint">{t.inRussian}: </span>{row.title_ru}</p>
+                    ) : null}
                     <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-xs text-muted">
                       {row.customer ? <span><span className="text-faint">{t.customer}: </span>{row.customer}{row.region ? ` · ${row.region}` : ""}</span> : null}
                       {row.price ? <span><span className="text-faint">{t.price}: </span>{priceText(row.price, row.currency)}</span> : null}

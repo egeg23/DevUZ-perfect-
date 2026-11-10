@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
 import { tenderVerdict } from "@/lib/scout/tender-match";
+import { cleanRu, needsRu, ruProblems, tenderRu } from "@/lib/scout/tender-ru";
 import { PRICE_RULE, leadFromTender, servicesOfTopics, studioTender, tenderHeading, type TenderLeadRow } from "@/lib/scout/tender-lead";
 import {
   HAYOT_ON,
@@ -15,6 +16,7 @@ import {
   parseEtender,
   parseHayot,
   parseTenderAsia,
+  pickInnContact,
   personOf,
   phoneOf,
   tashkentIso,
@@ -241,4 +243,34 @@ test("тендеры: все площадки включены, раздел —
   assert.match(readFileSync("app/admin/tenders/page.tsx", "utf8"), /requireSection\("\/admin\/tenders"\)/);
   assert.match(readFileSync("app/admin/tenders/actions.ts", "utf8"), /requireSection\("\/admin\/tenders"\)/);
   assert.match(readFileSync("app/api/reminders/sweep/route.ts", "utf8"), /runTenderScan\(/);
+});
+
+test("тендеры: что хотят — коротко по-русски, без новых чисел", async () => {
+  assert.equal(needsRu("CRM tizimi uchun TZ yozish xizmati"), true);
+  assert.equal(needsRu("Дастурий таъминотни такомиллаштириш"), true);
+  assert.equal(needsRu("Разработка официального сайта"), false);
+  assert.equal(await tenderRu("Разработка официального сайта", async () => "не должно звать"), "Разработка официального сайта");
+  assert.equal(await tenderRu("CRM tizimi uchun TZ yozish xizmati", async () => "«Написать техническое задание для CRM-системы»"), "Написать техническое задание для CRM-системы");
+  assert.equal(await tenderRu("CRM tizimi uchun TZ yozish xizmati", async () => "Написать ТЗ для CRM за 30 дней"), null, "числа нет в названии");
+  assert.equal(await tenderRu("CRM tizimi uchun TZ yozish xizmati", async () => null), null);
+  assert.deepEqual(ruProblems("CRM tizimi", "CRM tizimi"), ["не по-русски"]);
+  assert.equal(cleanRu("Сайт — для клиники"), "Сайт: для клиники");
+});
+
+test("тендеры: телефон по ИНН из других закупок заказчика, раздел открыт всем", () => {
+  const rows = [
+    { company_inn: "306350099", phone: "998939913223" },
+    { company_inn: "200244767", phone: null, email: null },
+    { company_inn: "200244767", phone: "+998781502200", contact_person: "Ivanov I" },
+  ];
+  assert.deepEqual(pickInnContact(rows, "200244767"), { phone: "+998781502200", email: null, person: "Ivanov I", inn: "200244767" });
+  assert.equal(pickInnContact(rows, "111111111"), null);
+  assert.match(readFileSync("lib/admin/roles.ts", "utf8"), /ALWAYS_OPEN[^\n]*"\/admin\/tenders"/);
+  const lead = leadFromTender({
+    id: "00000000-0000-0000-0000-000000000002", created_at: "2026-11-10T12:00:00Z", source: "hayot", url: "https://xt-xarid.uz/procedure/1/core",
+    title: "Rasmiy veb-saytni ishlab chiqish", title_ru: "Разработать официальный сайт", customer: "X", region: null, kind: "Отбор", price: null, currency: null,
+    deadline: null, topics: ["сайт"], phone: "+998781502200", email: null, contact_person: null, customer_inn: "200244767",
+  });
+  assert.match(lead.summary.request, /Разработать официальный сайт/);
+  assert.match(lead.notes, /Название на площадке: Rasmiy veb-saytni/);
 });

@@ -977,7 +977,7 @@ export const uz: HelpCopy = {
     /* ── Поиск ────────────────────────────────────────────────────────── */
     /* ── Tenderlar ─────────────────────────────────────────────────── */
     "/admin/tenders": {
-      what: "Skaut O‘zbekiston xarid maydonchalarini o‘qiydi va faqat studiya qiladigan ishlarni qoldiradi: sayt, ilova, bot, sun’iy intellekt, CRM, platforma, axborot tizimi. Har bir shunday lot botga lid bo‘lib keladi, bu yerda esa — ularning tasmasi ariza muddati, buyurtmachi aloqasi va tugmalar bilan.",
+      what: "Skaut O‘zbekiston xarid maydonchalarini o‘qiydi va faqat studiya qiladigan ishlarni qoldiradi: sayt, ilova, bot, sun’iy intellekt, CRM, platforma, axborot tizimi. Har bir shunday lot botga lid bo‘lib keladi, bu yerda esa — ularning tasmasi ariza muddati, buyurtmachi aloqasi va tugmalar bilan. Bo‘lim barcha xodimlarga ochiq.",
       items: [
         {
           id: "how",
@@ -985,7 +985,7 @@ export const uz: HelpCopy = {
           body: [
             "Har 30 daqiqada skaut maydonchalardagi ochiq lotlar ro‘yxatini o‘qiydi: etender.uzex.uz, xarid.uzex.uz, Hayot Birja (XT-Xarid) va Tender.asia. Faqat maydoncha har qanday tashrif buyuruvchiga kirishsiz ko‘rsatadigan narsa: skautda login va ERI yo‘q, kapchani aylanib o‘tmaydi. Maydonchadagi va Tender.asia’dagi bir xil lot — bitta qator: Tender.asia’dagi aloqa maydoncha lotiga qo‘shiladi.",
             "Lot biznikimi — buni kod nomiga qarab, modelsiz hal qiladi: mavzu (sayt, ilova, bot, axborot tizimi, CRM, avtomatlashtirish, platforma, sun’iy intellekt) va ish (ishlab chiqish, yaratish, takomillashtirish, qo‘llab-quvvatlash) kerak. Maydonchaning IT toifasida ham mavzusiz lot olinmaydi. Hech qachon bizniki emas: kiberxavfsizlik, antiviruslar, 1C, litsenziyalar, serverlar va bulut, videokuzatuv, yong‘in tizimlari, kompyuter va kartrijlar.",
-            "Har bir yangi lot lidga aylanadi va saytdagi ariza bilan bir xil [lidlar navbati](#leads-queue) bo‘yicha yuradi: kunduzi — navbat bilan, kechasi — ertalab. Botdagi kartada — maydoncha, muddat, lotga havola, buyurtmachining telefoni, pochtasi va mas’ul shaxsi (maydoncha ko‘rsatsa) hamda majburiy shart: «Перед подачей заявки — связаться с Егором или Александром и запросить цену». O‘sha lot skaut kanaliga ham qator bo‘lib ketadi, bir o‘tishda sakkiztadan ko‘p emas.",
+            "Har bir yangi lot lidga aylanadi va saytdagi ariza bilan bir xil [lidlar navbati](#leads-queue) bo‘yicha yuradi: kunduzi — navbat bilan, kechasi — ertalab. Botdagi kartada — maydoncha, muddat, lotga havola, buyurtmachining telefoni, pochtasi va mas’ul shaxsi (maydoncha ko‘rsatsa) hamda majburiy shart: «Перед подачей заявки — связаться с Егором или Александром и запросить цену». O‘sha lot skaut kanaliga ham qator bo‘lib ketadi, bir o‘tishda sakkiztadan ko‘p emas. O‘zbekcha nomga ruscha qisqa «nima xohlashadi» jumlasi qo‘shiladi (uni arzon model yozadi, yangi raqamlarsiz). Lot kartasida telefon bo‘lmasa — skaut uni o‘sha buyurtmachining boshqa xaridlaridan STIR bo‘yicha topadi.",
             "Yuqoridagi «Oxirgi o‘tish» qatori skaut maydonchalarni qachon o‘qiganini, har birida nechta lot va ulardan nechtasi bizniki ekanini ko‘rsatadi. Maydoncha javob bermasa — u ajratib ko‘rsatiladi, qolganlari odatdagidek o‘qiladi.",
           ],
         },

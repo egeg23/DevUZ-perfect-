@@ -327,7 +327,8 @@ export type SectionAccess = Readonly<Record<string, boolean>>;
  * «Инструкции» — справка, «Настройки» — свой язык и телефон есть у каждого,
  * а чужие настройки там и так отобраны по галочкам (`settingsFor`).
  */
-export const ALWAYS_OPEN: readonly string[] = ["/admin", "/admin/tasks", "/admin/help", "/admin/settings"];
+// «Тендеры» — всем сотрудникам всегда (владелец, 10.11.2026: «доступ к тендерам открываем всем сотрудникам»).
+export const ALWAYS_OPEN: readonly string[] = ["/admin", "/admin/tasks", "/admin/help", "/admin/settings", "/admin/tenders"];
 
 /** Строка из базы — в галочки: только известные разделы и только да/нет. */
 export function sectionAccess(raw: unknown): SectionAccess {

@@ -3,6 +3,7 @@ import type { Staff } from "@/lib/admin/session";
 import { esc, sendMessage } from "@/lib/qualify/telegram";
 import { siteUrl } from "@/lib/seo";
 import { PRICE_RULE, promoteTenders } from "@/lib/scout/tender-lead";
+import { tenderRu } from "@/lib/scout/tender-ru";
 import { SOURCE_LABEL, mergeLots, withContact, type SourceResult, type TenderLot, type TenderSource } from "@/lib/scout/tender-sources";
 import { serviceClient } from "@/lib/supabase";
 
@@ -45,6 +46,7 @@ export type TenderRow = {
   status: TenderStatus;
   taken_by: string | null;
   taken_at: string | null;
+  title_ru?: string | null;
   phone?: string | null;
   email?: string | null;
   contact_person?: string | null;
@@ -89,6 +91,7 @@ export function tenderNotice(lot: TenderLot): string {
     `🏛 <b>Тендер</b> · ${esc(SOURCE_LABEL[lot.source])}${lot.kind ? ` · ${esc(lot.kind)}` : ""}`,
     "",
     `<b>${esc(lot.title.slice(0, 300))}</b>`,
+    lot.titleRu && lot.titleRu !== lot.title ? `🇷🇺 ${esc(lot.titleRu)}` : "",
     lot.customer ? `Заказчик: ${esc(lot.customer)}` : "",
     lot.region ? `Регион: ${esc(lot.region)}` : "",
     lot.price ? `Стартовая цена: ${esc(priceText(lot.price, lot.currency))}` : "",
@@ -159,18 +162,23 @@ async function saveLots(lots: TenderLot[]): Promise<TenderLot[] | null> {
   return fresh;
 }
 
-/** Контакт, дочитанный после записи, — в строку лота. */
-async function saveContacts(lots: TenderLot[]): Promise<void> {
+/** Контакт и русская фраза, дочитанные после записи, — в строку лота. */
+async function saveExtras(lots: TenderLot[]): Promise<void> {
   const db = serviceClient();
   if (!db) return;
   for (const lot of lots) {
-    if (!lot.contact) continue;
-    await db
-      .from("scout_tenders")
-      .update({ phone: lot.contact.phone, email: lot.contact.email, contact_person: lot.contact.person, customer_inn: lot.contact.inn })
-      .eq("source", lot.source)
-      .eq("external_id", lot.externalId);
+    const patch: Record<string, unknown> = {};
+    if (lot.contact) Object.assign(patch, { phone: lot.contact.phone, email: lot.contact.email, contact_person: lot.contact.person, customer_inn: lot.contact.inn });
+    if (lot.titleRu) patch.title_ru = lot.titleRu.slice(0, 400);
+    if (!Object.keys(patch).length) continue;
+    await db.from("scout_tenders").update(patch).eq("source", lot.source).eq("external_id", lot.externalId);
   }
+}
+
+/** Новый лот: контакт заказчика и что он хочет по-русски. */
+export async function enrichLot(lot: TenderLot): Promise<TenderLot> {
+  const withPhone = await withContact(lot);
+  return { ...withPhone, titleRu: await tenderRu(withPhone.title).catch(() => null) };
 }
 
 async function markNotified(lots: TenderLot[]): Promise<void> {
@@ -193,7 +201,7 @@ export async function runTenderScan(
     return channel ? Boolean(await sendMessage(channel, text)) : false;
   },
   toLeads: (now: Date) => Promise<{ errors: string[] }> = promoteTenders,
-  enrich: (lot: TenderLot) => Promise<TenderLot> = withContact,
+  enrich: (lot: TenderLot) => Promise<TenderLot> = enrichLot,
 ): Promise<{ ran: boolean; added: number; errors: string[] }> {
   const db = serviceClient();
   if (!db) return { ran: false, added: 0, errors: [] };
@@ -203,12 +211,12 @@ export async function runTenderScan(
   const results = await read();
   const lots = mergeLots(results.flatMap((result) => result.lots));
   const saved = await saveLots(lots);
-  // Контакт новых лотов, которого не было в списке площадки (etender — по вызову на лот).
+  // Новым лотам — контакт, которого не было в списке площадки, и русская фраза.
   let fresh: TenderLot[] | null = saved;
   if (saved?.length) {
     fresh = [];
     for (const lot of saved) fresh.push(await enrich(lot));
-    await saveContacts(fresh.filter((lot, index) => lot.contact !== saved[index].contact));
+    await saveExtras(fresh.filter((lot, index) => lot.contact !== saved[index].contact || Boolean(lot.titleRu)));
   }
   const errors = results.map((result) => result.error).filter((error): error is string => Boolean(error));
   if (fresh === null) errors.push("scout_tenders: таблица не ответила (миграция 0184 применена?)");

@@ -34,6 +34,8 @@ export type TenderLot = {
   deadline: string | null;
   topics: string[];
   contact: TenderContact | null;
+  /** Что хочет заказчик, коротко по-русски (lib/scout/tender-ru.ts) — только у новых лотов. */
+  titleRu?: string | null;
 };
 
 /** Контакт заказчика из карточки лота. */
@@ -206,18 +208,58 @@ export function etenderContact(detail: Record<string, unknown> | null, inn: stri
 }
 
 /**
- * Дочитать контакт лота, если площадка не отдала его в списке: etender —
- * по вызову на лот, поэтому только для новых лотов, не для всех подряд.
+ * Телефон заказчика из других его закупок: Tender.asia ищет по ИНН
+ * (`query=<ИНН>`) и отдаёт его лоты на etender и xarid, где телефон напечатан.
+ * Так находится контакт лотов Hayot: их карточка контакты гостю не показывает.
+ */
+export function pickInnContact(rows: unknown, inn: string): TenderContact | null {
+  if (!Array.isArray(rows)) return null;
+  for (const raw of rows) {
+    const row = raw as Record<string, unknown>;
+    if (innOf(row.company_inn) !== inn) continue;
+    const phone = phoneOf(row.phone);
+    const email = emailOf(row.email);
+    if (phone || email) return { phone, email, person: text(row.contact_person, 200), inn };
+  }
+  return null;
+}
+
+async function contactByInn(inn: string): Promise<TenderContact | null> {
+  try {
+    const query = new URLSearchParams({ query: inn, limit: "10", offset: "0" });
+    const answer = (await getJson(`${TENDERASIA_API}?${query}`)) as { tenders?: { data?: unknown } };
+    return pickInnContact(answer?.tenders?.data, inn);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Дочитать контакт лота, если площадка не отдала его в списке (владелец,
+ * 10.11.2026: «Обязательно контакты вытаскиваем с тендеров»): etender — по
+ * вызову на лот, потом — по ИНН заказчика из других его закупок. Только для
+ * новых лотов, не для всех подряд.
  */
 export async function withContact(lot: TenderLot): Promise<TenderLot> {
-  if (lot.source !== "etender" || lot.contact?.phone) return lot;
-  try {
-    const detail = (await getJson(`https://apietender.uzex.uz/api/common/GetTrade/${encodeURIComponent(lot.externalId)}/0`)) as Record<string, unknown> | null;
-    const found = etenderContact(detail && typeof detail === "object" ? detail : null, lot.contact?.inn ?? null);
-    return found ? { ...lot, contact: { ...found, email: found.email ?? lot.contact?.email ?? null, person: found.person ?? lot.contact?.person ?? null } } : lot;
-  } catch {
-    return lot;
+  let out = lot;
+  if (lot.source === "etender" && !lot.contact?.phone) {
+    try {
+      const detail = (await getJson(`https://apietender.uzex.uz/api/common/GetTrade/${encodeURIComponent(lot.externalId)}/0`)) as Record<string, unknown> | null;
+      const found = etenderContact(detail && typeof detail === "object" ? detail : null, lot.contact?.inn ?? null);
+      if (found) out = { ...lot, contact: { ...found, email: found.email ?? lot.contact?.email ?? null, person: found.person ?? lot.contact?.person ?? null } };
+    } catch {
+      // Карточка не открылась — дальше по ИНН.
+    }
   }
+  const inn = out.contact?.inn;
+  if (TENDERASIA_ON && inn && !out.contact?.phone && !out.contact?.email) {
+    const found = await contactByInn(inn);
+    if (found) {
+      const person = out.contact?.person ?? found.person;
+      out = { ...out, contact: { phone: found.phone, email: found.email, person: `${person ? `${person}; ` : ""}телефон из других закупок заказчика`.slice(0, 200), inn } };
+    }
+  }
+  return out;
 }
 
 export async function readEtender(): Promise<SourceResult> {

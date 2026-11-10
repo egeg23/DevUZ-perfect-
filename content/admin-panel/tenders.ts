@@ -18,6 +18,7 @@ export const tendersDict = defineDict({
     pl: "Przed złożeniem oferty — skontaktuj się z Jegorem lub Aleksandrem i zapytaj o cenę. Bez uzgodnionej ceny nie składamy.",
   },
   contact: { ru: "Контакт", uz: "Aloqa", pl: "Kontakt" },
+  inRussian: { ru: "По-русски", uz: "Ruschada", pl: "Po rosyjsku" },
   inn: { ru: "ИНН", uz: "STIR", pl: "NIP" },
   leadCard: { ru: "Карточка лида", uz: "Lid kartasi", pl: "Karta leada" },
   done: { ru: "Готово.", uz: "Tayyor.", pl: "Gotowe." },

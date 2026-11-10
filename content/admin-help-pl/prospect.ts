@@ -54,7 +54,7 @@ export const prospectSections: Record<string, HelpEntry> = {
 
   /* ── Поиск ────────────────────────────────────────────────────────── */
   "/admin/tenders": {
-    what: "Skaut czyta platformy zamówień w Uzbekistanie i zostawia tylko to, co robi studio: strona, aplikacja, bot, AI, CRM, platforma, system informacyjny. Każdy taki lot trafia do bota jako lead, a tutaj jest ich lista z terminem składania ofert, kontaktem zamawiającego i przyciskami.",
+    what: "Skaut czyta platformy zamówień w Uzbekistanie i zostawia tylko to, co robi studio: strona, aplikacja, bot, AI, CRM, platforma, system informacyjny. Każdy taki lot trafia do bota jako lead, a tutaj jest ich lista z terminem składania ofert, kontaktem zamawiającego i przyciskami. Sekcja jest otwarta dla wszystkich pracowników.",
     items: [
       {
         id: "how",
@@ -62,7 +62,7 @@ export const prospectSections: Record<string, HelpEntry> = {
         body: [
           "Co 30 minut skaut czyta otwarte listy lotów na platformach: etender.uzex.uz, xarid.uzex.uz, Hayot Birja (XT-Xarid) i Tender.asia. Tylko to, co platforma pokazuje każdemu odwiedzającemu bez logowania: skaut nie ma loginów ani podpisu elektronicznego i nie obchodzi captchy. Ten sam lot z platformy i z Tender.asia to jedna linijka: kontakt z Tender.asia dopisuje się do lotu platformy.",
           "Czy lot jest nasz, decyduje kod po nazwie, bez modelu: potrzebny jest temat (strona, aplikacja, bot, system informacyjny, CRM, automatyzacja, platforma, AI) i praca (opracowanie, stworzenie, rozbudowa, utrzymanie). Nawet w kategorii IT platformy lot bez tematu nie jest brany. Nigdy nie nasze: cyberbezpieczeństwo, antywirusy, 1C, licencje, serwery i chmura, monitoring wizyjny, systemy przeciwpożarowe, komputery i kartridże.",
-          "Każdy nowy lot staje się leadem i idzie tą samą [kolejką leadów](#leads-queue), co zgłoszenie ze strony: w dzień — po kolei, w nocy — rano. W karcie w bocie jest platforma, termin, link do lotu, telefon, e-mail i osoba odpowiedzialna zamawiającego, jeśli platforma je pokazuje, oraz obowiązkowy warunek: «Перед подачей заявки — связаться с Егором или Александром и запросить цену». Ten sam lot trafia też linijką na kanał skauta, najwyżej osiem w jednym przejściu.",
+          "Każdy nowy lot staje się leadem i idzie tą samą [kolejką leadów](#leads-queue), co zgłoszenie ze strony: w dzień — po kolei, w nocy — rano. W karcie w bocie jest platforma, termin, link do lotu, telefon, e-mail i osoba odpowiedzialna zamawiającego, jeśli platforma je pokazuje, oraz obowiązkowy warunek: «Перед подачей заявки — связаться с Егором или Александром и запросить цену». Ten sam lot trafia też linijką na kanał skauta, najwyżej osiem w jednym przejściu. Do uzbeckiej nazwy dochodzi krótkie zdanie po rosyjsku „czego chcą” (pisze je tani model, bez nowych liczb). Brak telefonu w karcie lotu — skaut znajduje go w innych zamówieniach tego samego zamawiającego po numerze NIP.",
           "Linijka «Ostatnie przejście» na górze pokazuje, kiedy skaut czytał platformy, ile lotów jest na każdej i ile z nich naszych. Platforma nie odpowiedziała — jest podświetlona, pozostałe czytają się normalnie.",
         ],
       },
