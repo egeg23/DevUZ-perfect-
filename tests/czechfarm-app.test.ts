@@ -38,7 +38,8 @@ function fakeNet() {
     calls.push({ url, body, method: init.method || "GET" });
     if (url.includes("api.telegram.org")) {
       if (url.endsWith("/getMe")) return ok({ ok: true, result: { username: "czechfarm_bot" } });
-      if (url.endsWith("/sendMessage")) return ok({ ok: true, result: { message_id: ++msg } });
+      if (body?.chat_id === "666") return ok({ ok: false, description: "Forbidden: bot was blocked by the user" }, 403);
+      if (url.endsWith("/sendMessage") || url.endsWith("/sendPhoto")) return ok({ ok: true, result: { message_id: ++msg } });
       return ok({ ok: true, result: true });
     }
     if (url.includes("amocrm.ru")) {
@@ -71,7 +72,7 @@ async function boot() {
   let cookie = "";
   async function call(path: string, body?: unknown, extra: Record<string, string> = {}) {
     const headers: Record<string, string> = { ...(cookie ? { Cookie: cookie } : {}), ...extra };
-    if (body !== undefined) headers["Content-Type"] = "application/json";
+    if (body !== undefined && !headers["Content-Type"]) headers["Content-Type"] = "application/json";
     const r = await fetch(`http://127.0.0.1:${port}${path}`, { method: body === undefined ? "GET" : "POST", headers, body: body === undefined ? undefined : JSON.stringify(body), redirect: "manual" });
     const set = r.headers.get("set-cookie");
     if (set) cookie = set.split(";")[0];
@@ -114,7 +115,7 @@ test("czechfarm: разбор CRM, Telegram, адресов и файлов", as
 
 test("czechfarm: страницы на четырёх языках, без следов макета, арабский справа налево", () => {
   const dir = site();
-  for (const lang of ["", "uz/", "en/", "ar/"]) for (const p of ["", "about/", "products/", "partners/", "investors/", "news/", "contacts/", "privacy/"]) {
+  for (const lang of ["", "uz/", "en/", "ar/"]) for (const p of ["", "about/", "products/", "partners/", "investors/", "news/", "contacts/", "privacy/", "account/"]) {
     const f = dir + lang + p + "index.html";
     assert.ok(existsSync(f), "нет страницы " + lang + p);
     const html = readFileSync(f, "utf8");
@@ -258,7 +259,7 @@ test("czechfarm: продукты, новости, контакты и заго�
     assert.ok(en2.includes("X\\u003c/script>\\u003cb>") && !en2.includes("X</script>"), "название продукта закрыло скрипт страницы");
     assert.ok((await a.call("/en/news")).text.includes("News EN"));
     assert.ok((await a.call("/uz/news")).text.includes("Новость"), "нет перевода — русский");
-    assert.equal((await a.call("/sitemap.xml")).text.match(/<loc>/g)!.length, 32);
+    assert.equal((await a.call("/sitemap.xml")).text.match(/<loc>/g)!.length, 36);
     assert.equal((await a.call("/about/")).status, 301);
   } finally { await a.close(); }
 });
@@ -303,4 +304,97 @@ test("czechfarm: выкатка — сервер компании, наш сер
   assert.ok(!remote.includes("syanie"), "в выкатке CZECHFARM остался сайт клиники");
   writeFileSync(join(tmpdir(), "cf-remote.sh"), remote);
   execFileSync("bash", ["-n", join(tmpdir(), "cf-remote.sh")]);
+});
+
+const say = (a: any, chat: number, text: string, extra: Record<string, unknown> = {}) => a.tg({ message: { message_id: Math.floor(Math.random() * 1e6), date: 1, chat: { id: chat, type: "private" }, from: { first_name: "Гость " + chat, username: "u" + chat }, text, ...extra } });
+const press = (a: any, chat: number, data: string) => a.tg({ callback_query: { id: "cb" + Math.random(), data, from: { first_name: "x" }, message: { message_id: 1, chat: { id: chat } } } });
+
+test("czechfarm: подписчики бота и рассылки — из панели и с телефона владельца", async () => {
+  const a = await boot();
+  try {
+    await owner(a);
+    await a.adminPost("/connect/tg", { token: "123456:" + "A".repeat(35) });
+    const code = new URL((await a.adminPost("/tg/link", {})).json.url).searchParams.get("start");
+    await say(a, 500, "/start " + code);
+    /* Клиенты пишут боту и выбирают, кто они. */
+    await say(a, 901, "/start");
+    assert.ok(a.net.calls.some((c) => c.body?.chat_id === "901" && c.body.reply_markup?.inline_keyboard?.[0]?.[0]?.callback_data === "kind:partner"), "бот не спросил, кто вы");
+    await press(a, 901, "kind:partner");
+    await say(a, 902, "/start"); await press(a, 902, "kind:client");
+    await say(a, 666, "/start"); await press(a, 666, "kind:client");
+    const aud = (await a.call("/api/admin/audience")).json;
+    assert.deepEqual([aud.counts.all, aud.counts.partner, aud.counts.client], [3, 1, 2], "сотрудник посчитан подписчиком или сегменты неверны");
+    /* Из панели: клиентам; заблокировавший бота отмечается. */
+    a.net.calls.length = 0;
+    assert.equal((await a.adminPost("/broadcasts", { text: "", seg: "client" })).status, 400);
+    const id = (await a.adminPost("/broadcasts", { text: "Новый препарат в каталоге", seg: "client" })).json.id;
+    await a.core.aud.bc.tick(100, null);
+    const sent = a.net.calls.filter((c) => c.url.endsWith("/sendMessage") && c.body.text === "Новый препарат в каталоге").map((c) => c.body.chat_id).sort();
+    assert.deepEqual(sent, ["666", "902"], "рассылка ушла не тем");
+    const row = (await a.call("/api/admin/audience")).json.broadcasts.find((b: any) => b.id === id);
+    assert.deepEqual([row.state, row.sent, row.blocked], ["done", 1, 1]);
+    assert.equal((await a.call("/api/admin/audience")).json.counts.all, 2, "заблокировавший остался в подписчиках");
+    /* С телефона владельца: /рассылка → текст → «Партнёрам». */
+    await say(a, 500, "/рассылка");
+    await say(a, 500, "Приглашаем партнёров на встречу");
+    const ask = a.net.calls.filter((c) => c.body?.chat_id === "500").pop()!;
+    assert.match(ask.body.text, /Кому отправить/);
+    a.net.calls.length = 0;
+    await press(a, 500, "bc:partner");
+    await a.core.aud.bc.tick(100, null);
+    assert.ok(a.net.calls.some((c) => c.body?.chat_id === "901" && c.body.text === "Приглашаем партнёров на встречу"));
+    assert.ok(!a.net.calls.some((c) => c.body?.chat_id === "902" && c.body.text === "Приглашаем партнёров на встречу"), "партнёрская рассылка ушла клиенту");
+    assert.equal((await a.call("/api/admin/audience")).json.broadcasts[0].via, "telegram");
+    /* Менеджер рассылки не видит и не делает. */
+    await a.adminPost("/users", { login: "manager1", name: "Менеджер", role: "manager", pass: "пароль-менеджера" });
+    a.setCookie(""); await a.adminPost("/login", { login: "manager1", pass: "пароль-менеджера" });
+    assert.equal((await a.call("/api/admin/audience")).status, 403);
+    assert.equal((await a.adminPost("/broadcasts", { text: "x", seg: "all" })).status, 403);
+  } finally { await a.close(); }
+});
+
+test("czechfarm: регистрация партнёров и клиентов, кабинет, привязка Telegram", async () => {
+  const a = await boot();
+  try {
+    await owner(a);
+    await a.adminPost("/connect/tg", { token: "123456:" + "A".repeat(35) });
+    const ownerCookie = a.getCookie();
+    const accPost = (path: string, body: unknown) => a.call("/api/acc/" + path, body);
+    a.setCookie("");
+    assert.equal((await a.call("/api/acc/me")).status, 401);
+    assert.equal((await accPost("register", { kind: "partner", name: "Ravi", email: "ravi@pharma.in", pass: "long-password" })).status, 400, "партнёр без компании");
+    assert.equal((await accPost("register", { kind: "client", name: "Apteka", email: "a@apteka.uz", pass: "short" })).status, 400);
+    assert.equal((await accPost("register", { kind: "partner", name: "Ravi", org: "Pharma India", country: "India", email: "Ravi@Pharma.in", pass: "long-password" })).status, 200);
+    let me = (await a.call("/api/acc/me")).json;
+    assert.deepEqual([me.kind, me.status, me.email], ["partner", "pending", "ravi@pharma.in"]);
+    assert.equal(me.leads.length, 1, "регистрация партнёра не стала обращением команде");
+    /* Обращение из кабинета подписано кабинетом, статус виден там же. */
+    await a.call("/api/lead", { kind: "partner", msg: "Хотим вывести препарат", accountId: 999 });
+    me = (await a.call("/api/acc/me")).json;
+    assert.equal(me.leads.length, 2);
+    assert.equal(a.db.get("select count(*) n from leads where account_id = 999").n, 0, "чужой кабинет подставили из формы");
+    assert.equal((await accPost("register", { kind: "client", name: "Ravi", email: "ravi@pharma.in", pass: "long-password" })).status, 400, "второй кабинет на ту же почту");
+    /* Привязка Telegram: ссылка из кабинета → /start в боте. */
+    const link = (await accPost("tg", {})).json.url;
+    const code = new URL(link).searchParams.get("start")!;
+    assert.match(code, /^acc/);
+    await say(a, 777, "/start " + code);
+    assert.equal(a.db.get("select tg_chat from accounts where email = 'ravi@pharma.in'").tg_chat, "777");
+    assert.equal(a.db.get("select account_id from bot_users where chat = '777'").account_id, me.id);
+    /* Панель: одобрить партнёра — ему строка в Telegram. */
+    a.setCookie(ownerCookie);
+    const accs = (await a.call("/api/admin/accounts")).json.accounts;
+    assert.equal(accs[0].statusName, "На проверке");
+    a.net.calls.length = 0;
+    await a.adminPost(`/accounts/${accs[0].id}`, { status: "active" });
+    assert.ok(a.net.calls.some((c) => c.body?.chat_id === "777" && /одобрен/.test(c.body.text)));
+    /* Партнёр из кабинета — в сегменте «Партнёрам». */
+    assert.equal((await a.call("/api/admin/audience")).json.counts.partner, 1);
+    /* Блок — выход из кабинета. */
+    await a.adminPost(`/accounts/${accs[0].id}`, { status: "blocked" });
+    a.setCookie("");
+    assert.equal((await accPost("login", { email: "ravi@pharma.in", pass: "long-password" })).status, 400);
+    /* Вход без JSON (форма с чужого сайта) не принимается. */
+    assert.equal((await a.call("/api/acc/login", { email: "a@apteka.uz", pass: "x" }, { "Content-Type": "text/plain" })).status, 415);
+  } finally { await a.close(); }
 });

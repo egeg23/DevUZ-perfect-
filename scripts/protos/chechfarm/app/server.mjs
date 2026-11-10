@@ -8,7 +8,7 @@ import { createReadStream, existsSync, statSync, readFileSync, mkdirSync, writeF
 import { createHash } from "node:crypto";
 import { extname, join, normalize, resolve, sep } from "node:path";
 import { openDb } from "./lib/db.mjs";
-import { makeCore, ROLES, STATUS, KINDS, LANGS, PAGES, CONTACT_KEYS } from "./lib/core.mjs";
+import { makeCore, ROLES, STATUS, KINDS, LANGS, PAGES, CONTACT_KEYS, SEGMENTS, ACC_STATUS } from "./lib/core.mjs";
 import { sameSecret } from "./lib/crypt.mjs";
 
 const MIME = {
@@ -17,8 +17,8 @@ const MIME = {
   ".svg": "image/svg+xml", ".mp4": "video/mp4", ".ico": "image/x-icon", ".txt": "text/plain; charset=utf-8", ".xml": "application/xml",
   ".pdf": "application/pdf", ".bin": "application/octet-stream",
 };
-const COOKIE = "cf_s";
-const SITE_PAGES = ["", "about", "products", "partners", "investors", "news", "contacts", "privacy"];
+const COOKIE = "cf_s", ACOOKIE = "cf_a";
+const SITE_PAGES = ["", "about", "products", "partners", "investors", "news", "contacts", "privacy", "account"];
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 export function limiter() {
@@ -59,7 +59,8 @@ export function createApp({ core, siteDir, adminDir, dataDir = "", setupCode = "
   const ipOf = (req) => (trustProxy && String(req.headers["x-forwarded-for"] || "").split(",")[0].trim()) || req.socket.remoteAddress || "?";
   const cookies = (req) => Object.fromEntries(String(req.headers.cookie || "").split(";").map((c) => c.trim().split("=")).filter((x) => x[0]).map(([k, ...v]) => [k, decodeURIComponent(v.join("="))]));
   const secure = publicUrl.startsWith("https://");
-  const setCookie = (res, v, age) => res.setHeader("Set-Cookie", `${COOKIE}=${v}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${age}${secure ? "; Secure" : ""}`);
+  const setCookie = (res, v, age, name = COOKIE) => res.setHeader("Set-Cookie", `${name}=${v}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${age}${secure ? "; Secure" : ""}`);
+  const accOf = (req) => core.aud.acc.of(cookies(req)[ACOOKIE]);
 
   function send(res, code, body, headers = {}) {
     const isJson = typeof body !== "string";
@@ -190,6 +191,14 @@ export function createApp({ core, siteDir, adminDir, dataDir = "", setupCode = "
       if (lk && M === "GET") return { views: core.ir.views(lk[1]) };
     }
 
+    /* Подписчики бота и рассылки — руководитель и владелец (менеджеру не видно). */
+    if (path === "/audience" && M === "GET") { lead(); return { counts: core.aud.subs.counts(), broadcasts: core.aud.bc.list(), segments: SEGMENTS }; }
+    if (path === "/broadcasts" && M === "POST") { lead(); const b = await body(req, 16 * 1024); const bid = core.aud.bc.create({ text: b.text, photo: b.photo, seg: b.seg }, who); return { id: bid, broadcasts: core.aud.bc.list() }; }
+    if (M === "POST" && /^\/broadcasts\/\d+\/cancel$/.test(path)) { lead(); core.aud.bc.cancel(id, who); return { broadcasts: core.aud.bc.list() }; }
+    /* Кабинеты партнёров и клиентов: видят все, одобряет и блокирует руководитель или владелец. */
+    if (path === "/accounts" && M === "GET") return { accounts: core.aud.acc.list(), status: ACC_STATUS };
+    if (M === "POST" && /^\/accounts\/\d+$/.test(path)) { lead(); core.aud.acc.setStatus(id, (await body(req)).status, who); return { accounts: core.aud.acc.list() }; }
+
     /* Подключения и команда — владелец. */
     if (M === "GET" && path === "/settings") return core.settingsView();
     if (M === "POST" && /^\/connect\/(tg|amo|b24)$/.test(path)) { owner(); return await core.connect[path.slice(9)](await body(req), who); }
@@ -210,10 +219,40 @@ export function createApp({ core, siteDir, adminDir, dataDir = "", setupCode = "
     const p = url.pathname, M = req.method, ip = ipOf(req);
     if (p === "/api/health") return send(res, 200, { ok: true, commit });
 
+    /* Кабинет партнёра и клиента. */
+    if (p.startsWith("/api/acc/")) {
+      const a = p.slice(9);
+      if (M === "POST" && req.headers["content-type"]?.startsWith("application/json") !== true) throw new HttpError(415, "Ожидался JSON");
+      if (a === "register" && M === "POST") {
+        if (!allow("reg:" + ip, 5, 60 * 6e4)) throw new HttpError(429, "Слишком много регистраций подряд. Попробуйте позже");
+        const b = await body(req, 8 * 1024);
+        if (b.website) return send(res, 200, { ok: true });
+        setCookie(res, core.aud.acc.register(b), 90 * 86400, ACOOKIE);
+        return send(res, 200, { ok: true });
+      }
+      if (a === "login" && M === "POST") {
+        const b = await body(req);
+        if (!allow("alogin:" + ip, 10, 15 * 6e4) || !allow("alogin:" + String(b.email || "").toLowerCase(), 10, 15 * 6e4)) throw new HttpError(429, "Слишком много попыток, подождите 15 минут");
+        const sid = core.aud.acc.login(b.email, b.pass);
+        if (!sid) throw new HttpError(401, "Почта или пароль не подошли");
+        setCookie(res, sid, 90 * 86400, ACOOKIE);
+        return send(res, 200, { ok: true });
+      }
+      if (a === "logout" && M === "POST") { core.aud.acc.logout(cookies(req)[ACOOKIE]); setCookie(res, "", 0, ACOOKIE); return send(res, 200, { ok: true }); }
+      const acc = accOf(req);
+      if (!acc) throw new HttpError(401, "Войдите в кабинет");
+      if (a === "me" && M === "GET") return send(res, 200, core.aud.acc.me(acc));
+      if (a === "tg" && M === "POST") return send(res, 200, { url: core.aud.acc.tgLink(acc, core.settingsView().tg.bot) });
+      throw new HttpError(404, "Нет такого адреса");
+    }
+
     if (p === "/api/lead" && M === "POST") {
       if (!allow("lead:" + ip, 6, 10 * 6e4)) throw new HttpError(429, "Слишком много обращений подряд. Попробуйте через несколько минут");
       const b = await body(req, 16 * 1024);
       if (b.website) return send(res, 200, { no: "", key: "" });
+      delete b.accountId; delete b.tgChat;
+      const acc = accOf(req);
+      if (acc) Object.assign(b, { accountId: acc.id, name: b.name || acc.name, org: b.org || acc.org, email: b.email || acc.email, phone: b.phone || acc.phone, country: b.country || acc.country });
       const r = await core.leads.add(b, "site");
       return send(res, 200, { no: r.no, key: r.key });
     }
@@ -325,6 +364,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const core = makeCore({ db, secret: env.APP_SECRET, publicUrl });
   const handle = createApp({ core, siteDir: env.SITE_DIR || join(dir, "site"), adminDir: join(dir, "admin"), dataDir, setupCode: env.SETUP_CODE || "", publicUrl, trustProxy: env.TRUST_PROXY === "1", commit: env.COMMIT || "", sceneKey: env.SCENE_KEY || "" });
   const port = Number(env.PORT || 3000);
+  /* Рассылки уходят порциями в фоне. */
+  setInterval(() => { if (core.aud.bc.pending()) core.aud.bc.tick().catch((e) => console.error("рассылка", e.message)); }, 3000).unref();
   createServer(handle).listen(port, () => console.log(`CZECHFARM: порт ${port}, ${publicUrl || "без адреса"}${core.users.count() ? "" : ", ждёт первого входа по коду установки"}`));
   for (const s of ["SIGTERM", "SIGINT"]) process.on(s, () => { db.close(); process.exit(0); });
 }

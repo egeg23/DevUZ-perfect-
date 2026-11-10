@@ -6,13 +6,15 @@ import { randomBytes } from "node:crypto";
 import { sealer, hashPass, checkPass, token, sha } from "./crypt.mjs";
 import { tgClient, tgUpdate, faqMatch } from "./tg.mjs";
 import { crmClient, amoBase, b24Base, KIND_NAME, leadText } from "./crm.mjs";
+import { makeAudience, SEGMENTS, ACC_STATUS } from "./audience.mjs";
 
 export const STATUS = { new: "Новое", work: "В работе", meet: "Назначена встреча", done: "Ответ отправлен", spam: "Спам" };
 export const ROLES = { owner: "Владелец", head: "Руководитель", manager: "Менеджер" };
 export const KINDS = KIND_NAME;
 export const LANGS = ["ru", "uz", "en", "ar"];
 /* Страницы сайта, у которых заголовок и описание правятся в панели. */
-export const PAGES = ["home", "about", "products", "partners", "investors", "news", "contacts", "privacy"];
+export const PAGES = ["home", "about", "products", "partners", "investors", "news", "contacts", "privacy", "account"];
+export { SEGMENTS, ACC_STATUS };
 export const PRODUCT_KEYS = ["name", "inn", "form", "maker", "dir", "rx", "doc", "img", "about"];
 export const CONTACT_KEYS = ["phone", "email", "address", "social", "map"];
 const SECRET_KEYS = new Set(["tg.token", "amo.token", "b24.hook"]);
@@ -108,6 +110,9 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
 
   /* ── Подключения ────────────────────────────────────────────────── */
   const tg = () => tgClient(getS("tg.token"), fetchImpl);
+  /* Подписчики бота, рассылки и кабинеты (audience.mjs). Регистрация партнёра —
+     ещё и обращение команде: его надо проверить. */
+  const aud = makeAudience({ db, note, tg, now, publicUrl, onLead: (b) => leads.add(b, "site") });
   const crmCfg = () => {
     const kind = getS("crm.kind");
     if (kind === "amo") return { kind, domain: getS("amo.domain"), token: getS("amo.token") };
@@ -196,11 +201,11 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
       if (l.email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(l.email)) throw new Error("Проверьте почту");
       /* Остальные поля формы (масштаб, что нужно, препарат из «Пути бренда») — как есть, коротко. */
       const extra = {};
-      for (const [k, v] of Object.entries(b)) if (!["name", "org", "email", "phone", "country", "msg", "page", "lang", "kind", "id", "ts", "website", "agree"].includes(k) && typeof v === "string" && v.trim() && Object.keys(extra).length < 12) extra[cut(k, 30)] = cut(v, 300);
+      for (const [k, v] of Object.entries(b)) if (!["name", "org", "email", "phone", "country", "msg", "page", "lang", "kind", "id", "ts", "website", "agree", "accountId", "tgChat"].includes(k) && typeof v === "string" && v.trim() && Object.keys(extra).length < 12) extra[cut(k, 30)] = cut(v, 300);
       let no; do no = leadNo(); while (db.get("select 1 from leads where no = ?", no));
       const key = token(12);
-      const r = db.run("insert into leads(no, key, at, kind, src, page, lang, name, org, email, phone, country, msg, extra, tg_chat) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        no, key, now(), kind, src, l.page, l.lang, l.name, l.org, l.email, l.phone, l.country, l.msg, JSON.stringify(extra), cut(b.tgChat, 40));
+      const r = db.run("insert into leads(no, key, at, kind, src, page, lang, name, org, email, phone, country, msg, extra, tg_chat, account_id) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        no, key, now(), kind, src, l.page, l.lang, l.name, l.org, l.email, l.phone, l.country, l.msg, JSON.stringify(extra), cut(b.tgChat, 40), Number(b.accountId) || null);
       const id = Number(r.lastInsertRowid);
       note(src === "bot" ? "Telegram-бот" : "сайт", `Новое обращение ${no}: ${KINDS[kind]}`, id);
       await notifyStaff(id).catch((e) => console.error("tg notify", e.message));
@@ -324,8 +329,16 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
     more: "Добавили к вашему обращению.",
     faq: "Частые вопросы:",
     none: "Частых вопросов пока нет. Напишите свой, и команда ответит.",
+    who: "Подскажите, кто вы: так мы будем присылать вам то, что важно именно вам.",
+    kindPartner: "Отлично, вы с нами как партнёр. Кабинет партнёра — на сайте, раздел «Кабинет».",
+    kindClient: "Отлично! Пишите сюда любой вопрос, команда ответит.",
   };
   const botText = (k) => getS("bot." + k) || BOT_TEXT[k];
+  function sendFaq(chat, lead) {
+    const list = faqList();
+    const head = [lead, list.length ? botText("faq") : botText("none")].filter(Boolean).join("\n\n");
+    return tg().send(chat, head, list.length ? { reply_markup: { inline_keyboard: list.slice(0, 10).map((f) => [{ text: f.q.slice(0, 60), callback_data: `faq:${f.id}` }]) } } : {});
+  }
   const faqList = () => db.all("select id, q, a from faq order by sort, id");
 
   async function hook(update) {
@@ -333,6 +346,7 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
     if (!u) return;
     const bot = tg();
     const staffRow = db.get("select t.user_id, u.name, u.role from tg_staff t join users u on u.id = t.user_id where t.chat_id = ? and u.disabled = 0", u.chat);
+    if (!staffRow && u.kind === "message") aud.subs.touch(u);
 
     if (u.kind === "button") {
       const m = /^take:(\d+)$/.exec(u.data), f = /^faq:(\d+)$/.exec(u.data);
@@ -344,9 +358,27 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
         return bot.answer(u.id, "Обращение ваше");
       }
       if (f) { const q = db.get("select a from faq where id = ?", Number(f[1])); await bot.answer(u.id, ""); if (q) await bot.send(u.chat, q.a); return; }
+      const k = /^kind:(partner|client)$/.exec(u.data);
+      if (k && !staffRow) { aud.subs.setKind(u.chat, k[1]); await bot.answer(u.id, "Спасибо!"); return sendFaq(u.chat, k[1] === "partner" ? botText("kindPartner") : botText("kindClient")); }
+      const b = /^bc:(all|partner|client|no)$/.exec(u.data);
+      if (b && staffRow && staffRow.role !== "manager") {
+        const d = db.get("select * from bc_drafts where chat = ?", u.chat);
+        db.run("delete from bc_drafts where chat = ?", u.chat);
+        if (b[1] === "no" || !d || !d.text) { await bot.answer(u.id, "Отменено"); return bot.edit(u.chat, u.messageId, "Рассылка отменена.").catch(() => {}); }
+        try {
+          const id = aud.bc.create({ text: d.text, photo: d.photo, seg: b[1], via: "telegram" }, staffRow.name);
+          await bot.answer(u.id, "Рассылка запущена");
+          return bot.edit(u.chat, u.messageId, `Рассылка № ${id} запущена: ${SEGMENTS[b[1]].toLowerCase()}. Итог — в панели, «Рассылки».`).catch(() => {});
+        } catch (e) { await bot.answer(u.id, e.message); return; }
+      }
       return bot.answer(u.id, "");
     }
 
+    /* Кабинет на сайте: /start acc<код> — Telegram привязан к кабинету. */
+    if (u.start && u.start.startsWith("acc") && !staffRow) {
+      const a = aud.acc.linkChat(u.start, u.chat);
+      if (a) { await bot.send(u.chat, `Готово, ${a.name}: Telegram привязан к кабинету CZECHFARM. Сюда будут приходить новости компании.`); return sendFaq(u.chat, ""); }
+    }
     /* Привязка сотрудника: /start <код из панели>. */
     if (u.start) {
       const c = db.get("select * from tg_codes where code = ? and until > ?", u.start, now());
@@ -366,15 +398,32 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
         const user = { id: staffRow.user_id, name: staffRow.name, role: staffRow.role };
         try { await leads.reply(user, n.lead_id, u.text); return bot.send(u.chat, "Отправили клиенту."); } catch (e) { return bot.send(u.chat, e.message); }
       }
-      return bot.send(u.chat, "Это бот для обращений. Чтобы ответить клиенту, ответьте (Reply) на его обращение.");
+      /* Рассылка с телефона: /рассылка, потом текст (или фото с подписью), потом кнопка «кому». */
+      if (staffRow.role !== "manager") {
+        const cmd = /^\/(broadcast|rassylka|рассылка)(?:@\w+)?\s*([\s\S]*)$/i.exec(u.text);
+        const draft = db.get("select * from bc_drafts where chat = ? and at > ?", u.chat, now() - 30 * 6e4);
+        if (cmd || (draft && !draft.text)) {
+          const text = cmd ? cmd[2].trim() : (u.text.startsWith("[") ? "" : u.text);
+          db.run("insert into bc_drafts(chat, text, photo, at) values(?, ?, ?, ?) on conflict(chat) do update set text = excluded.text, photo = excluded.photo, at = excluded.at", u.chat, cut(text, 4000), cmd ? "" : u.photo || "", now());
+          if (!text) return bot.send(u.chat, "Пришлите текст рассылки одним сообщением. Можно фото с подписью.");
+          const c = aud.subs.counts();
+          return bot.send(u.chat, `Рассылка подписчикам бота:\n\n${text.slice(0, 1500)}\n\nКому отправить?`, { reply_markup: { inline_keyboard: [
+            [{ text: `Всем · ${c.all}`, callback_data: "bc:all" }],
+            [{ text: `Партнёрам · ${c.partner}`, callback_data: "bc:partner" }, { text: `Клиентам · ${c.client}`, callback_data: "bc:client" }],
+            [{ text: "Отмена", callback_data: "bc:no" }]] } });
+        }
+      }
+      return bot.send(u.chat, staffRow.role === "manager" ? "Это бот для обращений. Чтобы ответить клиенту, ответьте (Reply) на его обращение." : "Это бот для обращений. Ответ клиенту — Reply на его обращение. Рассылка подписчикам — команда /рассылка.");
     }
 
     /* Клиент. */
-    if (u.start !== null || u.text === "/faq") {
-      const list = faqList();
-      if (u.start !== null) await bot.send(u.chat, botText("hello"));
-      return bot.send(u.chat, list.length ? botText("faq") : botText("none"), list.length ? { reply_markup: { inline_keyboard: list.slice(0, 10).map((f) => [{ text: f.q.slice(0, 60), callback_data: `faq:${f.id}` }]) } } : {});
+    if (u.start !== null) {
+      await bot.send(u.chat, botText("hello"));
+      const me = db.get("select kind, account_id from bot_users where chat = ?", u.chat);
+      if (me && (me.kind || me.account_id)) return sendFaq(u.chat, "");
+      return bot.send(u.chat, botText("who"), { reply_markup: { inline_keyboard: [[{ text: "Я партнёр", callback_data: "kind:partner" }, { text: "Я клиент", callback_data: "kind:client" }]] } });
     }
+    if (u.text === "/faq") return sendFaq(u.chat, "");
     const hit = faqMatch(u.text, faqList());
     const open = db.get("select id from leads where tg_chat = ? and status in ('new', 'work', 'meet') and at > ? order by id desc", u.chat, now() - 7 * 864e5);
     if (hit && !open) return bot.send(u.chat, hit.a);
@@ -527,13 +576,14 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
         !crmCfg().kind && "Подключить amoCRM или Bitrix24",
         !getS("ct.phone") && !getS("ct.email") && "Заполнить контакты на сайте",
         !db.get("select 1 from products where pub = 1") && "Опубликовать первые продукты",
+        db.get("select count(*) n from accounts where status = 'pending'").n && `Проверить партнёров: ${db.get("select count(*) n from accounts where status = 'pending'").n} ждут в «Партнёры и клиенты»`,
       ].filter(Boolean),
     };
   }
   const log = () => db.all("select l.at, l.who, l.t, l.lead_id, ld.no from log l left join leads ld on ld.id = l.lead_id order by l.id desc limit 300");
 
   return {
-    users, auth, connect, settingsView, leads, faq, products, news, seo, contacts, ir, summary, log, live, seoFor,
+    aud, users, auth, connect, settingsView, leads, faq, products, news, seo, contacts, ir, summary, log, live, seoFor,
     hook, tgSecret: () => getS("tg.secret"), counters: () => ({ metrika: getS("seo.metrika"), yandex: getS("seo.yandex"), google: getS("seo.google") }),
     version: () => version, leadText,
   };
