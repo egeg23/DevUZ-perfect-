@@ -510,7 +510,46 @@ function panelPage(l) {
     empty: t("No bookings from the site yet. Book on the site, and it appears here.", "საიტიდან ჯერ ჩაწერა არ არის. ჩაეწერეთ საიტზე და აქ გამოჩნდება.", "С сайта записей пока нет. Запишитесь на сайте, и запись появится здесь."),
     openSite: t("Open the website", "საიტის გახსნა", "Открыть сайт"), back: t("Mockup", "მაკეტი", "Макет"), doctor: t("Doctor", "ექიმი", "Врач"), free: t("free", "თავისუფალი", "свободно"),
     phone: t("Phone", "ტელეფონი", "Телефон"), from: t("Source", "წყარო", "Источник"), hist: t("History", "ისტორია", "История"), reset: t("Clear demo", "დემოს გასუფთავება", "Сбросить демо"),
+    /* Сообщения: все каналы одним окном, как в рабочей админке «Сияния Севера». */
+    tab_msg: t("Messages", "შეტყობინებები", "Сообщения"), tab_con: t("Connections", "კავშირები", "Подключения"), lang: t("Language", "ენა", "Язык"),
+    ch_site: t("Site chat", "საიტის ჩატი", "Чат сайта"), m_ph: t("Reply to the patient", "უპასუხეთ პაციენტს", "Ответ пациенту"), m_send: t("Send", "გაგზავნა", "Отправить"),
+    m_book: t("Book a visit", "ვიზიტზე ჩაწერა", "Записать на приём"), m_booked: t("The booking is in «Bookings»", "ჩაწერა «ჩაწერებშია»", "Запись добавлена в «Записи»"),
+    m_demo: t("In the mockup the reply stays here. In the working panel it goes to the same channel.", "მაკეტში პასუხი აქ რჩება. სამუშაო პანელში ის იმავე არხში მიდის.", "В макете ответ остаётся здесь. В рабочей панели он уходит в тот же канал."),
+    m_nowz: t("Wazzup is not connected: connect it in «Connections», and replies go to WhatsApp, Instagram, Telegram and Viber.", "Wazzup არ არის დაკავშირებული: დააკავშირეთ «კავშირებში» და პასუხები წავა WhatsApp-ში, Instagram-ში, Telegram-ში და Viber-ში.", "Wazzup не подключён: подключите его в «Подключениях», и ответы пойдут в WhatsApp, Instagram, Telegram и Viber."),
+    m_pick: t("Choose a conversation on the left.", "აირჩიეთ საუბარი მარცხნივ.", "Выберите переписку слева."), m_back: t("All conversations", "ყველა საუბარი", "Все переписки"),
+    m_site0: t("Write in the chat on the site, and the conversation appears here.", "მისწერეთ საიტის ჩატში და საუბარი აქ გამოჩნდება.", "Напишите в чат на сайте, и переписка появится здесь."),
+    m_bot: t("bot", "ბოტი", "бот"), m_wait: t("messages wait for a reply", "შეტყობინება ელოდება პასუხს", "сообщений ждут ответа"), m_visitor: t("Site visitor", "საიტის სტუმარი", "Гость сайта"),
+    note_msg: t("replied in", "უპასუხა", "ответил в"), note_book: t("booked from the conversation", "ჩაწერა საუბრიდან", "записал из переписки"),
+    /* Подключения: ключи вводит главный врач, в макете они никуда не уходят. */
+    c_sub: t("Paste a key once, then everything works by itself. The head doctor changes connections.", "ჩასვით გასაღები ერთხელ, შემდეგ ყველაფერი თავად მუშაობს. კავშირებს მთავარი ექიმი ცვლის.", "Вставьте ключ один раз, дальше всё работает само. Подключения меняет главный врач."),
+    c_demo: t("In the mockup the key stays in this browser and goes nowhere.", "მაკეტში გასაღები ამ ბრაუზერში რჩება და არსად მიდის.", "В макете ключ остаётся в этом браузере и никуда не уходит."),
+    c_ro: t("Connections are changed by the head doctor. You see what is connected.", "კავშირებს მთავარი ექიმი ცვლის. თქვენ ხედავთ, რა არის დაკავშირებული.", "Подключения меняет главный врач. Вы видите, что подключено."),
+    c_wz_t: t("Wazzup: WhatsApp, Instagram, Telegram, Viber", "Wazzup: WhatsApp, Instagram, Telegram, Viber", "Wazzup: WhatsApp, Instagram, Telegram, Viber"),
+    c_wz_e: t("All patient chats land in «Messages», and the reply goes back to the same channel.", "პაციენტების ყველა ჩატი «შეტყობინებებში» მოდის, პასუხი კი იმავე არხში ბრუნდება.", "Все чаты пациентов приходят в «Сообщения», ответ уходит в тот же канал."),
+    c_wz_how: t("Wazzup: Integrations, then API, copy the API key.", "Wazzup: ინტეგრაციები, შემდეგ API, დააკოპირეთ API გასაღები.", "Wazzup: «Интеграции», затем «API», скопируйте ключ API."),
+    c_tg_t: t("Telegram bot for the administrator", "Telegram ბოტი ადმინისტრატორისთვის", "Telegram-бот администратору"),
+    c_tg_e: t("New bookings and messages arrive in Telegram, and you can answer right there.", "ახალი ჩაწერები და შეტყობინებები Telegram-ში მოდის და იქვე შეგიძლიათ უპასუხოთ.", "Новые записи и сообщения приходят в Telegram, отвечать можно прямо там."),
+    c_tg_how: t("Telegram: @BotFather, then /newbot, copy the token.", "Telegram: @BotFather, შემდეგ /newbot, დააკოპირეთ ტოკენი.", "Telegram: @BotFather, затем /newbot, скопируйте токен."),
+    c_crm_t: t("CRM: amoCRM or Bitrix24", "CRM: amoCRM ან Bitrix24", "CRM: amoCRM или Bitrix24"),
+    c_crm_e: t("Each booking becomes a deal with the patient's contact; the stage comes back to the panel.", "ყოველი ჩაწერა ხდება გარიგება პაციენტის კონტაქტით; ეტაპი პანელში ბრუნდება.", "Каждая запись становится сделкой с контактом пациента, этап возвращается в панель."),
+    c_crm_how: t("amoCRM: Settings, Integrations, private integration, long-term token. Bitrix24: Developers, incoming webhook, its address.", "amoCRM: პარამეტრები, ინტეგრაციები, პირადი ინტეგრაცია, გრძელვადიანი ტოკენი. Bitrix24: დეველოპერები, შემომავალი ვებჰუკი, მისი მისამართი.", "amoCRM: «Настройки», «Интеграции», частная интеграция, долгосрочный токен. Bitrix24: «Разработчикам», входящий вебхук, его адрес."),
+    c_rem_t: t("Reminders to patients", "შეხსენებები პაციენტებს", "Напоминания пациентам"),
+    c_rem_e: t("A WhatsApp message a day and two hours before the visit. Works through Wazzup.", "WhatsApp შეტყობინება ვიზიტამდე ერთი დღით და ორი საათით ადრე. მუშაობს Wazzup-ით.", "Сообщение в WhatsApp за сутки и за два часа до визита. Работает через Wazzup."),
+    c_key: t("Key", "გასაღები", "Ключ"), c_save: t("Connect", "დაკავშირება", "Подключить"), c_off: t("Disconnect", "გათიშვა", "Отключить"),
+    c_on: t("Connected · demo", "დაკავშირებულია · დემო", "Подключено · демо"), c_need: t("Not connected", "არ არის დაკავშირებული", "Не подключено"),
+    c_need_wz: t("Connect Wazzup first.", "ჯერ Wazzup დააკავშირეთ.", "Сначала подключите Wazzup."), c_turn: t("Turn on", "ჩართვა", "Включить"), c_turnoff: t("Turn off", "გამორთვა", "Выключить"),
+    c_left: t("Left to connect", "დასაკავშირებელია", "Осталось подключить"), how: t("Where to get it", "სად ავიღოთ", "Где взять"),
+    note_con: t("connected", "დააკავშირა", "подключил"), note_coff: t("disconnected", "გათიშა", "отключил"),
   };
+  /* Переписки демо: каналы Wazzup, слова пациентов без цен. */
+  const threads = [
+    { ch: "whatsapp", n: 0, svc: "thera", un: 1, m: [["p", t("Hello, can I come for a consultation this week?", "გამარჯობა, შეიძლება ამ კვირაში კონსულტაციაზე მოსვლა?", "Здравствуйте, можно на консультацию на этой неделе?")], ["a", t("Hello! Thursday at 14:00 or Friday at 12:30 is free.", "გამარჯობა! ხუთშაბათს 14:00 ან პარასკევს 12:30 თავისუფალია.", "Здравствуйте! Свободно в четверг в 14:00 или в пятницу в 12:30.")], ["p", t("Thursday suits me.", "ხუთშაბათი მაწყობს.", "Мне подходит четверг.")]] },
+    { ch: "instagram", n: 1, svc: "white", un: 1, m: [["p", t("Do you do whitening? How long does it take?", "თეთრებას აკეთებთ? რამდენ ხანს გრძელდება?", "Вы делаете отбеливание? Сколько это длится?")]] },
+    { ch: "telegram", n: 2, svc: "resto", un: 1, m: [["p", t("I arrive in Tbilisi on the 20th for five days. Can you plan the treatment before I come?", "20-ში ჩამოვდივარ თბილისში ხუთი დღით. შეგიძლიათ მკურნალობა წინასწარ დაგეგმოთ?", "Прилетаю в Тбилиси 20-го на пять дней. Можно спланировать лечение заранее?")]] },
+    { ch: "viber", n: 3, svc: "ortho", un: 0, m: [["p", t("I would like to move my visit to Saturday.", "მინდა ვიზიტი შაბათზე გადავიტანო.", "Хочу перенести визит на субботу.")], ["a", t("Done: Saturday at 11:00.", "გადავიტანეთ: შაბათს 11:00.", "Перенесли: суббота, 11:00.")]] },
+    { ch: "instagram", n: 4, svc: "resto", un: 0, m: [["p", t("Thank you for the restoration, I love the result!", "მადლობა რესტავრაციისთვის, შედეგი ძალიან მომწონს!", "Спасибо за реставрацию, результат очень нравится!")]] },
+  ];
+  const langs = LANGS.map((x) => ({ k: x === "ka" ? "ქარ" : x.toUpperCase(), l: x, h: href(x, "panel"), on: x === l }));
   const pd = {
     l, ui, mark: MARK, site: href(l, "site"), home: href(l),
     svc: SERVICES.map((s) => ({ id: s.id, n: s[l][0] })),
@@ -518,6 +557,7 @@ function panelPage(l) {
     wd: days(l),
     names: l === "ka" ? ["ანა", "გიორგი", "ნინო", "დავით", "მარიამ", "ლევან", "თამარ", "ლუკა", "ელენე", "საბა"] : l === "ru" ? ["Анна", "Георгий", "Нино", "Давид", "Мариам", "Леван", "Тамара", "Лука", "Елена", "Саба"] : ["Anna", "Giorgi", "Nino", "Davit", "Mariam", "Levan", "Tamar", "Luka", "Elene", "Saba"],
     trap: "[[t:0]] Travel",
+    threads, langs,
   };
   return `${head(l, t("Nek Dental Studio panel · demo", "Nek Dental Studio-ს პანელი · დემო", "Панель Nek Dental Studio · демо"), t("Clinic panel: bookings from the site, schedule by doctor, statuses, history and roles. Demo data.", "კლინიკის პანელი: ჩაწერები საიტიდან, განრიგი, სტატუსები, ისტორია და როლები. დემო მონაცემები.", "Панель клиники: записи с сайта, расписание по врачам, статусы, история и роли. Демо-данные."))}
 <style>${CSS}${PANEL_CSS}</style>

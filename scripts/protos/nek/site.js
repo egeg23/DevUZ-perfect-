@@ -108,8 +108,15 @@ var cb=$('#chatb'),cw=$('#chat'),cbody=$('#chb'),C=T.chat;
 function say(t,u){var p=d.createElement('p');if(u)p.className='u';p.textContent=t;cbody.appendChild(p);cbody.scrollTop=cbody.scrollHeight}
 function words(s){return s.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu,' ').split(/\s+/).filter(function(x){return x.length>3})}
 function answer(q){var qw=words(q),best=null,score=0;D.faq.forEach(function(f){var fw=words(f[0]+' '+f[1]),s=0;qw.forEach(function(x){fw.forEach(function(y){if(y.indexOf(x.slice(0,5))===0)s++})});if(s>score){score=s;best=f}});return score?best[1]:C.miss}
+/* Переписка лежит в общем состоянии: панель видит её в «Сообщениях», ответ
+   администратора из панели появляется здесь. shown: сколько уже на экране. */
+function chatLog(){return load().chat||[]}
+function keep(f,t){var s=load();s.chat=s.chat||[];s.chat.push({f:f,t:t,at:Date.now()});save(s);shown=s.chat.length}
+var shown=0;
+function fill(){var c=chatLog();for(;shown<c.length;shown++){var m=c[shown];say(m.t,m.f==='p')}}
 if(cb&&cw){$('#ch-sub').textContent=C.sub;
-  cb.addEventListener('click',function(){var on=cw.hidden;cw.hidden=!on;cb.setAttribute('aria-expanded',on);if(on&&!cbody.children.length)say(C.hi);if(on)$('#chi').focus()});
+  cb.addEventListener('click',function(){var on=cw.hidden;cw.hidden=!on;cb.setAttribute('aria-expanded',on);cb.classList.remove('ping');if(on&&!cbody.children.length){say(C.hi);fill()}if(on)$('#chi').focus()});
   $('#chx').addEventListener('click',function(){cw.hidden=true;cb.setAttribute('aria-expanded','false');cb.focus()});
-  $('#chf').addEventListener('submit',function(e){e.preventDefault();var i=$('#chi'),q=i.value.trim();if(!q)return;i.value='';say(q,true);setTimeout(function(){say(answer(q))},/*~*/420)})}
+  $('#chf').addEventListener('submit',function(e){e.preventDefault();var i=$('#chi'),q=i.value.trim();if(!q)return;i.value='';say(q,true);keep('p',q);setTimeout(function(){var a=answer(q);say(a);keep('b',a)},/*~*/420)});
+  addEventListener('storage',function(e){if(e.key!==KEY)return;var c=chatLog();if(cbody.children.length)fill();else if(c.length&&c[c.length-1].f==='a')cb.classList.add('ping')})}
 })();
