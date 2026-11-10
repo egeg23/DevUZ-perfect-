@@ -277,3 +277,11 @@ test("виджет: имя, цвет и услуги клиента в сост�
   const html = widgetHtml("ru");
   assert.ok(html.includes("textContent=s.n") && html.includes("e.textContent=list"), "данные клиента не разметкой");
 });
+
+test("медцентр: допы с ценами — из плана нашего макета Shox", () => {
+  const ru = priceText("ru", new Date("2026-11-10T10:00:00Z"), "medcentr");
+  assert.ok(ru.includes("Telegram-бот записи: 300 $"));
+  assert.ok(ru.includes("Админ-панель для записи и работы с пациентами: 450 $"));
+  assert.ok(!ru.includes("Улыбка"), "допы стоматологии не путаются");
+  assert.ok(!/[ЀЁ-ӿ]{3}/.test(priceText("uz", new Date(), "medcentr").split("\n").slice(-7).join(" ")), "узбекские допы без кириллицы");
+});

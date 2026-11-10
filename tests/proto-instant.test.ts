@@ -11,7 +11,10 @@ import { emptySite, instantReady, type InstantSite } from "@/lib/proto/instant/t
 import { tails } from "../scripts/protos/instant/tails.mjs";
 import { nekAssets } from "../scripts/protos/instant/nek-assets.mjs";
 import assetsFile from "@/content/proto-instant/nek-assets.json" with { type: "json" };
-import { EXAMPLE } from "../scripts/protos/instant/preview-data.mjs";
+import { EXAMPLE, EXAMPLE_MED } from "../scripts/protos/instant/preview-data.mjs";
+import { shoxAssets } from "../scripts/protos/instant/shox-assets.mjs";
+import shoxFile from "@/content/proto-instant/shox-assets.json" with { type: "json" };
+import { MEDCENTR_PHOTOS } from "@/lib/proto/instant/medcentr";
 
 /**
  * «Макет в боте» (CLAUDE.md): шаблон ниши из наших макетов, данные клиента —
@@ -157,4 +160,48 @@ test("макет в боте: пролёт ниши — кадры шифром,
   assert.match(html, /<div class="hs-sign"[^>]*>.*Белая Лилия/);
   assert.ok(html.includes("/protos/_niche/stomatologiya/poster-16.webp"));
   assert.ok(!/\/protos\/nek\//.test(html), "кадров Nek нет");
+});
+
+const med = EXAMPLE_MED as InstantSite;
+
+test("медцентр: пример собирается без замечаний, защита та же", () => {
+  const { html, problems, stamp } = buildInstant(med, SEED);
+  assert.deepEqual(problems, []);
+  assert.ok(html.includes("Здоровье Плюс"));
+  assert.ok(html.includes("/ru/mockup-terms") && html.includes('class="dz-vid"'));
+  assert.ok(stamp.signals.some((s) => s.startsWith("js:")), "метка числа скрипта Shox");
+  assert.ok(stamp.signals.filter((s) => s.startsWith("text:")).length >= 4, "две ловушки");
+  assert.deepEqual(buildInstant({ ...med, locale: "uz", tagline: null, about: null }, SEED).problems, []);
+});
+
+test("медцентр: шаблон — стили и скрипт нашего макета Shox, свежие, без Shox", () => {
+  assert.deepEqual(shoxFile, shoxAssets(), "node scripts/protos/instant/shox-assets.mjs");
+  const { html } = buildInstant(med, SEED);
+  assert.ok(html.includes(shoxFile.css.slice(0, 200)), "стили Shox на странице");
+  assert.ok(html.includes('id="im-i18n"') && html.includes('id="im-docs"'));
+  for (const shox of ["Shox", "shox.hospital", "1183", "/clients/shox-hospital", "shoxgroupbot", "Яккасарай", "SHOX10"]) {
+    assert.ok(!html.includes(shox), shox);
+  }
+  assert.deepEqual(tailsIn(html), []);
+  const tail = buildInstant({ ...med, perks: ["Как в Shox International Hospital"] }, SEED);
+  assert.ok(tail.problems.some((p) => p.code === "tail"), "Shox — хвост");
+});
+
+test("медцентр: направления — услуги клиента, врачи по специальности, запись в их Telegram", () => {
+  const { html } = buildInstant(med, SEED);
+  assert.ok(html.includes('id="napravleniya"') && html.includes('id="vrachi"') && html.includes('id="zapis"'));
+  const docs = JSON.parse(/<script type="application\/json" id="im-docs">(.*?)<\/script>/.exec(html)![1]);
+  assert.equal(docs.find((d: { n: string }) => d.n === "Бахтиёр Усманов").dir, "s1", "кардиолог — в «Кардиологию»");
+  const i18n = JSON.parse(/<script type="application\/json" id="im-i18n">(.*?)<\/script>/.exec(html)![1]);
+  assert.equal(i18n.go, "https://t.me/zdorovie_plus_demo?text=");
+  const none = buildInstant({ ...med, doctors: [], services: [] }, SEED);
+  assert.deepEqual(none.problems, []);
+  assert.ok(!none.html.includes('id="vrachi"') && !none.html.includes('id="ceny"'), "нет данных — блока нет");
+});
+
+test("медцентр: нейтральные фото и пролёт ниши лежат в репозитории, ключ в SCENES", async () => {
+  assert.ok(instantReady("medcentr"));
+  for (const photo of MEDCENTR_PHOTOS) assert.ok(existsSync(`public${photo}`), photo);
+  const { SCENES } = await import("@/lib/proto/promo");
+  assert.equal(SCENES["instant-medcentr"], "SCENE_KEY_INSTANT_MEDCENTR");
 });

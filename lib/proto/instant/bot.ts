@@ -19,6 +19,7 @@
  * и здесь не тронуто: макет собирается только по просьбе самого клиента.
  */
 import plans from "@/content/mockup-plans.json" with { type: "json" };
+import shox from "@/content/proto-instant/shox-assets.json" with { type: "json" };
 import { OFFER_MS, announceText } from "@/lib/admin/mockup-offer";
 import { CIRCLE_NICHES, CIRCLE_NICHE_RU, isCircleNiche, type CircleNiche } from "@/lib/admin/sales-after-reply";
 import { buildInstant, type InstantBuild } from "@/lib/proto/instant/build";
@@ -160,7 +161,7 @@ const ADDON_UZ: Record<(typeof DENTAL_ADDONS)[number], string> = {
 
 type Plan = { id: string; addons: { id: string; title: string; price: number }[] };
 
-export function addonLines(locale: InstantLocale): string[] {
+function dentalAddons(locale: InstantLocale): string[] {
   const plan = (plans as Plan[]).find((p) => p.id === "nek");
   if (!plan) return [];
   return DENTAL_ADDONS.flatMap((id) => {
@@ -170,10 +171,16 @@ export function addonLines(locale: InstantLocale): string[] {
   });
 }
 
+/** Допы медцентра — из плана нашего макета Shox (content/proto-instant/shox-assets.json). */
+export function addonLines(locale: InstantLocale, niche: InstantNiche = "stomatologiya"): string[] {
+  if (niche === "medcentr") return shox.addons.map((a) => `• ${esc(a[locale])}: ${a.price} $`);
+  return dentalAddons(locale);
+}
+
 /** Цена: те же спецусловия 48 часов, что после любого макета, и допы из плана. */
-export function priceText(locale: InstantLocale, now: Date): string {
+export function priceText(locale: InstantLocale, now: Date, niche: InstantNiche = "stomatologiya"): string {
   const expires = new Date(now.getTime() + OFFER_MS).toISOString();
-  return [esc(announceText(locale, expires)), "", T[locale].addons, ...addonLines(locale), "", T[locale].after].join("\n");
+  return [esc(announceText(locale, expires)), "", T[locale].addons, ...addonLines(locale, niche), "", T[locale].after].join("\n");
 }
 
 export function nicheRows(locale: InstantLocale): Btn[][] {
@@ -406,7 +413,7 @@ export async function runBuild(ctx: Ctx, flow: Flow, deps: Deps): Promise<void> 
   await deps.dropFlow(ctx.chatId);
   const link = deps.protoUrl(saved.token);
   await deps.send(ctx.chatId, T[locale].ready(build.site.name), [[{ text: T[locale].openBtn, url: link }]]);
-  await deps.send(ctx.chatId, priceText(locale, deps.now()));
+  await deps.send(ctx.chatId, priceText(locale, deps.now(), build.site.niche));
   // Сборка сотрудника — тестовая: лида в очередь менеджерам нет.
   if (ctx.staffId) return;
   const leadId = await deps.lead({ ctx, name, niche, site: flow.url, link, phone: build.site.phone, why: "built" });

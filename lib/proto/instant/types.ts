@@ -16,7 +16,7 @@ import { PHONE_DIGITS } from "@/lib/proto/instant/safe";
 export type InstantLocale = "ru" | "uz";
 
 /** Ниши, у которых есть шаблон. Остальные — «скоро» и лид менеджеру. */
-export const INSTANT_NICHES = ["stomatologiya"] as const;
+export const INSTANT_NICHES = ["stomatologiya", "medcentr"] as const;
 export type InstantNiche = (typeof INSTANT_NICHES)[number];
 
 export function instantReady(niche: string): niche is InstantNiche {

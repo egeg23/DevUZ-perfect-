@@ -7,13 +7,14 @@
  * ловушки и метка числа; отпечаток (lib/proto/stamp) — свой на клиента.
  */
 import { dentalHtml } from "@/lib/proto/instant/dental";
+import { medcentrHtml } from "@/lib/proto/instant/medcentr";
 import { instantProblems, tailsIn, type InstantProblem } from "@/lib/proto/instant/check";
 import { brandColor, clean, handleOf, imageUrl } from "@/lib/proto/instant/safe";
 import { LIMITS, instantMissing, type InstantSite } from "@/lib/proto/instant/types";
 import { withoutDashes } from "@/lib/proto/plain-text";
 import { newSeed, stampHtml, type Stamp } from "@/lib/proto/stamp";
 
-const TEMPLATES = { stomatologiya: dentalHtml } as const;
+const TEMPLATES = { stomatologiya: dentalHtml, medcentr: medcentrHtml } as const;
 
 const plain = (text: string | null, max: number) => {
   const out = clean(text, max);
