@@ -30,7 +30,8 @@ test("по дате новые сверху; на сайте — сначала 
   for (let i = 1; i < casesOnSite.length; i += 1) {
     const [a, b] = [casesOnSite[i - 1], casesOnSite[i]];
     assert.ok(coverRank(a) <= coverRank(b), `${a.slug} (заставка ${coverRank(a)}) выше ${b.slug} (${coverRank(b)})`);
-    if (coverRank(a) === coverRank(b)) assert.ok(a.date >= b.date, `${a.slug} ниже ${b.slug} в своей группе`);
+    // SamAuto закреплён первым (владелец, 21.10.2026), остальные — по дате.
+    if (coverRank(a) === coverRank(b) && a.slug !== "samauto") assert.ok(a.date >= b.date, `${a.slug} ниже ${b.slug} в своей группе`);
   }
   // Ролик — у прототипа и у витрины под паролем, снимки — `shots`.
   assert.equal(coverRank({ prototype: { href: "/proto/x", teaser: "/cases/x/teaser" }, shots: 3 }), 0);
@@ -41,12 +42,13 @@ test("по дате новые сверху; на сайте — сначала 
   // идут: там проекты клиентов. В списке /cases они стоят в своей группе.
   // Макеты из «Макетов» вошли в кейсы 20.10.2026, каждый со своей датой.
   const home = casesOnSite.filter((c) => c.slug !== showcaseSlug && !c.demo).slice(0, 6);
-  // SamAuto — первым: кейс с живым прототипом (владелец, 21.10.2026).
-  assert.deepEqual(home.map((c) => c.slug), ["samauto", "jiguli", "syanie-severa", "tovar", "sia", "amani"]);
+  // SamAuto — первым: кейс с живым прототипом (владелец, 21.10.2026). Дальше
+  // кейсы с роликом по дате: Nek Dental Studio (10.11.2026) — самый свежий.
+  assert.deepEqual(home.map((c) => c.slug), ["samauto", "nek-dental", "jiguli", "syanie-severa", "tovar", "sia"]);
   assert.ok(home.every((c) => coverRank(c) === 0), "на главной карточка без ролика");
   // Макеты 30.10-04.11.2026 (05.11.2026: «добавь … в раздел кейсов тоже») —
   // со снимками, без ролика: по дате они сверху, на главной ролики прежние.
-  assert.deepEqual(casesByDate.slice(0, 4).map((c) => c.slug), ["samist-auto", "agora", "cargo-pro", "optimal-prime"]);
+  assert.deepEqual(casesByDate.slice(0, 4).map((c) => c.slug), ["nek-dental", "samist-auto", "agora", "cargo-pro"]);
   assert.ok(casesByDate.find((c) => c.slug === "ig-hub")?.demo, "хаб — демо, не клиент");
   // Главная, список и «следующий проект» берут порядок сайта; презентация
   // для партнёров — список без заставок, в ней шесть самых свежих.
