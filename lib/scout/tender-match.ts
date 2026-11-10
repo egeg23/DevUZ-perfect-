@@ -116,6 +116,8 @@ const NEVER = new RegExp(
       "хостинг\\p{L}*|hosting\\p{L}*|ma[’'ʼ`]?lumotlar markaz\\p{L}*|центр\\p{L}* обработки данных|дата-?центр\\p{L}*",
       "видеонаблюдени\\p{L}*|videokuzatuv\\p{L}*|видеокузатув\\p{L}*|пожарн\\p{L}*|yong[‘'ʻ`]?in\\p{L}*|ёнғин\\p{L}*",
       "скуд(?![\\p{L}\\p{N}])|контрол\\p{L}* доступа|lisenziya\\p{L}*|litsenziya\\p{L}*|лицензи\\p{L}*|server qurilma\\p{L}*",
+      // Сервер — железо: «сунъий интеллект сервери харид қилиш» (10.11.2026 ушёл лидом). «Серверная часть» — не он.
+      "(?:сервер|server)(?:i|lar|lari|ni|и|лар|лари|ни|а|ов|ы)?(?![\\p{L}\\p{N}])",
       // Консалтинг, регламенты, ISO, пользовательская документация — бумага, не разработка.
       "konsalting\\p{L}*|консалтинг\\p{L}*|reglament\\p{L}*|регламент\\p{L}*|iso \\d{4,5}|foydalanuvchi hujjat\\p{L}*|пользовательск\\p{L}* документаци\\p{L}*|rfid",
     ].join("|") +
@@ -133,7 +135,7 @@ export type TenderVerdict = {
 };
 
 /** Поставка готового: «yetkazib berish», «поставка», «приобретение». */
-const SUPPLY = stem("yetkazib berish\\p{L}*|етказиб бериш\\p{L}*|поставк\\p{L}*|приобретени\\p{L}*|xarid qilish\\p{L}*|sotib olish\\p{L}*");
+const SUPPLY = stem("yetkazib berish\\p{L}*|етказиб бериш\\p{L}*|поставк\\p{L}*|приобретени\\p{L}*|xarid qilish\\p{L}*|sotib olish\\p{L}*|харид қилиш\\p{L}*|сотиб олиш\\p{L}*");
 
 /**
  * Решение по названию лота (и описанию, если площадка его отдаёт).
