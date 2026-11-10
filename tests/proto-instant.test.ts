@@ -9,6 +9,8 @@ import { DENTAL_PHOTOS } from "@/lib/proto/instant/dental";
 import { imageUrl } from "@/lib/proto/instant/safe";
 import { emptySite, instantReady, type InstantSite } from "@/lib/proto/instant/types";
 import { tails } from "../scripts/protos/instant/tails.mjs";
+import { nekAssets } from "../scripts/protos/instant/nek-assets.mjs";
+import assetsFile from "@/content/proto-instant/nek-assets.json" with { type: "json" };
 import { EXAMPLE } from "../scripts/protos/instant/preview-data.mjs";
 
 /**
@@ -73,7 +75,7 @@ test("макет в боте: пустое — без блока, цен не п
   assert.deepEqual(problems, []);
   assert.ok(!html.includes('id="team"'), "врачей нет — блока нет");
   assert.ok(!html.includes('id="about"'));
-  assert.ok(html.includes("Цену уточняйте при записи"));
+  assert.ok(html.includes("Стоимость врач назовёт после осмотра"));
   assert.ok(!/\bсум\b/.test(html));
   assert.ok(html.includes(DENTAL_PHOTOS[0]), "своих фото нет — нейтральные фото ниши");
 });
@@ -114,7 +116,7 @@ test("макет в боте: без сети, кроме шрифтов", () =>
   assert.ok(!/<script[^>]+src=/i.test(html));
   assert.ok(!/<iframe/i.test(html));
   const links = [...html.matchAll(/<link[^>]+href="([^"]+)"/g)].map((m) => new URL(m[1]).host);
-  assert.ok(links.every((h) => h === "fonts.googleapis.com"));
+  assert.ok(links.every((h) => h === "fonts.googleapis.com" || h === "fonts.gstatic.com"));
 });
 
 test("макет в боте: шаблон есть только у стоматологии, фото ниши лежат в репозитории", () => {
@@ -128,4 +130,14 @@ test("макет в боте: длинные списки режутся, дуб
   assert.equal(normalizeSite(many).services.length, 12);
   const dup = { ...example, services: [{ name: "Чистка", price: null }, { name: "чистка", price: null }] };
   assert.equal(normalizeSite(dup).services.length, 1);
+});
+
+test("макет в боте: шаблон — стили и скрипт сайта нашего макета Nek, свежие", () => {
+  assert.deepEqual(assetsFile, nekAssets(), "node scripts/protos/instant/nek-assets.mjs");
+  const { html } = buildInstant(example, SEED);
+  assert.ok(html.includes(assetsFile.css.slice(0, 200)), "стили Nek на странице");
+  assert.ok(html.includes('id="im-data"'));
+  for (const nek of ["Nek Dental", "Tbilisi", "Тбилиси", "Ваке", "Paliashvili", "/protos/nek/", "100doc", "+995"]) {
+    assert.ok(!html.includes(nek), nek);
+  }
 });

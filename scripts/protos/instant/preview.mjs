@@ -51,7 +51,15 @@ const browser = await chromium.launch();
 for (const [w, h, tag] of [[390, 844, "390"], [1440, 900, "1440"]]) {
   const page = await browser.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: 1, reducedMotion: "reduce" });
   await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: "networkidle" }).catch(() => {});
-  await page.waitForTimeout(400);
+  // Фото ниже первого экрана грузятся по мере прокрутки: докрутить до конца.
+  await page.evaluate(async () => {
+    for (let y = 0; y < document.body.scrollHeight; y += 600) {
+      scrollTo(0, y);
+      await new Promise((r) => setTimeout(r, 120));
+    }
+    scrollTo(0, 0);
+  });
+  await page.waitForTimeout(800);
   const scroll = await page.evaluate(() => document.documentElement.scrollWidth > innerWidth);
   if (scroll) console.error(`Прокрутка вбок на ${w}!`);
   await page.screenshot({ path: join(shots, `dental-${tag}.png`), fullPage: true });

@@ -1,20 +1,25 @@
 /**
- * Шаблон «Стоматология» — лёгкая версия наших макетов Nek Dental Studio и
- * «Сияние Севера» (scripts/protos/nek, scripts/protos/syanie).
+ * Шаблон «Стоматология» — страница сайта нашего макета Nek Dental Studio
+ * (scripts/protos/nek/gen.mjs, sitePage), переодетая под клиента.
  *
- * От них — устройство и стиль: стеклянная шапка, которая прячется при
- * прокрутке и возвращается через 3 секунды, крупный заголовок с засечками,
- * карточки услуг с кнопкой записи, врачи, «как придёт запись», контакты,
- * кнопка под большим пальцем. Без сцены из кадров, роликов и панели: страница
- * собирается подстановкой строк за миллисекунды, на сервере без браузера.
+ * Владелец, 10.11.2026: «Просто бери наши макеты и лепи логотипы, цены и
+ * контактные данные клиента». Отсюда устройство: стили и скрипт сайта Nek
+ * — те же файлы (content/proto-instant/nek-assets.json, пишет
+ * scripts/protos/instant/nek-assets.mjs), разметка — те же блоки и классы:
+ * стеклянная шапка, первый экран с фото и карточкой, бегущая строка услуг,
+ * услуги с кнопкой записи, слои реставрации, «почему мы», фото клиники,
+ * врачи, вопросы, контакты тёмным блоком, подвал, чат, кнопки внизу экрана
+ * и шторка записи.
  *
- * Ничего от прошлых клиентов: ни названий, ни телефонов, ни врачей, ни фото
- * (проверяет lib/proto/instant/check, «хвосты»). Фото — их собственные или
- * нейтральные фото ниши из public/protos/_niche/stomatologiya.
+ * Что от Nek не берётся, потому что это про их клинику, а не дизайн: их
+ * фото и пролёт по прокрутке из них, знак-цветок, отзывы их пациентов,
+ * их врачи, Тбилиси и языки клиники. На этих местах — данные клиента, его
+ * фото или нейтральные фото ниши; нет данных — блока нет.
  *
- * Текст шаблона без цифр: каждое число на странице — из данных клиента
- * (lib/proto/instant/check, «числа»).
+ * Шаблонные слова без цифр: каждое число на странице — из данных клиента
+ * (lib/proto/instant/check).
  */
+import assets from "@/content/proto-instant/nek-assets.json" with { type: "json" };
 import { dzIntroSolo } from "@/lib/proto/dz-video.mjs";
 import { mockupTermsUrl } from "@/lib/proto/booking";
 import { LIMITS, type InstantLocale, type InstantSite } from "@/lib/proto/instant/types";
@@ -28,439 +33,434 @@ export const DENTAL_PHOTOS = [
   "/protos/_niche/stomatologiya/n4.webp",
 ] as const;
 
-const COPY = {
-  ru: {
-    kick: "Стоматология",
-    nav: ["Услуги", "Врачи", "Контакты"],
-    book: "Записаться",
-    call: "Позвонить",
-    svcKick: "Услуги",
-    svcH: "С чем к нам <b>приходят</b>",
-    ask: "Цену уточняйте при записи",
-    bookThis: "Записаться",
-    perksKick: "О клинике",
-    perksH: "Почему выбирают <b>нас</b>",
-    docKick: "Команда",
-    docH: "Наши <b>врачи</b>",
-    flowKick: "Запись с сайта",
-    flowH: "Так запись придёт <b>вам в Telegram</b>",
-    flowLead: "Пациент нажимает «Записаться», выбирает услугу и время. Клинике падает сообщение, отвечаете в один клик.",
-    flow: ["Выбрал услугу", "Оставил номер", "Вам пришла заявка"],
-    demo: "демо-данные",
-    demoTitle: "Новая запись с сайта",
-    demoRows: (svc: string) => [
-      ["Пациент", "Мадина"],
-      ["Услуга", svc],
-      ["Район", "[[t:0]]"],
-      ["Ориентир", "магазин «[[t:1]]»"],
-    ],
-    galKick: "Клиника",
-    galH: "Как у нас <b>внутри</b>",
-    galNote: "Фото с сайта клиники.",
-    galStock: "Фото для примера: клиника добавит свои.",
-    whereKick: "Контакты",
-    whereH: "Ждём вас на <b>приём</b>",
-    phone: "Телефон",
-    addr: "Адрес",
-    hours: "Часы работы",
-    map: "Открыть на карте",
-    write: "Написать",
-    made: "Макет сайта собран DevUz Studio по данным:",
-    rights: "Макет принадлежит DevUz Studio и используется только по договору. Подробно:",
-    terms: "условия использования",
-    skip: "К содержанию",
-    title: (name: string) => `${name}: стоматология`,
-    desc: (name: string) => `${name}. Услуги, врачи и запись на приём.`,
-    greet: (name: string) => `Здравствуйте! Хочу записаться в «${name}». Подскажите свободное время?`,
+type Pair = { ru: string; uz: string };
+const P = (ru: string, uz: string): Pair => ({ ru, uz });
+
+const C = {
+  nav: [P("Услуги", "Xizmatlar"), P("Реставрация", "Restavratsiya"), P("Врачи", "Shifokorlar"), P("Вопросы", "Savollar"), P("Контакты", "Kontaktlar")],
+  sections: P("Разделы", "Bo‘limlar"),
+  book: P("Записаться", "Yozilish"),
+  bookVisit: P("Записаться на приём", "Qabulga yozilish"),
+  call: P("Позвонить", "Qo‘ng‘iroq"),
+  callShort: P("Звонок", "Qo‘ng‘iroq"),
+  kick: P("Стоматология", "Stomatologiya"),
+  h1: P("Здоровые зубы <em>без лишнего стресса</em>", "Sog‘lom tishlar <em>ortiqcha xavotirsiz</em>"),
+  calm: P("Спокойный визит", "Xotirjam tashrif"),
+  calmSub: P("запись в два нажатия", "ikki bosishda yozilish"),
+  svcKick: P("Услуги", "Xizmatlar"),
+  svcH: P("Что мы <b>лечим</b>", "Nimani <b>davolaymiz</b>"),
+  bookThis: P("Записаться", "Yozilish"),
+  ask: P("Стоимость врач назовёт после осмотра.", "Narxini shifokor ko‘rikdan keyin aytadi."),
+  restoKick: P("Реставрация", "Restavratsiya"),
+  restoH: P("Форма, цвет и <b>естественный вид</b>", "Shakl, rang va <b>tabiiy ko‘rinish</b>"),
+  restoLead: P("Подвиньте ползунок: так слой за слоем собирается восстановленный зуб.", "Slayderni suring: tiklangan tish qatlam-qatlam shunday yig‘iladi."),
+  restoNote: P("Иллюстрация метода, не фото работы клиники.", "Usul tasviri, klinika ishining surati emas."),
+  layer: P("Слой", "Qatlam"),
+  layers: [
+    [P("Форма", "Shakl"), P("Врач восстанавливает анатомию зуба: контур и края.", "Shifokor tish anatomiyasini tiklaydi: shakli va qirralari.")],
+    [P("Дентин", "Dentin"), P("Внутренний слой даёт зубу тёплую глубину цвета.", "Ichki qatlam tishga rangning iliq chuqurligini beradi.")],
+    [P("Эмаль", "Emal"), P("Внешний слой подбирается под ваши зубы, чтобы зуб выглядел естественно.", "Tashqi qatlam tishlaringizga moslanadi, tish tabiiy ko‘rinadi.")],
+    [P("Режущий край", "Kesuvchi qirra"), P("Прозрачный край, как у живого зуба: улыбка без резкой границы.", "Tirik tishdagidek shaffof qirra: tabassum keskin chegarasiz.")],
+  ],
+  perksKick: P("О клинике", "Klinika haqida"),
+  perksH: P("Почему выбирают <b>нас</b>", "Nega <b>bizni</b> tanlashadi"),
+  spaceKick: P("Клиника", "Klinika"),
+  spaceH: P("Как у нас <b>внутри</b>", "Klinika <b>ichida</b>"),
+  ownPhotos: P("Фото с сайта клиники.", "Rasmlar klinika saytidan."),
+  stockPhotos: P("Фото для примера: клиника добавит свои.", "Rasmlar namuna uchun: klinika o‘zinikini qo‘yadi."),
+  teamKick: P("Команда", "Jamoa"),
+  teamH: P("Наши <b>врачи</b>", "Bizning <b>shifokorlar</b>"),
+  flowKick: P("Запись с сайта", "Saytdan yozilish"),
+  flowH: P("Так запись придёт <b>вам в Telegram</b>", "Yozuv sizga <b>Telegramda</b> shunday keladi"),
+  flowLead: P("Пациент нажимает «Записаться», выбирает услугу и время. Клинике приходит сообщение, отвечаете в один клик.", "Bemor «Yozilish»ni bosadi, xizmat va vaqtni tanlaydi. Klinikaga xabar keladi, bir bosishda javob berasiz."),
+  demo: P("демо-данные", "demo-ma’lumot"),
+  demoTitle: P("Новая запись с сайта", "Saytdan yangi yozuv"),
+  demoPatient: P("Пациент", "Bemor"),
+  demoService: P("Услуга", "Xizmat"),
+  demoArea: P("Район", "Mahalla"),
+  demoNear: P("Ориентир", "Mo‘ljal"),
+  demoShop: P("магазин «[[t:1]]»", "«[[t:1]]» do‘koni"),
+  faqKick: P("Вопросы", "Savollar"),
+  faqH: P("Перед <b>первым визитом</b>", "<b>Birinchi tashrifdan</b> oldin"),
+  faq: [
+    [P("Сколько длится лечение?", "Davolash qancha davom etadi?"), P("Зависит от зуба и от того, что нужно сделать. Врач скажет после осмотра, до начала работы.", "Tish va nima qilish kerakligiga bog‘liq. Shifokor ko‘rikdan keyin, ish boshlanishidan oldin aytadi.")],
+    [P("Будет ли пломба отличаться по цвету?", "Plomba rangi farq qiladimi?"), P("Цвет подбирают под ваши зубы, слой за слоем, чтобы рядом с ними пломба выглядела естественно.", "Rang tishlaringizga qatlam-qatlam moslanadi, plomba ular yonida tabiiy ko‘rinadi.")],
+    [P("Подходят ли брекеты взрослым?", "Breketlar kattalarga to‘g‘ri keladimi?"), P("Да, врач планирует каждый этап под ваш прикус. Спросите на консультации.", "Ha, shifokor har bir bosqichni tishlashingizga qarab rejalashtiradi. Konsultatsiyada so‘rang.")],
+  ],
+  whereQ: P("Где вы и когда работаете?", "Qayerdasiz va qachon ishlaysiz?"),
+  findKick: P("Как нас найти", "Bizni qanday topish mumkin"),
+  findH: P("Ждём вас на <b>приём</b>", "Sizni <b>qabulda</b> kutamiz"),
+  route: P("Маршрут на карте", "Xaritada yo‘nalish"),
+  foot: { svc: P("Услуги", "Xizmatlar"), clinic: P("Клиника", "Klinika"), follow: P("Мы в сетях", "Ijtimoiy tarmoqlar") },
+  mockup: P("Макет DevUz Studio. Пользуясь макетом, вы принимаете", "DevUz Studio maketi. Maketdan foydalanib, siz qabul qilasiz:"),
+  terms: P("условия макета", "maket shartlari"),
+  source: P("Данные:", "Ma’lumotlar:"),
+  chatTitle: P("Чат с клиникой", "Klinika bilan chat"),
+  chatSub: P("Ответы из вопросов клиники · демо", "Klinika savollaridan javoblar · demo"),
+  chatHi: P("Здравствуйте! Спросите об услугах, адресе или часах работы. Чтобы записаться, нажмите «Записаться».", "Assalomu alaykum! Xizmatlar, manzil yoki ish vaqti haqida so‘rang. Yozilish uchun «Yozilish»ni bosing."),
+  chatMiss: P("Передам вопрос администратору: он ответит в рабочее время.", "Savolni administratorga topshiraman: u ish vaqtida javob beradi."),
+  chatPh: P("Ваш вопрос", "Savolingiz"),
+  send: P("Отправить", "Yuborish"),
+  chat: P("Чат", "Chat"),
+  close: P("Закрыть", "Yopish"),
+  toServices: P("К услугам", "Xizmatlarga o‘tish"),
+  sheet: {
+    book: P("Запись на приём", "Qabulga yozilish"),
+    svc: P("Услуга", "Xizmat"),
+    day: P("День", "Kun"),
+    time: P("Время", "Vaqt"),
+    name: P("Ваше имя", "Ismingiz"),
+    phone: P("Телефон", "Telefon"),
+    send: P("Отправить заявку", "Arizani yuborish"),
+    need: P("Выберите день и время, напишите имя и телефон", "Kun va vaqtni tanlang, ism va telefonni yozing"),
+    sent: P("Заявка у клиники. Открываем чат с клиникой", "Ariza klinikada. Klinika bilan chatni ochamiz"),
+    hello: P("Здравствуйте! Хочу записаться", "Assalomu alaykum! Yozilmoqchiman"),
+    at: P("на", ""),
   },
-  uz: {
-    kick: "Stomatologiya",
-    nav: ["Xizmatlar", "Shifokorlar", "Kontaktlar"],
-    book: "Yozilish",
-    call: "Qo‘ng‘iroq",
-    svcKick: "Xizmatlar",
-    svcH: "Bizga nima bilan <b>kelishadi</b>",
-    ask: "Narxini yozilishda aniqlang",
-    bookThis: "Yozilish",
-    perksKick: "Klinika haqida",
-    perksH: "Nega <b>bizni</b> tanlashadi",
-    docKick: "Jamoa",
-    docH: "Bizning <b>shifokorlar</b>",
-    flowKick: "Saytdan yozilish",
-    flowH: "Yozuv sizga <b>Telegramda</b> shunday keladi",
-    flowLead: "Bemor «Yozilish»ni bosadi, xizmat va vaqtni tanlaydi. Klinikaga xabar keladi, bir bosishda javob berasiz.",
-    flow: ["Xizmatni tanladi", "Raqamini qoldirdi", "Sizga ariza keldi"],
-    demo: "demo-ma’lumot",
-    demoTitle: "Saytdan yangi yozuv",
-    demoRows: (svc: string) => [
-      ["Bemor", "Madina"],
-      ["Xizmat", svc],
-      ["Mahalla", "[[t:0]]"],
-      ["Mo‘ljal", "«[[t:1]]» do‘koni"],
-    ],
-    galKick: "Klinika",
-    galH: "Klinika <b>ichida</b>",
-    galNote: "Rasmlar klinika saytidan.",
-    galStock: "Rasmlar namuna uchun: klinika o‘zinikini qo‘yadi.",
-    whereKick: "Kontaktlar",
-    whereH: "Sizni <b>qabulda</b> kutamiz",
-    phone: "Telefon",
-    addr: "Manzil",
-    hours: "Ish vaqti",
-    map: "Xaritada ochish",
-    write: "Yozish",
-    made: "Sayt maketini DevUz Studio quyidagi ma’lumotlar asosida yig‘di:",
-    rights: "Maket DevUz Studio’ga tegishli va faqat shartnoma asosida ishlatiladi. Batafsil:",
-    terms: "foydalanish shartlari",
-    skip: "Mazmunga o‘tish",
-    title: (name: string) => `${name}: stomatologiya`,
-    desc: (name: string) => `${name}. Xizmatlar, shifokorlar va qabulga yozilish.`,
-    greet: (name: string) => `Assalomu alaykum! «${name}» ga yozilmoqchiman. Qaysi vaqt bo‘sh?`,
-  },
+  wd: { ru: ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"], uz: ["Ya", "Du", "Se", "Ch", "Pa", "Ju", "Sh"] },
+  title: P("стоматология", "stomatologiya"),
+  desc: P("Услуги, врачи и запись на приём в два нажатия.", "Xizmatlar, shifokorlar va ikki bosishda qabulga yozilish."),
 } as const;
 
+const I = (d: string) =>
+  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${d}</svg>`;
 const ICON = {
-  phone: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 10.8a15 15 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.6a1 1 0 0 1-.25 1z" fill="currentColor"/></svg>`,
-  cal: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2v3M17 2v3M3.5 9h17M5 5h14a1.5 1.5 0 0 1 1.5 1.5v12A1.5 1.5 0 0 1 19 20H5a1.5 1.5 0 0 1-1.5-1.5v-12A1.5 1.5 0 0 1 5 5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`,
-  pin: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="9.5" r="2.4" fill="currentColor"/></svg>`,
-  clock: `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7.5V12l3 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`,
-  tooth: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3c1.6 0 2.5.8 4 .8S14.4 3 16 3c2.6 0 4 2.1 4 4.6 0 2.8-1.2 4.6-1.7 7.4-.4 2.6-.9 6-2.6 6-1.6 0-1.8-4.4-3.7-4.4S10 21 8.3 21C6.6 21 6.1 17.6 5.7 15 5.2 12.2 4 10.4 4 7.6 4 5.1 5.4 3 8 3z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>`,
-  check: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
-  arrow: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
-  tg: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.5 4.2 2.9 11.4c-1 .4-1 1.5 0 1.8l4.7 1.5 1.8 5.6c.2.7 1.1.9 1.6.4l2.6-2.4 4.9 3.6c.6.4 1.4.1 1.6-.6l3-15.3c.2-.9-.7-1.6-1.6-1.3zM9.6 14.4l8.4-7.5-6.6 8.6-.3 3.3z" fill="currentColor"/></svg>`,
+  arrow: I('<path d="M5 12h14M13 6l6 6-6 6"/>'),
+  close: I('<path d="M6 6l12 12M18 6 6 18"/>'),
+  check: I('<path d="m5 12 5 5 9-10"/>'),
+  phone: I('<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z"/>'),
+  wa: I('<path d="M4.5 19.5 5.6 16A8 8 0 1 1 8.4 18.6z"/><path d="M9.2 8.6c.3 2.9 2.4 5.2 5.4 5.9l1.2-1.3-1.8-1-1 .8c-1-.4-1.9-1.3-2.4-2.4l.8-1-1-1.8z"/>'),
+  tg: I('<path d="M21 4 3 11l6 2 2 6 3-4 5 4Z"/><path d="m9 13 8-6"/>'),
+  pin: I('<path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/>'),
+  clock: I('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'),
+  chat: I('<path d="M4 5.5h16v11H9l-5 3.5z"/><path d="M8 10h8M8 13h5"/>'),
+  cal: I('<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>'),
+  tooth: I('<path d="M7.5 4c-2.2 0-3.5 1.8-3.5 4.3 0 3 1.4 4.5 2 7.2.5 2.5 1 4.5 2.3 4.5 1.5 0 1.3-4.5 3.7-4.5s2.2 4.5 3.7 4.5c1.3 0 1.8-2 2.3-4.5.6-2.7 2-4.2 2-7.2C20 5.8 18.7 4 16.5 4c-1.8 0-2.6 1-4.5 1S9.3 4 7.5 4z"/>'),
+  insta: I('<rect x="4" y="4" width="16" height="16" rx="4.5"/><circle cx="12" cy="12" r="3.6"/><circle cx="16.8" cy="7.2" r=".6" fill="currentColor"/>'),
 };
+/** Знак клиники, если логотипа нет: зуб линией, в цвете бренда. Не цветок Nek. */
+const MARK = ICON.tooth.replace("<svg ", '<svg class="mk" ');
+const MOTION = ["rise", "tilt", "pop", "slide"];
 
-/** Действие главной кнопки: Telegram → WhatsApp → звонок. */
-function mainHref(site: InstantSite, greet: string): string | null {
-  const tg = handleOf(site.telegram);
-  if (tg) return `https://t.me/${tg}?text=${encodeURIComponent(greet)}`;
-  const wa = waHref(site.whatsapp);
-  if (wa) return `${wa}?text=${encodeURIComponent(greet)}`;
-  return telHref(site.phone);
-}
-
-/** Две буквы названия: знак, если логотип не нашёлся. */
+/** Две буквы имени врача — на месте фото. */
 function initials(name: string): string {
   const words = name.replace(/["«»'`]/g, " ").split(/\s+/).filter((w) => /\p{L}/u.test(w));
-  return (words.slice(0, 2).map((w) => [...w][0]?.toUpperCase() ?? "").join("") || [...name][0] || "").slice(0, 2);
+  return words.slice(0, 2).map((w) => [...w][0]?.toUpperCase() ?? "").join("");
 }
 
-/** Палитра от фирменного цвета: кнопка остаётся читаемой с белыми буквами. */
+/**
+ * Акцент Nek (орхидея) — в цвет бренда клиента. Переменные — в hsl: так их
+ * сдвигает отпечаток (lib/proto/stamp). Нет цвета — акцент шаблона.
+ */
+/** hsl → «r g b» для rgb(var(--x)/a): блики и тени из стилей Nek. */
+function rgbOf(h: number, s: number, l: number): string {
+  const a = (s / 100) * Math.min(l / 100, 1 - l / 100);
+  const f = (n: number) => {
+    const k = (n + h / 30) % 12;
+    return Math.round((l / 100 - a * Math.max(-1, Math.min(k - 3, 9 - k, 1))) * 255);
+  };
+  return `${f(0)} ${f(8)} ${f(4)}`;
+}
+
 function palette(color: string | null): string {
   const hex = brandColor(color);
-  const [h, s0, l0] = hex ? hexToHsl(hex) : [186, 59, 28];
+  const [h, s0, l0] = hex ? hexToHsl(hex) : [298, 31, 42];
   const s = Math.min(Math.max(s0, 24), 78);
-  const l = Math.min(Math.max(l0, 26), 44);
+  const l = Math.min(Math.max(l0, 26), 46);
   return [
-    `--ac:hsl(${h} ${s}% ${l}%)`,
-    `--ac-d:hsl(${h} ${s}% ${Math.max(l - 9, 16)}%)`,
-    `--ac-l:hsl(${h} ${Math.min(s, 60)}% 93%)`,
-    `--ink:hsl(${h} 24% 14%)`,
-    `--ink2:hsl(${h} 14% 30%)`,
-    `--mu:hsl(${h} 8% 42%)`,
-    `--paper:hsl(${h} 30% 98%)`,
-    `--s2:hsl(${h} 24% 94%)`,
+    `--orchid-rgb:${rgbOf(h, s, l)}`,
+    `--ink-rgb:${rgbOf(h, 28, 15)}`,
+    `--peach:hsl(${h} ${Math.min(s + 10, 70)}% 76%)`,
+    `--orchid:hsl(${h} ${s}% ${l}%)`,
+    `--orchid-d:hsl(${h} ${s}% ${Math.max(l - 12, 14)}%)`,
+    `--orchid-l:hsl(${h} ${Math.min(s, 55)}% 91%)`,
+    `--ink:hsl(${h} 28% 15%)`,
+    `--ink2:hsl(${h} 16% 27%)`,
+    `--paper:hsl(${h} 25% 97%)`,
+    `--s2:hsl(${h} 18% 91%)`,
   ].join(";");
 }
 
-const CSS = `*{box-sizing:border-box}
-html{-webkit-text-size-adjust:100%;overflow-x:clip;scroll-behavior:smooth}
-body{margin:0;background:var(--paper);color:var(--ink);font:400 16px/1.6 "Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;overflow-x:clip}
-img{max-width:100%;height:auto;display:block}
-a{color:inherit}
-h1,h2,h3{margin:0;font-family:"Cormorant",Georgia,"Times New Roman",serif;font-weight:700;line-height:1.08;letter-spacing:-.01em}
-.vh{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-.vh:focus{position:fixed!important;left:16px;top:16px;width:auto;height:auto;clip:auto;z-index:99;padding:8px 16px;background:#fff;border-radius:999px}
-.wrap{width:min(1200px,100% - 32px);margin:0 auto}
-.sec{padding:clamp(64px,10vw,120px) 0}
-.soft{background:var(--s2)}
-.dark{background:var(--ink);color:#f4f1ee}
-.dark .lead,.dark .mu{color:rgb(244 241 238/.74)}
-.kick{display:inline-flex;align-items:center;gap:12px;margin:0 0 16px;font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:var(--ac)}
-.dark .kick{color:var(--ac-l)}
-.kick i{width:28px;height:1px;background:currentColor}
-.h2{font-size:clamp(36px,5vw,64px);max-width:18ch}
-.h2 b{color:var(--ac);font-style:italic}
-.dark .h2 b{color:var(--ac-l)}
-.lead{font-size:18px;color:var(--ink2);max-width:56ch;margin:22px 0 0}
-.mu{color:var(--mu)}
-.small{font-size:14px}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:48px;padding:12px 22px;border-radius:999px;border:1px solid transparent;font:700 16px/1.2 "Manrope",system-ui,sans-serif;text-decoration:none;cursor:pointer;transition:transform .25s,background-color .25s;white-space:nowrap}
-.btn svg{width:20px;height:20px;flex:none}
-.btn:active{transform:scale(.97)}
-.btn-a{background:var(--ac);color:#fff}
-.btn-a:hover{background:var(--ac-d)}
-.btn-l{border-color:currentColor}
-.btn-s{min-height:44px;padding:8px 16px;font-size:14px}
-:focus-visible{outline:2px solid var(--ac);outline-offset:3px}
-.glass{background:rgb(255 255 255/.7);border:1px solid rgb(255 255 255/.7);box-shadow:0 2px 8px rgb(0 0 0/.05),0 12px 32px rgb(0 0 0/.07)}
-@supports (backdrop-filter:blur(1px)){.glass{backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4)}}
-.top{position:fixed;left:0;right:0;top:0;z-index:40;padding:12px 0 0;transition:transform .45s cubic-bezier(.2,.8,.2,1),opacity .35s}
-.top.hide{transform:translateY(-130%);opacity:0;pointer-events:none}
-.top-in{width:min(1200px,100% - 24px);margin:0 auto;display:flex;align-items:center;gap:16px;padding:8px 8px 8px 14px;border-radius:999px}
-.logo{display:inline-flex;align-items:center;gap:10px;text-decoration:none;min-width:0}
-.logo img{height:34px;width:auto;max-width:110px;object-fit:contain}
-.logo b{font:700 16px/1.1 "Manrope",system-ui,sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:46vw}
-.mk{display:inline-grid;place-items:center;width:36px;height:36px;border-radius:50%;background:var(--ac);color:#fff;font:700 14px/1 "Manrope",system-ui,sans-serif;letter-spacing:.02em;flex:none}
-.nav{display:none;gap:24px;margin:0 auto}
-.nav a{text-decoration:none;font-size:14px;opacity:.8}
-.nav a:hover{opacity:1}
-.top .btn{margin-left:auto}
-@media(min-width:960px){.nav{display:flex}.top .btn{margin-left:0}}
-.hero{padding:132px 0 72px;background:linear-gradient(180deg,var(--paper) 0,var(--s2) 100%);overflow:hidden}
-.hero-in{display:grid;gap:40px;align-items:center}
-@media(min-width:960px){.hero-in{grid-template-columns:1.05fr .95fr}}
-.hero h1{font-size:clamp(44px,7vw,88px);max-width:13ch;overflow-wrap:anywhere}
-.hero h1 em{font-style:italic;color:var(--ac)}
-.hsub{font-size:18px;color:var(--ink2);max-width:52ch;margin:22px 0 0}
-.hact{display:flex;flex-wrap:wrap;gap:12px;margin:30px 0 0}
-.hfacts{list-style:none;padding:0;margin:30px 0 0;display:grid;gap:10px;font-size:15px;color:var(--ink2)}
-.hfacts li{display:flex;gap:10px;align-items:flex-start}
-.hfacts svg{width:20px;height:20px;flex:none;color:var(--ac);margin-top:2px}
-.hph{position:relative;border-radius:28px;overflow:hidden;aspect-ratio:4/5;background:var(--s2);box-shadow:0 24px 64px rgb(0 0 0/.16)}
-.hph img{width:100%;height:100%;object-fit:cover}
-.hcard{position:absolute;left:16px;right:16px;bottom:16px;display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:18px;font-size:14px}
-.hcard svg{width:28px;height:28px;color:var(--ac);flex:none}
-.svc{display:grid;gap:16px;margin:40px 0 0}
-@media(min-width:700px){.svc{grid-template-columns:repeat(2,1fr)}}
-@media(min-width:1040px){.svc{grid-template-columns:repeat(3,1fr)}}
-.sv{display:flex;flex-direction:column;gap:12px;padding:24px;border-radius:22px;background:#fff;border:1px solid rgb(0 0 0/.06);transition:transform .3s,box-shadow .3s}
-.sv:hover{transform:translateY(-4px);box-shadow:0 18px 40px rgb(0 0 0/.08)}
-.sv-i{display:inline-grid;place-items:center;width:46px;height:46px;border-radius:14px;background:var(--ac-l);color:var(--ac)}
-.sv-i svg{width:24px;height:24px}
-.sv h3{font-size:26px;line-height:1.15;overflow-wrap:anywhere}
-.sv-p{margin:auto 0 0;font-weight:700;font-size:18px;color:var(--ac-d)}
-.sv-p.q{font-weight:400;font-size:14px;color:var(--mu)}
-.sv-b{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;padding:0;border:0;background:none;font:700 15px/1.4 "Manrope",system-ui,sans-serif;color:var(--ac);text-decoration:none;cursor:pointer}
-.sv-b svg{width:18px;height:18px;transition:transform .25s}
-.sv-b:hover svg{transform:translateX(4px)}
-.perks{list-style:none;padding:0;margin:40px 0 0;display:grid;gap:14px}
-@media(min-width:800px){.perks{grid-template-columns:repeat(2,1fr)}}
-.perks li{display:flex;gap:14px;align-items:flex-start;padding:20px;border-radius:18px;background:rgb(255 255 255/.06);border:1px solid rgb(255 255 255/.12)}
-.perks svg{width:24px;height:24px;flex:none;color:var(--ac-l)}
-.team{display:grid;gap:16px;margin:40px 0 0;grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
-.tm{display:flex;flex-direction:column;gap:8px;padding:22px;border-radius:20px;background:#fff;border:1px solid rgb(0 0 0/.06)}
-.av{display:grid;place-items:center;width:64px;height:64px;border-radius:50%;background:var(--ac-l);color:var(--ac-d);font:700 22px/1 "Cormorant",Georgia,serif;margin-bottom:6px}
-.tm b{font-size:18px;line-height:1.3}
-.tm span{color:var(--mu);font-size:14px}
-.flow{display:grid;gap:40px;align-items:center}
-@media(min-width:960px){.flow{grid-template-columns:1fr 1fr}}
-.steps{list-style:none;padding:0;margin:28px 0 0;display:grid;gap:12px}
-.steps li{display:flex;gap:14px;align-items:center;font-size:17px}
-.n{display:inline-grid;place-items:center;width:36px;height:36px;border-radius:50%;background:var(--ac);color:#fff;font-weight:700;font-size:14px;flex:none}
-.tgc{max-width:420px;margin:0 auto;width:100%;border-radius:24px;padding:20px;background:#fff;color:var(--ink);box-shadow:0 24px 64px rgb(0 0 0/.18)}
-.tgc-h{display:flex;align-items:center;gap:10px;font-weight:700}
-.tgc-h svg{width:28px;height:28px;color:#2aa3df}
-.tgc-h small{margin-left:auto;font-weight:400;font-size:12px;color:var(--mu);padding:4px 10px;border-radius:999px;background:var(--s2)}
-.tgc dl{display:grid;grid-template-columns:auto 1fr;gap:8px 14px;margin:16px 0 0;font-size:15px}
-.tgc dt{color:var(--mu)}
-.tgc dd{margin:0;font-weight:700;overflow-wrap:anywhere}
-.tgc-b{display:flex;gap:8px;margin:16px 0 0}
-.tgc-b span{flex:1;text-align:center;padding:10px;border-radius:12px;background:var(--ac-l);color:var(--ac-d);font-weight:700;font-size:14px}
-.gal{display:grid;gap:14px;margin:40px 0 18px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
-.gal img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:20px;background:var(--s2)}
-.where{display:grid;gap:16px;margin:40px 0 0;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
-.wc{display:flex;flex-direction:column;gap:8px;padding:24px;border-radius:20px;background:#fff;border:1px solid rgb(0 0 0/.06)}
-.wc svg{width:24px;height:24px;color:var(--ac)}
-.wc span{color:var(--mu);font-size:14px}
-.wc b,.wc a{font-size:18px;overflow-wrap:anywhere}
-.wact{display:flex;flex-wrap:wrap;gap:12px;margin:28px 0 0}
-footer{padding:32px 0 112px;border-top:1px solid rgb(0 0 0/.08);color:var(--mu);font-size:14px}
-footer .wrap{display:flex;flex-wrap:wrap;gap:8px 24px}
-footer a{text-decoration:underline}
-.dock{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:30;display:flex;gap:8px}
-.dock .btn{flex:1}
-@media(min-width:960px){.dock{display:none}footer{padding-bottom:40px}}
-.rise{opacity:0;transform:translateY(24px);transition:opacity .8s cubic-bezier(.2,.8,.2,1),transform .8s cubic-bezier(.2,.8,.2,1)}
-.rise.on{opacity:1;transform:none}
-@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}.rise{opacity:1;transform:none;transition:none}.top{transition:none}.sv,.sv-b svg{transition:none}}`;
+/** Часы для шторки записи: из «9:00-20:00» на сайте клиники, иначе дневные. */
+export function slotsOf(hours: string | null): string[] {
+  const m = hours ? /(\d{1,2})[:.](\d{2})\s*(?:-|–|—|до)\s*(\d{1,2})[:.](\d{2})/.exec(hours) : null;
+  const from = m ? Number(m[1]) : 0;
+  const to = m ? Number(m[3]) : 0;
+  if (!(from >= 6 && to <= 23 && to - from >= 3)) return ["10:00", "11:30", "13:00", "14:30", "16:00", "17:00"];
+  const step = Math.max(60, Math.floor(((to - 1 - from) * 60) / 5 / 30) * 30);
+  const out: string[] = [];
+  for (let m2 = from * 60; m2 <= (to - 1) * 60 && out.length < 6; m2 += step) {
+    out.push(`${String(Math.floor(m2 / 60)).padStart(2, "0")}:${String(m2 % 60).padStart(2, "0")}`);
+  }
+  return out;
+}
 
-/*
- * Шапка: при любой прокрутке прячется сразу, возвращается через 3 секунды
- * после последнего события (CLAUDE.md «Шапка макета»). Фокус внутри шапки —
- * не прячется. Появление блоков — по пересечению с экраном.
- */
-const JS = `(function(){var top=document.querySelector('.top'),t=0;
-function show(){top.classList.remove('hide')}
-addEventListener('scroll',function(){if(top.contains(document.activeElement)&&document.activeElement!==document.body)return;if(scrollY>40)top.classList.add('hide');clearTimeout(t);t=setTimeout(show,3000)},{passive:true});
-top.addEventListener('focusin',show);
-var els=document.querySelectorAll('.rise');
-if(!('IntersectionObserver' in window)){for(var i=0;i<els.length;i++)els[i].classList.add('on');return}
-var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('on');io.unobserve(e.target)}})},{threshold:/*~*/0.12,rootMargin:'0px 0px -6% 0px'});
-for(var j=0;j<els.length;j++)io.observe(els[j]);
-})()`;
+/** Выходные: «Пн-Сб» — воскресенье, «Пн-Пт» — суббота и воскресенье. Не ясно — все дни. */
+export function offDaysOf(hours: string | null): number[] {
+  const h = (hours ?? "").toLowerCase();
+  if (/пн\s*[-–—]\s*пт|du\s*[-–—]\s*ju/.test(h)) return [0, 6];
+  if (/пн\s*[-–—]\s*сб|du\s*[-–—]\s*sh/.test(h)) return [0];
+  return [];
+}
 
-const LOCALE_TAG: Record<InstantLocale, string> = { ru: "ru", uz: "uz" };
+/** Куда ведёт запись: Telegram → WhatsApp. Префикс, к нему скрипт добавит текст. Нет — звонок. */
+function goPrefix(site: InstantSite): string | null {
+  const tg = handleOf(site.telegram);
+  if (tg) return `https://t.me/${tg}?text=`;
+  const wa = waHref(site.whatsapp);
+  return wa ? `${wa}?text=` : null;
+}
 
-/** Собрать страницу. Данные — уже очищенные (lib/proto/instant/normalize). */
+const json = (v: unknown) => JSON.stringify(v).replace(/</g, "\\u003c");
+
+/** Собрать страницу. Данные — уже очищенные (lib/proto/instant/build, normalizeSite). */
 export function dentalHtml(site: InstantSite): string {
-  const c = COPY[site.locale];
+  const l: InstantLocale = site.locale;
+  const t = (p: Pair) => p[l];
   const name = esc(site.name);
-  const book = mainHref(site, c.greet(site.name));
   const tel = telHref(site.phone);
+  const telDigits = tel ? tel.slice(4) : "";
   const tg = handleOf(site.telegram);
   const wa = waHref(site.whatsapp);
   const ig = handleOf(site.instagram);
   const logo = imageUrl(site.logo);
   const own = site.photos.map(imageUrl).filter((u): u is string => Boolean(u)).slice(0, LIMITS.photos);
   const photos = own.length ? own : [...DENTAL_PHOTOS];
-  const bookBtn = (cls: string, label: string) =>
-    book ? `<a class="btn btn-a ${cls}" href="${esc(book)}" rel="noopener">${ICON.cal}<span>${esc(label)}</span></a>` : "";
-  const callBtn = (cls: string) =>
-    tel ? `<a class="btn btn-l ${cls}" href="${esc(tel)}">${ICON.phone}<span>${esc(c.call)}</span></a>` : "";
-
-  const mark = logo
-    ? `<img src="${esc(logo)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">`
-    : `<span class="mk" aria-hidden="true">${esc(initials(site.name))}</span>`;
+  const photo = (i: number) => esc(photos[i % photos.length]);
   const services = site.services.slice(0, LIMITS.services);
   const doctors = site.doctors.slice(0, LIMITS.doctors);
   const perks = site.perks.slice(0, LIMITS.perks);
+  const mark = logo ? `<img class="lg" src="${esc(logo)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : MARK;
+  const LOGO = `<a class="logo" href="#top" aria-label="${name}">${mark}<span><b>${name}</b></span></a>`;
+  const where = [site.address, site.hours].filter(Boolean).join(", ");
+
   const nav = [
-    services.length ? `<a href="#services">${esc(c.nav[0])}</a>` : "",
-    doctors.length ? `<a href="#team">${esc(c.nav[1])}</a>` : "",
-    `<a href="#where">${esc(c.nav[2])}</a>`,
+    services.length ? `<a href="#services">${t(C.nav[0])}</a>` : "",
+    `<a href="#resto">${t(C.nav[1])}</a>`,
+    doctors.length ? `<a href="#team">${t(C.nav[2])}</a>` : "",
+    `<a href="#faq">${t(C.nav[3])}</a>`,
+    `<a href="#visit">${t(C.nav[4])}</a>`,
   ].join("");
 
   const header = `<header class="top"><div class="top-in glass">
-<a class="logo" href="#top" aria-label="${name}">${mark}<b>${name}</b></a>
-<nav class="nav" aria-label="${esc(c.nav.join(", "))}">${nav}</nav>
-${bookBtn("btn-s", c.book)}
+${LOGO}
+<nav class="nav" aria-label="${t(C.sections)}">${nav}</nav>
+${tel ? `<a class="btn btn-l btn-s tel" href="${esc(tel)}">${ICON.phone}<span>${esc(site.phone ?? "")}</span></a>` : ""}
+<button type="button" class="btn btn-a btn-s" data-book>${t(C.book)}</button>
 </div></header>`;
 
   const hfacts = [
     site.address ? `<li>${ICON.pin}<span>${esc(site.address)}</span></li>` : "",
     site.hours ? `<li>${ICON.clock}<span>${esc(site.hours)}</span></li>` : "",
   ].join("");
-  const hero = `<section class="hero" id="top" aria-label="${name}"><div class="wrap hero-in">
-<div>
-<p class="kick"><i></i>${esc(site.city ? `${c.kick} · ${site.city}` : c.kick)}</p>
-<h1>${name}${site.tagline ? `<br><em>${esc(site.tagline)}</em>` : ""}</h1>
-${site.about ? `<p class="hsub">${esc(site.about)}</p>` : ""}
-<div class="hact">${bookBtn("", c.book)}${callBtn("")}</div>
-${hfacts ? `<ul class="hfacts">${hfacts}</ul>` : ""}
+  const kick = site.tagline ?? (site.city ? `${t(C.kick)} · ${site.city}` : t(C.kick));
+  const hero = `<section class="hero" id="top" aria-label="${name}">
+<div class="wrap hero-in">
+<div class="hero-tx">
+<p class="kick rise"><i></i>${esc(kick)}</p>
+<h1>${name}<br>${t(C.h1)}</h1>
+${site.about ? `<p class="hsub rise">${esc(site.about)}</p>` : ""}
+<div class="hero-act rise"><button type="button" class="btn btn-a" data-book>${ICON.cal}<span>${t(C.bookVisit)}</span></button>${tel ? `<a class="btn btn-l" href="${esc(tel)}">${ICON.phone}<span>${t(C.call)}</span></a>` : ""}</div>
+${hfacts ? `<ul class="hfacts rise">${hfacts}</ul>` : ""}
 </div>
-<div class="hph"><img src="${esc(photos[0])}" width="1200" height="1500" alt="${name}" fetchpriority="high" referrerpolicy="no-referrer">
-${services[0] ? `<div class="hcard glass">${ICON.tooth}<span>${esc(services[0].name)}</span></div>` : ""}</div>
+<div class="hero-ph"><div class="ph" data-par="0.12"><img src="${photo(0)}" width="1200" height="1500" alt="${name}" fetchpriority="high" referrerpolicy="no-referrer"></div>
+<div class="hcard glass" data-par="-0.06">${MARK}<b>${t(C.calm)}</b><span>${t(C.calmSub)}</span></div></div>
 </div></section>`;
+
+  const velo =
+    services.length >= 3
+      ? `<div class="velo"><div class="row" aria-hidden="true">${[0, 1].map(() => services.map((s) => `<span>${MARK}${esc(s.name)}</span>`).join("")).join("")}</div></div>`
+      : "";
 
   const svcSec = services.length
     ? `<section class="sec" id="services"><div class="wrap">
-<p class="kick rise"><i></i>${esc(c.svcKick)}</p>
-<h2 class="h2 rise">${c.svcH}</h2>
+<p class="kick rise"><i></i>${t(C.svcKick)}</p>
+<h2 class="h2 rise">${t(C.svcH)}</h2>
 <div class="svc">${services
         .map(
-          (s) =>
-            `<article class="sv rise"><span class="sv-i">${ICON.tooth}</span><h3>${esc(s.name)}</h3>${
-              s.price ? `<p class="sv-p">${esc(s.price)}</p>` : `<p class="sv-p q">${esc(c.ask)}</p>`
-            }${book ? `<a class="sv-b" href="${esc(book)}" rel="noopener">${esc(c.bookThis)}${ICON.arrow}</a>` : ""}</article>`,
+          (s, i) =>
+            `<article class="sv ${MOTION[i % 4]}" style="transition-delay:${(i % 4) * 70}ms"><span class="sv-i">${ICON.tooth}</span><h3>${esc(s.name)}</h3>${
+              s.price ? `<p class="sv-p">${esc(s.price)}</p>` : ""
+            }<button type="button" class="sv-b" data-book="s${i}">${t(C.bookThis)}${ICON.arrow}</button></article>`,
         )
         .join("")}</div>
+${services.some((s) => !s.price) ? `<p class="note rise">${t(C.ask)}</p>` : ""}
 </div></section>`
     : "";
 
-  const perkSec = perks.length
-    ? `<section class="sec dark" id="about"><div class="wrap">
-<p class="kick rise"><i></i>${esc(c.perksKick)}</p>
-<h2 class="h2 rise">${c.perksH}</h2>
-<ul class="perks">${perks.map((p) => `<li class="rise">${ICON.check}<span>${esc(p)}</span></li>`).join("")}</ul>
+  const resto = `<section class="sec dark" id="resto"><div class="wrap two">
+<div><p class="kick rise"><i></i>${t(C.restoKick)}</p>
+<h2 class="h2 rise">${t(C.restoH)}</h2>
+<p class="lead rise">${t(C.restoLead)}</p>
+<ol class="layers" id="layers">${C.layers.map(([h, p], i) => `<li data-ly="${i}"${i === 0 ? ' class="on"' : ""}><b>${t(h)}</b><span>${t(p)}</span></li>`).join("")}</ol>
+<label class="rng"><span class="vh">${t(C.layer)}</span><input type="range" id="lyr" min="0" max="3" step="1" value="0"></label>
+<p class="mu small">${t(C.restoNote)}</p></div>
+<div class="tooth tilt" aria-hidden="true"><svg viewBox="0 0 200 260" id="tsvg">
+<defs><linearGradient id="g-de" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3d9b8"/><stop offset="1" stop-color="#d9a877"/></linearGradient><linearGradient id="g-en" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e9eef2"/></linearGradient><linearGradient id="g-ed" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#dfeaf2" stop-opacity=".2"/><stop offset="1" stop-color="#bcd4e6" stop-opacity=".85"/></linearGradient></defs>
+<path class="l0" d="M72 26C90 18 110 18 128 26C140 60 152 130 156 200C157 222 146 236 128 238C110 240 90 240 72 238C54 236 43 222 44 200C48 130 60 60 72 26z" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="6 6"/>
+<path class="l1" d="M82 46C94 40 106 40 118 46C127 74 135 130 137 180C138 196 130 204 118 205C106 206 94 206 82 205C70 204 62 196 63 180C65 130 73 74 82 46z" fill="url(#g-de)"/>
+<path class="l2" d="M72 26C90 18 110 18 128 26C140 60 152 130 156 200C157 222 146 236 128 238C110 240 90 240 72 238C54 236 43 222 44 200C48 130 60 60 72 26z" fill="url(#g-en)" opacity=".88"/>
+<path class="l3" d="M48 196C70 206 130 206 152 196C155 204 156 210 155 214C152 228 142 236 128 238C110 240 90 240 72 238C58 236 48 228 45 214C44 210 45 204 48 196z" fill="url(#g-ed)"/>
+</svg></div>
+</div></section>`;
+
+  const care = perks.length
+    ? `<section class="sec" id="care"><div class="wrap two">
+<div class="ph-tall slide"><img src="${photo(1)}" width="1200" height="1600" alt="${name}" loading="lazy" referrerpolicy="no-referrer"></div>
+<div><p class="kick rise"><i></i>${t(C.perksKick)}</p>
+<h2 class="h2 rise">${t(C.perksH)}</h2>
+<div class="care">${perks.map((p, i) => `<div class="cr ${MOTION[(i + 1) % 4]}" style="transition-delay:${i * 90}ms"><i>${ICON.check}</i><b>${esc(p)}</b></div>`).join("")}</div></div>
 </div></section>`
     : "";
 
-  const teamSec = doctors.length
+  // Фото, которое уже стоит в «Почему мы», в галерее не повторяется.
+  const gallery = photos.slice(perks.length ? 2 : 1, 6);
+  const space = gallery.length
+    ? `<section class="sec soft" id="space"><div class="wrap">
+<p class="kick rise"><i></i>${t(C.spaceKick)}</p>
+<h2 class="h2 rise">${t(C.spaceH)}</h2>
+<div class="gal">${gallery.map((src, i) => `<figure class="${MOTION[(i + 2) % 4]}" style="transition-delay:${i * 80}ms"><img src="${esc(src)}" width="1200" height="1500" alt="${name}" loading="lazy" referrerpolicy="no-referrer"></figure>`).join("")}</div>
+<p class="mu small rise">${t(own.length ? C.ownPhotos : C.stockPhotos)}</p>
+</div></section>`
+    : "";
+
+  const team = doctors.length
     ? `<section class="sec" id="team"><div class="wrap">
-<p class="kick rise"><i></i>${esc(c.docKick)}</p>
-<h2 class="h2 rise">${c.docH}</h2>
-<div class="team">${doctors
-        .map(
-          (d) =>
-            `<div class="tm rise"><span class="av" aria-hidden="true">${esc(initials(d.name))}</span><b>${esc(d.name)}</b>${
-              d.role ? `<span>${esc(d.role)}</span>` : ""
-            }</div>`,
-        )
-        .join("")}</div>
+<p class="kick rise"><i></i>${t(C.teamKick)}</p>
+<h2 class="h2 rise">${t(C.teamH)}</h2>
+<div class="team">${doctors.map((d, i) => `<div class="tm pop" style="transition-delay:${(i % 5) * 60}ms"><span class="av" aria-hidden="true">${esc(initials(d.name))}</span><b>${esc(d.name)}</b>${d.role ? `<span>${esc(d.role)}</span>` : ""}</div>`).join("")}</div>
 </div></section>`
     : "";
 
-  const demoSvc = services[0]?.name ?? c.kick;
-  const flowSec = `<section class="sec soft" id="flow"><div class="wrap flow">
-<div><p class="kick rise"><i></i>${esc(c.flowKick)}</p>
-<h2 class="h2 rise">${c.flowH}</h2>
-<p class="lead rise">${esc(c.flowLead)}</p>
-<ol class="steps">${c.flow.map((s, i) => `<li class="rise"><span class="n">0${i + 1}</span>${esc(s)}</li>`).join("")}</ol></div>
-<div class="tgc rise" aria-label="${esc(c.demo)}"><div class="tgc-h">${ICON.tg}<span>${esc(c.demoTitle)}</span><small>${esc(c.demo)}</small></div>
-<dl>${c.demoRows(demoSvc).map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>
-<div class="tgc-b"><span>${esc(c.book)}</span><span>${esc(c.call)}</span></div></div>
+  const demoRows: [Pair, string][] = [
+    [C.demoPatient, l === "uz" ? "Madina" : "Мадина"],
+    [C.demoService, services[0]?.name ?? t(C.kick)],
+    [C.demoArea, "[[t:0]]"],
+    [C.demoNear, t(C.demoShop)],
+  ];
+  const flow = `<section class="sec soft" id="flow"><div class="wrap two">
+<div><p class="kick rise"><i></i>${t(C.flowKick)}</p>
+<h2 class="h2 rise">${t(C.flowH)}</h2>
+<p class="lead rise">${t(C.flowLead)}</p></div>
+<div class="tgc glass pop"><div class="tgc-h">${ICON.tg}<b>${t(C.demoTitle)}</b><small>${t(C.demo)}</small></div>
+<dl>${demoRows.map(([k, v]) => `<dt>${t(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl></div>
 </div></section>`;
 
-  const galSec = photos.length > 1
-    ? `<section class="sec" id="clinic"><div class="wrap">
-<p class="kick rise"><i></i>${esc(c.galKick)}</p>
-<h2 class="h2 rise">${c.galH}</h2>
-<div class="gal">${photos
-        .slice(1)
-        .map((p) => `<img class="rise" src="${esc(p)}" width="1200" height="900" alt="${name}" loading="lazy" referrerpolicy="no-referrer">`)
-        .join("")}</div>
-<p class="mu small">${esc(own.length ? c.galNote : c.galStock)}</p>
-</div></section>`
-    : "";
-
-  const cards = [
-    tel ? `<div class="wc rise">${ICON.phone}<span>${esc(c.phone)}</span><a href="${esc(tel)}">${esc(site.phone ?? "")}</a></div>` : "",
-    site.address ? `<div class="wc rise">${ICON.pin}<span>${esc(c.addr)}</span><b>${esc(site.address)}</b></div>` : "",
-    site.hours ? `<div class="wc rise">${ICON.clock}<span>${esc(c.hours)}</span><b>${esc(site.hours)}</b></div>` : "",
-  ].join("");
-  const links = [
-    tg ? `<a class="btn btn-a" href="https://t.me/${esc(tg)}" rel="noopener">${ICON.tg}<span>Telegram</span></a>` : "",
-    wa ? `<a class="btn btn-l" href="${esc(wa)}" rel="noopener"><span>WhatsApp</span></a>` : "",
-    ig ? `<a class="btn btn-l" href="https://instagram.com/${esc(ig)}" rel="noopener"><span>Instagram</span></a>` : "",
-    site.address
-      ? `<a class="btn btn-l" href="https://yandex.uz/maps/?text=${esc(encodeURIComponent(site.address))}" rel="noopener">${ICON.pin}<span>${esc(c.map)}</span></a>`
-      : "",
-  ].join("");
-  const whereSec = `<section class="sec soft" id="where"><div class="wrap">
-<p class="kick rise"><i></i>${esc(c.whereKick)}</p>
-<h2 class="h2 rise">${c.whereH}</h2>
-${cards ? `<div class="where">${cards}</div>` : ""}
-${links ? `<div class="wact">${links}</div>` : ""}
+  const faqs: [string, string][] = C.faq.map(([q, a]) => [t(q), t(a)]);
+  if (where) faqs.push([t(C.whereQ), where]);
+  const faq = `<section class="sec" id="faq"><div class="wrap narrow">
+<p class="kick rise"><i></i>${t(C.faqKick)}</p>
+<h2 class="h2 rise">${t(C.faqH)}</h2>
+<div class="faq">${faqs.map(([q, a], i) => `<div class="qa"><button type="button" aria-expanded="false" aria-controls="qa-${i}" id="qb-${i}"><span>${esc(q)}</span><i aria-hidden="true"></i></button><div class="qa-a" id="qa-${i}" role="region" aria-labelledby="qb-${i}"><div><p>${esc(a)}</p></div></div></div>`).join("")}</div>
 </div></section>`;
 
-  const footer = `<footer><div class="wrap">
-<span>${name}</span>
-<span>${esc(c.made)} ${esc(site.source)}</span>
-<span>${esc(c.rights)} <a href="${esc(mockupTermsUrl(site.locale))}">${esc(c.terms)}</a></span>
+  const map = site.address ? `https://yandex.uz/maps/?text=${encodeURIComponent(site.address)}` : null;
+  const visit = `<section class="sec dark" id="visit"><div class="wrap two">
+<div><p class="kick rise"><i></i>${t(C.findKick)}</p>
+<h2 class="h2 rise">${t(C.findH)}</h2>
+<div class="cinfo rise">
+${tel ? `<a href="${esc(tel)}">${ICON.phone}<span>${esc(site.phone ?? "")}</span></a>` : ""}
+${tg ? `<a href="https://t.me/${esc(tg)}" target="_blank" rel="noopener">${ICON.tg}<span>Telegram</span></a>` : ""}
+${wa ? `<a href="${esc(wa)}" target="_blank" rel="noopener">${ICON.wa}<span>WhatsApp</span></a>` : ""}
+${ig ? `<a href="https://instagram.com/${esc(ig)}" target="_blank" rel="noopener">${ICON.insta}<span>Instagram</span></a>` : ""}
+${site.address || site.hours ? `<p>${ICON.pin}<span>${esc(site.address ?? "")}${site.hours ? `<small>${esc(site.hours)}</small>` : ""}</span></p>` : ""}
+</div>
+<div class="hero-act rise">${map ? `<a class="btn btn-a" href="${esc(map)}" target="_blank" rel="noopener">${ICON.pin}<span>${t(C.route)}</span></a>` : ""}<button type="button" class="btn btn-l" data-book>${t(C.book)}</button></div></div>
+<div class="mapcard slide"><img src="${photo(photos.length - 1)}" width="1200" height="1600" alt="${name}" loading="lazy" referrerpolicy="no-referrer"><span class="glass">${MARK}<b>${name}</b>${site.address ? `<small>${esc(site.address)}</small>` : ""}</span></div>
+</div></section>`;
+
+  const follow = [
+    tg ? `<a href="https://t.me/${esc(tg)}" target="_blank" rel="noopener">Telegram</a>` : "",
+    ig ? `<a href="https://instagram.com/${esc(ig)}" target="_blank" rel="noopener">Instagram</a>` : "",
+    wa ? `<a href="${esc(wa)}" target="_blank" rel="noopener">WhatsApp</a>` : "",
+  ].join("");
+  const footer = `<footer class="foot"><div class="wrap"><div class="fgrid">
+<div>${LOGO}${site.tagline ? `<p>${esc(site.tagline)}</p>` : ""}${tel ? `<a class="ftel" href="${esc(tel)}">${esc(site.phone ?? "")}</a>` : ""}</div>
+${services.length ? `<div><h4>${t(C.foot.svc)}</h4>${services.slice(0, 5).map((s) => `<a href="#services">${esc(s.name)}</a>`).join("")}</div>` : ""}
+<div><h4>${t(C.foot.clinic)}</h4>${doctors.length ? `<a href="#team">${t(C.nav[2])}</a>` : ""}<a href="#faq">${t(C.nav[3])}</a><a href="#visit">${t(C.nav[4])}</a></div>
+${follow ? `<div><h4>${t(C.foot.follow)}</h4>${follow}</div>` : ""}
+</div>
+<div class="sm"><span>${name}</span><span>${t(C.mockup)} <a href="${esc(mockupTermsUrl(l))}" target="_blank" rel="noopener">${t(C.terms)}</a></span><span>${t(C.source)} ${esc(site.source)}</span></div>
 </div></footer>`;
 
-  const dock = book || tel ? `<div class="dock">${bookBtn("", c.book)}${book ? "" : callBtn("")}</div>` : "";
+  const data = {
+    l,
+    tel: telDigits,
+    go: goPrefix(site),
+    ph: l === "uz" || /^998/.test(telDigits) ? "+998" : "+",
+    slots: slotsOf(site.hours),
+    off: offDaysOf(site.hours),
+    panel: "#",
+    svc: services.length ? services.map((s, i) => ({ id: `s${i}`, n: s.name })) : [{ id: "s0", n: t(C.bookVisit) }],
+    wd: C.wd[l],
+    faq: faqs,
+    t: {
+      book: t(C.sheet.book),
+      svc: t(C.sheet.svc),
+      day: t(C.sheet.day),
+      time: t(C.sheet.time),
+      name: t(C.sheet.name),
+      phone: t(C.sheet.phone),
+      send: t(C.sheet.send),
+      need: t(C.sheet.need),
+      sent: t(C.sheet.sent),
+      hello: t(C.sheet.hello),
+      at: t(C.sheet.at),
+      chat: { title: site.name, sub: t(C.chatSub), hi: t(C.chatHi), miss: t(C.chatMiss), ph: t(C.chatPh), send: t(C.send), open: t(C.chat) },
+    },
+  };
 
+  const close = t(C.close);
   return `<!doctype html>
-<html lang="${LOCALE_TAG[site.locale]}">
+<html lang="${l}">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="robots" content="noindex,nofollow">
-<title>${esc(c.title(site.name))}</title>
-<meta name="description" content="${esc(c.desc(site.name))}">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>${name} · ${t(C.title)}</title>
+<meta name="description" content="${esc(`${site.name}. ${t(C.desc)}`)}">
+<meta name="robots" content="noindex, nofollow, noarchive">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,700;1,700&family=Manrope:wght@400;700&display=swap">
-<style>:root{${palette(site.color)};--r:18px}
-${CSS}</style>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant:wght@400;700&family=Manrope:wght@400;700&display=swap">
+<style>${assets.css}
+:root{${palette(site.color)}}
+.logo .lg{height:32px;width:auto;max-width:120px;object-fit:contain}
+.cr i svg{width:20px;height:20px}
+.tgc{border-radius:var(--r);padding:20px;max-width:420px;width:100%;justify-self:center}
+.tgc-h{display:flex;align-items:center;gap:10px}
+.tgc-h svg{width:26px;height:26px;color:var(--orchid)}
+.tgc-h small{margin-left:auto;font-size:12px;color:var(--mu);padding:4px 10px;border-radius:999px;background:var(--s2)}
+.tgc dl{display:grid;grid-template-columns:auto 1fr;gap:8px 14px;margin:16px 0 0}
+.tgc dt{color:var(--mu)}
+.tgc dd{margin:0;font-weight:700;overflow-wrap:anywhere}
+.hero h1{overflow-wrap:anywhere}
+@media(max-width:560px){.logo span{display:inline;max-width:50vw;overflow:hidden;text-overflow:ellipsis}}</style>
 </head>
 <body>
-${dzIntroSolo(site.locale)}
-<a class="vh" href="#services">${esc(c.skip)}</a>
+${dzIntroSolo(l)}
+<a class="vh" href="#services">${t(C.toServices)}</a>
 ${header}
 <main>
 ${hero}
+${velo}
 ${svcSec}
-${perkSec}
-${teamSec}
-${flowSec}
-${galSec}
-${whereSec}
+${resto}
+${care}
+${space}
+${team}
+${flow}
+${faq}
+${visit}
 </main>
 ${footer}
-${dock}
-<script>${JS}</script>
+<button type="button" class="chatb" id="chatb" aria-controls="chat" aria-expanded="false">${ICON.chat}<span>${t(C.chat)}</span></button>
+<div class="chat glass" id="chat" role="dialog" aria-label="${t(C.chatTitle)}" hidden><div class="ch-h">${MARK}<div><b>${name}</b><small id="ch-sub"></small></div><button type="button" class="x" id="chx" aria-label="${close}">${ICON.close}</button></div><div class="ch-b" id="chb" aria-live="polite"></div><form class="ch-f" id="chf"><label class="vh" for="chi">${t(C.chatPh)}</label><input id="chi" placeholder="${t(C.chatPh)}" autocomplete="off"><button type="submit" class="btn btn-a btn-s">${t(C.send)}</button></form></div>
+<div class="dock glass" id="dock"><button type="button" class="btn btn-a" data-book>${ICON.cal}<span>${t(C.book)}</span></button>${tel ? `<a class="btn btn-l" href="${esc(tel)}">${ICON.phone}<span>${t(C.callShort)}</span></a>` : ""}</div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="shh"><div class="sh-bg" data-close></div><div class="box"><div class="bh"><b id="shh"></b><button type="button" class="x" data-close aria-label="${close}">${ICON.close}</button></div><div class="bb" id="shb"></div></div></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script type="application/json" id="im-data">${json(data)}</script>
+<script>
+${assets.js}</script>
 </body>
 </html>`;
 }
