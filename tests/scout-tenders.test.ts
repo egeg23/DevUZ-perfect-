@@ -4,7 +4,7 @@ import { test } from "node:test";
 
 import { tenderVerdict } from "@/lib/scout/tender-match";
 import { cleanRu, needsRu, ruProblems, tenderRu } from "@/lib/scout/tender-ru";
-import { PRICE_RULE, leadFromTender, servicesOfTopics, studioTender, tenderHeading, type TenderLeadRow } from "@/lib/scout/tender-lead";
+import { PRICE_RULE, completeRow, leadFromTender, servicesOfTopics, studioTender, tenderHeading, type TenderLeadRow } from "@/lib/scout/tender-lead";
 import {
   HAYOT_ON,
   TENDERASIA_ON,
@@ -273,4 +273,23 @@ test("тендеры: телефон по ИНН из других закупо�
   });
   assert.match(lead.summary.request, /Разработать официальный сайт/);
   assert.match(lead.notes, /Название на площадке: Rasmiy veb-saytni/);
+});
+
+test("тендеры: лот без контакта и без русской фразы дочитывается перед лидом", async () => {
+  const row: TenderLeadRow = {
+    id: "00000000-0000-0000-0000-000000000003", created_at: "2026-11-10T12:00:00Z", source: "etender", external_id: "523525",
+    url: "https://etender.uzex.uz/lot/523525", title: "CRM tizimi uchun TZ yozish xizmati", customer: "UZAUTO", region: null, kind: "Отбор",
+    price: null, currency: null, deadline: null, topics: ["система"], phone: null, email: null, contact_person: null, customer_inn: "200244767",
+  };
+  const done = await completeRow(
+    row,
+    async (lot) => ({ ...lot, contact: { phone: "+998781417777", email: null, person: "Artamonov V", inn: lot.contact?.inn ?? null } }),
+    async () => "Написать техзадание для CRM-системы",
+  );
+  assert.equal(done.row.phone, "+998781417777");
+  assert.equal(done.row.customer_inn, "200244767");
+  assert.equal(done.row.title_ru, "Написать техзадание для CRM-системы");
+  assert.deepEqual(Object.keys(done.patch).sort(), ["contact_person", "customer_inn", "email", "phone", "title_ru"]);
+  const same = await completeRow({ ...row, phone: "+998", title_ru: "есть" }, async () => { throw new Error("не звать"); }, async () => { throw new Error("не звать"); });
+  assert.deepEqual(same.patch, {});
 });

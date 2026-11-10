@@ -6,7 +6,8 @@ import { saveLead } from "@/lib/qualify/store";
 import { esc } from "@/lib/qualify/telegram";
 import type { QualifyToolInput } from "@/lib/qualify/types";
 import { tenderVerdict } from "@/lib/scout/tender-match";
-import { SOURCE_LABEL, type TenderSource } from "@/lib/scout/tender-sources";
+import { tenderRu } from "@/lib/scout/tender-ru";
+import { SOURCE_LABEL, withContact, type TenderLot, type TenderSource } from "@/lib/scout/tender-sources";
 import { serviceClient } from "@/lib/supabase";
 
 /**
@@ -36,6 +37,7 @@ export type TenderLeadRow = {
   id: string;
   created_at: string;
   source: TenderSource;
+  external_id?: string;
   url: string;
   title: string;
   title_ru?: string | null;
@@ -153,6 +155,50 @@ export function tenderHeading(row: TenderLeadRow): string {
     .join("\n");
 }
 
+/**
+ * Дочитать перед лидом, чего нет: контакт заказчика и «что хотят» по-русски.
+ * Лоты, сохранённые до этого (или когда площадка не ответила), получают их
+ * здесь (владелец, 10.11.2026: «Обязательно контакты вытаскиваем с тендеров»).
+ */
+export async function completeRow(
+  row: TenderLeadRow,
+  contact: (lot: TenderLot) => Promise<TenderLot> = withContact,
+  ru: (title: string) => Promise<string | null> = (title) => tenderRu(title),
+): Promise<{ row: TenderLeadRow; patch: Record<string, unknown> }> {
+  const patch: Record<string, unknown> = {};
+  let out = row;
+  if (!row.phone && !row.email && row.external_id) {
+    const lot = await contact({
+      source: row.source,
+      externalId: row.external_id,
+      url: row.url,
+      title: row.title,
+      customer: row.customer,
+      region: row.region,
+      kind: row.kind,
+      price: row.price,
+      currency: row.currency,
+      publishedAt: null,
+      deadline: row.deadline,
+      topics: row.topics,
+      contact: row.customer_inn || row.contact_person ? { phone: null, email: null, person: row.contact_person, inn: row.customer_inn } : null,
+    }).catch(() => null);
+    const found = lot?.contact;
+    if (found && (found.phone || found.email || found.person || found.inn)) {
+      out = { ...out, phone: found.phone, email: found.email, contact_person: found.person, customer_inn: found.inn };
+      Object.assign(patch, { phone: found.phone, email: found.email, contact_person: found.person, customer_inn: found.inn });
+    }
+  }
+  if (!row.title_ru) {
+    const text = await ru(row.title).catch(() => null);
+    if (text) {
+      out = { ...out, title_ru: text };
+      patch.title_ru = text.slice(0, 400);
+    }
+  }
+  return { row: out, patch };
+}
+
 export type TenderLeadReport = { leads: number; skipped: number; errors: string[] };
 
 /**
@@ -167,7 +213,7 @@ export async function promoteTenders(now: Date = new Date()): Promise<TenderLead
   const since = new Date(now.getTime() - FRESH_DAYS * 86_400_000).toISOString();
   const { data, error } = await db
     .from("scout_tenders")
-    .select("id, created_at, source, url, title, title_ru, customer, region, kind, price, currency, deadline, topics, phone, email, contact_person, customer_inn")
+    .select("id, created_at, source, external_id, url, title, title_ru, customer, region, kind, price, currency, deadline, topics, phone, email, contact_person, customer_inn")
     .is("lead_at", null)
     .eq("status", "new")
     .gte("created_at", since)
@@ -182,7 +228,7 @@ export async function promoteTenders(now: Date = new Date()): Promise<TenderLead
 
   for (const raw of data ?? []) {
     if (report.leads >= PER_PASS) break;
-    const row = raw as TenderLeadRow;
+    let row = raw as TenderLeadRow;
     const { data: claimed } = await db
       .from("scout_tenders")
       .update({ lead_at: now.toISOString() })
@@ -196,6 +242,9 @@ export async function promoteTenders(now: Date = new Date()): Promise<TenderLead
     }
 
     try {
+      const done = await completeRow(row);
+      row = done.row;
+      if (Object.keys(done.patch).length) await db.from("scout_tenders").update(done.patch).eq("id", row.id);
       const lead = scoreLead(leadFromTender(row), "ru");
       const requestNo = newRequestNo(now);
       const leadId = await saveLead(lead, [], "scout", { requestNo, origin: { source: "scout" } });
