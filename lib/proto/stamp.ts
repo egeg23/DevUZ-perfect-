@@ -120,9 +120,16 @@ function jsShift(value: number, next: () => number): number {
   return Number((value + k / 10000).toFixed(4));
 }
 
+/**
+ * Ловушка латиницей: на узбекской странице и на страницах, где кириллица чужая
+ * (английский, грузинский у Nek Dental Studio). Кириллица остаётся русским и
+ * страницам без языка, как было.
+ */
+const latinTraps = (html: string) => /<html[^>]*\blang=["']?(uz|en|ka)\b/i.test(html);
+
 /** Сборка без зерна (локальный показ): ловушки — первыми словами, метки чисел убраны. */
 export function plainTraps(html: string): string {
-  const k = /<html[^>]*\blang=["']?uz/i.test(html) ? 1 : 0;
+  const k = latinTraps(html) ? 1 : 0;
   return html
     .replace(TRAP, (_all, n: string) => TRAP_HEAD[Number(n) % TRAP_HEAD.length][k] + TRAP_TAIL[0][k])
     .replace(JS_MARK, "$1");
@@ -206,7 +213,7 @@ export function stampHtml(html: string, seed: string): { html: string; stamp: St
   // Ловушки и числа скриптов — своими потоками из того же зерна: поток
   // стилей выше не сдвигается, и у макетов, записанных до ловушек, признаки
   // стилей в базе остаются верными.
-  const uz = /<html[^>]*\blang=["']?uz/i.test(html);
+  const uz = latinTraps(html);
   stamped = stamped.replace(TRAP, (_all, n: string) => {
     const [ru, lat] = trapWord(seed, Number(n));
     signals.push(`text:${ru}`, `text:${lat}`);

@@ -3077,3 +3077,81 @@ test("Sunday: сайт 500 $ вместо 3 900 $, девять допов вм�
   const site = bundlePages("sunday")!;
   for (const html of [site.html, site.pages.uz]) for (const re of [/3\s900\s\$/, />500\s\$/, /1\s000\s\$/]) assert.match(html, re, "на первой странице не та цена");
 });
+
+test("Nek Dental Studio: выбор, сайт и панель на en, ka и ru — условия, noindex, видео DevUz и пролёт шифром, шапка 3 с, запись в их WhatsApp, только факты из их соцсетей", async () => {
+  const { existsSync, readdirSync } = await import("node:fs");
+  const { SCENES } = await import("@/lib/proto/promo");
+  const site = bundlePages("nek");
+  assert.ok(site);
+  const all: Record<string, string> = { "": site.html, ...site.pages };
+  assert.deepEqual(Object.keys(all).sort(), ["", "ka", "ka/panel", "ka/site", "panel", "ru", "ru/panel", "ru/site", "site"]);
+  const data = await import("../scripts/protos/nek/data.mjs");
+  const plan = await import("../scripts/protos/nek/plan.mjs");
+  for (const [path, page] of Object.entries(all)) {
+    const lang = path.startsWith("ka") ? "ka" : path.startsWith("ru") ? "ru" : "en";
+    const kind = path.replace(/^(ka|ru)\/?/, "") || "land";
+    assert.doesNotMatch(page, /@@[A-Z]+@@/, `${path}: метка сборки осталась в странице`);
+    assert.ok(page.includes(`<html lang="${lang}">`), `${path}: язык страницы`);
+    /* Условий на грузинском нет: грузинская страница ведёт на английские. */
+    assert.ok(page.includes(`https://devuz.studio/${lang === "ru" ? "ru" : "en"}/mockup-terms`), `${path}: нет условий макета`);
+    assert.match(page, /<meta name="robots" content="noindex/, `${path}: нет noindex`);
+    assert.match(page, /prefers-reduced-motion/, `${path}: анимацию нечем выключить`);
+    assert.doesNotMatch(page, /stamp|watermark|fingerprint|отпечат|seed|data-mark/i, `${path}: слово, по которому находят отпечаток`);
+    assert.doesNotMatch(page, /proto-ai|proxyapi|higgsfield\.ai|firecrawl/i, `${path}: макет не зовёт модель и чужие сервисы`);
+    assert.doesNotMatch(page, /href="#"/, `${path}: ссылка в никуда`);
+    assert.doesNotMatch(page, /scroll-behavior|passive:\s*false/, `${path}: перехват прокрутки`);
+    assert.doesNotMatch(page.replace(/<script[\s\S]*?<\/script>/g, ""), /[—–]/, `${path}: длинное тире`);
+    for (const img of page.match(/<img [^>]+>/g) ?? []) assert.match(img, /alt="/, `${path}: картинка без alt`);
+    for (const src of page.match(/\/protos\/nek\/[\w./-]+\.(?:webp|png|svg|js)/g) ?? []) assert.ok(existsSync("public" + src), `${path}: нет файла ${src}`);
+    for (const id of (page.match(/href="#([\w-]+)"/g) ?? []).map((h) => h.slice(7, -1))) assert.ok(page.includes(`id="${id}"`), `${path}: ссылка на #${id}, а блока нет`);
+    const ids = page.replace(/<script[\s\S]*?<\/script>/g, "").match(/\bid="([\w-]+)"/g) ?? [];
+    assert.equal(new Set(ids).size, ids.length, `${path}: id повторяется`);
+    if (lang !== "ru") assert.doesNotMatch(page.replace(/<script(?! type="application\/json")[\s\S]*?<\/script>/g, "").replace(/<style>[\s\S]*?<\/style>/g, ""), /[А-Яа-яЁё]/, `${path}: кириллица не на русской странице`);
+    if (kind === "panel") {
+      assert.ok(page.includes("nk-demo-1"), `${path}: панель не видит записи с сайта`);
+      continue;
+    }
+    assert.match(page, /\bIDLE=3000\b/, `${path}: шапка не по правилу 3 секунд`);
+    assert.match(page, /classList\.add\('hide'\)[\s\S]*IDLE\)/, `${path}: шапка не прячется`);
+    if (kind === "land") {
+      assert.ok(page.indexOf('id="dzi"') > 0 && page.indexOf('id="dzi"') < page.indexOf('id="fly"'), `${path}: нет видео DevUz перед пролётом`);
+      assert.ok(page.includes("/promo/scene") && page.includes("AES-GCM"), `${path}: кадры пролёта не по ключу`);
+      assert.equal((page.match(/class="choice rise"/g) ?? []).length, 2, `${path}: не два выбора: сайт и панель`);
+      for (const a of plan.ADDONS) assert.ok(page.includes(`data-add="${a.id}"`), `${path}: нет тумблера ${a.id}`);
+      assert.ok(page.includes('class="calm"'), `${path}: нет спокойной версии без движения`);
+      continue;
+    }
+    assert.ok(page.includes(`tel:${data.CLINIC.tel}`) && page.includes("nk-demo-1"), `${path}: нет их телефона или связки с панелью`);
+    assert.ok(page.includes(data.CLINIC.map), `${path}: нет их ссылки на карту`);
+    for (const s of data.SERVICES) assert.ok(page.includes(s[lang][0].replace(/&/g, "&amp;")), `${path}: нет услуги «${s[lang][0]}»`);
+    for (const id of ["services", "resto", "care", "space", "team", "reviews", "faq", "visit"]) assert.ok(page.includes(`id="${id}"`), `${path}: нет блока #${id}`);
+    for (const a of plan.ADDONS) assert.ok(page.includes(`data-addon="${a.id}"`), `${path}: тумблер ${a.id} не ведёт к блоку`);
+    /* Цена на странице одна — их пост про отбеливание, 550 ₾. */
+    assert.deepEqual([...new Set(page.replace(/<script[\s\S]*?<\/script>/g, "").match(/\d[\d  ]* ?₾/g) ?? [])], ["550 ₾"], `${path}: цена не из их постов`);
+  }
+  /* Кадры Higgsfield — только шифром, открыты лишь постеры и ключевые кадры. */
+  assert.equal(SCENES.nek, "SCENE_KEY_NEK");
+  const n = JSON.parse((await import("node:fs")).readFileSync("scripts/protos/nek/media.json", "utf8")).n;
+  for (const set of ["d", "m"]) {
+    const files = readdirSync(`public/protos/nek/seq/${set}`);
+    assert.equal(files.length, n, `${set}: кадров не столько, сколько в media.json`);
+    assert.ok(files.every((f) => f.endsWith(".bin")), `${set}: кадр лежит открытым`);
+  }
+  assert.deepEqual(readdirSync("public/protos/nek").filter((f) => /\.(mp4|png|jpe?g)$/.test(f)), [], "открытый ролик или кадр в public");
+  const stamped = stampedBundle("nek", SEED)!;
+  assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
+  assert.doesNotMatch(stamped.pages["site"], /[А-Яа-яЁё]{3,}/, "ловушка на английской странице кириллицей");
+});
+
+test("Nek Dental Studio: сайт 1 000 $ вместо 2 500 $, восемь допов на 2 000 $, всё вместе 3 000 $", async () => {
+  const plan = await import("../scripts/protos/nek/plan.mjs");
+  /* Владелец, 10.11.2026: «Сайт 1000$, с допами должно быть вместе не дороже 3000$». */
+  assert.equal(plan.BASE.promo, 1000);
+  assert.equal(plan.BASE.price, 2500);
+  assert.ok(plan.ALL <= 3000, "сайт с допами дороже 3 000 $");
+  assert.equal(plan.ALL, 3000);
+  for (const id of ["fly", "admin", "quiz", "chat", "remind", "abroad", "reviews", "pages"]) assert.ok(plan.ADDONS.some((a: { id: string }) => a.id === id), `нет допа ${id}`);
+  for (const a of plan.ADDONS) for (const l of ["en", "ka", "ru"] as const) assert.ok(a[l].t && a[l].e && a[l].who, `${a.id}: нет текста на ${l}`);
+  const site = bundlePages("nek")!;
+  assert.ok(site.html.includes("2 500 $") && site.html.includes("1 000 $"), "на первой странице не та цена");
+});
