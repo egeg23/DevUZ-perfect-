@@ -24,6 +24,7 @@ const JS_SWAPS = [
   // Ключи браузера свои: состояние макета Nek и макета клиента не смешиваются.
   ["var KEY='nk-demo-1';", "var KEY='im-demo-1';"],
   ["put('nk-mine-1',l.id)", "put('im-mine-1',l.id)"],
+  ["get('nk-mine-1','')", "get('im-mine-1','')"],
   ["get('nk-cfg-1',{})", "get('im-cfg-1',{})"],
   ["$('#nk-data')", "$('#im-data')"],
   // Запись: туда, куда клиент принимает (Telegram, WhatsApp или звонок), а не только wa.me.
