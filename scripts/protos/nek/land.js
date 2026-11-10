@@ -26,26 +26,33 @@ $$('.rise,.tilt,.pop,.slide').forEach(function(e){if(io&&!RM)io.observe(e);else 
    Кадры зашифрованы (AES-GCM, 12 байт nonce + шифр), ключ отдаёт только
    открытый макет: app/proto/[token]/promo/scene. Компьютеру — 1280×720,
    телефону — свои ролики 9:16. Кадр едет за прокруткой мягким догоном,
-   соседние кадры смешиваются. */
+   соседние кадры смешиваются. Кадр распаковывается заранее и не в главном
+   потоке (createImageBitmap): распаковка WebP в миг отрисовки и давала
+   рывки на телефоне. */
 var hs=$('.hs');
 if(hs&&!RM){
-  var cv=$('canvas',hs),cx=cv.getContext('2d'),cps=$$('.cp',hs),F=D.n,url=[],cache={},order=[],ready=false,want=0,cur=0,raf=0,last=-1,dir=1;
-  var SET=w.innerWidth<900?'m':'d',EASE=/*~*/0.12,MAXB=SET==='m'?28:64,AHEAD=SET==='m'?10:16;
+  var cv=$('canvas',hs),cx=cv.getContext('2d'),cps=$$('.cp',hs),F=D.n,blob=[],bm={},order=[],busy={},nb=0,asked={},ready=false,want=0,cur=0,raf=0,last=-1,dir=1;
+  var SET=w.innerWidth<900?'m':'d',EASE=/*~*/0.12,MAXB=SET==='m'?24:56,AHEAD=SET==='m'?14:18,SRC=SET==='m'?1280:720,BMP='createImageBitmap'in w;
   function prog(){var r=hs.getBoundingClientRect(),span=r.height-innerHeight;return span>0?cl(-r.top/span):0}
-  function size(){var dpr=Math.min(w.devicePixelRatio||1,2);cv.width=Math.round(cv.clientWidth*dpr);cv.height=Math.round(cv.clientHeight*dpr);last=-1}
-  /* Расшифрованный кадр лежит сжатым (blob:), распакованными — только
-     MAXB ближних: сотни кадров iPhone в памяти не держит. Кадры впереди по
-     ходу прокрутки распаковываются заранее, чтобы пролёт не шёл ступенями. */
-  function img(i){if(i<0||i>=F)return null;var g=cache[i];if(g||!url[i])return g;g=new Image();g.decoding='async';g.onload=function(){last=-1;if(!raf)raf=requestAnimationFrame(loop)};g.src=url[i];cache[i]=g;order.push(i);return g}
-  function trim(c){while(order.length>MAXB){var far=0,fd=-1;for(var k=0;k<order.length;k++){var dd=Math.abs(order[k]-c);if(dd>fd){fd=dd;far=k}}delete cache[order[far]];order.splice(far,1)}}
-  function warm(c){for(var k=-4;k<=AHEAD;k++)img(c+k*dir);trim(c)}
-  function ok(g){return g&&g.complete&&g.naturalWidth}
-  function near(i){var g=img(i);if(ok(g))return g;for(var k=1;k<F;k++){var a=cache[i-k],b=cache[i+k];if(ok(a))return a;if(ok(b))return b}for(k=1;k<F;k++){if(url[i-k])return img(i-k);if(url[i+k])return img(i+k)}return null}
-  function blit(g){var cw=cv.width,ch=cv.height,s=Math.max(cw/g.naturalWidth,ch/g.naturalHeight),gw=g.naturalWidth*s,gh=g.naturalHeight*s;cx.drawImage(g,(cw-gw)*.5,(ch-gh)*.5,gw,gh)}
+  /* Холст не крупнее самого кадра: лишние точки только греют телефон. */
+  function size(){var dpr=Math.min(w.devicePixelRatio||1,2,Math.max(1,SRC/(cv.clientHeight||1)));cv.width=Math.round(cv.clientWidth*dpr);cv.height=Math.round(cv.clientHeight*dpr);last=-1}
+  function at(){return Math.round(cur*(F-1))}
+  function viaImg(b){return new Promise(function(ok,no){var g=new Image(),u=URL.createObjectURL(b);g.onload=function(){var fin=function(){URL.revokeObjectURL(u);ok(g)};g.decode?g.decode().then(fin,fin):fin()};g.onerror=function(){URL.revokeObjectURL(u);no()};g.src=u})}
+  /* Расшифрованный кадр лежит сжатым (Blob), распакованными — только MAXB
+     ближних: сотни кадров iPhone в памяти не держит. Распаковка идёт по
+     ходу прокрутки, ближние первыми, не больше трёх сразу. */
+  function unpack(i){if(i<0||i>=F||bm[i]||busy[i]||!blob[i]||nb>=3)return;busy[i]=1;nb++;
+    (BMP?createImageBitmap(blob[i]).catch(function(){BMP=false;return viaImg(blob[i])}):viaImg(blob[i])).then(function(g){busy[i]=0;nb--;bm[i]=g;order.push(i);trim(at());if(Math.abs(i-at())<3)last=-1;warm(at());if(!raf)raf=requestAnimationFrame(loop)},function(){busy[i]=0;nb--})}
+  function trim(c){while(order.length>MAXB){var far=0,fd=-1;for(var k=0;k<order.length;k++){var dd=Math.abs(order[k]-c);if(dd>fd){fd=dd;far=k}}var j=order[far];if(bm[j]&&bm[j].close)bm[j].close();delete bm[j];order.splice(far,1)}}
+  function warm(c){for(var k=0;k<=AHEAD;k++)unpack(c+k*dir);for(k=1;k<=4;k++)unpack(c-k*dir)}
+  function near(i){if(bm[i])return bm[i];for(var k=1;k<F;k++){if(bm[i-k])return bm[i-k];if(bm[i+k])return bm[i+k]}return null}
+  function blit(g){var cw=cv.width,ch=cv.height,s=Math.max(cw/g.width,ch/g.height),gw=g.width*s,gh=g.height*s;cx.drawImage(g,(cw-gw)*.5,(ch-gh)*.5,gw,gh)}
   /* Между двумя кадрами — их смесь: соседний кадр ложится поверх с долей
-     прозрачности, и движение идёт без ступеней даже при медленной прокрутке. */
-  function draw(){var f=cur*(F-1),i=Math.floor(f),t=f-i,key=Math.round(f*50);if(key===last)return;warm(i);var g=near(i);if(!ok(g))return;last=key;
-    cx.globalAlpha=1;blit(g);var h=t>.02&&g===cache[i]?cache[i+1]:null;if(ok(h)){cx.globalAlpha=t;blit(h);cx.globalAlpha=1}}
+     прозрачности, и медленная прокрутка идёт без ступеней. На быстрой кадр
+     и так меняется каждый раз, смесь не видна, а слабому телефону она
+     вдвое дороже — там её нет. */
+  function draw(){var f=cur*(F-1),i=Math.floor(f),t=f-i,key=Math.round(f*50),slow=Math.abs(want-cur)*(F-1)*EASE<.6;if(key===last)return;warm(i);var g=near(i);if(!g)return;last=key;
+    cx.globalAlpha=1;blit(g);var h=slow&&t>.02&&g===bm[i]?bm[i+1]:null;if(h){cx.globalAlpha=t;blit(h);cx.globalAlpha=1}}
   /* Глава видна вокруг своей доли сцены: появляется и уходит движением. */
   function paint(p){
     for(var i=0;i<cps.length;i++){var at=D.ch[i].at,o=i===0?cl(1-(p-.02)/.08):i===cps.length-1&&p>at?1:cl(1-Math.abs(p-at)/.085);cps[i].style.setProperty('--o',o.toFixed(3))}
@@ -53,7 +60,7 @@ if(hs&&!RM){
   function loop(){raf=0;var dl=want-cur;if(dl)dir=dl>0?1:-1;cur=Math.abs(dl)<.0002?want:cur+dl*EASE;if(ready)draw();if(cur!==want)raf=requestAnimationFrame(loop)}
   function poke(){want=prog();paint(want);if(!raf)raf=requestAnimationFrame(loop)}
   addEventListener('scroll',poke,{passive:true});addEventListener('resize',function(){if(ready)size();poke()});poke();
-  if(!w.crypto||!crypto.subtle||!w.URL||!URL.createObjectURL)$('#hs-load').classList.add('ok');
+  if(!w.crypto||!crypto.subtle||!w.Blob)$('#hs-load').classList.add('ok');
   else if(d.readyState==='complete')setTimeout(loadScene,200);else addEventListener('load',function(){setTimeout(loadScene,200)});
   function loadScene(){
     var n=$('#hs-n'),bar=$('#hs-b'),done=0,got=0;
@@ -63,12 +70,14 @@ if(hs&&!RM){
     fetch(D.root+'/promo/scene',{credentials:'same-origin'}).then(function(r){if(!r.ok)throw 0;return r.arrayBuffer()})
     .then(function(b){return crypto.subtle.importKey('raw',b,'AES-GCM',false,['decrypt'])})
     .then(function(key){
-      /* Сначала каждый двенадцатый кадр, потом остальные: сцена живая сразу. */
-      var q=[],i,seen={};for(i=0;i<F;i+=12){q.push(i);seen[i]=1}if(!seen[F-1]){q.push(F-1);seen[F-1]=1}for(i=0;i<F;i++)if(!seen[i])q.push(i);
-      function next(){var j=q.shift();if(j==null)return;
+      /* Сначала каждый двенадцатый кадр (сцена живая сразу), потом те, что
+         ближе к месту, где человек листает, впереди по ходу первыми. */
+      var q=[],i;for(i=0;i<F;i+=12)q.push(i);if((F-1)%12)q.push(F-1);
+      function pick(){while(q.length){var j=q.shift();if(!asked[j])return j}var c=at();for(var k=0;k<F;k++){var a=c+k*dir,z=c-k*dir;if(a>=0&&a<F&&!asked[a])return a;if(z>=0&&z<F&&!asked[z])return z}return null}
+      function next(){var j=pick();if(j==null)return;asked[j]=1;
         fetch(D.img+'/seq/'+SET+'/f'+pad(j,3)+'.bin').then(function(r){if(!r.ok)throw 0;return r.arrayBuffer()})
         .then(function(buf){return crypto.subtle.decrypt({name:'AES-GCM',iv:new Uint8Array(buf,0,12)},key,new Uint8Array(buf,12))})
-        .then(function(x){url[j]=URL.createObjectURL(new Blob([x],{type:'image/webp'}));got++;last=-1;step();if(ready&&!raf)raf=requestAnimationFrame(loop);next()},function(){step();next()})}
+        .then(function(x){blob[j]=new Blob([x],{type:'image/webp'});got++;step();if(ready){if(Math.abs(j-at())<=AHEAD)warm(at());if(!raf)raf=requestAnimationFrame(loop)}next()},function(){step();next()})}
       for(i=0;i<6;i++)next()})
     .catch(function(){$('#hs-load').classList.add('ok')})}
 }else if(hs){$$('.cp',hs).forEach(function(c){c.style.setProperty('--o','1')})}
