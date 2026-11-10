@@ -41,13 +41,31 @@ create table if not exists tg_staff(chat_id text primary key, user_id integer no
 create table if not exists tg_codes(code text primary key, user_id integer not null, until integer not null);
 create table if not exists notices(chat_id text not null, message_id integer not null, lead_id integer not null, primary key(chat_id, message_id));
 create table if not exists faq(id integer primary key, q text not null, a text not null, sort integer not null default 0);
+create table if not exists bot_users(
+  chat text primary key, name text not null default '', username text not null default '', lang text not null default '',
+  kind text not null default '', account_id integer, first_at integer not null, last_at integer not null, blocked_at integer);
+create table if not exists broadcasts(
+  id integer primary key, at integer not null, by text not null, text text not null, photo text not null default '',
+  seg text not null, via text not null default 'panel', total integer not null default 0, sent integer not null default 0,
+  failed integer not null default 0, blocked integer not null default 0, state text not null default 'queued', done_at integer);
+create table if not exists broadcast_q(broadcast_id integer not null, chat text not null, primary key(broadcast_id, chat));
+create table if not exists bc_drafts(chat text primary key, text text not null default '', photo text not null default '', at integer not null);
+create table if not exists accounts(
+  id integer primary key, kind text not null, name text not null, org text not null default '', email text unique not null,
+  phone text not null default '', country text not null default '', lang text not null default 'ru', pass text not null,
+  status text not null, created_at integer not null, approved_by text not null default '', tg_chat text not null default '');
+create table if not exists account_sessions(id text primary key, account_id integer not null, created_at integer not null, last_at integer not null);
+create table if not exists acc_codes(code text primary key, account_id integer not null, until integer not null);
 `;
+/* Колонки, добавленные после первой выкатки: в базе, созданной раньше, их нет. */
+const LATER = ["alter table leads add column account_id integer"];
 
 export function openDb(file) {
   if (file !== ":memory:") mkdirSync(dirname(file), { recursive: true });
   const db = new DatabaseSync(file);
   db.exec("pragma journal_mode = wal; pragma foreign_keys = on; pragma busy_timeout = 5000;");
   db.exec(SCHEMA);
+  for (const sql of LATER) { try { db.exec(sql); } catch { /* колонка уже есть */ } }
   const st = new Map();
   const q = (sql) => { let s = st.get(sql); if (!s) { s = db.prepare(sql); st.set(sql, s); } return s; };
   return {

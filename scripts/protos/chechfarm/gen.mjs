@@ -45,6 +45,7 @@ const TERMS = (l) => `https://devuz.studio/${l}/mockup-terms`;
 /* Арабский: у Literata и Onest нет арабских букв — Noto Naskh для заголовков, IBM Plex Sans Arabic для текста. */
 const FONTS_AR = "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;700&family=Noto+Naskh+Arabic:wght@400;700&display=swap";
 const AR_CSS = strip(existsSync(DIR + "rtl.css") ? readFileSync(DIR + "rtl.css", "utf8") : "").replace(/\n\s*/g, "");
+const ACC_JS = existsSync(DIR + "account.js") ? strip(readFileSync(DIR + "account.js", "utf8")) : "";
 const FONTS = "https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,700&family=Onest:wght@400;700&display=swap";
 const KEY = { ru: "", uz: "uz", en: "en", ar: "ar" };
 /* Боевой сайт — ещё и на арабском (подарок, ar.mjs): данные получают «ar». */
@@ -102,7 +103,9 @@ const NAV = [
   ["contacts", ["Контакты", "Aloqa", "Contacts"]],
 ];
 if (PROD) { for (const n of NAV) n[1].push(tr(n[1][2])); }
-const navName = (p, l) => (NAV.find((n) => n[0] === p) || [p, ["Политика данных", "Ma’lumotlar siyosati", "Privacy"]])[1][LANGS.indexOf(l)];
+const EXTRA_NAV = { privacy: ["Политика данных", "Ma’lumotlar siyosati", "Privacy"], account: ["Кабинет", "Kabinet", "Account"] };
+if (PROD) for (const v of Object.values(EXTRA_NAV)) v.push(tr(v[2]));
+const navName = (p, l) => (NAV.find((n) => n[0] === p) || [p, EXTRA_NAV[p] || EXTRA_NAV.privacy])[1][LANGS.indexOf(l)];
 const L3 = (o, l) => o[l];
 const PB = makeBlocks({ T, href, ICON, IMG, L3, CHAIN, pad, BASE_URL });
 const LB = makeLaunch({ T, href, ICON, pad });
@@ -114,12 +117,12 @@ function headerHtml(l, p) {
   return `<header class="top" id="top"><div class="top-in glass">
 ${LOGO(l)}
 <nav class="nav" aria-label="${t("Разделы", "Bo‘limlar", "Sections")}">${NAV.map(([id, n]) => `<a href="${href(l, id)}"${id === p ? ' aria-current="page"' : ""}>${n[LANGS.indexOf(l)]}</a>`).join("")}</nav>
-<div class="top-r">${lang}<a class="btn btn-pri top-cta" href="${href(l, "contacts")}#form">${t("Связаться", "Bog‘lanish", "Get in touch")}</a>
+<div class="top-r">${PROD ? `<a class="top-acc" href="${href(l, "account")}"${p === "account" ? ' aria-current="page"' : ""}>${t("Кабинет", "Kabinet", "Account")}</a>` : ""}${lang}<a class="btn btn-pri top-cta" href="${href(l, "contacts")}#form">${t("Связаться", "Bog‘lanish", "Get in touch")}</a>
 <button type="button" class="ic-btn" id="menu-btn" aria-expanded="false" aria-controls="menu" aria-label="${t("Меню", "Menyu", "Menu")}">${ICON.menu}</button></div>
 </div></header>
 <div class="menu" id="menu" role="dialog" aria-modal="true" aria-label="${t("Меню", "Menyu", "Menu")}" hidden>
 <button type="button" class="ic-btn" data-close aria-label="${t("Закрыть", "Yopish", "Close")}">${ICON.close}</button>
-<nav class="mn-list" aria-label="${t("Разделы", "Bo‘limlar", "Sections")}"><a href="${href(l)}"><small>00</small>${t("Главная", "Bosh sahifa", "Home")}</a>${NAV.map(([id, n], i) => `<a href="${href(l, id)}"><small>${pad(i + 1)}</small>${n[LANGS.indexOf(l)]}</a>`).join("")}</nav>
+<nav class="mn-list" aria-label="${t("Разделы", "Bo‘limlar", "Sections")}"><a href="${href(l)}"><small>00</small>${t("Главная", "Bosh sahifa", "Home")}</a>${NAV.map(([id, n], i) => `<a href="${href(l, id)}"><small>${pad(i + 1)}</small>${n[LANGS.indexOf(l)]}</a>`).join("")}${PROD ? `<a href="${href(l, "account")}"><small>${pad(NAV.length + 1)}</small>${t("Кабинет", "Kabinet", "Account")}</a>` : ""}</nav>
 ${lang}
 <a class="btn btn-gold" href="${href(l, "contacts")}#form">${ICON.send}<span>${t("Связаться с CZECHFARM", "CZECHFARM bilan bog‘lanish", "Contact CZECHFARM")}</span></a>
 </div>`;
@@ -383,7 +386,35 @@ function privacy(l) {
   `<section class="sec" style="padding-top:24px"><div class="wrap"><div class="sect-list">${items.map(([h, b], i) => `<div><b>${pad(i + 1)}</b><span><strong>${h}</strong><br>${b}</span></div>`).join("")}</div></div></section>`].join("\n");
 }
 
-const BUILD = { "": home, about, products, partners, investors, news, contacts, privacy };
+/* Кабинет партнёра и клиента — только боевой сайт (account.js, сервер /api/acc). */
+function account(l) {
+  const t = T(l);
+  const kind = (v, name, note) => `<label class="acc-kind"><input type="radio" name="kind" value="${v}" required><span><b>${name}</b><small>${note}</small></span></label>`;
+  return [pageHead(l, "account", t("Кабинет <b>партнёра и клиента</b>", "Hamkor va mijoz <b>kabineti</b>", "Partner and client <b>account</b>"), t("Регистрация и вход: ваши обращения и их статус в одном месте, новости компании в Telegram.", "Ro‘yxatdan o‘tish va kirish: murojaatlaringiz va ularning holati bir joyda, kompaniya yangiliklari Telegramda.", "Sign up and sign in: your requests and their status in one place, company news on Telegram.")),
+  `<section class="sec" style="padding-top:24px" id="acc"><div class="wrap" id="acc-app">
+<div id="acc-auth" class="acc-auth">
+<div class="tabs" role="group" aria-label="${t("Кабинет", "Kabinet", "Account")}"><button type="button" data-acc-tab="login" aria-pressed="true">${t("Вход", "Kirish", "Sign in")}</button><button type="button" data-acc-tab="reg" aria-pressed="false">${t("Регистрация", "Ro‘yxatdan o‘tish", "Sign up")}</button></div>
+<form class="form" id="acc-login" novalidate><h3>${t("Вход в кабинет", "Kabinetga kirish", "Sign in to your account")}</h3>
+${fl(l, "email", t("Почта", "Pochta", "Email"), { req: true, type: "email", auto: "email", mode: "email" })}${fl(l, "pass", t("Пароль", "Parol", "Password"), { req: true, type: "password", auto: "current-password" })}
+<p class="acc-err err" aria-live="polite"></p>${submit(l, t("Войти", "Kirish", "Sign in"))}</form>
+<form class="form" id="acc-reg" novalidate hidden><h3>${t("Регистрация", "Ro‘yxatdan o‘tish", "Sign up")}</h3>
+<div class="acc-kinds" role="radiogroup" aria-label="${t("Кто вы", "Siz kimsiz", "Who you are")}">${kind("partner", t("Партнёр", "Hamkor", "Partner"), t("Производитель или дистрибьютор. Кабинет откроется после проверки.", "Ishlab chiqaruvchi yoki distribyutor. Kabinet tekshiruvdan keyin ochiladi.", "A manufacturer or distributor. Opens after the company checks it."))}${kind("client", t("Клиент", "Mijoz", "Client"), t("Аптека, клиника, врач или покупатель. Кабинет открывается сразу.", "Dorixona, klinika, shifokor yoki xaridor. Kabinet darhol ochiladi.", "A pharmacy, clinic, doctor or customer. Opens straight away."))}</div>
+<div class="row2">${fl(l, "name", t("Как к вам обращаться", "Ismingiz", "Your name"), { req: true, auto: "name" })}${fl(l, "org", t("Компания", "Kompaniya", "Company"), { auto: "organization" })}</div>
+<div class="row2">${fl(l, "email", t("Почта", "Pochta", "Email"), { req: true, type: "email", auto: "email", mode: "email" })}${fl(l, "phone", t("Телефон", "Telefon", "Phone"), { type: "tel", auto: "tel", mode: "tel", ph: "+998" })}</div>
+<div class="row2">${fl(l, "country", t("Страна", "Mamlakat", "Country"), { auto: "country-name" })}${fl(l, "pass", t("Пароль, от 8 знаков", "Parol, kamida 8 belgi", "Password, 8+ characters"), { req: true, type: "password", auto: "new-password" })}</div>
+${agree(l)}<p class="acc-err err" aria-live="polite"></p>${submit(l, t("Зарегистрироваться", "Ro‘yxatdan o‘tish", "Sign up"))}</form>
+</div>
+<div id="acc-cab" class="acc-cab" hidden>
+<div class="acc-head"><div><h2 class="h2" id="acc-hi"></h2><p><span class="chip" id="acc-kind"></span> <span class="chip" id="acc-st"></span></p></div><button type="button" class="btn btn-line" id="acc-out">${t("Выйти", "Chiqish", "Sign out")}</button></div>
+<p class="warn" id="acc-pend" hidden>${ICON.info}<span>${t("Кабинет партнёра на проверке: компания посмотрит заявку и откроет его. Обращения можно писать уже сейчас.", "Hamkor kabineti tekshiruvda: kompaniya arizani ko‘rib, uni ochadi. Murojaatlarni hozirdanoq yozish mumkin.", "Your partner account is being checked: the company will review it and open it. You can already send requests.")}</span></p>
+<div class="acc-tg glass"><span>${t("Новости и ответы компании в Telegram", "Kompaniya yangiliklari va javoblari Telegramda", "Company news and replies on Telegram")}</span><button type="button" class="btn btn-pri" id="acc-tg">${ICON.send}<span>${t("Привязать Telegram", "Telegramni ulash", "Link Telegram")}</span></button><b id="acc-tg-ok" hidden>${ICON.check}${t("Telegram привязан", "Telegram ulangan", "Telegram linked")}</b></div>
+<div class="split" style="margin-top:28px"><div><p class="kicker">${t("Мои обращения", "Murojaatlarim", "My requests")}</p><div class="track" style="display:grid;gap:12px"><div class="track-l" id="acc-leads"></div></div></div>
+<div id="acc-new">${contactForm(l, t("Новое обращение", "Yangi murojaat", "New request"))}</div></div>
+</div>
+</div></section>`].join("\n");
+}
+
+const BUILD = { "": home, about, products, partners, investors, news, contacts, privacy, account };
 const TITLES = {
   "": ["CZECHFARM: Health. Trust. Value. Фармацевтическая компания", "CZECHFARM: Health. Trust. Value. Farmatsevtika kompaniyasi", "CZECHFARM: Health. Trust. Value. Pharmaceutical company"],
   about: ["О компании CZECHFARM: миссия, принципы, модель", "CZECHFARM haqida: missiya, tamoyillar, model", "About CZECHFARM: mission, principles, model"],
@@ -392,6 +423,7 @@ const TITLES = {
   investors: ["Инвесторам: CZECHFARM, где здоровье создаёт стоимость", "Investorlarga: salomatlik qiymat yaratadigan CZECHFARM", "Investors: CZECHFARM, where health creates value"],
   news: ["Новости CZECHFARM", "CZECHFARM yangiliklari", "CZECHFARM news"],
   contacts: ["Контакты CZECHFARM", "CZECHFARM bilan aloqa", "Contact CZECHFARM"],
+  account: ["Кабинет партнёра и клиента CZECHFARM", "CZECHFARM hamkor va mijoz kabineti", "CZECHFARM partner and client account"],
   privacy: ["Политика обработки данных CZECHFARM", "CZECHFARM ma’lumotlarni qayta ishlash siyosati", "CZECHFARM privacy policy"],
 };
 const DESC = ["CZECHFARM улучшает здоровье и качество жизни людей через доступ к современным решениям. Партнёрам, аптекам, врачам и инвесторам.", "CZECHFARM zamonaviy yechimlar orqali odamlarning salomatligi va hayot sifatini yaxshilaydi. Hamkorlar, dorixonalar, shifokorlar va investorlar uchun.", "CZECHFARM improves people’s health and quality of life through access to modern solutions. For partners, pharmacies, doctors and investors."];
@@ -412,6 +444,16 @@ function K(l, p) {
     offer: PROD ? null : PB.offerData(l),
     launch: LB.launchData(l),
     panel: PROD ? "" : href(l, "panel"),
+    ...(PROD && p === "account" ? { acc: {
+      hi: t("Здравствуйте, {n}", "Assalomu alaykum, {n}", "Hello, {n}"),
+      partner: t("Партнёр", "Hamkor", "Partner"), client: t("Клиент", "Mijoz", "Client"),
+      st: { pending: t("На проверке", "Tekshiruvda", "Being checked"), active: t("Активен", "Faol", "Active"), blocked: t("Заблокирован", "Bloklangan", "Blocked") },
+      noLeads: t("Обращений пока нет. Напишите первое справа.", "Hozircha murojaat yo‘q. Birinchisini o‘ng tomonda yozing.", "No requests yet. Write your first one on the right."),
+      fail: t("Не получилось. Проверьте интернет и попробуйте ещё раз.", "Bo‘lmadi. Internetni tekshirib, qayta urinib ko‘ring.", "That did not work. Check your connection and try again."),
+      needKind: t("Выберите: партнёр или клиент", "Tanlang: hamkor yoki mijoz", "Choose: partner or client"),
+      needAgree: t("Нужно согласие на обработку данных", "Ma’lumotlarni qayta ishlashga rozilik kerak", "Please agree to data processing"),
+      shortPass: t("Пароль не короче 8 знаков", "Parol kamida 8 belgi", "The password needs at least 8 characters"),
+    } } : {}),
     ...(PROD ? { prod: true, live: null, rxName: { rx: t("По рецепту", "Retsept bilan", "Prescription only"), otc: t("Без рецепта", "Retseptsiz", "Over the counter") },
     leaflet: t("Открыть инструкцию (PDF)", "Yo‘riqnomani ochish (PDF)", "Open the leaflet (PDF)"),
     sendFail: t("Не получилось отправить. Проверьте интернет и попробуйте ещё раз.", "Yuborib bo‘lmadi. Internetni tekshirib, qayta urinib ko‘ring.", "Could not send. Check your connection and try again.") } : {}),
@@ -488,7 +530,7 @@ ${footHtml(l)}
 <p class="toast" id="toast" role="status" hidden></p>
 <script type="application/json" id="cf-data">${JSON.stringify(K(l, p)).replace(/</g, "\\u003c")}</script>
 <script>
-${JS}</script>
+${JS}</script>${PROD && p === "account" ? `\n<script>\n${ACC_JS}</script>` : ""}
 </body>
 </html>`;
 }
@@ -609,7 +651,7 @@ const out = {};
 if (PROD) {
   /* Боевой сайт: страницы файлами в app/site, без демо-панели и сборки макета. */
   const SITE = process.env.CF_SITE || DIR + "app/site/";
-  for (const l of LANGS) for (const p of [...PAGES, "privacy"]) {
+  for (const l of LANGS) for (const p of [...PAGES, "privacy", "account"]) {
     const k = keyOf(l, p), f = SITE + (k ? k + "/" : "") + "index.html";
     mkdirSync(f.slice(0, f.lastIndexOf("/")), { recursive: true });
     writeFileSync(f, page(l, p));

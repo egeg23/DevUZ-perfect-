@@ -54,7 +54,7 @@
   }
 
   /* ── Каркас ────────────────────────────────────────────────────── */
-  var NAV = [["home", "Сводка"], ["leads", "Обращения"], ["products", "Продукты"], ["news", "Новости"], ["ir", "Комната инвестора", "head"], ["site", "Сайт и бот"], ["connect", "Подключения"], ["team", "Команда"], ["log", "История", "head"]];
+  var NAV = [["home", "Сводка"], ["leads", "Обращения"], ["accounts", "Партнёры и клиенты"], ["bc", "Рассылки в бот", "head"], ["products", "Продукты"], ["news", "Новости"], ["ir", "Комната инвестора", "head"], ["site", "Сайт и бот"], ["connect", "Подключения"], ["team", "Команда"], ["log", "История", "head"]];
   function shell() {
     app.className = "";
     app.innerHTML = '<div class="shell"><nav class="side" id="side"><div class="brand">CZECHFARM<small>ALLIANCE · ПАНЕЛЬ</small></div>' +
@@ -68,7 +68,7 @@
     $$("#side a").forEach(function (a) { if (a.getAttribute("data-s") === (sec === "lead" ? "leads" : sec)) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
     $("#side").classList.remove("open");
     var main = $("#main"); main.innerHTML = '<p class="note">Загружаем…</p>';
-    var V = { home: home, leads: leads, lead: lead, products: products, news: news, ir: ir, site: site, connect: connect, team: team, log: logV }[sec] || home;
+    var V = { accounts: accounts, bc: broadcasts, home: home, leads: leads, lead: lead, products: products, news: news, ir: ir, site: site, connect: connect, team: team, log: logV }[sec] || home;
     Promise.resolve(V(main, hs.split("/")[1])).catch(fail);
     api("/summary").then(function (s) { var n = $("#nfresh"); if (n) { n.hidden = !s.fresh; n.textContent = s.fresh; } }).catch(function () {});
   }
@@ -213,7 +213,7 @@
       var seoKeys = []; if (j.seo) M.langs.forEach(function (l) { M.pages.forEach(function (p) { seoKeys.push(l + ":" + p); }); });
       b.innerHTML = '<h2>Контакты на сайте</h2><div class="card grid"><p class="note">Пустое поле на сайте не показывается.</p><div class="grid g2">' + M.contactKeys.map(function (k) { return '<label class="f">' + CT_NAME[k] + '<input data-c="' + k + '" value="' + h(j.contacts[k]) + '"></label>'; }).join("") + '</div><div class="row"><button class="btn pri" id="csave">Сохранить контакты</button></div></div>' +
         '<h2>Частые вопросы в Telegram-боте</h2><div class="card grid"><p class="note">Клиент нажимает вопрос или пишет похожими словами — бот отвечает этим текстом. На остальное бот заводит обращение, и вы отвечаете клиенту из панели или ответом в Telegram.</p><div id="fq"></div><div class="row"><button class="btn" id="fadd">Добавить вопрос</button></div>' +
-        '<h2>Тексты бота</h2><div class="grid g2">' + Object.keys(j.botTexts).map(function (k) { return '<label class="f">' + ({ hello: "Приветствие", taken: "Обращение принято", more: "Клиент дописал", faq: "Заголовок частых вопросов", none: "Вопросов нет" }[k] || k) + '<textarea data-t="' + k + '">' + h(j.botTexts[k]) + "</textarea></label>"; }).join("") + '</div><div class="row"><button class="btn pri" id="fsave">Сохранить вопросы и тексты</button></div></div>' +
+        '<h2>Тексты бота</h2><div class="grid g2">' + Object.keys(j.botTexts).map(function (k) { return '<label class="f">' + ({ hello: "Приветствие", who: "Вопрос «кто вы» (партнёр или клиент)", kindPartner: "Ответ партнёру", kindClient: "Ответ клиенту", taken: "Обращение принято", more: "Клиент дописал", faq: "Заголовок частых вопросов", none: "Вопросов нет" }[k] || k) + '<textarea data-t="' + k + '">' + h(j.botTexts[k]) + "</textarea></label>"; }).join("") + '</div><div class="row"><button class="btn pri" id="fsave">Сохранить вопросы и тексты</button></div></div>' +
         (j.seo ? '<h2>Заголовки страниц для поиска</h2><div class="card grid"><p class="note">Заголовок — до 60 знаков, описание — до 160. Пусто — стоит заголовок из сайта.</p><table class="resp"><thead><tr><th>Страница</th><th>Заголовок</th><th>Описание</th></tr></thead><tbody>' + seoKeys.map(function (k) { var v = j.seo[k] || {}, p = k.split(":"); return "<tr><td>" + PAGE_NAME[p[1]] + '<br><span class="note">' + LANG_NAME[p[0]] + '</span></td><td><input class="i" data-st="' + k + '" maxlength="120" value="' + h(v.t) + '"' + (p[0] === "ar" ? ' dir="rtl"' : "") + '></td><td><textarea class="i" data-sd="' + k + '" maxlength="300"' + (p[0] === "ar" ? ' dir="rtl"' : "") + ">" + h(v.d) + "</textarea></td></tr>"; }).join("") + '</tbody></table><div class="row"><button class="btn pri" id="ssave">Сохранить заголовки</button></div></div>' +
           '<h2>Счётчики и подтверждение сайта</h2><div class="card grid"><div class="grid g2"><label class="f">Яндекс Метрика: номер счётчика<input id="cm" value="' + h(j.counters.metrika) + '"></label><label class="f">Яндекс Вебмастер: код из meta yandex-verification<input id="cy" value="' + h(j.counters.yandex) + '"></label><label class="f">Google Search Console: код из meta google-site-verification<input id="cg" value="' + h(j.counters.google) + '"></label></div><div class="row"><button class="btn pri" id="ksave">Сохранить</button></div></div>' : "");
       var faq = j.faq.map(function (f) { return { q: f.q, a: f.a }; });
@@ -267,6 +267,41 @@
       $$("[data-pw]", b).forEach(function (x) { x.addEventListener("click", function () { var p = prompt("Новый пароль (от 8 знаков):"); if (p) api("/users/" + x.getAttribute("data-pw") + "/pass", { pass: p }).then(function () { toast("Пароль изменён, сотрудник войдёт заново"); }).catch(fail); }); });
       $$("[data-off]", b).forEach(function (x) { x.addEventListener("click", function () { if (confirm("Отключить сотрудника? Он сразу выйдет из панели.")) api("/users/" + x.getAttribute("data-off") + "/off", {}).then(function () { team(main); }).catch(fail); }); });
       $("#psave").addEventListener("click", function () { api("/me/pass", { old: $("#po").value, pass: $("#pn").value }).then(function () { toast("Пароль сменён, войдите заново"); boot(); }).catch(fail); });
+    });
+  }
+
+  /* ── Партнёры и клиенты ────────────────────────────────────────── */
+  function accounts(main) {
+    return api("/accounts").then(function (j) {
+      var b = head(main, "Партнёры и клиенты");
+      var pend = j.accounts.filter(function (a) { return a.status === "pending"; }).length;
+      b.innerHTML = '<p class="note">Кабинеты с сайта (раздел «Кабинет»). Клиент получает кабинет сразу, партнёр — после «Одобрить». В кабинете человек видит свои обращения и их статус. Привязанный Telegram — человек нажал «Привязать Telegram» в кабинете: такие получают рассылки своего сегмента.</p>' +
+        (pend ? '<div class="card"><b>Ждут проверки: ' + pend + "</b></div>" : "") +
+        (j.accounts.length ? '<table class="resp"><thead><tr><th>Кто</th><th>Контакт</th><th>Когда</th><th>Статус</th><th></th></tr></thead><tbody>' + j.accounts.map(function (a) {
+          return "<tr><td><b>" + h(a.name) + "</b>" + (a.org ? ", " + h(a.org) : "") + '<br><span class="note">' + (a.kind === "partner" ? "партнёр" : "клиент") + (a.country ? " · " + h(a.country) : "") + "</span></td><td>" + h(a.email) + (a.phone ? "<br>" + h(a.phone) : "") + (a.tg ? '<br><span class="pill">Telegram</span>' : "") + "</td><td>" + dt(a.created_at) + '</td><td><span class="pill ' + (a.status === "pending" ? "new" : a.status === "active" ? "done" : "spam") + '">' + h(a.statusName) + "</span>" + (a.approved_by ? '<br><span class="note">' + h(a.approved_by) + "</span>" : "") + '</td><td class="row">' + (staff() ? (a.status !== "active" ? '<button class="btn pri" data-st="active" data-id="' + a.id + '">' + (a.status === "pending" ? "Одобрить" : "Разблокировать") + "</button>" : "") + (a.status !== "blocked" ? '<button class="btn warn" data-st="blocked" data-id="' + a.id + '">Заблокировать</button>' : "") : "") + "</td></tr>";
+        }).join("") + "</tbody></table>" : '<div class="card note">Регистраций пока нет.</div>');
+      $$("[data-st]", b).forEach(function (x) { x.addEventListener("click", function () { var st = x.getAttribute("data-st"); if (st === "blocked" && !confirm("Заблокировать кабинет? Человек сразу выйдет и не сможет войти.")) return; api("/accounts/" + x.getAttribute("data-id"), { status: st }).then(function () { toast("Сохранено"); accounts(main); }).catch(fail); }); });
+    });
+  }
+
+  /* ── Рассылки в бот ────────────────────────────────────────────── */
+  var BC_ST = { queued: "в очереди", sending: "идёт", done: "готово", canceled: "остановлена" };
+  function broadcasts(main) {
+    return api("/audience").then(function (j) {
+      var c = j.counts, b = head(main, "Рассылки в бот");
+      b.innerHTML = '<div class="grid g4">' + [["Подписчиков сейчас", c.all], ["Партнёров", c.partner], ["Клиентов", c.client], ["Новых за 7 дней", c.week]].map(function (x) { return '<div class="card stat"><b>' + x[1] + "</b><span>" + x[0] + "</span></div>"; }).join("") + '</div><p class="note">Подписчик — тот, кто сам писал боту и не заблокировал его (сотрудники не считаются). Заблокировали бота: ' + c.blocked + '. С телефона: напишите боту /рассылка, пришлите текст или фото с подписью и выберите, кому.</p>' +
+        '<h2>Новая рассылка</h2><div class="card grid"><label class="f">Текст (до 4000 знаков, с фото — до 1024)<textarea id="bt" rows="6"></textarea></label><div class="grid g2"><label class="f">Кому<select id="bs">' + Object.keys(j.segments).map(function (k) { return '<option value="' + k + '">' + h(j.segments[k]) + " · " + c[k] + "</option>"; }).join("") + '</select></label><label class="f">Фото (необязательно)<input type="file" accept="image/jpeg,image/png,image/webp" id="bp"></label></div><div class="row"><button class="btn pri" id="bgo">Отправить</button><span class="note">Уходит не быстрее 25 сообщений в секунду; отменить можно, пока идёт.</span></div></div>' +
+        "<h2>История</h2>" + (j.broadcasts.length ? '<table class="resp"><thead><tr><th>Когда</th><th>Текст</th><th>Кому</th><th>Итог</th><th></th></tr></thead><tbody>' + j.broadcasts.map(function (r) {
+          return "<tr><td>" + dt(r.at) + '<br><span class="note">' + h(r.by) + (r.via === "telegram" ? " · с телефона" : "") + "</span></td><td>" + (r.photo ? "🖼 " : "") + h(r.text.slice(0, 160)) + "</td><td>" + h(j.segments[r.seg]) + "</td><td>" + h(BC_ST[r.state] || r.state) + "<br>" + r.sent + " из " + r.total + (r.blocked ? ", заблокировали " + r.blocked : "") + (r.failed ? ", не дошло " + r.failed : "") + "</td><td>" + (r.state === "queued" || r.state === "sending" ? '<button class="btn warn" data-cx="' + r.id + '">Остановить</button>' : "") + "</td></tr>";
+        }).join("") + "</tbody></table>" : '<div class="card note">Рассылок ещё не было.</div>');
+      $("#bgo").addEventListener("click", function () {
+        var text = $("#bt").value.trim(), seg = $("#bs").value; if (!text) return toast("Напишите текст", true);
+        if (!confirm("Отправить рассылку: " + j.segments[seg].toLowerCase() + ", " + c[seg] + " получателей?")) return;
+        $("#bgo").disabled = true;
+        var job = $("#bp").files.length ? upload($("#bp")) : Promise.resolve("");
+        job.then(function (photo) { return api("/broadcasts", { text: text, seg: seg, photo: photo }); }).then(function () { toast("Рассылка запущена"); broadcasts(main); }).catch(function (e) { $("#bgo").disabled = false; fail(e); });
+      });
+      $$("[data-cx]", b).forEach(function (x) { x.addEventListener("click", function () { api("/broadcasts/" + x.getAttribute("data-cx") + "/cancel", {}).then(function () { broadcasts(main); }).catch(fail); }); });
     });
   }
 
