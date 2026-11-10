@@ -62,6 +62,7 @@ test("тендеры: только то, что делает студия — т
   // Владелец, 10.11.2026: «Берем только сайты и все что делает наша студия».
   assert.equal(tenderVerdict("Mobil ilova ishlab chiqish xizmati", "", true).ours, true);
   assert.equal(tenderVerdict("Разработка информационной системы учёта обращений", "", true).ours, true);
+  assert.equal(tenderVerdict("Разработка сайта и серверной части мобильного приложения", "", true).ours, true, "серверная часть — работа, не железо");
   assert.equal(tenderVerdict("“UMS” MChJ kompaniyasining korporativ ma’lumotlarni saqlash axborot tizimi va hisobotlarini avtomatlashtirish uchun tahliliy platformani xarid qilish", "", true).ours, true);
   for (const resale of [
     "\"Тоза макон\" биллинг тизимини техник қўллаб-қувватлаш",
@@ -75,6 +76,8 @@ test("тендеры: только то, что делает студия — т
     "“Hududlarning investitsiyaviy jozibadorligi reytingi” axborot tizimi reglamentini takomillashtirish boʻyicha yirik xalqaro reyting agentligi konsalting xizmatini koʻrsatish",
     "Ko‘p o‘lchovli ma’lumotlarni tahlil qilish dasturiy ta’minoti uchun foydalanuvchi hujjatlarini sinovdan o‘tkazish, tasdiqlash va ishlab chiqish xizmatlarini ko‘rsatish",
     "Bankning asosiy vositalari va mulkini hisobga olish va nazorat qilish uchun RFID yorliq tizimi",
+    "Ўзбекистон Республикаси Бош прокуратураси ҳузуридаги Мажбурий ижро бюроси учун сунъий интеллект сервери харид қилиш",
+    "Поставка сервера для системы видеоаналитики",
     "Kerio Control va Kerio Connect lisenziyalari muddatini uzaytirish",
     "Ijrochining ma’lumotlar markazida “Sovuq zahira” rejimida virtual serverlar taqdim etish xizmati",
     "Bulutli infratuzilmani (IaaS) taqdim etish xizmatlar",
