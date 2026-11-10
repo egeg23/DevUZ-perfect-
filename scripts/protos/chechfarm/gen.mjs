@@ -1,6 +1,8 @@
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, existsSync, unlinkSync } from "node:fs";
 import { dzIntroSolo } from "../../../lib/proto/dz-video.mjs";
 import { LANGS, PILLARS, CHAIN, PARTNER_STEPS, PRODUCT_FIELDS, IR_DOCS } from "./data.mjs";
+import * as DATA from "./data.mjs";
+import { tr, withAr, arMissing } from "./ar.mjs";
 import { PANEL_UI } from "./panel-ui.mjs";
 import { makeBlocks, SCENE_FRAMES } from "./blocks.mjs";
 import { makeLaunch } from "./launch.mjs";
@@ -34,16 +36,25 @@ const IMG = "/protos/chechfarm";
 const strip = (s) => s.replace(/\/\*[\s\S]*?\*\//g, "");
 const CSS = strip(readFileSync(DIR + "site.css", "utf8") + readFileSync(DIR + "premium.css", "utf8") + readFileSync(DIR + "launch.css", "utf8")).replace(/\n\s*/g, "");
 const JS = strip(readFileSync(DIR + "site.js", "utf8") + "\n" + readFileSync(DIR + "premium.js", "utf8") + "\n" + readFileSync(DIR + "launch.js", "utf8")).replace(/\n\s*\n/g, "\n");
-const BASE_URL = "__PROTO_BASE__";
+/* CF_PROD=1 — боевой сайт на сервере компании (app/): без видео DevUz,
+   условий макета, демо-панели и блока цены; формы идут на сервер, продукты,
+   новости, контакты и заголовки — из базы (K.live, подставляет сервер). */
+const PROD = process.env.CF_PROD === "1";
+const BASE_URL = PROD ? "" : "__PROTO_BASE__";
 const TERMS = (l) => `https://devuz.studio/${l}/mockup-terms`;
+/* Арабский: у Literata и Onest нет арабских букв — Noto Naskh для заголовков, IBM Plex Sans Arabic для текста. */
+const FONTS_AR = "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;700&family=Noto+Naskh+Arabic:wght@400;700&display=swap";
+const AR_CSS = strip(existsSync(DIR + "rtl.css") ? readFileSync(DIR + "rtl.css", "utf8") : "").replace(/\n\s*/g, "");
 const FONTS = "https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,700&family=Onest:wght@400;700&display=swap";
-const KEY = { ru: "", uz: "uz", en: "en" };
+const KEY = { ru: "", uz: "uz", en: "en", ar: "ar" };
+/* Боевой сайт — ещё и на арабском (подарок, ar.mjs): данные получают «ar». */
+if (PROD) { LANGS.push("ar"); for (const v of Object.values(DATA)) withAr(v); }
 const PAGES = ["", "about", "products", "partners", "investors", "news", "contacts"];
 
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const href = (l, p = "") => BASE_URL + (KEY[l] ? "/" + KEY[l] : "") + "/" + p;
 const keyOf = (l, p) => [KEY[l], p].filter(Boolean).join("/");
-const T = (l) => (ru, uz, en) => (l === "ru" ? ru : l === "uz" ? uz : en);
+const T = (l) => (ru, uz, en) => (l === "ru" ? ru : l === "uz" ? uz : l === "ar" ? tr(en) : en);
 const pad = (n) => String(n).padStart(2, "0");
 
 /* ── Иконки: линейные, одна толщина ─────────────────────────────────── */
@@ -90,7 +101,8 @@ const NAV = [
   ["news", ["Новости", "Yangiliklar", "News"]],
   ["contacts", ["Контакты", "Aloqa", "Contacts"]],
 ];
-const navName = (p, l) => NAV.find((n) => n[0] === p)[1][LANGS.indexOf(l)];
+if (PROD) { for (const n of NAV) n[1].push(tr(n[1][2])); }
+const navName = (p, l) => (NAV.find((n) => n[0] === p) || [p, ["Политика данных", "Ma’lumotlar siyosati", "Privacy"]])[1][LANGS.indexOf(l)];
 const L3 = (o, l) => o[l];
 const PB = makeBlocks({ T, href, ICON, IMG, L3, CHAIN, pad, BASE_URL });
 const LB = makeLaunch({ T, href, ICON, pad });
@@ -119,11 +131,14 @@ function footHtml(l) {
 <div class="ft">
 <div>${LOGO(l)}<p style="margin-top:16px">Health. Trust. Value.</p><p>${t("Фармацевтическая компания. Здоровье и качество жизни через доступ к современным решениям.", "Farmatsevtika kompaniyasi. Zamonaviy yechimlardan foydalanish orqali salomatlik va hayot sifati.", "A pharmaceutical company. Health and quality of life through access to modern solutions.")}</p></div>
 <div><b>${t("Разделы", "Bo‘limlar", "Sections")}</b><ul>${NAV.map(([id, n]) => `<li><a href="${href(l, id)}">${n[LANGS.indexOf(l)]}</a></li>`).join("")}</ul></div>
-<div><b>${t("Связь", "Aloqa", "Contact")}</b><ul><li>${t("Телефон, почта и адрес появятся после согласования с компанией", "Telefon, pochta va manzil kompaniya bilan kelishilgach chiqadi", "Phone, email and address will appear once the company confirms them")}</li><li><a href="${href(l, "contacts")}#form">${t("Написать в компанию", "Kompaniyaga yozish", "Write to the company")}</a></li><li><a href="${href(l, "panel")}">${t("Вход для сотрудников", "Xodimlar uchun kirish", "Staff sign-in")}</a></li></ul></div>
+${PROD ? `<div><b>${t("Связь", "Aloqa", "Contact")}</b><ul><li data-live-wrap="phone" hidden><a data-live="phone"></a></li><li data-live-wrap="email" hidden><a data-live="email"></a></li><li data-live-wrap="address" hidden><span data-live="address"></span></li><li><a href="${href(l, "contacts")}#form">${t("Написать в компанию", "Kompaniyaga yozish", "Write to the company")}</a></li></ul></div>
+</div>
+<div class="rights"><p>© ${new Date().getFullYear()} CZECHFARM alliance. Health. Trust. Value.</p><p>${t("Информация на сайте не заменяет консультацию врача.", "Saytdagi ma’lumot shifokor maslahatining o‘rnini bosmaydi.", "Information on this website does not replace a doctor’s consultation.")} <a href="${href(l, "privacy")}">${t("Политика обработки данных", "Ma’lumotlarni qayta ishlash siyosati", "Privacy policy")}</a></p></div>
+` : `<div><b>${t("Связь", "Aloqa", "Contact")}</b><ul><li>${t("Телефон, почта и адрес появятся после согласования с компанией", "Telefon, pochta va manzil kompaniya bilan kelishilgach chiqadi", "Phone, email and address will appear once the company confirms them")}</li><li><a href="${href(l, "contacts")}#form">${t("Написать в компанию", "Kompaniyaga yozish", "Write to the company")}</a></li><li><a href="${href(l, "panel")}">${t("Вход для сотрудников", "Xodimlar uchun kirish", "Staff sign-in")}</a></li></ul></div>
 </div>
 <div class="rights"><p>${t("Это макет DevUz Studio: так может выглядеть сайт CZECHFARM. Тексты собраны по техническому заданию компании. Названий препаратов, производителей, цифр, адресов и контактов на макете нет: их даёт и утверждает компания. Знак: концепт до получения логотипа. Продукты и новости с пометкой «демо» добавлены из демо-панели.", "Bu DevUz Studio maketi: CZECHFARM sayti shunday ko‘rinishi mumkin. Matnlar kompaniyaning texnik topshirig‘i asosida. Maketda dori nomlari, ishlab chiqaruvchilar, raqamlar, manzil va kontaktlar yo‘q: ularni kompaniya beradi va tasdiqlaydi. Belgi: logotip olingunga qadar konsept. «Demo» belgili mahsulot va yangiliklar demo-paneldan qo‘shilgan.", "A DevUz Studio mockup of how the CZECHFARM website could look. Texts follow the company’s brief. There are no product names, manufacturers, figures, addresses or contacts: the company provides and approves them. The mark is a concept until we receive the logo. Products and news marked “demo” come from the demo panel.")}</p>
 <p>${t("Макет принадлежит DevUz Studio и используется только по договору.", "Maket DevUz Studio’ga tegishli va faqat shartnoma asosida ishlatiladi.", "The mockup belongs to DevUz Studio and may be used only under contract.")} <a href="${TERMS(l)}">${t("Условия использования макета", "Maketdan foydalanish shartlari", "Mockup terms of use")}</a></p></div>
-</div></footer>`;
+`}</div></footer>`;
 }
 
 /* ── Цепочка стоимости: две схемы (широкая и вертикальная) ────────────── */
@@ -186,10 +201,11 @@ function fl(l, name, label, o = {}) {
       : `<input name="${name}" type="${o.type || "text"}"${o.auto ? ` autocomplete="${o.auto}"` : ""}${o.mode ? ` inputmode="${o.mode}"` : ""}${req} placeholder="${esc(o.ph || "")}">`;
   return `<label class="fl"><span>${label}${star}</span>${field}<span class="err" aria-live="polite"></span></label>`;
 }
-const agree = (l) => `<label class="agree"><input type="checkbox" name="agree" required><span>${T(l)("Согласен на обработку моих данных, чтобы компания ответила на обращение. Текст согласия утверждает компания.", "Kompaniya murojaatimga javob berishi uchun ma’lumotlarim qayta ishlanishiga roziman. Rozilik matnini kompaniya tasdiqlaydi.", "I agree to my data being processed so the company can reply. The consent text is approved by the company.")}</span></label>`;
+const agreeMock = (l) => `<label class="agree"><input type="checkbox" name="agree" required><span>${T(l)("Согласен на обработку моих данных, чтобы компания ответила на обращение. Текст согласия утверждает компания.", "Kompaniya murojaatimga javob berishi uchun ma’lumotlarim qayta ishlanishiga roziman. Rozilik matnini kompaniya tasdiqlaydi.", "I agree to my data being processed so the company can reply. The consent text is approved by the company.")}</span></label>`;
+const agree = (l) => PROD ? `<label class="agree"><input type="checkbox" name="agree" required><span>${T(l)("Согласен на обработку моих данных, чтобы компания ответила на обращение.", "Kompaniya murojaatimga javob berishi uchun ma’lumotlarim qayta ishlanishiga roziman.", "I agree to my data being processed so the company can reply.")} <a href="${href(l, "privacy")}">${T(l)("Политика", "Siyosat", "Policy")}</a></span></label><input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">` : agreeMock(l);
 function sentBox(l) {
   const t = T(l);
-  return `<div class="sent" hidden tabindex="-1"><span class="chip">${ICON.check}${t("Отправлено", "Yuborildi", "Sent")}</span><h3>${t("Обращение", "Murojaat", "Request")} <span data-no></span> ${t("принято", "qabul qilindi", "received")}</h3><p>${t("Ответит команда CZECHFARM. Статус обращения виден на странице «Контакты».", "CZECHFARM jamoasi javob beradi. Murojaat holati «Aloqa» sahifasida ko‘rinadi.", "The CZECHFARM team will reply. You can see the status on the Contacts page.")}</p><p class="note">${t("Это макет: обращение пришло в демо-панель компании, она открыта в этом же браузере.", "Bu maket: murojaat kompaniyaning demo-paneliga keldi, u shu brauzerda ochiladi.", "This is a mockup: the request went to the company’s demo panel, open in this same browser.")}</p><button type="button" class="btn btn-line" data-again>${t("Написать ещё", "Yana yozish", "Write again")}</button></div>`;
+  return `<div class="sent" hidden tabindex="-1"><span class="chip">${ICON.check}${t("Отправлено", "Yuborildi", "Sent")}</span><h3>${t("Обращение", "Murojaat", "Request")} <span data-no></span> ${t("принято", "qabul qilindi", "received")}</h3><p>${t("Ответит команда CZECHFARM. Статус обращения виден на странице «Контакты».", "CZECHFARM jamoasi javob beradi. Murojaat holati «Aloqa» sahifasida ko‘rinadi.", "The CZECHFARM team will reply. You can see the status on the Contacts page.")}</p>${PROD ? "" : `<p class="note">${t("Это макет: обращение пришло в демо-панель компании, она открыта в этом же браузере.", "Bu maket: murojaat kompaniyaning demo-paneliga keldi, u shu brauzerda ochiladi.", "This is a mockup: the request went to the company’s demo panel, open in this same browser.")}</p>`}<button type="button" class="btn btn-line" data-again>${t("Написать ещё", "Yana yozish", "Write again")}</button></div>`;
 }
 const submit = (l, s) => `<button type="submit" class="btn btn-pri">${ICON.send}<span>${s}</span></button>`;
 function contactForm(l, title) {
@@ -230,8 +246,8 @@ ${withHead ? `<div class="sec-h mv mv-up"><p class="kicker">${t("Формула 
 function portfolioTeaser(l) {
   const t = T(l);
   return `<section class="sec" id="portfolio"><div class="wrap pf">
-<div class="sec-h mv mv-left" style="margin:0"><p class="kicker">${t("Портфель продуктов", "Mahsulotlar portfeli", "Product portfolio")}</p><h2 class="h2">${t("Каталог, в котором <b>легко найти нужное</b>", "Keraklisini <b>oson topish</b> mumkin bo‘lgan katalog", "A catalogue where <b>the right product is easy to find</b>")}</h2><p class="lead">${t("Перечень продуктов публикуем только после того, как его утвердит компания. Пока здесь устройство карточки: какие поля увидит пациент, врач и аптека.", "Mahsulotlar ro‘yxatini faqat kompaniya tasdiqlagandan keyin e’lon qilamiz. Hozircha bu yerda kartochka tuzilishi: bemor, shifokor va dorixona qaysi maydonlarni ko‘radi.", "We publish the product list only after the company approves it. For now this shows how a product card works: which fields patients, doctors and pharmacies will see.")}</p><a class="link" href="${href(l, "products")}">${t("Открыть каталог", "Katalogni ochish", "Open the catalogue")}${ICON.arrow}</a></div>
-<div class="pf-card mv mv-scale"><div class="pf-cap"><span class="pf-ph">${ICON.capsule}</span><div><span class="chip">${t("Устройство карточки", "Kartochka tuzilishi", "Card layout")}</span><p class="note" style="margin-top:6px">${t("Поля согласуем с компанией", "Maydonlarni kompaniya bilan kelishamiz", "Fields to be agreed with the company")}</p></div></div>
+<div class="sec-h mv mv-left" style="margin:0"><p class="kicker">${t("Портфель продуктов", "Mahsulotlar portfeli", "Product portfolio")}</p><h2 class="h2">${t("Каталог, в котором <b>легко найти нужное</b>", "Keraklisini <b>oson topish</b> mumkin bo‘lgan katalog", "A catalogue where <b>the right product is easy to find</b>")}</h2><p class="lead">${PROD ? t("Препараты и БАДы CZECHFARM: поиск по названию и действующему веществу, в каждой карточке главное и инструкция.", "CZECHFARM dori vositalari va BFQlari: nomi va ta’sir etuvchi modda bo‘yicha qidiruv, har bir kartochkada asosiy ma’lumot va yo‘riqnoma.", "CZECHFARM medicines and supplements: search by name and active substance, with the essentials and the leaflet on every card.") : t("Перечень продуктов публикуем только после того, как его утвердит компания. Пока здесь устройство карточки: какие поля увидит пациент, врач и аптека.", "Mahsulotlar ro‘yxatini faqat kompaniya tasdiqlagandan keyin e’lon qilamiz. Hozircha bu yerda kartochka tuzilishi: bemor, shifokor va dorixona qaysi maydonlarni ko‘radi.", "We publish the product list only after the company approves it. For now this shows how a product card works: which fields patients, doctors and pharmacies will see.")}</p><a class="link" href="${href(l, "products")}">${t("Открыть каталог", "Katalogni ochish", "Open the catalogue")}${ICON.arrow}</a></div>
+<div class="pf-card mv mv-scale"><div class="pf-cap"><span class="pf-ph">${ICON.capsule}</span><div><span class="chip">${PROD ? t("Что в карточке", "Kartochkada nima bor", "What a card shows") : t("Устройство карточки", "Kartochka tuzilishi", "Card layout")}</span>${PROD ? "" : `<p class="note" style="margin-top:6px">${t("Поля согласуем с компанией", "Maydonlarni kompaniya bilan kelishamiz", "Fields to be agreed with the company")}</p>`}</div></div>
 <ul class="pf-fields">${PRODUCT_FIELDS.map((f) => `<li><span>${f[l]}</span><span aria-hidden="true"></span></li>`).join("")}</ul></div>
 </div></section>`;
 }
@@ -257,7 +273,7 @@ function home(l) {
     k: t("Как работает модель CZECHFARM", "CZECHFARM modeli qanday ishlaydi", "How the CZECHFARM model works"),
     h: t("Улучшение здоровья <b>создаёт стоимость</b>", "Salomatlikni yaxshilash <b>qiymat yaratadi</b>", "Better health <b>creates value</b>"),
     p: t("Семь шагов от здоровья человека до роста компании. Импульс идёт по цепочке сам; нажмите на шаг, чтобы прочитать о нём.", "Inson salomatligidan kompaniya o‘sishigacha yetti qadam. Impuls zanjir bo‘ylab o‘zi yuradi; qadam haqida o‘qish uchun uni bosing.", "Seven steps from a person’s health to the company’s growth. The pulse runs on its own; tap a step to read about it."),
-  }), PB.audienceSwitch(l), portfolioTeaser(l), ctaEnd(l), PB.priceBlock(l)].join("\n");
+  }), PB.audienceSwitch(l), portfolioTeaser(l), ctaEnd(l), PROD ? "" : PB.priceBlock(l)].join("\n");
 }
 
 function about(l) {
@@ -272,7 +288,7 @@ function about(l) {
     h: t("Продукты, рынок, <b>повторный спрос</b>", "Mahsulotlar, bozor, <b>takroriy talab</b>", "Products, market, <b>repeat demand</b>"),
     p: t("Продукт, которому доверяют, выбирают снова. Повторный спрос даёт денежный поток, а он идёт в новые продукты и масштабирование.", "Ishonchli mahsulot yana tanlanadi. Takroriy talab pul oqimini beradi, u esa yangi mahsulotlar va kengayishga yo‘naltiriladi.", "A trusted product gets chosen again. Repeat demand brings cash flow, which goes into new products and growth."),
   }),
-  PB.needsBlock(l)].join("\n");
+  PROD ? "" : PB.needsBlock(l)].join("\n");
 }
 
 function products(l) {
@@ -280,13 +296,15 @@ function products(l) {
   return [pageHead(l, "products", t("Портфель <b>продуктов</b>", "Mahsulotlar <b>portfeli</b>", "Product <b>portfolio</b>"), t("Поиск по названию и действующему веществу, карточка с главным и страница продукта с инструкцией. Публикуем только то, что утвердила компания.", "Nomi va ta’sir etuvchi modda bo‘yicha qidiruv, asosiy ma’lumotli kartochka va yo‘riqnomali mahsulot sahifasi. Faqat kompaniya tasdiqlaganini e’lon qilamiz.", "Search by name and active substance, a card with the essentials and a product page with the leaflet. We publish only what the company has approved.")),
   `<section class="sec" style="padding-top:24px" id="catalog-sec"><div class="wrap">
 <div class="cat-bar"><label class="search">${ICON.search}<input id="q" type="search" placeholder="${t("Название или действующее вещество", "Nomi yoki ta’sir etuvchi modda", "Name or active substance")}" aria-label="${t("Поиск по каталогу", "Katalog bo‘yicha qidiruv", "Search the catalogue")}"></label>
-<select class="flt" aria-label="${t("Направление", "Yo‘nalish", "Area")}"><option>${t("Все направления", "Barcha yo‘nalishlar", "All areas")}</option><option disabled>${t("Направления согласуем с компанией", "Yo‘nalishlar kompaniya bilan kelishiladi", "Areas to be agreed")}</option></select>
-<select class="flt" aria-label="${t("Отпуск", "Berilishi", "Prescription")}"><option>${t("По рецепту и без", "Retsept bilan va retseptsiz", "Rx and OTC")}</option></select></div>
+${PROD ? `<select class="flt" id="f-dir" aria-label="${t("Направление", "Yo‘nalish", "Area")}"><option value="">${t("Все направления", "Barcha yo‘nalishlar", "All areas")}</option></select>
+<select class="flt" id="f-rx" aria-label="${t("Отпуск", "Berilishi", "Prescription")}"><option value="">${t("По рецепту и без", "Retsept bilan va retseptsiz", "Rx and OTC")}</option>${PROD ? `<option value="rx">${t("По рецепту", "Retsept bilan", "Prescription only")}</option><option value="otc">${t("Без рецепта", "Retseptsiz", "Over the counter")}</option>` : ""}</select></div>` : `<select class="flt" aria-label="${t("Направление", "Yo‘nalish", "Area")}"><option>${t("Все направления", "Barcha yo‘nalishlar", "All areas")}</option><option disabled>${t("Направления согласуем с компанией", "Yo‘nalishlar kompaniya bilan kelishiladi", "Areas to be agreed")}</option></select>
+<select class="flt" aria-label="${t("Отпуск", "Berilishi", "Prescription")}"><option>${t("По рецепту и без", "Retsept bilan va retseptsiz", "Rx and OTC")}</option></select></div>`}
 <p class="note" id="cat-n" style="margin-bottom:16px"></p>
 <div class="grid3" id="catalog" aria-live="polite"></div>
-<div class="empty mv mv-up" style="margin-top:24px"><span class="chip">${t("Как это работает", "Bu qanday ishlaydi", "How it works")}</span><p>${t("Компания добавляет продукт в панели: название, вещество, форма выпуска, производитель, направление, инструкция. После публикации карточка появляется здесь сама.", "Kompaniya panelda mahsulot qo‘shadi: nomi, modda, chiqarilish shakli, ishlab chiqaruvchi, yo‘nalish, yo‘riqnoma. E’lon qilingach kartochka bu yerda o‘zi chiqadi.", "The company adds a product in the panel: name, substance, dosage form, manufacturer, area, leaflet. Once published, the card appears here on its own.")}</p>
+${PROD ? `<div class="empty mv mv-up" style="margin-top:24px"><p>${t("Не нашли нужный препарат? Напишите нам, подскажем.", "Kerakli dorini topmadingizmi? Bizga yozing, yordam beramiz.", "Can’t find the product you need? Write to us and we will help.")}</p><div class="hero-act"><a class="link" href="${href(l, "contacts")}#form">${t("Написать в компанию", "Kompaniyaga yozish", "Write to the company")}${ICON.arrow}</a></div></div>
+` : `<div class="empty mv mv-up" style="margin-top:24px"><span class="chip">${t("Как это работает", "Bu qanday ishlaydi", "How it works")}</span><p>${t("Компания добавляет продукт в панели: название, вещество, форма выпуска, производитель, направление, инструкция. После публикации карточка появляется здесь сама.", "Kompaniya panelda mahsulot qo‘shadi: nomi, modda, chiqarilish shakli, ishlab chiqaruvchi, yo‘nalish, yo‘riqnoma. E’lon qilingach kartochka bu yerda o‘zi chiqadi.", "The company adds a product in the panel: name, substance, dosage form, manufacturer, area, leaflet. Once published, the card appears here on its own.")}</p>
 <div class="hero-act"><button type="button" class="btn btn-line" data-sample-prod>${ICON.doc}<span>${t("Как выглядит страница продукта", "Mahsulot sahifasi qanday ko‘rinadi", "See a product page layout")}</span></button><a class="link" href="${href(l, "panel")}#products">${t("Добавить продукт в панели", "Panelda mahsulot qo‘shish", "Add a product in the panel")}${ICON.arrow}</a></div></div>
-<p class="warn" style="margin-top:24px">${ICON.info}<span>${t("Информация о продуктах не заменяет консультацию врача. Перед применением прочитайте инструкцию.", "Mahsulotlar haqidagi ma’lumot shifokor maslahatining o‘rnini bosmaydi. Qo‘llashdan oldin yo‘riqnomani o‘qing.", "Product information does not replace a doctor’s consultation. Read the leaflet before use.")}</span></p>
+`}<p class="warn" style="margin-top:24px">${ICON.info}<span>${t("Информация о продуктах не заменяет консультацию врача. Перед применением прочитайте инструкцию.", "Mahsulotlar haqidagi ma’lumot shifokor maslahatining o‘rnini bosmaydi. Qo‘llashdan oldin yo‘riqnomani o‘qing.", "Product information does not replace a doctor’s consultation. Read the leaflet before use.")}</span></p>
 </div></section>`].join("\n");
 }
 
@@ -322,7 +340,7 @@ function investors(l) {
   }),
   PB.blocksStage(l),
   `<section class="sec" id="materials"><div class="wrap"><div class="sec-h mv mv-up"><p class="kicker">${t("Показатели и материалы", "Ko‘rsatkichlar va materiallar", "Figures and materials")}</p><h2 class="h2">${t("Цифры <b>по запросу</b>", "Raqamlar <b>so‘rov bo‘yicha</b>", "Figures <b>on request</b>")}</h2><p class="lead">${t("Показатели компания публикует сама, когда будет готова. До этого материалы выдаются по запросу.", "Ko‘rsatkichlarni kompaniya tayyor bo‘lganda o‘zi e’lon qiladi. Ungacha materiallar so‘rov bo‘yicha beriladi.", "The company publishes its figures itself when ready. Until then, materials are shared on request.")}</p></div>
-<div class="docs">${IR_DOCS.map((x, i) => `<div class="doc mv mv-tilt" style="--d:${i * 100}ms"><span class="lock">${ICON.lock}</span><h3>${L3(x, l)[0]}</h3><p class="note">${L3(x, l)[1]}</p><span class="chip">${t("По запросу", "So‘rov bo‘yicha", "On request")}</span></div>`).join("")}</div></div></section>`,
+<div class="docs">${IR_DOCS.map((x, i) => `<div class="doc mv mv-tilt" style="--d:${i * 100}ms"><span class="lock">${ICON.lock}</span><h3>${L3(x, l)[0]}</h3><p class="note">${L3(x, l)[1]}</p><span class="chip">${PROD ? t("По личной ссылке", "Shaxsiy havola orqali", "By personal link") : t("По запросу", "So‘rov bo‘yicha", "On request")}</span></div>`).join("")}</div></div></section>`,
   `<section class="sec mint" id="form"><div class="wrap split"><div class="sec-h mv mv-left" style="margin:0"><p class="kicker">${t("Для инвесторов", "Investorlar uchun", "For investors")}</p><h2 class="h2">${t("Запросить материалы <b>или встречу</b>", "Materiallar <b>yoki uchrashuv</b> so‘rash", "Request materials <b>or a meeting</b>")}</h2></div>
 <div class="mv mv-right"><div class="form-wrap"><form class="form" data-lead="investor" novalidate><h3>${t("Запрос инвестора", "Investor so‘rovi", "Investor request")}</h3>
 <div class="row2">${fl(l, "name", t("Имя", "Ism", "Name"), { req: true, auto: "name" })}${fl(l, "org", t("Фонд или компания", "Fond yoki kompaniya", "Fund or company"), { auto: "organization" })}</div>
@@ -333,9 +351,9 @@ ${agree(l)}${submit(l, t("Отправить запрос", "So‘rovni yuborish
 
 function news(l) {
   const t = T(l);
-  return [pageHead(l, "news", t("Новости <b>компании</b>", "Kompaniya <b>yangiliklari</b>", "Company <b>news</b>"), t("Заголовок, дата, изображение и текст. Новости публикует администратор в панели.", "Sarlavha, sana, rasm va matn. Yangiliklarni administrator panelda e’lon qiladi.", "Headline, date, image and text. An administrator publishes news in the panel.")),
+  return [pageHead(l, "news", t("Новости <b>компании</b>", "Kompaniya <b>yangiliklari</b>", "Company <b>news</b>"), PROD ? t("События компании, новые продукты и партнёрства.", "Kompaniya voqealari, yangi mahsulotlar va hamkorliklar.", "Company events, new products and partnerships.") : t("Заголовок, дата, изображение и текст. Новости публикует администратор в панели.", "Sarlavha, sana, rasm va matn. Yangiliklarni administrator panelda e’lon qiladi.", "Headline, date, image and text. An administrator publishes news in the panel.")),
   `<section class="sec" style="padding-top:24px"><div class="wrap"><div class="news" id="news-l" aria-live="polite"></div>
-<div class="empty" id="news-empty" style="margin-top:24px"><span class="chip">${t("Пока пусто", "Hozircha bo‘sh", "Nothing yet")}</span><p>${t("Здесь будут новости CZECHFARM. Первую публикует администратор в панели, и она появляется на сайте сама.", "Bu yerda CZECHFARM yangiliklari bo‘ladi. Birinchisini administrator panelda e’lon qiladi va u saytda o‘zi chiqadi.", "CZECHFARM news will appear here. An administrator publishes the first one in the panel and it shows up on the site by itself.")}</p><a class="link" href="${href(l, "panel")}#news">${t("Опубликовать в панели", "Panelda e’lon qilish", "Publish in the panel")}${ICON.arrow}</a></div></div></section>`].join("\n");
+<div class="empty" id="news-empty" style="margin-top:24px"><span class="chip">${t("Пока пусто", "Hozircha bo‘sh", "Nothing yet")}</span>${PROD ? `<p>${t("Скоро здесь появятся новости CZECHFARM.", "Tez orada bu yerda CZECHFARM yangiliklari paydo bo‘ladi.", "CZECHFARM news will appear here soon.")}</p>` : `<p>${t("Здесь будут новости CZECHFARM. Первую публикует администратор в панели, и она появляется на сайте сама.", "Bu yerda CZECHFARM yangiliklari bo‘ladi. Birinchisini administrator panelda e’lon qiladi va u saytda o‘zi chiqadi.", "CZECHFARM news will appear here. An administrator publishes the first one in the panel and it shows up on the site by itself.")}</p><a class="link" href="${href(l, "panel")}#news">${t("Опубликовать в панели", "Panelda e’lon qilish", "Publish in the panel")}${ICON.arrow}</a>`}</div></div></section>`].join("\n");
 }
 
 function contacts(l) {
@@ -344,14 +362,28 @@ function contacts(l) {
   const later = t("после согласования с компанией", "kompaniya bilan kelishilgach", "once the company confirms");
   return [pageHead(l, "contacts", t("Связаться <b>с CZECHFARM</b>", "<b>CZECHFARM</b> bilan bog‘lanish", "Contact <b>CZECHFARM</b>"), t("Одна форма для партнёров, аптек, врачей и инвесторов. Обращение попадает к нужному человеку.", "Hamkorlar, dorixonalar, shifokorlar va investorlar uchun bitta shakl. Murojaat kerakli odamga yetadi.", "One form for partners, pharmacies, doctors and investors. Your message reaches the right person.")),
   `<section class="sec" style="padding-top:24px" id="form"><div class="wrap split">
-<div style="display:grid;gap:24px"><div class="cts mv mv-left">${ct("phone", t("Телефон", "Telefon", "Phone"), later)}${ct("mail", t("Почта", "Pochta", "Email"), later)}${ct("pin", t("Адрес офиса", "Ofis manzili", "Office address"), later)}${ct("globe", t("Соцсети", "Ijtimoiy tarmoqlar", "Social media"), later)}</div>
+<div style="display:grid;gap:24px"><div class="cts mv mv-left">${PROD ? [["phone", "phone", t("Телефон", "Telefon", "Phone")], ["mail", "email", t("Почта", "Pochta", "Email")], ["pin", "address", t("Адрес офиса", "Ofis manzili", "Office address")], ["globe", "social", t("Соцсети", "Ijtimoiy tarmoqlar", "Social media")]].map(([ic, k, b]) => `<div class="ct" data-live-wrap="${k}" hidden><span class="i">${ICON[ic]}</span><span><b>${b}</b><span class="note"><a data-live="${k}"></a></span></span></div>`).join("") : `${ct("phone", t("Телефон", "Telefon", "Phone"), later)}${ct("mail", t("Почта", "Pochta", "Email"), later)}${ct("pin", t("Адрес офиса", "Ofis manzili", "Office address"), later)}${ct("globe", t("Соцсети", "Ijtimoiy tarmoqlar", "Social media"), later)}`}</div>
 <div class="track" id="track" hidden><p class="kicker">${t("Мои обращения", "Murojaatlarim", "My requests")}</p><div class="track-l"></div><p class="note">${t("Статус ставит компания в своей панели.", "Holatni kompaniya o‘z panelida qo‘yadi.", "The company sets the status in its panel.")}</p></div>
-<div class="map mv mv-scale"><svg class="grid" viewBox="0 0 400 250" aria-hidden="true"><g stroke="#e5f4f0" stroke-width=".6" fill="none">${Array.from({ length: 12 }, (_, i) => `<path d="M${i * 36} 0v250"/>`).join("")}${Array.from({ length: 8 }, (_, i) => `<path d="M0 ${i * 36}h400"/>`).join("")}<path d="M0 180C80 150 140 190 220 140S340 90 400 110" stroke-width="2"/></g></svg><p>${ICON.pin}${t("Карта появится, когда компания подтвердит адрес.", "Manzil tasdiqlangach xarita chiqadi.", "The map will appear once the company confirms its address.")}</p></div></div>
+${PROD ? `<div class="map mv mv-scale" data-live-wrap="map" hidden><iframe data-live="map" title="${t("Карта", "Xarita", "Map")}" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>` : `<div class="map mv mv-scale"><svg class="grid" viewBox="0 0 400 250" aria-hidden="true"><g stroke="#e5f4f0" stroke-width=".6" fill="none">${Array.from({ length: 12 }, (_, i) => `<path d="M${i * 36} 0v250"/>`).join("")}${Array.from({ length: 8 }, (_, i) => `<path d="M0 ${i * 36}h400"/>`).join("")}<path d="M0 180C80 150 140 190 220 140S340 90 400 110" stroke-width="2"/></g></svg><p>${ICON.pin}${t("Карта появится, когда компания подтвердит адрес.", "Manzil tasdiqlangach xarita chiqadi.", "The map will appear once the company confirms its address.")}</p></div>`}</div>
 <div class="mv mv-right">${contactForm(l, t("Обращение", "Murojaat", "Your message"))}</div>
 </div></section>`].join("\n");
 }
 
-const BUILD = { "": home, about, products, partners, investors, news, contacts };
+function privacy(l) {
+  const t = T(l);
+  const items = [
+    [t("Кто обрабатывает данные", "Ma’lumotlarni kim qayta ishlaydi", "Who processes the data"), t("ООО «MIR-PHARM UNITED» (CZECHFARM alliance), г. Ташкент, Республика Узбекистан.", "«MIR-PHARM UNITED» MChJ (CZECHFARM alliance), Toshkent sh., O‘zbekiston Respublikasi.", "MIR-PHARM UNITED LLC (CZECHFARM alliance), Tashkent, Republic of Uzbekistan.")],
+    [t("Какие данные", "Qanday ma’lumotlar", "What data"), t("То, что вы сами пишете в форме или боту: имя, организация, страна, почта, телефон и текст обращения.", "Shaklda yoki botga o‘zingiz yozgan narsalar: ism, tashkilot, mamlakat, pochta, telefon va murojaat matni.", "What you enter in a form or send to our bot: name, organisation, country, email, phone and your message.")],
+    [t("Зачем", "Nima uchun", "Why"), t("Только чтобы ответить на обращение и вести переписку по нему. Рассылок без вашего согласия не делаем.", "Faqat murojaatga javob berish va u bo‘yicha yozishma olib borish uchun. Roziligingizsiz xabarnoma yubormaymiz.", "Only to reply to your request and keep the conversation going. We do not send mailings without your consent.")],
+    [t("Где хранятся", "Qayerda saqlanadi", "Where it is stored"), t("На сервере компании. Сотрудники видят обращения в своей панели; если компания ведёт учёт в CRM, обращение попадает и туда.", "Kompaniya serverida. Xodimlar murojaatlarni o‘z panelida ko‘radi; kompaniya CRMda hisob yuritsa, murojaat u yerga ham tushadi.", "On the company’s server. Staff see requests in their panel; if the company uses a CRM, the request goes there too.")],
+    [t("Сколько хранятся", "Qancha saqlanadi", "How long"), t("Пока это нужно для работы с обращением и пока этого требует закон.", "Murojaat bilan ishlash uchun kerak bo‘lguncha va qonun talab qilguncha.", "As long as needed to handle the request and as required by law.")],
+    [t("Ваши права", "Huquqlaringiz", "Your rights"), t("Вы можете узнать, какие данные о вас есть, исправить их или попросить удалить: напишите через форму на странице «Контакты». Обработка идёт по Закону Республики Узбекистан «О персональных данных».", "Siz haqingizda qanday ma’lumotlar borligini bilishingiz, ularni tuzatishingiz yoki o‘chirishni so‘rashingiz mumkin: «Aloqa» sahifasidagi shakl orqali yozing. Qayta ishlash O‘zbekiston Respublikasining «Shaxsga doir ma’lumotlar to‘g‘risida»gi Qonuniga muvofiq olib boriladi.", "You can ask what data we hold about you, correct it or ask us to delete it: write via the form on the Contacts page. Processing follows the Law of the Republic of Uzbekistan “On Personal Data”.")],
+  ];
+  return [pageHead(l, "privacy", t("Политика <b>обработки данных</b>", "Ma’lumotlarni qayta ishlash <b>siyosati</b>", "Privacy <b>policy</b>"), t("Коротко и по делу: что мы узнаём о вас на этом сайте и что с этим делаем.", "Qisqa va aniq: bu saytda siz haqingizda nimani bilamiz va u bilan nima qilamiz.", "In short: what we learn about you on this website and what we do with it.")),
+  `<section class="sec" style="padding-top:24px"><div class="wrap"><div class="sect-list">${items.map(([h, b], i) => `<div><b>${pad(i + 1)}</b><span><strong>${h}</strong><br>${b}</span></div>`).join("")}</div></div></section>`].join("\n");
+}
+
+const BUILD = { "": home, about, products, partners, investors, news, contacts, privacy };
 const TITLES = {
   "": ["CZECHFARM: Health. Trust. Value. Фармацевтическая компания", "CZECHFARM: Health. Trust. Value. Farmatsevtika kompaniyasi", "CZECHFARM: Health. Trust. Value. Pharmaceutical company"],
   about: ["О компании CZECHFARM: миссия, принципы, модель", "CZECHFARM haqida: missiya, tamoyillar, model", "About CZECHFARM: mission, principles, model"],
@@ -360,8 +392,11 @@ const TITLES = {
   investors: ["Инвесторам: CZECHFARM, где здоровье создаёт стоимость", "Investorlarga: salomatlik qiymat yaratadigan CZECHFARM", "Investors: CZECHFARM, where health creates value"],
   news: ["Новости CZECHFARM", "CZECHFARM yangiliklari", "CZECHFARM news"],
   contacts: ["Контакты CZECHFARM", "CZECHFARM bilan aloqa", "Contact CZECHFARM"],
+  privacy: ["Политика обработки данных CZECHFARM", "CZECHFARM ma’lumotlarni qayta ishlash siyosati", "CZECHFARM privacy policy"],
 };
 const DESC = ["CZECHFARM улучшает здоровье и качество жизни людей через доступ к современным решениям. Партнёрам, аптекам, врачам и инвесторам.", "CZECHFARM zamonaviy yechimlar orqali odamlarning salomatligi va hayot sifatini yaxshilaydi. Hamkorlar, dorixonalar, shifokorlar va investorlar uchun.", "CZECHFARM improves people’s health and quality of life through access to modern solutions. For partners, pharmacies, doctors and investors."];
+
+if (PROD) { for (const v of Object.values(TITLES)) v.push(tr(v[2])); DESC.push(tr(DESC[2])); }
 
 /* ── Данные для скрипта ────────────────────────────────────────────── */
 function K(l, p) {
@@ -374,9 +409,12 @@ function K(l, p) {
     scene: { n: SCENE_FRAMES },
     aud: PB.audCta(l),
     steps: PARTNER_STEPS.map((x) => x[l]),
-    offer: PB.offerData(l),
+    offer: PROD ? null : PB.offerData(l),
     launch: LB.launchData(l),
-    panel: href(l, "panel"),
+    panel: PROD ? "" : href(l, "panel"),
+    ...(PROD ? { prod: true, live: null, rxName: { rx: t("По рецепту", "Retsept bilan", "Prescription only"), otc: t("Без рецепта", "Retseptsiz", "Over the counter") },
+    leaflet: t("Открыть инструкцию (PDF)", "Yo‘riqnomani ochish (PDF)", "Open the leaflet (PDF)"),
+    sendFail: t("Не получилось отправить. Проверьте интернет и попробуйте ещё раз.", "Yuborib bo‘lmadi. Internetni tekshirib, qayta urinib ko‘ring.", "Could not send. Check your connection and try again.") } : {}),
     pillars: PILLARS.map((x) => x[l][1]),
     chain: CHAIN.map((c) => c[l]),
     play: t("Пустить импульс", "Impulsni yurgizish", "Play the pulse"),
@@ -387,14 +425,14 @@ function K(l, p) {
     status: t("Статус", "Holat", "Status"),
     err: { need: t("Заполните это поле", "Bu maydonni to‘ldiring", "Please fill this in"), mail: t("Проверьте почту: нужен вид name@company.com", "Pochtani tekshiring: name@company.com ko‘rinishida", "Check the email: it should look like name@company.com"), phone: t("В номере мало цифр", "Raqamda raqamlar kam", "The number is too short"), form: t("Проверьте отмеченные поля", "Belgilangan maydonlarni tekshiring", "Please check the highlighted fields") },
     sending: t("Отправляем", "Yuborilmoqda", "Sending"),
-    sentToast: t("Обращение ушло в панель компании.", "Murojaat kompaniya paneliga ketdi.", "The request went to the company panel."),
+    sentToast: PROD ? t("Обращение отправлено. Команда CZECHFARM ответит вам.", "Murojaat yuborildi. CZECHFARM jamoasi sizga javob beradi.", "Your request has been sent. The CZECHFARM team will reply.") : t("Обращение ушло в панель компании.", "Murojaat kompaniya paneliga ketdi.", "The request went to the company panel."),
     toPanel: t("Открыть в панели", "Panelda ochish", "Open in the panel"),
-    demo: t("демо", "demo", "demo"),
+    demo: PROD ? "" : t("демо", "demo", "demo"),
     sample: t("Образец устройства", "Tuzilish namunasi", "Layout sample"),
     agree: t("согласуем с компанией", "kompaniya bilan kelishiladi", "to be agreed"),
     fields: PRODUCT_FIELDS.map((f) => ({ id: f.id, t: f[l] })),
     catN: t("Найдено: {n}", "Topildi: {n}", "Found: {n}"),
-    catEmpty: t("Перечень продуктов ещё не утверждён. Так будет выглядеть каталог:", "Mahsulotlar ro‘yxati hali tasdiqlanmagan. Katalog shunday ko‘rinadi:", "The product list is not approved yet. This is how the catalogue will look:"),
+    catEmpty: PROD ? t("Каталог пополняется: скоро здесь появятся препараты CZECHFARM.", "Katalog to‘ldirilmoqda: tez orada bu yerda CZECHFARM dori vositalari paydo bo‘ladi.", "The catalogue is being filled: CZECHFARM products will appear here soon.") : t("Перечень продуктов ещё не утверждён. Так будет выглядеть каталог:", "Mahsulotlar ro‘yxati hali tasdiqlanmagan. Katalog shunday ko‘rinadi:", "The product list is not approved yet. This is how the catalogue will look:"),
     notFound: t("Ничего не нашлось. Попробуйте другое название.", "Hech narsa topilmadi. Boshqa nom bilan urinib ko‘ring.", "Nothing found. Try another name."),
     prodSample: t("Страница продукта", "Mahsulot sahifasi", "Product page"),
     medNote: t("Информация не заменяет консультацию врача. Медицинские тексты публикуются только после согласования с ответственным в компании.", "Ma’lumot shifokor maslahatining o‘rnini bosmaydi. Tibbiy matnlar faqat kompaniyadagi mas’ul shaxs bilan kelishilgach e’lon qilinadi.", "This information does not replace a doctor’s consultation. Medical texts are published only after approval by the responsible person at the company."),
@@ -412,15 +450,15 @@ function ld(l, p) {
 function page(l, p) {
   const t = T(l);
   const isHome = p === "";
-  const dz = isHome ? dzIntroSolo(l === "en" ? "ru" : l).replace(">Пропустить<", l === "en" ? ">Skip<" : ">Пропустить<") : "";
+  const dz = isHome && !PROD ? dzIntroSolo(l === "en" ? "ru" : l).replace(">Пропустить<", l === "en" ? ">Skip<" : ">Пропустить<") : "";
   return `<!doctype html>
-<html lang="${l}">
+<html lang="${l}"${l === "ar" ? ' dir="rtl"' : ""}>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>${TITLES[p][LANGS.indexOf(l)]}</title>
 <meta name="description" content="${DESC[LANGS.indexOf(l)]}">
-<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="robots" content="${PROD ? "index, follow" : "noindex, nofollow, noarchive"}">${PROD ? `\n<link rel="canonical" href="__SITE_URL__${href(l, p)}">\n<meta property="og:url" content="__SITE_URL__${href(l, p)}">` : ""}
 <meta name="theme-color" content="#f5f3ee">
 <meta property="og:title" content="${TITLES[p][LANGS.indexOf(l)]}">
 <meta property="og:description" content="${DESC[LANGS.indexOf(l)]}">
@@ -428,12 +466,12 @@ function page(l, p) {
 <link rel="icon" type="image/svg+xml" href="${IMG}/icon.svg">
 <link rel="apple-touch-icon" href="${IMG}/apple-180.png">
 ${isHome ? `<link rel="preload" as="image" href="${IMG}/hero-2400.webp" imagesrcset="${IMG}/hero-900.webp 900w, ${IMG}/hero-1400.webp 1400w, ${IMG}/hero-2400.webp 2400w" imagesizes="100vw" media="(min-width: 900px), (orientation: landscape)">\n<link rel="preload" as="image" href="${IMG}/hero-m-1080.webp" media="(max-width: 899px) and (orientation: portrait)">` : ""}
-${LANGS.filter((x) => x !== l).map((x) => `<link rel="alternate" hreflang="${x}" href="${href(x, p)}">`).join("\n")}
+${LANGS.filter((x) => x !== l).map((x) => `<link rel="alternate" hreflang="${x}" href="${PROD ? "__SITE_URL__" : ""}${href(x, p)}">`).join("\n")}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="${FONTS}">
+<link rel="stylesheet" href="${FONTS}">${l === "ar" ? `\n<link rel="stylesheet" href="${FONTS_AR}">` : ""}
 <script>(function(){var r=document.documentElement;r.classList.add('js');try{if(matchMedia('(prefers-reduced-motion: reduce)').matches)r.classList.add('rm')}catch(e){}})()</script>
-<style>${CSS}</style>
+<style>${CSS}</style>${l === "ar" ? `\n<style>${AR_CSS}</style>` : ""}
 <script type="application/ld+json">${ld(l, p)}</script>
 </head>
 <body data-lang="${l}" data-page="${p || "home"}">
@@ -475,7 +513,7 @@ window.cfiOff=function(){r.classList.remove('cfi');o.classList.add('out');setTim
 var last=Date.now();(function w(){if(window.cfiOn||!o.parentNode)return;if(document.getElementById('dzi'))last=Date.now();if(Date.now()-last>4000){window.cfiOff();return}setTimeout(w,200)})();
 })()`;
 function introHtml(l) {
-  const skip = { ru: "Пропустить", uz: "O‘tkazib yuborish", en: "Skip" }[l];
+  const skip = { ru: "Пропустить", uz: "O‘tkazib yuborish", en: "Skip", ar: "تخطٍّ" }[l];
   return `<div class="cfi" id="cfi" data-env="${IMG}/studio-2048.webp" role="presentation"><canvas></canvas><button type="button" class="cfi-skip">${skip}</button></div>
 <style>${INTRO_CSS}</style>
 <script>${INTRO_JS}</script>
@@ -568,6 +606,19 @@ ${PANEL_JS}</script>
 }
 
 const out = {};
+if (PROD) {
+  /* Боевой сайт: страницы файлами в app/site, без демо-панели и сборки макета. */
+  const SITE = process.env.CF_SITE || DIR + "app/site/";
+  for (const l of LANGS) for (const p of [...PAGES, "privacy"]) {
+    const k = keyOf(l, p), f = SITE + (k ? k + "/" : "") + "index.html";
+    mkdirSync(f.slice(0, f.lastIndexOf("/")), { recursive: true });
+    writeFileSync(f, page(l, p));
+  }
+  const miss = arMissing();
+  if (miss.length) { writeFileSync(DIR + "ar-missing.json", JSON.stringify(miss, null, 1)); console.error(`CZECHFARM: нет арабского перевода у ${miss.length} строк — ar-missing.json`); process.exit(1); }
+  if (existsSync(DIR + "ar-missing.json")) unlinkSync(DIR + "ar-missing.json");
+  console.log("CZECHFARM: страницы боевого сайта в", SITE);
+} else {
 for (const l of LANGS) {
   for (const p of PAGES) out[keyOf(l, p)] = page(l, p);
   out[keyOf(l, "panel")] = panelPage(l);
@@ -588,3 +639,4 @@ const bundleDir = new URL("../../../content/proto-bundles/", import.meta.url).pa
 mkdirSync(bundleDir, { recursive: true });
 writeFileSync(bundleDir + "chechfarm.json", JSON.stringify({ parts, pages }));
 for (const [k, v] of Object.entries(out)) console.log((k || "(ru)").padEnd(14), v.length);
+}

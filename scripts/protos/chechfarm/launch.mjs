@@ -10,6 +10,8 @@
  *   «Сам или с CZECHFARM» (#compare): два сценария одним переключателем.
  * Поведение — launch.js, стили — launch.css.
  */
+import { withAr } from "./ar.mjs";
+
 const ORIGINS = {
   ru: ["Китай", "Индия", "Европа", "Турция", "Корея", "Другая страна"],
   uz: ["Xitoy", "Hindiston", "Yevropa", "Turkiya", "Koreya", "Boshqa mamlakat"],
@@ -34,6 +36,8 @@ const COMPARE = [
 /* Полки: где стоят маленькие коробки на сцене точек сбыта. */
 const SHELF = [];
 for (let r = 0; r < 3; r++) for (let c = 0; c < 6; c++) SHELF.push([388 + c * 38, 108 + r * 92]);
+
+withAr(ORIGINS); withAr(STAGES); withAr(COMPARE);
 
 export function makeLaunch({ T, href, ICON, pad }) {
   const box = (cls) => `<g class="${cls}"><path class="bx-side" d="M0 0 L36 -22 L36 158 L0 180Z" transform="translate(140 0)"/><path class="bx-top" d="M0 0 L140 0 L176 -22 L36 -22Z"/><rect class="bx-front" width="140" height="180" rx="4"/><rect class="bx-band" y="112" width="140" height="22"/><text class="bx-q" x="70" y="104" text-anchor="middle">?</text><text class="bx-name" x="70" y="72" text-anchor="middle"></text><text class="bx-org" x="70" y="160" text-anchor="middle"></text><g class="bx-mk" transform="translate(58 18) scale(.6)"><path d="M20 8h-4.5a8 8 0 0 0 0 16H20Z" class="m-a"/><path d="M20 8h4.5a8 8 0 0 1 0 16H20Z" class="m-b"/></g></g>`;

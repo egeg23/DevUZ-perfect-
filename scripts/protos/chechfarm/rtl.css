@@ -1,0 +1,34 @@
+/* Арабская версия боевого сайта: письмо справа налево. Подключается только
+   в страницы ar (gen.mjs, AR_CSS) после основных стилей и зеркалит то,
+   что в site.css, premium.css и launch.css привязано к левому краю. */
+:root{--disp:"Literata","Noto Naskh Arabic",Georgia,serif;--txt:"Onest","IBM Plex Sans Arabic",system-ui,sans-serif}
+/* Справа налево вылезающее влево прокручивается: держим страницу в ширине экрана. */
+body{overflow-x:clip}
+/* Разрядка ломает связное арабское письмо; у знака CZECHFARM — оставляем. */
+body *{letter-spacing:0}
+.word{letter-spacing:.08em}
+.skip{left:auto;right:-999px}.skip:focus{left:auto;right:8px}
+.hp{left:auto;right:-9999px}
+.top-r{margin-left:0;margin-right:auto}
+.prod,.nw,.ln-steps button{text-align:right}
+.mv-left{transform:translateX(28px)}
+.mv-right{transform:translateX(-28px)}
+.mv.in{transform:none}
+.hs-load{right:auto;left:var(--g);justify-items:start}
+.vs-sw i{left:auto;right:4px}
+.vs[data-on="1"] .vs-sw i{transform:translateX(-100%)}
+/* Стрелки «вперёд» смотрят влево. */
+svg:has(> path[d="M5 12h14M13 6l6 6-6 6"]){transform:scaleX(-1)}
+.link:hover svg:has(> path[d="M5 12h14M13 6l6 6-6 6"]){transform:scaleX(-1) translateX(4px)}
+/* Схемы рисованы слева направо: внутри SVG направление прежнее, арабский текст — по своим правилам. */
+svg{direction:ltr}
+svg text{unicode-bidi:plaintext}
+/* Знак и латинские строки — слева направо, как в логотипе. */
+.logo{direction:ltr}
+.kicker,.pl-w,.hc-row button{unicode-bidi:plaintext}
+/* Арабским буквам нужно место под строкой: заголовок первого экрана выше. */
+.hs h1{line-height:1.22}
+.hs h1 .w{padding-bottom:.14em}
+/* Кадр первого экрана и шапок разделов зеркально: предмет уходит от текста влево. */
+.hs-media,.ph-img{transform:scaleX(-1)}
+#formula .h2{unicode-bidi:plaintext}

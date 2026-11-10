@@ -6,6 +6,7 @@
  * premium.js, стили — в premium.css. Факты — те же, только из ТЗ.
  */
 import { PARTNER_STEPS, AUDIENCES } from "./data.mjs";
+import { withAr } from "./ar.mjs";
 import { BASE, ADDONS, ALL, OFFER_HOURS, RATE } from "./plan.mjs";
 
 /* Сцена: кадров столько, сколько нарезал scene.py (seq/d/f00…). */
@@ -57,6 +58,8 @@ const NEEDS = [
   ["cons", { ru: ["Текст согласия", "Для форм обращений"], uz: ["Rozilik matni", "Murojaat shakllari uchun"], en: ["Consent text", "For the request forms"] }],
   ["ir", { ru: ["Материалы для инвесторов", "Презентация, показатели"], uz: ["Investorlar uchun materiallar", "Taqdimot, ko‘rsatkichlar"], en: ["Investor materials", "Presentation, figures"] }],
 ];
+
+withAr(BLOCKS); withAr(AUD_POINTS);
 
 export function makeBlocks({ T, href, ICON, IMG, L3, CHAIN, pad, BASE_URL }) {
   const usd = (n) => `${String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ")} $`;

@@ -377,3 +377,9 @@ h1,h2,h3,h4,p{margin:0}
 
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.rise,.mv,.hs h1 .w>span{opacity:1!important;transform:none!important}.mission .wd{opacity:1}}
 .rm .rise,.rm .mv,.rm .hs h1 .w>span{opacity:1;transform:none}
+
+/* Боевой сайт: ловушка для ботов, фото продукта и новости, карта. */
+.hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none}
+.pp-img,.art-img{width:100%;max-height:360px;object-fit:contain;border-radius:var(--r);background:#fff}
+.nw .im img{width:100%;height:100%;object-fit:cover;border-radius:inherit}
+.map iframe{width:100%;height:100%;min-height:260px;border:0;border-radius:var(--r)}
