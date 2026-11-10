@@ -13,6 +13,8 @@ SCENE_KEY=<64 hex> python3 -I scene.py <папка h: v1..v4.mp4, k1..k5.png> <�
 «Переходы абсолютно не плавные… слайдшоу какое-то». Поэтому ролики по 10 с
 с медленной камерой и каждый второй кадр: около 480 кадров на пролёт, а
 land.js ещё смешивает соседние. Реже STEP=2 не делать.
+Телефону сверх кадров — seq/m.bin: одно видео H.264 (все кадры, ключевой
+каждый третий) под тем же шифром; `VIDEO=1` пересобирает только его.
 Последний кадр ролика совпадает с первым следующего, стык выбрасывается.
 Компьютеру — 1280×720 (d/), телефону — 720×1280 из вертикальных роликов (m/).
 В public кадры лежат только шифром, как у SamAuto и Optimal Prime:
@@ -25,6 +27,7 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from PIL import Image
 
 STEP = 2
+FPS = 24
 KEY = bytes.fromhex(os.environ.get("SCENE_KEY", "0" * 64))
 assert len(KEY) == 32, "ключ — 32 байта"
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -52,16 +55,48 @@ def webp(im, q):
     return b.getvalue()
 
 
-def sequence(kind):
+def full(kind):
     seq = []
     for v in range(4):
         fs = frames(os.path.join(SRC[kind], f"v{v + 1}.mp4"))
         seq += fs[1:] if v else fs
+    return seq
+
+
+def video():
+    """Телефону — одно видео: все кадры вертикальных роликов подряд, ключевой
+    каждый третий, без B-кадров. Телефон перематывает его аппаратно; кадры
+    по одному он распаковывать не успевал (владелец, 11.11.2026: «пролаг»,
+    после распаковки заранее — «стало хуже»). Тот же приём, что у SamAuto."""
+    seq = full("m")
+    lst = tempfile.mkdtemp()
+    for i, f in enumerate(seq):
+        os.symlink(f, os.path.join(lst, f"{i:05d}.jpg"))
+    mp4 = os.path.join(lst, "m.mp4")
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-framerate", str(FPS), "-i", os.path.join(lst, "%05d.jpg"), "-vf", "scale=720:1280:flags=lanczos",
+                    "-c:v", "libx264", "-preset", "slow", "-tune", "film", "-crf", "25", "-g", "3", "-keyint_min", "1", "-bf", "0",
+                    "-pix_fmt", "yuv420p", "-profile:v", "high", "-movflags", "+faststart", "-an", mp4], check=True)
+    seal(open(mp4, "rb").read(), os.path.join(PUB, "seq", "m.bin"))
+    return len(seq), os.path.getsize(mp4)
+
+
+def sequence(kind):
+    seq = full(kind)
     pick = seq[::STEP]
     if pick[-1] != seq[-1]:
         pick.append(seq[-1])
     return pick
 
+
+MEDIA = os.path.join(HERE, "media.json")
+if os.environ.get("VIDEO"):
+    # Только видео телефона: кадры не трогаем, их шифр в git не меняется.
+    vn, size = video()
+    m = json.load(open(MEDIA))
+    m.update(vn=vn, fps=FPS)
+    json.dump(m, open(MEDIA, "w"))
+    print("видео", vn, "кадров,", round(size / 1048576, 1), "МБ", file=sys.stderr)
+    sys.exit(0)
 
 picks = {k: sequence(k) for k in ("d", "m")}
 n = min(len(p) for p in picks.values())
@@ -100,6 +135,7 @@ for i in range(1, 6):
     Image.open(os.path.join(SRC["d"], f"k{i}.png")).convert("RGB").resize((1600, 893), Image.LANCZOS).save(os.path.join(PUB, f"k{i}-16.webp"), "WEBP", quality=82, method=6)
     Image.open(os.path.join(SRC["m"], f"k{i}.png")).convert("RGB").resize((720, 1290), Image.LANCZOS).save(os.path.join(PUB, f"k{i}-9.webp"), "WEBP", quality=80, method=6)
 
-with open(os.path.join(HERE, "media.json"), "w") as f:
-    json.dump({"n": n}, f)
+vn, _ = video()
+with open(MEDIA, "w") as f:
+    json.dump({"n": n, "vn": vn, "fps": FPS}, f)
 print("кадров", n, "× 2,", round(total / 1048576, 1), "МБ", file=sys.stderr)

@@ -27,16 +27,25 @@ $$('.rise,.tilt,.pop,.slide').forEach(function(e){if(io&&!RM)io.observe(e);else 
    открытый макет: app/proto/[token]/promo/scene. Компьютеру — 1280×720,
    телефону — свои ролики 9:16. Кадр едет за прокруткой мягким догоном,
    соседние кадры смешиваются. Кадр распаковывается заранее и не в главном
-   потоке (createImageBitmap): распаковка WebP в миг отрисовки и давала
-   рывки на телефоне. */
+   потоке (createImageBitmap).
+   Телефону — одно видео seq/m.bin (H.264, ключевой каждый третий кадр) под
+   тем же шифром: перемотка аппаратная, картинки не распаковываются. Кадры
+   по одному телефон распаковывать не успевал, и пролёт у знака шёл рывками
+   (владелец, 11.11.2026). Не умеет mp4 или видео не пришло — кадры, как на
+   компьютере. Приём и грабли — из SamAuto. */
 var hs=$('.hs');
 if(hs&&!RM){
   var cv=$('canvas',hs),cx=cv.getContext('2d'),cps=$$('.cp',hs),F=D.n,blob=[],bm={},order=[],busy={},nb=0,asked={},ready=false,want=0,cur=0,raf=0,last=-1,dir=1;
+  var vd=$('video',hs),VN=D.vn||0,FPS=D.fps||24,vseek=-1,vok=false;
   var SET=w.innerWidth<900?'m':'d',EASE=/*~*/0.12,MAXB=SET==='m'?24:56,AHEAD=SET==='m'?14:18,SRC=SET==='m'?1280:720,BMP='createImageBitmap'in w;
   function prog(){var r=hs.getBoundingClientRect(),span=r.height-innerHeight;return span>0?cl(-r.top/span):0}
   /* Холст не крупнее самого кадра: лишние точки только греют телефон. */
   function size(){var dpr=Math.min(w.devicePixelRatio||1,2,Math.max(1,SRC/(cv.clientHeight||1)));cv.width=Math.round(cv.clientWidth*dpr);cv.height=Math.round(cv.clientHeight*dpr);last=-1}
+  var VID=SET==='m'&&VN>1&&!!vd&&!!vd.canPlayType&&vd.canPlayType('video/mp4; codecs="avc1.640020"')!=='';
   function at(){return Math.round(cur*(F-1))}
+  /* Перемотка: следующая — только когда прошлая встала (seeked), иначе Safari
+     копит запросы и отстаёт. */
+  function vgo(){var t=(Math.round(cur*(VN-1))+.5)/FPS;if(vd.seeking){vseek=t;return}vseek=-1;if(Math.abs(vd.currentTime-t)>.4/FPS)vd.currentTime=t}
   function viaImg(b){return new Promise(function(ok,no){var g=new Image(),u=URL.createObjectURL(b);g.onload=function(){var fin=function(){URL.revokeObjectURL(u);ok(g)};g.decode?g.decode().then(fin,fin):fin()};g.onerror=function(){URL.revokeObjectURL(u);no()};g.src=u})}
   /* Расшифрованный кадр лежит сжатым (Blob), распакованными — только MAXB
      ближних: сотни кадров iPhone в памяти не держит. Распаковка идёт по
@@ -51,7 +60,7 @@ if(hs&&!RM){
      прозрачности, и медленная прокрутка идёт без ступеней. На быстрой кадр
      и так меняется каждый раз, смесь не видна, а слабому телефону она
      вдвое дороже — там её нет. */
-  function draw(){var f=cur*(F-1),i=Math.floor(f),t=f-i,key=Math.round(f*50),slow=Math.abs(want-cur)*(F-1)*EASE<.6;if(key===last)return;warm(i);var g=near(i);if(!g)return;last=key;
+  function draw(){var f=cur*(F-1),i=Math.floor(f),t=f-i,key=Math.round(f*50),slow=Math.abs(want-cur)*(F-1)*EASE<.6;if(vok){vgo();return}if(key===last)return;warm(i);var g=near(i);if(!g)return;last=key;
     cx.globalAlpha=1;blit(g);var h=slow&&t>.02&&g===bm[i]?bm[i+1]:null;if(h){cx.globalAlpha=t;blit(h);cx.globalAlpha=1}}
   /* Глава видна вокруг своей доли сцены: появляется и уходит движением. */
   function paint(p){
@@ -61,7 +70,28 @@ if(hs&&!RM){
   function poke(){want=prog();paint(want);if(!raf)raf=requestAnimationFrame(loop)}
   addEventListener('scroll',poke,{passive:true});addEventListener('resize',function(){if(ready)size();poke()});poke();
   if(!w.crypto||!crypto.subtle||!w.Blob)$('#hs-load').classList.add('ok');
-  else if(d.readyState==='complete')setTimeout(loadScene,200);else addEventListener('load',function(){setTimeout(loadScene,200)});
+  else{var go=VID?loadVid:loadScene;if(d.readyState==='complete')setTimeout(go,200);else addEventListener('load',function(){setTimeout(go,200)})}
+  function unseal(buf){return fetch(D.root+'/promo/scene',{credentials:'same-origin'}).then(function(r){if(!r.ok)throw 0;return r.arrayBuffer()})
+    .then(function(b){return crypto.subtle.importKey('raw',b,'AES-GCM',false,['decrypt'])})
+    .then(function(k){return crypto.subtle.decrypt({name:'AES-GCM',iv:new Uint8Array(buf,0,12)},k,new Uint8Array(buf,12))})}
+  /* Видео — одним файлом с ходом загрузки, потом в <video> из памяти:
+     перемотка не ждёт сеть. */
+  function loadVid(){
+    var n=$('#hs-n'),bar=$('#hs-b'),dead=false,show=function(k){n.textContent=Math.floor(k*100);bar.style.transform='scaleX('+k.toFixed(3)+')'};
+    var fail=function(){if(dead||vok)return;dead=true;VID=false;hs.classList.remove('vid');loadScene()};
+    fetch(D.img+'/seq/m.bin').then(function(r){if(!r.ok)throw 0;var len=+r.headers.get('content-length')||0;
+      if(!r.body||!r.body.getReader||!len)return r.arrayBuffer();
+      var rd=r.body.getReader(),parts=[],got=0;
+      return(function pump(){return rd.read().then(function(x){if(x.done)return new Blob(parts).arrayBuffer();parts.push(x.value);got+=x.value.length;show(got/len*.98);return pump()})})()})
+    .then(unseal).then(function(x){
+      vd.addEventListener('loadeddata',function(){if(dead)return;show(1);vok=true;ready=true;hs.classList.add('live','vid');$('#hs-load').classList.add('ok');cur=want=prog();
+        /* iOS рисует кадры перемотки только после первого play(); в режиме
+           энергосбережения play() откажет — тогда по первому касанию. */
+        var prime=function(){var p=vd.play();if(p&&p.then)p.then(function(){vd.pause();vgo();poke()},function(){})};prime();
+        addEventListener('touchstart',function(){if(vd.paused&&vd.currentTime===0)prime()},{once:true,passive:true});vgo()},{once:true});
+      vd.addEventListener('seeked',function(){if(vseek>=0){var s=vseek;vseek=-1;vd.currentTime=s}});
+      vd.addEventListener('error',fail,{once:true});setTimeout(function(){if(!vok)fail()},20000);
+      vd.preload='auto';vd.src=URL.createObjectURL(new Blob([x],{type:'video/mp4'}));vd.load()},fail)}
   function loadScene(){
     var n=$('#hs-n'),bar=$('#hs-b'),done=0,got=0;
     function step(){done++;var k=done/F;n.textContent=Math.floor(k*100);bar.style.transform='scaleX('+k.toFixed(3)+')';

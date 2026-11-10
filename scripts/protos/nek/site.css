@@ -291,6 +291,8 @@ h1,h2,h3{margin:0;font-family:var(--hd);font-weight:700;line-height:1.08;letter-
 .hs-a,.hs canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .hs canvas{opacity:0;transition:opacity .6s}
 .hs.live canvas{opacity:1}
+.hs video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;pointer-events:none}
+.hs.vid video{display:block}
 .hs-shade{position:absolute;inset:0;background:linear-gradient(0deg,rgb(30 18 36/.78) 0,rgb(30 18 36/0) 55%),linear-gradient(90deg,rgb(30 18 36/.45),rgb(30 18 36/0) 60%);pointer-events:none}
 .hs-ch{position:absolute;inset:0;pointer-events:none}
 .cp{position:absolute;left:max(16px,(100% - 1200px)/2);right:16px;bottom:clamp(96px,16vh,160px);max-width:760px;opacity:var(--o,0);transform:translateY(calc((1 - var(--o,0)) * 28px))}
