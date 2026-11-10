@@ -224,6 +224,12 @@ export const broadcastDict = defineDict({
 export const botSubsDict = defineDict({
   title: { ru: "Подписчики бота", uz: "Bot obunachilari", pl: "Subskrybenci bota" },
   now: { ru: "сейчас в боте", uz: "hozir botda", pl: "teraz w bocie" },
+  today: { ru: "подписались сегодня", uz: "bugun obuna bo‘ldi", pl: "zasubskrybowało dzisiaj" },
+  yesterday: {
+    ru: (n: number) => `вчера ${n}`,
+    uz: (n: number) => `kecha ${n}`,
+    pl: (n: number) => `wczoraj ${n}`,
+  },
   caption: {
     ru: "Новые и активные подписчики бота за сутки, неделю и месяц",
     uz: "Kun, hafta va oy davomida botning yangi va faol obunachilari",
@@ -245,8 +251,8 @@ export const botSubsDict = defineDict({
     pl: (n: number) => `Zablokowali bota: ${n}`,
   },
   note: {
-    ru: "Подписчик — тот, кто сам написал боту или нажал «Start». Сотрудники не считаются. Числа обновляются раз в 5 минут.",
-    uz: "Obunachi — botga o‘zi yozgan yoki «Start»ni bosgan kishi. Xodimlar hisobga olinmaydi. Raqamlar har 5 daqiqada yangilanadi.",
-    pl: "Subskrybent to osoba, która sama napisała do bota albo nacisnęła «Start». Pracownicy się nie liczą. Liczby odświeżają się co 5 minut.",
+    ru: "Подписчик — тот, кто сам написал боту или нажал «Start». Сотрудники не считаются. «Сегодня» — с полуночи по Ташкенту. Числа обновляются раз в 5 минут, сводка в бот — каждый день в 20:00.",
+    uz: "Obunachi — botga o‘zi yozgan yoki «Start»ni bosgan kishi. Xodimlar hisobga olinmaydi. «Bugun» — Toshkent vaqti bilan yarim tundan. Raqamlar har 5 daqiqada yangilanadi, botga hisobot — har kuni soat 20:00 da.",
+    pl: "Subskrybent to osoba, która sama napisała do bota albo nacisnęła «Start». Pracownicy się nie liczą. «Dzisiaj» liczy się od północy czasu taszkenckiego. Liczby odświeżają się co 5 minut, podsumowanie w bocie przychodzi codziennie o 20:00.",
   },
 });
