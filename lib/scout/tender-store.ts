@@ -2,7 +2,7 @@ import { record } from "@/lib/admin/audit";
 import type { Staff } from "@/lib/admin/session";
 import { esc, sendMessage } from "@/lib/qualify/telegram";
 import { siteUrl } from "@/lib/seo";
-import { PRICE_RULE, promoteTenders } from "@/lib/scout/tender-lead";
+import { PRICE_RULE, fillTakenTenders, promoteTenders } from "@/lib/scout/tender-lead";
 import { tenderRu } from "@/lib/scout/tender-ru";
 import { SOURCE_LABEL, mergeLots, withContact, type SourceResult, type TenderLot, type TenderSource } from "@/lib/scout/tender-sources";
 import { serviceClient } from "@/lib/supabase";
@@ -202,6 +202,7 @@ export async function runTenderScan(
   },
   toLeads: (now: Date) => Promise<{ errors: string[] }> = promoteTenders,
   enrich: (lot: TenderLot) => Promise<TenderLot> = enrichLot,
+  fillTaken: (now: Date) => Promise<{ errors: string[] }> = fillTakenTenders,
 ): Promise<{ ran: boolean; added: number; errors: string[] }> {
   const db = serviceClient();
   if (!db) return { ran: false, added: 0, errors: [] };
@@ -234,6 +235,8 @@ export async function runTenderScan(
 
   // Новые наши лоты — лидами в очередь менеджеров.
   errors.push(...(await toLeads(now).catch((error) => ({ errors: [String(error)] }))).errors);
+  // Взятым руками — контакт и русская фраза, которых им никто не дочитал.
+  errors.push(...(await fillTaken(now).catch((error) => ({ errors: [String(error)] }))).errors);
 
   await writeScan({
     at: now.toISOString(),
