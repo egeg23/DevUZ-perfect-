@@ -19,6 +19,12 @@ export type Estimate = {
    * этой: округление вниз до полумиллиона уводило бы его ниже базы.
    */
   exactUzs: number;
+  /**
+   * Цена на сайте — одна, без «от» и вилки (владелец, 09.11.2026: «цены
+   * указываем не „от“ в калькуляторе, а фиксированную»). Та же, что lowUzs:
+   * вилка lowUzs–highUzs осталась только порогом менеджера (lib/admin/quote.ts).
+   */
+  priceUzs: number;
   lowUzs: number;
   highUzs: number;
   weeksLow: number;
@@ -49,6 +55,11 @@ export function formatUzs(value: number, locale: Locale): string {
 export function formatUsd(uzs: number): string {
   const usd = Math.round(uzs / USD_RATE / 50) * 50;
   return `$${usd.toLocaleString("en-US")}`;
+}
+
+/** Цена типа проекта без допов: та же сумма, что калькулятор покажет при выборе. */
+export function basePriceUzs(categorySlug: string): number {
+  return estimate(categorySlug, defaultSelection(categorySlug), "ru")?.priceUzs ?? 0;
 }
 
 /** Значение опции по умолчанию: для выбора — первый вариант. */
@@ -129,6 +140,7 @@ export function estimate(
 
   return {
     exactUzs: Math.round(total),
+    priceUzs: roundUzs(total),
     lowUzs: roundUzs(total),
     highUzs: roundUzs(total * RANGE_FACTOR),
     weeksLow: Math.max(1, Math.round(weeks)),
@@ -158,7 +170,7 @@ export function estimateToMessage(
     prefix,
     "",
     `• ${categoryTitle}`,
-    `• ${formatUzs(result.lowUzs, locale)} – ${formatUzs(result.highUzs, locale)} (${formatUsd(result.lowUzs)} – ${formatUsd(result.highUzs)})`,
+    `• ${formatUzs(result.priceUzs, locale)} (${formatUsd(result.priceUzs)})`,
     `• ${result.weeksLow}–${result.weeksHigh} ${weeksLabel}`,
   ];
 

@@ -106,7 +106,6 @@ export function MarketingCalculator({ locale, copy }: { locale: Locale; copy: Ma
                 </span>
                 <span className="mt-1.5 flex-1 text-[0.78rem] leading-snug text-faint">{t(channel.note, locale)}</span>
                 <span className={cn("mt-3 font-mono text-[0.7rem]", active ? "text-green" : "text-faint")}>
-                  {channel.from ? `${copy.from} ` : ""}
                   {money(channel.monthly)} · {copy.monthlyCol.toLowerCase()}
                 </span>
               </button>

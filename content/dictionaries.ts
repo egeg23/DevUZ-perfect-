@@ -173,7 +173,7 @@ const ru = {
     kicker: "вопросы",
     title: "Отвечаем заранее",
     items: [
-      { q: "Сколько стоит разработка сайта в Ташкенте?", a: "Разработка сайта в Ташкенте у DevUz Studio начинается от 500 $ за лендинг, от 1 000 $ за корпоративный сайт, от 8 000 $ за мобильное приложение и от 15 000 $ за маркетплейс. Цена зависит от четырёх вещей: количества языков, числа ролей пользователей, глубины интеграций со сторонними системами и того, нужен ли отдельный дизайн или подойдёт адаптация готовой сетки. Сайт на четырёх языках с админкой обойдётся дороже одноязычного лендинга примерно в полтора раза. Точную цифру мы называем после разбора задачи: до него любая цена будет выдумкой, а выдуманная смета всегда заканчивается доплатами. Посчитать вилку самостоятельно можно калькулятором на сайте — он покажет диапазон в сумах и срок в неделях за минуту, без разговора с менеджером." },
+      { q: "Сколько стоит разработка сайта в Ташкенте?", a: "Разработка сайта в Ташкенте у DevUz Studio начинается от 500 $ за лендинг, от 1 000 $ за корпоративный сайт, от 8 000 $ за мобильное приложение и от 15 000 $ за маркетплейс. Цена зависит от четырёх вещей: количества языков, числа ролей пользователей, глубины интеграций со сторонними системами и того, нужен ли отдельный дизайн или подойдёт адаптация готовой сетки. Сайт на четырёх языках с админкой обойдётся дороже одноязычного лендинга примерно в полтора раза. Точную цену за выбранный состав можно посчитать самому калькулятором на сайте: за минуту он покажет фиксированную сумму и срок в неделях, без разговора с менеджером." },
       { q: "Сколько времени занимает разработка сайта или приложения?", a: "Корпоративный сайт или лендинг DevUz Studio собирает за 3–8 недель, мобильное приложение на Flutter — за 6–14 недель, маркетплейс или сервис доставки — за 10–20 недель. Отсчёт идёт с момента, когда согласован объём работ и получены доступы, а не с первого письма. На срок сильнее всего влияют три фактора: готовность контента со стороны заказчика, количество внешних интеграций и скорость согласований внутри компании. Проект на четыре языка добавляет к сроку примерно 15% — переводы и проверка вёрстки на каждом языке занимают время. Мы работаем недельными итерациями: каждую пятницу заказчик видит работающую сборку на тестовом домене, а не отчёт о проделанной работе." },
       { q: "Что входит в разработку сайта под ключ?", a: "Под ключ у DevUz Studio означает, что заказчик получает работающий сайт, а не набор файлов. В объём входят: дизайн под ваш бренд, вёрстка и программирование, админка, где контент правит менеджер без разработчика, мультиязычность с hreflang-разметкой, техническое SEO — sitemap, Schema.org, скорость в зелёной зоне Core Web Vitals, подключение домена и SSL, настройка аналитики и перенос существующего контента. Отдельно оплачиваются только хостинг и покупка домена — обычно 5–15 $ в месяц. После запуска действует месяц бесплатной поддержки: правим то, что всплыло на боевом трафике. Исходный код передаётся заказчику полностью, включая репозиторий и историю коммитов." },
       { q: "Сколько стоит внедрение ИИ в бизнес?", a: "Внедрение ИИ в бизнес в DevUz Studio начинается от 4 000 $ и занимает 4–10 недель. За эти деньги получается работающий продукт, а не эксперимент: чаще всего это ассистент первой линии, который отвечает клиентам круглосуточно, разбирается в задаче и передаёт менеджеру готовую сводку, либо поиск по базе знаний компании на технологии RAG. Стоимость складывается из объёма данных, которые нужно подготовить, количества интеграций с вашими системами и того, нужна ли дообученная модель или достаточно готовой. Отдельная статья — расходы на сами запросы к модели: для среднего потока обращений это 30–150 $ в месяц. Окупаемость мы считаем до старта: если по цифрам не сходится, честно об этом говорим." },
@@ -393,7 +393,7 @@ const ru = {
     calculator: {
       title: "Стоимость разработки сайта в Ташкенте — калькулятор",
       description:
-        "Посчитайте цену сайта, приложения или маркетплейса за минуту. Отметьте нужные опции — калькулятор покажет вилку «от» в сумах и срок в неделях.",
+        "Посчитайте цену сайта, приложения или маркетплейса за минуту. Отметьте нужные опции — калькулятор покажет точную цену в сумах и долларах и срок в неделях.",
     },
     products: {
       title: "Купить готовые проекты и сервисы — исходный код | DevUz",
@@ -449,10 +449,10 @@ const ru = {
     kicker: "разработка · расчёт стоимости",
     title: "Посчитайте проект за минуту",
     description:
-      "Выберите тип проекта и отметьте, что нужно. Калькулятор покажет вилку «от» и состав работ — тот же расчёт, который делает менеджер, только без ожидания.",
+      "Выберите тип проекта и отметьте, что нужно. Калькулятор покажет точную цену и состав работ: тот же расчёт, который делает менеджер, только без ожидания.",
     chooseType: "Что делаем",
     configure: "Настройте под себя",
-    result: "Предварительная оценка",
+    result: "Стоимость проекта",
     from: "от",
     weeksLabel: "недель работы",
     techTitle: "Что получите технически",
@@ -461,7 +461,7 @@ const ru = {
     discuss: "Обсудить расчёт",
     handoff: "Расчёт подставлен в чат. Опишите детали — менеджер получит его вместе с вашим запросом.",
     disclaimer:
-      "Это ориентир, а не коммерческое предложение. Точную цифру называем после разбора задачи: на реальном проекте всплывают требования, которых нет ни в одном калькуляторе.",
+      "Цена фиксированная: за выбранный состав вы платите эту сумму. Добавите функции после разбора задачи, пересчитаем по тем же ценам.",
     none: "не нужно",
     included: "уже входит",
     prefill:
@@ -617,7 +617,7 @@ const en: Dictionary = {
     kicker: "questions",
     title: "Answered upfront",
     items: [
-      { q: "How much does website development in Tashkent cost?", a: "Website development at DevUz Studio in Tashkent starts at $500 for a landing page, $1,000 for a corporate site, $8,000 for a mobile app and $15,000 for a marketplace. The price depends on four things: how many languages you need, how many user roles the system has, how deep the integrations with third-party systems go, and whether you want original design or an adaptation of an existing grid. A four-language site with an admin panel costs roughly one and a half times more than a single-language landing page. We quote the exact figure after scoping the task — before that any number is a guess, and a guessed estimate always ends in surcharges. You can get a range yourself with the calculator on the site: it shows a starting price and a timeline in weeks in about a minute." },
+      { q: "How much does website development in Tashkent cost?", a: "Website development at DevUz Studio in Tashkent starts at $500 for a landing page, $1,000 for a corporate site, $8,000 for a mobile app and $15,000 for a marketplace. The price depends on four things: how many languages you need, how many user roles the system has, how deep the integrations with third-party systems go, and whether you want original design or an adaptation of an existing grid. A four-language site with an admin panel costs roughly one and a half times more than a single-language landing page. You can get the exact price for the scope you pick yourself with the calculator on the site: in about a minute it shows a fixed amount and a timeline in weeks." },
       { q: "How long does it take to build a website or an app?", a: "DevUz Studio builds a corporate site or landing page in 3–8 weeks, a Flutter mobile app in 6–14 weeks, and a marketplace or delivery service in 10–20 weeks. The clock starts when scope is agreed and access is granted, not at the first email. Three things drive the timeline most: how ready your content is, how many external integrations are involved, and how fast approvals move inside your company. A four-language project adds roughly 15% — translation and layout checks in every language take time. We work in weekly iterations: every Friday you see a working build on a staging domain, not a progress report." },
       { q: "What is included in turnkey website development?", a: "Turnkey at DevUz Studio means you get a working website, not a folder of files. The scope includes design for your brand, front-end and back-end development, an admin panel where a manager edits content without a developer, multilingual support with hreflang markup, technical SEO — sitemap, Schema.org, Core Web Vitals in the green zone — domain and SSL setup, analytics, and migration of existing content. Only hosting and the domain are billed separately, typically $5–15 a month. After launch you get a month of free support for whatever surfaces under real traffic. The source code is handed over in full, including the repository and its commit history." },
       { q: "How much does AI implementation for business cost?", a: "AI implementation at DevUz Studio starts at $4,000 and takes 4–10 weeks. That budget buys a working product, not an experiment: most often a first-line assistant that answers customers around the clock, works out the task and hands a finished summary to a human manager, or a RAG-based search across the company knowledge base. The cost depends on how much data needs preparing, how many integrations with your systems are required, and whether a fine-tuned model is needed or an off-the-shelf one will do. Model usage is a separate line: for an average flow of enquiries that is $30–150 a month. We size the payback before the start — if the numbers do not work, we say so." },
@@ -825,7 +825,7 @@ const en: Dictionary = {
     calculator: {
       title: "Development Cost Calculator — Tashkent | DevUz",
       description:
-        "Estimate the price of a website, app or marketplace in a minute. Pick the options you need and get a starting range and a timeline in weeks.",
+        "Estimate the price of a website, app or marketplace in a minute. Pick the options you need and get the exact price and a timeline in weeks.",
     },
     products: {
       title: "Buy Ready-Made Projects and Services — Source Code | DevUz",
@@ -878,10 +878,10 @@ const en: Dictionary = {
     kicker: "development · price estimate",
     title: "Price your project in a minute",
     description:
-      "Pick a project type and tick what you need. The calculator shows a «from» range and the scope of work — the same estimate a manager would make, without the wait.",
+      "Pick a project type and tick what you need. The calculator shows the exact price and the scope of work: the same calculation a manager would make, without the wait.",
     chooseType: "What we build",
     configure: "Tailor it",
-    result: "Preliminary estimate",
+    result: "Project price",
     from: "from",
     weeksLabel: "weeks of work",
     techTitle: "What you get technically",
@@ -890,7 +890,7 @@ const en: Dictionary = {
     discuss: "Discuss this estimate",
     handoff: "The estimate is loaded into the chat. Add the details and the manager will receive it with your request.",
     disclaimer:
-      "This is a guide, not a quote. We give an exact figure after going through the brief: real projects surface requirements no calculator has.",
+      "The price is fixed: for the scope you picked you pay exactly this amount. If you add features after the brief, we recalculate at the same rates.",
     none: "not needed",
     included: "already included",
     prefill: "Hello. I priced a project with the calculator on your site:",
@@ -1042,7 +1042,7 @@ const uz: Dictionary = {
     kicker: "savollar",
     title: "Oldindan javob beramiz",
     items: [
-      { q: "Toshkentda sayt yaratish qancha turadi?", a: "DevUz Studio’da Toshkentda sayt yaratish lending uchun 500 $ dan, korporativ sayt uchun 1 000 $ dan, mobil ilova uchun 8 000 $ dan, marketpleys uchun 15 000 $ dan boshlanadi. Narx to‘rt narsaga bog‘liq: tillar soni, foydalanuvchi rollari soni, tashqi tizimlar bilan integratsiya chuqurligi va alohida dizayn kerakmi yoki tayyor setkani moslash yetarlimi. To‘rt tilli, admin paneli bo‘lgan sayt bir tilli lendingdan taxminan bir yarim baravar qimmatroq chiqadi. Aniq raqamni vazifani tahlil qilgandan keyin aytamiz: undan oldin har qanday narx taxmin bo‘ladi, taxminiy smeta esa doim qo‘shimcha to‘lovlar bilan tugaydi. Vilkani o‘zingiz saytdagi kalkulyator orqali hisoblashingiz mumkin — u bir daqiqada so‘mdagi diapazonni va haftadagi muddatni ko‘rsatadi." },
+      { q: "Toshkentda sayt yaratish qancha turadi?", a: "DevUz Studio’da Toshkentda sayt yaratish lending uchun 500 $ dan, korporativ sayt uchun 1 000 $ dan, mobil ilova uchun 8 000 $ dan, marketpleys uchun 15 000 $ dan boshlanadi. Narx to‘rt narsaga bog‘liq: tillar soni, foydalanuvchi rollari soni, tashqi tizimlar bilan integratsiya chuqurligi va alohida dizayn kerakmi yoki tayyor setkani moslash yetarlimi. To‘rt tilli, admin paneli bo‘lgan sayt bir tilli lendingdan taxminan bir yarim baravar qimmatroq chiqadi. Tanlangan tarkibning aniq narxini saytdagi kalkulyator orqali o‘zingiz hisoblashingiz mumkin: u bir daqiqada qat’iy summani va haftadagi muddatni ko‘rsatadi." },
       { q: "Sayt yoki ilova yaratish qancha vaqt oladi?", a: "DevUz Studio korporativ sayt yoki lendingni 3–8 haftada, Flutter’dagi mobil ilovani 6–14 haftada, marketpleys yoki yetkazib berish servisini 10–20 haftada yig‘adi. Hisob birinchi xatdan emas, ish hajmi kelishilgan va kirish huquqlari olingan paytdan boshlanadi. Muddatga eng ko‘p uch narsa ta’sir qiladi: buyurtmachi tomonidagi kontent tayyorligi, tashqi integratsiyalar soni va kompaniya ichidagi kelishuvlar tezligi. To‘rt tilli loyiha muddatga taxminan 15% qo‘shadi — tarjima va har bir tilda verstkani tekshirish vaqt oladi. Biz haftalik iteratsiyalarda ishlaymiz: har juma buyurtmachi test domenida ishlayotgan yig‘mani ko‘radi, bajarilgan ish haqidagi hisobotni emas." },
       { q: "Kalit topshirish sharti bilan sayt yaratishga nima kiradi?", a: "DevUz Studio’da kalit topshirish sharti buyurtmachi fayllar to‘plamini emas, ishlayotgan saytni olishini bildiradi. Hajmga quyidagilar kiradi: brendingiz uchun dizayn, verstka va dasturlash, menejer dasturchisiz kontent tahrirlaydigan admin panel, hreflang bilan ko‘p tillilik, texnik SEO — sitemap, Schema.org, Core Web Vitals yashil zonada, domen va SSL ulash, analitika sozlash va mavjud kontentni ko‘chirish. Alohida faqat hosting va domen to‘lanadi — odatda oyiga 5–15 $. Ishga tushgandan keyin bir oy bepul qo‘llab-quvvatlash amal qiladi. Manba kodi to‘liq, repozitoriy va kommitlar tarixi bilan topshiriladi." },
       { q: "Biznesga AI joriy etish qancha turadi?", a: "DevUz Studio’da biznesga AI joriy etish 4 000 $ dan boshlanadi va 4–10 hafta oladi. Bu pulga tajriba emas, ishlaydigan mahsulot chiqadi: ko‘pincha bu mijozlarga kunu tun javob beradigan, vazifani tushunadigan va menejerga tayyor xulosani uzatadigan birinchi liniya yordamchisi yoki RAG texnologiyasida kompaniya bilimlar bazasi bo‘yicha qidiruv. Narx tayyorlanishi kerak bo‘lgan ma’lumot hajmiga, tizimlaringiz bilan integratsiyalar soniga va tayyor model yetarlimi yoki qo‘shimcha o‘qitilgani kerakmi — shunga bog‘liq. Modelga so‘rovlar alohida xarajat: o‘rtacha oqim uchun bu oyiga 30–150 $. Qoplanishni boshlashdan oldin hisoblaymiz." },
@@ -1250,7 +1250,7 @@ const uz: Dictionary = {
     calculator: {
       title: "Sayt yaratish narxi — onlayn kalkulyator | DevUz",
       description:
-        "Sayt, ilova yoki marketpleys narxini bir daqiqada hisoblang. Kerakli variantlarni belgilang — kalkulyator so‘mdagi «dan» narxini va muddatni ko‘rsatadi.",
+        "Sayt, ilova yoki marketpleys narxini bir daqiqada hisoblang. Kerakli variantlarni belgilang — kalkulyator so‘m va dollardagi aniq narxni va muddatni ko‘rsatadi.",
     },
     products: {
       title: "Tayyor loyiha va xizmatlarni sotib olish — manba kodi | DevUz",
@@ -1303,10 +1303,10 @@ const uz: Dictionary = {
     kicker: "ishlab chiqish · narxni hisoblash",
     title: "Loyihani bir daqiqada hisoblang",
     description:
-      "Loyiha turini tanlang va kerakli narsalarni belgilang. Kalkulyator «dan» oralig‘ini va ish tarkibini ko‘rsatadi — menejer qiladigan hisobning aynan o‘zi, faqat kutishsiz.",
+      "Loyiha turini tanlang va kerakli narsalarni belgilang. Kalkulyator aniq narx va ish tarkibini ko‘rsatadi: menejer qiladigan hisobning aynan o‘zi, faqat kutishsiz.",
     chooseType: "Nima qilamiz",
     configure: "O‘zingizga moslang",
-    result: "Dastlabki baholash",
+    result: "Loyiha narxi",
     from: "dan",
     weeksLabel: "hafta ish",
     techTitle: "Texnik jihatdan nima olasiz",
@@ -1315,7 +1315,7 @@ const uz: Dictionary = {
     discuss: "Hisobni muhokama qilish",
     handoff: "Hisob chatga qo‘yildi. Tafsilotlarni yozing — menejer uni so‘rovingiz bilan birga oladi.",
     disclaimer:
-      "Bu mo‘ljal, tijorat taklifi emas. Aniq raqamni vazifani tahlil qilgandan keyin aytamiz: haqiqiy loyihada hech bir kalkulyatorda yo‘q talablar chiqadi.",
+      "Narx qat’iy: tanlangan tarkib uchun aynan shu summani to‘laysiz. Vazifani tahlil qilgandan keyin funksiya qo‘shsangiz, xuddi shu narxlar bo‘yicha qayta hisoblaymiz.",
     none: "kerak emas",
     included: "allaqachon kiradi",
     prefill: "Assalomu alaykum! Saytdagi kalkulyatorda loyihani hisobladim:",
@@ -1467,7 +1467,7 @@ const zh: Dictionary = {
     kicker: "常见问题",
     title: "先把话说清楚",
     items: [
-      { q: "在塔什干做一个网站要多少钱？", a: "DevUz Studio 在塔什干的网站开发起价为：落地页 500 美元，企业官网 1000 美元，移动应用 8000 美元，电商平台 15000 美元。价格取决于四个因素：需要多少种语言、系统有多少种用户角色、与第三方系统的对接有多深，以及需要原创设计还是沿用现成栅格进行适配。一个带后台、支持四种语言的网站，价格约为单语言落地页的一点五倍。确切数字我们会在梳理清楚需求之后给出——在那之前的任何报价都是猜测，而猜出来的预算最后总会变成追加费用。你也可以用网站上的计算器自己估算：一分钟即可得到以苏姆计的价格区间和以周计的周期。" },
+      { q: "在塔什干做一个网站要多少钱？", a: "DevUz Studio 在塔什干的网站开发起价为：落地页 500 美元，企业官网 1000 美元，移动应用 8000 美元，电商平台 15000 美元。价格取决于四个因素：需要多少种语言、系统有多少种用户角色、与第三方系统的对接有多深，以及需要原创设计还是沿用现成栅格进行适配。一个带后台、支持四种语言的网站，价格约为单语言落地页的一点五倍。所选内容的确切价格可以用网站上的计算器自己算：一分钟即可得到固定金额和以周计的周期。" },
       { q: "做一个网站或应用需要多长时间？", a: "DevUz Studio 完成企业官网或落地页需要 3–8 周，Flutter 移动应用 6–14 周，电商平台或配送服务 10–20 周。计时从需求范围确认、账号权限到位那一刻开始，而不是从第一封邮件开始。影响周期最大的有三点：客户方内容的准备程度、外部对接的数量，以及公司内部审批的速度。四语言项目会让周期增加约 15%——翻译和逐语言的版面检查都需要时间。我们按周迭代：每周五客户都能在测试域名上看到可运行的版本，而不是一份工作汇报。" },
       { q: "交钥匙的网站开发包含哪些内容？", a: "在 DevUz Studio，交钥匙意味着客户拿到的是一个可运行的网站，而不是一堆文件。范围包括：契合品牌的设计、前后端开发、让运营人员无需开发者即可修改内容的后台、带 hreflang 标注的多语言支持、技术 SEO（sitemap、Schema.org、Core Web Vitals 保持绿色区间）、域名与 SSL 配置、统计分析接入，以及既有内容的迁移。单独计费的只有主机和域名，通常每月 5–15 美元。上线后享有一个月的免费维护，用于修复真实流量下暴露的问题。源代码全部交付，包含代码仓库及其提交历史。" },
       { q: "企业落地 AI 需要多少预算？", a: "DevUz Studio 的 AI 落地起价 4000 美元，周期 4–10 周。这笔预算买到的是可用的产品，而不是一次实验：最常见的是全天候接待客户、厘清需求并把整理好的摘要交给真人经理的第一线助手，或者基于 RAG 技术的企业知识库检索。成本取决于需要整理的数据量、与贵方系统对接的数量，以及是需要微调模型还是现成模型即可。模型调用是另一项开支：按平均咨询量计算，每月约 30–150 美元。投入产出我们在启动前就算清楚——如果账算不过来，我们会直说。" },
@@ -1671,7 +1671,7 @@ const zh: Dictionary = {
     },
     calculator: {
       title: "开发报价计算器 — 塔什干 | DevUz",
-      description: "一分钟估算网站、应用或电商平台的价格。勾选所需选项，即可得到起步价区间与以周计的周期。",
+      description: "一分钟估算网站、应用或电商平台的价格。勾选所需选项，即可得到确切价格与以周计的周期。",
     },
     products: {
       title: "购买成品项目与服务 — 源代码 | DevUz",
@@ -1722,10 +1722,10 @@ const zh: Dictionary = {
     kicker: "开发 · 报价计算器",
     title: "一分钟估算项目费用",
     description:
-      "选择项目类型并勾选所需功能。计算器会给出「起价」区间与工作范围 —— 与客户经理所做的估算一致，只是无需等待。",
+      "选择项目类型并勾选所需功能。计算器会给出确切价格与工作范围：与客户经理所做的计算一致，只是无需等待。",
     chooseType: "做什么",
     configure: "按需配置",
-    result: "初步估算",
+    result: "项目价格",
     from: "起价",
     weeksLabel: "周工期",
     techTitle: "技术上你将获得",
@@ -1734,7 +1734,7 @@ const zh: Dictionary = {
     discuss: "就此估算沟通",
     handoff: "估算结果已填入聊天。补充细节后，客户经理会连同您的需求一并收到。",
     disclaimer:
-      "此为参考区间，并非正式报价。我们会在梳理清楚需求后给出准确数字：真实项目总会冒出任何计算器都涵盖不了的要求。",
+      "价格固定：所选内容就按这个金额支付。梳理需求后如需增加功能，我们按同样的价格重新计算。",
     none: "不需要",
     included: "已包含",
     prefill: "您好！我用贵司网站的计算器估算了一个项目：",
@@ -1902,7 +1902,7 @@ const uk: Dictionary = {
     kicker: "питання",
     title: "Відповідаємо заздалегідь",
     items: [
-      { q: "Скільки коштує розробка сайту в Ташкенті?", a: "Розробка сайту в Ташкенті в DevUz Studio коштує від 500 $ за лендинг, від 1 000 $ за корпоративний сайт, від 8 000 $ за мобільний застосунок і від 15 000 $ за маркетплейс. Ціна залежить від чотирьох речей: кількості мов, кількості ролей користувачів, глибини інтеграцій зі сторонніми системами і того, чи потрібен окремий дизайн, чи підійде адаптація готової сітки. Сайт чотирма мовами з адмінкою коштуватиме приблизно в півтора раза дорожче, ніж одномовний лендинг. Точну цифру ми називаємо після розбору завдання: до нього будь-яка ціна буде вигадкою, а вигаданий кошторис завжди закінчується доплатами. Порахувати діапазон самостійно можна калькулятором на сайті — він за хвилину покаже діапазон у сумах і термін у тижнях, без розмови з менеджером." },
+      { q: "Скільки коштує розробка сайту в Ташкенті?", a: "Розробка сайту в Ташкенті в DevUz Studio коштує від 500 $ за лендинг, від 1 000 $ за корпоративний сайт, від 8 000 $ за мобільний застосунок і від 15 000 $ за маркетплейс. Ціна залежить від чотирьох речей: кількості мов, кількості ролей користувачів, глибини інтеграцій зі сторонніми системами і того, чи потрібен окремий дизайн, чи підійде адаптація готової сітки. Сайт чотирма мовами з адмінкою коштуватиме приблизно в півтора раза дорожче, ніж одномовний лендинг. Точну ціну за обраний склад можна порахувати самому калькулятором на сайті: за хвилину він покаже фіксовану суму і термін у тижнях, без розмови з менеджером." },
       { q: "Скільки часу займає розробка сайту або застосунку?", a: "Корпоративний сайт або лендинг DevUz Studio збирає за 3–8 тижнів, мобільний застосунок на Flutter — за 6–14 тижнів, маркетплейс або сервіс доставки — за 10–20 тижнів. Відлік іде з моменту, коли погоджено обсяг робіт і отримано доступи, а не з першого листа. Найбільше на термін впливають три чинники: готовність контенту з боку замовника, кількість зовнішніх інтеграцій і швидкість погоджень усередині компанії. Проєкт чотирма мовами додає до терміну приблизно 15% — переклади й перевірка верстки кожною мовою потребують часу. Ми працюємо тижневими ітераціями: щоп'ятниці замовник бачить робочу збірку на тестовому домені, а не звіт про виконану роботу." },
       { q: "Що входить у розробку сайту під ключ?", a: "Під ключ у DevUz Studio означає, що замовник отримує робочий сайт, а не набір файлів. В обсяг входять: дизайн під ваш бренд, верстка й програмування, адмінка, де контент редагує менеджер без розробника, багатомовність із розміткою hreflang, технічне SEO — sitemap, Schema.org, швидкість у зеленій зоні Core Web Vitals, підключення домену та SSL, налаштування аналітики й перенесення наявного контенту. Окремо оплачуються тільки хостинг і купівля домену — зазвичай 5–15 $ на місяць. Після запуску діє місяць безкоштовної підтримки: виправляємо те, що виявилося на бойовому трафіку. Вихідний код передається замовникові повністю, разом із репозиторієм та історією комітів." },
       { q: "Скільки коштує впровадження ШІ в бізнес?", a: "Впровадження ШІ в бізнес у DevUz Studio коштує від 4 000 $ і займає 4–10 тижнів. За ці гроші ви отримуєте робочий продукт, а не експеримент: найчастіше це асистент першої лінії, який цілодобово відповідає клієнтам, розбирається в завданні й передає менеджерові готове зведення, або пошук базою знань компанії на технології RAG. Вартість складається з обсягу даних, які треба підготувати, кількості інтеграцій з вашими системами і того, чи потрібна донавчена модель, чи вистачить готової. Окрема стаття — витрати на самі запити до моделі: для середнього потоку звернень це 30–150 $ на місяць. Окупність ми рахуємо до старту: якщо за цифрами не сходиться, чесно про це кажемо." },
@@ -2110,7 +2110,7 @@ const uk: Dictionary = {
     calculator: {
       title: "Вартість розробки сайту в Ташкенті — калькулятор",
       description:
-        "Порахуйте ціну сайту, застосунку чи маркетплейсу за хвилину. Позначте потрібні опції — калькулятор покаже діапазон «від» у сумах і термін у тижнях.",
+        "Порахуйте ціну сайту, застосунку чи маркетплейсу за хвилину. Позначте потрібні опції — калькулятор покаже точну ціну в сумах і доларах і термін у тижнях.",
     },
     products: {
       title: "Купити готові проєкти й сервіси — вихідний код | DevUz",
@@ -2166,10 +2166,10 @@ const uk: Dictionary = {
     kicker: "розробка · розрахунок вартості",
     title: "Порахуйте проєкт за хвилину",
     description:
-      "Оберіть тип проєкту й позначте, що потрібно. Калькулятор покаже діапазон «від» і склад робіт — той самий розрахунок, який робить менеджер, тільки без очікування.",
+      "Оберіть тип проєкту й позначте, що потрібно. Калькулятор покаже точну ціну і склад робіт: той самий розрахунок, який робить менеджер, тільки без очікування.",
     chooseType: "Що робимо",
     configure: "Налаштуйте під себе",
-    result: "Попередня оцінка",
+    result: "Вартість проєкту",
     from: "від",
     weeksLabel: "тижнів роботи",
     techTitle: "Що отримаєте технічно",
@@ -2178,7 +2178,7 @@ const uk: Dictionary = {
     discuss: "Обговорити розрахунок",
     handoff: "Розрахунок підставлено в чат. Опишіть деталі — менеджер отримає його разом із вашим запитом.",
     disclaimer:
-      "Це орієнтир, а не комерційна пропозиція. Точну цифру називаємо після розбору завдання: на реальному проєкті виникають вимоги, яких немає в жодному калькуляторі.",
+      "Ціна фіксована: за обраний склад ви платите саме цю суму. Додасте функції після розбору завдання, перерахуємо за тими самими цінами.",
     none: "не потрібно",
     included: "уже входить",
     prefill:
@@ -2347,7 +2347,7 @@ const pl: Dictionary = {
     kicker: "pytania",
     title: "Odpowiadamy z wyprzedzeniem",
     items: [
-      { q: "Ile kosztuje stworzenie strony internetowej w Taszkencie?", a: "Tworzenie strony w Taszkencie w DevUz Studio zaczyna się od 500 $ za landing page, od 1 000 $ za stronę firmową, od 8 000 $ za aplikację mobilną i od 15 000 $ za marketplace. Cena zależy od czterech rzeczy: liczby języków, liczby ról użytkowników, zakresu integracji z zewnętrznymi systemami oraz tego, czy potrzebny jest indywidualny projekt graficzny, czy wystarczy adaptacja gotowego układu. Strona w czterech językach z panelem administracyjnym kosztuje mniej więcej półtora raza więcej niż jednojęzyczny landing page. Dokładną kwotę podajemy po analizie zadania: wcześniej każda cena byłaby zmyślona, a zmyślony kosztorys zawsze kończy się dopłatami. Widełki możesz policzyć sam kalkulatorem na stronie — w minutę pokaże zakres w sumach i termin w tygodniach, bez rozmowy z menedżerem." },
+      { q: "Ile kosztuje stworzenie strony internetowej w Taszkencie?", a: "Tworzenie strony w Taszkencie w DevUz Studio zaczyna się od 500 $ za landing page, od 1 000 $ za stronę firmową, od 8 000 $ za aplikację mobilną i od 15 000 $ za marketplace. Cena zależy od czterech rzeczy: liczby języków, liczby ról użytkowników, zakresu integracji z zewnętrznymi systemami oraz tego, czy potrzebny jest indywidualny projekt graficzny, czy wystarczy adaptacja gotowego układu. Strona w czterech językach z panelem administracyjnym kosztuje mniej więcej półtora raza więcej niż jednojęzyczny landing page. Dokładną cenę za wybrany zakres policzysz sam kalkulatorem na stronie: w minutę pokaże stałą kwotę i termin w tygodniach, bez rozmowy z menedżerem." },
       { q: "Ile trwa stworzenie strony lub aplikacji?", a: "Stronę firmową lub landing page DevUz Studio przygotowuje w 3–8 tygodni, aplikację mobilną we Flutterze — w 6–14 tygodni, marketplace lub serwis dostaw — w 10–20 tygodni. Czas liczymy od momentu uzgodnienia zakresu prac i otrzymania dostępów, a nie od pierwszego maila. Na termin najmocniej wpływają trzy czynniki: gotowość treści po stronie klienta, liczba zewnętrznych integracji i tempo akceptacji wewnątrz firmy. Projekt w czterech językach wydłuża termin o około 15% — tłumaczenia i sprawdzenie układu w każdym języku wymagają czasu. Pracujemy w tygodniowych iteracjach: w każdy piątek klient widzi działającą wersję na domenie testowej, a nie raport z wykonanych prac." },
       { q: "Co obejmuje stworzenie strony pod klucz?", a: "„Pod klucz” w DevUz Studio oznacza, że klient dostaje działającą stronę, a nie zestaw plików. Zakres obejmuje: projekt graficzny pod Twoją markę, kodowanie i programowanie, panel administracyjny, w którym treści edytuje menedżer bez udziału programisty, wielojęzyczność ze znacznikami hreflang, techniczne SEO — sitemap, Schema.org, szybkość w zielonej strefie Core Web Vitals, podpięcie domeny i SSL, konfigurację analityki oraz przeniesienie istniejących treści. Osobno płatny jest tylko hosting i zakup domeny — zwykle 5–15 $ miesięcznie. Po uruchomieniu przez miesiąc obowiązuje bezpłatne wsparcie: poprawiamy to, co wyszło przy prawdziwym ruchu. Kod źródłowy przekazujemy klientowi w całości, razem z repozytorium i historią commitów." },
       { q: "Ile kosztuje wdrożenie AI w firmie?", a: "Wdrożenie AI w firmie w DevUz Studio zaczyna się od 4 000 $ i trwa 4–10 tygodni. Za te pieniądze dostajesz działający produkt, a nie eksperyment: najczęściej jest to asystent pierwszej linii, który odpowiada klientom całą dobę, rozpracowuje zadanie i przekazuje menedżerowi gotowe podsumowanie, albo wyszukiwarka w firmowej bazie wiedzy oparta na technologii RAG. Koszt zależy od ilości danych do przygotowania, liczby integracji z Twoimi systemami i tego, czy potrzebny jest douczony model, czy wystarczy gotowy. Osobna pozycja to koszt samych zapytań do modelu: przy średnim natężeniu zgłoszeń to 30–150 $ miesięcznie. Zwrot z inwestycji liczymy przed startem: jeśli liczby się nie spinają, uczciwie o tym mówimy." },
@@ -2555,7 +2555,7 @@ const pl: Dictionary = {
     calculator: {
       title: "Koszt stworzenia strony w Taszkencie — kalkulator",
       description:
-        "Policz cenę strony, aplikacji lub marketplace'u w minutę. Zaznacz potrzebne opcje — kalkulator pokaże cenę „od” w sumach i termin w tygodniach.",
+        "Policz cenę strony, aplikacji lub marketplace'u w minutę. Zaznacz potrzebne opcje — kalkulator pokaże dokładną cenę w sumach i dolarach oraz termin w tygodniach.",
     },
     products: {
       title: "Gotowe projekty i serwisy z kodem źródłowym | DevUz",
@@ -2611,10 +2611,10 @@ const pl: Dictionary = {
     kicker: "tworzenie · wycena",
     title: "Wyceń projekt w minutę",
     description:
-      "Wybierz typ projektu i zaznacz, czego potrzebujesz. Kalkulator pokaże cenę „od” i zakres prac — ten sam rachunek, który robi menedżer, tylko bez czekania.",
+      "Wybierz typ projektu i zaznacz, czego potrzebujesz. Kalkulator pokaże dokładną cenę i zakres prac: ten sam rachunek, który robi menedżer, tylko bez czekania.",
     chooseType: "Co robimy",
     configure: "Dopasuj do siebie",
-    result: "Wstępna wycena",
+    result: "Cena projektu",
     from: "od",
     weeksLabel: "tygodni pracy",
     techTitle: "Co dostajesz od strony technicznej",
@@ -2623,7 +2623,7 @@ const pl: Dictionary = {
     discuss: "Omów wycenę",
     handoff: "Wycena trafiła do czatu. Opisz szczegóły — menedżer otrzyma ją razem z Twoim zapytaniem.",
     disclaimer:
-      "To orientacyjna kwota, a nie oferta handlowa. Dokładną cenę podajemy po analizie zadania: w prawdziwym projekcie wychodzą wymagania, których nie ma w żadnym kalkulatorze.",
+      "Cena jest stała: za wybrany zakres płacisz dokładnie tę kwotę. Jeśli po analizie zadania dodasz funkcje, przeliczymy według tych samych stawek.",
     none: "niepotrzebne",
     included: "w cenie",
     prefill:

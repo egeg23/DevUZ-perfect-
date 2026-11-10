@@ -6,6 +6,7 @@ import { Icon } from "@/components/ui/icon";
 import { categories, optionsFor } from "@/content/calculator";
 import type { Dictionary } from "@/content/dictionaries";
 import {
+  basePriceUzs,
   defaultSelection,
   estimate,
   estimateToMessage,
@@ -120,7 +121,7 @@ export function PriceCalculator({ locale, dict }: { locale: Locale; dict: Dictio
                     active ? "text-green" : "text-faint",
                   )}
                 >
-                  {dict.calculator.from} {money(item.baseUzs)}
+                  {money(basePriceUzs(item.slug))}
                 </span>
               </button>
             );
@@ -263,13 +264,9 @@ export function PriceCalculator({ locale, dict }: { locale: Locale; dict: Dictio
 
           {result ? (
             <div className="px-6 py-6">
-              <p className="font-mono text-[0.7rem] uppercase tracking-[0.16em] text-faint">
-                {dict.calculator.from}
+              <p className="font-display text-[1.75rem] font-extrabold leading-tight text-green">
+                {money(result.priceUzs)}
               </p>
-              <p className="mt-2 font-display text-[1.75rem] font-extrabold leading-tight text-green">
-                {money(result.lowUzs)}
-              </p>
-              <p className="mt-1 text-[0.9rem] text-muted">— {money(result.highUzs)}</p>
 
               <p className="mt-5 border-t border-line pt-5 font-mono text-[0.8rem] text-muted">
                 <span className="font-display text-xl font-bold text-text">
