@@ -166,7 +166,7 @@ function initials(name: string): string {
  * сдвигает отпечаток (lib/proto/stamp). Нет цвета — акцент шаблона.
  */
 /** hsl → «r g b» для rgb(var(--x)/a): блики и тени из стилей Nek. */
-function rgbOf(h: number, s: number, l: number): string {
+export function rgbOf(h: number, s: number, l: number): string {
   const a = (s / 100) * Math.min(l / 100, 1 - l / 100);
   const f = (n: number) => {
     const k = (n + h / 30) % 12;
