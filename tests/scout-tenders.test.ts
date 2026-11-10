@@ -4,7 +4,7 @@ import { test } from "node:test";
 
 import { tenderVerdict } from "@/lib/scout/tender-match";
 import { cleanRu, needsRu, ruProblems, tenderRu } from "@/lib/scout/tender-ru";
-import { PRICE_RULE, completeRow, leadFromTender, servicesOfTopics, studioTender, tenderHeading, type TenderLeadRow } from "@/lib/scout/tender-lead";
+import { PRICE_RULE, completeRow, leadFromTender, needsFill, servicesOfTopics, studioTender, tenderHeading, type TenderLeadRow } from "@/lib/scout/tender-lead";
 import {
   HAYOT_ON,
   TENDERASIA_ON,
@@ -295,4 +295,22 @@ test("тендеры: лот без контакта и без русской ф
   assert.deepEqual(Object.keys(done.patch).sort(), ["contact_person", "customer_inn", "email", "phone", "title_ru"]);
   const same = await completeRow({ ...row, phone: "+998", title_ru: "есть" }, async () => { throw new Error("не звать"); }, async () => { throw new Error("не звать"); });
   assert.deepEqual(same.patch, {});
+});
+
+test("тендеры: взятым руками дочитываются контакт и русская фраза — по разу", () => {
+  const now = new Date("2026-11-10T16:00:00Z");
+  const row = {
+    id: "00000000-0000-0000-0000-000000000004", created_at: "2026-11-10T12:00:00Z", source: "etender" as const, external_id: "523525",
+    url: "https://etender.uzex.uz/lot/523525", title: "CRM tizimi uchun TZ yozish xizmati", customer: "UZAUTO", region: null, kind: "Отбор",
+    price: null, currency: null, deadline: "2026-11-17T11:13:35Z", topics: ["система"], phone: null, email: null, contact_person: null, customer_inn: null,
+    status: "taken",
+  };
+  assert.equal(needsFill(row, new Set(), now), true);
+  assert.equal(needsFill({ ...row, status: "new" }, new Set(), now), false, "новые дочитывает лид");
+  assert.equal(needsFill({ ...row, status: "skipped" }, new Set(), now), false);
+  assert.equal(needsFill(row, new Set([row.id]), now), false, "второй раз не ходим");
+  assert.equal(needsFill({ ...row, deadline: "2026-11-10T15:00:00Z" }, new Set(), now), false, "приём закрыт");
+  assert.equal(needsFill({ ...row, phone: "+998781417777", title_ru: "Написать ТЗ для CRM" }, new Set(), now), false);
+  assert.equal(needsFill({ ...row, phone: "+998781417777" }, new Set(), now), true, "нет русской фразы");
+  assert.match(readFileSync("lib/scout/tender-store.ts", "utf8"), /fillTaken\(now\)/);
 });

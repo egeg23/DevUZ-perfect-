@@ -199,6 +199,66 @@ export async function completeRow(
   return { row: out, patch };
 }
 
+/** Взятым руками лотам — за проход не больше: каждый стоит запроса к площадке и модели. */
+const FILL_PER_PASS = 4;
+/** Каким лотам уже пробовали дочитать — второй раз не ходим. */
+export const FILL_TRIED_KEY = "tender-fill-tried";
+const FILL_TRIED_CAP = 300;
+
+/** Кому дочитывать: взят или подан руками, приём открыт, контакта или русской фразы нет, ещё не пробовали. */
+export function needsFill(row: TenderLeadRow & { status?: string }, tried: Set<string>, now: Date): boolean {
+  if (tried.has(row.id)) return false;
+  if (row.status !== "taken" && row.status !== "applied") return false;
+  if (row.deadline && new Date(row.deadline).getTime() <= now.getTime()) return false;
+  return (!row.phone && !row.email && Boolean(row.external_id)) || !row.title_ru;
+}
+
+/**
+ * Лот, который сотрудник взял «Беру» сам, лидом не становится — и контакта с
+ * русской фразой ему никто не дочитывал (10.11.2026 так остались пустыми
+ * десять лотов, взятых до лидов). Дочитываем тем же `completeRow`, по разу.
+ */
+export async function fillTakenTenders(
+  now: Date = new Date(),
+  complete: typeof completeRow = completeRow,
+): Promise<{ filled: number; errors: string[] }> {
+  const report = { filled: 0, errors: [] as string[] };
+  const db = serviceClient();
+  if (!db) return report;
+  const { data: triedRow } = await db.from("stats_snapshots").select("payload").eq("key", FILL_TRIED_KEY).maybeSingle();
+  const triedIds = Array.isArray((triedRow?.payload as { ids?: unknown } | null)?.ids)
+    ? ((triedRow?.payload as { ids: unknown[] }).ids.filter((id) => typeof id === "string") as string[])
+    : [];
+  const tried = new Set(triedIds);
+
+  const { data, error } = await db
+    .from("scout_tenders")
+    .select("id, created_at, source, external_id, url, title, title_ru, customer, region, kind, price, currency, deadline, topics, phone, email, contact_person, customer_inn, status")
+    .in("status", ["taken", "applied"])
+    .or(`deadline.is.null,deadline.gt.${now.toISOString()}`)
+    .order("deadline", { ascending: true, nullsFirst: false })
+    .limit(60);
+  if (error) return { ...report, errors: [`тендеры, дочитать взятые: ${error.message}`] };
+
+  const due = (data ?? []).filter((row) => needsFill(row as TenderLeadRow & { status: string }, tried, now)).slice(0, FILL_PER_PASS);
+  if (!due.length) return report;
+  // Отметка — до запросов: упавший проход не будет ходить за тем же лотом снова.
+  const ids = [...triedIds, ...due.map((row) => row.id as string)].slice(-FILL_TRIED_CAP);
+  await db.from("stats_snapshots").upsert({ key: FILL_TRIED_KEY, payload: { ids }, computed_at: now.toISOString() }, { onConflict: "key" });
+
+  for (const raw of due) {
+    try {
+      const { patch } = await complete(raw as TenderLeadRow);
+      if (!Object.keys(patch).length) continue;
+      await db.from("scout_tenders").update(patch).eq("id", raw.id);
+      report.filled += 1;
+    } catch (err) {
+      report.errors.push(`${raw.id}: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
+  return report;
+}
+
 export type TenderLeadReport = { leads: number; skipped: number; errors: string[] };
 
 /**
