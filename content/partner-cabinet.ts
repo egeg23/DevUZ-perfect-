@@ -23,7 +23,8 @@ export type CabinetCopy = {
   /** Ставка без персональной: «от 10 до 30 % от суммы проекта». */
   /** Ставка без персональной: модель и вилка процентов. */
   rate: (model: "profit" | "turnover", from: number, to: number) => string;
-  personalRate: (percent: number) => string;
+  /** Личная ставка и что будет после `from` заказов: +bonus навсегда (lifetimeOf). */
+  personalRate: (percent: number, from: string, bonus: number) => string;
   tiersTitle: string;
   tierUpTo: (amount: string) => string;
   tierOver: (amount: string) => string;
@@ -210,7 +211,8 @@ const ru: CabinetCopy = {
     model === "turnover"
       ? `Ваша модель — с оборота: от ${from} до ${to} % от суммы договора, чем крупнее проект, тем выше процент`
       : `Ваша модель — от чистой прибыли: от ${from} до ${to} % от прибыли проекта, чем крупнее проект, тем выше процент`,
-  personalRate: (percent) => `Ваша персональная ставка — ${percent} % с каждого проекта клиента`,
+  personalRate: (percent, from, bonus) =>
+    `Ваша ставка — ${percent} % с оборота: с суммы каждого проекта клиента. Когда ваши заказы дойдут до ${from}, станет ${percent + bonus} % навсегда`,
   tiersTitle: "Ваш процент",
   tierUpTo: (amount) => `до ${amount}`,
   tierOver: (amount) => `дороже ${amount}`,
@@ -501,7 +503,8 @@ const en: CabinetCopy = {
     model === "turnover"
       ? `Your model is turnover: ${from}–${to}% of the contract amount, the bigger the project, the higher the rate`
       : `Your model is net profit: ${from}–${to}% of the project's profit, the bigger the project, the higher the rate`,
-  personalRate: (percent) => `Your personal rate is ${percent}% of every client project`,
+  personalRate: (percent, from, bonus) =>
+    `Your rate is ${percent}% of turnover: of every client project amount. Once your orders reach ${from}, it becomes ${percent + bonus}% for life`,
   tiersTitle: "Your rate",
   tierUpTo: (amount) => `up to ${amount}`,
   tierOver: (amount) => `over ${amount}`,
@@ -792,7 +795,8 @@ const uz: CabinetCopy = {
     model === "turnover"
       ? `Sizning modelingiz — aylanmadan: shartnoma summasining ${from} dan ${to} % gacha, loyiha qanchalik yirik bo'lsa, foiz shunchalik yuqori`
       : `Sizning modelingiz — sof foydadan: loyiha foydasining ${from} dan ${to} % gacha, loyiha qanchalik yirik bo'lsa, foiz shunchalik yuqori`,
-  personalRate: (percent) => `Sizning shaxsiy stavkangiz — mijozning har bir loyihasidan ${percent} %`,
+  personalRate: (percent, from, bonus) =>
+    `Sizning stavkangiz — aylanmadan ${percent} %: mijozning har bir loyihasi summasidan. Buyurtmalaringiz ${from} ga yetganda, ${percent + bonus} % bo‘ladi — umrbod`,
   tiersTitle: "Sizning foizingiz",
   tierUpTo: (amount) => `${amount} gacha`,
   tierOver: (amount) => `${amount} dan yuqori`,

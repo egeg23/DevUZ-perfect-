@@ -139,7 +139,7 @@ export function CabinetView({
             <h1 className="mt-2 font-display text-3xl font-semibold sm:text-4xl">{t.hello(partner.name)}</h1>
             <p className="mt-3 text-sm text-muted">
               {partner.percent_override !== null
-                ? t.personalRate(partner.percent_override)
+                ? t.personalRate(partner.percent_override, money(locale, LIFETIME_FROM_USD), LIFETIME_BONUS)
                 : t.rate(
                     partner.payout_model,
                     PARTNER_TIERS[0][partner.payout_model],
