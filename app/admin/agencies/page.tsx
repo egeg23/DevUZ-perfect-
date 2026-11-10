@@ -9,7 +9,7 @@ import { pick } from "@/lib/admin/i18n";
 import { loadPeople } from "@/lib/admin/ledger";
 import { agencyMoney, type Split } from "@/lib/partners/agency";
 import { AGENCY_PERCENT, LIFETIME_BONUS, LIFETIME_FROM_USD, finderUntil, finderUntilDay, shortUrl } from "@/lib/partners/rules";
-import { agencyPartners, agencyProjects, defaultSlugs, PARTNER_DESK } from "@/lib/partners/store";
+import { agencyProjects, defaultSlugs, foundPartners, PARTNER_DESK } from "@/lib/partners/store";
 import { siteUrl } from "@/lib/seo";
 import { addAgency, setFinder } from "./actions";
 
@@ -27,6 +27,12 @@ export const dynamic = "force-dynamic";
  * Менеджер видит агентства, которые привёл сам, и свои 5%. Владелец и
  * руководитель — все агентства и 15% агентству. Кто привёл, поправляет
  * владелец.
+ *
+ * С 10.11.2026 здесь же партнёры-блогеры (владелец: «Этого партнера привел
+ * Эльдар, по нашему правилу ему должно падать 5% с оборота… сделай так,
+ * чтобы менеджеры могли посмотреть всех своих партнеров и сколько денег они
+ * принесли, сколько проектов, на какую сумму»): у любого партнёра «Кто
+ * привёл», 5% тому, кто привёл, сколько проектов, сумма и оплачено клиентами.
  */
 
 const INPUT =
@@ -63,7 +69,7 @@ export default async function AgenciesPage({ searchParams }: { searchParams: Pro
   const resultKey = r && Object.hasOwn(RESULTS, r) ? RESULTS[r as keyof typeof RESULTS] : null;
   const good = r === "created" || r === "ok";
 
-  const [agencies, people] = await Promise.all([agencyPartners(desk ? "all" : staff.id), loadPeople()]);
+  const [agencies, people] = await Promise.all([foundPartners(desk ? "all" : staff.id), loadPeople()]);
   const ids = agencies.map((a) => a.id);
   const [{ projects, payments }, slugs] = await Promise.all([agencyProjects(ids), defaultSlugs(ids)]);
   const nameOf = (id: string | null) => (id ? (people.find((p) => p.id === id)?.display_name ?? "—") : t.nobody);
@@ -81,6 +87,16 @@ export default async function AgenciesPage({ searchParams }: { searchParams: Pro
   const now = Date.now();
   const exampleAgency = Math.round((EXAMPLE * AGENCY_PERCENT) / 100);
   const exampleFinder = Math.round((EXAMPLE * AGENCY_FINDER_PERCENT) / 100);
+  const rows = agencies.map((a) => ({ a, m: agencyMoney(a, projects, payments) }));
+  const total = rows.reduce(
+    (sum, { m }) => ({
+      projects: sum.projects + m.projects,
+      turnover: sum.turnover + m.turnover,
+      paid: sum.paid + m.paid,
+      finder: sum.finder + m.finder.earned + m.finder.frozen,
+    }),
+    { projects: 0, turnover: 0, paid: 0, finder: 0 },
+  );
 
   return (
     <AdminShell staff={staff}>
@@ -222,6 +238,10 @@ export default async function AgenciesPage({ searchParams }: { searchParams: Pro
 
       {/* ── Список ────────────────────────────────────────────────────── */}
       <h2 className="mt-8 text-xs uppercase tracking-wider text-faint">{desk ? t.listAll : t.listMine}</h2>
+      <p className="mt-2 max-w-3xl text-xs text-muted">{t.personsNote(AGENCY_FINDER_PERCENT, AGENCY_FINDER_MONTHS)}</p>
+      {rows.length ? (
+        <p className="mt-2 text-sm">{t.totals(total.projects, money(total.turnover), money(total.paid), money(total.finder))}</p>
+      ) : null}
       <section className="mt-3 overflow-x-auto rounded-xl border border-line bg-surface">
         <table className="w-full text-left text-sm">
           <thead className="border-b border-line text-xs text-faint">
@@ -231,23 +251,27 @@ export default async function AgenciesPage({ searchParams }: { searchParams: Pro
               <th className={TH}>{t.colUntil}</th>
               <th className={TH}>{t.colProjects}</th>
               <th className={TH}>{t.colTurnover}</th>
+              <th className={TH}>{t.colPaid}</th>
               <th className={TH}>{t.colFinder}</th>
               {desk ? <th className={TH}>{t.colAgencyShare}</th> : null}
             </tr>
           </thead>
           <tbody>
-            {agencies.map((a) => {
-              const m = agencyMoney(a, projects, payments);
+            {rows.map(({ a, m }) => {
+              const isAgency = a.kind === "agency";
               const until = finderUntil(a.brought_at);
               const slug = slugs.get(a.id);
               return (
                 <tr key={a.id} className="border-b border-line-soft last:border-0">
                   <td data-label={t.colAgency} className={TD}>
                     <span className="font-medium">{a.name}</span>
+                    <span className={`ml-2 rounded-full border px-2 py-0.5 text-[11px] ${isAgency ? "border-green/30 text-green" : "border-line text-muted"}`}>
+                      {isAgency ? t.kindAgency : t.kindPerson}
+                    </span>
                     {a.status === "blocked" ? <span className="ml-2 text-xs text-gold">{t.blocked}</span> : null}
-                    <span className="block text-xs text-muted">{a.contact ?? "—"}</span>
+                    <span className="block text-xs text-muted">{a.contact ?? (a.username ? `@${a.username}` : "—")}</span>
                     {a.brought_at ? <span className="block text-xs text-faint">{t.since(day(a.brought_at))}</span> : null}
-                    {slug ? (
+                    {slug && isAgency ? (
                       <a
                         href={shortUrl(siteUrl, slug)}
                         className="block text-xs text-blue-soft hover:underline"
@@ -257,14 +281,16 @@ export default async function AgenciesPage({ searchParams }: { searchParams: Pro
                         {t.link}: devuz.studio/r/{slug}
                       </a>
                     ) : null}
-                    <a
-                      href={`/${locale}/partners/deck/agency?ref=${a.code}`}
-                      className="block text-xs text-blue-soft hover:underline"
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      {t.deckRow}
-                    </a>
+                    {isAgency ? (
+                      <a
+                        href={`/${locale}/partners/deck/agency?ref=${a.code}`}
+                        className="block text-xs text-blue-soft hover:underline"
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {t.deckRow}
+                      </a>
+                    ) : null}
                   </td>
                   <td data-label={t.colBrought} className={`${TD} text-xs`}>
                     {owner ? (
@@ -307,11 +333,18 @@ export default async function AgenciesPage({ searchParams }: { searchParams: Pro
                     {money(m.turnover)}
                     {/* Пожизненный грейд: с 50 000 $ заказов — 20% (rules.ts, lifetimeOf). */}
                     {m.lifetime.reached ? (
-                      <span className="block text-green">{t.lifetimeOn(AGENCY_PERCENT + LIFETIME_BONUS)}</span>
+                      <span className="block text-green">
+                        {isAgency ? t.lifetimeOn(AGENCY_PERCENT + LIFETIME_BONUS) : t.lifetimePlusOn(LIFETIME_BONUS)}
+                      </span>
                     ) : (
-                      <span className="block text-faint">{t.lifetimeLeft(money(m.lifetime.left), AGENCY_PERCENT + LIFETIME_BONUS)}</span>
+                      <span className="block text-faint">
+                        {isAgency
+                          ? t.lifetimeLeft(money(m.lifetime.left), AGENCY_PERCENT + LIFETIME_BONUS)
+                          : t.lifetimePlusLeft(money(m.lifetime.left), LIFETIME_BONUS)}
+                      </span>
                     )}
                   </td>
+                  <td data-label={t.colPaid} className={`${TD} font-mono text-xs`}>{money(m.paid)}</td>
                   <td data-label={t.colFinder} className={`${TD} font-mono text-xs`}>{split(m.finder)}</td>
                   {desk ? (
                     <td data-label={t.colAgencyShare} className={`${TD} font-mono text-xs`}>{split(m.agency)}</td>
@@ -319,9 +352,9 @@ export default async function AgenciesPage({ searchParams }: { searchParams: Pro
                 </tr>
               );
             })}
-            {agencies.length === 0 ? (
+            {rows.length === 0 ? (
               <tr>
-                <td colSpan={desk ? 7 : 6} className="px-4 py-6 text-sm text-muted">
+                <td colSpan={desk ? 8 : 7} className="px-4 py-6 text-sm text-muted">
                   {desk ? t.emptyAll : t.emptyMine}
                 </td>
               </tr>

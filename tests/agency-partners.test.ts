@@ -93,7 +93,8 @@ test("5% тому, кто привёл: только проекты, завед�
   // Проект, заведённый раньше агентства, — не через агентство.
   assert.equal(agencyFinder(project({ created_at: "2026-11-01T10:00:00Z" }), AGENCY), null);
   // Не агентство, никто не привёл, чужой проект — никому.
-  assert.equal(agencyFinder(project(), { ...AGENCY, kind: "person" }), null);
+  // С 10.11.2026 — и у партнёра-блогера (владелец: «по нашему правилу ему должно падать 5% с оборота»).
+  assert.equal(agencyFinder(project(), { ...AGENCY, kind: "person" }), "mgr");
   assert.equal(agencyFinder(project(), { ...AGENCY, brought_by: null }), null);
   assert.equal(agencyFinder(project({ partner_id: "other" }), AGENCY), null);
   assert.equal(agencyFinder(project(), undefined), null);
@@ -258,4 +259,26 @@ test("на клиентском сайте процента менеджера �
   assert.match(panel, /t\.getsFinder\(AGENCY_FINDER_PERCENT, AGENCY_FINDER_MONTHS\)/);
   assert.match(panel, /t\.getsAgency\(AGENCY_PERCENT\)/);
   assert.match(panel, /\/partners\/deck\/agency/);
+});
+
+test("партнёр-блогер, которого привёл менеджер: 5% тому, кто привёл, и сколько принёс", () => {
+  // Владелец, 10.11.2026: «Этого партнера привел Эльдар, по нашему правилу ему должно падать 5% с оборота».
+  const blogger = { id: "bl1", percent_override: 10, kind: "person" as const, brought_by: "mgr", brought_at: "2026-11-10T13:50:00Z" };
+  const projects = [
+    project({ id: "b1", partner_id: "bl1", partner_model: "turnover", amount_usd: 2000, created_at: "2026-12-01T10:00:00Z" }),
+    project({ id: "b2", partner_id: "bl1", partner_model: "turnover", amount_usd: 1000, created_at: "2026-12-05T10:00:00Z" }),
+    project({ id: "b3", partner_id: "bl1", amount_usd: 5000, stage: "cancelled" }),
+  ];
+  const m = agencyMoney(blogger, projects, [
+    { project_id: "b1", amount_usd: 2000 },
+    { project_id: "b2", amount_usd: 400 },
+  ]);
+  assert.equal(m.projects, 2);
+  assert.equal(m.turnover, 3000);
+  assert.equal(m.paid, 2400, "оплачено клиентами — без отменённого проекта");
+  assert.deepEqual(m.finder, { earned: 100, frozen: 50 }, "5% тому, кто привёл: оплаченный — заработано, неоплаченный — заморожено");
+  assert.deepEqual(m.agency, { earned: 200, frozen: 100 }, "партнёру его 10%");
+  const page = read("app/admin/agencies/page.tsx");
+  assert.match(page, /foundPartners\(desk \? "all" : staff\.id\)/, "менеджеру — партнёры, которых привёл он");
+  assert.doesNotMatch(read("lib/admin/ledger.ts"), /\.eq\("kind", "agency"\)\s*\n\s*\.in\("brought_by"/);
 });

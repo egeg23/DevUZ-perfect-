@@ -1925,16 +1925,19 @@ export async function setAgencyFinder(
   const db = serviceClient();
   if (!db) return { ok: false, reason: "offline" };
   if (broughtBy && !(await activeStaffId(db, broughtBy))) return { ok: false, reason: "staff" };
+  // С 10.11.2026 — у любого партнёра, не только агентства (agencyFinder).
   const { data: before } = await db
     .from("partners")
-    .select("id, brought_by")
+    .select("id, brought_by, brought_at, created_at")
     .eq("id", partnerId)
-    .eq("kind", "agency")
     .maybeSingle();
   if (!before) return { ok: false, reason: "gone" };
   const from = (before.brought_by as string | null) ?? null;
   if (from === broughtBy) return { ok: true };
-  const { error } = await db.from("partners").update({ brought_by: broughtBy }).eq("id", partnerId).eq("kind", "agency");
+  // 12 месяцев считаются с того дня, как партнёра завели: у блогеров, заведённых ботом, даты не было.
+  const patch: Record<string, unknown> = { brought_by: broughtBy };
+  if (broughtBy && !before.brought_at) patch.brought_at = before.created_at;
+  const { error } = await db.from("partners").update(patch).eq("id", partnerId);
   if (error) return { ok: false, reason: "failed" };
   await record("partner.agency_finder", {
     actorStaffId: admin.id,
@@ -1947,6 +1950,26 @@ export async function setAgencyFinder(
 }
 
 /** Агентства-партнёры: все или те, кого привёл этот человек. */
+/**
+ * Партнёры для вкладки «Агентства»: агентства и блогеры. Менеджеру — те,
+ * кого привёл он (владелец, 10.11.2026: «сделай так, чтобы менеджеры могли
+ * посмотреть всех своих партнеров и сколько денег они принесли»); владельцу и
+ * руководителю — все. Агентства — первыми.
+ */
+export async function foundPartners(broughtBy: "all" | string): Promise<Partner[]> {
+  const db = serviceClient();
+  if (!db) return [];
+  let query = db.from("partners").select(PARTNER_COLUMNS).order("created_at", { ascending: false });
+  if (broughtBy !== "all") query = query.eq("brought_by", broughtBy);
+  const { data, error } = await query.limit(500);
+  if (error) {
+    console.error("partners: не прочитал партнёров", error.message);
+    return [];
+  }
+  const all = (data ?? []).map((row) => shapePartner(row as Record<string, unknown>));
+  return [...all.filter((p) => p.kind === "agency"), ...all.filter((p) => p.kind !== "agency")];
+}
+
 export async function agencyPartners(broughtBy: "all" | string): Promise<Partner[]> {
   const db = serviceClient();
   if (!db) return [];

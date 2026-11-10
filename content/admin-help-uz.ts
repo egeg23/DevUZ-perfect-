@@ -2310,7 +2310,7 @@ export const uz: HelpCopy = {
           body: [
             "**Bitimning sof foydasi** = shartnoma summasi − soliq − ishlab chiqish tannarxi. Foiz shartnoma summasidan emas, undan olinadi. Soliq va tannarxni egasi yozadi.",
             "Daraja bo‘yicha stavkalar: **kichik menejer** — yangi mijozdan 10% va qo‘shimcha sotuvdan 0; **menejer** — 15% va 5%; **rahbar** — 30% va 30%. Daraja va shaxsiy stavkani egasi «Jamoa» bo‘limida qo‘yadi. Shaxsiy stavka darajani faqat yangi mijozlar uchun almashtiradi.",
-            "Rahbar qo‘shimcha ravishda o‘z jamoasi menejerlarining har bir bitimidan 5% oladi — ustiga, ularning ulushidan emas. Muassis-rahbarda bu qator 0: u baribir qolgan hamma narsadan ulush oladi. Agentlikni olib kelib, uni [Agentliklar](/admin/agencies) bo‘limida qo‘shgan odam esa 12 oy davomida shu agentlikning har bir loyihasi summasidan yana 5% oladi — «agentlikni olib kelgan» qatori, foydadan emas, shartnoma summasidan.",
+            "Rahbar qo‘shimcha ravishda o‘z jamoasi menejerlarining har bir bitimidan 5% oladi — ustiga, ularning ulushidan emas. Muassis-rahbarda bu qator 0: u baribir qolgan hamma narsadan ulush oladi. Agentlikni olib kelib, uni [Agentliklar](/admin/agencies) bo‘limida qo‘shgan odam esa 12 oy davomida shu agentlikning har bir loyihasi summasidan yana 5% oladi — «hamkorni olib kelgan» qatori, foydadan emas, shartnoma summasidan.",
             "Egasi aniq bitim uchun foiz belgilashi mumkin — u daraja va shaxsiy stavkadan muhimroq. Hisoblanma loyihada summa va mas’ul bo‘lganda paydo bo‘ladi. Bitim minusga ketdi — hisoblanma 0: minus — egasining tashvishi.",
           ],
         },
@@ -2683,8 +2683,16 @@ export const uz: HelpCopy = {
           body: [
             "Agentlikka — har bir loyihasi summasidan doim 15%: havola orqali keladigan hamkorlardagi kabi jadval bosqichlarisiz. Summa — loyihada, boshqacha aytganda shartnomada turgan summa.",
             "Agentlikni olib kelganga — agentlik shu yerda qo‘shilgan kundan boshlab 12 oy ichida ochilgan har bir loyihasi summasidan 5%. Keyinroq ochilgan loyiha endi 5% siz, muddat ichida ochilgani esa keyin ham unda qoladi. Agentlikdan oldin ochilgan loyiha ham 5% siz: u agentlik orqali kelmagan. Muddat jadvalda, «5% gacha» ustunida ko‘rinadi.",
-            "5% hamma narsaning ustidan tushadi. Agentlik loyihasini o‘zingiz olib borsangiz, olib boruvchi foizingiz odatdagidek hisoblanadi, 5% esa alohida «agentlikni olib kelgan» qatori bo‘lib tushadi. Boshqa odam olib borsa, unda uning foizi, sizda sizning 5%.",
+            "5% hamma narsaning ustidan tushadi. Agentlik loyihasini o‘zingiz olib borsangiz, olib boruvchi foizingiz odatdagidek hisoblanadi, 5% esa alohida «hamkorni olib kelgan» qatori bo‘lib tushadi. Boshqa odam olib borsa, unda uning foizi, sizda sizning 5%.",
             "Ikkala ulush ham mijoz loyihani to‘liq to‘lamaguncha muzlatilgan, [Moliya](/admin/finance) bo‘limidagi hamma narsa kabi: qisman to‘lov — muzlatilgan, to‘liq — ishlab topilgan. Bekor qilingan loyiha hech narsa bermaydi.",
+          ],
+        },
+        {
+          id: "partners",
+          title: "Bloger-hamkorlar: xuddi shu 5% va ular qancha olib kelgani",
+          body: [
+            "10.11.2026 dan boshlab xuddi shu 5% ni loyihalar summasidan 12 oy davomida faqat agentlikni emas, bloger-hamkorni olib kelgan ham oladi. Hamkorni kim olib kelganini egasi «Kim olib kelgan» ustunida belgilaydi; 12 oy hamkor qo‘shilgan kundan hisoblanadi. Hamkorni olib keldingiz, lekin u yerda yo‘qsiz — egasiga ayting.",
+            "Jadvalda — siz olib kelgan barcha agentliklar va hamkorlar (rahbar va egada — hammasi): har biri nechta loyiha olib kelgani, shartnomalar bo‘yicha «Loyihalar summasi», «Mijozlar to‘lagan» — mijozlar allaqachon qancha to‘lagani va sizning 5% ingiz. Jadval ustida — hammasi bo‘yicha jami.",
           ],
         },
         {
@@ -2751,15 +2759,15 @@ export const uz: HelpCopy = {
           title: "Pul qayerda ko‘rinadi",
           body: {
             manager: [
-              "«Mening agentliklarim» jadvalida — siz olib kelgan agentliklar: agentlikning nechta loyihasi bor, «Loyihalar summasi» va «Agentlik uchun 5%» — qancha ishlab topilgan va qancha muzlatilgan. Xuddi shu 5% — [Moliya](/admin/finance) bo‘limida «agentlikni olib kelgan» qatori: ular balansingizga kiradi va qolgan pul bilan birga to‘lanadi.",
+              "«Mening agentliklarim va hamkorlarim — siz olib kelganlar» jadvalida — siz olib kelgan agentliklar: agentlikning nechta loyihasi bor, «Loyihalar summasi» va «Olib kelganga 5%» — qancha ishlab topilgan va qancha muzlatilgan. Xuddi shu 5% — [Moliya](/admin/finance) bo‘limida «hamkorni olib kelgan» qatori: ular balansingizga kiradi va qolgan pul bilan birga to‘lanadi.",
               "Agentlik qancha olishini ko‘rmaysiz: bu begona odamga pul, uni to‘lashni ega hal qiladi.",
             ],
             head: [
-              "«Barcha agentliklar» jadvalida — barcha agentliklar, har birini kim olib kelgani, nechta loyihasi bor, «Loyihalar summasi», «Agentlik uchun 5%» va «Agentlikka 15%». Sizning 5% va jamoangizning 5% — [Moliya](/admin/finance) bo‘limida, «agentlikni olib kelgan» qatori.",
+              "«Barcha agentliklar va hamkorlar» jadvalida — barcha agentliklar, har birini kim olib kelgani, nechta loyihasi bor, «Loyihalar summasi», «Olib kelganga 5%» va «Agentlikka 15%». Sizning 5% va jamoangizning 5% — [Moliya](/admin/finance) bo‘limida, «hamkorni olib kelgan» qatori.",
               "Agentlik [Hamkorlar](/admin/partners) umumiy ro‘yxatida ham bor, «agentlik · 15%» belgisi bilan: u yerda uning hisoblanmalari va to‘lov so‘rovlari, har qanday hamkordagi kabi. To‘lov bo‘yicha qaror — egada.",
             ],
             admin: [
-              "«Barcha agentliklar» jadvalida — barcha agentliklar, har birini kim olib kelgani, nechta loyihasi bor, «Loyihalar summasi», «Agentlik uchun 5%» va «Agentlikka 15%». [Moliya](/admin/finance) bo‘limida 5% — olib kelgan odamda «agentlikni olib kelgan» qatori; ular jamoaga har qanday hisoblanma kabi studiyaga qoladigan puldan ayiriladi.",
+              "«Barcha agentliklar va hamkorlar» jadvalida — barcha agentliklar, har birini kim olib kelgani, nechta loyihasi bor, «Loyihalar summasi», «Olib kelganga 5%» va «Agentlikka 15%». [Moliya](/admin/finance) bo‘limida 5% — olib kelgan odamda «hamkorni olib kelgan» qatori; ular jamoaga har qanday hisoblanma kabi studiyaga qoladigan puldan ayiriladi.",
               "Agentlik [Hamkorlar](/admin/partners) umumiy ro‘yxatida ham bor, «agentlik · 15%» belgisi bilan: u yerda uning hisoblanmalari, rekvizitlari va to‘lov so‘rovlari, har qanday hamkordagi kabi. To‘lovni siz hal qilasiz.",
             ],
           },

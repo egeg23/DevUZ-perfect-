@@ -270,7 +270,7 @@ export const projectCardDict = defineDict({
   ownerLeft: { ru: "Остаётся владельцу", uz: "Egasiga qoladi", pl: "Zostaje właścicielowi" },
   shareHead: { ru: "руководитель", uz: "rahbar", pl: "kierownik" },
   shareLeads: { ru: "ведёт", uz: "olib boradi", pl: "prowadzi" },
-  shareAgency: { ru: "привёл агентство", uz: "agentlikni olib kelgan", pl: "przyprowadził agencję" },
+  shareAgency: { ru: "привёл партнёра", uz: "hamkorni olib kelgan", pl: "przyprowadził partnera" },
   fromTurnoverTail: { ru: " · с суммы проекта, 12 месяцев", uz: " · loyiha summasidan, 12 oy", pl: " · od kwoty projektu, 12 miesięcy" },
   manual: { ru: " · вручную", uz: " · qo‘lda", pl: " · ręcznie" },
   byGradeTail: { ru: " · по грейду", uz: " · daraja bo‘yicha", pl: " · według poziomu" },
