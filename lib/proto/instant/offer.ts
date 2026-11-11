@@ -73,6 +73,16 @@ const OFFERS: Record<InstantNiche, () => OfferAddon[]> = {
     fromPlan("semtravel", "tgbot", null, "Arizalar uchun Telegram-bot"),
     fromPlan("semtravel", "pay", null, "Click, Payme, Uzum orqali onlayn to‘lov"),
   ],
+  // Учебный центр: допы нашего макета Aipply и общие допы наших макетов (цены оттуда).
+  "uchebnyy-centr": () => [
+    fromPlan("aipply", "tg", "Заявка в Telegram: курс, день, время", "Telegramda ariza: kurs, kun, vaqt"),
+    fromPlan("aipply", "test", "Тест «Какой у вас уровень»", "«Darajangiz qanday» testi"),
+    fromPlan("aipply", "intro", "Влёт в логотип", "Logotipga uchib kirish"),
+    fromPlan("semtravel", "cabinet", "Кабинет ученика: расписание и оплаты", "O‘quvchi kabineti: jadval va to‘lovlar"),
+    fromPlan("semtravel", "crm", null, "amoCRM yoki Bitrix24 bilan bog‘lash"),
+    fromPlan("semtravel", "pay", null, "Click, Payme, Uzum orqali onlayn to‘lov"),
+    fromPlan("karomat", "tgbot", "Telegram-бот: запись и напоминание о занятии", "Telegram-bot: yozilish va dars eslatmasi"),
+  ],
 };
 
 export function offerAddons(niche: InstantNiche): OfferAddon[] {

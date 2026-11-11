@@ -11,7 +11,7 @@ import { emptySite, instantReady, type InstantSite } from "@/lib/proto/instant/t
 import { tails } from "../scripts/protos/instant/tails.mjs";
 import { nekAssets } from "../scripts/protos/instant/nek-assets.mjs";
 import assetsFile from "@/content/proto-instant/nek-assets.json" with { type: "json" };
-import { EXAMPLE, EXAMPLE_MEBEL, EXAMPLE_MED, EXAMPLE_REST, EXAMPLE_TUR } from "../scripts/protos/instant/preview-data.mjs";
+import { EXAMPLE, EXAMPLE_MEBEL, EXAMPLE_MED, EXAMPLE_REST, EXAMPLE_TUR, EXAMPLE_EDU } from "../scripts/protos/instant/preview-data.mjs";
 import { shoxAssets } from "../scripts/protos/instant/shox-assets.mjs";
 import shoxFile from "@/content/proto-instant/shox-assets.json" with { type: "json" };
 import { MEDCENTR_PHOTOS } from "@/lib/proto/instant/medcentr";
@@ -24,6 +24,9 @@ import { TUR_PHOTOS, destsOf, usdPrice } from "@/lib/proto/instant/tur";
 import agFile from "@/content/proto-instant/agora-assets.json" with { type: "json" };
 import { vtashkenteAssets } from "../scripts/protos/instant/vtashkente-assets.mjs";
 import vtFile from "@/content/proto-instant/vtashkente-assets.json" with { type: "json" };
+import { aipplyAssets } from "../scripts/protos/instant/aipply-assets.mjs";
+import apFile from "@/content/proto-instant/aipply-assets.json" with { type: "json" };
+import { EDU_PHOTOS } from "@/lib/proto/instant/edu";
 
 /**
  * «Макет в боте» (CLAUDE.md): шаблон ниши из наших макетов, данные клиента —
@@ -336,4 +339,35 @@ test("турагентство: фото ниши лежат в репозито
   assert.ok(instantReady("turagentstvo"));
   for (const photo of TUR_PHOTOS) assert.ok(existsSync(`public${photo}`), photo);
   for (const d of destsOf(tur.services)) assert.ok(existsSync(`public/protos/_niche/turagentstvo/${d.img}-s.webp`), d.img);
+});
+
+const edu = EXAMPLE_EDU as InstantSite;
+
+test("учебный центр: пример собирается без замечаний, защита та же", () => {
+  const { html, problems, stamp } = buildInstant(edu, SEED);
+  assert.deepEqual(problems, []);
+  assert.ok(html.includes("Ступени") && html.includes('id="dastur"') && html.includes('id="ochiq"'));
+  assert.ok(html.includes("/ru/mockup-terms") && html.includes('class="dz-vid"'));
+  assert.ok(stamp.signals.some((s) => s.startsWith("js:")), "метка числа скрипта Aipply");
+  assert.ok(stamp.signals.filter((s) => s.startsWith("text:")).length >= 4, "две ловушки");
+  assert.deepEqual(buildInstant({ ...edu, locale: "uz", tagline: null, about: null }, SEED).problems, []);
+});
+
+test("учебный центр: стили и скрипт нашего макета Aipply, свежие, без Aipply", () => {
+  assert.deepEqual(apFile, aipplyAssets(), "node scripts/protos/instant/aipply-assets.mjs");
+  const { html } = buildInstant(edu, SEED);
+  for (const s of ["Aipply", "aipply", "/protos/aipply", "ap-kit-v1"]) assert.ok(!html.includes(s), s);
+  assert.ok(!/<script[^>]+src=/.test(html), "без скриптов со стороны");
+  assert.deepEqual(tailsIn(html), []);
+});
+
+test("учебный центр: нет курсов и Telegram — без блока и без ссылки", () => {
+  const bare = buildInstant({ ...edu, services: [], telegram: null, instagram: null }, SEED);
+  assert.deepEqual(bare.problems, []);
+  assert.ok(!bare.html.includes("t.me/"), "без чата клиента ссылки нет");
+});
+
+test("учебный центр: нейтральные фото ниши лежат в репозитории", () => {
+  assert.ok(instantReady("uchebnyy-centr"));
+  for (const photo of EDU_PHOTOS) assert.ok(existsSync(`public${photo}`), photo);
 });
