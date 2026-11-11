@@ -1,7 +1,7 @@
 // Хвосты прошлых клиентов для «Макета в боте» (lib/proto/instant/tails).
 //
 // Шаблоны собраны из макетов Nek Dental Studio, «Сияния Севера» (стоматология)
-// и Shox International Hospital (медцентр); в макете нового клиента не должно остаться ни строки о них:
+// Shox International Hospital (медцентр) и vTashkente (мебель); в макете нового клиента не должно остаться ни строки о них:
 // название, телефон, почта, домен, ник, адрес, врачи, авторы отзывов,
 // лицензия. Список пишется отсюда из их data.mjs, а не руками:
 //
@@ -15,6 +15,28 @@ import { fileURLToPath } from "node:url";
 import * as nek from "../nek/data.mjs";
 import * as syanie from "../syanie/data.mjs";
 import * as shox from "../shox-hospital/data.mjs";
+
+const VTASHKENTE = [
+  "vTashkente",
+  "vtashkente.uz",
+  "vTashkenteuz_IrinaTsoy",
+  "IrinaTsoy",
+  "Шота Руставели",
+  "Shota Rustaveli",
+  "Кизгалдок",
+  "Qizg‘aldoq",
+  "Амстердам VIP",
+  "Ницца VIP",
+  "Лондон VIP",
+  "Нью-Йорк VIP",
+  "Мельбурн VIP",
+  "Лос-Анджелес VIP",
+  "Чикаго VIP",
+  "Сантьяго VIP",
+  "Santyago VIP",
+  "Карандаевой",
+];
+const VTASHKENTE_PHONE = "+998909729989";
 
 /** Имя человека: два слова и больше — одно «Николай» встречается у кого угодно. */
 const person = (name) => (typeof name === "string" && name.trim().split(/\s+/).length >= 2 ? [name.trim()] : []);
@@ -43,8 +65,11 @@ export function tails() {
     "shoxgroupbot",
     ...shox.BRANCHES.flatMap((b) => [b.name, ...(b.addr ? [b.addr.ru, b.addr.uz] : [])]),
     ...shox.DOCS.flatMap((d) => [d.ru, d.la]),
+    // vTashkente — шаблон мебели (lib/proto/instant/mebel). Их факты
+    // живут в gen.mjs (F, WORKS), отдельного data.mjs нет: переписаны отсюда.
+    ...VTASHKENTE,
   ];
-  const phones = [nek.CLINIC.tel, syanie.BRAND.phoneRaw, ...shox.BRANCHES.map((b) => b.tel)].filter(Boolean).map((p) => p.replace(/\D/g, ""));
+  const phones = [nek.CLINIC.tel, syanie.BRAND.phoneRaw, ...shox.BRANCHES.map((b) => b.tel), VTASHKENTE_PHONE].filter(Boolean).map((p) => p.replace(/\D/g, ""));
   return {
     text: [...new Set(text.map((s) => s.trim()).filter((s) => s.length >= 5))].sort(),
     phones: [...new Set(phones)].sort(),

@@ -70,3 +70,32 @@ export const EXAMPLE_MED = {
   photos: [],
   source: "пример, выдуманная клиника",
 };
+
+// Выдуманная мебельная фабрика — пример шаблона «Мебель».
+export const EXAMPLE_MEBEL = {
+  niche: "mebel",
+  locale: "ru",
+  name: "Дуб и Дом",
+  tagline: "Кухни и шкафы по вашим размерам",
+  about: "Мебельная фабрика в Сергели: кухни, шкафы-купе и гардеробные на заказ. Своё производство и сборка.",
+  city: "Ташкент",
+  color: "#b5652b",
+  logo: null,
+  services: [
+    { name: "Кухни на заказ", price: "от 2 500 000 сум за метр" },
+    { name: "Шкафы-купе", price: null },
+    { name: "Гардеробные", price: null },
+    { name: "Детская мебель", price: null },
+    { name: "Мебель для ванной", price: null },
+  ],
+  doctors: [],
+  perks: ["Своё производство", "Замер и проект бесплатно", "Фурнитура Blum и Hettich", "Сборка нашими мастерами"],
+  phone: "+998 71 200 00 01",
+  telegram: "dub_i_dom_demo",
+  whatsapp: null,
+  instagram: "dub_i_dom_demo",
+  address: "Ташкент, Сергели, ул. Примерная, 7",
+  hours: "Пн-Сб 9:00-19:00",
+  photos: [],
+  source: "пример, выдуманная фабрика",
+};

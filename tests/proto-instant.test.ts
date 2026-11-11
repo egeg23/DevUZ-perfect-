@@ -11,10 +11,13 @@ import { emptySite, instantReady, type InstantSite } from "@/lib/proto/instant/t
 import { tails } from "../scripts/protos/instant/tails.mjs";
 import { nekAssets } from "../scripts/protos/instant/nek-assets.mjs";
 import assetsFile from "@/content/proto-instant/nek-assets.json" with { type: "json" };
-import { EXAMPLE, EXAMPLE_MED } from "../scripts/protos/instant/preview-data.mjs";
+import { EXAMPLE, EXAMPLE_MEBEL, EXAMPLE_MED } from "../scripts/protos/instant/preview-data.mjs";
 import { shoxAssets } from "../scripts/protos/instant/shox-assets.mjs";
 import shoxFile from "@/content/proto-instant/shox-assets.json" with { type: "json" };
 import { MEDCENTR_PHOTOS } from "@/lib/proto/instant/medcentr";
+import { MEBEL_PHOTOS } from "@/lib/proto/instant/mebel";
+import { vtashkenteAssets } from "../scripts/protos/instant/vtashkente-assets.mjs";
+import vtFile from "@/content/proto-instant/vtashkente-assets.json" with { type: "json" };
 
 /**
  * «Макет в боте» (CLAUDE.md): шаблон ниши из наших макетов, данные клиента —
@@ -122,9 +125,9 @@ test("макет в боте: без сети, кроме шрифтов", () =>
   assert.ok(links.every((h) => h === "fonts.googleapis.com" || h === "fonts.gstatic.com"));
 });
 
-test("макет в боте: шаблон есть только у стоматологии, фото ниши лежат в репозитории", () => {
+test("макет в боте: шаблоны — у стоматологии, медцентра и мебели, фото ниши лежат в репозитории", () => {
   assert.ok(instantReady("stomatologiya"));
-  assert.ok(!instantReady("mebel"));
+  assert.ok(!instantReady("restoran"));
   for (const photo of DENTAL_PHOTOS) assert.ok(existsSync(`public${photo}`), photo);
 });
 
@@ -204,4 +207,48 @@ test("медцентр: нейтральные фото и пролёт ниши
   for (const photo of MEDCENTR_PHOTOS) assert.ok(existsSync(`public${photo}`), photo);
   const { SCENES } = await import("@/lib/proto/promo");
   assert.equal(SCENES["instant-medcentr"], "SCENE_KEY_INSTANT_MEDCENTR");
+});
+
+const mebel = EXAMPLE_MEBEL as InstantSite;
+
+test("мебель: пример собирается без замечаний, защита та же", () => {
+  const { html, problems, stamp } = buildInstant(mebel, SEED);
+  assert.deepEqual(problems, []);
+  assert.ok(html.includes("Дуб и Дом"));
+  assert.ok(html.includes("/ru/mockup-terms") && html.includes('class="dz-vid"'));
+  assert.ok(stamp.signals.some((s) => s.startsWith("js:")), "метка числа скрипта vTashkente");
+  assert.ok(stamp.signals.filter((s) => s.startsWith("text:")).length >= 4, "две ловушки");
+  assert.deepEqual(buildInstant({ ...mebel, locale: "uz", tagline: null, about: null }, SEED).problems, []);
+});
+
+test("мебель: шаблон — стили, сборка кухни и скрипт нашего макета vTashkente, свежие, без vTashkente", () => {
+  assert.deepEqual(vtFile, vtashkenteAssets(), "node scripts/protos/instant/vtashkente-assets.mjs");
+  const { html } = buildInstant(mebel, SEED);
+  assert.ok(html.includes(vtFile.css.slice(0, 200)), "стили vTashkente на странице");
+  assert.ok(html.includes('id="sborka"') && html.includes('class="asm-cv"') && html.includes('id="calc"'), "сборка кухни и расчёт метров");
+  for (const vt of ["vTashkente", "vtashkente", "IrinaTsoy", "Руставели", "Сантьяго", "/protos/vtashkente", "pkvesta", "#e34623"]) {
+    assert.ok(!html.replace(/getPropertyValue\('--or'\)\.trim\(\)\|\|'#e34623'/, "").includes(vt), vt);
+  }
+  assert.deepEqual(tailsIn(html), []);
+  const tail = buildInstant({ ...mebel, perks: ["Как у vTashkente"] }, SEED);
+  assert.ok(tail.problems.some((p) => p.code === "tail"), "vTashkente — хвост");
+});
+
+test("мебель: услуги клиента лентой, заявка в их Telegram, нет данных — блока нет", () => {
+  const { html } = buildInstant(mebel, SEED);
+  assert.ok(html.includes('id="raboty"') && html.includes("Шкафы-купе"));
+  assert.ok(html.includes("https://t.me/dub_i_dom_demo?text="), "чат компании с текстом");
+  assert.ok(html.includes("--or:hsl("), "цвет клиента");
+  const none = buildInstant({ ...mebel, services: [], perks: [], telegram: null }, SEED);
+  assert.deepEqual(none.problems, []);
+  assert.ok(!none.html.includes('id="raboty"') && !none.html.includes('class="im-why"'), "нет данных — блока нет");
+  assert.ok(!none.html.includes("t.me/"), "нет Telegram — нет ссылок в Telegram");
+});
+
+test("мебель: нейтральные фото ниши лежат в репозитории", () => {
+  assert.ok(instantReady("mebel"));
+  for (const photo of MEBEL_PHOTOS) {
+    assert.ok(existsSync(`public${photo}`), photo);
+    assert.ok(existsSync(`public${photo.replace("-1200", "-900")}`), photo);
+  }
 });
