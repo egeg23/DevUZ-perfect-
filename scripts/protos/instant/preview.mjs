@@ -14,7 +14,7 @@ import { createRequire } from "node:module";
 import { execSync } from "node:child_process";
 
 import { buildInstant } from "../../../lib/proto/instant/build.ts";
-import { EXAMPLE, EXAMPLE_MED, EXAMPLE_MEBEL, EXAMPLE_REST } from "./preview-data.mjs";
+import { EXAMPLE, EXAMPLE_MED, EXAMPLE_MEBEL, EXAMPLE_REST, EXAMPLE_TUR } from "./preview-data.mjs";
 
 
 
@@ -26,7 +26,8 @@ const build = buildInstant(EXAMPLE, "0".repeat(32));
 const med = buildInstant(EXAMPLE_MED, "0".repeat(32));
 const mebel = buildInstant(EXAMPLE_MEBEL, "0".repeat(32));
 const rest = buildInstant(EXAMPLE_REST, "0".repeat(32));
-for (const b of [build, med, mebel, rest]) {
+const tur = buildInstant(EXAMPLE_TUR, "0".repeat(32));
+for (const b of [build, med, mebel, rest, tur]) {
   if (b.problems.length) {
     console.error("Проверка не прошла:", b.problems);
     process.exit(1);
@@ -38,13 +39,14 @@ writeFileSync(join(out, "uz.html"), uz.html);
 writeFileSync(join(out, "med.html"), med.html);
 writeFileSync(join(out, "mebel.html"), mebel.html);
 writeFileSync(join(out, "rest.html"), rest.html);
+writeFileSync(join(out, "tur.html"), tur.html);
 writeFileSync(join(out, "kp.html"), mebel.pages.kp.replaceAll("__PROTO_BASE__", "/mebel"));
 console.log(`Страница: ${join(out, "index.html")} (${Math.round(build.html.length / 1024)} КБ), проблем uz: ${uz.problems.length}`);
 
 const TYPES = { ".html": "text/html; charset=utf-8", ".webp": "image/webp", ".mp4": "video/mp4" };
 const server = createServer((req, res) => {
   const path = decodeURIComponent((req.url ?? "/").split("?")[0]);
-  const file = path === "/" ? join(out, "index.html") : path === "/uz" ? join(out, "uz.html") : path === "/med" ? join(out, "med.html") : path === "/mebel" ? join(out, "mebel.html") : path === "/rest" ? join(out, "rest.html") : path === "/kp" ? join(out, "kp.html") : join(root, "public", path);
+  const file = path === "/" ? join(out, "index.html") : path === "/uz" ? join(out, "uz.html") : path === "/med" ? join(out, "med.html") : path === "/mebel" ? join(out, "mebel.html") : path === "/rest" ? join(out, "rest.html") : path === "/tur" ? join(out, "tur.html") : path === "/kp" ? join(out, "kp.html") : join(root, "public", path);
   if (!file.startsWith(root) && !file.startsWith(out)) return res.writeHead(403).end();
   if (!existsSync(file)) return res.writeHead(404).end();
   res.writeHead(200, { "content-type": TYPES[extname(file)] ?? "application/octet-stream" });
@@ -57,8 +59,9 @@ const { chromium } = require("playwright");
 const shots = join(root, "docs/screens/instant");
 mkdirSync(shots, { recursive: true });
 const browser = await chromium.launch();
-for (const [w, h, tag, path, file] of [[390, 844, "390", "/", "dental"], [1440, 900, "1440", "/", "dental"], [390, 844, "390", "/med", "medcentr"], [1440, 900, "1440", "/med", "medcentr"], [390, 844, "390", "/mebel", "mebel"], [1440, 900, "1440", "/mebel", "mebel"], [390, 844, "390", "/rest", "restoran"], [1440, 900, "1440", "/rest", "restoran"], [390, 844, "390", "/kp", "kp"], [1440, 900, "1440", "/kp", "kp"]]) {
+for (const [w, h, tag, path, file] of [[390, 844, "390", "/", "dental"], [1440, 900, "1440", "/", "dental"], [390, 844, "390", "/med", "medcentr"], [1440, 900, "1440", "/med", "medcentr"], [390, 844, "390", "/mebel", "mebel"], [1440, 900, "1440", "/mebel", "mebel"], [390, 844, "390", "/rest", "restoran"], [1440, 900, "1440", "/rest", "restoran"], [390, 844, "390", "/tur", "tur"], [1440, 900, "1440", "/tur", "tur"], [390, 844, "390", "/kp", "kp"], [1440, 900, "1440", "/kp", "kp"]]) {
   const page = await browser.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: 1, reducedMotion: "reduce" });
+  page.on("pageerror", (e) => console.error(`Ошибка скрипта на ${path} (${w}):`, e.message));
   await page.goto(`http://127.0.0.1:${port}${path}`, { waitUntil: "networkidle" }).catch(() => {});
   // Фото ниже первого экрана грузятся по мере прокрутки: докрутить до конца.
   await page.evaluate(async () => {

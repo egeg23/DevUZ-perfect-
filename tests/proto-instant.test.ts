@@ -11,13 +11,16 @@ import { emptySite, instantReady, type InstantSite } from "@/lib/proto/instant/t
 import { tails } from "../scripts/protos/instant/tails.mjs";
 import { nekAssets } from "../scripts/protos/instant/nek-assets.mjs";
 import assetsFile from "@/content/proto-instant/nek-assets.json" with { type: "json" };
-import { EXAMPLE, EXAMPLE_MEBEL, EXAMPLE_MED, EXAMPLE_REST } from "../scripts/protos/instant/preview-data.mjs";
+import { EXAMPLE, EXAMPLE_MEBEL, EXAMPLE_MED, EXAMPLE_REST, EXAMPLE_TUR } from "../scripts/protos/instant/preview-data.mjs";
 import { shoxAssets } from "../scripts/protos/instant/shox-assets.mjs";
 import shoxFile from "@/content/proto-instant/shox-assets.json" with { type: "json" };
 import { MEDCENTR_PHOTOS } from "@/lib/proto/instant/medcentr";
 import { MEBEL_PHOTOS } from "@/lib/proto/instant/mebel";
 import { RESTORAN_PHOTOS, priceNumber } from "@/lib/proto/instant/restoran";
 import { agoraAssets } from "../scripts/protos/instant/agora-assets.mjs";
+import { semtravelAssets } from "../scripts/protos/instant/semtravel-assets.mjs";
+import semFile from "@/content/proto-instant/semtravel-assets.json" with { type: "json" };
+import { TUR_PHOTOS, destsOf, usdPrice } from "@/lib/proto/instant/tur";
 import agFile from "@/content/proto-instant/agora-assets.json" with { type: "json" };
 import { vtashkenteAssets } from "../scripts/protos/instant/vtashkente-assets.mjs";
 import vtFile from "@/content/proto-instant/vtashkente-assets.json" with { type: "json" };
@@ -293,4 +296,44 @@ test("ресторан: нейтральные фото ниши лежат в �
     assert.ok(existsSync(`public${photo}`), photo);
     assert.ok(existsSync(`public${photo.replace("-1200", "-900")}`), photo);
   }
+});
+
+const tur = EXAMPLE_TUR as InstantSite;
+
+test("турагентство: пример собирается без замечаний, защита та же", () => {
+  const { html, problems, stamp } = buildInstant(tur, SEED);
+  assert.deepEqual(problems, []);
+  assert.ok(html.includes("Голубая Волна") && html.includes('id="karta"') && html.includes('id="bron"'));
+  assert.ok(html.includes("/ru/mockup-terms") && html.includes('class="dz-vid"'));
+  assert.ok(stamp.signals.some((s) => s.startsWith("js:")), "метка числа скрипта SEM Travel");
+  assert.ok(stamp.signals.filter((s) => s.startsWith("text:")).length >= 4, "две ловушки");
+  assert.deepEqual(buildInstant({ ...tur, locale: "uz", tagline: null, about: null }, SEED).problems, []);
+});
+
+test("турагентство: стили и скрипт SEM Travel, свежие, без SEM Travel и без GSAP", () => {
+  assert.deepEqual(semFile, semtravelAssets(), "node scripts/protos/instant/semtravel-assets.mjs");
+  const { html } = buildInstant(tur, SEED);
+  for (const s of ["SEM Travel", "semtravel", "prosem_bot", "gsap.min", "/protos/semtravel"]) assert.ok(!html.includes(s), s);
+  assert.ok(!/<script[^>]+src=/.test(html), "без скриптов со стороны");
+  assert.ok(html.includes("function runKnow(){var x0=byId(S.dest);openBron("), "поиск сразу ведёт в заявку, без примера расчёта");
+  assert.ok(html.includes("--sun:hsl("), "цвет клиента поверх их оранжевого");
+  assert.deepEqual(tailsIn(html), []);
+});
+
+test("турагентство: на карту — только страны клиента с ценой в долларах", () => {
+  assert.equal(usdPrice("от $550"), 550);
+  assert.equal(usdPrice("от 620 $"), 620);
+  assert.equal(usdPrice("от 700 USD"), 700);
+  for (const p of ["от 5 000 000 сум", null, "по запросу"]) assert.equal(usdPrice(p), 0, String(p));
+  const ds = destsOf(tur.services);
+  assert.deepEqual(ds.map((d) => d.id), ["georgia", "dubai", "turkey", "egypt", "thai"], "дешёвая первой, без услуг без страны");
+  const none = buildInstant({ ...tur, services: [{ name: "Авиабилеты", price: null }], telegram: null, instagram: null }, SEED);
+  assert.deepEqual(none.problems, []);
+  assert.ok(!none.html.includes('id="karta"') && !none.html.includes('id="route"') && !none.html.includes("t.me/"), "нет стран — нет карты и маршрута");
+});
+
+test("турагентство: фото ниши лежат в репозитории", () => {
+  assert.ok(instantReady("turagentstvo"));
+  for (const photo of TUR_PHOTOS) assert.ok(existsSync(`public${photo}`), photo);
+  for (const d of destsOf(tur.services)) assert.ok(existsSync(`public/protos/_niche/turagentstvo/${d.img}-s.webp`), d.img);
 });

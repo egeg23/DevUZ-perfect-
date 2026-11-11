@@ -129,3 +129,33 @@ export const EXAMPLE_REST = {
   photos: [],
   source: "пример, выдуманная чайхана",
 };
+
+export const EXAMPLE_TUR = {
+  niche: "turagentstvo",
+  locale: "ru",
+  name: "Голубая Волна",
+  tagline: "Туры из Ташкента на море",
+  about: "Подбираем туры на море и в города из Ташкента: перелёт, отель, трансфер и визы в одном месте.",
+  city: "Ташкент",
+  color: "#1f8fbf",
+  logo: null,
+  services: [
+    { name: "Туры в Турцию", price: "от $550" },
+    { name: "Туры в Дубай", price: "от $480" },
+    { name: "Египет, Шарм-эль-Шейх", price: "от 620 $" },
+    { name: "Грузия, Батуми", price: "от $390" },
+    { name: "Таиланд, Пхукет", price: "от $790" },
+    { name: "Авиабилеты", price: null },
+    { name: "Визовая поддержка", price: null },
+  ],
+  doctors: [],
+  perks: ["Подбор за один день", "Оплата Payme и Click"],
+  phone: "+998 71 200 00 03",
+  telegram: "golubaya_volna_demo",
+  whatsapp: null,
+  instagram: "golubaya_volna_demo",
+  address: "Ташкент, Чиланзар, ул. Примерная, 5",
+  hours: "Пн-Сб 9:00-19:00",
+  photos: [],
+  source: "пример, выдуманное агентство",
+};

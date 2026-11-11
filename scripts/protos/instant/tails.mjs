@@ -1,7 +1,7 @@
 // Хвосты прошлых клиентов для «Макета в боте» (lib/proto/instant/tails).
 //
 // Шаблоны собраны из макетов Nek Dental Studio, «Сияния Севера» (стоматология)
-// Shox International Hospital (медцентр), vTashkente (мебель) и Agora (ресторан); в макете нового клиента не должно остаться ни строки о них:
+// Shox International Hospital (медцентр), vTashkente (мебель), Agora (ресторан) и SEM Travel (турагентство); в макете нового клиента не должно остаться ни строки о них:
 // название, телефон, почта, домен, ник, адрес, врачи, авторы отзывов,
 // лицензия. Список пишется отсюда из их data.mjs, а не руками:
 //
@@ -16,6 +16,7 @@ import * as nek from "../nek/data.mjs";
 import * as syanie from "../syanie/data.mjs";
 import * as shox from "../shox-hospital/data.mjs";
 import * as agora from "../agora/data.mjs";
+import * as sem from "../semtravel/data.mjs";
 
 const VTASHKENTE = [
   "vTashkente",
@@ -74,8 +75,16 @@ export function tails() {
     agora.BRAND.ig,
     agora.BRAND.ru.street,
     agora.BRAND.uz.street,
+    // SEM Travel — шаблон турагентства (lib/proto/instant/tur).
+    sem.BRAND.name,
+    "semtravel",
+    "prosem_bot",
+    sem.BRAND.mail,
+    "Хирмонтепа",
+    "Xirmontepa",
+    "Park City Olmazor",
   ];
-  const phones = [nek.CLINIC.tel, syanie.BRAND.phoneRaw, ...shox.BRANCHES.map((b) => b.tel), VTASHKENTE_PHONE, agora.BRAND.tel].filter(Boolean).map((p) => p.replace(/\D/g, ""));
+  const phones = [nek.CLINIC.tel, syanie.BRAND.phoneRaw, ...shox.BRANCHES.map((b) => b.tel), VTASHKENTE_PHONE, agora.BRAND.tel, sem.BRAND.phoneRaw, sem.BRAND.phone2Raw].filter(Boolean).map((p) => p.replace(/\D/g, ""));
   return {
     text: [...new Set(text.map((s) => s.trim()).filter((s) => s.length >= 5))].sort(),
     phones: [...new Set(phones)].sort(),
