@@ -48,7 +48,7 @@ export function instantProblems(raw: string, site: InstantSite): InstantProblem[
   for (const p of pageProblems(raw, sitePool(site))) out.push(p);
   // Ловушки не видны в числах: в шаблоне стоят как [[t:N]] — убрать до счёта.
   // Счётчик загрузки пролёта («0%») — не утверждение о клинике.
-  const text = visibleText(raw.replace(/<div class="hs-load"[\s\S]*?<\/div>/, " ")).replace(/\[\[t:\d+\]\]/g, " ");
+  const text = visibleText(raw.replace(/<div class="(?:hs|fz)-load"[\s\S]*?<\/div>/, " ")).replace(/\[\[t:\d+\]\]/g, " ");
   const extra = unsupportedNumbers(text, "", sitePool(site));
   if (extra.length) out.push({ code: "numbers", text: `Числа не из данных клиента: ${extra.slice(0, 5).join(", ")}` });
   return out;
