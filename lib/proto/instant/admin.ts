@@ -25,7 +25,8 @@ import panels from "@/content/proto-instant/panel-assets.json" with { type: "jso
 import { mockupTermsUrl } from "@/lib/proto/booking";
 import { dentalPalette } from "@/lib/proto/instant/dental";
 import { priceNumber, RESTORAN_PHOTOS, restoranPalette, RESTORAN_TIMES } from "@/lib/proto/instant/restoran";
-import { esc, imageUrl } from "@/lib/proto/instant/safe";
+import { brandColor, esc, hexToHsl, imageUrl } from "@/lib/proto/instant/safe";
+import { TUR_PHOTOS } from "@/lib/proto/instant/tur";
 import { LIMITS, type InstantLocale, type InstantNiche, type InstantSite } from "@/lib/proto/instant/types";
 import { PROTO_BASE } from "@/lib/proto/pages";
 
@@ -206,10 +207,186 @@ ${panels.agora.js}</script>
   );
 }
 
+// ── Панель турагентства: Sunday Event Agency ──────────────────────────
+/** Подписи Sunday про события и гостей — словами турагентства. Остальные — как у Sunday. */
+const TOUR_UI: Record<string, Pair> = {
+  in_sub: ["Заявки и расчёты туров с сайта, даты и туристы. Пароля нет: код приходит по SMS.", "Saytdan arizalar va tur hisoblari, sanalar va turistlar. Parol yo‘q: kod SMS bilan keladi."],
+  tab_gst: ["Туристы", "Turistlar"],
+  r_own_sub: ["Всё: бюджеты, сделки, даты, туристы, история", "Hammasi: byudjetlar, bitimlar, sanalar, turistlar, tarix"],
+  r_mgr_sub: ["Заявки, даты и туристы, без денег", "Arizalar, sanalar va turistlar, pulsiz"],
+  search_ph: ["Заявка, клиент, турист", "Ariza, mijoz, turist"],
+  demo_line: ["Демо-данные: клиенты, бюджеты и даты выдуманы. Заявки с сайта в этом браузере настоящие.", "Demo ma’lumotlar: mijozlar, byudjetlar va sanalar o‘ylab topilgan. Shu brauzerdagi saytdan arizalar haqiqiy."],
+  hello_sub: ["Что пришло с сайта, какие даты заняты и кто едет", "Saytdan nima keldi, qaysi sanalar band va kim boradi"],
+  busy_sub: ["дней с выездами", "jo‘nash kunlari"],
+  k_guests: ["Туристов едет", "Turist boradi"],
+  crm_gst: ["ответов туристов,", "turist javoblari,"],
+  ch_kind: ["Какие туры", "Qanday turlar"],
+  req_sub: ["Расчёты туров, подборы, брони дат и звонки. Статус клиент видит в своей заявке.", "Tur hisoblari, tanlovlar, sana bronlari va qo‘ng‘iroqlar. Holatni mijoz o‘z arizasida ko‘radi."],
+  gst_sub: ["Кто едет: сколько человек и какие пожелания.", "Kim boradi: necha kishi va qanday istaklar."],
+  ev_date: ["Дата вылета", "Uchish sanasi"],
+  guests: ["туристов", "turist"],
+  do_sent: ["Расчёт отправлен", "Hisob yuborildi"],
+  st_sent: ["Расчёт отправлен", "Hisob yuborildi"],
+  k_wedding: ["Пляжный отдых", "Plyaj dam olishi"],
+  k_fest: ["Экскурсионный тур", "Ekskursiya turi"],
+  k_party: ["Семейный тур", "Oilaviy tur"],
+  k_corp: ["Деловая поездка", "Ish safari"],
+  k_quiz: ["Подбор тура", "Tur tanlash"],
+  k_date: ["Бронь дат", "Sana broni"],
+  ex_quiz: ["Подбор: море, двое взрослых и ребёнок", "Tanlov: dengiz, ikki kattalar va bola"],
+  ex_diet: ["номер с видом на море", "dengiz manzarali xona"],
+  g_diet: ["Пожелания", "Istaklar"],
+  g_come: ["Едут", "Boradi"],
+  g_yes: ["Едет", "Boradi"],
+  g_no: ["Не едут", "Bormaydi"],
+};
+const MONTHS: Record<InstantLocale, string[]> = {
+  ru: ["январь", "февраль", "март", "апрель", "май", "июнь", "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"],
+  uz: ["yanvar", "fevral", "mart", "aprel", "may", "iyun", "iyul", "avgust", "sentabr", "oktabr", "noyabr", "dekabr"],
+};
+const WD_MON: Record<InstantLocale, string[]> = { ru: ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"], uz: ["Du", "Se", "Ch", "Pa", "Ju", "Sh", "Ya"] };
+
+/** Цвет клиента поверх розового Sunday: акцент и его тёмный тон. Тёмно-синее стекло остаётся. */
+function sundayPalette(color: string | null): string {
+  const hex = brandColor(color);
+  if (!hex) return "";
+  const [h, s0, l0] = hexToHsl(hex);
+  const s = Math.min(Math.max(s0, 45), 85);
+  const l = Math.min(Math.max(l0, 45), 60);
+  return `--a:hsl(${h} ${s}% ${l}%);--a2:hsl(${h} ${s}% ${l - 8}%)`;
+}
+
+function tourAdmin(site: InstantSite): string {
+  const l = site.locale;
+  const i = l === "uz" ? 1 : 0;
+  const nm = esc(site.name);
+  const base = panels.sunday.ui as Record<string, string[]>;
+  const ui = Object.fromEntries(Object.entries(base).map(([k, v]) => [k, (TOUR_UI[k] ?? v)[i].split("{name}").join(nm)]));
+  const own = site.photos.map(imageUrl).filter((u): u is string => Boolean(u));
+  const pd = {
+    l, ui, name: site.name, mark: markOf(site, "lg-logo"), site: PROTO_BASE, home: PROTO_BASE,
+    addr: site.address ?? site.city ?? "",
+    names: NAMES[l],
+    corp: l === "uz" ? ["«[[t:0]]» MChJ", "«[[t:1]] Group»"] : ["ООО «[[t:0]]»", "«[[t:1]] Group»"],
+    months: MONTHS[l], wd: WD_MON[l],
+    // Туристов в заявке единицы: множитель к числу гостей Sunday.
+    gk: 0.03,
+  };
+  const terms = l === "uz" ? ["DevUz Studio maketi, demo ma’lumotlar. Maketdan foydalanib, siz", "maket shartlarini qabul qilasiz"] : ["Макет DevUz Studio, демо-данные. Пользуясь макетом, вы принимаете", "условия макета"];
+  return page(
+    l,
+    `${nm} · ${l === "uz" ? "turagentlik paneli · demo" : "панель турагентства · демо"}`,
+    esc(l === "uz" ? "Turagentlik paneli: saytdan arizalar, band sanalar kalendari, turistlar, tarix va rollar. Demo ma’lumotlar." : "Панель турагентства: заявки с сайта, календарь занятых дат, туристы, история и роли. Демо-данные."),
+    "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;700&family=Manrope:wght@400;700&display=swap",
+    `${panels.sunday.css}:root{${sundayPalette(site.color)}}html,body{overflow-x:clip}`,
+    `<body class="pn">
+<div class="pn-bg" aria-hidden="true"><img src="${esc(own[0] ?? TUR_PHOTOS[0])}" width="960" height="537" alt="" referrerpolicy="no-referrer"></div>
+<div id="app"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<footer class="pn-foot">${terms[0]} <a href="${esc(mockupTermsUrl(l))}" target="_blank" rel="noopener">${terms[1]}</a>.</footer>
+<script type="application/json" id="pn-data">${json(pd)}</script>
+<script>
+${panels.sunday.js}</script>
+</body>`,
+  );
+}
+
+// ── Панель учебного центра: FinTax ────────────────────────────────────
+/** Подписи FinTax про бухгалтерию и налоги — словами учебного центра. Остальные — как у FinTax. */
+const EDU_UI: Record<string, Pair> = {
+  demoNote: ["Демо-панель макета DevUz Studio: цифры и ученики с пометкой «демо» придуманы для показа, заявки с сайта в этом браузере настоящие.", "DevUz Studio maketining demo paneli: «demo» belgili raqamlar va o‘quvchilar ko‘rsatish uchun o‘ylab topilgan, shu brauzerdagi saytdan arizalar haqiqiy."],
+  n_clients: ["Ученики", "O‘quvchilar"], n_tariffs: ["Курсы", "Kurslar"],
+  role_head: ["Руководитель центра", "Markaz rahbari"],
+  r_owner: ["Всё: заявки, учеников с суммами, выручку в месяц, курсы на сайте, команду и историю.", "Hammasi: arizalar, summalari bilan o‘quvchilar, oylik tushum, saytdagi kurslar, jamoa va tarix."],
+  r_head: ["Заявки, учеников, преподавателей и расписание, суммы и курсы на сайте.", "Arizalar, o‘quvchilar, o‘qituvchilar va jadval, summalar va saytdagi kurslar."],
+  r_manager: ["Заявки и учеников без денег: не видит выручку и суммы, не правит курсы и команду.", "Arizalar va o‘quvchilar pulsiz: tushum va summalarni ko‘rmaydi, kurslar va jamoani o‘zgartirmaydi."],
+  k_client: ["Стали учениками", "O‘quvchi bo‘ldi"], clientsN: ["учеников", "o‘quvchi"],
+  pickNote: ["«Подбор курса»: человек сам ответил на вопросы, курс уже в заявке.", "«Kurs tanlash»: odam savollarga o‘zi javob berdi, kurs allaqachon arizada."],
+  mix: ["Ученики по курсам", "Kurslar bo‘yicha o‘quvchilar"], soon: ["Занятия на неделе", "Haftadagi darslar"],
+  co: ["Ученик", "O‘quvchi"], col_tariff: ["Курс", "Kurs"], col_acc: ["Преподаватель", "O‘qituvchi"], col_co: ["Ученик", "O‘quvchi"],
+  col_docs: ["Занятий за месяц", "Oylik darslar"], col_rep: ["Ближайшее", "Eng yaqini"],
+  src_pick: ["Подбор курса", "Kurs tanlash"], s_offer: ["Записали на пробное", "Sinov darsiga yozildi"], s_client: ["Ученик", "O‘quvchi"],
+  cs_wait: ["Ждём оплату", "To‘lov kutilmoqda"], cs_late: ["Пропускает занятия", "Darslarni qoldiryapti"],
+  rep_vat: ["Пробное занятие", "Sinov darsi"], rep_pay: ["Оплата за месяц", "Oylik to‘lov"], rep_fin: ["Итоговый тест", "Yakuniy test"],
+  pickH: ["Из подбора курса", "Kurs tanlovidan"], docs: ["Занятий в месяц", "Oyiga darslar"], staffN: ["Человек в группе", "Guruhdagi kishilar"],
+  tax: ["Формат", "Format"], tax_usn: ["Группа", "Guruh"], tax_vat: ["Индивидуально", "Yakka tartibda"], ved: ["Онлайн", "Onlayn"],
+  pickWhy: ["Человек пришёл с ответами: на звонке не нужно спрашивать уровень заново.", "Odam javoblar bilan keldi: qo‘ng‘iroqda darajani qayta so‘rash shart emas."],
+  stNote: ["Статус сразу виден человеку на сайте. «Ученик» добавляет его в «Ученики».", "Holat saytda odamga darhol ko‘rinadi. «O‘quvchi» uni «O‘quvchilar»ga qo‘shadi."],
+  clientsHelp: ["Кто ведёт ученика, сколько занятий прошло и что ближайшее.", "O‘quvchini kim olib boradi, nechta dars o‘tdi va eng yaqini nima."],
+  noMoney: ["Суммы видят владелец и руководитель центра.", "Summalarni egasi va markaz rahbari ko‘radi."],
+  since: ["учится с", "o‘qiydi:"], gotAll: ["Оплата получена", "To‘lov olindi"],
+  tariffsHelp: ["Строка цены выходит на сайт: в карточки курсов и в текст заявки.", "Narx qatori saytga chiqadi: kurs kartochkalariga va ariza matniga."],
+  tariffsRo: ["Цены курсов меняют владелец и руководитель центра.", "Kurs narxlarini egasi va markaz rahbari o‘zgartiradi."],
+  people: ["Команда {name}", "{name} jamoasi"], peopleNote: ["Имена и роли демо: впишете своих преподавателей.", "Ismlar va rollar demo: o‘qituvchilaringizni yozasiz."],
+  a_acc: ["назначил преподавателя", "o‘qituvchi tayinladi"], a_docs: ["отметил оплату", "to‘lovni belgiladi"], a_price: ["изменил цену курса", "kurs narxini o‘zgartirdi"],
+};
+const EDU_KINDS: Record<string, Pair> = { ip: ["Дети", "Bolalar"], opt: ["Подростки", "O‘smirlar"], retail: ["Взрослые", "Kattalar"], serv: ["Студенты", "Talabalar"], prod: ["Компании", "Kompaniyalar"] };
+const EDU_TARIFFS: Pair[] = [["Группа", "Guruh"], ["Интенсив", "Intensiv"], ["Индивидуально", "Yakka tartibda"], ["Онлайн", "Onlayn"]];
+const EDU_STAFF: Pair[] = [["Малика А.", "Malika A."], ["Бехруз Т.", "Behruz T."], ["Нодира С.", "Nodira S."], ["Отабек Р.", "Otabek R."]];
+const EDU_HEADS: Pair[] = [["Вы (владелец)", "Siz (ega)"], ["Шахло К.", "Shahlo K."], ["Жавохир М.", "Javohir M."]];
+
+function eduAdmin(site: InstantSite): string {
+  const l = site.locale;
+  const i = l === "uz" ? 1 : 0;
+  const t = (p: Pair) => p[i];
+  const nm = esc(site.name);
+  const base = panels.fintax.ui as Record<string, string[]>;
+  const ui = Object.fromEntries(Object.entries(base).map(([k, v]) => [k, (EDU_UI[k] ?? v)[i].split("{name}").join(nm)]));
+  const services = site.services.slice(0, LIMITS.services);
+  // Панель FinTax держит ровно четыре тарифа: курсы клиента, недостающие — форматами занятий.
+  const four = [0, 1, 2, 3].map((k) => (services[k] ? { n: services[k].name, p: services[k].price ?? "" } : { n: t(EDU_TARIFFS[k]), p: "" }));
+  const pd = {
+    lang: l, ui,
+    names: NAMES[l].map((x, k) => `${x} ${(l === "uz" ? "ABDEFGHIKL" : "АБВГДЕЖЗИК")[k]}.`),
+    staff: EDU_STAFF.map((p, k) => ({ n: t(p), r: services[k]?.name ?? t(EDU_TARIFFS[k]) })),
+    heads: EDU_HEADS.map(t),
+    // Сколько платят в месяц, млн сум (демо): от группы к индивидуальным.
+    tariffs: four.map((x, k) => ({ id: ["ip", "small", "mid", "big"][k], n: x.n, p: x.p, lo: [0.3, 0.5, 0.8, 0.4][k], hi: [0.6, 0.9, 1.6, 0.8][k] })),
+    kinds: Object.fromEntries(Object.entries(EDU_KINDS).map(([k, v]) => [k, t(v)])),
+    services: services.map((s) => s.name),
+    site: PROTO_BASE, prices: PROTO_BASE, tg: site.telegram ? `https://t.me/${esc(site.telegram.replace(/^@/, ""))}` : "",
+  };
+  const pick = (k: string) => esc(ui[k] ?? k);
+  const nav = ["dash", "leads", "clients", "tariffs", "log", "team"];
+  const sprite = `<svg width="0" height="0" style="position:absolute" aria-hidden="true">${Object.entries(panels.fintax.sprite as Record<string, string>).map(([k, dd]) => `<symbol id="i-${k}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${dd}</symbol>`).join("")}</svg>`;
+  const hex = brandColor(site.color);
+  const palette = hex ? (() => { const [h, s0] = hexToHsl(hex); const sat = Math.min(Math.max(s0, 35), 80); return `--teal:hsl(${h} ${sat}% 18%);--teal2:hsl(${h} ${sat}% 34%);--mint:hsl(${h} ${Math.round(sat * 0.5)}% 92%);--deep:hsl(${h} ${sat}% 12%)`; })() : "";
+  return page(
+    l,
+    `${nm} · ${l === "uz" ? "o‘quv markazi paneli · demo" : "панель учебного центра · демо"}`,
+    esc(l === "uz" ? "O‘quv markazi paneli: saytdan arizalar, o‘quvchilar, kurslar, jamoa va rollar, tarix. Demo ma’lumotlar." : "Панель учебного центра: заявки с сайта, ученики, курсы, команда и роли, история. Демо-данные."),
+    "https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;700&family=Playfair+Display:wght@400;700&display=swap",
+    `${panels.fintax.css}:root{${palette}}html,body{overflow-x:clip}.brand .logo img{height:30px;width:auto;max-width:140px;object-fit:contain}`,
+    `<body class="panel" data-lang="${l}">
+${sprite}
+<div class="app">
+<div class="nav-back" data-navclose></div>
+<aside class="side-nav" aria-label="${pick("sections")}">
+<a class="brand" href="${PROTO_BASE}" aria-label="${nm}"><span class="logo">${imageUrl(site.logo) ? `<img src="${esc(imageUrl(site.logo) ?? "")}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : nm}</span><small>${pick("panelOf")}</small></a>
+<nav class="nav">${nav.map((k) => `<a href="#${k}"><svg class="ic" aria-hidden="true"><use href="#i-${k}"/></svg><span>${pick("n_" + k)}</span>${k === "leads" ? `<i data-cnt hidden>0</i>` : ""}</a>`).join("")}</nav>
+<div class="role"><label><span>${pick("viewAs")}</span><select id="role">${["owner", "head", "manager"].map((r) => `<option value="${r}">${pick("role_" + r)}</option>`).join("")}</select></label>
+<a class="to-site" href="${PROTO_BASE}"><svg class="ic" aria-hidden="true"><use href="#i-ext"/></svg><span>${pick("toSite")}</span></a></div>
+</aside>
+<div class="main">
+<header class="topbar"><button type="button" class="ib" id="menu-b" aria-label="${pick("menu")}"><svg class="ic" aria-hidden="true"><use href="#i-menu"/></svg></button><b class="tb-t" id="tb-t"></b><span class="sp"></span></header>
+<main id="pv" tabindex="-1"></main>
+<p class="demo">${pick("demoNote")} <a href="${esc(mockupTermsUrl(l))}" target="_blank" rel="noopener">${pick("terms")}</a></p>
+</div></div>
+<div id="mdl" hidden></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<script type="application/json" id="fp-data">${json(pd)}</script>
+<script>
+${panels.fintax.js}</script>
+</body>`,
+  );
+}
+
 const ADMINS: Partial<Record<InstantNiche, (site: InstantSite) => string>> = {
   stomatologiya: (s) => clinicAdmin(s, "stomatologiya"),
   medcentr: (s) => clinicAdmin(s, "medcentr"),
   restoran: restoranAdmin,
+  turagentstvo: tourAdmin,
+  "uchebnyy-centr": eduAdmin,
 };
 
 /** Админка сферы на данных клиента; у сферы без нашей панели — null. */

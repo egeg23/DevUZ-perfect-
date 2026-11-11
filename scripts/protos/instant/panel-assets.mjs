@@ -21,6 +21,8 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 import { PANEL_UI as AGORA_UI } from "../agora/ui.mjs";
+import { PANEL_UI as SUNDAY_UI } from "../sunday/ui.mjs";
+import { PANEL_UI as FINTAX_UI } from "../fintax/panel-ui.mjs";
 
 const read = (m, f) => readFileSync(new URL(`../${m}/${f}`, import.meta.url), "utf8");
 
@@ -63,14 +65,60 @@ const AGORA_JS = [
   ['<h1 style="font-weight:400">AGORA Lounge &amp; bar</h1>', '<h1 style="font-weight:400">'+"'+esc(P.name)+'"+'</h1>'],
 ];
 
+/** Sunday Event Agency — панель агентства: вход кодом, заявки со статусами, календарь занятых дат, участники, история, выгрузки. */
+const SUNDAY_JS = [
+  // Ключи памяти — свои у шаблона.
+  ["'sn-", "'tv-"],
+  ["var MARK='<svg viewBox=\"0 0 400 400\" aria-hidden=\"true\" focusable=\"false\"><use href=\"#sn-g\"/></svg>';", "var MARK=P.mark;"],
+  ['aria-label="Sunday">S</a>', 'aria-label="'+"'+esc(P.name)+'"+'">'+"'+esc(P.name.slice(0,1))+'"+'</a>'],
+  ["<i>S</i><span><b>Sunday Event Agency</b>", "<i>'+esc(P.name.slice(0,1))+'</i><span><b>'+esc(P.name)+'</b>"],
+  ["sunday-zayavki", "zayavki"],
+  ["sunday-gosti", "uchastniki"],
+  // Сколько людей в заявке — множителем из данных: у турагентства туристов единицы, а не сотни гостей свадьбы.
+  [
+    "g=k==='party'?20+Math.floor(rnd()*30):k==='call'||k==='date'?0:60+Math.floor(rnd()*240);",
+    "g=k==='call'||k==='date'?0:Math.max(1,Math.round((k==='party'?20+Math.floor(rnd()*30):60+Math.floor(rnd()*240))*(P.gk||1)));",
+  ],
+];
+
+/** FinTax — панель компании услуг: заявки, клиенты на обслуживании, тарифы, команда и роли, история. */
+const FINTAX_JS = [["'ft-", "'fe-"]];
+
+/** Значки панели FinTax — те же пути, что в их gen.mjs (SPRITE). */
+function fintaxSprite() {
+  const gen = read("fintax", "gen.mjs");
+  const sp = gen.match(/^const SP = [^\n]*$/m);
+  const from = gen.indexOf("const SPRITE = {");
+  const to = gen.indexOf("const sprite = ");
+  if (!sp || from < 0 || to < from) throw new Error("fintax/gen.mjs изменился: не нашлось значков");
+  return new Function(`${sp[0]}\n${gen.slice(from, to)}; return SPRITE;`)();
+}
+
+/** Подписи FinTax: [ru, uz] (третий, английский, шаблону не нужен), имя — «{name}». */
+const fintaxUi = () => Object.fromEntries(Object.entries(FINTAX_UI).map(([k, v]) => [k, v.slice(0, 2).map((x) => x.split("FinTax").join("{name}"))]));
+
 /** Подписи Agora: имя ресторана — местом «{name}», шаблон ставит имя клиента. */
 const agoraUi = () => Object.fromEntries(Object.entries(AGORA_UI).map(([k, v]) => [k, v.map((x) => x.split("Agora").join("{name}"))]));
+
+/** Подписи Sunday: имя агентства — местом «{name}». */
+const sundayUi = () => Object.fromEntries(Object.entries(SUNDAY_UI).map(([k, v]) => [k, v.map((x) => x.split("Sunday").join("{name}"))]));
 
 export function panelAssets() {
   const nekJs = swap(noComments(read("nek", "panel.js")), NEK_JS, "nek/panel.js").replace(/\n\s*\n/g, "\n");
   const agJs = swap(noComments(read("agora", "panel.js")), AGORA_JS, "agora/panel.js").replace(/\n\s*\n/g, "\n");
   return {
     nek: { css: noComments(read("nek", "panel.css")).replace(/\n\s*/g, ""), js: nekJs },
+    sunday: {
+      css: noComments(read("sunday", "site.css")).replace(/\n\s*/g, "") + noComments(read("sunday", "panel.css")).replace(/\n\s*/g, ""),
+      js: swap(noComments(read("sunday", "panel.js")), SUNDAY_JS, "sunday/panel.js").replace(/\n\s*\n/g, "\n"),
+      ui: sundayUi(),
+    },
+    fintax: {
+      css: noComments(read("fintax", "panel.css")).replace(/\n\s*/g, ""),
+      js: swap(noComments(read("fintax", "panel.js")), FINTAX_JS, "fintax/panel.js").replace(/\n\s*\n/g, "\n"),
+      ui: fintaxUi(),
+      sprite: fintaxSprite(),
+    },
     agora: { css: noComments(read("agora", "panel.css")).replace(/\n\s*/g, ""), js: agJs, ui: agoraUi() },
   };
 }
