@@ -27,6 +27,8 @@ KEY = bytes.fromhex(os.environ.get("SCENE_KEY", "0" * 64))
 assert len(KEY) == 32, "ключ — 32 байта"
 HERE = os.path.dirname(os.path.abspath(__file__))
 NICHE = os.environ.get("NICHE", "stomatologiya")
+# Роликов в пролёте: у салона красоты их шесть (семь ключевых кадров), у остальных четыре.
+CLIPS = int(os.environ.get("CLIPS", "4"))
 PUB = os.path.join(HERE, "../../../public/protos/_niche", NICHE)
 SRC = {"d": sys.argv[1], "m": sys.argv[2]}
 SIZE = {"d": (1280, 720), "m": (720, 1280)}
@@ -53,7 +55,7 @@ def webp(im, q):
 
 def full(kind):
     seq = []
-    for v in range(4):
+    for v in range(CLIPS):
         fs = frames(os.path.join(SRC[kind], f"v{v + 1}.mp4"))
         seq += fs[1:] if v else fs
     return seq
@@ -127,7 +129,7 @@ for k in ("d", "m"):
         first.resize((720, 1280), Image.LANCZOS).save(os.path.join(PUB, "poster-9.webp"), "WEBP", quality=84, method=6)
 
 # Ключевые кадры открыто: версия без движения и картинки сайта.
-for i in range(1, 6):
+for i in range(1, CLIPS + 2):
     Image.open(os.path.join(SRC["d"], f"k{i}.png")).convert("RGB").resize((1600, 893), Image.LANCZOS).save(os.path.join(PUB, f"k{i}-16.webp"), "WEBP", quality=82, method=6)
     Image.open(os.path.join(SRC["m"], f"k{i}.png")).convert("RGB").resize((720, 1290), Image.LANCZOS).save(os.path.join(PUB, f"k{i}-9.webp"), "WEBP", quality=80, method=6)
 

@@ -88,6 +88,7 @@ const BOOK: Partial<Record<InstantNiche, Record<InstantLocale, string>>> = {
   turagentstvo: { ru: "Подобрать тур", uz: "Tur tanlash" },
   "uchebnyy-centr": { ru: "Записаться на курс", uz: "Kursga yozilish" },
   nedvizhimost: { ru: "Подобрать объект", uz: "Obyekt tanlash" },
+  "salon-krasoty": { ru: "Записаться", uz: "Yozilish" },
 };
 
 export function widgetHtml(locale: InstantLocale, niche?: InstantNiche): string {

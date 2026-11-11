@@ -13,6 +13,7 @@ import { MOCKUP_TERMS_PATH } from "@/content/mockup-terms";
 import { adminHtml } from "@/lib/proto/instant/admin";
 import { mebelHtml } from "@/lib/proto/instant/mebel";
 import { restoranHtml } from "@/lib/proto/instant/restoran";
+import { salonHtml } from "@/lib/proto/instant/salon";
 import { turHtml } from "@/lib/proto/instant/tur";
 import { eduHtml } from "@/lib/proto/instant/edu";
 import { nedvHtml } from "@/lib/proto/instant/nedv";
@@ -22,7 +23,7 @@ import { LIMITS, instantMissing, type InstantSite } from "@/lib/proto/instant/ty
 import { pageProblems, withoutDashes } from "@/lib/proto/plain-text";
 import { newSeed, stampHtml, type Stamp } from "@/lib/proto/stamp";
 
-const TEMPLATES = { stomatologiya: dentalHtml, medcentr: medcentrHtml, mebel: mebelHtml, restoran: restoranHtml, turagentstvo: (s: InstantSite) => turHtml(s), "uchebnyy-centr": eduHtml, nedvizhimost: nedvHtml } as const;
+const TEMPLATES = { stomatologiya: dentalHtml, medcentr: medcentrHtml, mebel: mebelHtml, restoran: restoranHtml, turagentstvo: (s: InstantSite) => turHtml(s), "uchebnyy-centr": eduHtml, nedvizhimost: nedvHtml, "salon-krasoty": salonHtml } as const;
 
 const plain = (text: string | null, max: number) => {
   const out = clean(text, max);

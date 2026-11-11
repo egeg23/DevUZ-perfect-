@@ -60,6 +60,12 @@ export type FlyOptions = {
   tx: string;
   /** Якорь первого экрана шаблона: туда ведёт «Смотреть сайт». */
   to: string;
+  /**
+   * Переход к сайту каплей (салон красоты): в конце пролёта из центра кадра
+   * растёт круг цвета клиента и закрывает кадр, первый экран сайта начинается
+   * тем же цветом. Движет его та же доля конца сцены `--q`, что и кнопку.
+   */
+  drop?: boolean;
 };
 
 /** Сцена есть, только когда кадры ниши сняты: до этого шаблон идёт без пролёта. */
@@ -77,6 +83,7 @@ export function flyParts(o: FlyOptions): { section: string; css: string; script:
 <video muted playsinline preload="none" disablepictureinpicture aria-hidden="true"></video>
 <div class="fz-shade" aria-hidden="true"></div>
 ${o.sign ? `<div class="fz-sign" aria-hidden="true">${o.sign}</div>` : ""}
+${o.drop ? `<div class="fz-drop" aria-hidden="true"></div>` : ""}
 <div class="fz-ch">${o.chapters
     .map((c, i) =>
       i === 0
@@ -111,6 +118,8 @@ ${FLY_CSS}
 .fz .fzc.fin-top .fzc-h{color:#1f1b17;text-shadow:0 1px 0 rgb(255 255 255/.5)}
 .fzc.fin-top .fzc-h{font-size:clamp(34px,6vw,84px)}
 .fin-sub{display:block;margin-top:16px;font:600 clamp(14px,1.4vw,18px)/1.3 var(--tx);letter-spacing:.16em;text-transform:uppercase;color:var(--peach)}
+.fz-drop{position:absolute;left:50%;top:50%;width:12vmax;height:12vmax;margin:-6vmax 0 0 -6vmax;border-radius:50%;background:var(--peach);transform:scale(calc(var(--q,0) * var(--q,0) * 22));opacity:calc(var(--q,0) * 6);pointer-events:none}
+.fz-drop~.fz-ch .fzc.fin .fzc-h{text-shadow:none}
 @media(max-width:899px){.fz-sign{top:25%;font-size:18px}.fzc.fin-top{top:24%}}
 @media(prefers-reduced-motion:reduce){.fz{display:none}.fzcalm{display:block}}</style>`;
   const land = { root: PROTO_BASE, img: o.img, n: o.media.n, vn: o.media.vn, fps: o.media.fps, ch: o.chapters.map((c) => ({ at: c.at })) };
