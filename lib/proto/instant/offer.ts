@@ -1,0 +1,81 @@
+/**
+ * Предложение после «Макета в боте»: база и допы ниши — одни и те же для
+ * сообщения бота и страницы КП (lib/proto/instant/kp.ts).
+ *
+ * Владелец, 11.11.2026: «КП предлагаю собрать базовое 500 / 1000 $ + допы
+ * если нужно, много допов совокупно на 1500$. То есть чтобы весь сайт стоил
+ * не дороже 2000-2500… данные просто подставляются клиентские, ничего
+ * заново не генерируем и не тратим на это токены… Для многих ниш мы их уже
+ * делали — просто берем их».
+ *
+ * База — PROMO (lib/admin/mockup-offer): лендинг 500 $ и корпоративный
+ * 1 000 $, как во всех спецусловиях после макета. Допы и цены — из планов
+ * наших макетов этой ниши (scripts/protos/<макет>/plan.mjs →
+ * content/mockup-plans.json, ассеты ниш), подобраны так, чтобы все вместе
+ * давали до OFFER_ADDONS_MAX. Модели нет.
+ */
+import plans from "@/content/mockup-plans.json" with { type: "json" };
+import shox from "@/content/proto-instant/shox-assets.json" with { type: "json" };
+import { PROMO } from "@/lib/admin/mockup-offer";
+import type { InstantLocale, InstantNiche } from "@/lib/proto/instant/types";
+
+export type OfferAddon = { id: string; ru: string; uz: string; price: number };
+
+/** Допы все вместе — не дороже этого: сайт целиком 2 000-2 500 $. */
+export const OFFER_ADDONS_MAX = 1500;
+
+type Plan = { id: string; addons: { id: string; title: string; price: number }[] };
+
+/** Доп из плана нашего макета: цена оттуда, подписи — наши, на двух языках. */
+function fromPlan(plan: string, id: string, ru: string | null, uz: string): OfferAddon {
+  const p = (plans as Plan[]).find((x) => x.id === plan);
+  const a = p?.addons.find((x) => x.id === id);
+  if (!a) throw new Error(`Нет допа «${id}» в плане «${plan}» (content/mockup-plans.json)`);
+  return { id: `${plan}-${id}`, ru: ru ?? a.title, uz, price: a.price };
+}
+
+const OFFERS: Record<InstantNiche, () => OfferAddon[]> = {
+  // Nek Dental Studio.
+  stomatologiya: () => [
+    fromPlan("nek", "admin", null, "Klinika paneli: yozuv, messenjerlar, jadval"),
+    fromPlan("nek", "chat", null, "Saytdagi chat: javoblar yoki administrator"),
+    fromPlan("nek", "quiz", null, "4 qadamli «Tabassumingiz» kvizi"),
+    fromPlan("nek", "remind", null, "Bemorga tashrif eslatmasi"),
+    fromPlan("nek", "reviews", null, "Saytda Google sharhlari"),
+    fromPlan("nek", "pages", "Отдельные страницы услуг", "Har bir xizmat uchun alohida sahifa"),
+  ],
+  // Shox International Hospital: план — EXTRAS (shox-assets.json).
+  medcentr: () => shox.addons.map((a) => ({ id: `shox-${a.id}`, ru: a.ru, uz: a.uz, price: a.price })),
+  // Мебель: допы Enotmebel и общие допы наших макетов (панель, CRM, бот).
+  mebel: () => [
+    fromPlan("usemtau", "panel", "Панель заявок и замеров: статусы, менеджеры", "Ariza va o‘lchovlar paneli: holatlar, menejerlar"),
+    fromPlan("usemtau", "crm", "Заявки сразу в amoCRM или Bitrix24", "Arizalar darhol amoCRM yoki Bitrix24 ga"),
+    fromPlan("karomat", "tgbot", "Telegram-бот: заявка на замер и статус заказа", "Telegram-bot: o‘lchov arizasi va buyurtma holati"),
+    fromPlan("enotmebel", "pay", null, "Payme va Click orqali to‘lov"),
+    fromPlan("enotmebel", "nasiya", "Рассрочка Uzum Nasiya и Alif", "Uzum Nasiya va Alif muddatli to‘lovi"),
+    fromPlan("enotmebel", "uz", null, "O‘zbekcha versiya"),
+  ],
+};
+
+export function offerAddons(niche: InstantNiche): OfferAddon[] {
+  return OFFERS[niche]();
+}
+
+export function offerBase(locale: InstantLocale) {
+  return [
+    {
+      id: "landing",
+      title: locale === "uz" ? "Shu maket bo‘yicha lending" : "Лендинг по этому макету",
+      note: locale === "uz" ? `barcha funksiyalari va tanlovingizga ${PROMO.landing.addons} ta qo‘shimcha bilan` : `со всем, что на нём работает, и ${PROMO.landing.addons} допа на выбор`,
+      price: PROMO.landing.price,
+      regular: PROMO.landing.regular,
+    },
+    {
+      id: "corporate",
+      title: locale === "uz" ? "To‘liq korporativ sayt" : "Полноразмерный корпоративный сайт",
+      note: locale === "uz" ? "barcha bo‘limlar, ikki til, qidiruv uchun sahifalar" : "все разделы, два языка, страницы под поиск",
+      price: PROMO.corporate.price,
+      regular: PROMO.corporate.regular,
+    },
+  ];
+}

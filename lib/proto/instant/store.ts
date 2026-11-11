@@ -128,6 +128,7 @@ export async function saveInstantProto(
         instant: { tg: String(who.tgId), username: who.username, staff: who.staffId, test: Boolean(who.staffId), site: build.site },
       },
       html: build.html,
+      pages: build.pages,
       stamp: build.stamp,
       problems: build.problems,
       status: build.problems.length ? "draft" : "sent",

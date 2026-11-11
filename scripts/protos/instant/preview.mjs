@@ -36,12 +36,13 @@ writeFileSync(join(out, "index.html"), build.html);
 writeFileSync(join(out, "uz.html"), uz.html);
 writeFileSync(join(out, "med.html"), med.html);
 writeFileSync(join(out, "mebel.html"), mebel.html);
+writeFileSync(join(out, "kp.html"), mebel.pages.kp.replaceAll("__PROTO_BASE__", "/mebel"));
 console.log(`Страница: ${join(out, "index.html")} (${Math.round(build.html.length / 1024)} КБ), проблем uz: ${uz.problems.length}`);
 
 const TYPES = { ".html": "text/html; charset=utf-8", ".webp": "image/webp", ".mp4": "video/mp4" };
 const server = createServer((req, res) => {
   const path = decodeURIComponent((req.url ?? "/").split("?")[0]);
-  const file = path === "/" ? join(out, "index.html") : path === "/uz" ? join(out, "uz.html") : path === "/med" ? join(out, "med.html") : path === "/mebel" ? join(out, "mebel.html") : join(root, "public", path);
+  const file = path === "/" ? join(out, "index.html") : path === "/uz" ? join(out, "uz.html") : path === "/med" ? join(out, "med.html") : path === "/mebel" ? join(out, "mebel.html") : path === "/kp" ? join(out, "kp.html") : join(root, "public", path);
   if (!file.startsWith(root) && !file.startsWith(out)) return res.writeHead(403).end();
   if (!existsSync(file)) return res.writeHead(404).end();
   res.writeHead(200, { "content-type": TYPES[extname(file)] ?? "application/octet-stream" });
@@ -54,7 +55,7 @@ const { chromium } = require("playwright");
 const shots = join(root, "docs/screens/instant");
 mkdirSync(shots, { recursive: true });
 const browser = await chromium.launch();
-for (const [w, h, tag, path, file] of [[390, 844, "390", "/", "dental"], [1440, 900, "1440", "/", "dental"], [390, 844, "390", "/med", "medcentr"], [1440, 900, "1440", "/med", "medcentr"], [390, 844, "390", "/mebel", "mebel"], [1440, 900, "1440", "/mebel", "mebel"]]) {
+for (const [w, h, tag, path, file] of [[390, 844, "390", "/", "dental"], [1440, 900, "1440", "/", "dental"], [390, 844, "390", "/med", "medcentr"], [1440, 900, "1440", "/med", "medcentr"], [390, 844, "390", "/mebel", "mebel"], [1440, 900, "1440", "/mebel", "mebel"], [390, 844, "390", "/kp", "kp"], [1440, 900, "1440", "/kp", "kp"]]) {
   const page = await browser.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: 1, reducedMotion: "reduce" });
   await page.goto(`http://127.0.0.1:${port}${path}`, { waitUntil: "networkidle" }).catch(() => {});
   // Фото ниже первого экрана грузятся по мере прокрутки: докрутить до конца.
