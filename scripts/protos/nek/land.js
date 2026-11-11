@@ -71,7 +71,11 @@ if(hs&&!RM){
   addEventListener('scroll',poke,{passive:true});addEventListener('resize',function(){if(ready)size();poke()});poke();
   if(!w.crypto||!crypto.subtle||!w.Blob)$('#hs-load').classList.add('ok');
   else{var go=VID?loadVid:loadScene;if(d.readyState==='complete')setTimeout(go,200);else addEventListener('load',function(){setTimeout(go,200)})}
-  function unseal(buf){return fetch(D.root+'/promo/scene',{credentials:'same-origin'}).then(function(r){if(!r.ok)throw 0;return r.arrayBuffer()})
+  /* Ключ и кадры спрашиваем до трёх раз: один отказ сервера (502 во время
+     выкатки, обрыв сети) раньше оставлял сцену стоять на первом кадре. */
+  function keyBytes(n){return fetch(D.root+'/promo/scene',{credentials:'same-origin'}).then(function(r){if(!r.ok)throw 0;return r.arrayBuffer()})
+    .catch(function(e){if(n>0)return new Promise(function(ok){setTimeout(ok,900)}).then(function(){return keyBytes(n-1)});throw e})}
+  function unseal(buf){return keyBytes(2)
     .then(function(b){return crypto.subtle.importKey('raw',b,'AES-GCM',false,['decrypt'])})
     .then(function(k){return crypto.subtle.decrypt({name:'AES-GCM',iv:new Uint8Array(buf,0,12)},k,new Uint8Array(buf,12))})}
   /* Видео — одним файлом с ходом загрузки, потом в <video> из памяти:
@@ -84,20 +88,24 @@ if(hs&&!RM){
       var rd=r.body.getReader(),parts=[],got=0;
       return(function pump(){return rd.read().then(function(x){if(x.done)return new Blob(parts).arrayBuffer();parts.push(x.value);got+=x.value.length;show(got/len*.98);return pump()})})()})
     .then(unseal).then(function(x){
-      vd.addEventListener('loadeddata',function(){if(dead)return;show(1);vok=true;ready=true;hs.classList.add('live','vid');$('#hs-load').classList.add('ok');cur=want=prog();
-        /* iOS рисует кадры перемотки только после первого play(); в режиме
-           энергосбережения play() откажет — тогда по первому касанию. */
-        var prime=function(){var p=vd.play();if(p&&p.then)p.then(function(){vd.pause();vgo();poke()},function(){})};prime();
-        addEventListener('touchstart',function(){if(vd.paused&&vd.currentTime===0)prime()},{once:true,passive:true});vgo()},{once:true});
+      /* iOS рисует кадры перемотки только после play(). В режиме
+         энергосбережения и во встроенных браузерах play() без нажатия
+         отказывает, а прокрутка нажатием не считается: сцена стояла на первом
+         кадре (владелец, 11.11.2026: «не двигаются кадры»). Отказ — сцена
+         идёт кадрами-картинками, а не стоит. */
+      vd.addEventListener('loadeddata',function(){if(dead)return;show(1);
+        var on=function(){if(dead||vok)return;try{vd.pause()}catch(e){}vok=true;ready=true;hs.classList.add('live','vid');$('#hs-load').classList.add('ok');cur=want=prog();vgo();poke()};
+        var p;try{p=vd.play()}catch(e){fail();return}
+        if(p&&p.then)p.then(on,fail);else on()},{once:true});
       vd.addEventListener('seeked',function(){if(vseek>=0){var s=vseek;vseek=-1;vd.currentTime=s}});
       vd.addEventListener('error',fail,{once:true});setTimeout(function(){if(!vok)fail()},20000);
       vd.preload='auto';vd.src=URL.createObjectURL(new Blob([x],{type:'video/mp4'}));vd.load()},fail)}
   function loadScene(){
-    var n=$('#hs-n'),bar=$('#hs-b'),done=0,got=0;
+    var n=$('#hs-n'),bar=$('#hs-b'),done=0,got=0,tries={};
     function step(){done++;var k=done/F;n.textContent=Math.floor(k*100);bar.style.transform='scaleX('+k.toFixed(3)+')';
       if(got>=2&&!ready){ready=true;size();hs.classList.add('live');cur=want=prog();draw()}
       if(done===F)$('#hs-load').classList.add('ok')}
-    fetch(D.root+'/promo/scene',{credentials:'same-origin'}).then(function(r){if(!r.ok)throw 0;return r.arrayBuffer()})
+    keyBytes(2)
     .then(function(b){return crypto.subtle.importKey('raw',b,'AES-GCM',false,['decrypt'])})
     .then(function(key){
       /* Сначала каждый двенадцатый кадр (сцена живая сразу), потом те, что
@@ -107,7 +115,7 @@ if(hs&&!RM){
       function next(){var j=pick();if(j==null)return;asked[j]=1;
         fetch(D.img+'/seq/'+SET+'/f'+pad(j,3)+'.bin').then(function(r){if(!r.ok)throw 0;return r.arrayBuffer()})
         .then(function(buf){return crypto.subtle.decrypt({name:'AES-GCM',iv:new Uint8Array(buf,0,12)},key,new Uint8Array(buf,12))})
-        .then(function(x){blob[j]=new Blob([x],{type:'image/webp'});got++;step();if(ready){if(Math.abs(j-at())<=AHEAD)warm(at());if(!raf)raf=requestAnimationFrame(loop)}next()},function(){step();next()})}
+        .then(function(x){blob[j]=new Blob([x],{type:'image/webp'});got++;step();if(ready){if(Math.abs(j-at())<=AHEAD)warm(at());if(!raf)raf=requestAnimationFrame(loop)}next()},function(){tries[j]=(tries[j]||0)+1;if(tries[j]<3){asked[j]=0;setTimeout(next,700)}else{step();next()}})}
       for(i=0;i<6;i++)next()})
     .catch(function(){$('#hs-load').classList.add('ok')})}
 }else if(hs){$$('.cp',hs).forEach(function(c){c.style.setProperty('--o','1')})}

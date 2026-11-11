@@ -28,6 +28,8 @@ import { mockupTermsUrl } from "@/lib/proto/booking";
 import { LIMITS, type InstantLocale, type InstantSite } from "@/lib/proto/instant/types";
 import { brandColor, esc, handleOf, hexToHsl, imageUrl, telHref, waHref } from "@/lib/proto/instant/safe";
 import { rgbOf } from "@/lib/proto/instant/dental";
+import mebelMedia from "@/content/proto-instant/mebel-media.json" with { type: "json" };
+import { flyParts } from "@/lib/proto/instant/fly";
 
 const IMG = "/protos/_niche/mebel";
 /** Нейтральные фото ниши: светлая кухня, гардеробная, тёмная кухня, цех, образцы. */
@@ -271,6 +273,21 @@ ${form("p")}
   const h1 = [site.name, ...C.h1[l]];
   const facts = perks.slice(0, 3);
   const askLabel = tg ? C.askTg : wa ? C.askWa : C.callUs;
+  // Пролёт ниши (владелец, 11.11.2026): камера стоит в центре комнаты, рабочие
+  // выносят старое, делают ремонт, ставят новую мебель; подлёт к дивану и название.
+  const top2 = services.slice(0, 2).map((x) => x.name).join(", ");
+  const fly = flyParts({
+    locale: l, img: IMG, media: mebelMedia, label: l === "ru" ? "Комната до и после" : "Xona oldin va keyin", fin: "top",
+    btn: "btn btn-or", accent: "var(--or)", hd: "'Unbounded',sans-serif", tx: "'Onest',sans-serif", to: "hero",
+    chapters: [
+      { at: 0.06, a: site.name, b: site.city ?? (l === "ru" ? "Мебель на заказ" : "Buyurtma mebel") },
+      { at: 0.28, a: l === "ru" ? "Старое выносим" : "Eskisini olib chiqamiz", b: l === "ru" ? "до голых стен" : "yalang devorgacha" },
+      { at: 0.5, a: l === "ru" ? "Комната как новая" : "Xona yangidek", b: l === "ru" ? "стены, пол, свет" : "devor, pol, yorug‘lik" },
+      { at: 0.72, a: l === "ru" ? "Ставим новую мебель" : "Yangi mebel qo‘yamiz", b: top2 || (l === "ru" ? "под ваш размер" : "o‘lchamingiz bo‘yicha") },
+      { at: 0.93, a: site.name, b: site.tagline ?? site.city ?? "" },
+    ],
+  });
+
   const hero = `<section class="hs hero" id="hero" aria-label="${t(C.firstScreen)}">
 <div class="hr-media" aria-hidden="true">${heroPics.map((src, i) => `<img class="hr-img${i === 0 ? " on" : ""}" src="${esc(src)}"${srcset(src)} sizes="100vw" alt="" width="1200" height="900"${i ? ' loading="lazy"' : ' fetchpriority="high"'} decoding="async" referrerpolicy="no-referrer">`).join("")}<div class="hr-shade"></div></div>
 <div class="hr-in">
@@ -443,12 +460,14 @@ ${site.address ? `<div><b>${t(C.showKick)}</b><ul><li>${esc(site.address)}</li>$
 .tgc dl{display:grid;grid-template-columns:auto 1fr;gap:8px 14px;margin:16px 0 0}
 .tgc dt{color:var(--mut)}
 .tgc dd{margin:0;font-weight:700;overflow-wrap:anywhere}</style>
+${fly.css}
 </head>
 <body data-lang="${l}">
 ${dzIntroSolo(l)}
 <a class="skip" href="#sborka">${t(C.toMain)}</a>
 ${header}
 <main id="main">
+${fly.section}
 ${hero}
 ${assembly}
 ${works}
@@ -468,6 +487,7 @@ if(!b||!b.isConnected){on();return}var k=setInterval(function(){n++;if(!b.isConn
 ${assets.asm}</script>
 <script>
 ${assets.js}</script>
+${fly.script}
 </body>
 </html>`;
 }
