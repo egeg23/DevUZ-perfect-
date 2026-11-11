@@ -55,6 +55,16 @@ const OFFERS: Record<InstantNiche, () => OfferAddon[]> = {
     fromPlan("enotmebel", "nasiya", "Рассрочка Uzum Nasiya и Alif", "Uzum Nasiya va Alif muddatli to‘lovi"),
     fromPlan("enotmebel", "uz", null, "O‘zbekcha versiya"),
   ],
+  // Ресторан: допы нашего макета Karomat (бронь уже в лендинге).
+  restoran: () => [
+    fromPlan("karomat", "order", null, "Onlayn buyurtma: yetkazib berish va olib ketish"),
+    fromPlan("karomat", "pay", null, "Click, Payme, Uzum orqali to‘lov"),
+    fromPlan("karomat", "panel", "Панель владельца: брони, заказы, стоп-лист", "Ega paneli: bronlar, buyurtmalar, stop-list"),
+    fromPlan("karomat", "tgbot", null, "Restoran Telegram-boti"),
+    fromPlan("karomat", "qr", null, "Stoldagi QR-menyu"),
+    fromPlan("karomat", "banket", null, "Banketlar va to‘y: kalkulyator va arizalar"),
+    fromPlan("karomat", "reviews", null, "Yandex Xaritalar va Google sharhlari"),
+  ],
 };
 
 export function offerAddons(niche: InstantNiche): OfferAddon[] {

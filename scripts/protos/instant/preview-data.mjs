@@ -99,3 +99,33 @@ export const EXAMPLE_MEBEL = {
   photos: [],
   source: "пример, выдуманная фабрика",
 };
+
+export const EXAMPLE_REST = {
+  niche: "restoran",
+  locale: "ru",
+  name: "Чайхана Тандыр",
+  tagline: "Узбекская кухня и мангал",
+  about: "Семейная чайхана в Юнусабаде: плов из казана, самса из тандыра и шашлык на углях.",
+  city: "Ташкент",
+  color: "#c8892b",
+  logo: null,
+  services: [
+    { name: "Плов ташкентский", price: "45 000 сум" },
+    { name: "Самса из тандыра", price: "12 000 сум" },
+    { name: "Шашлык из баранины", price: "38 000 сум" },
+    { name: "Лагман", price: "35 000 сум" },
+    { name: "Салат Ачичук", price: "15 000 сум" },
+    { name: "Манты", price: null },
+    { name: "Чай зелёный, чайник", price: "8 000 сум" },
+  ],
+  doctors: [],
+  perks: [],
+  phone: "+998 71 200 00 02",
+  telegram: "tandyr_demo",
+  whatsapp: null,
+  instagram: "tandyr_demo",
+  address: "Ташкент, Юнусабад, ул. Примерная, 12",
+  hours: "Ежедневно 10:00-23:00",
+  photos: [],
+  source: "пример, выдуманная чайхана",
+};

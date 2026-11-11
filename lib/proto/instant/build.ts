@@ -10,13 +10,14 @@ import { dentalHtml } from "@/lib/proto/instant/dental";
 import { medcentrHtml } from "@/lib/proto/instant/medcentr";
 import { kpHtml } from "@/lib/proto/instant/kp";
 import { mebelHtml } from "@/lib/proto/instant/mebel";
+import { restoranHtml } from "@/lib/proto/instant/restoran";
 import { instantProblems, tailsIn, type InstantProblem } from "@/lib/proto/instant/check";
 import { brandColor, clean, handleOf, imageUrl } from "@/lib/proto/instant/safe";
 import { LIMITS, instantMissing, type InstantSite } from "@/lib/proto/instant/types";
 import { pageProblems, withoutDashes } from "@/lib/proto/plain-text";
 import { newSeed, stampHtml, type Stamp } from "@/lib/proto/stamp";
 
-const TEMPLATES = { stomatologiya: dentalHtml, medcentr: medcentrHtml, mebel: mebelHtml } as const;
+const TEMPLATES = { stomatologiya: dentalHtml, medcentr: medcentrHtml, mebel: mebelHtml, restoran: restoranHtml } as const;
 
 const plain = (text: string | null, max: number) => {
   const out = clean(text, max);
