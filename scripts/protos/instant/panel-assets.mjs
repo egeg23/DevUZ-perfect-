@@ -21,6 +21,11 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 import { PANEL_UI as AGORA_UI } from "../agora/ui.mjs";
+import { PANEL_UI as SUNDAY_UI } from "../sunday/ui.mjs";
+import { PANEL_UI as FINTAX_UI } from "../fintax/panel-ui.mjs";
+import { PANEL_UI as GREENWELL_UI } from "../greenwell/ui.mjs";
+import { PANEL_UI as SOFFICE_UI } from "../soffice/panel-ui.mjs";
+import { UNITS as SOFFICE_UNITS, inventory as sofficeInventory, TEAM as SOFFICE_TEAM, TENANT_ROOTS, TENANT_KINDS, MARKET as SOFFICE_MARKET, TARIFF as SOFFICE_TARIFF } from "../soffice/panel-data.mjs";
 
 const read = (m, f) => readFileSync(new URL(`../${m}/${f}`, import.meta.url), "utf8");
 
@@ -63,14 +68,135 @@ const AGORA_JS = [
   ['<h1 style="font-weight:400">AGORA Lounge &amp; bar</h1>', '<h1 style="font-weight:400">'+"'+esc(P.name)+'"+'</h1>'],
 ];
 
+/** Sunday Event Agency — панель агентства: вход кодом, заявки со статусами, календарь занятых дат, участники, история, выгрузки. */
+const SUNDAY_JS = [
+  // Ключи памяти — свои у шаблона.
+  ["'sn-", "'tv-"],
+  ["var MARK='<svg viewBox=\"0 0 400 400\" aria-hidden=\"true\" focusable=\"false\"><use href=\"#sn-g\"/></svg>';", "var MARK=P.mark;"],
+  ['aria-label="Sunday">S</a>', 'aria-label="'+"'+esc(P.name)+'"+'">'+"'+esc(P.name.slice(0,1))+'"+'</a>'],
+  ["<i>S</i><span><b>Sunday Event Agency</b>", "<i>'+esc(P.name.slice(0,1))+'</i><span><b>'+esc(P.name)+'</b>"],
+  ["sunday-zayavki", "zayavki"],
+  ["sunday-gosti", "uchastniki"],
+  // Сколько людей в заявке — множителем из данных: у турагентства туристов единицы, а не сотни гостей свадьбы.
+  [
+    "g=k==='party'?20+Math.floor(rnd()*30):k==='call'||k==='date'?0:60+Math.floor(rnd()*240);",
+    "g=k==='call'||k==='date'?0:Math.max(1,Math.round((k==='party'?20+Math.floor(rnd()*30):60+Math.floor(rnd()*240))*(P.gk||1)));",
+  ],
+];
+
+/** FinTax — панель компании услуг: заявки, клиенты на обслуживании, тарифы, команда и роли, история. */
+const FINTAX_JS = [["'ft-", "'fe-"]];
+
+/** Значки панели FinTax — те же пути, что в их gen.mjs (SPRITE). */
+function fintaxSprite() {
+  const gen = read("fintax", "gen.mjs");
+  const sp = gen.match(/^const SP = [^\n]*$/m);
+  const from = gen.indexOf("const SPRITE = {");
+  const to = gen.indexOf("const sprite = ");
+  if (!sp || from < 0 || to < from) throw new Error("fintax/gen.mjs изменился: не нашлось значков");
+  return new Function(`${sp[0]}\n${gen.slice(from, to)}; return SPRITE;`)();
+}
+
+/** Подписи FinTax: [ru, uz] (третий, английский, шаблону не нужен), имя — «{name}». */
+const fintaxUi = () => Object.fromEntries(Object.entries(FINTAX_UI).map(([k, v]) => [k, v.slice(0, 2).map((x) => x.split("FinTax").join("{name}"))]));
+
+/** Greenwell — панель магазина: заказы с историей, отзывы, товары и прибыль, доставка, рассрочка, посещаемость. */
+const GREENWELL_JS = [
+  ["'gw-", "'mb-"],
+  ["'GW-'", "'Z-'"],
+  ["IMG=G.img,P={};", "IMG=G.img,P={};function PHO(id){return(G.ph&&G.ph[id])||''}"],
+  ["IMG+'/p-'+", "PHO("],
+  ["+'-s.webp\"", ")+'\""],
+  ["<b>Greenwell</b>", "<b>'+h(G.name)+'</b>"],
+  // Заказов в день — множителем из данных: мебель покупают реже, чем биодобавки.
+  ["cnt=Math.round((11+rnd()*6)*", "cnt=Math.round((11+rnd()*6)*(G.k||1)*"],
+];
+
+/** Значки панели Greenwell — те же пути, что в их gen.mjs (I). */
+function greenwellIcons() {
+  const gen = read("greenwell", "gen.mjs");
+  const sMatch = gen.match(/^const S = [^\n]*$/m);
+  const from = gen.indexOf("const I = {");
+  const to = gen.indexOf("const sprite = ");
+  if (!sMatch || from < 0 || to < from) throw new Error("greenwell/gen.mjs изменился: не нашлось значков");
+  return new Function(`${sMatch[0]}\n${gen.slice(from, to)}; return I;`)();
+}
+
+/** Подписи Greenwell: имя магазина — местом «{name}». */
+const greenwellUi = () => Object.fromEntries(Object.entries(GREENWELL_UI).map(([k, v]) => [k, v.map((x) => x.split("Greenwell").join("{name}"))]));
+
+/** Soffice — панель управляющей компании: заявки и сделки, просмотры, объекты с этажами, договоры, счета, эксплуатация, отчёт собственнику. */
+const SOFFICE_JS = [
+  ["'so-", "'nv-"],
+  ["G=JSON.parse(d.getElementById('sp-data').textContent),U=G.ui,L=G.lang,EN=L==='en';", "G=JSON.parse(d.getElementById('sp-data').textContent),U=G.ui,L=G.lang,EN=L==='en';function BPH(id){return(G.ph&&G.ph[id])||''}"],
+  ["/protos/soffice/b-'+b.id+'-560.webp", "'+BPH(b.id)+'"],
+  ['<img src="/protos/soffice/logo.webp" alt="Soffice" width="574" height="127">', "'+G.logo+'"],
+  ["link='https://soffice.uz/kp/'+l.id.toLowerCase()", "link=G.kp+l.id.toLowerCase()"],
+  ["'https://soffice.uz/pay/'+b.id.toLowerCase()", "G.kp+b.id.toLowerCase()"],
+  ["<small>Soffice · Global Property Group</small>", "<small>'+h(G.name)+'</small>"],
+  ["<code>soffice.uz/kp/'+id.toLowerCase()", "<code>'+h(G.kp)+id.toLowerCase()"],
+  ["' · soffice.uz/kp/'+id.toLowerCase()", "' · '+G.kp+id.toLowerCase()"],
+];
+
+/** Слова Soffice про бизнес-центры и офисы — словами жилой недвижимости; длинные формы раньше коротких. */
+const NEDV_WORDS = [
+  ["бизнес-центрам", "домам"], ["бизнес-центров", "домов"], ["бизнес-центрах", "домах"], ["бизнес-центре", "доме"], ["бизнес-центра", "дома"], ["бизнес-центр", "дом"], ["Бизнес-центр", "Дом"],
+  ["офисов", "квартир"], ["офисы", "квартиры"], ["офисе", "квартире"], ["офиса", "квартиры"], ["офису", "квартире"], ["офис", "квартира"], ["Офис", "Квартира"],
+  ["Biznes-markazlar", "Uylar"], ["biznes-markazlar", "uylar"], ["Biznes-markaz", "Uy"], ["biznes-markaz", "uy"], ["ofislar", "kvartiralar"], ["Ofislar", "Kvartiralar"], ["ofis", "kvartira"], ["Ofis", "Kvartira"],
+  ["soffice.uz", "{site}"], ["Soffice", "{name}"], ["БЦ", "дом"],
+];
+const nedvWord = (x) => NEDV_WORDS.reduce((acc, [a, b]) => acc.split(a).join(b), x);
+const sofficeUi = () => Object.fromEntries(Object.entries(SOFFICE_UI).map(([k, v]) => [k, v.slice(0, 2).map((x) => (Array.isArray(x) ? x.map(nedvWord) : nedvWord(x)))]));
+
+/** Значки панели Soffice — те же пути, что в их gen.mjs (SPRITE). */
+function sofficeSprite() {
+  const gen = read("soffice", "gen.mjs");
+  const from = gen.indexOf("const SPRITE = {");
+  const to = gen.indexOf("const sprite = ");
+  if (from < 0 || to < from) throw new Error("soffice/gen.mjs изменился: не нашлось значков");
+  const pre = gen.slice(0, from).match(/^const (SP|P|S) = [^\n]*$/gm) ?? [];
+  return new Function(`${pre.join("\n")}\n${gen.slice(from, to)}; return SPRITE;`)();
+}
+
 /** Подписи Agora: имя ресторана — местом «{name}», шаблон ставит имя клиента. */
 const agoraUi = () => Object.fromEntries(Object.entries(AGORA_UI).map(([k, v]) => [k, v.map((x) => x.split("Agora").join("{name}"))]));
+
+/** Подписи Sunday: имя агентства — местом «{name}». */
+const sundayUi = () => Object.fromEntries(Object.entries(SUNDAY_UI).map(([k, v]) => [k, v.map((x) => x.split("Sunday").join("{name}"))]));
 
 export function panelAssets() {
   const nekJs = swap(noComments(read("nek", "panel.js")), NEK_JS, "nek/panel.js").replace(/\n\s*\n/g, "\n");
   const agJs = swap(noComments(read("agora", "panel.js")), AGORA_JS, "agora/panel.js").replace(/\n\s*\n/g, "\n");
   return {
     nek: { css: noComments(read("nek", "panel.css")).replace(/\n\s*/g, ""), js: nekJs },
+    sunday: {
+      css: noComments(read("sunday", "site.css")).replace(/\n\s*/g, "") + noComments(read("sunday", "panel.css")).replace(/\n\s*/g, ""),
+      js: swap(noComments(read("sunday", "panel.js")), SUNDAY_JS, "sunday/panel.js").replace(/\n\s*\n/g, "\n"),
+      ui: sundayUi(),
+    },
+    fintax: {
+      css: noComments(read("fintax", "panel.css")).replace(/\n\s*/g, ""),
+      js: swap(noComments(read("fintax", "panel.js")), FINTAX_JS, "fintax/panel.js").replace(/\n\s*\n/g, "\n"),
+      ui: fintaxUi(),
+      sprite: fintaxSprite(),
+    },
+    greenwell: {
+      css: noComments(read("greenwell", "panel.css")).replace(/\n\s*/g, ""),
+      js: swap(noComments(read("greenwell", "panel.js")), GREENWELL_JS, "greenwell/panel.js").replace(/\n\s*\n/g, "\n"),
+      ui: greenwellUi(),
+      icons: greenwellIcons(),
+    },
+    soffice: {
+      css: noComments(read("soffice", "panel.css")).replace(/\n\s*/g, ""),
+      js: swap(noComments(read("soffice", "panel.js")), SOFFICE_JS, "soffice/panel.js").replace(/\n\s*\n/g, "\n"),
+      ui: sofficeUi(),
+      sprite: sofficeSprite(),
+      // Демо-данные панели, которые не про Soffice: планировка этажа, этажи и занятость, команда, названия арендаторов, ставки.
+      units: SOFFICE_UNITS.map((u) => ({ n: u.n, r: u.r, a: u.a, w: u.w })),
+      inv: Object.values(sofficeInventory()).slice(0, 8),
+      team: SOFFICE_TEAM.map((p) => ({ id: p.id, role: p.role, n: [p.n.ru, p.n.uz] })),
+      roots: TENANT_ROOTS, kinds: TENANT_KINDS, market: SOFFICE_MARKET, tariff: SOFFICE_TARIFF,
+    },
     agora: { css: noComments(read("agora", "panel.css")).replace(/\n\s*/g, ""), js: agJs, ui: agoraUi() },
   };
 }
