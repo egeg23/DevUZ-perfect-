@@ -17,7 +17,7 @@ import { RUN_HOLD_MS, tashkentDayStart } from "@/lib/proto/instant/limits";
 import type { InstantLocale, InstantNiche } from "@/lib/proto/instant/types";
 import { serviceClient } from "@/lib/supabase";
 
-export type FlowStage = "url" | "niche" | "q_name" | "q_phone" | "q_address" | "q_services" | "building";
+export type FlowStage = "greet" | "url" | "niche" | "q_name" | "q_phone" | "q_address" | "q_services" | "building";
 
 export type Flow = {
   stage: FlowStage;
@@ -25,7 +25,7 @@ export type Flow = {
   url: string | null;
   nosite: boolean;
   niche: InstantNiche | null;
-  answers: { name?: string; phone?: string; address?: string; services?: string };
+  answers: { name?: string; phone?: string; address?: string; services?: string; instagram?: string };
   at: string;
 };
 
