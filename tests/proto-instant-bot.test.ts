@@ -464,3 +464,10 @@ test("КП: сборка кладёт его страницей kp, бот да�
   assert.ok(build.pages.kp.includes("Коммерческое предложение"));
   assert.ok(!build.problems.some((p) => p.code.startsWith("kp-")), JSON.stringify(build.problems));
 });
+
+test("макет в боте: кнопка в виджете сборки — по сфере", () => {
+  assert.match(widgetHtml("ru"), /<span class="bk">Записаться<\/span>/);
+  assert.match(widgetHtml("ru", "stomatologiya"), /<span class="bk">Записаться<\/span>/);
+  assert.match(widgetHtml("ru", "restoran"), /<span class="bk">Забронировать<\/span>/);
+  assert.match(widgetHtml("uz", "nedvizhimost"), /<span class="bk">Obyekt tanlash<\/span>/);
+});

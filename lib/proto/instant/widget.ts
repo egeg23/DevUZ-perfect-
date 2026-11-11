@@ -15,7 +15,7 @@
  * s: до четырёх услуг}. Пишет только бот, данные клиента виджет кладёт
  * через textContent.
  */
-import type { InstantLocale } from "@/lib/proto/instant/types";
+import type { InstantLocale, InstantNiche } from "@/lib/proto/instant/types";
 
 export const STEPS = ["read", "brand", "services", "build", "check", "done"] as const;
 export type BuildStep = (typeof STEPS)[number];
@@ -81,8 +81,17 @@ export function widgetState(step: BuildStep, failed: BuildFail | false = false, 
 }
 
 /** Код виджета на языке клиента. Тексты шаблона — наши; данные клиента — только textContent. */
-export function widgetHtml(locale: InstantLocale): string {
-  const l = LABELS[locale];
+/** Кнопка в мини-сайте виджета — как главная кнопка шаблона сферы: ресторан бронирует, а не «записывает». */
+const BOOK: Partial<Record<InstantNiche, Record<InstantLocale, string>>> = {
+  mebel: { ru: "Заказать замер", uz: "O‘lchovga buyurtma" },
+  restoran: { ru: "Забронировать", uz: "Stol band qilish" },
+  turagentstvo: { ru: "Подобрать тур", uz: "Tur tanlash" },
+  "uchebnyy-centr": { ru: "Записаться на курс", uz: "Kursga yozilish" },
+  nedvizhimost: { ru: "Подобрать объект", uz: "Obyekt tanlash" },
+};
+
+export function widgetHtml(locale: InstantLocale, niche?: InstantNiche): string {
+  const l = { ...LABELS[locale], book: (niche && BOOK[niche]?.[locale]) || LABELS[locale].book };
   const names = JSON.stringify(STEPS.map((s) => l[s]));
   return `<style>
 .w{padding:12px 14px 14px;font:14px/1.35 system-ui,sans-serif;color:var(--tg-theme-text-color);--a:var(--tg-theme-button-color)}

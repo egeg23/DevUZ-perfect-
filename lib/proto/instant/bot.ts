@@ -444,7 +444,7 @@ export async function runBuild(ctx: Ctx, flow: Flow, deps: Deps): Promise<void> 
     return;
   }
 
-  const widget = await deps.sendWidget(ctx.chatId, { html: widgetHtml(locale), chatData: widgetState("read"), caption: stepCaption(locale, "read") });
+  const widget = await deps.sendWidget(ctx.chatId, { html: widgetHtml(locale, niche), chatData: widgetState("read"), caption: stepCaption(locale, "read") });
   // Приложение без виджетов (или метод не принят) — тот же ход обычным сообщением.
   const status = widget === null ? await deps.send(ctx.chatId, stepCaption(locale, "read")) : null;
   let info: WidgetInfo = {};
