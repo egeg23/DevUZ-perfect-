@@ -44,6 +44,9 @@ for (const n of Object.keys(SITES)) {
     const page = await browser.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: 1 });
     const errors = [];
     page.on("pageerror", (e) => errors.push(String(e)));
+    // REFUSE=1 — телефон не даёт видео запуститься (режим энергосбережения,
+    // встроенный браузер): сцена должна пойти кадрами, а не встать.
+    if (process.env.REFUSE) await page.addInitScript(() => { HTMLMediaElement.prototype.play = () => Promise.reject(new DOMException("NotAllowedError")); });
     await page.goto(`http://127.0.0.1:${port}/${n}`);
     await page.evaluate(() => document.querySelectorAll("#dzi,.dz-intro,[data-dz]").forEach((e) => e.remove()));
     await page.waitForSelector(".fz.live", { timeout: 60000 });
@@ -55,9 +58,10 @@ for (const n of Object.keys(SITES)) {
         scrollTo(0, f.offsetTop + (f.offsetHeight - innerHeight) * k);
       }, at);
       await page.waitForTimeout(2600);
-      await page.screenshot({ path: join(shots, `fly-${n}-${w}-${tag}.webp`.replace(".webp", ".png")) });
+      await page.screenshot({ path: join(shots, `${process.env.REFUSE ? "refuse" : "fly"}-${n}-${w}-${tag}.png`) });
     }
-    console.log(n, w, "прокрутка вбок:", wide, "ошибок:", errors.length, errors.slice(0, 2).join(" | "));
+    const cls = await page.evaluate(() => document.querySelector(".fz").className);
+    console.log(n, w, "прокрутка вбок:", wide, "ошибок:", errors.length, errors.slice(0, 2).join(" | "), "· сцена:", cls);
     await page.close();
   }
 }

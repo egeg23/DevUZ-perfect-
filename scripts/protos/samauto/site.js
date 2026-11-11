@@ -115,11 +115,14 @@ function loadVid(){
     return(function pump(){return rd.read().then(function(x){if(x.done)return new Blob(parts);parts.push(x.value);got+=x.value.length;show(got/len*.98);return pump()})})()})
   .then(function(b){return b.arrayBuffer()}).then(function(b){return unseal(b,'video/mp4')})
   .then(function(b){vd.addEventListener('loadeddata',function(){show(1);vplace();
-      /* iOS рисует кадры перемотки только после первого play(); в режиме
-         энергосбережения play() откажет — тогда по первому касанию. */
-      var prime=function(){var p=vd.play();if(p&&p.then)p.then(function(){vd.pause();poke()},function(){})};prime();
-      addEventListener('touchstart',function(){if(vd.paused&&vd.currentTime===0)prime()},{once:true,passive:true});
-      setTimeout(unlock,250)},{once:true});
+      /* iOS рисует кадры перемотки только после play(). В режиме
+         энергосбережения и во встроенных браузерах play() без нажатия
+         отказывает, а прокрутка нажатием не считается: сцена стояла на первом
+         кадре (владелец, 11.11.2026: «не двигаются кадры»). Отказ — сцена
+         идёт кадрами-картинками, а не стоит. */
+      var on=function(){try{vd.pause()}catch(e){}poke();setTimeout(unlock,250)};
+      var p;try{p=vd.play()}catch(e){fail();return}
+      if(p&&p.then)p.then(on,fail);else on()},{once:true});
     vd.addEventListener('seeked',function(){if(vseek>=0){var s=vseek;vseek=-1;vd.currentTime=s}});
     vd.addEventListener('error',fail,{once:true});
     vd.preload='auto';vd.src=URL.createObjectURL(b);vd.load()},fail)}

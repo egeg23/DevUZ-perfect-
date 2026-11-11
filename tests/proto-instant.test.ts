@@ -516,3 +516,16 @@ test("пролёт ниши: кадров нет — шаблон идёт бе�
   const p = flyParts({ locale: "ru", img: "/x", media: { n: 0, vn: 0, fps: 24 }, label: "x", chapters: [], fin: "center", btn: "btn", accent: "#fff", hd: "serif", tx: "sans-serif", to: "top" });
   assert.deepEqual(p, { section: "", css: "", script: "" });
 });
+
+test("сцена по прокрутке: видео отказало в запуске — идёт кадрами, ключ и кадры спрашиваются повторно", async () => {
+  const { readFileSync } = await import("node:fs");
+  // Владелец, 11.11.2026: «На всех макетах не двигаются кадры на скролл анимации».
+  for (const f of ["scripts/protos/nek/land.js", "scripts/protos/samauto/site.js", "scripts/protos/samist/scene.js"]) {
+    const js = readFileSync(f, "utf8");
+    assert.ok(js.includes("p.then(on,fail)"), `${f}: отказ play() ведёт к кадрам`);
+    assert.ok(!js.includes("vd.currentTime===0)prime()"), `${f}: сцена не ждёт касания, которого не будет`);
+  }
+  const scene = assetsFile.scene;
+  assert.ok(scene.includes("p.then(on,fail)") && scene.includes("keyBytes(2)") && scene.includes("tries[j]<3"), "движок «Макета в боте» свежий");
+  for (const b of ["nek", "samauto", "samist"]) assert.ok(readFileSync(`content/proto-bundles/${b}.json`, "utf8").includes("p.then(on,fail)"), `сборка ${b} пересобрана`);
+});
