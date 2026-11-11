@@ -145,7 +145,9 @@ export async function collectFacts(input: {
   try {
     page = await enrich(await probe(input.url));
   } catch (error) {
-    return { error: error instanceof Error ? error.message : "Сайт не открылся" };
+    // Код ошибки (ENOTFOUND, ECONNRESET, timeout) — чтобы сбой на сервере было видно.
+    const code = (error as { code?: unknown })?.code;
+    return { error: error instanceof Error ? `${typeof code === "string" ? `${code} ` : ""}${error.message}` : "Сайт не открылся" };
   }
   if (page.status >= 400) return { error: `${page.finalUrl} ответил ${page.status}` };
 

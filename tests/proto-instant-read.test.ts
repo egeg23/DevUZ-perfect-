@@ -113,7 +113,7 @@ test("разбор сайта: текст сайта уходит модели �
 
 test("разбор сайта: сайт не открылся, модель молчит", async () => {
   const closed = await readClientSite("https://x.example", "stomatologiya", "ru", { collect: async () => ({ error: "нет" }) });
-  assert.deepEqual(closed, { ok: false, why: "open" });
+  assert.deepEqual(closed, { ok: false, why: "open", detail: "нет" });
   const silent = await readClientSite("https://x.example", "stomatologiya", "ru", { collect: async () => collected, ask: async () => null });
   assert.ok(silent.ok, "без модели — то, что собрал аудитор");
   if (silent.ok) assert.equal(silent.usedModel, false);
@@ -137,4 +137,23 @@ test("сайта нет: макет из ответов в боте", () => {
 test("цвета страницы: theme-color первым, серые мимо", () => {
   const html = `<meta name="theme-color" content="#0a7cff"><style>a{color:#e63946}b{color:#e63946}i{color:#777777}</style>`;
   assert.deepEqual(pageColors(html), ["#0a7cff", "#e63946"]);
+});
+
+test("ответы в боте: цена после запятой, «рублей», «₽», «сум», «/ подход»; без цены — через запятую", async () => {
+  const { siteFromAnswers } = await import("@/lib/proto/instant/read");
+  const s = siteFromAnswers({ niche: "stomatologiya", locale: "ru", name: "A", phone: "1", address: "", services: "Чистка Зубов, 5000 рублей\nВиниры - 1 500 000 сум\nОтбеливание 9000 ₽\nЖим лежа, 100 рублей / подход\nБрекеты, Импланты" });
+  assert.deepEqual(s.services, [
+    { name: "Чистка Зубов", price: "5000 рублей" },
+    { name: "Виниры", price: "1 500 000 сум" },
+    { name: "Отбеливание", price: "9000 ₽" },
+    { name: "Жим лежа", price: "100 рублей / подход" },
+    { name: "Брекеты", price: null },
+    { name: "Импланты", price: null },
+  ]);
+});
+
+test("причина сбоя чтения — без адреса клиента", async () => {
+  const { failDetail } = await import("@/lib/proto/instant/read");
+  assert.equal(failDetail("ENOTFOUND getaddrinfo ENOTFOUND dental.uz"), "ENOTFOUND getaddrinfo ENOTFOUND <адрес>");
+  assert.doesNotMatch(failDetail("https://shop.example.uz/ ответил 500"), /example/);
 });

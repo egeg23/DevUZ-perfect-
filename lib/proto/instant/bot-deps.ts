@@ -4,10 +4,11 @@
  * lib/proto/instant/store.ts, лид — тем же путём, что форма на сайте:
  * saveLead + routeNewLead (очередь тёплых лидов, ночное правило — там).
  */
+import { broken, probe } from "@/lib/audit/fetch";
 import { routeNewLead } from "@/lib/admin/lead-queue-store";
 import { CIRCLE_NICHE_RU } from "@/lib/admin/sales-after-reply";
 import { MOCKUP_BOT_OPEN } from "@/lib/proto/instant/limits";
-import { readClientSite } from "@/lib/proto/instant/read";
+import { failDetail, readClientSite } from "@/lib/proto/instant/read";
 import { claimBuild, dropFlow, flowOf, instantCounts, saveFlow, saveInstantProto, setProtoLead } from "@/lib/proto/instant/store";
 import { MANUAL_HOURS, manualWhy, type Deps, type LeadInput } from "@/lib/proto/instant/bot";
 import { esc } from "@/lib/proto/instant/safe";
@@ -111,6 +112,20 @@ async function lead(input: LeadInput): Promise<string | null> {
   return leadId;
 }
 
+/**
+ * Сайт клиента открывается — тем же аудитором, что читает его потом
+ * (lib/audit/fetch: проверенный адрес, каждый редирект заново). Не ответил,
+ * нет такого имени или 4xx/5xx — нет. Одна главная, без стилей и картинок.
+ */
+export async function siteOpens(url: string): Promise<string | null> {
+  try {
+    const page = await probe(url);
+    return broken(page.status) ? `ответ ${page.status}` : null;
+  } catch (error) {
+    return failDetail(error instanceof Error ? `${error.name}: ${error.message}` : String(error));
+  }
+}
+
 export function realDeps(): Deps {
   return {
     send: (chatId, html, rows) => (rows?.length ? sendRowsForId(chatId, html, rows) : sendForId(chatId, html)),
@@ -123,6 +138,7 @@ export function realDeps(): Deps {
     dropFlow,
     claimBuild,
     counts: (tgId) => instantCounts(tgId),
+    reachable: siteOpens,
     read: (url, niche, locale, onStep) => readClientSite(url, niche, locale, { onStep }),
     save: (build, ctx) => saveInstantProto(build, { tgId: ctx.tgId, username: ctx.username, staffId: ctx.staffId }),
     lead,
