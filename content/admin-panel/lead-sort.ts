@@ -75,6 +75,7 @@ export const leadSortDict = defineDict({
   src_form: { ru: "форма на сайте", uz: "saytdagi forma", pl: "formularz na stronie" },
   src_box: { ru: "лист ожидания DevUz Box", uz: "DevUz Box kutish ro‘yxati", pl: "lista oczekujących DevUz Box" },
   src_mockup: { ru: "макет в боте", uz: "botdagi maket", pl: "makieta w bocie" },
+  "src_mockup-manual": { ru: "макет вручную из бота", uz: "botdan qo‘lda maket", pl: "makieta ręcznie z bota" },
   src_telegram: { ru: "бот студии", uz: "studiya boti", pl: "bot studia" },
   src_manual: { ru: "заведён вручную", uz: "qo‘lda kiritilgan", pl: "dodany ręcznie" },
   src_outreach: { ru: "холодное касание", uz: "sovuq aloqa", pl: "zimny kontakt" },

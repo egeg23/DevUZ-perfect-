@@ -87,7 +87,7 @@ export const SHOWN_VIA = ["video", "live"] as const;
 export type ShownVia = (typeof SHOWN_VIA)[number];
 
 /** Заявки, которые клиент оставил сам или менеджер завёл руками: это уже ответ и интерес. */
-export const INBOUND_SOURCES: readonly string[] = ["chat", "form", "box", "telegram", "manual", "mockup"];
+export const INBOUND_SOURCES: readonly string[] = ["chat", "form", "box", "telegram", "manual", "mockup", "mockup-manual"];
 
 /** Сколько дней смотрим назад: «за 30 дней» и «7 против 7 до них» помещаются. */
 export const STAGES_DAYS = 30;

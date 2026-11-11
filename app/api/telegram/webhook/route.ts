@@ -58,7 +58,7 @@ import { BROADCAST_NOTE, broadcastTurn } from "@/lib/admin/bot-users";
 import { NO_MORE_WAIT, TIDY_CALLBACK, parseTidyCallback } from "@/lib/admin/lead-tidy";
 import { answerTidy } from "@/lib/admin/lead-tidy-store";
 import { findStaffByTelegram, issueLoginToken, staffByTelegramId, type Staff } from "@/lib/admin/session";
-import { INSTANT_CB, INSTANT_START, handleInstantButton, handleInstantText, instantOpenFor, startInstant, type Ctx as InstantCtx } from "@/lib/proto/instant/bot";
+import { INSTANT_CB, INSTANT_START, greetInstant, handleInstantButton, handleInstantText, instantFromAddress, instantOpenFor, looksLikeAddress, startInstant, type Ctx as InstantCtx } from "@/lib/proto/instant/bot";
 import { realDeps as instantDeps } from "@/lib/proto/instant/bot-deps";
 import {
   APP_CODE_NONE,
@@ -828,6 +828,20 @@ async function handleLearnButton(query: NonNullable<Update["callback_query"]>, p
 // Клиент
 // ───────────────────────────────────────────────────────────────────────────
 
+/**
+ * Приветствие холодного старта (владелец, 11.11.2026: «фишка с макетом
+ * прямо в боте… стала прям основой при первом обращении клиента»): новому
+ * человеку — «пришлите сайт или Instagram, соберём макет» с кнопками
+ * «Собрать макет» и «У меня другой вопрос». Пока поток закрыт
+ * (MOCKUP_BOT_OPEN) — прежнее приветствие всем, кроме admin и head. Разговор,
+ * который уже идёт, новым приветствием не перебиваем.
+ */
+async function welcome(chatId: number, from: TelegramUser | undefined, locale: Locale, existing: ReturnType<typeof sessionFor>) {
+  if (!existing?.transcript.length && (await greetInstant(await instantCtx(chatId, from, locale), instantDeps()))) return;
+  if (!existing) startSession(chatId, locale);
+  await sendMessage(chatId, botCopy(locale).welcome);
+}
+
 async function handleClient(message: NonNullable<Update["message"]>) {
   const chat = message.chat;
   const text = (message.text ?? "").trim();
@@ -928,8 +942,7 @@ async function handleClient(message: NonNullable<Update["message"]>) {
       await countClick(refCode, "bot", `tg:${chat.id}|${new Date().toISOString().slice(0, 10)}`).catch(
         () => false,
       );
-      if (!existing) startSession(chat.id, locale);
-      await sendMessage(chat.id, copy.welcome);
+      await welcome(chat.id, message.from, locale, existing);
       return;
     }
 
@@ -938,8 +951,7 @@ async function handleClient(message: NonNullable<Update["message"]>) {
       return;
     }
     console.log("handoff: /start без токена — холодный старт", { chatId: chat.id });
-    if (!existing) startSession(chat.id, locale);
-    await sendMessage(chat.id, copy.welcome);
+    await welcome(chat.id, message.from, locale, existing);
     return;
   }
 
@@ -996,6 +1008,10 @@ async function handleClient(message: NonNullable<Update["message"]>) {
   // Идёт «Макет в боте» — адрес сайта и ответы без сайта разбирает его поток,
   // и сотруднику тоже: он проверяет, как это выглядит у клиента.
   if (await handleInstantText(chat.id, () => instantCtx(chat.id, message.from, locale), text, instantDeps())) return;
+
+  // Новый человек сразу прислал адрес сайта или Instagram — собираем макет.
+  // Разговор, который уже идёт, адресом в сообщении не перебиваем.
+  if (!existing?.transcript.length && looksLikeAddress(text) && (await instantFromAddress(await instantCtx(chat.id, message.from, locale), text, instantDeps()))) return;
 
   // Сотрудник пишет боту обычный текст — помощник, а не первичка; называет
   // себя сотрудником, а в «Команде» его нет — короткий ответ и строка
@@ -1620,7 +1636,11 @@ async function handleButton(query: NonNullable<Update["callback_query"]>) {
     }
     await answerCallback(query.id, "");
     const locale = sessionFor(chatId)?.locale ?? localeOf(query.from);
-    await handleInstantButton(await instantCtx(chatId, query.from, locale), parts, instantDeps());
+    // «У меня другой вопрос» — прежний разговор с первичкой.
+    if ((await handleInstantButton(await instantCtx(chatId, query.from, locale), parts, instantDeps())) === "other") {
+      if (!sessionFor(chatId)) startSession(chatId, locale);
+      await sendMessage(chatId, botCopy(locale).welcome);
+    }
     return;
   }
 

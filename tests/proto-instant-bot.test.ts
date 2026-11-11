@@ -5,8 +5,10 @@ import { deflateSync } from "node:zlib";
 import plans from "@/content/mockup-plans.json" with { type: "json" };
 import { PROMO } from "@/lib/admin/mockup-offer";
 import { INBOUND_SOURCES } from "@/lib/admin/sales-stages";
-import { handleInstantButton, handleInstantText, priceText, startInstant, type Ctx, type Deps } from "@/lib/proto/instant/bot";
-import { INSTANT_SOURCE, instantLeadInput } from "@/lib/proto/instant/bot-deps";
+import { MANUAL_HOURS, caseLinks, greetInstant, handleInstantButton, handleInstantText, instagramOf, instantFromAddress, manualText, priceText, startInstant, type Ctx, type Deps } from "@/lib/proto/instant/bot";
+import { badOurLinks } from "@/lib/admin/our-links";
+import { PROTOTYPE_HOURS } from "@/lib/admin/outreach";
+import { INSTANT_SOURCE, MANUAL_SOURCE, instantLeadInput, manualHeading, sourceOf } from "@/lib/proto/instant/bot-deps";
 import { DAILY_CAP, MOCKUP_BOT_OPEN, limitVerdict, mayUseInstant, siteUrlOf, tashkentDayStart } from "@/lib/proto/instant/limits";
 import type { Flow } from "@/lib/proto/instant/store";
 import { emptySite } from "@/lib/proto/instant/types";
@@ -107,7 +109,8 @@ test("макет в боте: второй макет тому же аккаун
 test("макет в боте: дневной лимит — честный ответ и лид менеджеру", async () => {
   const f = fake({}, { mine: 0, today: 30, link: null });
   await startInstant(ctx, f.deps);
-  assert.match(f.sent[0].html, /очередь на завтра/);
+  assert.match(f.sent[0].html, /дизайнер вручную/);
+  assert.match(f.sent[0].html, /devuz\.studio\/ru\/cases/);
   assert.deepEqual(f.leads, ["day"]);
 });
 
@@ -150,12 +153,13 @@ test("макет в боте: без виджетов — тот же ход о�
   assert.ok(f.sent.some((m) => /Готово/.test(m.html)));
 });
 
-test("макет в боте: ниша без шаблона — «скоро» и лид, без сборки", async () => {
+test("макет в боте: ниша без шаблона — вручную за 12 часов, кейсы сферы и лид, без сборки", async () => {
   const f = fake();
   await startInstant(ctx, f.deps);
   await ask(f.deps, "mebel.example");
   await handleInstantButton(ctx, ["im", "n", "mebel"], f.deps);
-  assert.match(f.sent.at(-1)!.html, /ещё готовим/);
+  assert.match(f.sent.at(-1)!.html, /дизайнер вручную, пришлём сюда в течение 12 часов/);
+  assert.match(f.sent.at(-1)!.html, /devuz\.studio\/ru\/cases\/[a-z-]+/, "кейсы мебели");
   assert.deepEqual(f.leads, ["soon"]);
   assert.ok(!f.log.some((l) => l.startsWith("widget")));
 });
@@ -284,4 +288,80 @@ test("медцентр: допы с ценами — из плана нашег�
   assert.ok(ru.includes("Админ-панель для записи и работы с пациентами: 450 $"));
   assert.ok(!ru.includes("Улыбка"), "допы стоматологии не путаются");
   assert.ok(!/[ЀЁ-ӿ]{3}/.test(priceText("uz", new Date(), "medcentr").split("\n").slice(-7).join(" ")), "узбекские допы без кириллицы");
+});
+
+test("первое сообщение: «пришлите сайт или Instagram» с кнопками; пока закрыто — false", async () => {
+  const f = fake();
+  assert.equal(await greetInstant(ctx, f.deps), true);
+  assert.match(f.sent[0].html, /адрес вашего сайта или Instagram — за 2 минуты соберём макет/);
+  assert.deepEqual(JSON.stringify(f.sent[0].rows).match(/im:(go|other)/g), ["im:go", "im:other"]);
+  assert.equal(f.flow()?.stage, "greet");
+  const closed = fake({ open: false });
+  assert.equal(await greetInstant(ctx, closed.deps), false, "клиенту при закрытом пилоте — прежнее приветствие");
+  assert.equal(await greetInstant(owner, closed.deps), true, "владелец видит новое");
+  const uz = fake();
+  await greetInstant({ ...ctx, locale: "uz" }, uz.deps);
+  assert.ok(!/[\u0400-\u04ff]/.test(uz.sent[0].html), "узбекский — латиницей");
+});
+
+test("первое сообщение: адрес → сфера; обычный текст и «другой вопрос» — в первичку", async () => {
+  const f = fake();
+  await greetInstant(ctx, f.deps);
+  assert.equal(await ask(f.deps, "Сколько стоит интернет-магазин?"), false, "вопрос уходит первичке");
+  assert.equal(f.flow(), null);
+  await greetInstant(ctx, f.deps);
+  assert.ok(await ask(f.deps, "dentanur.example"));
+  assert.equal(f.flow()?.stage, "niche");
+  const g = fake();
+  await greetInstant(ctx, g.deps);
+  assert.equal(await handleInstantButton(ctx, ["im", "other"], g.deps), "other");
+  assert.equal(g.flow(), null);
+  const h = fake();
+  await greetInstant(ctx, h.deps);
+  await handleInstantButton(ctx, ["im", "go"], h.deps);
+  assert.equal(h.flow()?.stage, "url");
+});
+
+test("первое сообщение: Instagram — вопросами, профиль в макет; адрес без /start тоже", async () => {
+  assert.equal(instagramOf("вот https://www.instagram.com/dentanur.uz/"), "dentanur.uz");
+  assert.equal(instagramOf("instagram.com/p/abc123"), null);
+  const f = fake();
+  await greetInstant(ctx, f.deps);
+  await ask(f.deps, "https://instagram.com/dentanur_demo");
+  assert.equal(f.flow()?.nosite, true);
+  assert.equal(f.flow()?.answers.instagram, "dentanur_demo");
+  const n = fake();
+  assert.equal(await instantFromAddress(ctx, "привет", n.deps), false);
+  assert.equal(await instantFromAddress(ctx, "clinic.example", n.deps), true);
+  assert.equal(n.flow()?.stage, "niche");
+  assert.equal(await instantFromAddress(ctx, "clinic.example", fake({ open: false }).deps), false);
+});
+
+test("ручной путь: срок одним числом, кейсы — наши живые ссылки, лид — свой источник с шапкой", () => {
+  assert.equal(MANUAL_HOURS, PROTOTYPE_HOURS);
+  for (const niche of ["mebel", "salon-krasoty", "general", "stomatologiya"] as const) {
+    const text = manualText("ru", niche);
+    assert.deepEqual(badOurLinks(text), [], niche);
+    assert.ok(caseLinks(niche, "ru").length >= 1);
+  }
+  assert.match(caseLinks("salon-krasoty", "uz")[0].url, /devuz\.studio\/uz\/cases$/, "кейсов сферы нет — все кейсы");
+  assert.equal(sourceOf("built"), INSTANT_SOURCE);
+  for (const why of ["soon", "day", "failed"] as const) assert.equal(sourceOf(why), MANUAL_SOURCE);
+  assert.ok(INBOUND_SOURCES.includes(MANUAL_SOURCE), "в ступенях продажи — входящий");
+  const head = manualHeading({ niche: "mebel", site: "https://mebel.example/" });
+  assert.match(head, /🔥 <b>Нужен макет вручную · /);
+  assert.match(head, /12 часов/);
+  assert.match(instantLeadInput({ ctx, name: "@client_demo", niche: "mebel", site: null, link: null, phone: null, why: "soon" }).notes, /нужен макет вручную/);
+});
+
+test("первое сообщение: вебхук — реф-ссылка, промокод и вход в приложение разбираются раньше приветствия", async () => {
+  const { readFileSync } = await import("node:fs");
+  const src = readFileSync("app/api/telegram/webhook/route.ts", "utf8");
+  const start = src.slice(src.indexOf("async function handleClient("));
+  const at = (s: string) => start.indexOf(s);
+  for (const before of ["BIND_PREFIX", 'payload === "partner"', "isAppStart(payload)", "parseTelegramPayload(payload)"]) {
+    assert.ok(at(before) > 0 && at(before) < at("await welcome(chat.id"), before);
+  }
+  assert.ok(src.includes("if (!existing?.transcript.length && (await greetInstant("), "идущий разговор не перебиваем");
+  assert.ok(src.includes("touchChat(chat.id, refCode)") && at("touchChat(chat.id, refCode)") < start.indexOf("await welcome(chat.id, message.from, locale, existing);"), "реф-код записан до приветствия");
 });

@@ -20,7 +20,9 @@
  */
 import plans from "@/content/mockup-plans.json" with { type: "json" };
 import shox from "@/content/proto-instant/shox-assets.json" with { type: "json" };
+import { cases } from "@/content/cases";
 import { OFFER_MS, announceText } from "@/lib/admin/mockup-offer";
+import { PROTOTYPE_HOURS } from "@/lib/admin/outreach";
 import { CIRCLE_NICHES, CIRCLE_NICHE_RU, isCircleNiche, type CircleNiche } from "@/lib/admin/sales-after-reply";
 import { buildInstant, type InstantBuild } from "@/lib/proto/instant/build";
 import { DAILY_CAP, limitVerdict, mayUseInstant, siteUrlOf } from "@/lib/proto/instant/limits";
@@ -83,6 +85,52 @@ export type LeadInput = {
   why: "built" | "soon" | "failed" | "day";
 };
 
+/**
+ * Через сколько часов дизайнер пришлёт макет, собранный вручную. Одно число
+ * на всё: то же обещание, что в письмах касаний (PROTOTYPE_HOURS).
+ */
+export const MANUAL_HOURS = PROTOTYPE_HOURS;
+
+/** Лид, которому макет собирают руками: сферы без шаблона, дневной потолок, сборка не прошла. */
+export const manualWhy = (why: LeadInput["why"]) => why !== "built";
+
+/** Ниши кружков → ниши кейсов (forNiches в content/cases.ts). */
+const CASE_NICHES: Record<CircleNiche, readonly string[]> = {
+  general: [],
+  medcentr: ["medcentr"],
+  stomatologiya: ["stomatologiya"],
+  mebel: ["mebel"],
+  restoran: ["restoran"],
+  "salon-krasoty": [],
+  turagentstvo: ["turagentstvo"],
+  "uchebnyy-centr": ["uchebnyy-centr"],
+  nedvizhimost: ["nedvizhimost", "agentstvo-nedvizhimosti"],
+};
+
+/**
+ * Кейсы сферы клиента — до трёх ссылок на страницы кейсов; сферы нет или
+ * кейсов в ней нет — страница всех кейсов. Адреса — devuz.studio/<язык>/cases,
+ * их же пропускает badOurLinks.
+ */
+export function caseLinks(niche: CircleNiche, locale: InstantLocale): { name: string; url: string }[] {
+  const keys = CASE_NICHES[niche];
+  const found = cases.filter((c) => c.forNiches.some((n) => keys.includes(n))).slice(0, 3);
+  if (found.length) return found.map((c) => ({ name: c.name, url: `https://devuz.studio/${locale}/cases/${c.slug}` }));
+  return [{ name: locale === "uz" ? "Barcha keyslar" : "Все кейсы", url: `https://devuz.studio/${locale}/cases` }];
+}
+
+/** Ручной путь клиенту: честно про дизайнера и срок, и кейсы его сферы. */
+export function manualText(locale: InstantLocale, niche: CircleNiche): string {
+  const links = caseLinks(niche, locale).map((c) => `• <a href="${esc(c.url)}">${esc(c.name)}</a>`);
+  return [T[locale].manual(MANUAL_HOURS), "", ...links].join("\n");
+}
+
+/** Instagram в ответе клиента: ссылка на профиль. Сайта по нему не прочитать — идём вопросами. */
+export function instagramOf(text: string): string | null {
+  const m = /instagram\.com\/([A-Za-z0-9._]{2,30})/i.exec(text);
+  return m && !/^(p|reel|reels|stories|explore)$/i.test(m[1]) ? m[1] : null;
+}
+
 const T = {
   ru: {
     ask: "Соберу макет вашего сайта прямо здесь, за пару минут.\n\nПришлите адрес сайта вашей компании, например <code>clinic.uz</code>. Сайта нет, только Instagram — нажмите «Сайта нет».",
@@ -90,22 +138,24 @@ const T = {
     badUrl: "Не похоже на адрес сайта. Пришлите адрес вида <code>clinic.uz</code> или нажмите «Сайта нет».",
     niche: "Чем занимается ваша компания? Выберите, и я возьму готовый макет под вашу сферу.",
     other: "Другое",
-    soon: "Макет для этой сферы ещё готовим. Передал менеджеру: он напишет вам и покажет похожие работы.",
     qName: "Как называется ваша компания?",
     qPhone: "Телефон для записи, например <code>+998 90 123 45 67</code>",
     qAddress: "Адрес, как его ищут клиенты. Нет адреса — напишите «нет».",
     qServices: "Перечислите 3-6 услуг, каждую с новой строки. Цену, если есть, — через тире: <code>Чистка - 300 000 сум</code>",
     badPhone: "Не вижу номера. Пришлите телефон цифрами.",
     has: (link: string) => `Ваш макет уже собран, он один на аккаунт: <a href="${esc(link)}">открыть макет</a>.\n\nХотите доработать или собрать сайт — напишите здесь, менеджер ответит.`,
-    day: "Сегодня собрали уже много макетов, очередь на завтра. Передал вашу заявку менеджеру, он напишет вам сам.",
     busy: "Уже собираю, ещё минутку.",
     later: "Сейчас не получается проверить очередь. Попробуйте через пару минут: /maket",
     open: "Не получилось открыть сайт. Проверьте адрес и пришлите ещё раз или нажмите «Сайта нет».",
-    failed: "Собрать сам не смог, передал менеджеру: он сделает макет руками и пришлёт сюда.",
+    failed: `Собрать сам не смог: макет соберёт наш дизайнер вручную и пришлёт сюда в течение ${PROTOTYPE_HOURS} часов.`,
     ready: (name: string) => `Готово! Макет сайта «${esc(name)}» по вашим данным.\n\nСсылка открыта 24 часа, дальше по паролю: попросите его здесь.`,
     openBtn: "Открыть макет",
     addons: "Что можно добавить к сайту:",
     after: "Хотите такой сайт? Напишите здесь «Да», менеджер свяжется и ответит на вопросы.",
+    greet: "Здравствуйте! Пришлите адрес вашего сайта или Instagram — за 2 минуты соберём макет вашего нового сайта.",
+    greetGo: "Собрать макет",
+    greetOther: "У меня другой вопрос",
+    manual: (h: number) => `Для вашей сферы макет соберёт наш дизайнер вручную, пришлём сюда в течение ${h} часов. Пока посмотрите, что мы уже делали:`,
   },
   uz: {
     ask: "Saytingiz maketini shu yerning o‘zida, bir-ikki daqiqada yig‘ib beraman.\n\nKompaniyangiz sayti manzilini yuboring, masalan <code>clinic.uz</code>. Sayt yo‘q, faqat Instagram bo‘lsa — «Sayt yo‘q» tugmasini bosing.",
@@ -113,22 +163,24 @@ const T = {
     badUrl: "Bu sayt manziliga o‘xshamaydi. <code>clinic.uz</code> ko‘rinishidagi manzilni yuboring yoki «Sayt yo‘q» tugmasini bosing.",
     niche: "Kompaniyangiz nima bilan shug‘ullanadi? Tanlang, sohangizga mos tayyor maketni olaman.",
     other: "Boshqa",
-    soon: "Bu soha uchun maket hali tayyorlanmoqda. Menejerga topshirdim: u sizga yozadi va o‘xshash ishlarni ko‘rsatadi.",
     qName: "Kompaniyangiz nomi qanday?",
     qPhone: "Yozilish uchun telefon, masalan <code>+998 90 123 45 67</code>",
     qAddress: "Mijozlar qidiradigan manzil. Manzil yo‘q bo‘lsa — «yo‘q» deb yozing.",
     qServices: "3-6 ta xizmatni har birini yangi qatordan yozing. Narxi bo‘lsa, tire orqali: <code>Tozalash - 300 000 so‘m</code>",
     badPhone: "Raqamni ko‘rmayapman. Telefonni raqamlar bilan yuboring.",
     has: (link: string) => `Maketingiz allaqachon tayyor, bitta akkauntga bitta: <a href="${esc(link)}">maketni ochish</a>.\n\nSaytni yig‘ish yoki o‘zgartirish kerak bo‘lsa, shu yerda yozing, menejer javob beradi.`,
-    day: "Bugun ko‘p maket yig‘dik, navbat ertaga. Arizangizni menejerga topshirdim, u o‘zi yozadi.",
     busy: "Yig‘yapman, bir daqiqa.",
     later: "Hozir navbatni tekshirib bo‘lmayapti. Bir-ikki daqiqadan keyin urinib ko‘ring: /maket",
     open: "Saytni ochib bo‘lmadi. Manzilni tekshirib, qayta yuboring yoki «Sayt yo‘q» tugmasini bosing.",
-    failed: "O‘zim yig‘a olmadim, menejerga topshirdim: u maketni qo‘lda yig‘ib, shu yerga yuboradi.",
+    failed: `O‘zim yig‘a olmadim: maketni dizaynerimiz qo‘lda yig‘ib, ${PROTOTYPE_HOURS} soat ichida shu yerga yuboradi.`,
     ready: (name: string) => `Tayyor! «${esc(name)}» sayti maketi sizning ma’lumotlaringiz bo‘yicha.\n\nHavola 24 soat ochiq, keyin parol bilan: uni shu yerda so‘rang.`,
     openBtn: "Maketni ochish",
     addons: "Saytga nimalar qo‘shish mumkin:",
     after: "Shunday sayt kerakmi? Shu yerda «Ha» deb yozing, menejer bog‘lanadi.",
+    greet: "Assalomu alaykum! Saytingiz yoki Instagram manzilini yuboring — 2 daqiqada yangi saytingiz maketini yig‘amiz.",
+    greetGo: "Maketni yig‘ish",
+    greetOther: "Boshqa savolim bor",
+    manual: (h: number) => `Sohangiz uchun maketni dizaynerimiz qo‘lda yig‘adi, ${h} soat ichida shu yerga yuboramiz. Hozircha qilgan ishlarimizni ko‘ring:`,
   },
 } as const;
 
@@ -217,7 +269,7 @@ async function allowed(ctx: Ctx, deps: Deps): Promise<boolean> {
     return false;
   }
   if (verdict === "day") {
-    await deps.send(ctx.chatId, T[ctx.locale].day);
+    await deps.send(ctx.chatId, manualText(ctx.locale, "general"));
     await deps.lead({ ctx, name: ctx.username ? `@${ctx.username}` : "", niche: "general", site: null, link: null, phone: null, why: "day" });
     return false;
   }
@@ -232,6 +284,53 @@ export async function startInstant(ctx: Ctx, deps: Deps): Promise<void> {
   if (!(await allowed(ctx, deps))) return;
   await deps.saveFlow(ctx.chatId, fresh(ctx, "url"));
   await deps.send(ctx.chatId, T[ctx.locale].ask, [[{ text: T[ctx.locale].nosite, callback_data: `${INSTANT_CB}:nosite` }]]);
+}
+
+/**
+ * Первое сообщение нового клиента (владелец, 11.11.2026: «фишка с макетом
+ * прямо в боте… стала прям основой при первом обращении клиента»). Адрес
+ * сайта или Instagram сразу ведёт в сборку, «У меня другой вопрос» и любой
+ * другой текст — в прежний разговор. Пока поток закрыт — false, приветствие
+ * прежнее.
+ */
+export async function greetInstant(ctx: Ctx, deps: Deps): Promise<boolean> {
+  if (!instantOpenFor(ctx, deps.open)) return false;
+  const t = T[ctx.locale];
+  await deps.saveFlow(ctx.chatId, fresh(ctx, "greet"));
+  await deps.send(ctx.chatId, t.greet, [
+    [{ text: t.greetGo, callback_data: `${INSTANT_CB}:go` }],
+    [{ text: t.greetOther, callback_data: `${INSTANT_CB}:other` }],
+  ]);
+  return true;
+}
+
+/** Адрес сайта или Instagram — дальше выбор сферы; иначе null. */
+async function takeAddress(ctx: Ctx, flow: Flow, value: string, deps: Deps): Promise<boolean> {
+  const insta = instagramOf(value);
+  const url = insta ? null : siteUrlOf(value);
+  if (!insta && !url) return false;
+  if (!(await allowed(ctx, deps))) {
+    await deps.dropFlow(ctx.chatId);
+    return true;
+  }
+  const next: Flow = insta
+    ? { ...flow, stage: "niche", nosite: true, url: null, answers: { ...flow.answers, instagram: insta } }
+    : { ...flow, stage: "niche", url };
+  await deps.saveFlow(ctx.chatId, next);
+  await deps.send(ctx.chatId, T[flow.locale].niche, nicheRows(flow.locale));
+  return true;
+}
+
+/**
+ * Новый человек без /start сразу прислал адрес сайта или Instagram — это и
+ * есть просьба о макете. Пока поток закрыт или это не адрес — false.
+ */
+export const looksLikeAddress = (text: string) => Boolean(instagramOf(text) || siteUrlOf(text.trim()));
+
+export async function instantFromAddress(ctx: Ctx, text: string, deps: Deps): Promise<boolean> {
+  if (!instantOpenFor(ctx, deps.open)) return false;
+  if (!looksLikeAddress(text)) return false;
+  return takeAddress(ctx, fresh(ctx, "greet"), text.trim().slice(0, 1500), deps);
 }
 
 /** Текст клиента во время потока. false — потока нет, пусть разбирает первичка. */
@@ -252,14 +351,15 @@ export async function handleInstantText(
   const t = T[flow.locale];
   const value = text.trim().slice(0, 1500);
   switch (flow.stage) {
+    case "greet": {
+      // Не адрес — человек пришёл с другим вопросом: приветствие отступает, отвечает первичка.
+      if (await takeAddress(ctx, flow, value, deps)) return true;
+      await deps.dropFlow(chatId);
+      return false;
+    }
     case "url": {
-      const url = siteUrlOf(value);
-      if (!url) {
-        await deps.send(ctx.chatId, t.badUrl, [[{ text: t.nosite, callback_data: `${INSTANT_CB}:nosite` }]]);
-        return true;
-      }
-      await deps.saveFlow(ctx.chatId, { ...flow, stage: "niche", url });
-      await deps.send(ctx.chatId, t.niche, nicheRows(flow.locale));
+      if (await takeAddress(ctx, flow, value, deps)) return true;
+      await deps.send(ctx.chatId, t.badUrl, [[{ text: t.nosite, callback_data: `${INSTANT_CB}:nosite` }]]);
       return true;
     }
     case "niche":
@@ -295,9 +395,20 @@ export async function handleInstantText(
   }
 }
 
-/** Кнопка потока: «Сайта нет» или ниша. */
-export async function handleInstantButton(ctx: Ctx, parts: readonly string[], deps: Deps): Promise<void> {
+/**
+ * Кнопка потока: «Собрать макет», «У меня другой вопрос», «Сайта нет» или
+ * ниша. "other" — вызывающий отвечает прежним приветствием первички.
+ */
+export async function handleInstantButton(ctx: Ctx, parts: readonly string[], deps: Deps): Promise<"other" | void> {
   if (!instantOpenFor(ctx, deps.open)) return;
+  if (parts[1] === "other") {
+    await deps.dropFlow(ctx.chatId);
+    return "other";
+  }
+  if (parts[1] === "go") {
+    await startInstant(ctx, deps);
+    return;
+  }
   const flow = (await deps.flowOf(ctx.chatId)) ?? null;
   if (!flow) {
     await startInstant(ctx, deps);
@@ -313,7 +424,7 @@ export async function handleInstantButton(ctx: Ctx, parts: readonly string[], de
   const niche = parts[2];
   if (!instantReady(niche)) {
     await deps.dropFlow(ctx.chatId);
-    await deps.send(ctx.chatId, t.soon);
+    await deps.send(ctx.chatId, manualText(flow.locale, niche));
     if (!ctx.staffId) await deps.lead({ ctx, name: ctx.username ? `@${ctx.username}` : "", niche, site: flow.url, link: null, phone: null, why: "soon" });
     return;
   }
@@ -369,7 +480,7 @@ export async function runBuild(ctx: Ctx, flow: Flow, deps: Deps): Promise<void> 
   let site: InstantSite | null = null;
   if (flow.nosite) {
     const a = flow.answers;
-    site = siteFromAnswers({ niche, locale, name: a.name ?? "", phone: a.phone ?? "", address: a.address ?? "", services: a.services ?? "" });
+    site = siteFromAnswers({ niche, locale, name: a.name ?? "", phone: a.phone ?? "", address: a.address ?? "", services: a.services ?? "", instagram: a.instagram ?? null });
     learn(site);
     await step("brand");
     await step("services");

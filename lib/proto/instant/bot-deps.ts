@@ -9,7 +9,8 @@ import { CIRCLE_NICHE_RU } from "@/lib/admin/sales-after-reply";
 import { MOCKUP_BOT_OPEN } from "@/lib/proto/instant/limits";
 import { readClientSite } from "@/lib/proto/instant/read";
 import { claimBuild, dropFlow, flowOf, instantCounts, saveFlow, saveInstantProto, setProtoLead } from "@/lib/proto/instant/store";
-import type { Deps, LeadInput } from "@/lib/proto/instant/bot";
+import { MANUAL_HOURS, manualWhy, type Deps, type LeadInput } from "@/lib/proto/instant/bot";
+import { esc } from "@/lib/proto/instant/safe";
 import { protoUrl } from "@/lib/proto/store";
 import { salesRecipients } from "@/lib/qualify/brief";
 import { newRequestNo } from "@/lib/qualify/engine";
@@ -20,12 +21,25 @@ import type { QualifyToolInput } from "@/lib/qualify/types";
 
 /** Источник лида: «макет в боте» — отдельно, чтобы видеть в ступенях продажи. */
 export const INSTANT_SOURCE = "mockup";
+/** Макет соберут руками: сферы без шаблона, дневной потолок, сборка не прошла. */
+export const MANUAL_SOURCE = "mockup-manual";
+
+export const sourceOf = (why: LeadInput["why"]) => (manualWhy(why) ? MANUAL_SOURCE : INSTANT_SOURCE);
+
+/**
+ * Шапка карточки команде: «нужен макет вручную» — тот же сигнал, что
+ * «🔥 Нужен прототип», с обещанным клиенту сроком. Ночью карточку держит
+ * очередь (startQueue) до утра, как любую.
+ */
+export function manualHeading(input: Pick<LeadInput, "niche" | "site">): string {
+  return `🔥 <b>Нужен макет вручную · ${esc(CIRCLE_NICHE_RU[input.niche])}</b>${input.site ? ` · ${esc(input.site)}` : ""}\nКлиенту в боте обещали макет за ${MANUAL_HOURS} часов: кто взял лид, собирает его в «Прототипах» и шлёт ссылку из карточки лида («Клиенту от бота студии»).`;
+}
 
 const WHY: Record<LeadInput["why"], string> = {
   built: "собрал себе макет в боте студии",
-  soon: "хотел макет в боте, но для его сферы шаблона пока нет",
-  failed: "хотел макет в боте, но автоматически не собрался: собрать руками",
-  day: "хотел макет в боте, но сегодня исчерпан дневной лимит",
+  soon: "хотел макет в боте, для его сферы шаблона пока нет: нужен макет вручную",
+  failed: "хотел макет в боте, автоматически не собрался: нужен макет вручную",
+  day: "хотел макет в боте, сегодня исчерпан дневной лимит: нужен макет вручную",
 };
 
 /** Лид без диалога — как у формы: грейды худшие, суть — в заметке. */
@@ -79,9 +93,10 @@ async function lead(input: LeadInput): Promise<string | null> {
   const scored = scoreLead(instantLeadInput(input), input.ctx.locale);
   const requestNo = newRequestNo();
   const origin = { tgUsername: input.ctx.username ?? undefined, entryPath: "bot:/maket", entryRef: null };
+  const source = sourceOf(input.why);
   let leadId: string | null = null;
   try {
-    leadId = await saveLead(scored, [], INSTANT_SOURCE, { requestNo, origin });
+    leadId = await saveLead(scored, [], source, { requestNo, origin });
   } catch (error) {
     console.error("макет в боте: лид не записался", error);
   }
@@ -89,7 +104,8 @@ async function lead(input: LeadInput): Promise<string | null> {
     leadId: leadId ?? "unsaved",
     lead: scored,
     requestNo,
-    origin: { ...origin, source: INSTANT_SOURCE },
+    origin: { ...origin, source },
+    heading: manualWhy(input.why) ? manualHeading(input) : undefined,
     fallback: await salesRecipients(),
   }).catch((error) => console.error("макет в боте: лид не разослан", error));
   return leadId;
