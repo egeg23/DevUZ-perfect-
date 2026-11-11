@@ -164,6 +164,52 @@ const agoraUi = () => Object.fromEntries(Object.entries(AGORA_UI).map(([k, v]) =
 /** Подписи Sunday: имя агентства — местом «{name}». */
 const sundayUi = () => Object.fromEntries(Object.entries(SUNDAY_UI).map(([k, v]) => [k, v.map((x) => x.split("Sunday").join("{name}"))]));
 
+/**
+ * «Сияние Севера» — админка клиники косметологии: заявки, «Сообщения» всех
+ * каналов одним окном, раздел «Сайт», подключения, команда, история. У неё
+ * настоящий сервер; в макете вместо него демо в памяти браузера (PD.demo
+ * ставит шаблон салона), поэтому запросы уходят туда, а не в сеть.
+ */
+const SYANIE_JS = [
+  ["var d=document,app=d.getElementById('app');", "var d=document,app=d.getElementById('app');var PD=JSON.parse(d.getElementById('pn-data').textContent),DEMO=window.__sd(PD);"],
+  ['<div class="brand"><i>С</i>Сияние Севера</div>', "<div class=\"brand\">'+PD.sign+'<span>'+h(PD.name)+'</span></div>"],
+  ["Код установки лежит на сервере клиники в файле /opt/syanie/.env, строка SETUP_CODE. Его даст тот, кто ставил сайт.", "Код установки даст тот, кто ставил сайт."],
+  ["Евгений Реутов", "Ваше имя"],
+  [", заявки — по кнопке", ", заявки по кнопке"],
+  ["Заявки с сайта, переписка из всех мессенджеров и подключения.", "Заявки с сайта, переписка из всех мессенджеров, статьи и управление сайтом. В макете подойдут любой логин и пароль."],
+  ["Статус видит и пациент: на сайте у него стоит отметка о заявке.", "Статус видит вся команда."],
+  ["главного врача", "владельца"],
+  ["Главный врач", "Владелец"],
+  ["главный врач", "владелец"],
+  ["Пациент", "Клиент"],
+  ["пациент", "клиент"],
+  ["'Клиника'", "PD.name"],
+  ["Пришли на приём", "Пришли в салон"],
+  ["боту клиники", "боту салона"],
+  [", например «Сияние Севера»", ""],
+  ["siyanie или siyanie.amocrm.ru", "salon или salon.amocrm.ru"],
+  ["'/protos/syanie/'+h(val)+'.webp'", "h(val)"],
+  ["Цены, услуги, акции, врачи, вопросы, отзывы и тексты. Сохранили: сайт обновился сразу.", "Услуги и цены, акции, мастера, контакты и тексты. На рабочем сайте правка видна сразу, в макете она остаётся в админке."],
+  ['href="/" target="_blank" rel="noopener">Открыть сайт', "href=\"'+PD.site+'\" target=\"_blank\" rel=\"noopener\">Открыть сайт"],
+  ["Сохранено, сайт обновлён", "Сохранено"],
+  ["instagram:'Instagram'", "instagram:'Instagram Direct'"],
+  ["Сайт, Telegram, WhatsApp, Instagram, ВКонтакте и Авито в одном окне.", "Сайт, Telegram, WhatsApp, Instagram Direct и ВКонтакте в одном окне."],
+  // Новые разделы макета салона: «Статьи» и значок к ним; сам раздел дописывает шаблон через __sx.
+  ["['sayt','Сайт','globe'],", "['sayt','Сайт','globe'],['stati','Статьи','doc'],"],
+  ["var ICONS={globe:", "var ICONS={doc:'<path d=\"M6 3.5h8l4 4v13H6zM14 3.5v4h4M9 12h6M9 16h6\" '+P+'/>',globe:"],
+  ["'<div class=\"pg-h\"><div><h1>'+t+'</h1>'", "'<div class=\"pg-h\"><div><h1>'+t+' <span class=\"pn-demo\">демо-данные</span></h1>'"],
+  ["boot();\n})();", "if(window.__sx)window.__sx({api:api,pg:pg,h:h,$:$,$$:$$,VIEWS:VIEWS,toast:toast,busy:busy,when:when,ic:ic});boot();\n})();"],
+];
+
+function syanieJs() {
+  const src = noComments(read("syanie", "app/admin/app.js"));
+  const net = /function api\(path,body\)\{[\s\S]*?\n(?=var tmr=0)/;
+  if (!net.test(src)) throw new Error("syanie/app/admin/app.js изменился: не нашлась функция запросов");
+  const js = swap(src.replace(net, "function api(path,body){return DEMO(path,body)}\n"), SYANIE_JS, "syanie/app/admin/app.js").replace(/\n\s*\n/g, "\n");
+  if (/fetch\(|Сияние|syanie/i.test(js)) throw new Error("syanie/app/admin/app.js: остался запрос в сеть или имя клиники");
+  return js;
+}
+
 export function panelAssets() {
   const nekJs = swap(noComments(read("nek", "panel.js")), NEK_JS, "nek/panel.js").replace(/\n\s*\n/g, "\n");
   const agJs = swap(noComments(read("agora", "panel.js")), AGORA_JS, "agora/panel.js").replace(/\n\s*\n/g, "\n");
@@ -198,6 +244,7 @@ export function panelAssets() {
       roots: TENANT_ROOTS, kinds: TENANT_KINDS, market: SOFFICE_MARKET, tariff: SOFFICE_TARIFF,
     },
     agora: { css: noComments(read("agora", "panel.css")).replace(/\n\s*/g, ""), js: agJs, ui: agoraUi() },
+    syanie: { css: noComments(read("syanie", "app/admin/app.css")).replace(/\n\s*/g, ""), js: syanieJs() },
   };
 }
 

@@ -488,5 +488,7 @@ var form=$('#form');if(form)form.addEventListener('submit',function(e){e.prevent
   if(!n||!p){m.textContent=D.need;return}
   var s=$('#f-s').value,lines=[D.hello,s?D.lbl.service+': '+s:'',D.lbl.day+': '+day+', '+time,pick.touched?D.lbl.shade+': '+pick.shade+', '+pick.finish+', '+pick.base:'',D.lbl.name+': '+n,D.lbl.phone+': '+p].filter(Boolean).join('\\n');
   try{navigator.clipboard&&navigator.clipboard.writeText(lines)}catch(_){}
+  /* Та же запись приходит в админку макета первой строкой. */
+  try{localStorage.setItem('is-salon-book',JSON.stringify({n:n,p:p,s:s,w:day+', '+time,at:Date.now()}))}catch(_){}
   m.textContent=D.sent;var to=D.chat?(D.chat.indexOf('wa.me')>=0?D.chat+(D.chat.indexOf('?')<0?'?text=':'&text=')+encodeURIComponent(lines):D.chat):D.tel;if(to)setTimeout(function(){w.open(to,'_blank','noopener')},600)});
 })();`;

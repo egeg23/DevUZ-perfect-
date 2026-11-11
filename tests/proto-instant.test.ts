@@ -439,7 +439,7 @@ test("админка: у всех семи сфер — на данных кли
       if (mark) assert.ok(a.includes(mark));
     }
   }
-  for (const n of ["stomatologiya", "medcentr", "mebel", "restoran", "turagentstvo", "uchebnyy-centr", "nedvizhimost"] as const) assert.ok(hasAdmin(n), `${n}: админка есть`);
+  for (const n of ["stomatologiya", "medcentr", "mebel", "restoran", "turagentstvo", "uchebnyy-centr", "nedvizhimost", "salon-krasoty"] as const) assert.ok(hasAdmin(n), `${n}: админка есть`);
 });
 
 test("админка ресторана: блюда клиента в меню, демо-заказы только из блюд с ценой", () => {
@@ -584,4 +584,23 @@ test("салон красоты: капля падает к ногтю, подб
   assert.ok(html.includes("https://t.me/myata_pudra_demo"), "заявка уходит в Telegram салона");
   assert.ok(html.includes("prefers-reduced-motion:reduce"), "без движения — капли нет, ноготь уже покрыт");
   assert.ok(html.includes("3000"), "шапка возвращается через 3 секунды");
+});
+
+test("админка салона: все каналы в одном окне, статьи, акции и сайт, без сети и без имени прошлого клиента", () => {
+  for (const locale of ["ru", "uz"] as const) {
+    const b = buildInstant({ ...salon, locale }, SEED);
+    assert.deepEqual(b.problems, [], locale);
+    const a = b.pages.admin!;
+    assert.ok(a.includes(`/${locale}/mockup-terms`), "условия макета");
+    assert.ok(!/\[\[t:\d+\]\]/.test(a) && !/<script[^>]+src=/.test(a) && !/fetch\(/.test(a), "ловушки заменены, в сеть панель не ходит");
+    assert.deepEqual(tailsIn(a), []);
+    const pd = JSON.parse(a.match(/<script type="application\/json" id="pn-data">([\s\S]*?)<\/script>/)![1]);
+    assert.equal(pd.name, salon.name);
+    assert.deepEqual([...new Set(pd.convs.map((c: { kind: string }) => c.kind))].sort(), ["instagram", "site", "tg", "vk", "whatsapp"]);
+    assert.deepEqual(pd.groups.map((g: { key: string }) => g.key), ["contacts", "services", "promos", "masters", "perks", "texts"]);
+    assert.deepEqual(pd.defaults.services.map((x: { t: string }) => x.t), salon.services.map((x) => x.name), "услуги и цены клиента");
+    assert.ok(pd.posts.length >= 3 && a.includes("VIEWS.stati") && a.includes("Instagram Direct"));
+    assert.ok(a.includes("демо-данные"));
+  }
+  assert.ok(buildInstant(salon, SEED).html.includes("is-salon-book"), "запись с сайта макета приходит в админку");
 });
