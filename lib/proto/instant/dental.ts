@@ -518,3 +518,6 @@ ${assets.js}</script>
 </body>
 </html>`;
 }
+
+/** Цвет клиента для страниц рядом с макетом (админка на стилях Nek). */
+export const dentalPalette = palette;

@@ -151,6 +151,8 @@ const T = {
     failed: `Собрать сам не смог: макет соберёт наш дизайнер вручную и пришлёт сюда в течение ${PROTOTYPE_HOURS} часов.`,
     ready: (name: string) => `Готово! Макет сайта «${esc(name)}» по вашим данным.\n\nСсылка открыта 24 часа, дальше по паролю: попросите его здесь.`,
     openBtn: "Открыть макет",
+    adminBtn: "🛠 Админка",
+    admin: "Админка рядом: туда приходят записи и заявки с макета, демо-данные. Попробуйте записаться на макете и откройте админку.",
     addons: "Что можно добавить к сайту:",
     kpBtn: "📄 Коммерческое предложение",
     kp: "Коммерческое предложение на нашем бланке: выберите основу и допы, итог посчитается сам. Цена закреплена на 48 часов.",
@@ -178,6 +180,8 @@ const T = {
     failed: `O‘zim yig‘a olmadim: maketni dizaynerimiz qo‘lda yig‘ib, ${PROTOTYPE_HOURS} soat ichida shu yerga yuboradi.`,
     ready: (name: string) => `Tayyor! «${esc(name)}» sayti maketi sizning ma’lumotlaringiz bo‘yicha.\n\nHavola 24 soat ochiq, keyin parol bilan: uni shu yerda so‘rang.`,
     openBtn: "Maketni ochish",
+    adminBtn: "🛠 Admin panel",
+    admin: "Admin panel yonida: maketdagi yozuvlar va arizalar shu yerga keladi, demo ma’lumotlar. Maketda yozilib ko‘ring va admin panelni oching.",
     addons: "Saytga nimalar qo‘shish mumkin:",
     kpBtn: "📄 Tijorat taklifi",
     kp: "Blankamizdagi tijorat taklifi: asos va qo‘shimchalarni tanlang, jami o‘zi hisoblanadi. Narx 48 soatga qotirildi.",
@@ -512,7 +516,13 @@ export async function runBuild(ctx: Ctx, flow: Flow, deps: Deps): Promise<void> 
   await step("done");
   await deps.dropFlow(ctx.chatId);
   const link = deps.protoUrl(saved.token);
-  await deps.send(ctx.chatId, T[locale].ready(build.site.name), [[{ text: T[locale].openBtn, url: link }]]);
+  // Админка нашего макета сферы на данных клиента (lib/proto/instant/admin): кнопка — только если она есть.
+  const admin = Boolean(build.pages.admin);
+  await deps.send(
+    ctx.chatId,
+    admin ? `${T[locale].ready(build.site.name)}\n\n${T[locale].admin}` : T[locale].ready(build.site.name),
+    admin ? [[{ text: T[locale].openBtn, url: link }], [{ text: T[locale].adminBtn, url: `${link}/admin` }]] : [[{ text: T[locale].openBtn, url: link }]],
+  );
   // КП на бланке рядом с макетом: та же цена и те же допы, выбрать и посчитать.
   await deps.send(ctx.chatId, `${priceText(locale, deps.now(), build.site.niche)}\n\n${T[locale].kp}`, [[{ text: T[locale].kpBtn, url: `${link}/kp` }]]);
   // Сборка сотрудника — тестовая: лида в очередь менеджерам нет.
