@@ -7,7 +7,8 @@ import { buildInstant, normalizeSite } from "@/lib/proto/instant/build";
 import { tailsIn } from "@/lib/proto/instant/check";
 import { DENTAL_PHOTOS } from "@/lib/proto/instant/dental";
 import { imageUrl } from "@/lib/proto/instant/safe";
-import { emptySite, instantReady, type InstantSite } from "@/lib/proto/instant/types";
+import { emptySite, INSTANT_NICHES, instantReady, type InstantSite } from "@/lib/proto/instant/types";
+import { siteFromAnswers } from "@/lib/proto/instant/read";
 import { tails } from "../scripts/protos/instant/tails.mjs";
 import { nekAssets } from "../scripts/protos/instant/nek-assets.mjs";
 import assetsFile from "@/content/proto-instant/nek-assets.json" with { type: "json" };
@@ -603,4 +604,13 @@ test("админка салона: все каналы в одном окне, �
     assert.ok(a.includes("демо-данные"));
   }
   assert.ok(buildInstant(salon, SEED).html.includes("is-salon-book"), "запись с сайта макета приходит в админку");
+});
+
+test("сборка из ответов в боте проходит у каждой сферы: счётчик загрузки пролёта не число клиента", () => {
+  // 12.11.2026: салон, мебель и ресторан уходили «дизайнеру вручную». У клиента без цен
+  // в данных нет нуля, а «0%» счётчика пролёта проверка считала чужим числом.
+  for (const niche of INSTANT_NICHES) for (const locale of ["ru", "uz"] as const) {
+    const site = siteFromAnswers({ niche, locale, name: "Лолипопыч", phone: "+998 91 234 56 78", address: "Чиланзар", services: "Ногти" });
+    assert.deepEqual(buildInstant(site, SEED).problems, [], `${niche} ${locale}`);
+  }
 });
