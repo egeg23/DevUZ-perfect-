@@ -93,6 +93,16 @@ const OFFERS: Record<InstantNiche, () => OfferAddon[]> = {
     fromPlan("shahar", "mort", "Калькулятор ипотеки", "Ipoteka kalkulyatori"),
     fromPlan("shahar", "uz", null, "O‘zbekcha versiya"),
   ],
+  // Салон красоты: своего макета салона нет, допы — из планов Nek (запись, панель) и Karomat.
+  "salon-krasoty": () => [
+    fromPlan("nek", "admin", "Панель салона: запись, мессенджеры, расписание мастеров", "Salon paneli: yozuv, messenjerlar, ustalar jadvali"),
+    fromPlan("nek", "remind", "Напоминание о визите клиенту", "Mijozga tashrif eslatmasi"),
+    fromPlan("nek", "chat", null, "Saytdagi chat: javoblar yoki administrator"),
+    fromPlan("nek", "reviews", null, "Saytda Google sharhlari"),
+    fromPlan("karomat", "loyalty", "Кешбэк и уровни клиента", "Keshbek va mijoz darajalari"),
+    fromPlan("karomat", "gift", null, "Sovg‘a sertifikatlari"),
+    fromPlan("karomat", "pay", null, "Click, Payme, Uzum orqali to‘lov"),
+  ],
 };
 
 export function offerAddons(niche: InstantNiche): OfferAddon[] {

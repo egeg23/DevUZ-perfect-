@@ -35,6 +35,7 @@ import { MEBEL_PHOTOS } from "@/lib/proto/instant/mebel";
 import { NEDV_PHOTOS } from "@/lib/proto/instant/nedv";
 import { LIMITS, type InstantLocale, type InstantNiche, type InstantSite } from "@/lib/proto/instant/types";
 import { PROTO_BASE } from "@/lib/proto/pages";
+import { SALON_DEMO_JS, SALON_EXT_JS } from "@/lib/proto/instant/salon-admin";
 
 type Pair = [string, string];
 const json = (v: unknown) => JSON.stringify(v).replace(/</g, "\\u003c");
@@ -605,6 +606,114 @@ ${so.js}</script>
   );
 }
 
+// ── Админка салона красоты: панель «Сияние Севера» ────────────────────
+// Своей панели у салона не было; берём админку нашего сайта клиники
+// косметологии: «Сообщения» всех каналов одним окном, «Сайт», подключения.
+// Она на русском (подписи зашиты в её скрипт), для узбекского макета тоже.
+const SF = (k: string, label: string, type = "text", max = 120, hint = "") => ({ k, label, type, max, hint });
+
+function salonPalette(color: string | null): string {
+  const hex = brandColor(color);
+  const [h, s0, l0] = hex ? hexToHsl(hex) : [345, 42, 44];
+  const s = Math.min(Math.max(s0, 28), 62);
+  const l = Math.min(Math.max(l0, 34), 48);
+  return `--onyx:hsl(${h} ${s}% ${l}%);--onyx2:hsl(${h} ${Math.min(s + 8, 70)}% ${Math.min(l + 30, 84)}%);--onyx-ink:#fff;--paper:#fbf6f1;--paper2:hsl(${h} 38% 94%);--ink:#2a1f24;--ink2:#35272d;--text:#2e2226;--f-d:'Cormorant Garamond',Georgia,serif;--f-t:'Onest',system-ui,sans-serif`;
+}
+
+function salonAdmin(site: InstantSite): string {
+  const l = site.locale;
+  const services = site.services.slice(0, LIMITS.services);
+  const any = "Запись в салон";
+  const s = (k: number) => (services.length ? services[k % services.length].name : any);
+  const N = NAMES.ru;
+  const tel = (k: number) => `+998 9• ••• •• ${String(10 + k * 7).slice(-2)}`;
+  const owner = N[5];
+  const admin = N[3];
+  const masters = site.doctors.slice(0, LIMITS.doctors).map((d) => ({ name: d.name, role: d.role ?? "", img: "" }));
+  const pd = {
+    v: `${site.name}|${services.length}`, name: site.name, sign: markOf(site, "pn-sign"), site: PROTO_BASE, any,
+    trap: "[[t:0]] [[t:1]]",
+    roles: { owner: "Владелец", admin: "Администратор" },
+    st: { new: "Новая", confirmed: "Подтверждена", came: "Пришёл", canceled: "Отменена" },
+    conn: { amo: "amoCRM", tg: "Telegram-бот", wz: "Wazzup" },
+    team: [[owner, "owner", "owner"], [admin, "admin", "admin"]],
+    bot: "salon_demo_bot",
+    thanks: "Спасибо, буду ждать!",
+    channels: [{ kind: "instagram", plain: site.instagram ?? "" }, { kind: "whatsapp", plain: "" }, { kind: "telegram", plain: "" }, { kind: "vk", plain: "" }],
+    pipes: [{ id: 1, name: "Запись в салон", statuses: [{ id: 11, name: "Новая заявка" }, { id: 12, name: "Подтверждена" }, { id: 13, name: "Пришёл" }] }],
+    leads: [
+      { name: N[1], phone: tel(1), what: s(0), wish: "Сегодня, вечер", src: "booking", status: "new", ago: 1 },
+      { name: N[7], phone: tel(2), what: s(1), wish: "Завтра, утро", src: "wz", status: "new", ago: 3, conv: 1 },
+      { name: N[9], phone: tel(3), what: s(2), wish: "Суббота", src: "booking", status: "confirmed", ago: 9, note: "Просила того же мастера, что в прошлый раз." },
+      { name: N[0], phone: tel(4), what: s(0), wish: "", src: "tg", status: "confirmed", ago: 26, conv: 4 },
+      { name: N[8], phone: tel(5), what: s(3), wish: "Пятница, после работы", src: "chat", status: "came", ago: 52, conv: 5 },
+      { name: N[2], phone: tel(6), what: s(1), wish: "", src: "booking", status: "came", ago: 180 },
+      { name: N[6], phone: tel(7), what: s(4), wish: "Воскресенье", src: "wz", status: "came", ago: 215 },
+      { name: N[4], phone: tel(8), what: s(2), wish: "", src: "booking", status: "canceled", ago: 290, note: "Перенесла на следующий месяц." },
+    ],
+    // Переписки демо: [кто, текст, часов назад]. Цен и чужих фактов в них нет.
+    convs: [
+      { name: N[7], kind: "instagram", unread: 2, msgs: [["in", `Здравствуйте! Увидела у вас в профиле работу. Хочу так же: ${s(1)}. Есть время на завтра?`, 3.2], ["in", "Могу утром до работы.", 3]] },
+      { name: N[1], kind: "whatsapp", phone: tel(1), unread: 1, msgs: [["in", `Добрый день. Записалась на сайте: ${s(0)}. Подскажите, сколько по времени займёт?`, 1.1]] },
+      { name: N[9], kind: "instagram", msgs: [["in", "А можно прийти вдвоём с подругой в одно время?", 8], ["out", "Здравствуйте! Да, поставим вас к двум мастерам рядом. На какой день смотрим?", 7.6], ["in", "На субботу, ближе к обеду.", 7.5], ["out", "Записала на субботу. Напомню накануне.", 7.4]] },
+      { name: N[0], kind: "tg", msgs: [["in", `Здравствуйте, нужна запись: ${s(0)}.`, 27], ["out", "Добрый день! Есть окна завтра и в четверг. Когда удобнее?", 26.5], ["in", "В четверг.", 26.2], ["out", "Готово, ждём вас в четверг.", 26]] },
+      { name: N[8], kind: "site", msgs: [["in", "Пишу с сайта. У вас есть парковка рядом?", 53], ["out", "Да, можно встать у входа. Записать вас?", 52.5], ["in", "Да, на пятницу после работы.", 52.2], ["out", "Записала. До встречи!", 52]] },
+      { name: N[6], kind: "vk", unread: 1, msgs: [["in", `Подскажите, вы работаете в воскресенье? Интересует: ${s(4)}.`, 5]] },
+    ],
+    posts: [
+      { title: `${s(2)}: как подготовиться к визиту`, text: "Пример статьи. Расскажите, что сделать накануне, что взять с собой и чего не делать перед визитом. Такие статьи находят в поиске, а анонс в Telegram и Instagram возвращает тех, кто давно не заходил.", status: "published", ago: 70, ch: { site: true, tg: true, ig: true } },
+      { title: "Как сохранить цвет волос после окрашивания", text: "Пример статьи. Коротко и по делу: чем мыть голову в первые дни, как сушить, когда прийти на обновление тона. Допишите свои советы и опубликуйте.", status: "published", ago: 240, ch: { site: true, tg: true, ig: false } },
+      { title: "Какое покрытие выбрать для ногтей", text: "Черновик. Сравните покрытия простыми словами: кому что подходит и как за ним ухаживать.", status: "draft", ago: 20, ch: { site: true, tg: false, ig: false } },
+    ],
+    log: [[1.1, admin, `Заявка от ${N[1]}: «Новая»`], [7.4, admin, `Ответила в Instagram Direct: ${N[9]}`], [26, admin, "Заявка: «Подтверждена»"], [70, owner, "Опубликовала статью"], [96, owner, "Изменила на сайте: «Акции»"], [140, owner, "Подключила: Wazzup"]],
+    texts: { hero: "Первый экран", services: "Услуги и цены", lab: "Подбор цвета", book: "Запись" },
+    groups: [
+      { key: "contacts", title: "Контакты", hint: "Телефон, часы и адрес стоят на всём сайте: в шапке, кнопках, контактах и подвале. Пустое поле: кнопки нет.", kind: "object",
+        fields: [SF("phone", "Телефон", "text", 30), SF("hours", "Часы работы", "text", 60), SF("addr", "Адрес", "text", 120), SF("telegram", "Telegram: ник без @", "text", 40), SF("whatsapp", "WhatsApp: номер", "text", 20), SF("instagram", "Instagram: ник без @", "text", 40)] },
+      { key: "services", title: "Услуги и цены", hint: "Список в разделе «Услуги и цены». Эти же услуги клиент выбирает в записи.", kind: "list", max: 20, fields: [SF("t", "Услуга", "text", 80), SF("p", "Цена", "text", 40)] },
+      { key: "promos", title: "Акции", hint: "Акция встаёт на сайте отдельным блоком и уходит анонсом в мессенджеры. Срок вышел: блок сам пропадает.", kind: "list", max: 6, fields: [SF("t", "Акция", "text", 80), SF("d", "Условия", "area", 240), SF("until", "До какого числа", "text", 30), SF("on", "Показывать на сайте", "bool")] },
+      { key: "masters", title: "Мастера", hint: "Фото лучше квадратное, JPG или PNG.", kind: "list", max: 8, fields: [SF("name", "Имя", "text", 80), SF("role", "Специальность", "text", 120), SF("img", "Фото", "image")] },
+      { key: "perks", title: "Почему к нам", hint: "", kind: "list", max: 6, fields: [SF("t", "Причина", "text", 120)] },
+      { key: "texts", title: "Тексты разделов", hint: "Заголовки и абзацы блоков. Пустое поле: стоит текст по умолчанию.", kind: "texts" },
+    ],
+    defaults: {
+      contacts: { phone: site.phone ?? "", hours: site.hours ?? "", addr: site.address ?? "", telegram: site.telegram ?? "", whatsapp: site.whatsapp ?? "", instagram: site.instagram ?? "" },
+      services: services.map((x) => ({ t: x.name, p: x.price ?? "" })),
+      promos: [
+        { t: "Пример: подарок новым клиентам", d: "Уход для волос в подарок к первой стрижке. Замените на свою акцию.", until: "до конца месяца", on: true },
+        { t: "Пример: маникюр и педикюр в один визит", d: "Укрепление ногтей в подарок. Замените на свою акцию.", until: "", on: false },
+      ],
+      masters,
+      perks: site.perks.slice(0, LIMITS.perks).map((t) => ({ t })),
+      texts: {
+        hero: { kick: site.city ? `Салон красоты · ${site.city}` : "Салон красоты", h: site.name, em: "", p: site.tagline ?? "" },
+        services: { kick: "", h: "Услуги и цены", p: "Цены салона. Точную сумму мастер назовёт до начала работы." },
+        lab: { kick: "Примерка", h: "Подберите цвет до визита", p: "" },
+        book: { kick: "", h: "Запись за минуту", p: "" },
+      },
+    },
+  };
+  const name = esc(site.name);
+  const terms = l === "uz" ? ["DevUz Studio maketi, demo ma’lumotlar. Maketdan foydalanib, siz", "maket shartlarini qabul qilasiz"] : ["Макет DevUz Studio, демо-данные. Пользуясь макетом, вы принимаете", "условия макета"];
+  return page(
+    l,
+    `${name} · админка · демо`,
+    esc("Админка салона: заявки с сайта, сообщения из Instagram Direct, WhatsApp, Telegram и ВКонтакте в одном окне, статьи, акции и управление сайтом. Демо-данные."),
+    "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500&family=Onest:wght@400;600;700&display=swap",
+    `${panels.syanie.css}:root{${salonPalette(site.color)}}.brand img,.brand .pn-sign{flex:none}.brand span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pn-demo{display:inline-block;vertical-align:middle;margin-left:8px;padding:3px 10px;border-radius:999px;background:var(--paper2);color:var(--mute);font:600 12px/1.4 var(--f-t);letter-spacing:.02em}.pn-foot{padding:14px 20px 28px;text-align:center;color:var(--mute);font-size:13px}.pn-foot a{color:inherit}`,
+    `<body>
+<div id="app" aria-live="polite"><p class="boot">Загружаем админку…</p></div>
+<div id="toast" class="toast" role="status" hidden></div>
+<footer class="pn-foot">${terms[0]} <a href="${esc(mockupTermsUrl(l))}" target="_blank" rel="noopener">${terms[1]}</a>.</footer>
+<script type="application/json" id="pn-data">${json(pd)}</script>
+<script>
+${SALON_DEMO_JS}
+${SALON_EXT_JS}
+${panels.syanie.js}</script>
+</body>`,
+  );
+}
+
 const ADMINS: Partial<Record<InstantNiche, (site: InstantSite) => string>> = {
   stomatologiya: (s) => clinicAdmin(s, "stomatologiya"),
   medcentr: (s) => clinicAdmin(s, "medcentr"),
@@ -613,6 +722,7 @@ const ADMINS: Partial<Record<InstantNiche, (site: InstantSite) => string>> = {
   "uchebnyy-centr": eduAdmin,
   mebel: mebelAdmin,
   nedvizhimost: nedvAdmin,
+  "salon-krasoty": salonAdmin,
 };
 
 /** Админка сферы на данных клиента; у сферы без нашей панели — null. */

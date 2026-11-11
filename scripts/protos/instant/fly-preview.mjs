@@ -14,12 +14,14 @@ import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, extname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildInstant } from "@/lib/proto/instant/build";
-import { EXAMPLE_MEBEL, EXAMPLE_REST, EXAMPLE_TUR } from "./preview-data.mjs";
+import { EXAMPLE_MEBEL, EXAMPLE_REST, EXAMPLE_SALON, EXAMPLE_TUR } from "./preview-data.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "../../..");
 const keys = process.env.KEYS;
 if (!keys) throw new Error("KEYS — папка с файлами <ниша>.key");
-const SITES = { restoran: EXAMPLE_REST, mebel: EXAMPLE_MEBEL, turagentstvo: EXAMPLE_TUR };
+const ALL = { restoran: EXAMPLE_REST, mebel: EXAMPLE_MEBEL, turagentstvo: EXAMPLE_TUR, "salon-krasoty": EXAMPLE_SALON };
+// ONLY=<ниша> — снять одну нишу.
+const SITES = process.env.ONLY ? { [process.env.ONLY]: ALL[process.env.ONLY] } : ALL;
 const pages = Object.fromEntries(Object.entries(SITES).map(([n, s]) => [n, buildInstant(s, "0".repeat(32)).html.replaceAll("__PROTO_BASE__", `/${n}`)]));
 
 const TYPES = { ".webp": "image/webp", ".mp4": "video/mp4" };

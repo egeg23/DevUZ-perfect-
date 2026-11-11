@@ -11,7 +11,7 @@ import { emptySite, instantReady, type InstantSite } from "@/lib/proto/instant/t
 import { tails } from "../scripts/protos/instant/tails.mjs";
 import { nekAssets } from "../scripts/protos/instant/nek-assets.mjs";
 import assetsFile from "@/content/proto-instant/nek-assets.json" with { type: "json" };
-import { EXAMPLE, EXAMPLE_MEBEL, EXAMPLE_MED, EXAMPLE_REST, EXAMPLE_TUR, EXAMPLE_EDU, EXAMPLE_NEDV } from "../scripts/protos/instant/preview-data.mjs";
+import { EXAMPLE, EXAMPLE_MEBEL, EXAMPLE_MED, EXAMPLE_REST, EXAMPLE_TUR, EXAMPLE_EDU, EXAMPLE_NEDV, EXAMPLE_SALON } from "../scripts/protos/instant/preview-data.mjs";
 import { shoxAssets } from "../scripts/protos/instant/shox-assets.mjs";
 import shoxFile from "@/content/proto-instant/shox-assets.json" with { type: "json" };
 import { MEDCENTR_PHOTOS } from "@/lib/proto/instant/medcentr";
@@ -142,7 +142,8 @@ test("макет в боте: без сети, кроме шрифтов", () =>
 
 test("макет в боте: шаблоны — у стоматологии, медцентра, мебели и ресторана, фото ниши лежат в репозитории", () => {
   assert.ok(instantReady("stomatologiya"));
-  assert.ok(!instantReady("salon-krasoty"));
+  assert.ok(instantReady("salon-krasoty"));
+  assert.ok(!instantReady("general"), "сфера без шаблона — вручную");
   for (const photo of DENTAL_PHOTOS) assert.ok(existsSync(`public${photo}`), photo);
 });
 
@@ -438,7 +439,7 @@ test("админка: у всех семи сфер — на данных кли
       if (mark) assert.ok(a.includes(mark));
     }
   }
-  for (const n of ["stomatologiya", "medcentr", "mebel", "restoran", "turagentstvo", "uchebnyy-centr", "nedvizhimost"] as const) assert.ok(hasAdmin(n), `${n}: админка есть`);
+  for (const n of ["stomatologiya", "medcentr", "mebel", "restoran", "turagentstvo", "uchebnyy-centr", "nedvizhimost", "salon-krasoty"] as const) assert.ok(hasAdmin(n), `${n}: админка есть`);
 });
 
 test("админка ресторана: блюда клиента в меню, демо-заказы только из блюд с ценой", () => {
@@ -528,4 +529,78 @@ test("сцена по прокрутке: видео отказало в зап�
   const scene = assetsFile.scene;
   assert.ok(scene.includes("p.then(on,fail)") && scene.includes("keyBytes(2)") && scene.includes("tries[j]<3"), "движок «Макета в боте» свежий");
   for (const b of ["nek", "samauto", "samist"]) assert.ok(readFileSync(`content/proto-bundles/${b}.json`, "utf8").includes("p.then(on,fail)"), `сборка ${b} пересобрана`);
+});
+
+// Салон красоты (владелец, 11.11.2026: «влетаем в дверь… капля лака, которая падает через всю страницу»).
+const salon = EXAMPLE_SALON as InstantSite;
+
+test("салон красоты: пример собирается без замечаний на двух языках, защита та же", () => {
+  for (const locale of ["ru", "uz"] as const) {
+    const b = buildInstant({ ...salon, locale }, SEED);
+    assert.deepEqual(b.problems, [], locale);
+    assert.ok(b.html.includes('class="dz-vid"') && b.html.includes("mockup-terms"), "видео DevUz и условия");
+    assert.ok(!/\[\[t:\d+\]\]/.test(b.html), "ловушки подставлены");
+    assert.ok(!/<script[^>]+src=/i.test(b.html), "скриптов со стороны нет");
+  }
+});
+
+test("салон красоты: пролёт из шести роликов, цены клиента в главах, капля закрывает кадр", async () => {
+  const { readdirSync, statSync, readFileSync } = await import("node:fs");
+  const media = JSON.parse(readFileSync("content/proto-instant/salon-krasoty-media.json", "utf8"));
+  assert.ok(media.n > 600 && media.vn > media.n, "шесть роликов сняты");
+  for (const k of ["d", "m"]) {
+    const dir = readdirSync(`public/protos/_niche/salon-krasoty/seq/${k}`);
+    assert.equal(dir.length, media.n);
+    assert.ok(dir.every((f) => f.endsWith(".bin")), "в public только шифр");
+  }
+  assert.ok(statSync("public/protos/_niche/salon-krasoty/seq/m.bin").size > 0);
+  for (let i = 1; i <= 7; i++) for (const a of ["16", "9"]) assert.ok(existsSync(`public/protos/_niche/salon-krasoty/k${i}-${a}.webp`));
+  const { SCENES } = await import("@/lib/proto/promo");
+  assert.equal(SCENES["instant-salon-krasoty"], "SCENE_KEY_INSTANT_SALON_KRASOTY");
+  const { html } = buildInstant(salon, SEED);
+  assert.ok(html.includes('class="fz im-fly"') && html.includes('class="fz-drop"'), "пролёт и капля-переход");
+  assert.match(html, /<div class="fz-sign"[^>]*>.*Мята и Пудра/, "название на вывеске над дверью");
+  // Главы — услуги и цены самого салона, а не наши.
+  assert.match(html, /Женская стрижка <em>от 180 000 сум<\/em>/);
+  assert.match(html, /Маникюр с покрытием гель-лаком <em>220 000 сум<\/em>/);
+  assert.match(html, /Окрашивание в один тон <em>от 650 000 сум<\/em>/);
+  assert.equal((html.match(/data-cp="/g) ?? []).length, 6);
+});
+
+test("салон красоты: нет услуги или цены — глава без числа, блоки без данных не рисуются", () => {
+  const bare = buildInstant({ ...salon, services: [{ name: "Оформление бровей", price: null }], doctors: [], perks: [] }, SEED);
+  assert.deepEqual(bare.problems, []);
+  assert.match(bare.html, /Стрижка <em>цену подскажем при записи<\/em>/);
+  assert.ok(!bare.html.includes('class="people"') && !bare.html.includes('class="perks"'));
+  assert.ok(bare.html.includes("цена при записи"), "услуга без цены — словами");
+});
+
+test("салон красоты: капля падает к ногтю, подбор цвета без марок, запись в чат салона", () => {
+  const { html } = buildInstant(salon, SEED);
+  assert.ok(html.includes('id="rail"') && html.includes('id="drop"') && html.includes('id="nail"'), "капля, рельс и ноготь");
+  assert.equal((html.match(/class="sw[ "]/g) ?? []).length, 10, "десять оттенков для примерки");
+  assert.ok(html.includes("Кошачий глаз") && html.includes("Френч") && html.includes("Гель-лак"));
+  assert.ok(!/OPI|Luxio|Kodi|CND|Masura/i.test(html), "марок не называем: какие у салона, не знаем");
+  assert.ok(html.includes("https://t.me/myata_pudra_demo"), "заявка уходит в Telegram салона");
+  assert.ok(html.includes("prefers-reduced-motion:reduce"), "без движения — капли нет, ноготь уже покрыт");
+  assert.ok(html.includes("3000"), "шапка возвращается через 3 секунды");
+});
+
+test("админка салона: все каналы в одном окне, статьи, акции и сайт, без сети и без имени прошлого клиента", () => {
+  for (const locale of ["ru", "uz"] as const) {
+    const b = buildInstant({ ...salon, locale }, SEED);
+    assert.deepEqual(b.problems, [], locale);
+    const a = b.pages.admin!;
+    assert.ok(a.includes(`/${locale}/mockup-terms`), "условия макета");
+    assert.ok(!/\[\[t:\d+\]\]/.test(a) && !/<script[^>]+src=/.test(a) && !/fetch\(/.test(a), "ловушки заменены, в сеть панель не ходит");
+    assert.deepEqual(tailsIn(a), []);
+    const pd = JSON.parse(a.match(/<script type="application\/json" id="pn-data">([\s\S]*?)<\/script>/)![1]);
+    assert.equal(pd.name, salon.name);
+    assert.deepEqual([...new Set(pd.convs.map((c: { kind: string }) => c.kind))].sort(), ["instagram", "site", "tg", "vk", "whatsapp"]);
+    assert.deepEqual(pd.groups.map((g: { key: string }) => g.key), ["contacts", "services", "promos", "masters", "perks", "texts"]);
+    assert.deepEqual(pd.defaults.services.map((x: { t: string }) => x.t), salon.services.map((x) => x.name), "услуги и цены клиента");
+    assert.ok(pd.posts.length >= 3 && a.includes("VIEWS.stati") && a.includes("Instagram Direct"));
+    assert.ok(a.includes("демо-данные"));
+  }
+  assert.ok(buildInstant(salon, SEED).html.includes("is-salon-book"), "запись с сайта макета приходит в админку");
 });
