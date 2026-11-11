@@ -373,3 +373,19 @@ test("первое сообщение: вебхук — реф-ссылка, п�
   assert.ok(src.includes("if (!existing?.transcript.length && (await greetInstant("), "идущий разговор не перебиваем");
   assert.ok(src.includes("touchChat(chat.id, refCode)") && at("touchChat(chat.id, refCode)") < start.indexOf("await welcome(chat.id, message.from, locale, existing);"), "реф-код записан до приветствия");
 });
+
+test("личка владельца — чат продаж: /maket, ?start=maket и ответы посреди сборки идут в поток макета", async () => {
+  const { readFileSync } = await import("node:fs");
+  const route = readFileSync("app/api/telegram/webhook/route.ts", "utf8");
+  const sales = route.slice(route.indexOf("async function handleSales("), route.indexOf("async function handleGroup("));
+  assert.ok(sales.length > 0);
+  // Поток макета — раньше служебного «Это чат отдела продаж» и приветствия брифов.
+  const flowAt = sales.indexOf("startInstant(ictx, instantDeps())");
+  assert.ok(flowAt > 0, "в чате продаж есть вход в поток макета");
+  assert.ok(flowAt < sales.indexOf("Это чат отдела продаж"));
+  assert.ok(flowAt < sales.indexOf("бот отдела продаж"));
+  assert.match(sales, /\(maket\|mockup\)/);
+  assert.match(sales, /startPayloadOf\(raw\) === INSTANT_START/);
+  assert.match(sales, /instantOpenFor\(ictx\)/, "тот же выключатель: только admin/head, пока поток закрыт");
+  assert.ok(sales.indexOf("handleInstantText(") < sales.indexOf("handleStaffText("), "ответы посреди сборки — потоку, остальной текст — помощнику");
+});

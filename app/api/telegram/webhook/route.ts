@@ -1492,6 +1492,25 @@ async function handleSales(message: NonNullable<Update["message"]>) {
     return;
   }
 
+  // «Макет в боте» из лички владельца (владелец, 11.11.2026: «Я пытаюсь
+  // протестировать бота, но видимо так как я владелец и сотрудник и админ -
+  // не могу. Поправь»). Личка владельца — чат продаж, и /maket, ссылка
+  // ?start=maket и ответы посреди сборки уходили сюда, мимо потока: бот
+  // молчал. Здесь они идут в тот же поток, что у клиента; брифы — как были.
+  if (chat.type === "private") {
+    const raw = (message.text ?? "").trim();
+    const locale = sessionFor(chat.id)?.locale ?? localeOf(message.from);
+    const asks = /^\/(maket|mockup)(@\w+)?$/i.test(raw) || startPayloadOf(raw) === INSTANT_START;
+    if (asks) {
+      const ictx = await instantCtx(chat.id, message.from, locale);
+      if (instantOpenFor(ictx)) {
+        await startInstant(ictx, instantDeps());
+        return;
+      }
+    }
+    if (raw && !raw.startsWith("/") && (await handleInstantText(chat.id, () => instantCtx(chat.id, message.from, locale), raw, instantDeps()))) return;
+  }
+
   // Переход с сайта в чат отдела продаж. Так бывает ровно в одном случае:
   // владелец проверяет переезд разговора со своего же аккаунта, а его личный
   // чат и назначен чатом отдела продаж. Клиентский диалог здесь не ведётся
