@@ -65,6 +65,14 @@ const OFFERS: Record<InstantNiche, () => OfferAddon[]> = {
     fromPlan("karomat", "banket", null, "Banketlar va to‘y: kalkulyator va arizalar"),
     fromPlan("karomat", "reviews", null, "Yandex Xaritalar va Google sharhlari"),
   ],
+  // Турагентство: допы нашего макета SEM Travel.
+  turagentstvo: () => [
+    fromPlan("semtravel", "tourvisor", "Поиск туров через Турвизор", "Turvizor orqali tur qidirish"),
+    fromPlan("semtravel", "pick", null, "«Qayerga borishni bilmayman» tanlovi"),
+    fromPlan("semtravel", "crm", null, "amoCRM yoki Bitrix24 bilan bog‘lash"),
+    fromPlan("semtravel", "tgbot", null, "Arizalar uchun Telegram-bot"),
+    fromPlan("semtravel", "pay", null, "Click, Payme, Uzum orqali onlayn to‘lov"),
+  ],
 };
 
 export function offerAddons(niche: InstantNiche): OfferAddon[] {
