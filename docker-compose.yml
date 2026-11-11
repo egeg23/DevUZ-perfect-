@@ -120,6 +120,8 @@ services:
       # Haiku: ответ до 500 знаков по 2-3 кускам инструкции.
       STAFF_HELPER_MODEL: ${STAFF_HELPER_MODEL:-}
       TENDER_RU_MODEL: ${TENDER_RU_MODEL:-}
+      # Перевод слов клиента бота на русский для команды. Пусто — Haiku.
+      CLIENT_RU_MODEL: ${CLIENT_RU_MODEL:-}
       INSTANT_READ_MODEL: ${INSTANT_READ_MODEL:-}
       # ИИ-сотрудники по подписке (docs/ai-staff/design.md). Модели: пусто —
       # Sonnet для ответов покупателям, Opus для тарифа «Про», Haiku для

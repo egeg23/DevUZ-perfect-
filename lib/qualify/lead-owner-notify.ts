@@ -1,5 +1,6 @@
 import { wants } from "@/lib/admin/notify-prefs";
 import { messageWindow } from "@/lib/admin/tasks";
+import { clientRu, ruLine } from "@/lib/qualify/client-ru";
 import { esc, sendMessage } from "@/lib/qualify/telegram";
 import type { ChatMessage } from "@/lib/qualify/types";
 import { siteUrl } from "@/lib/seo";
@@ -24,14 +25,18 @@ import { serviceClient } from "@/lib/supabase";
 /** Сколько дней лид считается тем же разговором. */
 export const OWNER_LEAD_DAYS = 30;
 
-export function ownerNotice(input: { label: string; requestNo: string | null; leadId: string; text: string }): string {
+export function ownerNotice(input: { label: string; requestNo: string | null; leadId: string; text: string; ru?: string | null }): string {
   const no = input.requestNo ? ` · ${esc(input.requestNo)}` : "";
+  const ru = ruLine(input.ru ? esc(input.ru.replace(/\s+/g, " ").trim().slice(0, 700)) : null);
   return [
     `💬 <b>Клиент написал в бот</b> · ${esc(input.label)}${no}`,
     `«${esc(input.text.replace(/\s+/g, " ").trim().slice(0, 700))}»`,
+    ru,
     "",
     `Карточка и переписка: ${siteUrl}/admin/leads/${input.leadId}`,
-  ].join("\n");
+  ]
+    .filter((line) => line !== null)
+    .join("\n");
 }
 
 export async function tellLeadOwner(
@@ -92,6 +97,7 @@ export async function tellLeadOwner(
       requestNo: (lead.request_no as string | null) ?? null,
       leadId: String(lead.id),
       text: input.text,
+      ru: await clientRu(input.text),
     }),
   );
 }

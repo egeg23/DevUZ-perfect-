@@ -7,6 +7,7 @@ import { staffByTelegramId } from "@/lib/admin/session";
 import { QUIET_FROM_HOUR, QUIET_TO_HOUR, messageWindow } from "@/lib/admin/tasks";
 import { saveSession, sessionFor } from "@/lib/qualify/handoff";
 import { copyMessage, copyMessageForId, esc, sendForId, sendMessage } from "@/lib/qualify/telegram";
+import { clientRu, ruLine } from "@/lib/qualify/client-ru";
 import { tellLeadOwner } from "@/lib/qualify/lead-owner-notify";
 import { siteUrl } from "@/lib/seo";
 import { serviceClient } from "@/lib/supabase";
@@ -67,6 +68,8 @@ export function inboxNotice(input: {
   lead: InboxLead;
   human: string | null;
   modelDown?: boolean;
+  /** Слова клиента по-русски, если он писал не по-русски (client-ru). */
+  ru?: string | null;
 }): string {
   const lead = input.lead
     ? `🧾 ${esc(input.lead.requestNo ?? input.lead.label)} · ${siteUrl}/admin/leads/${input.lead.id}`
@@ -78,16 +81,18 @@ export function inboxNotice(input: {
       : input.botReply?.trim()
         ? `🤖 Бот ответил: «${quote(input.botReply, 400)}»`
         : null;
-  return [`📩 <b>Обращение в бота</b> · ${who(input.client)}`, `«${quote(input.text, 900)}»`, bot, lead, "", REPLY_HINT]
+  const ru = ruLine(input.ru ? quote(input.ru, 900) : null);
+  return [`📩 <b>Обращение в бота</b> · ${who(input.client)}`, `«${quote(input.text, 900)}»`, ru, bot, lead, "", REPLY_HINT]
     .filter((line) => line !== null)
     .join("\n");
 }
 
-export function nightNotice(input: { client: InboxClient; text: string; at: string; lead: InboxLead }): string {
+export function nightNotice(input: { client: InboxClient; text: string; at: string; lead: InboxLead; ru?: string | null }): string {
   const t = new Date(Date.parse(input.at) + TASHKENT_OFFSET_MS);
   const hhmm = `${String(t.getUTCHours()).padStart(2, "0")}:${String(t.getUTCMinutes()).padStart(2, "0")}`;
   const lead = input.lead ? `🧾 ${esc(input.lead.requestNo ?? input.lead.label)} · ${siteUrl}/admin/leads/${input.lead.id}` : null;
-  return [`🌙 <b>Писал боту ночью</b>, ${hhmm} · ${who(input.client)}`, `Последнее: «${quote(input.text, 900)}»`, lead, "", REPLY_HINT]
+  const ru = ruLine(input.ru ? quote(input.ru, 900) : null);
+  return [`🌙 <b>Писал боту ночью</b>, ${hhmm} · ${who(input.client)}`, `Последнее: «${quote(input.text, 900)}»`, ru, lead, "", REPLY_HINT]
     .filter((line) => line !== null)
     .join("\n");
 }
@@ -167,7 +172,8 @@ export async function notifyInbox(
   if (!messageWindow(now) || !input.text.trim()) return sent;
   const list = await readers();
   if (!list.length) return sent;
-  const text = inboxNotice({ ...input, lead: await leadOf(input.client.username) });
+  const [lead, ru] = await Promise.all([leadOf(input.client.username), clientRu(input.text)]);
+  const text = inboxNotice({ ...input, lead, ru });
   for (const reader of list) {
     if (reader.chat === input.client.chatId) continue;
     if (await sendNotice(reader, input.client.chatId, text)) sent.add(reader.chat);
@@ -417,6 +423,7 @@ export async function sendNightInbox(now: Date = new Date()): Promise<number> {
   if (!clients.length) return 0;
 
   const key = `bot-night:${day}`;
+  const notices = new Map<number, string>();
   let sent = 0;
   for (const reader of await readers()) {
     const { data: claimed } = await db
@@ -426,7 +433,12 @@ export async function sendNightInbox(now: Date = new Date()): Promise<number> {
     if (!claimed?.length) continue;
     for (const u of clients) {
       const client = { chatId: Number(u.chat_id), name: String(u.first_name ?? ""), username: (u.username as string | null) ?? null };
-      const text = nightNotice({ client, text: String(u.last_text), at: String(u.last_text_at), lead: await leadOf(client.username) });
+      let text = notices.get(client.chatId);
+      if (!text) {
+        const [lead, ru] = await Promise.all([leadOf(client.username), clientRu(String(u.last_text))]);
+        text = nightNotice({ client, text: String(u.last_text), at: String(u.last_text_at), lead, ru });
+        notices.set(client.chatId, text);
+      }
       if (await sendNotice(reader, client.chatId, text)) sent += 1;
     }
   }
