@@ -1,7 +1,7 @@
 // Хвосты прошлых клиентов для «Макета в боте» (lib/proto/instant/tails).
 //
 // Шаблоны собраны из макетов Nek Dental Studio, «Сияния Севера» (стоматология)
-// Shox International Hospital (медцентр), vTashkente (мебель), Agora (ресторан), SEM Travel (турагентство) и Aipply Academy (учебный центр); в макете нового клиента не должно остаться ни строки о них:
+// Shox International Hospital (медцентр), vTashkente (мебель), Agora (ресторан), SEM Travel (турагентство) и Aipply Academy (учебный центр) и ShahaR.Uz (недвижимость); в макете нового клиента не должно остаться ни строки о них:
 // название, телефон, почта, домен, ник, адрес, врачи, авторы отзывов,
 // лицензия. Список пишется отсюда из их data.mjs, а не руками:
 //
@@ -89,6 +89,15 @@ export function tails() {
     "aipplyacademy",
     "Bog‘ko‘cha",
     "Богкуча",
+    // ShahaR.Uz — шаблон недвижимости (lib/proto/instant/nedv). Факты — в их gen.mjs (F).
+    // Не «ShahaR» одно: по-узбекски «shahar» — город.
+    "ShahaR.Uz",
+    "operator_shahar",
+    "Shaharuz_bot",
+    "shaharuzchannel",
+    "cityshahar",
+    "RR 0007",
+    "14/СОР-01",
   ];
   const phones = [nek.CLINIC.tel, syanie.BRAND.phoneRaw, ...shox.BRANCHES.map((b) => b.tel), VTASHKENTE_PHONE, agora.BRAND.tel, sem.BRAND.phoneRaw, sem.BRAND.phone2Raw, "+998771233300"].filter(Boolean).map((p) => p.replace(/\D/g, ""));
   return {

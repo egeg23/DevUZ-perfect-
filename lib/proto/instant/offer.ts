@@ -83,6 +83,16 @@ const OFFERS: Record<InstantNiche, () => OfferAddon[]> = {
     fromPlan("semtravel", "pay", null, "Click, Payme, Uzum orqali onlayn to‘lov"),
     fromPlan("karomat", "tgbot", "Telegram-бот: запись и напоминание о занятии", "Telegram-bot: yozilish va dars eslatmasi"),
   ],
+  // Недвижимость: допы наших макетов DomTut и ShahaR.
+  nedvizhimost: () => [
+    fromPlan("domtut", "booking", null, "Menejer taqvimi bilan ko‘rishga yozilish"),
+    fromPlan("domtut", "crm", "Заявки в amoCRM или Bitrix24", "Arizalar amoCRM yoki Bitrix24 ga"),
+    fromPlan("domtut", "bot", null, "Tanlovlar uchun Telegram-bot"),
+    fromPlan("domtut", "estimate", "Оценка квартиры по району", "Kvartirani tuman bo‘yicha baholash"),
+    fromPlan("shahar", "fav", null, "Sevimlilar va Telegramga tanlov"),
+    fromPlan("shahar", "mort", "Калькулятор ипотеки", "Ipoteka kalkulyatori"),
+    fromPlan("shahar", "uz", null, "O‘zbekcha versiya"),
+  ],
 };
 
 export function offerAddons(niche: InstantNiche): OfferAddon[] {

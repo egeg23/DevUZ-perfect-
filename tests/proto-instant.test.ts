@@ -11,7 +11,7 @@ import { emptySite, instantReady, type InstantSite } from "@/lib/proto/instant/t
 import { tails } from "../scripts/protos/instant/tails.mjs";
 import { nekAssets } from "../scripts/protos/instant/nek-assets.mjs";
 import assetsFile from "@/content/proto-instant/nek-assets.json" with { type: "json" };
-import { EXAMPLE, EXAMPLE_MEBEL, EXAMPLE_MED, EXAMPLE_REST, EXAMPLE_TUR, EXAMPLE_EDU } from "../scripts/protos/instant/preview-data.mjs";
+import { EXAMPLE, EXAMPLE_MEBEL, EXAMPLE_MED, EXAMPLE_REST, EXAMPLE_TUR, EXAMPLE_EDU, EXAMPLE_NEDV } from "../scripts/protos/instant/preview-data.mjs";
 import { shoxAssets } from "../scripts/protos/instant/shox-assets.mjs";
 import shoxFile from "@/content/proto-instant/shox-assets.json" with { type: "json" };
 import { MEDCENTR_PHOTOS } from "@/lib/proto/instant/medcentr";
@@ -27,6 +27,9 @@ import vtFile from "@/content/proto-instant/vtashkente-assets.json" with { type:
 import { aipplyAssets } from "../scripts/protos/instant/aipply-assets.mjs";
 import apFile from "@/content/proto-instant/aipply-assets.json" with { type: "json" };
 import { EDU_PHOTOS } from "@/lib/proto/instant/edu";
+import { shaharAssets } from "../scripts/protos/instant/shahar-assets.mjs";
+import shFile from "@/content/proto-instant/shahar-assets.json" with { type: "json" };
+import { NEDV_BACKS, NEDV_PHOTOS } from "@/lib/proto/instant/nedv";
 
 /**
  * «Макет в боте» (CLAUDE.md): шаблон ниши из наших макетов, данные клиента —
@@ -370,4 +373,39 @@ test("учебный центр: нет курсов и Telegram — без бл
 test("учебный центр: нейтральные фото ниши лежат в репозитории", () => {
   assert.ok(instantReady("uchebnyy-centr"));
   for (const photo of EDU_PHOTOS) assert.ok(existsSync(`public${photo}`), photo);
+});
+
+const nedv = EXAMPLE_NEDV as InstantSite;
+
+test("недвижимость: пример собирается без замечаний, защита та же", () => {
+  const { html, problems, stamp } = buildInstant(nedv, SEED);
+  assert.deepEqual(problems, []);
+  assert.ok(html.includes("Агентство Ключ") && html.includes('id="podbor"') && html.includes('id="search"'));
+  assert.ok(html.includes("/ru/mockup-terms") && html.includes('class="dz-vid"'));
+  assert.ok(stamp.signals.some((s) => s.startsWith("js:")), "метка числа скрипта ShahaR");
+  assert.ok(stamp.signals.filter((s) => s.startsWith("text:")).length >= 4, "две ловушки");
+  assert.deepEqual(buildInstant({ ...nedv, locale: "uz", tagline: null, about: null }, SEED).problems, [], "узбекское «shahar» — не хвост");
+});
+
+test("недвижимость: стили и скрипт нашего макета ShahaR, свежие, без ShahaR, поиск ведёт в подбор", () => {
+  assert.deepEqual(shFile, shaharAssets(), "node scripts/protos/instant/shahar-assets.mjs");
+  const { html } = buildInstant(nedv, SEED);
+  for (const s of ["ShahaR", "operator_shahar", "Shaharuz_bot", "/protos/shahar/", "sh-kit-v1"]) assert.ok(!html.includes(s), s);
+  assert.ok(!/<script[^>]+src=/.test(html), "без скриптов со стороны");
+  assert.ok(html.includes("var bk=$('book');if(bk)"), "каталога нет: поиск заполняет заявку");
+  assert.ok(html.includes("--bh:"), "цвет клиента поверх их зелёного");
+  assert.deepEqual(tailsIn(html), []);
+});
+
+test("недвижимость: нет услуг, преимуществ и чата — без блоков и без ссылки в Telegram", () => {
+  const bare = buildInstant({ ...nedv, services: [], perks: [], telegram: null, instagram: null, city: null, about: null }, SEED);
+  assert.deepEqual(bare.problems, []);
+  assert.ok(!bare.html.includes('id="uslugi"'), "нет услуг — нет блока");
+  assert.ok(!bare.html.includes('href="https://t.me/'), "нет чата — нет ссылки");
+  assert.ok(bare.html.includes('"adminUrl":""'), "без чата заявка только копируется");
+});
+
+test("недвижимость: нейтральные фото ниши лежат в репозитории", () => {
+  assert.ok(instantReady("nedvizhimost"));
+  for (const photo of [...NEDV_PHOTOS, ...NEDV_BACKS]) assert.ok(existsSync(`public${photo}`), photo);
 });
