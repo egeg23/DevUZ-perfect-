@@ -417,17 +417,20 @@ test("админка: панели наших макетов, свежие, бе
   assert.deepEqual(panelFile, panelAssets(), "node scripts/protos/instant/panel-assets.mjs");
   const js = [panelFile.nek.js, panelFile.agora.js, panelFile.sunday.js, panelFile.fintax.js, JSON.stringify([panelFile.agora.ui, panelFile.sunday.ui, panelFile.fintax.ui])].join("");
   for (const s of ["Nek Dental", "Agora", "AGORA", "+995", "₾", "'ag-", "agora-", "Sunday", "sunday-", "'sn-", "FinTax", "'ft-"]) assert.ok(!js.includes(s), s);
+  const more = [panelFile.greenwell.js, panelFile.soffice.js, JSON.stringify([panelFile.greenwell.ui, panelFile.soffice.ui])].join("");
+  for (const s of ["Greenwell", "'gw-", "GW-", "/protos/greenwell", "Soffice", "soffice.uz", "'so-", "Global Property", "/protos/soffice"]) assert.ok(!more.includes(s), s);
+  assert.ok(!JSON.stringify(panelFile.soffice.ui).includes("бизнес-центр"), "бизнес-центры — домами");
   assert.ok(panelFile.agora.js.includes("'ir-book-1'"), "ключи — как у сайта ресторана: бронь с макета приходит в админку");
 });
 
-test("админка: у стоматологии, медцентра, ресторана, турагентства и учебного центра — на данных клиента, с отпечатком и условиями", () => {
-  for (const [ex, mark] of [[example, "Белая Лилия"], [med, null], [rest, null], [tur, "Голубая Волна"], [edu, null]] as const) {
+test("админка: у всех семи сфер — на данных клиента, с отпечатком и условиями", () => {
+  for (const [ex, mark] of [[example, "Белая Лилия"], [med, null], [rest, null], [tur, "Голубая Волна"], [edu, null], [mebel, null], [nedv, "Агентство Ключ"]] as const) {
     for (const locale of ["ru", "uz"] as const) {
       const b = buildInstant({ ...ex, locale }, SEED);
       assert.deepEqual(b.problems, [], `${ex.niche} ${locale}`);
       const a = b.pages.admin;
       assert.ok(a, `${ex.niche}: админка есть`);
-      assert.ok(a.includes(`/${locale}/mockup-terms`) && /id="(?:pn|fp)-data"/.test(a));
+      assert.ok(a.includes(`/${locale}/mockup-terms`) && /id="(?:pn|fp|gp|sp)-data"/.test(a));
       assert.ok(!/\[\[t:\d+\]\]/.test(a), "ловушки заменены отпечатком");
       assert.ok(!/<script[^>]+src=/.test(a));
       assert.deepEqual(tailsIn(a), []);
@@ -435,7 +438,7 @@ test("админка: у стоматологии, медцентра, рест�
       if (mark) assert.ok(a.includes(mark));
     }
   }
-  assert.ok(!hasAdmin("nedvizhimost") && !buildInstant(nedv, SEED).pages.admin, "сферы без панели — без админки");
+  for (const n of ["stomatologiya", "medcentr", "mebel", "restoran", "turagentstvo", "uchebnyy-centr", "nedvizhimost"] as const) assert.ok(hasAdmin(n), `${n}: админка есть`);
 });
 
 test("админка ресторана: блюда клиента в меню, демо-заказы только из блюд с ценой", () => {
@@ -458,4 +461,18 @@ test("админка турагентства и учебного центра: 
   const pd = JSON.parse(e.match(/id="fp-data">([\s\S]*?)<\/script>/)![1]);
   assert.equal(pd.tariffs.length, 4, "панель FinTax держит четыре тарифа");
   assert.equal(pd.tariffs[0].n, edu.services[0].name, "курсы клиента первыми");
+});
+
+test("админка мебели и недвижимости: изделия и дома клиента, демо-цены только там, где на сайте цены нет", async () => {
+  const { sumPrice } = await import("@/lib/proto/instant/admin");
+  assert.equal(sumPrice("от 5 000 000 сум"), 5000000);
+  for (const p of ["по запросу", "$500", null, "от 30 тыс"]) assert.equal(sumPrice(p), 0, String(p));
+  const m = buildInstant(mebel, SEED).pages.admin!;
+  const gp = JSON.parse(m.match(/id="gp-data">([\s\S]*?)<\/script>/)![1]);
+  assert.deepEqual(gp.products.map((p: { n: string }) => p.n), mebel.services.slice(0, 8).map((s) => s.name));
+  assert.ok(gp.products.every((p: { price: number }) => p.price > 0), "у каждого изделия есть цена для демо-заказов");
+  const n = buildInstant(nedv, SEED).pages.admin!;
+  const sp = JSON.parse(n.match(/id="sp-data">([\s\S]*?)<\/script>/)![1]);
+  assert.ok(sp.bc.length === 6 && sp.bc.every((b: { id: string }) => sp.inv[b.id]), "у каждого демо-дома этажи");
+  assert.ok(!/Gross Plaza|Sapphire|Arka Development/.test(n), "зданий и собственников Soffice нет");
 });
