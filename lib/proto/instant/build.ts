@@ -8,11 +8,12 @@
  */
 import { dentalHtml } from "@/lib/proto/instant/dental";
 import { medcentrHtml } from "@/lib/proto/instant/medcentr";
+import { kpHtml } from "@/lib/proto/instant/kp";
 import { mebelHtml } from "@/lib/proto/instant/mebel";
 import { instantProblems, tailsIn, type InstantProblem } from "@/lib/proto/instant/check";
 import { brandColor, clean, handleOf, imageUrl } from "@/lib/proto/instant/safe";
 import { LIMITS, instantMissing, type InstantSite } from "@/lib/proto/instant/types";
-import { withoutDashes } from "@/lib/proto/plain-text";
+import { pageProblems, withoutDashes } from "@/lib/proto/plain-text";
 import { newSeed, stampHtml, type Stamp } from "@/lib/proto/stamp";
 
 const TEMPLATES = { stomatologiya: dentalHtml, medcentr: medcentrHtml, mebel: mebelHtml } as const;
@@ -77,9 +78,11 @@ export type InstantBuild = {
   html: string;
   stamp: Stamp;
   problems: InstantProblem[];
+  /** Страницы рядом с макетом: `kp` — КП на бланке, цена закреплена на 48 часов от сборки. */
+  pages: { kp: string };
 };
 
-export function buildInstant(raw: InstantSite, seed = newSeed()): InstantBuild {
+export function buildInstant(raw: InstantSite, seed = newSeed(), now = new Date()): InstantBuild {
   const site = normalizeSite(raw);
   const template = TEMPLATES[site.niche];
   const missing = instantMissing(site);
@@ -92,5 +95,7 @@ export function buildInstant(raw: InstantSite, seed = newSeed()): InstantBuild {
   // Слова-ловушки — после отпечатка: хвостом прошлого клиента стать не могут, но проверим.
   const late = tailsIn(stamped.html, site);
   if (late.length && !problems.some((p) => p.code === "tail")) problems.push({ code: "tail", text: `Хвост: ${late[0]}` });
-  return { site, html: stamped.html, stamp: stamped.stamp, problems };
+  const kp = kpHtml(site, now);
+  for (const p of pageProblems(kp, site.name)) problems.push({ code: `kp-${p.code}`, text: `КП: ${p.text}` });
+  return { site, html: stamped.html, stamp: stamped.stamp, problems, pages: { kp } };
 }

@@ -7,6 +7,10 @@ import { PROMO } from "@/lib/admin/mockup-offer";
 import { INBOUND_SOURCES } from "@/lib/admin/sales-stages";
 import { MANUAL_HOURS, caseLinks, greetInstant, handleInstantButton, handleInstantText, instagramOf, instantFromAddress, manualText, priceText, startInstant, type Ctx, type Deps } from "@/lib/proto/instant/bot";
 import { badOurLinks } from "@/lib/admin/our-links";
+import { buildInstant } from "@/lib/proto/instant/build";
+import { EXAMPLE } from "@/scripts/protos/instant/preview-data.mjs";
+import type { InstantSite } from "@/lib/proto/instant/types";
+const example = EXAMPLE as InstantSite;
 import { PROTOTYPE_HOURS } from "@/lib/admin/outreach";
 import { INSTANT_SOURCE, MANUAL_SOURCE, instantLeadInput, manualHeading, sourceOf } from "@/lib/proto/instant/bot-deps";
 import { DAILY_CAP, MOCKUP_BOT_OPEN, limitVerdict, mayUseInstant, siteUrlOf, tashkentDayStart } from "@/lib/proto/instant/limits";
@@ -322,9 +326,9 @@ test("медцентр: допы с ценами — из плана нашег�
   assert.ok(!/[ЀЁ-ӿ]{3}/.test(priceText("uz", new Date(), "medcentr").split("\n").slice(-7).join(" ")), "узбекские допы без кириллицы");
 });
 
-test("мебель: допы с ценами — из плана нашего мебельного макета Enotmebel", () => {
+test("мебель: допы с ценами — из планов наших макетов (Enotmebel, Usemtau, Karomat)", () => {
   const ru = priceText("ru", new Date("2026-11-10T10:00:00Z"), "mebel");
-  assert.ok(ru.includes("Корзина и заказ в Telegram: 70 $"));
+  assert.ok(ru.includes("Панель заявок и замеров: статусы, менеджеры: 450 $"));
   assert.ok(ru.includes("Рассрочка Uzum Nasiya и Alif: 80 $"));
   assert.ok(!ru.includes("Telegram-бот записи"), "допы медцентра не путаются");
   assert.ok(!/[ЀЁ-ӿ]{3}/.test(priceText("uz", new Date(), "mebel").split("\n").slice(-7).join(" ")), "узбекские допы без кириллицы");
@@ -333,7 +337,7 @@ test("мебель: допы с ценами — из плана нашего м
 test("первое сообщение: «пришлите сайт или Instagram» с кнопками; пока закрыто — false", async () => {
   const f = fake();
   assert.equal(await greetInstant(ctx, f.deps), true);
-  assert.match(f.sent[0].html, /адрес вашего сайта или Instagram — за 2 минуты соберём макет/);
+  assert.match(f.sent[0].html, /за 2 минуты и бесплатно\. Пришлите адрес вашего сайта или Instagram/);
   assert.deepEqual(JSON.stringify(f.sent[0].rows).match(/im:(go|other)/g), ["im:go", "im:other"]);
   assert.equal(f.flow()?.stage, "greet");
   const closed = fake({ open: false });
@@ -420,4 +424,43 @@ test("личка владельца — чат продаж: /maket, ?start=make
   assert.match(sales, /startPayloadOf\(raw\) === INSTANT_START/);
   assert.match(sales, /instantOpenFor\(ictx\)/, "тот же выключатель: только admin/head, пока поток закрыт");
   assert.ok(sales.indexOf("handleInstantText(") < sales.indexOf("handleStaffText("), "ответы посреди сборки — потоку, остальной текст — помощнику");
+});
+
+test("КП: база 500 / 1 000 $ и допы ниши не дороже 1 500 $, сайт целиком не дороже 2 500 $", async () => {
+  const { offerAddons, offerBase, OFFER_ADDONS_MAX } = await import("@/lib/proto/instant/offer");
+  const { INSTANT_NICHES } = await import("@/lib/proto/instant/types");
+  const base = offerBase("ru");
+  assert.deepEqual(base.map((b) => b.price), [500, 1000]);
+  for (const niche of INSTANT_NICHES) {
+    const sum = offerAddons(niche).reduce((s, a) => s + a.price, 0);
+    assert.ok(sum > 0 && sum <= OFFER_ADDONS_MAX, `${niche}: допы ${sum} $`);
+    assert.ok(base[1].price + sum <= 2500, `${niche}: сайт целиком ${base[1].price + sum} $`);
+    for (const a of offerAddons(niche)) assert.ok(!/[Ѐ-ӿ]/.test(a.uz), `${niche}: «${a.uz}» узбекский без кириллицы`);
+  }
+});
+
+test("КП: на бланке, срок 48 часов от сборки, без тире и штампов, имя клиента экранировано", async () => {
+  const { kpHtml } = await import("@/lib/proto/instant/kp");
+  const { pageProblems } = await import("@/lib/proto/plain-text");
+  const { INSTANT_NICHES } = await import("@/lib/proto/instant/types");
+  const at = new Date("2026-11-10T10:00:00Z");
+  for (const locale of ["ru", "uz"] as const) {
+    for (const niche of INSTANT_NICHES) {
+      const html = kpHtml({ ...example, niche, locale, name: "Клиника <b>«Улыбка»</b>" }, at);
+      assert.deepEqual(pageProblems(html), [], `${locale} ${niche}`);
+      assert.ok(html.includes("2026-11-12T10:00:00.000Z"), "срок — 48 часов от сборки");
+      assert.ok(html.includes("MAKSIMOV EGOR ANDREEVICH") && html.includes("t.me/Devuz_studio_bot"), "бланк студии");
+      assert.ok(html.includes("__PROTO_BASE__/"), "кнопка обратно на макет");
+      assert.ok(!html.includes("<b>«Улыбка»</b>"), "имя экранировано");
+      assert.ok(/mockup-terms/.test(html), "ссылка на условия макета");
+    }
+  }
+  const uz = kpHtml({ ...example, locale: "uz", name: "Tabassum" }, at);
+  assert.ok(!/[Ѐ-ӿ]/.test(uz.replace(/<script[\s\S]*?<\/script>/g, "")), "узбекское КП без кириллицы");
+});
+
+test("КП: сборка кладёт его страницей kp, бот даёт кнопку на /kp", async () => {
+  const build = buildInstant(example, "0".repeat(32), new Date("2026-11-10T10:00:00Z"));
+  assert.ok(build.pages.kp.includes("Коммерческое предложение"));
+  assert.ok(!build.problems.some((p) => p.code.startsWith("kp-")), JSON.stringify(build.problems));
 });

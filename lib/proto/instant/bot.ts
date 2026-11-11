@@ -18,15 +18,13 @@
  * молчит»). Правило «бот макеты сам не собирает» (AUTO_PROTO) — про касания
  * и здесь не тронуто: макет собирается только по просьбе самого клиента.
  */
-import plans from "@/content/mockup-plans.json" with { type: "json" };
-import shox from "@/content/proto-instant/shox-assets.json" with { type: "json" };
-import vtashkente from "@/content/proto-instant/vtashkente-assets.json" with { type: "json" };
 import { cases } from "@/content/cases";
 import { OFFER_MS, announceText } from "@/lib/admin/mockup-offer";
 import { PROTOTYPE_HOURS } from "@/lib/admin/outreach";
 import { CIRCLE_NICHES, CIRCLE_NICHE_RU, isCircleNiche, type CircleNiche } from "@/lib/admin/sales-after-reply";
 import { buildInstant, type InstantBuild } from "@/lib/proto/instant/build";
 import { DAILY_CAP, limitVerdict, mayUseInstant, siteUrlOf } from "@/lib/proto/instant/limits";
+import { offerAddons } from "@/lib/proto/instant/offer";
 import { readClientSite, siteFromAnswers, type ReadResult } from "@/lib/proto/instant/read";
 import type { Flow } from "@/lib/proto/instant/store";
 import { instantReady, type InstantLocale, type InstantNiche, type InstantSite } from "@/lib/proto/instant/types";
@@ -154,8 +152,10 @@ const T = {
     ready: (name: string) => `Готово! Макет сайта «${esc(name)}» по вашим данным.\n\nСсылка открыта 24 часа, дальше по паролю: попросите его здесь.`,
     openBtn: "Открыть макет",
     addons: "Что можно добавить к сайту:",
+    kpBtn: "📄 Коммерческое предложение",
+    kp: "Коммерческое предложение на нашем бланке: выберите основу и допы, итог посчитается сам. Цена закреплена на 48 часов.",
     after: "Хотите такой сайт? Напишите здесь «Да», менеджер свяжется и ответит на вопросы.",
-    greet: "Здравствуйте! Пришлите адрес вашего сайта или Instagram — за 2 минуты соберём макет вашего нового сайта.",
+    greet: "Здравствуйте! Соберём макет вашего нового сайта прямо здесь, за 2 минуты и бесплатно. Пришлите адрес вашего сайта или Instagram.",
     greetGo: "Собрать макет",
     greetOther: "У меня другой вопрос",
     manual: (h: number) => `Для вашей сферы макет соберёт наш дизайнер вручную, пришлём сюда в течение ${h} часов. Пока посмотрите, что мы уже делали:`,
@@ -179,8 +179,10 @@ const T = {
     ready: (name: string) => `Tayyor! «${esc(name)}» sayti maketi sizning ma’lumotlaringiz bo‘yicha.\n\nHavola 24 soat ochiq, keyin parol bilan: uni shu yerda so‘rang.`,
     openBtn: "Maketni ochish",
     addons: "Saytga nimalar qo‘shish mumkin:",
+    kpBtn: "📄 Tijorat taklifi",
+    kp: "Blankamizdagi tijorat taklifi: asos va qo‘shimchalarni tanlang, jami o‘zi hisoblanadi. Narx 48 soatga qotirildi.",
     after: "Shunday sayt kerakmi? Shu yerda «Ha» deb yozing, menejer bog‘lanadi.",
-    greet: "Assalomu alaykum! Saytingiz yoki Instagram manzilini yuboring — 2 daqiqada yangi saytingiz maketini yig‘amiz.",
+    greet: "Assalomu alaykum! Yangi saytingiz maketini shu yerning o‘zida, 2 daqiqada va bepul yig‘amiz. Saytingiz yoki Instagram manzilini yuboring.",
     greetGo: "Maketni yig‘ish",
     greetOther: "Boshqa savolim bor",
     manual: (h: number) => `Sohangiz uchun maketni dizaynerimiz qo‘lda yig‘adi, ${h} soat ichida shu yerga yuboramiz. Hozircha qilgan ishlarimizni ko‘ring:`,
@@ -200,37 +202,9 @@ const NICHE_UZ: Record<CircleNiche, string> = {
   nedvizhimost: "Ko‘chmas mulk",
 };
 
-/**
- * Допы стоматологии — из плана нашего макета Nek Dental Studio
- * (content/mockup-plans.json): цены и описания оттуда, своих не придумываем.
- * Пролёт по кадрам и раздел для приезжих в Тбилиси — про Nek, не про всех.
- */
-const DENTAL_ADDONS = ["admin", "chat", "quiz", "remind", "reviews"] as const;
-const ADDON_UZ: Record<(typeof DENTAL_ADDONS)[number], string> = {
-  admin: "Klinika paneli: yozuv, jadval, holatlar",
-  chat: "Saytdagi chat: javoblar yoki administrator",
-  quiz: "4 qadamli «Tabassumingiz» kvizi",
-  remind: "Bemorga tashrif eslatmasi",
-  reviews: "Saytda Google sharhlari",
-};
-
-type Plan = { id: string; addons: { id: string; title: string; price: number }[] };
-
-function dentalAddons(locale: InstantLocale): string[] {
-  const plan = (plans as Plan[]).find((p) => p.id === "nek");
-  if (!plan) return [];
-  return DENTAL_ADDONS.flatMap((id) => {
-    const a = plan.addons.find((x) => x.id === id);
-    if (!a) return [];
-    return [`• ${esc(locale === "uz" ? ADDON_UZ[id] : a.title)}: ${a.price} $`];
-  });
-}
-
-/** Допы медцентра — из плана нашего макета Shox, мебели — из плана Enotmebel (content/proto-instant/*-assets.json). */
+/** Допы ниши — те же, что в КП (lib/proto/instant/offer): цены из планов наших макетов. */
 export function addonLines(locale: InstantLocale, niche: InstantNiche = "stomatologiya"): string[] {
-  if (niche === "medcentr") return shox.addons.map((a) => `• ${esc(a[locale])}: ${a.price} $`);
-  if (niche === "mebel") return vtashkente.addons.map((a) => `• ${esc(a[locale])}: ${a.price} $`);
-  return dentalAddons(locale);
+  return offerAddons(niche).map((a) => `• ${esc(a[locale])}: ${a.price} $`);
 }
 
 /** Цена: те же спецусловия 48 часов, что после любого макета, и допы из плана. */
@@ -515,7 +489,7 @@ export async function runBuild(ctx: Ctx, flow: Flow, deps: Deps): Promise<void> 
   if (!site) return;
 
   await step("build");
-  const build = buildInstant(site);
+  const build = buildInstant(site, undefined, deps.now());
   await step("check");
   const name = build.site.name || (ctx.username ? `@${ctx.username}` : "");
   if (build.problems.length) {
@@ -539,7 +513,8 @@ export async function runBuild(ctx: Ctx, flow: Flow, deps: Deps): Promise<void> 
   await deps.dropFlow(ctx.chatId);
   const link = deps.protoUrl(saved.token);
   await deps.send(ctx.chatId, T[locale].ready(build.site.name), [[{ text: T[locale].openBtn, url: link }]]);
-  await deps.send(ctx.chatId, priceText(locale, deps.now(), build.site.niche));
+  // КП на бланке рядом с макетом: та же цена и те же допы, выбрать и посчитать.
+  await deps.send(ctx.chatId, `${priceText(locale, deps.now(), build.site.niche)}\n\n${T[locale].kp}`, [[{ text: T[locale].kpBtn, url: `${link}/kp` }]]);
   // Сборка сотрудника — тестовая: лида в очередь менеджерам нет.
   if (ctx.staffId) return;
   const leadId = await deps.lead({ ctx, name, niche, site: flow.url, link, phone: build.site.phone, why: "built" });
