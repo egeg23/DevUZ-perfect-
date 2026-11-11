@@ -25,6 +25,8 @@ import { mockupTermsUrl } from "@/lib/proto/booking";
 import { LIMITS, type InstantLocale, type InstantService, type InstantSite } from "@/lib/proto/instant/types";
 import { brandColor, esc, handleOf, hexToHsl, imageUrl, telHref, waHref } from "@/lib/proto/instant/safe";
 import { rgbOf } from "@/lib/proto/instant/dental";
+import restoranMedia from "@/content/proto-instant/restoran-media.json" with { type: "json" };
+import { flyParts } from "@/lib/proto/instant/fly";
 
 const IMG = "/protos/_niche/restoran";
 /** Нейтральные фото ниши: зал вечером, сервированный стол, блюда на столе, мангал. */
@@ -210,6 +212,22 @@ ${logoA}
 <a class="btn btn-a btn-s tel" href="#book">${ICON.cal}<span>${t(C.bookShort)}</span></a>
 </div></header>`;
 
+  // Пролёт ниши (владелец, 11.11.2026): двери, администратор, кухня, огонь вока,
+  // темнота и название заведения. Кадры нейтральные, одни на всех клиентов ниши.
+  const top2 = services.slice(0, 2).map((x) => x.name).join(", ");
+  const fly = flyParts({
+    locale: l, img: IMG, media: restoranMedia, label: l === "ru" ? "Пролёт по ресторану" : "Restoran bo‘ylab parvoz", fin: "center",
+    sign: `${logo ? `<img src="${esc(logo)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : ""}<b>${name}</b>`,
+    btn: "btn btn-a", accent: "var(--a)", hd: "'Forum',Georgia,serif", tx: "'Manrope',sans-serif", to: "top",
+    chapters: [
+      { at: 0.06, a: site.name, b: site.city ?? (l === "ru" ? "Добро пожаловать" : "Xush kelibsiz") },
+      { at: 0.3, a: l === "ru" ? "Вас встретят" : "Sizni kutib olishadi", b: l === "ru" ? "и проводят к столу" : "va stolgacha kuzatishadi" },
+      { at: 0.52, a: l === "ru" ? "Кухня открыта" : "Oshxona ochiq", b: top2 || (l === "ru" ? "Готовим при вас" : "Ko‘z oldingizda pishiramiz") },
+      { at: 0.74, a: l === "ru" ? "Огонь, вок и мясо" : "Olov, vok va go‘sht", b: l === "ru" ? "с плиты сразу на стол" : "plitadan to‘g‘ri stolga" },
+      { at: 0.93, a: site.name, b: site.tagline ?? site.city ?? "" },
+    ],
+  });
+
   const hero = `<section class="hero" id="top" aria-label="${name}">
 <div class="hero-bg"><img src="${esc(pic(0))}"${srcset(pic(0))} sizes="100vw" width="1200" height="806" alt="" fetchpriority="high" referrerpolicy="no-referrer"></div>
 <div class="wrap hero-in">
@@ -346,12 +364,14 @@ ${links ? `<div><h4>${t(C.contacts)}</h4>${links}</div>` : ""}
 .im-tgw .mg{white-space:pre-line}
 .im-tgw .kb{display:flex;gap:6px}
 .im-tgw .kb span{flex:1;text-align:center}</style>
+${fly.css}
 </head>
 <body>
 ${dzIntroSolo(l)}
 <a class="vh" href="#book">${t(C.toBook)}</a>
 ${header}
 <main>
+${fly.section}
 ${hero}
 ${velo}
 ${menu}
@@ -367,6 +387,7 @@ ${dock}
 <script type="application/json" id="ir-data">${json(data)}</script>
 <script>
 ${assets.js}</script>
+${fly.script}
 </body>
 </html>`;
 }

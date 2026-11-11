@@ -28,6 +28,8 @@ import { mockupTermsUrl } from "@/lib/proto/booking";
 import { LIMITS, type InstantLocale, type InstantService, type InstantSite } from "@/lib/proto/instant/types";
 import { brandColor, esc, handleOf, hexToHsl, imageUrl, telHref, waHref } from "@/lib/proto/instant/safe";
 import { rgbOf } from "@/lib/proto/instant/dental";
+import turagentstvoMedia from "@/content/proto-instant/turagentstvo-media.json" with { type: "json" };
+import { flyParts } from "@/lib/proto/instant/fly";
 
 const IMG = "/protos/_niche/turagentstvo";
 export const TUR_PHOTOS = ["hero.webp", "hero-s.webp", "hero-9.webp"].map((f) => `${IMG}/${f}`);
@@ -244,6 +246,21 @@ ${dests.length ? `<div class="fld"><span class="fl">${t(C.where)}</span><div cla
 ${perks.length ? `<ul class="trust">${perks.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
 </div>`;
 
+  // Пролёт ниши (владелец, 11.11.2026): от первого лица — лента в телефоне, пост
+  // с островом, нажатие, влёт в экран, лежак с коктейлем у океана и закат.
+  const top2 = services.slice(0, 2).map((x) => x.name).join(", ");
+  const fly = flyParts({
+    locale: l, img: IMG, media: turagentstvoMedia, label: l === "ru" ? "Из ленты на море" : "Lentadan dengizga", fin: "center",
+    btn: "btn btn-sun", accent: "var(--sun)", hd: "'Playfair Display',serif", tx: "'Onest',sans-serif", to: "hero",
+    chapters: [
+      { at: 0.06, a: site.name, b: site.city ?? (l === "ru" ? "Туры и отдых" : "Turlar va dam olish") },
+      { at: 0.24, a: l === "ru" ? "За окном дождь" : "Derazada yomg‘ir", b: l === "ru" ? "а в ленте море" : "lentada esa dengiz" },
+      { at: 0.48, a: l === "ru" ? "Одно касание" : "Bir bosish", b: l === "ru" ? "и вы уже там" : "va siz o‘sha yerdasiz" },
+      { at: 0.72, a: l === "ru" ? "Коктейль, лежак, океан" : "Kokteyl, shezlong, okean", b: top2 || (l === "ru" ? "остальное берём на себя" : "qolganini biz hal qilamiz") },
+      { at: 0.93, a: site.name, b: site.tagline ?? site.city ?? "" },
+    ],
+  });
+
   const hero = `<section class="hero" id="hero" aria-labelledby="hero-h">
 <div class="hero-bg" aria-hidden="true">${heroBg}</div>
 <div class="hero-shade" aria-hidden="true"></div>
@@ -393,6 +410,7 @@ ${tel ? `<a class="btn btn-line" href="${esc(tel)}">${ic("phone")}<span>${t(C.ca
 .im-tg-h .ic{color:var(--sea2)}
 .im-tg-h small{margin-left:auto;color:var(--mute);font-size:12px}
 .im-tg p{margin:0;line-height:1.7}</style>
+${fly.css}
 </head>
 <body class="site">
 ${dzIntroSolo(l)}
@@ -404,6 +422,7 @@ ${logoA}
 <div class="top-r">${tel ? `<a class="top-ph" href="${esc(tel)}" aria-label="${t(C.call)}">${ic("phone")}<span>${esc(site.phone ?? "")}</span></a>` : ""}${chat ? `<a class="top-tg" href="${esc(chat)}" target="_blank" rel="noopener" aria-label="${t(C.write)}">${ic("tg")}</a>` : ""}<button type="button" class="mine" id="mine" hidden>${t(C.mine)}</button></div>
 </div></header>
 <main id="main">
+${fly.section}
 ${hero}
 ${rez}
 ${karta}
@@ -416,6 +435,7 @@ ${bron}
 <script type="application/json" id="tr-data">${json(data)}</script>
 <script>
 ${assets.js}</script>
+${fly.script}
 </body>
 </html>`;
 }

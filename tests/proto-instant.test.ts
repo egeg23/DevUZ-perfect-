@@ -476,3 +476,43 @@ test("админка мебели и недвижимости: изделия и
   assert.ok(sp.bc.length === 6 && sp.bc.every((b: { id: string }) => sp.inv[b.id]), "у каждого демо-дома этажи");
   assert.ok(!/Gross Plaza|Sapphire|Arka Development/.test(n), "зданий и собственников Soffice нет");
 });
+
+// Пролёты по прокрутке у ресторана, мебели и турагентства (владелец, 11.11.2026:
+// «Давай по остальным тоже продукты сделаем нейтральные»).
+for (const [niche, site, fin] of [
+  ["restoran", EXAMPLE_REST, "center"],
+  ["mebel", EXAMPLE_MEBEL, "top"],
+  ["turagentstvo", EXAMPLE_TUR, "center"],
+] as const) {
+  test(`пролёт ниши ${niche}: кадры шифром, ключ в SCENES, название клиента в последнем кадре`, async () => {
+    const { readdirSync, statSync, readFileSync } = await import("node:fs");
+    const media = JSON.parse(readFileSync(`content/proto-instant/${niche}-media.json`, "utf8"));
+    assert.ok(media.n > 100 && media.vn > media.n, "кадры и видео телефона сняты");
+    for (const k of ["d", "m"]) {
+      const dir = readdirSync(`public/protos/_niche/${niche}/seq/${k}`);
+      assert.equal(dir.length, media.n);
+      assert.ok(dir.every((f) => f.endsWith(".bin")), "в public только шифр");
+    }
+    assert.ok(statSync(`public/protos/_niche/${niche}/seq/m.bin`).size > 0, "телефону — одно видео, шифром");
+    for (let i = 1; i <= 5; i++) for (const a of ["16", "9"]) assert.ok(existsSync(`public/protos/_niche/${niche}/k${i}-${a}.webp`));
+    const { SCENES } = await import("@/lib/proto/promo");
+    assert.equal(SCENES[`instant-${niche}`], `SCENE_KEY_INSTANT_${niche.toUpperCase()}`);
+    const s = site as InstantSite;
+    const b = buildInstant(s, SEED);
+    assert.deepEqual(b.problems, []);
+    assert.ok(b.html.includes('class="fz im-fly"') && b.html.includes('id="im-land"'), "сцена и её данные на странице");
+    assert.ok(b.html.includes(`/protos/_niche/${niche}/poster-16.webp`));
+    assert.match(b.html, new RegExp(`class="fzc fin fin-${fin}"[^>]*><p class="fzc-h">${s.name}<`), "название клиента в последнем кадре");
+    assert.ok(b.html.indexOf('class="fz im-fly"') < b.html.indexOf('id="main"') || b.html.indexOf('class="fz im-fly"') < b.html.indexOf("<footer"), "пролёт стоит первым");
+    assert.ok(b.html.includes("prefers-reduced-motion:reduce){.fz{display:none}"), "без движения — кадры стопкой");
+    assert.ok(!b.html.includes("$('.hs')"), "движок сцены не трогает .hs шаблона");
+    const uz = buildInstant({ ...s, locale: "uz" }, SEED);
+    assert.deepEqual(uz.problems, []);
+  });
+}
+
+test("пролёт ниши: кадров нет — шаблон идёт без сцены", async () => {
+  const { flyParts } = await import("@/lib/proto/instant/fly");
+  const p = flyParts({ locale: "ru", img: "/x", media: { n: 0, vn: 0, fps: 24 }, label: "x", chapters: [], fin: "center", btn: "btn", accent: "#fff", hd: "serif", tx: "sans-serif", to: "top" });
+  assert.deepEqual(p, { section: "", css: "", script: "" });
+});
