@@ -203,9 +203,41 @@ test("виджет: в пределах Telegram — 32 КБ, 4 КБ сжаты�
     assert.doesNotMatch(html, /fetch\(|XMLHttpRequest|WebSocket|<img|<link|src=|url\(|@font-face|<input|https?:/);
     assert.ok(html.includes("chatDataChanged"));
   }
-  for (const s of STEPS) assert.ok(Buffer.byteLength(widgetState(s, true)) <= 1024);
+  for (const s of STEPS) assert.ok(Buffer.byteLength(widgetState(s, "build")) <= 1024);
   assert.match(stepCaption("ru", "services"), /✅ Логотип и цвета\n⏳ Услуги и цены/);
   assert.match(stepCaption("uz", "done"), /✅ Tayyor/);
+});
+
+test("сайт не открылся — сразу после адреса, без сферы и виджета; «Dental.uz» с заглавной — тот же адрес", async () => {
+  const seen: string[] = [];
+  const f = fake({ reachable: async (u) => (seen.push(u), "ENOTFOUND") });
+  await startInstant(ctx, f.deps);
+  await ask(f.deps, "Dental.uz");
+  assert.deepEqual(seen, ["https://dental.uz/"], "регистр адреса не мешает");
+  assert.match(f.sent.at(-1)!.html, /Не получилось открыть сайт/);
+  assert.equal(JSON.stringify(f.sent.at(-1)!.rows).includes(":nosite"), true, "кнопка «Сайта нет»");
+  assert.ok(!f.sent.some((m) => /Чем занимается/.test(m.html)), "сферу не спрашиваем");
+  assert.ok(!f.log.some((l) => l.startsWith("widget")), "виджет не начинаем");
+  assert.equal(f.flow()?.stage, "url", "ждём адрес снова");
+  assert.equal(f.flow()?.fail, "ENOTFOUND", "причина сбоя записана в разговор");
+  assert.ok(!f.sent.some((m) => /менеджер/.test(m.html)), "«передали менеджеру» не говорим");
+  assert.deepEqual(f.leads, []);
+  const ok = fake({ reachable: async () => null });
+  await startInstant(ctx, ok.deps);
+  await ask(ok.deps, "Dental.uz");
+  assert.equal(ok.flow()?.stage, "niche");
+});
+
+test("сбой посреди сборки — крестик на шаге, без «передали менеджеру», без повтора в подписи", () => {
+  const site = JSON.parse(widgetState("read", "site"));
+  assert.equal(site.f, 1);
+  const cap = stepCaption("ru", "read", "site");
+  assert.match(cap, /✖️ Читаем сайт/);
+  assert.doesNotMatch(cap, /менеджер|⚠️|Логотип/);
+  assert.equal(JSON.parse(widgetState("check", "build")).f, 2);
+  const html = widgetHtml("ru");
+  assert.ok(html.includes("Сайт не открылся") && html.includes("Соберёт дизайнер вручную"));
+  assert.doesNotMatch(widgetHtml("ru") + widgetHtml("uz"), /передали менеджеру|menejerga topshirdik/);
 });
 
 test("цена: спецусловия 48 часов из PROMO и допы из плана нашего макета", () => {

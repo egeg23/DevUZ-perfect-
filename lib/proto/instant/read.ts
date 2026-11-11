@@ -15,7 +15,7 @@
 import { collectFacts, type Collected } from "@/lib/proto/collect";
 import { anthropic } from "@/lib/model-road";
 import { modelTroubleSays } from "@/lib/model-trouble";
-import { emptySite, type InstantLocale, type InstantNiche, type InstantSite } from "@/lib/proto/instant/types";
+import { emptySite, type InstantLocale, type InstantNiche, type InstantService, type InstantSite } from "@/lib/proto/instant/types";
 
 export const INSTANT_READ_MODEL = process.env.INSTANT_READ_MODEL || "claude-haiku-4-5";
 
@@ -136,7 +136,7 @@ export type ReadStep = "read" | "brand" | "services";
 
 export type ReadResult =
   | { ok: true; site: InstantSite; usedModel: boolean }
-  | { ok: false; why: "open" | "empty" };
+  | { ok: false; why: "open" | "empty"; detail?: string };
 
 export type ReadDeps = {
   collect?: (url: string) => Promise<Collected | { error: string }>;
@@ -144,6 +144,14 @@ export type ReadDeps = {
   /** Шаг сделан; `site` — что уже узнали (виджет показывает имя, цвет и услуги). */
   onStep?: (step: ReadStep, site?: InstantSite) => Promise<void> | void;
 };
+
+/**
+ * Почему сайт не открылся — словами ошибки, без адреса клиента: это пишется
+ * в лог и в разговор (stats_snapshots), чтобы сбой на сервере было видно.
+ */
+export function failDetail(message: string): string {
+  return message.replace(/https?:\/\/\S+/g, "<адрес>").replace(/\b[a-z0-9-]+(\.[a-z0-9-]+)+\b/gi, "<адрес>").slice(0, 160);
+}
 
 export async function readClientSite(
   url: string,
@@ -154,7 +162,7 @@ export async function readClientSite(
   const collect = deps.collect ?? ((u: string) => collectFacts({ url: u, niche, locale }));
   await deps.onStep?.("read");
   const page = await collect(url);
-  if ("error" in page) return { ok: false, why: "open" };
+  if ("error" in page) return { ok: false, why: "open", detail: failDetail(page.error) };
   const f = page.facts;
 
   const site: InstantSite = {
@@ -191,6 +199,10 @@ export async function readClientSite(
   return { ok: true, site, usedModel: Boolean(reply) };
 }
 
+/** Услуга с ценой в конце: число, валюта словом или знаком, «/ подход» после. */
+const PRICED =
+  /^(.+?)\s*(?:[-–—:,]\s*|\s)((?:от\s+|dan\s+)?\d[\d\s.,]*\s*(?:сум|so['‘’`]?m|\$|usd|руб(?:лей|ля|ль)?\.?|р\.|₽|тенге|₸|eur|€)?(?:\s*\/\s*[\p{L} ]+)?)$/iu;
+
 /**
  * Сайта нет (только Instagram): данные — из ответов клиента в боте.
  * Услуги — строками, «Чистка - 300 000 сум» или «Чистка 300 000»: цена — то,
@@ -206,12 +218,15 @@ export function siteFromAnswers(input: {
   instagram?: string | null;
 }): InstantSite {
   const services = input.services
-    .split(/\n|;|,(?!\d)/)
+    .split(/\n|;/)
     .map((line) => line.trim())
     .filter(Boolean)
-    .map((line) => {
-      const split = /^(.+?)\s*(?:[-–—:]\s*|\s)((?:от\s+|dan\s+)?\d[\d\s.,]*\s*(?:сум|so['‘’`]?m|\$|usd|руб)?\.?)$/i.exec(line);
-      return split ? { name: split[1].trim(), price: split[2].trim() } : { name: line, price: null };
+    .flatMap((line): InstantService[] => {
+      // «Чистка, 5000 рублей», «Чистка - 300 000 сум», «Чистка 5000 ₽ / зуб».
+      const split = PRICED.exec(line);
+      if (split) return [{ name: split[1].trim(), price: split[2].trim() }];
+      // Без цены через запятую — несколько услуг одной строкой.
+      return line.split(/,(?!\d)/).map((name) => ({ name: name.trim(), price: null })).filter((x) => x.name);
     });
   const source = input.locale === "uz" ? "Telegramdagi javoblar" : "ответы в Telegram";
   return {

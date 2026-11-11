@@ -20,7 +20,13 @@ import type { InstantLocale } from "@/lib/proto/instant/types";
 export const STEPS = ["read", "brand", "services", "build", "check", "done"] as const;
 export type BuildStep = (typeof STEPS)[number];
 
-const LABELS: Record<InstantLocale, Record<BuildStep, string> & { title: string; fail: string; book: string }> = {
+/**
+ * Почему сборка встала. «Передали менеджеру» говорим только там, где лид
+ * правда ушёл (ручной путь); сайт не открылся — просим адрес ещё раз.
+ */
+export type BuildFail = "site" | "build";
+
+const LABELS: Record<InstantLocale, Record<BuildStep, string> & { title: string; fail: Record<BuildFail, string>; book: string }> = {
   ru: {
     title: "Собираем ваш сайт",
     read: "Читаем сайт",
@@ -29,7 +35,7 @@ const LABELS: Record<InstantLocale, Record<BuildStep, string> & { title: string;
     build: "Собираем страницы",
     check: "Проверяем",
     done: "Готово",
-    fail: "Не получилось, передали менеджеру",
+    fail: { site: "Сайт не открылся", build: "Соберёт дизайнер вручную" },
     book: "Записаться",
   },
   uz: {
@@ -40,28 +46,29 @@ const LABELS: Record<InstantLocale, Record<BuildStep, string> & { title: string;
     build: "Sahifalarni yig‘yapmiz",
     check: "Tekshiryapmiz",
     done: "Tayyor",
-    fail: "Bo‘lmadi, menejerga topshirdik",
+    fail: { site: "Sayt ochilmadi", build: "Dizayner qo‘lda yig‘adi" },
     book: "Yozilish",
   },
 };
 
 /** Подпись под виджетом — запасной путь: её видит и клиент, у которого виджетов нет. */
-export function stepCaption(locale: InstantLocale, step: BuildStep, failed = false): string {
+export function stepCaption(locale: InstantLocale, step: BuildStep, failed: BuildFail | false = false): string {
   const l = LABELS[locale];
-  if (failed) return `⚠️ ${l.fail}`;
   const at = STEPS.indexOf(step);
+  // Сбой — крестик на шаге, без отдельной строки: что делать дальше, бот
+  // пишет следующим сообщением, и одно и то же клиент не читает трижды.
   return [
     `<b>${l.title}</b>`,
-    ...STEPS.map((s, i) => `${i < at || step === "done" ? "✅" : i === at ? "⏳" : "▫️"} ${l[s]}`),
+    ...STEPS.slice(0, failed ? at + 1 : STEPS.length).map((s, i) => `${i < at || step === "done" ? "✅" : i === at ? (failed ? "✖️" : "⏳") : "▫️"} ${l[s]}`),
   ].join("\n");
 }
 
 export type WidgetInfo = { name?: string; color?: string | null; services?: string[] };
 
 /** Состояние виджета: шаг и то, что уже узнали о клиенте. Всегда ≤ 1024 байт. */
-export function widgetState(step: BuildStep, failed = false, info: WidgetInfo = {}): string {
+export function widgetState(step: BuildStep, failed: BuildFail | false = false, info: WidgetInfo = {}): string {
   const cut = (s: string, n: number) => ([...s].length > n ? `${[...s].slice(0, n - 1).join("")}…` : s);
-  const state: Record<string, unknown> = { k: STEPS.indexOf(step), f: failed ? 1 : 0 };
+  const state: Record<string, unknown> = { k: STEPS.indexOf(step), f: failed === "site" ? 1 : failed === "build" ? 2 : 0 };
   if (info.name) state.n = cut(info.name, 40);
   if (info.color && /^#[0-9a-f]{6}$/i.test(info.color)) state.c = info.color.toLowerCase();
   if (info.services?.length) state.s = info.services.slice(0, 4).map((x) => cut(x, 34));
@@ -117,7 +124,7 @@ export function widgetHtml(locale: InstantLocale): string {
 </div></div>
 <div class="st"><span class="d"></span><span id="sl"></span></div><div class="bar"><i id="p"></i></div></div>
 <script>
-var W=window.TelegramWidget,N=${names},F=${JSON.stringify(l.fail)},$=function(i){return document.getElementById(i)},shown=0,tm=0;
+var W=window.TelegramWidget,N=${names},F=${JSON.stringify(["", l.fail.site, l.fail.build])},$=function(i){return document.getElementById(i)},shown=0,tm=0;
 function st(){try{var s=JSON.parse(W&&W.chatData);if(s&&typeof s.k==='number')return s}catch(e){}return{k:0,f:0}}
 function draw(){var s=st(),last=N.length-1,w=$('w'),c='w';
 if(s.c)w.style.setProperty('--a',s.c);
@@ -126,7 +133,7 @@ if(s.n){$('nm').textContent=s.n;$('ns').style.display='none'}
 var sv=$('sv'),list=s.s||[];
 while(sv.children.length<list.length){var e=document.createElement('span');e.textContent=list[sv.children.length];sv.appendChild(e)}
 clearTimeout(tm);(function pop(){var k=sv.children;if(shown<k.length&&s.k>=2){k[shown].className='on';shown++;tm=setTimeout(pop,450)}})();
-$('sl').textContent=s.f?F:N[Math.min(s.k,last)];var pc=Math.round(Math.min(s.k,last)/last*100);$('pc').textContent=pc+'%';$('p').style.width=pc+'%';
+$('sl').textContent=s.f?F[s.f]||F[1]:N[Math.min(s.k,last)];var pc=Math.round(Math.min(s.k,last)/last*100);$('pc').textContent=pc+'%';$('p').style.width=pc+'%';
 if(W&&W.ready)W.ready()}
 if(W)W.onEvent('chatDataChanged',draw);
 draw();

@@ -30,7 +30,7 @@ import { DAILY_CAP, limitVerdict, mayUseInstant, siteUrlOf } from "@/lib/proto/i
 import { readClientSite, siteFromAnswers, type ReadResult } from "@/lib/proto/instant/read";
 import type { Flow } from "@/lib/proto/instant/store";
 import { instantReady, type InstantLocale, type InstantNiche, type InstantSite } from "@/lib/proto/instant/types";
-import { stepCaption, widgetHtml, widgetState, type BuildStep, type WidgetInfo } from "@/lib/proto/instant/widget";
+import { stepCaption, widgetHtml, widgetState, type BuildFail, type BuildStep, type WidgetInfo } from "@/lib/proto/instant/widget";
 
 /** Сколько виден каждый шаг сборки в виджете. */
 export const STEP_SHOW_MS = 1200;
@@ -56,6 +56,8 @@ type Btn = { text: string; callback_data: string } | { text: string; url: string
 export type Deps = {
   send: (chatId: number, html: string, rows?: Btn[][]) => Promise<number | null>;
   edit: (chatId: number, messageId: number, html: string) => Promise<boolean>;
+  /** Открывается ли сайт (наш аудитор, lib/audit/fetch): null — да, иначе почему нет. Нет функции — тест: «да». */
+  reachable?: (url: string) => Promise<string | null>;
   sendWidget: (chatId: number, input: { html: string; chatData: string; caption: string }) => Promise<number | null>;
   editWidget: (chatId: number, messageId: number, chatData: string) => Promise<boolean>;
   editCaption: (chatId: number, messageId: number, caption: string) => Promise<boolean>;
@@ -315,6 +317,15 @@ async function takeAddress(ctx: Ctx, flow: Flow, value: string, deps: Deps): Pro
     await deps.dropFlow(ctx.chatId);
     return true;
   }
+  // Сайт не открылся — говорим сразу, до сферы и виджета (владелец, 11.11.2026,
+  // на «Dental.uz»: бот спросил сферу, начал сборку и только потом сдался).
+  const fail = url && deps.reachable ? await deps.reachable(url) : null;
+  if (fail) {
+    console.error("макет в боте: сайт не открылся до сферы:", fail);
+    await deps.saveFlow(ctx.chatId, { ...flow, stage: "url", url: null, fail });
+    await deps.send(ctx.chatId, T[flow.locale].open, [[{ text: T[flow.locale].nosite, callback_data: `${INSTANT_CB}:nosite` }]]);
+    return true;
+  }
   const next: Flow = insta
     ? { ...flow, stage: "niche", nosite: true, url: null, answers: { ...flow.answers, instagram: insta } }
     : { ...flow, stage: "niche", url };
@@ -467,7 +478,7 @@ export async function runBuild(ctx: Ctx, flow: Flow, deps: Deps): Promise<void> 
     info = { name: x.name, color: x.color, services: x.services.map((v) => v.name) };
   };
   const pace = deps.pace ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
-  const step = async (s: BuildStep, failed = false) => {
+  const step = async (s: BuildStep, failed: BuildFail | false = false) => {
     // Постановка поверх настоящих шагов (владелец, 10.11.2026: «показывай
     // прям интерактивно… как ты собираешь»): каждый шаг виден не меньше секунды.
     if (!failed && s !== "read") await pace(STEP_SHOW_MS);
@@ -492,8 +503,10 @@ export async function runBuild(ctx: Ctx, flow: Flow, deps: Deps): Promise<void> 
       return step(s);
     });
     if (!res.ok) {
-      await step("read", true);
-      await deps.saveFlow(ctx.chatId, { ...flow, stage: "url", url: null });
+      await step("read", "site");
+      const fail = `${res.why}: ${res.detail ?? ""}`.trim();
+      console.error("макет в боте: сайт не прочитан:", fail);
+      await deps.saveFlow(ctx.chatId, { ...flow, stage: "url", url: null, fail });
       await deps.send(ctx.chatId, T[locale].open, [[{ text: T[locale].nosite, callback_data: `${INSTANT_CB}:nosite` }]]);
       return;
     }
@@ -508,7 +521,7 @@ export async function runBuild(ctx: Ctx, flow: Flow, deps: Deps): Promise<void> 
   if (build.problems.length) {
     console.error("макет в боте: проверка не прошла", build.problems.map((p) => p.code).join(","));
     await deps.save(build, ctx); // черновиком: в «Макетах» видно, что не так
-    await step("check", true);
+    await step("check", "build");
     await deps.dropFlow(ctx.chatId);
     await deps.send(ctx.chatId, T[locale].failed);
     if (!ctx.staffId) await deps.lead({ ctx, name, niche, site: flow.url, link: null, phone: build.site.phone, why: "failed" });
@@ -516,7 +529,7 @@ export async function runBuild(ctx: Ctx, flow: Flow, deps: Deps): Promise<void> 
   }
   const saved = await deps.save(build, ctx);
   if (!saved) {
-    await step("check", true);
+    await step("check", "build");
     await deps.dropFlow(ctx.chatId);
     await deps.send(ctx.chatId, T[locale].failed);
     if (!ctx.staffId) await deps.lead({ ctx, name, niche, site: flow.url, link: null, phone: build.site.phone, why: "failed" });
