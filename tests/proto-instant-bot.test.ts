@@ -160,10 +160,10 @@ test("макет в боте: без виджетов — тот же ход о�
 test("макет в боте: ниша без шаблона — вручную за 12 часов, кейсы сферы и лид, без сборки", async () => {
   const f = fake();
   await startInstant(ctx, f.deps);
-  await ask(f.deps, "restoran.example");
-  await handleInstantButton(ctx, ["im", "n", "restoran"], f.deps);
+  await ask(f.deps, "salon.example");
+  await handleInstantButton(ctx, ["im", "n", "salon-krasoty"], f.deps);
   assert.match(f.sent.at(-1)!.html, /дизайнер вручную, пришлём сюда в течение 12 часов/);
-  assert.match(f.sent.at(-1)!.html, /devuz\.studio\/ru\/cases\/[a-z-]+/, "кейсы ресторанов");
+  assert.match(f.sent.at(-1)!.html, /devuz\.studio\/ru\/cases/, "кейсы сферы или все кейсы");
   assert.deepEqual(f.leads, ["soon"]);
   assert.ok(!f.log.some((l) => l.startsWith("widget")));
 });

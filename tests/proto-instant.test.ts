@@ -11,11 +11,14 @@ import { emptySite, instantReady, type InstantSite } from "@/lib/proto/instant/t
 import { tails } from "../scripts/protos/instant/tails.mjs";
 import { nekAssets } from "../scripts/protos/instant/nek-assets.mjs";
 import assetsFile from "@/content/proto-instant/nek-assets.json" with { type: "json" };
-import { EXAMPLE, EXAMPLE_MEBEL, EXAMPLE_MED } from "../scripts/protos/instant/preview-data.mjs";
+import { EXAMPLE, EXAMPLE_MEBEL, EXAMPLE_MED, EXAMPLE_REST } from "../scripts/protos/instant/preview-data.mjs";
 import { shoxAssets } from "../scripts/protos/instant/shox-assets.mjs";
 import shoxFile from "@/content/proto-instant/shox-assets.json" with { type: "json" };
 import { MEDCENTR_PHOTOS } from "@/lib/proto/instant/medcentr";
 import { MEBEL_PHOTOS } from "@/lib/proto/instant/mebel";
+import { RESTORAN_PHOTOS, priceNumber } from "@/lib/proto/instant/restoran";
+import { agoraAssets } from "../scripts/protos/instant/agora-assets.mjs";
+import agFile from "@/content/proto-instant/agora-assets.json" with { type: "json" };
 import { vtashkenteAssets } from "../scripts/protos/instant/vtashkente-assets.mjs";
 import vtFile from "@/content/proto-instant/vtashkente-assets.json" with { type: "json" };
 
@@ -125,9 +128,9 @@ test("макет в боте: без сети, кроме шрифтов", () =>
   assert.ok(links.every((h) => h === "fonts.googleapis.com" || h === "fonts.gstatic.com"));
 });
 
-test("макет в боте: шаблоны — у стоматологии, медцентра и мебели, фото ниши лежат в репозитории", () => {
+test("макет в боте: шаблоны — у стоматологии, медцентра, мебели и ресторана, фото ниши лежат в репозитории", () => {
   assert.ok(instantReady("stomatologiya"));
-  assert.ok(!instantReady("restoran"));
+  assert.ok(!instantReady("salon-krasoty"));
   for (const photo of DENTAL_PHOTOS) assert.ok(existsSync(`public${photo}`), photo);
 });
 
@@ -248,6 +251,45 @@ test("мебель: услуги клиента лентой, заявка в и
 test("мебель: нейтральные фото ниши лежат в репозитории", () => {
   assert.ok(instantReady("mebel"));
   for (const photo of MEBEL_PHOTOS) {
+    assert.ok(existsSync(`public${photo}`), photo);
+    assert.ok(existsSync(`public${photo.replace("-1200", "-900")}`), photo);
+  }
+});
+
+const rest = EXAMPLE_REST as InstantSite;
+
+test("ресторан: пример собирается без замечаний, защита та же", () => {
+  const { html, problems, stamp } = buildInstant(rest, SEED);
+  assert.deepEqual(problems, []);
+  assert.ok(html.includes("Чайхана Тандыр") && html.includes('id="bk-form"') && html.includes('id="mn-grid"'));
+  assert.ok(html.includes("/ru/mockup-terms") && html.includes('class="dz-vid"'));
+  assert.ok(stamp.signals.some((s) => s.startsWith("js:")), "метка числа скрипта Agora");
+  assert.ok(stamp.signals.filter((s) => s.startsWith("text:")).length >= 4, "две ловушки");
+  assert.deepEqual(buildInstant({ ...rest, locale: "uz", tagline: null, about: null }, SEED).problems, []);
+});
+
+test("ресторан: стили и скрипт нашего макета Agora, свежие, без Agora", () => {
+  assert.deepEqual(agFile, agoraAssets(), "node scripts/protos/instant/agora-assets.mjs");
+  const { html } = buildInstant(rest, SEED);
+  assert.ok(html.includes(agFile.css.slice(0, 200)), "стили Agora на странице");
+  for (const ag of ["Agora", "agora", "rezvo", "Амира Темура", "/protos/agora", "'ag-"]) assert.ok(!html.includes(ag), ag);
+  assert.deepEqual(tailsIn(html), []);
+  assert.ok(buildInstant({ ...rest, about: "Как в Agora Lounge" }, SEED).problems.some((p) => p.code === "tail"), "Agora — хвост");
+});
+
+test("ресторан: в заказ — только цена целым числом в сумах, остальное словами", () => {
+  assert.equal(priceNumber("45 000 сум"), 45000);
+  assert.equal(priceNumber("45000"), 45000);
+  assert.equal(priceNumber("12 000 so‘m"), 12000);
+  for (const p of ["от 30 тыс", "$12", "30-40 000 сум", "по весу", null, "45 000 сум / 60 000 сум", "500 ₽"]) assert.equal(priceNumber(p), 0, String(p));
+  const none = buildInstant({ ...rest, services: [], telegram: null, instagram: null }, SEED);
+  assert.deepEqual(none.problems, []);
+  assert.ok(!none.html.includes('id="menu"') && !none.html.includes("t.me/"), "нет меню — нет блока, нет Telegram — нет ссылок");
+});
+
+test("ресторан: нейтральные фото ниши лежат в репозитории", () => {
+  assert.ok(instantReady("restoran"));
+  for (const photo of RESTORAN_PHOTOS) {
     assert.ok(existsSync(`public${photo}`), photo);
     assert.ok(existsSync(`public${photo.replace("-1200", "-900")}`), photo);
   }
