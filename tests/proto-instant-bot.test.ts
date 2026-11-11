@@ -142,7 +142,8 @@ test("макет в боте: адрес → ниша → виджет по на
   ]);
   const ready = f.sent.find((m) => /Готово/.test(m.html));
   assert.ok(ready);
-  assert.deepEqual(ready.rows, [[{ text: "Открыть макет", url: "https://devuz.studio/proto/tok" }]]);
+  assert.deepEqual(ready.rows, [[{ text: "Открыть макет", url: "https://devuz.studio/proto/tok" }], [{ text: "🛠 Админка", url: "https://devuz.studio/proto/tok/admin" }]]);
+  assert.match(ready.html, /Админка рядом/);
   assert.ok(f.sent.some((m) => m.html.includes(`${PROMO.landing.price} $`)), "цена после макета");
   assert.deepEqual(f.leads, ["built"]);
   assert.equal(f.flow(), null, "поток закрыт");

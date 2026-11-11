@@ -9,6 +9,8 @@
 import { dentalHtml } from "@/lib/proto/instant/dental";
 import { medcentrHtml } from "@/lib/proto/instant/medcentr";
 import { kpHtml } from "@/lib/proto/instant/kp";
+import { MOCKUP_TERMS_PATH } from "@/content/mockup-terms";
+import { adminHtml } from "@/lib/proto/instant/admin";
 import { mebelHtml } from "@/lib/proto/instant/mebel";
 import { restoranHtml } from "@/lib/proto/instant/restoran";
 import { turHtml } from "@/lib/proto/instant/tur";
@@ -82,8 +84,12 @@ export type InstantBuild = {
   html: string;
   stamp: Stamp;
   problems: InstantProblem[];
-  /** Страницы рядом с макетом: `kp` — КП на бланке, цена закреплена на 48 часов от сборки. */
-  pages: { kp: string };
+  /**
+   * Страницы рядом с макетом: `kp` — КП на бланке, цена закреплена на 48 часов
+   * от сборки; `admin` — админка сферы из нашего макета (lib/proto/instant/admin),
+   * у сферы без панели её нет.
+   */
+  pages: { kp: string; admin?: string };
 };
 
 export function buildInstant(raw: InstantSite, seed = newSeed(), now = new Date()): InstantBuild {
@@ -101,5 +107,17 @@ export function buildInstant(raw: InstantSite, seed = newSeed(), now = new Date(
   if (late.length && !problems.some((p) => p.code === "tail")) problems.push({ code: "tail", text: `Хвост: ${late[0]}` });
   const kp = kpHtml(site, now);
   for (const p of pageProblems(kp, site.name)) problems.push({ code: `kp-${p.code}`, text: `КП: ${p.text}` });
-  return { site, html: stamped.html, stamp: stamped.stamp, problems, pages: { kp } };
+  const pages: InstantBuild["pages"] = { kp };
+  const admin = adminHtml(site);
+  if (admin) {
+    // Тот же отпечаток, что у макета: ловушки и числа скрипта — свои у клиента.
+    const panel = stampHtml(admin, stamped.stamp.seed).html;
+    const left = tailsIn(panel, site);
+    if (left.length) problems.push({ code: "admin-tail", text: `Админка: хвост прошлого макета: ${left.slice(0, 3).join(", ")}` });
+    if (!panel.includes(MOCKUP_TERMS_PATH)) problems.push({ code: "admin-terms", text: "Админка: нет ссылки на условия макета." });
+    if (/<script[^>]+src=/i.test(panel) || /<iframe/i.test(panel)) problems.push({ code: "admin-net", text: "Админка: скрипт или страница со стороны." });
+    for (const p of pageProblems(panel, site.name)) problems.push({ code: `admin-${p.code}`, text: `Админка: ${p.text}` });
+    pages.admin = panel;
+  }
+  return { site, html: stamped.html, stamp: stamped.stamp, problems, pages };
 }

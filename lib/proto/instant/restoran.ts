@@ -370,3 +370,7 @@ ${assets.js}</script>
 </body>
 </html>`;
 }
+
+/** Цвет клиента и часы брони — для админки на стилях Agora. */
+export const restoranPalette = palette;
+export const RESTORAN_TIMES = TIMES;

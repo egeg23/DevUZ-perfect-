@@ -30,6 +30,9 @@ import { EDU_PHOTOS } from "@/lib/proto/instant/edu";
 import { shaharAssets } from "../scripts/protos/instant/shahar-assets.mjs";
 import shFile from "@/content/proto-instant/shahar-assets.json" with { type: "json" };
 import { NEDV_BACKS, NEDV_PHOTOS } from "@/lib/proto/instant/nedv";
+import { panelAssets } from "../scripts/protos/instant/panel-assets.mjs";
+import panelFile from "@/content/proto-instant/panel-assets.json" with { type: "json" };
+import { hasAdmin } from "@/lib/proto/instant/admin";
 
 /**
  * «Макет в боте» (CLAUDE.md): шаблон ниши из наших макетов, данные клиента —
@@ -408,4 +411,38 @@ test("недвижимость: нет услуг, преимуществ и ч�
 test("недвижимость: нейтральные фото ниши лежат в репозитории", () => {
   assert.ok(instantReady("nedvizhimost"));
   for (const photo of [...NEDV_PHOTOS, ...NEDV_BACKS]) assert.ok(existsSync(`public${photo}`), photo);
+});
+
+test("админка: панели наших макетов, свежие, без прошлых клиентов", () => {
+  assert.deepEqual(panelFile, panelAssets(), "node scripts/protos/instant/panel-assets.mjs");
+  const js = panelFile.nek.js + panelFile.agora.js + JSON.stringify(panelFile.agora.ui);
+  for (const s of ["Nek Dental", "Agora", "AGORA", "+995", "₾", "'ag-", "agora-"]) assert.ok(!js.includes(s), s);
+  assert.ok(panelFile.agora.js.includes("'ir-book-1'"), "ключи — как у сайта ресторана: бронь с макета приходит в админку");
+});
+
+test("админка: у стоматологии, медцентра и ресторана — на данных клиента, с отпечатком и условиями", () => {
+  for (const [ex, mark] of [[example, "Белая Лилия"], [med, null], [rest, null]] as const) {
+    for (const locale of ["ru", "uz"] as const) {
+      const b = buildInstant({ ...ex, locale }, SEED);
+      assert.deepEqual(b.problems, [], `${ex.niche} ${locale}`);
+      const a = b.pages.admin;
+      assert.ok(a, `${ex.niche}: админка есть`);
+      assert.ok(a.includes(`/${locale}/mockup-terms`) && a.includes('id="pn-data"'));
+      assert.ok(!/\[\[t:\d+\]\]/.test(a), "ловушки заменены отпечатком");
+      assert.ok(!/<script[^>]+src=/.test(a));
+      assert.deepEqual(tailsIn(a), []);
+      assert.ok(a.includes(JSON.stringify(ex.name).slice(1, -1)), "имя клиента в данных панели");
+      if (mark) assert.ok(a.includes(mark));
+    }
+  }
+  assert.ok(!hasAdmin("nedvizhimost") && !buildInstant(nedv, SEED).pages.admin, "сферы без панели — без админки");
+});
+
+test("админка ресторана: блюда клиента в меню, демо-заказы только из блюд с ценой", () => {
+  const a = buildInstant(rest, SEED).pages.admin!;
+  const pd = JSON.parse(a.match(/<script type="application\/json" id="pn-data">([\s\S]*?)<\/script>/)![1]);
+  assert.deepEqual(pd.menu.map((m: unknown[]) => m[2]), rest.services.map((s) => s.name));
+  assert.ok(pd.menu.every((m: unknown[], i: number) => m[0] === `d${i}`), "id как у сайта шаблона");
+  const none = buildInstant({ ...rest, services: [] }, SEED);
+  assert.deepEqual(none.problems, [], "без блюд админка собирается");
 });
