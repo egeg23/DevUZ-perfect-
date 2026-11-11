@@ -20,6 +20,7 @@
  */
 import plans from "@/content/mockup-plans.json" with { type: "json" };
 import shox from "@/content/proto-instant/shox-assets.json" with { type: "json" };
+import vtashkente from "@/content/proto-instant/vtashkente-assets.json" with { type: "json" };
 import { cases } from "@/content/cases";
 import { OFFER_MS, announceText } from "@/lib/admin/mockup-offer";
 import { PROTOTYPE_HOURS } from "@/lib/admin/outreach";
@@ -223,9 +224,10 @@ function dentalAddons(locale: InstantLocale): string[] {
   });
 }
 
-/** Допы медцентра — из плана нашего макета Shox (content/proto-instant/shox-assets.json). */
+/** Допы медцентра — из плана нашего макета Shox, мебели — из плана Enotmebel (content/proto-instant/*-assets.json). */
 export function addonLines(locale: InstantLocale, niche: InstantNiche = "stomatologiya"): string[] {
   if (niche === "medcentr") return shox.addons.map((a) => `• ${esc(a[locale])}: ${a.price} $`);
+  if (niche === "mebel") return vtashkente.addons.map((a) => `• ${esc(a[locale])}: ${a.price} $`);
   return dentalAddons(locale);
 }
 

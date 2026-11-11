@@ -156,10 +156,10 @@ test("макет в боте: без виджетов — тот же ход о�
 test("макет в боте: ниша без шаблона — вручную за 12 часов, кейсы сферы и лид, без сборки", async () => {
   const f = fake();
   await startInstant(ctx, f.deps);
-  await ask(f.deps, "mebel.example");
-  await handleInstantButton(ctx, ["im", "n", "mebel"], f.deps);
+  await ask(f.deps, "restoran.example");
+  await handleInstantButton(ctx, ["im", "n", "restoran"], f.deps);
   assert.match(f.sent.at(-1)!.html, /дизайнер вручную, пришлём сюда в течение 12 часов/);
-  assert.match(f.sent.at(-1)!.html, /devuz\.studio\/ru\/cases\/[a-z-]+/, "кейсы мебели");
+  assert.match(f.sent.at(-1)!.html, /devuz\.studio\/ru\/cases\/[a-z-]+/, "кейсы ресторанов");
   assert.deepEqual(f.leads, ["soon"]);
   assert.ok(!f.log.some((l) => l.startsWith("widget")));
 });
@@ -260,7 +260,7 @@ test("пилот: Егору и Александру — без лимита, м
   const soon = fake({ open: false });
   await startInstant(owner, soon.deps);
   await handleInstantButton(owner, ["im", "nosite"], soon.deps);
-  await handleInstantButton(owner, ["im", "n", "mebel"], soon.deps);
+  await handleInstantButton(owner, ["im", "n", "restoran"], soon.deps);
   assert.deepEqual(soon.leads, []);
 });
 
@@ -288,6 +288,14 @@ test("медцентр: допы с ценами — из плана нашег�
   assert.ok(ru.includes("Админ-панель для записи и работы с пациентами: 450 $"));
   assert.ok(!ru.includes("Улыбка"), "допы стоматологии не путаются");
   assert.ok(!/[ЀЁ-ӿ]{3}/.test(priceText("uz", new Date(), "medcentr").split("\n").slice(-7).join(" ")), "узбекские допы без кириллицы");
+});
+
+test("мебель: допы с ценами — из плана нашего мебельного макета Enotmebel", () => {
+  const ru = priceText("ru", new Date("2026-11-10T10:00:00Z"), "mebel");
+  assert.ok(ru.includes("Корзина и заказ в Telegram: 70 $"));
+  assert.ok(ru.includes("Рассрочка Uzum Nasiya и Alif: 80 $"));
+  assert.ok(!ru.includes("Telegram-бот записи"), "допы медцентра не путаются");
+  assert.ok(!/[ЀЁ-ӿ]{3}/.test(priceText("uz", new Date(), "mebel").split("\n").slice(-7).join(" ")), "узбекские допы без кириллицы");
 });
 
 test("первое сообщение: «пришлите сайт или Instagram» с кнопками; пока закрыто — false", async () => {
