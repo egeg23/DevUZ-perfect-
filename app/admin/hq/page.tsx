@@ -16,7 +16,7 @@ import { repeatOf, sendsBroadcasts } from "@/lib/admin/broadcast";
 import { giveLeadAction } from "@/app/admin/hq/actions";
 import { broadcastById, broadcastHistory, broadcastPeople } from "@/lib/admin/broadcast-store";
 import { botSubs, segmentCounts } from "@/lib/admin/bot-users";
-import { loadBotAudience } from "@/lib/admin/bot-users-store";
+import { loadBotAudience, loadBotMockups } from "@/lib/admin/bot-users-store";
 import { makesMockups } from "@/lib/admin/mockup-order";
 import { requireSection } from "@/lib/admin/guard";
 import { seesEveryone } from "@/lib/admin/roles";
@@ -78,7 +78,7 @@ export default async function HqPage({
   // Состав команды, история рассылок и аудитория бота меняются редко, а
   // страница обновляется раз в 90 секунд: из памяти (lib/memo.ts). Новая
   // рассылка и «число изменилось» снимают запомненное сразу.
-  const [hq, people, history, usersHistory, audience, again, plan, inbox] = await Promise.all([
+  const [hq, people, history, usersHistory, audience, again, plan, inbox, mockups] = await Promise.all([
     loadHq(staff, now),
     memo("hq:people", SLOW_MS, () => broadcastPeople()),
     broadcasts ? memo("hq:broadcast:staff", HISTORY_MS, () => broadcastHistory("staff", 10)) : Promise.resolve([]),
@@ -87,6 +87,8 @@ export default async function HqPage({
     broadcasts && repeat ? broadcastById(repeat) : Promise.resolve(null),
     touchProgressOf(staff.id),
     loadInbox(staff, now),
+    // Макеты подписчиков — рядом с подписчиками, тем же шагом: раз в 5 минут.
+    broadcasts ? memo("hq:bot-mockups", SLOW_MS, () => loadBotMockups().catch(() => null)) : Promise.resolve(null),
   ]);
   // «Сегодня» верхнего ряда — те же числа пульса, что ниже, коротко (hq-desk.tsx).
   const desk = pick(hqDeskDict, staff.panel_locale);
@@ -134,6 +136,7 @@ export default async function HqPage({
                 : null
             }
             subs={audience ? botSubs(audience.users, audience.marks, now) : null}
+            mockups={mockups}
             now={now}
           />
         }

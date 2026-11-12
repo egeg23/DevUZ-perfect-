@@ -6,8 +6,10 @@ import {
   MAX_ATTEMPTS,
   PASS_CAP,
   audienceOf,
+  mockupCuts,
   tallyOf,
   userMessage,
+  type BotMockups,
   type BotUser,
   type Marks,
   type Segment,
@@ -67,6 +69,35 @@ export async function loadBotAudience(): Promise<{ users: BotUser[]; marks: Mark
     users: ((users ?? []) as BotUser[]).map((u) => ({ ...u, chat_id: Number(u.chat_id) })),
     marks: { staff: nums(staff, "telegram_user_id"), partners: nums(partners, "telegram_user_id"), buyers: nums(buyers, "buyer_chat_id") },
   };
+}
+
+/**
+ * Сколько макетов подписчики собрали себе в боте: счёт базы без строк
+ * (строками база отдаёт не больше 1000). Готовые макеты клиентов —
+ * `facts.instant` есть, сотрудника нет, не черновик. Любой запрос не
+ * ответил — null: блок на «Главной» и сводка строку не показывают.
+ */
+export async function loadBotMockups(now: Date = new Date()): Promise<BotMockups | null> {
+  const db = serviceClient();
+  if (!db) return null;
+  const cuts = mockupCuts(now);
+  const built = () => db.from("protos").select("id", { count: "exact", head: true }).not("facts->instant", "is", null).neq("status", "draft");
+  const clients = () => built().is("facts->instant->>staff", null);
+  const answers = await Promise.all([
+    clients().gte("created_at", cuts.today),
+    clients().gte("created_at", cuts.yesterday).lt("created_at", cuts.today),
+    clients().gte("created_at", cuts.windows.day),
+    clients().gte("created_at", cuts.windows.week),
+    clients().gte("created_at", cuts.windows.month),
+    clients(),
+    built().not("facts->instant->>staff", "is", null).gte("created_at", cuts.windows.month),
+  ]);
+  if (answers.some((a) => a.error)) {
+    console.error("макеты подписчиков бота не посчитаны:", answers.find((a) => a.error)?.error?.message);
+    return null;
+  }
+  const [today, yesterday, day, week, month, total, staffMonth] = answers.map((a) => a.count ?? 0);
+  return { today, yesterday, windows: { day, week, month }, total, staffMonth };
 }
 
 export type CreateUserBroadcast =

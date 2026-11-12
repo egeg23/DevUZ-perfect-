@@ -94,3 +94,43 @@ test("«подписались сегодня» — с полуночи по Т�
   assert.match(read("app/api/reminders/sweep/route.ts"), /sendBotSubsReport\(new Date\(\)\)/);
   assert.match(read("components/admin/hq-side.tsx"), /subs\.today\.now/);
 });
+
+test("«собрали макет»: сегодня и вчера по Ташкенту, окна как у подписчиков, только готовые макеты клиентов", async () => {
+  // Владелец, 12.11.2026: «выведем где подписчики бота на главной у нас,
+  // сколько макетов они сделали за сегодня, вчера и тд».
+  const { mockupCuts, subsReportText } = await import("@/lib/admin/bot-users");
+  const cuts = mockupCuts(NOW);
+  assert.equal(cuts.today, "2026-10-24T19:00:00.000Z", "полночь по Ташкенту");
+  assert.equal(cuts.yesterday, "2026-10-23T19:00:00.000Z");
+  assert.equal(cuts.windows.day, new Date(NOW.getTime() - 24 * 3600_000).toISOString());
+  assert.equal(cuts.windows.week, new Date(NOW.getTime() - 7 * 24 * 3600_000).toISOString());
+  assert.equal(cuts.windows.month, new Date(NOW.getTime() - 30 * 24 * 3600_000).toISOString());
+
+  const store = read("lib/admin/bot-users-store.ts");
+  assert.match(store, /count: "exact", head: true/, "счёт базы без строк: строками она отдаёт не больше 1000");
+  assert.match(store, /\.not\("facts->instant", "is", null\)\.neq\("status", "draft"\)/, "только готовые макеты из бота");
+  assert.match(store, /\.is\("facts->instant->>staff", null\)/, "сборки сотрудников подписчикам не считаются");
+  assert.match(store, /if \(answers\.some\(\(a\) => a\.error\)\)[\s\S]{0,200}return null/, "база не ответила: нуля не показываем");
+
+  // Главная: рядом с подписчиками, только тем, кто шлёт рассылки, раз в 5 минут.
+  const page = read("app/admin/hq/page.tsx");
+  assert.match(page, /broadcasts \? memo\("hq:bot-mockups", SLOW_MS, \(\) => loadBotMockups\(\)/);
+  assert.match(page, /mockups=\{mockups\}/);
+  const side = read("components/admin/hq-side.tsx");
+  assert.match(side, /mockups\.today/);
+  assert.match(side, /mockups\.yesterday/);
+  assert.match(side, /mockups\.windows\[w\.key\]/);
+  assert.match(side, /href="\/admin\/mockups"/);
+  assert.match(side, /\{mockups \? \(/, "нет счёта: строк про макеты нет");
+
+  // Сводка в 20:00: та же строка; счёта нет — строки нет.
+  const s = botSubs([user(1, 2, 1)], marks, NOW);
+  const withMockups = subsReportText("2026-10-25", s, { today: 4, yesterday: 1, windows: { day: 5, week: 9, month: 9 }, total: 9, staffMonth: 16 });
+  assert.match(withMockups, /Собрали макет в боте сегодня: <b>4<\/b> \(вчера 1, за 7 дней 9\)/);
+  assert.doesNotMatch(subsReportText("2026-10-25", s, null), /макет/);
+  assert.match(read("lib/admin/bot-subs-report-store.ts"), /subsReportText\(day, botSubs\(users, marks, now\), mockups\)/);
+
+  for (const help of ["content/admin-help-ru.ts", "content/admin-help-uz.ts", "content/admin-help-pl/leads.ts"]) {
+    assert.match(read(help), /\/maket/, help);
+  }
+});

@@ -1,5 +1,5 @@
 import { SUBS_REPORT_HOUR, botSubs, subsNewsKey, subsReportText } from "@/lib/admin/bot-users";
-import { loadBotAudience } from "@/lib/admin/bot-users-store";
+import { loadBotAudience, loadBotMockups } from "@/lib/admin/bot-users-store";
 import { wants } from "@/lib/admin/notify-prefs";
 import { tashkentHour } from "@/lib/admin/portion";
 import { todayInTashkent } from "@/lib/admin/pulse";
@@ -10,7 +10,8 @@ import { serviceClient } from "@/lib/supabase";
 /**
  * «👥 Подписчики бота» — владельцу и руководителю под галочкой «Отчёты»,
  * каждый день с 20:00 до 21:00 по Ташкенту, раз в день (`bot-subs:<день>`).
- * Числа — тем же `botSubs`, что блок на «Главной». Модели нет.
+ * Числа — тем же `botSubs`, что блок на «Главной», и макеты подписчиков за
+ * день — тем же `loadBotMockups`. Модели нет.
  */
 export async function sendBotSubsReport(now: Date = new Date()): Promise<number> {
   const hour = tashkentHour(now);
@@ -30,8 +31,8 @@ export async function sendBotSubsReport(now: Date = new Date()): Promise<number>
   );
   if (!due.length) return 0;
 
-  const { users, marks } = await loadBotAudience();
-  const text = subsReportText(day, botSubs(users, marks, now));
+  const [{ users, marks }, mockups] = await Promise.all([loadBotAudience(), loadBotMockups(now).catch(() => null)]);
+  const text = subsReportText(day, botSubs(users, marks, now), mockups);
 
   let sent = 0;
   for (const reader of due) {
