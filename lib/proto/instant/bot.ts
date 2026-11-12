@@ -74,6 +74,8 @@ export type Deps = {
   now: () => Date;
   /** MOCKUP_BOT_OPEN; в тестах — оба положения. */
   open?: boolean;
+  /** Человек выбрал язык: бот дальше говорит на нём, выбор переживает выкатку. */
+  setLang?: (chatId: number, locale: InstantLocale) => Promise<void>;
 };
 
 export type LeadInput = {
@@ -258,6 +260,58 @@ async function allowed(ctx: Ctx, deps: Deps): Promise<boolean> {
   return true;
 }
 
+/**
+ * Язык — первым вопросом (владелец, 12.11.2026: «чтобы бот после приветствия
+ * сразу предлагал сделать макет прямо внутри… Но перед этим, чтобы выбрал
+ * язык бота и макета»). Один выбор на всё: на нём бот говорит дальше и на нём
+ * собирается макет. Шаблоны макетов есть на русском и узбекском, поэтому
+ * кнопок две. Вопрос на двух языках сразу: чей язык у человека, мы ещё не знаем.
+ */
+export const LANG_TEXT =
+  "Здравствуйте! На каком языке вам удобнее? На нём же соберём макет.\n\nAssalomu alaykum! Qaysi tilda qulay? Maketni ham shu tilda yig‘amiz.";
+const LANG_ROWS: Btn[][] = [
+  [
+    { text: "🇷🇺 Русский", callback_data: `${INSTANT_CB}:l:ru` },
+    { text: "🇺🇿 O‘zbekcha", callback_data: `${INSTANT_CB}:l:uz` },
+  ],
+];
+
+/** Язык словом вместо кнопки: «русский», «o‘zbekcha», «узб». */
+export function langOfText(text: string): InstantLocale | null {
+  const v = text.trim().toLowerCase();
+  if (v.length > 24) return null;
+  if (/^(🇷🇺\s*)?(рус|rus|ru$)/.test(v)) return "ru";
+  if (/^(🇺🇿\s*)?(o['‘’`ʻ]?zb|uzb|узб|ўзб|uz$)/.test(v)) return "uz";
+  return null;
+}
+
+async function askLang(ctx: Ctx, deps: Deps, next: "greet" | "url", pending?: string): Promise<void> {
+  await deps.saveFlow(ctx.chatId, { ...fresh(ctx, "lang"), next, ...(pending ? { pending } : {}) });
+  await deps.send(ctx.chatId, LANG_TEXT, LANG_ROWS);
+}
+
+/** Предложение макета на выбранном языке: «Собрать макет» или «другой вопрос». */
+async function offerInstant(ctx: Ctx, deps: Deps): Promise<void> {
+  const t = T[ctx.locale];
+  await deps.saveFlow(ctx.chatId, fresh(ctx, "greet"));
+  await deps.send(ctx.chatId, t.greet, [
+    [{ text: t.greetGo, callback_data: `${INSTANT_CB}:go` }],
+    [{ text: t.greetOther, callback_data: `${INSTANT_CB}:other` }],
+  ]);
+}
+
+/** Язык выбран: запомнить и идти туда, куда человек шёл. */
+async function pickLang(ctx: Ctx, flow: Flow | null, locale: InstantLocale, deps: Deps): Promise<void> {
+  await deps.setLang?.(ctx.chatId, locale);
+  const to: Ctx = { ...ctx, locale };
+  if (flow?.pending && (await takeAddress(to, { ...fresh(to, "greet") }, flow.pending, deps))) return;
+  if (flow?.next === "url") {
+    await startInstant(to, deps);
+    return;
+  }
+  await offerInstant(to, deps);
+}
+
 /** Поток открыт этому человеку? Нет — вызывающий ведёт себя как раньше. */
 export const instantOpenFor = (ctx: Pick<Ctx, "role">, open?: boolean) => mayUseInstant(ctx.role, open);
 
@@ -277,13 +331,17 @@ export async function startInstant(ctx: Ctx, deps: Deps): Promise<void> {
  */
 export async function greetInstant(ctx: Ctx, deps: Deps): Promise<boolean> {
   if (!instantOpenFor(ctx, deps.open)) return false;
-  const t = T[ctx.locale];
-  await deps.saveFlow(ctx.chatId, fresh(ctx, "greet"));
-  await deps.send(ctx.chatId, t.greet, [
-    [{ text: t.greetGo, callback_data: `${INSTANT_CB}:go` }],
-    [{ text: t.greetOther, callback_data: `${INSTANT_CB}:other` }],
-  ]);
+  await askLang(ctx, deps, "greet");
   return true;
+}
+
+/**
+ * `/maket` и ссылка `?start=maket`: человек уже просит макет, поэтому после
+ * языка сразу вопрос об адресе сайта, без «Собрать макет».
+ */
+export async function beginInstant(ctx: Ctx, deps: Deps): Promise<void> {
+  if (!instantOpenFor(ctx, deps.open)) return;
+  await askLang(ctx, deps, "url");
 }
 
 /** Адрес сайта или Instagram — дальше выбор сферы; иначе null. */
@@ -321,7 +379,9 @@ export const looksLikeAddress = (text: string) => Boolean(instagramOf(text) || s
 export async function instantFromAddress(ctx: Ctx, text: string, deps: Deps): Promise<boolean> {
   if (!instantOpenFor(ctx, deps.open)) return false;
   if (!looksLikeAddress(text)) return false;
-  return takeAddress(ctx, fresh(ctx, "greet"), text.trim().slice(0, 1500), deps);
+  // Адрес запоминаем и сначала спрашиваем язык: на нём пойдёт и сборка.
+  await askLang(ctx, deps, "greet", text.trim().slice(0, 1500));
+  return true;
 }
 
 /** Текст клиента во время потока. false — потока нет, пусть разбирает первичка. */
@@ -334,13 +394,30 @@ export async function handleInstantText(
   // Поток есть не у всех: кто его не начинал, тому — ни одного лишнего запроса, кроме этого.
   const flow = await deps.flowOf(chatId);
   if (!flow) return false;
-  const ctx = await makeCtx();
-  if (!instantOpenFor(ctx, deps.open)) {
+  const made = await makeCtx();
+  if (!instantOpenFor(made, deps.open)) {
     await deps.dropFlow(chatId);
     return false;
   }
-  const t = T[flow.locale];
   const value = text.trim().slice(0, 1500);
+  if (flow.stage === "lang") {
+    // Язык словом — как кнопкой; адрес — запомним и спросим язык ещё раз;
+    // остальное — человек пришёл с вопросом, отвечает первичка.
+    const said = langOfText(value);
+    if (said) {
+      await pickLang(made, flow, said, deps);
+      return true;
+    }
+    if (looksLikeAddress(value)) {
+      await askLang(made, deps, flow.next ?? "greet", value);
+      return true;
+    }
+    await deps.dropFlow(chatId);
+    return false;
+  }
+  // Дальше разговор идёт на выбранном языке, а не на языке приложения Telegram.
+  const ctx: Ctx = { ...made, locale: flow.locale };
+  const t = T[flow.locale];
   switch (flow.stage) {
     case "greet": {
       // Не адрес — человек пришёл с другим вопросом: приветствие отступает, отвечает первичка.
@@ -396,13 +473,19 @@ export async function handleInstantButton(ctx: Ctx, parts: readonly string[], de
     await deps.dropFlow(ctx.chatId);
     return "other";
   }
+  const flow = (await deps.flowOf(ctx.chatId)) ?? null;
+  if (parts[1] === "l") {
+    if (parts[2] === "ru" || parts[2] === "uz") await pickLang(ctx, flow, parts[2], deps);
+    return;
+  }
+  // Язык выбран раньше в этом разговоре — он главнее языка приложения Telegram.
+  if (flow && flow.stage !== "lang") ctx = { ...ctx, locale: flow.locale };
   if (parts[1] === "go") {
     await startInstant(ctx, deps);
     return;
   }
-  const flow = (await deps.flowOf(ctx.chatId)) ?? null;
-  if (!flow) {
-    await startInstant(ctx, deps);
+  if (!flow || flow.stage === "lang") {
+    await beginInstant(ctx, deps);
     return;
   }
   const t = T[flow.locale];

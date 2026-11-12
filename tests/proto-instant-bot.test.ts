@@ -6,7 +6,7 @@ import { deflateSync } from "node:zlib";
 import plans from "@/content/mockup-plans.json" with { type: "json" };
 import { PROMO } from "@/lib/admin/mockup-offer";
 import { INBOUND_SOURCES } from "@/lib/admin/sales-stages";
-import { MANUAL_HOURS, caseLinks, greetInstant, handleInstantButton, handleInstantText, instagramOf, instantFromAddress, manualText, priceText, startInstant, type Ctx, type Deps } from "@/lib/proto/instant/bot";
+import { LANG_TEXT, MANUAL_HOURS, beginInstant, caseLinks, greetInstant, handleInstantButton, handleInstantText, instagramOf, instantFromAddress, langOfText, manualText, priceText, startInstant, type Ctx, type Deps } from "@/lib/proto/instant/bot";
 import { badOurLinks } from "@/lib/admin/our-links";
 import { buildInstant } from "@/lib/proto/instant/build";
 import { EXAMPLE } from "@/scripts/protos/instant/preview-data.mjs";
@@ -390,34 +390,108 @@ test("мебель: допы с ценами — из планов наших м
   assert.ok(!/[ЀЁ-ӿ]{3}/.test(priceText("uz", new Date(), "mebel").split("\n").slice(-7).join(" ")), "узбекские допы без кириллицы");
 });
 
-test("первое сообщение: «пришлите сайт или Instagram» с кнопками; пока закрыто — false", async () => {
+/** Первое сообщение и выбор языка кнопкой — как это делает клиент. */
+async function greeted(f: ReturnType<typeof fake>, who: Ctx = ctx, lang: "ru" | "uz" = "ru") {
+  await greetInstant(who, f.deps);
+  await handleInstantButton(who, ["im", "l", lang], f.deps);
+}
+
+test("первое сообщение: сначала язык, потом «соберём макет прямо здесь»; пока закрыто — false", async () => {
   const f = fake();
   assert.equal(await greetInstant(ctx, f.deps), true);
-  assert.match(f.sent[0].html, /за 2 минуты и бесплатно\. Пришлите адрес вашего сайта или Instagram/);
-  assert.deepEqual(JSON.stringify(f.sent[0].rows).match(/im:(go|other)/g), ["im:go", "im:other"]);
+  assert.equal(f.sent[0].html, LANG_TEXT);
+  assert.match(LANG_TEXT, /На каком языке вам удобнее\?[\s\S]*Qaysi tilda qulay\?/, "вопрос на двух языках сразу");
+  assert.deepEqual(JSON.stringify(f.sent[0].rows).match(/im:l:(ru|uz)/g), ["im:l:ru", "im:l:uz"]);
+  assert.equal(f.flow()?.stage, "lang");
+  await handleInstantButton(ctx, ["im", "l", "ru"], f.deps);
+  assert.match(f.sent[1].html, /за 2 минуты и бесплатно\. Пришлите адрес вашего сайта или Instagram/);
+  assert.deepEqual(JSON.stringify(f.sent[1].rows).match(/im:(go|other)/g), ["im:go", "im:other"]);
   assert.equal(f.flow()?.stage, "greet");
   const closed = fake({ open: false });
   assert.equal(await greetInstant(ctx, closed.deps), false, "клиенту при закрытом пилоте — прежнее приветствие");
   assert.equal(await greetInstant(owner, closed.deps), true, "владелец видит новое");
-  const uz = fake();
-  await greetInstant({ ...ctx, locale: "uz" }, uz.deps);
-  assert.ok(!/[\u0400-\u04ff]/.test(uz.sent[0].html), "узбекский — латиницей");
+});
+
+test("язык: выбор главнее языка Telegram, запоминается и ведёт весь разговор и макет", async () => {
+  const picked: string[] = [];
+  const f = fake({ setLang: async (_c, l) => void picked.push(l) });
+  // Telegram у клиента русский, выбирает узбекский.
+  await greeted(f, ctx, "uz");
+  assert.deepEqual(picked, ["uz"]);
+  assert.equal(f.flow()?.locale, "uz");
+  assert.ok(!/[\u0400-\u04ff]/.test(f.sent[1].html), "предложение макета — по-узбекски, латиницей");
+  await handleInstantButton(ctx, ["im", "go"], f.deps);
+  assert.match(f.sent.at(-1)!.html, /Saytingiz maketini/, "«Собрать макет» — на выбранном языке");
+  await ask(f.deps, "dentanur.example");
+  assert.match(f.sent.at(-1)!.html, /Kompaniyangiz nima bilan/);
+  await handleInstantButton(ctx, ["im", "n", "stomatologiya"], f.deps);
+  assert.ok(f.log.includes("save:0"), "макет собран");
+  assert.match(f.sent.map((m) => m.html).join("\n"), /Tayyor!/, "итог — по-узбекски");
+});
+
+test("язык: словом вместо кнопки, адрес до выбора не теряется, вопрос уходит первичке", async () => {
+  assert.equal(langOfText("Русский"), "ru");
+  assert.equal(langOfText("o‘zbekcha"), "uz");
+  assert.equal(langOfText("O'zbek tili"), "uz");
+  assert.equal(langOfText("узбекский"), "uz");
+  assert.equal(langOfText("Сколько стоит сайт на русском и узбекском?"), null);
+  const w = fake();
+  await greetInstant(ctx, w.deps);
+  assert.ok(await ask(w.deps, "o‘zbekcha"));
+  assert.equal(w.flow()?.stage, "greet");
+  assert.equal(w.flow()?.locale, "uz");
+
+  // Адрес прислан раньше, чем выбран язык: спрашиваем язык ещё раз и идём с этим адресом.
+  const a = fake();
+  await greetInstant(ctx, a.deps);
+  assert.ok(await ask(a.deps, "dentanur.example"));
+  assert.equal(a.flow()?.stage, "lang");
+  assert.equal(a.flow()?.pending, "dentanur.example");
+  assert.equal(a.sent.at(-1)!.html, LANG_TEXT);
+  await handleInstantButton(ctx, ["im", "l", "ru"], a.deps);
+  assert.equal(a.flow()?.stage, "niche");
+  assert.equal(a.flow()?.url, "https://dentanur.example/");
+
+  const q = fake();
+  await greetInstant(ctx, q.deps);
+  assert.equal(await ask(q.deps, "Сколько стоит интернет-магазин?"), false, "не язык и не адрес — первичка");
+  assert.equal(q.flow(), null);
+});
+
+test("язык: /maket — после выбора сразу адрес сайта, без «Собрать макет»", async () => {
+  const f = fake();
+  await beginInstant(owner, f.deps);
+  assert.equal(f.sent[0].html, LANG_TEXT);
+  assert.equal(f.flow()?.next, "url");
+  await handleInstantButton(owner, ["im", "l", "uz"], f.deps);
+  assert.equal(f.flow()?.stage, "url");
+  assert.match(f.sent.at(-1)!.html, /Kompaniyangiz sayti manzilini yuboring/);
+  const closed = fake({ open: false });
+  await beginInstant(ctx, closed.deps);
+  assert.deepEqual(closed.sent, [], "пока закрыто — клиенту ничего");
+  // Кнопка из старого сообщения без разговора — начинаем с языка.
+  const stale = fake();
+  await handleInstantButton(ctx, ["im", "nosite"], stale.deps);
+  assert.equal(stale.sent[0].html, LANG_TEXT);
+  const src = readFileSync(new URL("../app/api/telegram/webhook/route.ts", import.meta.url), "utf8");
+  assert.doesNotMatch(src, /await startInstant\(/, "вебхук начинает с языка");
+  assert.match(src, /existing\?\.locale \?\? \(await botLangOf\(chat\.id\)/, "выбранный язык переживает выкатку");
 });
 
 test("первое сообщение: адрес → сфера; обычный текст и «другой вопрос» — в первичку", async () => {
   const f = fake();
-  await greetInstant(ctx, f.deps);
+  await greeted(f);
   assert.equal(await ask(f.deps, "Сколько стоит интернет-магазин?"), false, "вопрос уходит первичке");
   assert.equal(f.flow(), null);
-  await greetInstant(ctx, f.deps);
+  await greeted(f);
   assert.ok(await ask(f.deps, "dentanur.example"));
   assert.equal(f.flow()?.stage, "niche");
   const g = fake();
-  await greetInstant(ctx, g.deps);
+  await greeted(g);
   assert.equal(await handleInstantButton(ctx, ["im", "other"], g.deps), "other");
   assert.equal(g.flow(), null);
   const h = fake();
-  await greetInstant(ctx, h.deps);
+  await greeted(h);
   await handleInstantButton(ctx, ["im", "go"], h.deps);
   assert.equal(h.flow()?.stage, "url");
 });
@@ -426,14 +500,16 @@ test("первое сообщение: Instagram — вопросами, про�
   assert.equal(instagramOf("вот https://www.instagram.com/dentanur.uz/"), "dentanur.uz");
   assert.equal(instagramOf("instagram.com/p/abc123"), null);
   const f = fake();
-  await greetInstant(ctx, f.deps);
+  await greeted(f);
   await ask(f.deps, "https://instagram.com/dentanur_demo");
   assert.equal(f.flow()?.nosite, true);
   assert.equal(f.flow()?.answers.instagram, "dentanur_demo");
   const n = fake();
   assert.equal(await instantFromAddress(ctx, "привет", n.deps), false);
   assert.equal(await instantFromAddress(ctx, "clinic.example", n.deps), true);
-  assert.equal(n.flow()?.stage, "niche");
+  assert.equal(n.flow()?.stage, "lang", "сначала язык");
+  await handleInstantButton(ctx, ["im", "l", "ru"], n.deps);
+  assert.equal(n.flow()?.stage, "niche", "адрес не потерян");
   assert.equal(await instantFromAddress(ctx, "clinic.example", fake({ open: false }).deps), false);
 });
 
@@ -472,7 +548,7 @@ test("личка владельца — чат продаж: /maket, ?start=make
   const sales = route.slice(route.indexOf("async function handleSales("), route.indexOf("async function handleGroup("));
   assert.ok(sales.length > 0);
   // Поток макета — раньше служебного «Это чат отдела продаж» и приветствия брифов.
-  const flowAt = sales.indexOf("startInstant(ictx, instantDeps())");
+  const flowAt = sales.indexOf("beginInstant(ictx, instantDeps())");
   assert.ok(flowAt > 0, "в чате продаж есть вход в поток макета");
   assert.ok(flowAt < sales.indexOf("Это чат отдела продаж"));
   assert.ok(flowAt < sales.indexOf("бот отдела продаж"));

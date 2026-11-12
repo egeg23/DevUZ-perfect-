@@ -58,8 +58,9 @@ import { BROADCAST_NOTE, broadcastTurn } from "@/lib/admin/bot-users";
 import { NO_MORE_WAIT, TIDY_CALLBACK, parseTidyCallback } from "@/lib/admin/lead-tidy";
 import { answerTidy } from "@/lib/admin/lead-tidy-store";
 import { findStaffByTelegram, issueLoginToken, staffByTelegramId, type Staff } from "@/lib/admin/session";
-import { INSTANT_CB, INSTANT_START, greetInstant, handleInstantButton, handleInstantText, instantFromAddress, instantOpenFor, looksLikeAddress, startInstant, type Ctx as InstantCtx } from "@/lib/proto/instant/bot";
+import { INSTANT_CB, INSTANT_START, beginInstant, greetInstant, handleInstantButton, handleInstantText, instantFromAddress, instantOpenFor, looksLikeAddress, type Ctx as InstantCtx } from "@/lib/proto/instant/bot";
 import { realDeps as instantDeps } from "@/lib/proto/instant/bot-deps";
+import { botLangOf } from "@/lib/proto/instant/store";
 import {
   APP_CODE_NONE,
   APP_START_NO_REQUEST,
@@ -851,7 +852,9 @@ async function handleClient(message: NonNullable<Update["message"]>) {
   // ему по-русски только потому, что так подписаны кнопки в его мессенджере,
   // — значит посреди разговора сменить язык без спроса.
   const existing = sessionFor(chat.id);
-  const locale = existing?.locale ?? localeOf(message.from);
+  // Язык, выбранный кнопкой в боте, главнее языка приложения Telegram и
+  // переживает выкатку (сессия — в памяти, выбор — в базе).
+  const locale = existing?.locale ?? (await botLangOf(chat.id).catch(() => null)) ?? localeOf(message.from);
   const copy = botCopy(locale);
 
   if (text.startsWith("/start")) {
@@ -910,7 +913,7 @@ async function handleClient(message: NonNullable<Update["message"]>) {
     if (payload === INSTANT_START) {
       const ictx = await instantCtx(chat.id, message.from, locale);
       if (instantOpenFor(ictx)) {
-        await startInstant(ictx, instantDeps());
+        await beginInstant(ictx, instantDeps());
         return;
       }
       if (!existing) startSession(chat.id, locale);
@@ -993,7 +996,7 @@ async function handleClient(message: NonNullable<Update["message"]>) {
   if (/^\/(maket|mockup)(@\w+)?$/i.test(text)) {
     const ictx = await instantCtx(chat.id, message.from, locale);
     if (instantOpenFor(ictx)) {
-      await startInstant(ictx, instantDeps());
+      await beginInstant(ictx, instantDeps());
       return;
     }
   }
@@ -1504,7 +1507,7 @@ async function handleSales(message: NonNullable<Update["message"]>) {
     if (asks) {
       const ictx = await instantCtx(chat.id, message.from, locale);
       if (instantOpenFor(ictx)) {
-        await startInstant(ictx, instantDeps());
+        await beginInstant(ictx, instantDeps());
         return;
       }
     }

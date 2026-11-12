@@ -17,7 +17,7 @@ import { RUN_HOLD_MS, tashkentDayStart } from "@/lib/proto/instant/limits";
 import type { InstantLocale, InstantNiche } from "@/lib/proto/instant/types";
 import { serviceClient } from "@/lib/supabase";
 
-export type FlowStage = "greet" | "url" | "niche" | "q_name" | "q_phone" | "q_address" | "q_services" | "building";
+export type FlowStage = "lang" | "greet" | "url" | "niche" | "q_name" | "q_phone" | "q_address" | "q_services" | "building";
 
 export type Flow = {
   stage: FlowStage;
@@ -28,6 +28,10 @@ export type Flow = {
   answers: { name?: string; phone?: string; address?: string; services?: string; instagram?: string };
   /** Почему прошлый адрес не прочитался — для разбора сбоев, без данных клиента. */
   fail?: string;
+  /** Куда идти после выбора языка: к предложению макета или сразу к адресу сайта. */
+  next?: "greet" | "url";
+  /** Адрес сайта или Instagram, присланный до выбора языка. */
+  pending?: string;
   at: string;
 };
 
@@ -50,6 +54,37 @@ export async function saveFlow(chatId: number, flow: Flow): Promise<void> {
   await db
     .from("stats_snapshots")
     .upsert({ key: flowKey(chatId), payload: { ...flow, at: new Date().toISOString() }, computed_at: new Date().toISOString() });
+}
+
+/**
+ * Язык, который человек выбрал в боте (владелец, 12.11.2026: «чтобы выбрал
+ * язык бота и макета»). Сессия бота живёт в памяти и выкатку не переживает,
+ * поэтому выбор лежит в базе: «bot-lang:<чат>».
+ */
+const langKey = (chatId: number) => `bot-lang:${chatId}`;
+/** Память процесса: вебхук спрашивает язык на каждом сообщении человека без сессии. */
+const langMemo = new Map<number, { locale: InstantLocale | null; at: number }>();
+const LANG_MEMO_MS = 10 * 60_000;
+
+export async function saveBotLang(chatId: number, locale: InstantLocale): Promise<void> {
+  langMemo.set(chatId, { locale, at: Date.now() });
+  const db = serviceClient();
+  if (!db) return;
+  await db.from("stats_snapshots").upsert({ key: langKey(chatId), payload: { locale }, computed_at: new Date().toISOString() });
+}
+
+export async function botLangOf(chatId: number): Promise<InstantLocale | null> {
+  const memo = langMemo.get(chatId);
+  if (memo && Date.now() - memo.at < LANG_MEMO_MS) return memo.locale;
+  const db = serviceClient();
+  if (!db) return null;
+  const { data, error } = await db.from("stats_snapshots").select("payload").eq("key", langKey(chatId)).maybeSingle();
+  if (error) return null;
+  const raw = (data?.payload as { locale?: string } | null)?.locale;
+  const locale = raw === "ru" || raw === "uz" ? raw : null;
+  if (langMemo.size > 2000) langMemo.clear();
+  langMemo.set(chatId, { locale, at: Date.now() });
+  return locale;
 }
 
 export async function dropFlow(chatId: number): Promise<void> {

@@ -9,12 +9,13 @@ import { routeNewLead } from "@/lib/admin/lead-queue-store";
 import { CIRCLE_NICHE_RU } from "@/lib/admin/sales-after-reply";
 import { MOCKUP_BOT_OPEN } from "@/lib/proto/instant/limits";
 import { failDetail, readClientSite } from "@/lib/proto/instant/read";
-import { claimBuild, dropFlow, flowOf, instantCounts, saveFlow, saveInstantProto, setProtoLead } from "@/lib/proto/instant/store";
+import { claimBuild, dropFlow, flowOf, instantCounts, saveBotLang, saveFlow, saveInstantProto, setProtoLead } from "@/lib/proto/instant/store";
 import { MANUAL_HOURS, manualWhy, type Deps, type LeadInput } from "@/lib/proto/instant/bot";
 import { esc } from "@/lib/proto/instant/safe";
 import { protoUrl } from "@/lib/proto/store";
 import { salesRecipients } from "@/lib/qualify/brief";
 import { newRequestNo } from "@/lib/qualify/engine";
+import { saveSession, sessionFor, startSession } from "@/lib/qualify/handoff";
 import { scoreLead } from "@/lib/qualify/scoring";
 import { saveLead } from "@/lib/qualify/store";
 import { editCaption, editText, editWidgetData, sendRowsForId, sendForId, sendWidget } from "@/lib/qualify/telegram";
@@ -146,5 +147,12 @@ export function realDeps(): Deps {
     protoUrl,
     now: () => new Date(),
     open: MOCKUP_BOT_OPEN,
+    setLang: async (chatId, locale) => {
+      // Сессия первички — в памяти: её язык меняем сразу, выбор кладём в базу.
+      const session = sessionFor(chatId);
+      if (session) saveSession(chatId, { ...session, locale });
+      else startSession(chatId, locale);
+      await saveBotLang(chatId, locale);
+    },
   };
 }
