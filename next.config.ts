@@ -52,6 +52,16 @@ const config: NextConfig = {
     // Файлы клиенту от бота (lib/admin/client-outbox) — с диска, из kp/send/.
     "/api/reminders/sweep": ["./kp/send/**/*"],
   },
+  // Код читает с диска по пути, вычисленному при работе (файлы клиенту из
+  // kp/send, аватар бота, картинки объявлений), и трассировка на всякий
+  // случай клала в standalone весь проект. 12.11.2026 так в образ шла вторая
+  // копия public (1 ГБ кадров макетов) и снимки docs/: образ — 5,7 ГБ, диск
+  // сервера — 3 ГБ свободных. public лежит в образе отдельным слоем на том же
+  // месте (/app/public, Dockerfile), docs сервер не читает. Держит
+  // tests/deploy-chain.test.ts.
+  outputFileTracingExcludes: {
+    "**": ["./public/**/*", "./docs/**/*"],
+  },
   reactStrictMode: true,
   poweredByHeader: false,
   // Метаданные — в <head> всем, а не потоком в <body>. По умолчанию Next
