@@ -35,7 +35,18 @@ const DIR = new URL(".", import.meta.url).pathname;
 const IMG = "/protos/chechfarm";
 const strip = (s) => s.replace(/\/\*[\s\S]*?\*\//g, "");
 const CSS = strip(readFileSync(DIR + "site.css", "utf8") + readFileSync(DIR + "premium.css", "utf8") + readFileSync(DIR + "launch.css", "utf8")).replace(/\n\s*/g, "");
-const JS = strip(readFileSync(DIR + "site.js", "utf8") + "\n" + readFileSync(DIR + "premium.js", "utf8") + "\n" + readFileSync(DIR + "launch.js", "utf8")).replace(/\n\s*\n/g, "\n");
+/* Движок сцены первого экрана: пролёт Nek и салона красоты как есть, срезом из nek/land.js. */
+function nekScene() {
+  const land = readFileSync(DIR + "../nek/land.js", "utf8");
+  const a = land.indexOf("var hs=$('.hs');");
+  const b = land.indexOf("/* ── Конструктор DevUz");
+  if (a < 0 || b < a) throw new Error("nek/land.js изменился: не нашлась сцена пролёта");
+  const helpers = "var d=document,w=window,$=function(s,r){return(r||d).querySelector(s)},$$=function(s,r){return[].slice.call((r||d).querySelectorAll(s))};var D={root:K.base,img:K.img,n:K.scene.n,vn:K.scene.vn,fps:K.scene.fps,ch:[]};var RM=REDUCED;function cl(x){return x<0?0:x>1?1:x}function pad(n,k){n=String(n);while(n.length<(k||2))n='0'+n;return n}";
+  return `(function(){${helpers}\n${land.slice(a, b)}\n})()`;
+}
+const PREMIUM = readFileSync(DIR + "premium.js", "utf8");
+if (!PREMIUM.includes("__NEK_SCENE__;")) throw new Error("premium.js: нет места для движка сцены");
+const JS = strip(readFileSync(DIR + "site.js", "utf8") + "\n" + PREMIUM.replace("__NEK_SCENE__;", () => nekScene() + ";") + "\n" + readFileSync(DIR + "launch.js", "utf8")).replace(/\n\s*\n/g, "\n");
 /* CF_PROD=1 — боевой сайт на сервере компании (app/): без видео DevUz,
    условий макета, демо-панели и блока цены; формы идут на сервер, продукты,
    новости, контакты и заголовки — из базы (K.live, подставляет сервер). */
