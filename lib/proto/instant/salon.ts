@@ -53,6 +53,15 @@ const C = {
   pick: P("Выбрать", "Tanlash"),
   roomH: P("Как у нас", "Bizda qanday"),
   roomSub: P("Кадры для примера: на сайте будут фото вашего салона.", "Kadrlar namuna uchun: saytda saloningiz rasmlari bo‘ladi."),
+  worksH: P("Наши работы", "Ishlarimiz"),
+  worksSub: P("Кадры для примера: на сайте будут фото ваших работ.", "Kadrlar namuna uchun: saytda sizning ishlaringiz bo‘ladi."),
+  baH: P("До и после", "Oldin va keyin"),
+  baSub: P("Потяните ползунок: так гость видит результат окрашивания.", "Slayderni suring: mehmon bo‘yash natijasini shunday ko‘radi."),
+  before: P("До", "Oldin"),
+  after: P("После", "Keyin"),
+  revH: P("Отзывы гостей", "Mehmonlar fikri"),
+  revSub: P("Примеры для макета. На сайте будут настоящие отзывы ваших гостей с карт и из Instagram.", "Maket uchun namunalar. Saytda mehmonlaringizning xaritalar va Instagramdagi haqiqiy fikrlari bo‘ladi."),
+  revTag: P("Пример отзыва", "Fikr namunasi"),
   mastersH: P("Мастера", "Ustalar"),
   perksH: P("Почему к нам возвращаются", "Nega bizga qaytishadi"),
   labKick: P("Примерка", "Sinab ko‘rish"),
@@ -132,7 +141,15 @@ const ICON = {
   chat: I('<path d="M21 12a8 8 0 0 1-11.800 7L4 20l1.200-4.400A8 8 0 1 1 21 12z"/>'),
   arrow: I('<path d="M5 12h14M13 6l6 6-6 6"/>'),
 };
-const DROP = `<svg viewBox="0 0 40 56" aria-hidden="true"><path class="dp" d="M20 2C20 2 4 24 4 36a16 16 0 0 0 32 0C36 24 20 2 20 2z"/><path class="dh" d="M13 34c0-5 3-10 5-13" fill="none" stroke-linecap="round"/></svg>`;
+const WORKS = [1, 2, 3, 4, 5, 6].map((k) => `${IMG}/w${k}.webp`);
+/** Куда падает капля на фото руки: ноготь среднего пальца, доли кадра (пишет hand.py). */
+const HAND = { x: 64.04, y: 15.63 };
+const REVIEWS: { who: Pair; text: Pair }[] = [
+  { who: P("Мадина", "Madina"), text: P("Записалась на сайте вечером, утром уже была у мастера. Цвет получился ровно такой, как на примерке.", "Kechqurun saytda yozildim, ertalab ustada edim. Rang primerkadagi kabi chiqdi.") },
+  { who: P("Камола", "Kamola"), text: P("Удобно, что цену видно до визита, а напоминание пришло в Telegram. Маникюр держится отлично.", "Narx tashrifdan oldin ko‘rinishi qulay, eslatma Telegramga keldi. Manikyur juda yaxshi turibdi.") },
+  { who: P("Нигора", "Nigora"), text: P("Выбрала оттенок прямо на сайте, мастер подготовил его к моему приходу. Вернусь ещё.", "Rangni saytning o‘zida tanladim, usta kelishimga tayyorlab qo‘ydi. Yana kelaman.") },
+];
+const DROP = `<svg viewBox="0 0 40 58" aria-hidden="true"><defs><radialGradient id="dg" cx="36%" cy="64%" r="72%"><stop offset="0" stop-color="#fff" stop-opacity=".34"/><stop offset=".42" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".42"/></radialGradient></defs><path class="dp" d="M20 2C20 2 5 24 5 38a15 15 0 0 0 30 0C35 24 20 2 20 2z"/><path fill="url(#dg)" d="M20 2C20 2 5 24 5 38a15 15 0 0 0 30 0C35 24 20 2 20 2z"/><ellipse cx="13.4" cy="35" rx="3" ry="7.4" fill="#fff" opacity=".82" transform="rotate(17 13.4 35)"/><circle cx="15.4" cy="46.6" r="1.5" fill="#fff" opacity=".6"/><path d="M28.4 45.5a9.5 9.5 0 0 1-8 6.6" fill="none" stroke="#fff" stroke-opacity=".34" stroke-width="1.5" stroke-linecap="round"/></svg>`;
 
 /** Услуга клиента по слову: глава пролёта называет её и её цену, своих цен не пишем. */
 const pickService = (list: InstantService[], re: RegExp) => list.find((s) => re.test(s.name)) ?? null;
@@ -186,6 +203,7 @@ export function salonHtml(site: InstantSite): string {
 <div class="acts"><a class="btn btn-w" href="#book">${ICON.cal}<span>${t(C.book)}</span></a>${tel ? `<a class="btn btn-o" href="${esc(tel)}">${ICON.phone}<span>${esc(site.phone ?? t(C.call))}</span></a>` : ""}</div>
 </div>
 <svg class="drips" viewBox="0 0 1440 140" preserveAspectRatio="none" aria-hidden="true"><path d="M0 0h1440v40c-40 0-50 60-90 60s-40-70-90-70-50 100-100 100-50-110-100-110-40 50-80 50-50-40-90-40-40 90-90 90-50-80-100-80-40 40-80 40-50-60-100-60-40 100-90 100-50-90-100-90-40 60-80 60-50-50-90-50-40 30-60 30z"/></svg>
+<div class="drs" aria-hidden="true">${[[6, 22, 1.0, 190], [17, 14, 0.55, 150], [29, 26, 1.25, 205], [44, 16, 0.7, 165], [58, 24, 1.1, 200], [71, 12, 0.5, 148], [83, 22, 0.95, 192], [93, 14, 0.65, 158]].map(([x, w, k, h], i) => `<i style="left:${x}%;width:${w}px;height:${h}px" data-k="${k}" data-i="${i}"></i>`).join("")}</div>
 </section>`;
 
   const servicesSec = services.length
@@ -203,6 +221,20 @@ export function salonHtml(site: InstantSite): string {
 <div class="shots">${photos.map((src, i) => `<figure class="rv" style="--d:${i}"><img src="${esc(src)}" alt="" loading="lazy" referrerpolicy="no-referrer" data-par></figure>`).join("")}</div>
 </div></section>`
     : "";
+
+  const works = flyReady(media)
+    ? `<section class="sec" id="works"><div class="wrap">
+<header class="sh rv"><h2>${t(C.worksH)}</h2><p>${t(C.worksSub)}</p></header>
+<div class="works">${WORKS.map((src, i) => `<figure class="rv" style="--d:${i % 3}"><img src="${src}" alt="" loading="lazy" width="900" height="1117"></figure>`).join("")}</div>
+<div class="ba-w rv"><div class="ba-t"><h3>${t(C.baH)}</h3><p>${t(C.baSub)}</p></div>
+<div class="ba" id="ba" style="--p:50%"><img src="${IMG}/ba-after.webp" alt="" loading="lazy" width="1000" height="1241"><div class="ba-b"><img src="${IMG}/ba-before.webp" alt="" loading="lazy" width="1000" height="1241"></div><span class="ba-l ba-l1">${t(C.before)}</span><span class="ba-l ba-l2">${t(C.after)}</span><i class="ba-h"></i><input type="range" min="0" max="100" value="50" aria-label="${t(C.baH)}"></div></div>
+</div></section>`
+    : "";
+
+  const reviews = `<section class="sec" aria-label="${t(C.revH)}"><div class="wrap">
+<header class="sh rv"><h2>${t(C.revH)}</h2><p>${t(C.revSub)}</p></header>
+<div class="revs">${REVIEWS.map((r, i) => `<figure class="rv" style="--d:${i}"><span class="rtag">${t(C.revTag)}</span><blockquote>${t(r.text)}</blockquote><figcaption><span class="av" aria-hidden="true">${t(r.who).slice(0, 1)}</span>${t(r.who)}</figcaption></figure>`).join("")}</div>
+</div></section>`;
 
   const masters = site.doctors.length
     ? `<section class="sec" aria-label="${t(C.mastersH)}"><div class="wrap">
@@ -230,8 +262,7 @@ export function salonHtml(site: InstantSite): string {
 <a class="btn btn-w rv" href="#book" id="lab-go">${t(C.labGo)}${ICON.arrow}</a>
 </div>
 <div class="lab-v" aria-hidden="true">
-<div class="nail" id="nail" data-f="gloss"><span class="splash"></span><span class="np"></span><span class="nf"></span><span class="ng"></span></div>
-<div class="finger"></div>
+<div class="hand" id="nail" data-f="gloss" style="--tx:${HAND.x}%;--ty:${HAND.y}%"><img src="${IMG}/hand.webp" alt="" loading="lazy" width="900" height="1205"><span class="hn"></span><span class="ht"></span><span class="hg"></span><span class="splash"></span></div>
 </div>
 </div></section>`;
 
@@ -319,11 +350,13 @@ ${hero}
 <div class="fall" id="fall">
 <div class="rail" id="rail" aria-hidden="true"><div class="drop" id="drop">${DROP}</div></div>
 ${servicesSec}
+${works}
 ${room}
 ${masters}
 ${perks}
 ${lab}
 </div>
+${reviews}
 ${book}
 ${contact}
 </main>
@@ -369,12 +402,38 @@ p{margin:0}
 .acts{display:flex;flex-wrap:wrap;gap:12px;margin-top:34px}
 .drips{position:absolute;left:0;right:0;bottom:-138px;width:100%;height:140px;fill:var(--ac);pointer-events:none}
 .fall{position:relative}
-.rail{position:absolute;top:0;left:0;width:40px;height:100%;pointer-events:none;z-index:1}
-.drop{position:sticky;top:40vh;width:40px;transition:opacity .35s}
-.drop svg{width:100%;filter:drop-shadow(0 10px 14px rgb(var(--ac-rgb)/.35));transform:scaleY(var(--st,1));transform-origin:50% 0}
-.drop .dp{fill:var(--nc,var(--ac))}.drop .dh{stroke:rgb(255 255 255/.7);stroke-width:3}
+.fall{--lane:clamp(34px,6vw,92px)}
+.fall>.sec>.wrap,.fall>.lab>.wrap{padding-right:var(--lane)}
+.rail{position:absolute;top:0;right:max(6px,calc((100vw - 1120px)/2 - 6px));width:var(--lane);height:100%;pointer-events:none;z-index:3;display:flex;justify-content:center}
+.drop{position:sticky;top:40vh;width:34px;height:max-content;transition:opacity .3s;will-change:transform}
+.drop::before{content:"";position:absolute;left:50%;bottom:calc(100% - 6px);width:2px;height:70px;margin-left:-1px;border-radius:2px;background:linear-gradient(180deg,rgb(var(--ac-rgb)/0),var(--nc,var(--ac)));opacity:calc((var(--st,1) - 1) * 2.4)}
+.drop svg{display:block;width:100%;filter:drop-shadow(0 12px 12px rgb(46 34 38/.28));transform:scaleY(var(--st,1));transform-origin:50% 0}
+.drop .dp{fill:var(--nc,var(--ac))}
 .drop.down{opacity:0}
+.drs{position:absolute;left:0;right:0;top:100%;height:0;pointer-events:none;z-index:1}
+.drs i{position:absolute;top:-80px;border-radius:0 0 999px 999px;background:var(--ac);will-change:transform}
+.drs i::after{content:"";position:absolute;left:24%;bottom:9px;width:16%;height:18px;border-radius:99px;background:rgb(255 255 255/.22)}
+.works{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.works figure{margin:0;border-radius:28px;overflow:hidden;aspect-ratio:4/5}
+.works img{width:100%;height:100%;object-fit:cover;transition:transform .9s cubic-bezier(.2,.7,.2,1)}
+.works figure:hover img{transform:scale(1.06)}
+.ba-w{display:grid;grid-template-columns:.8fr 1.2fr;gap:40px;align-items:center;margin-top:72px}
+.ba-t h3{margin:0;font:italic 500 clamp(34px,4.4vw,56px)/1.05 'Cormorant Garamond',Georgia,serif}.ba-t p{margin-top:14px;color:#6b5a5f}
+.ba{position:relative;border-radius:32px;overflow:hidden;aspect-ratio:5/4;touch-action:pan-y;user-select:none}
+.ba img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 30%;pointer-events:none}
+.ba-b{position:absolute;inset:0;clip-path:inset(0 calc(100% - var(--p)) 0 0)}
+.ba-h{position:absolute;top:0;bottom:0;left:var(--p);width:2px;margin-left:-1px;background:#fff;box-shadow:0 0 0 1px rgb(46 34 38/.12)}
+.ba-h::after{content:"";position:absolute;left:50%;top:50%;width:44px;height:44px;margin:-22px;border-radius:50%;background:#fff;box-shadow:0 8px 24px rgb(46 34 38/.28)}
+.ba-l{position:absolute;top:16px;padding:6px 12px;border-radius:999px;background:rgb(46 34 38/.62);color:#fff;font-size:13px;font-weight:600}.ba-l1{left:16px}.ba-l2{right:16px}
+.ba input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:ew-resize}
+.revs{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.revs figure{margin:0;background:#fff;border-radius:28px;padding:26px;display:grid;gap:16px;align-content:start}
+.revs blockquote{margin:0;font:italic 500 22px/1.3 'Cormorant Garamond',Georgia,serif}
+.revs figcaption{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px}
+.revs .av{width:36px;height:36px;border-radius:50%;background:var(--wash);color:var(--ac);display:grid;place-items:center;font:italic 500 20px/1 'Cormorant Garamond',serif}
+.rtag{justify-self:start;padding:4px 10px;border-radius:999px;background:var(--wash);color:#6b5a5f;font-size:12px;font-weight:600}
 .sec{position:relative;padding:clamp(88px,13vh,150px) 0}
+.rail+.sec{padding-top:clamp(225px,28vh,260px)}
 .sec>.wrap,.lab>.wrap{position:relative;z-index:2}
 .sh{max-width:640px;margin-bottom:44px}.sh p{margin-top:14px;color:#6b5a5f}
 .list{list-style:none;margin:0;padding:0;display:grid;gap:4px 56px}
@@ -408,19 +467,20 @@ p{margin:0}
 .lab .chip{border-color:rgb(251 246 241/.28)}.lab .chip.on{background:#fbf6f1;border-color:#fbf6f1;color:#2a1d22}
 .note{margin-top:22px;font-size:14px;opacity:.6;max-width:460px}
 .lab .btn{margin-top:26px}
-.lab-v{position:relative;height:420px;display:grid;justify-items:center;align-content:start}
-.nail{position:relative;z-index:2;width:150px;height:210px;margin-top:20px;border-radius:75px 75px 40px 40px/95px 95px 34px 34px;background:#ead9d2;overflow:hidden;box-shadow:0 30px 60px rgb(0 0 0/.35)}
-.np{position:absolute;inset:0;background:var(--nc);transform:translateY(-101%);transition:transform .9s cubic-bezier(.2,.7,.2,1),background-color .45s}
-.nail.wet .np{transform:none}
-.nf{position:absolute;left:0;right:0;top:0;height:26%;background:#fff;border-radius:0 0 50% 50%/0 0 60% 60%;opacity:0;transition:opacity .4s}
-.nail[data-f=french] .nf{opacity:.96}
-.ng{position:absolute;left:18%;top:10%;width:20%;height:58%;border-radius:999px;background:linear-gradient(180deg,rgb(255 255 255/.75),rgb(255 255 255/0));transition:opacity .4s,transform .6s}
-.nail[data-f=matte] .ng{opacity:.12}
-.nail[data-f=cat] .ng{left:-10%;top:38%;width:120%;height:14%;transform:rotate(-24deg);background:linear-gradient(90deg,rgb(255 255 255/0),rgb(255 255 255/.8),rgb(255 255 255/0))}
-.splash{position:absolute;left:50%;top:0;width:20px;height:20px;margin:-10px;border-radius:50%;border:2px solid var(--nc);opacity:0;z-index:3}
-.nail.wet .splash{animation:splash .8s ease-out}
+.lab-v{position:relative;display:grid;justify-items:center}
+.hand{position:relative;z-index:2;width:min(100%,420px);aspect-ratio:900/1205;border-radius:36px;overflow:hidden;-webkit-mask-image:radial-gradient(120% 100% at 50% 45%,#000 62%,transparent 100%);mask-image:radial-gradient(120% 100% at 50% 45%,#000 62%,transparent 100%)}
+.hand img{display:block;width:100%;height:100%;object-fit:cover}
+.hn,.ht,.hg{position:absolute;inset:0;-webkit-mask-size:100% 100%;mask-size:100% 100%;transition:opacity .7s,background-color .45s}
+.hn{background:var(--nc);mix-blend-mode:multiply;-webkit-mask-image:url(${IMG}/hand-nails.webp);mask-image:url(${IMG}/hand-nails.webp);opacity:0}
+.hand.wet .hn{opacity:1}
+.ht{background:#fff;-webkit-mask-image:url(${IMG}/hand-tips.webp);mask-image:url(${IMG}/hand-tips.webp);opacity:0}
+.hand.wet[data-f=french] .ht{opacity:.94}
+.hg{background:#fff;-webkit-mask-image:url(${IMG}/hand-gloss.webp);mask-image:url(${IMG}/hand-gloss.webp);opacity:.8}
+.hand[data-f=matte] .hg{opacity:.1}
+.hand[data-f=cat] .hg{background:linear-gradient(118deg,rgb(255 255 255/0) 38%,#fff 50%,rgb(255 255 255/0) 62%);-webkit-mask-image:url(${IMG}/hand-nails.webp);mask-image:url(${IMG}/hand-nails.webp);opacity:.75}
+.splash{position:absolute;left:var(--tx);top:var(--ty);width:20px;height:20px;margin:-10px;border-radius:50%;border:2px solid var(--nc);opacity:0;z-index:3}
+.hand.wet .splash{animation:splash .8s ease-out}
 @keyframes splash{0%{opacity:.9;transform:scale(.4)}100%{opacity:0;transform:scale(7)}}
-.finger{width:190px;height:260px;margin-top:-64px;border-radius:95px 95px 0 0;background:linear-gradient(180deg,#e9c9b6,#d9b29c)}
 .book{display:grid;grid-template-columns:1.2fr .8fr;gap:48px;align-items:start}
 .form{display:grid;gap:18px;background:#fff;border-radius:32px;padding:28px}
 .form label,.fl{display:grid;gap:8px}
@@ -442,11 +502,11 @@ p{margin:0}
 .js .rv{opacity:0;transform:translateY(26px);transition:opacity .9s cubic-bezier(.2,.7,.2,1),transform .9s cubic-bezier(.2,.7,.2,1);transition-delay:calc(var(--d,0) * 70ms)}
 .js .rv.in{opacity:1;transform:none}
 @media(min-width:900px){.list{grid-template-columns:1fr 1fr}}
-@media(max-width:899px){.top nav{display:none}.lab-in,.book{grid-template-columns:1fr}.lab-v{height:330px;justify-items:end;padding-right:6px}.nail{width:110px;height:154px}.finger{width:140px;height:200px;margin-top:-48px;margin-right:-15px}.shots{grid-template-columns:1fr 1fr}.demo{position:static}.two{grid-template-columns:1fr}.room,.lab{border-radius:32px}.list li{flex-wrap:wrap}.list .chip{margin-left:auto}.drop,.rail{width:26px}
+@media(max-width:899px){.top nav{display:none}.lab-in,.book{grid-template-columns:1fr}.hand{width:min(100%,320px)}.works{grid-template-columns:1fr 1fr}.ba-w{grid-template-columns:1fr;gap:20px;margin-top:48px}.ba{aspect-ratio:4/5}.revs{grid-template-columns:1fr}.shots{grid-template-columns:1fr 1fr}.demo{position:static}.two{grid-template-columns:1fr}.room,.lab{border-radius:32px}.list li{flex-wrap:wrap}.list .chip{margin-left:auto}.drop{width:22px}
 .dock{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:40;display:flex;gap:8px;padding:8px;border-radius:999px;background:rgb(251 246 241/.9);box-shadow:0 10px 30px rgb(46 34 38/.16);transition:transform .4s,opacity .4s}
 .dock .btn{flex:1;min-height:48px}.dock .btn-o{flex:0 0 48px;padding:0}
 .dock.away{transform:translateY(140%);opacity:0}}
-@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.js .rv{opacity:1;transform:none;transition:none}.rail{display:none}.np{transform:none;transition:none}.shots img{transform:none}.top,.dock{transition:none}}`;
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.js .rv{opacity:1;transform:none;transition:none}.rail{display:none}.fall{--lane:0px}.hn{opacity:1;transition:none}.shots img{transform:none}.top,.dock{transition:none}}`;
 
 const JS = `(function(){'use strict';
 var d=document,w=window,$=function(s,r){return(r||d).querySelector(s)},$$=function(s,r){return[].slice.call((r||d).querySelectorAll(s))};
@@ -461,13 +521,21 @@ if('IntersectionObserver'in w&&!RM){var io=new IntersectionObserver(function(es)
 else $$('.rv').forEach(function(e){e.classList.add('in')});
 /* Капля: рельс кончается у ногтя, капля прилипает к экрану и «падает» через страницу. */
 var fall=$('#fall'),rail=$('#rail'),drop=$('#drop'),nail=$('#nail'),lab=$('#lab'),lastY=scrollY,st=1,raf=0,STRETCH=/*~*/0.012;
-function place(){if(!rail||!nail)return;var f=fall.getBoundingClientRect(),n=nail.getBoundingClientRect();
-  rail.style.left=Math.round(n.left+n.width/2-f.left-rail.offsetWidth/2)+'px';rail.style.height=Math.round(n.top-f.top+8)+'px'}
+var dx=0,drs=$$('.drs i'),hero=$('.hero');
+function target(){var n=nail.getBoundingClientRect(),cs=getComputedStyle(nail);return{x:n.left+n.width*parseFloat(cs.getPropertyValue('--tx'))/100,y:n.top+n.height*parseFloat(cs.getPropertyValue('--ty'))/100}}
+function place(){if(!rail||!nail)return;var f=fall.getBoundingClientRect(),r=rail.getBoundingClientRect(),g=target();
+  rail.style.height=Math.max(0,Math.round(g.y-f.top+2))+'px';dx=g.x-(r.left+r.width/2)}
 function tick(){raf=0;var y=scrollY,v=Math.abs(y-lastY);lastY=y;st+=((1+Math.min(v*STRETCH,.55))-st)*.25;
-  if(drop){drop.style.setProperty('--st',st.toFixed(3));var r=rail.getBoundingClientRect(),landed=r.bottom<innerHeight*.4+drop.offsetHeight+2;
+  if(drop&&rail){var r=rail.getBoundingClientRect(),stop=innerHeight*.4+drop.offsetHeight,left=r.bottom-stop,landed=left<2;
+    /* Последние две трети экрана капля уходит из своей полосы к ногтю. */
+    var q=1-Math.min(Math.max(left/(innerHeight*.66),0),1);q=q*q*(3-2*q);
+    drop.style.setProperty('--st',st.toFixed(3));drop.style.transform='translateX('+(dx*q).toFixed(1)+'px)';
     drop.classList.toggle('down',landed);nail.classList.toggle('wet',landed||RM)}
+  if(hero&&drs.length){var hb=hero.getBoundingClientRect(),h=Math.min(Math.max(-hb.top/Math.max(hb.height,1),0),1.2);
+    drs.forEach(function(d){var k=+d.getAttribute('data-k'),i=+d.getAttribute('data-i');d.style.transform='translateY('+(h*52*k+Math.sin(h*7+i*1.7)*6*k).toFixed(1)+'px)'})}
   $$('[data-par]').forEach(function(im){var b=im.parentNode.getBoundingClientRect();if(b.bottom<0||b.top>innerHeight)return;im.style.setProperty('--py',(-(b.top+b.height/2-innerHeight/2)*.08).toFixed(1)+'px')});
   if(Math.abs(st-1)>.004)raf=requestAnimationFrame(tick)}
+var ba=$('#ba');if(ba){var br=$('input',ba);br.addEventListener('input',function(){ba.style.setProperty('--p',br.value+'%')})}
 function poke(){if(!raf)raf=requestAnimationFrame(tick)}
 if(RM){if(nail)nail.classList.add('wet')}else{addEventListener('scroll',poke,{passive:true});addEventListener('resize',function(){place();poke()});addEventListener('load',function(){place();poke()});place();setTimeout(place,1200);poke()}
 /* Подбор цвета. */
