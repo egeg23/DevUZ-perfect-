@@ -140,6 +140,31 @@ export function botSubs(users: readonly BotUser[], marks: Marks, now: Date): Bot
   return { total: people.length - blocked, blocked, fresh, active, today };
 }
 
+/**
+ * Сколько макетов подписчики собрали себе в боте (владелец, 12.11.2026:
+ * «выведем где подписчики бота на главной у нас, сколько макетов они сделали
+ * за сегодня, вчера и тд»). Считаются готовые макеты клиентов из «Макета в
+ * боте»: без сборок сотрудников и без черновиков, не прошедших проверку.
+ * «Сегодня» и «вчера» — по Ташкенту, окна таблицы — те же скользящие, что у
+ * подписчиков.
+ */
+export type BotMockups = {
+  today: number;
+  yesterday: number;
+  windows: Record<SubWindow, number>;
+  total: number;
+  /** Сборки сотрудников за 30 дней — отдельной строкой: у них лимита нет. */
+  staffMonth: number;
+};
+
+/** Границы счёта макетов: начало сегодня и вчера по Ташкенту и начала скользящих окон. */
+export function mockupCuts(now: Date): { today: string; yesterday: string; windows: Record<SubWindow, string> } {
+  const start = tashkentDayStart(now);
+  const windows = {} as Record<SubWindow, string>;
+  for (const { key, ms } of SUB_WINDOWS) windows[key] = new Date(now.getTime() - ms).toISOString();
+  return { today: new Date(start).toISOString(), yesterday: new Date(start - DAY_MS).toISOString(), windows };
+}
+
 /** С этого часа по Ташкенту — сводка подписчиков за день; до 21:00 (ночью бот молчит). */
 export const SUBS_REPORT_HOUR = 20;
 
@@ -155,13 +180,15 @@ const signed = (n: number) => (n > 0 ? `+${n}` : String(n));
  * 10.11.2026: «Мне отчет по подписчикам и Александру раз в день
  * присылай»). Те же числа, что «Подписчики бота» на «Главной».
  */
-export function subsReportText(day: string, subs: BotSubs): string {
+export function subsReportText(day: string, subs: BotSubs, mockups?: BotMockups | null): string {
   const date = day.split("-").reverse().join(".");
   const diff = subs.today.now - subs.today.yesterday;
   return [
     `👥 <b>Подписчики бота · ${date}</b>`,
     `Подписались сегодня: <b>${subs.today.now}</b> (вчера ${subs.today.yesterday}, ${signed(diff)})`,
     `Были в боте сегодня: ${subs.today.active}`,
+    // База не ответила — строки нет: ноль был бы неправдой.
+    ...(mockups ? [`Собрали макет в боте сегодня: <b>${mockups.today}</b> (вчера ${mockups.yesterday}, за 7 дней ${mockups.windows.week})`] : []),
     `Новые за 7 дней: ${subs.fresh.week.now} (неделей раньше ${subs.fresh.week.prev})`,
     `Новые за 30 дней: ${subs.fresh.month.now}`,
     `Сейчас в боте: <b>${subs.total}</b>${subs.blocked ? ` · заблокировали: ${subs.blocked}` : ""}`,

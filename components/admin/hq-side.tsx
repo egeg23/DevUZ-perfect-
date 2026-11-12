@@ -6,7 +6,7 @@ import { HqBroadcast, type RepeatOf } from "@/components/admin/hq-broadcast";
 import { HqTask } from "@/components/admin/hq-task";
 import { botSubsDict, broadcastDict, hqTaskDict } from "@/content/admin-panel/hq-actions";
 import { canCancel, statusOf, type BroadcastPerson } from "@/lib/admin/broadcast";
-import { SUB_WINDOWS, type BotSubs, type Segment } from "@/lib/admin/bot-users";
+import { SUB_WINDOWS, type BotMockups, type BotSubs, type Segment } from "@/lib/admin/bot-users";
 import type { HistoryItem } from "@/lib/admin/broadcast-store";
 import { helpAnchor } from "@/lib/admin/help";
 import { clockOf } from "@/lib/admin/hq";
@@ -135,6 +135,7 @@ export function HqSide({
   preselect,
   broadcast,
   subs = null,
+  mockups = null,
   now,
 }: {
   locale: PanelLocale;
@@ -154,6 +155,8 @@ export function HqSide({
   } | null;
   /** Подписчики бота — владельцу и руководителю, рядом с рассылкой «Пользователям бота». */
   subs?: BotSubs | null;
+  /** Сколько макетов подписчики собрали себе в боте; null — база не ответила, строк нет. */
+  mockups?: BotMockups | null;
   now: Date;
 }) {
   const tt = pick(hqTaskDict, locale);
@@ -187,6 +190,13 @@ export function HqSide({
             <span className="text-xs font-medium text-text">{ts.today}</span>
             <span className="text-[0.7rem] text-faint">{ts.yesterday(subs.today.yesterday)}</span>
           </p>
+          {mockups ? (
+            <p className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-1 rounded-lg bg-gold/10 px-3 py-2">
+              <span className="font-mono text-2xl font-semibold leading-none tabular-nums text-gold">{mockups.today}</span>
+              <span className="text-xs font-medium text-text">{ts.mockToday}</span>
+              <span className="text-[0.7rem] text-faint">{ts.yesterday(mockups.yesterday)}</span>
+            </p>
+          ) : null}
           <table className="mt-4 w-full text-xs">
             <caption className="sr-only">{ts.caption}</caption>
             <thead>
@@ -217,8 +227,28 @@ export function HqSide({
                   </td>
                 ))}
               </tr>
+              {mockups ? (
+                <tr className="border-t border-line/60">
+                  <th scope="row" className="py-2 text-left font-medium">{ts.mockRow}</th>
+                  {SUB_WINDOWS.map((w) => (
+                    <td key={w.key} className="py-2 text-right font-mono text-sm font-semibold tabular-nums text-gold">
+                      {mockups.windows[w.key]}
+                    </td>
+                  ))}
+                </tr>
+              ) : null}
             </tbody>
           </table>
+          {mockups ? (
+            <p className="mt-2 text-xs text-muted">
+              {ts.mockTotal(mockups.total)}
+              {mockups.staffMonth ? ` · ${ts.mockStaff(mockups.staffMonth)}` : ""}
+              {" · "}
+              <Link href="/admin/mockups" className="underline underline-offset-2 hover:text-text">
+                {ts.mockOpen}
+              </Link>
+            </p>
+          ) : null}
           {subs.blocked ? <p className="mt-2 text-xs text-muted">{ts.blocked(subs.blocked)}</p> : null}
           <p className="mt-2 text-[0.7rem] leading-snug text-faint">{ts.note}</p>
         </section>

@@ -245,14 +245,27 @@ export const botSubsDict = defineDict({
     pl: (n: number) => `wcześniej ${n}`,
   },
   active: { ru: "Были в боте", uz: "Botda bo‘lganlar", pl: "Aktywni w bocie" },
+  mockToday: { ru: "собрали макет сегодня", uz: "bugun maket yig‘di", pl: "złożyło makietę dzisiaj" },
+  mockRow: { ru: "Собрали макет", uz: "Maket yig‘ganlar", pl: "Złożyli makietę" },
+  mockTotal: {
+    ru: (n: number) => `Всего макетов из бота: ${n}`,
+    uz: (n: number) => `Botdan jami maketlar: ${n}`,
+    pl: (n: number) => `Wszystkich makiet z bota: ${n}`,
+  },
+  mockStaff: {
+    ru: (n: number) => `Сотрудники собрали за 30 дней: ${n}`,
+    uz: (n: number) => `Xodimlar 30 kunda yig‘di: ${n}`,
+    pl: (n: number) => `Pracownicy złożyli w 30 dni: ${n}`,
+  },
+  mockOpen: { ru: "Открыть «Макеты»", uz: "«Maketlar»ni ochish", pl: "Otwórz «Makiety»" },
   blocked: {
     ru: (n: number) => `Заблокировали бота: ${n}`,
     uz: (n: number) => `Botni bloklaganlar: ${n}`,
     pl: (n: number) => `Zablokowali bota: ${n}`,
   },
   note: {
-    ru: "Подписчик — тот, кто сам написал боту или нажал «Start». Сотрудники не считаются. «Сегодня» — с полуночи по Ташкенту. Числа обновляются раз в 5 минут, сводка в бот — каждый день в 20:00.",
-    uz: "Obunachi — botga o‘zi yozgan yoki «Start»ni bosgan kishi. Xodimlar hisobga olinmaydi. «Bugun» — Toshkent vaqti bilan yarim tundan. Raqamlar har 5 daqiqada yangilanadi, botga hisobot — har kuni soat 20:00 da.",
-    pl: "Subskrybent to osoba, która sama napisała do bota albo nacisnęła «Start». Pracownicy się nie liczą. «Dzisiaj» liczy się od północy czasu taszkenckiego. Liczby odświeżają się co 5 minut, podsumowanie w bocie przychodzi codziennie o 20:00.",
+    ru: "Подписчик — тот, кто сам написал боту или нажал «Start». Сотрудники не считаются. «Сегодня» — с полуночи по Ташкенту. Макет — готовый макет, который подписчик собрал себе в боте: один на аккаунт. Числа обновляются раз в 5 минут, сводка в бот — каждый день в 20:00.",
+    uz: "Obunachi — botga o‘zi yozgan yoki «Start»ni bosgan kishi. Xodimlar hisobga olinmaydi. «Bugun» — Toshkent vaqti bilan yarim tundan. Maket — obunachi botda o‘zi uchun yig‘gan tayyor maket: bitta akkauntga bitta. Raqamlar har 5 daqiqada yangilanadi, botga hisobot — har kuni soat 20:00 da.",
+    pl: "Subskrybent to osoba, która sama napisała do bota albo nacisnęła «Start». Pracownicy się nie liczą. «Dzisiaj» liczy się od północy czasu taszkenckiego. Makieta to gotowa makieta, którą subskrybent złożył sobie w bocie: jedna na konto. Liczby odświeżają się co 5 minut, podsumowanie w bocie przychodzi codziennie o 20:00.",
   },
 });
