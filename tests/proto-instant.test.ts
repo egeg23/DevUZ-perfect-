@@ -880,3 +880,16 @@ test("стройка и ремонт: нейтральные фото ниши �
   for (const photo of [...STROI_PHOTOS, STROI_HERO, STROI_PANO]) assert.ok(existsSync(`public${photo}`), photo);
   for (const photo of STROI_PHOTOS) assert.ok(existsSync(`public${photo.replace("-1200", "-640")}`), photo);
 });
+
+/* Владелец, 13.11.2026: «Для макетов которые делаются через тг бот примени эти новые 2 правила»:
+   в браузере Telegram vh прыгает — высоты окна в стилях макета из бота на пикселях. */
+test("макет из бота: высоты окна — на --tgvh, скрипт за meta viewport, селекторы Tailwind целы", async () => {
+  const { pinViewportUnits, withTelegramFix } = await import("@/lib/proto/instant/telegram");
+  assert.equal(
+    pinViewportUnits("<style>.min-h-\\[100svh\\]{min-height:100svh}.a{height:1000vh;margin:-50vh 0;top:calc(100vh - 2px)}</style><p>100vh</p>"),
+    "<style>.min-h-\\[100svh\\]{min-height:calc(var(--tgvh,1vh)*100)}.a{height:calc(var(--tgvh,1vh)*1000);margin:calc(var(--tgvh,1vh)*-50) 0;top:calc(calc(var(--tgvh,1vh)*100) - 2px)}</style><p>100vh</p>",
+  );
+  const out = withTelegramFix('<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><style>a{height:100vh}</style></head><body></body></html>');
+  assert.ok(out.indexOf("--tgvh',innerHeight") > out.indexOf('name="viewport"'), "скрипт стоит до meta viewport");
+  assert.ok(assetsFile.scene.includes("function tgFix()") && assetsFile.scene.includes("function tgTone()"), "движок пролёта без высоты пикселями и тёмного фона");
+});
