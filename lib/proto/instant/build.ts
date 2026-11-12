@@ -28,6 +28,7 @@ import { brandColor, clean, handleOf, imageUrl } from "@/lib/proto/instant/safe"
 import { LIMITS, instantMissing, type InstantSite } from "@/lib/proto/instant/types";
 import { pageProblems, withoutDashes } from "@/lib/proto/plain-text";
 import { newSeed, stampHtml, type Stamp } from "@/lib/proto/stamp";
+import { withTelegramFix } from "@/lib/proto/instant/telegram";
 
 const TEMPLATES = { stomatologiya: dentalHtml, medcentr: medcentrHtml, mebel: mebelHtml, restoran: restoranHtml, turagentstvo: (s: InstantSite) => turHtml(s), "uchebnyy-centr": eduHtml, nedvizhimost: nedvHtml, "salon-krasoty": salonHtml, magazin: magazinHtml, avtoservis: avtoservisHtml, logistika: logistikaHtml, stroitelstvo: stroitelstvoHtml, uslugi: uslugiHtml, avtosalon: avtosalonHtml } as const;
 
@@ -103,7 +104,7 @@ export function buildInstant(raw: InstantSite, seed = newSeed(), now = new Date(
   const site = normalizeSite(raw);
   const template = TEMPLATES[site.niche];
   const missing = instantMissing(site);
-  const page = template(site);
+  const page = withTelegramFix(template(site));
   const problems = [
     ...missing.map((m) => ({ code: `missing:${m}`, text: m === "name" ? "Нет названия." : "Нет телефона, Telegram или WhatsApp." })),
     ...instantProblems(page, site),

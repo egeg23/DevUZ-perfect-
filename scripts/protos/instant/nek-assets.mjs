@@ -50,13 +50,25 @@ const CSS_SWAPS = [
  */
 const SCENE_FROM = "var hs=$('.hs');";
 const SCENE_TO = "var cfg=get('nk-cfg-1',{}),boxes";
+/*
+ * Макет из бота клиент открывает во встроенном браузере Telegram (владелец,
+ * 13.11.2026: «Для макетов которые делаются через тг бот примени эти новые
+ * 2 правила»; CLAUDE.md, «Макет открывают в браузере Telegram»):
+ * 1) высота пролёта — пикселями от первой высоты окна, заново только при
+ *    смене ширины: панель Telegram выезжает при смене направления, vh
+ *    пересчитывается, и страница прыгала;
+ * 2) пока пролёт закрывает весь экран, фон страницы — цвета пролёта:
+ *    свёрнутая панель Telegram красится фоном страницы, а не theme-color.
+ *    Блоки ниже его не видят: класс снимается, как только пролёт уходит.
+ */
+const TELEGRAM = "if(hs&&!RM){var tgK=0,tgW=0;function tgFix(){if(innerWidth===tgW)return;tgW=innerWidth;hs.style.height='';tgK=tgK||hs.offsetHeight/innerHeight;hs.style.height=Math.round(tgK*innerHeight)+'px'}tgFix();addEventListener('resize',tgFix);var tgBg=getComputedStyle(hs).backgroundColor,tgOn=null;if(!tgBg||/^rgba\\(0, 0, 0, 0\\)$|transparent/.test(tgBg))tgBg='#000';function tgTone(){var r=hs.getBoundingClientRect(),on=r.top<=1&&r.bottom>=innerHeight-1;if(on===tgOn)return;tgOn=on;var c=on?tgBg:'';d.documentElement.style.backgroundColor=c;d.body.style.backgroundColor=c}tgTone();addEventListener('scroll',tgTone,{passive:true});addEventListener('resize',tgTone)}";
 function sceneJs() {
   const land = strip(read("land.js")).replace(/\n\s*\n/g, "\n");
   const a = land.indexOf(SCENE_FROM);
   const b = land.indexOf(SCENE_TO);
   if (a < 0 || b < 0 || b < a) throw new Error("land.js Nek изменился: не нашлась сцена пролёта");
   const helpers = "var d=document,w=window,$=function(s,r){return(r||d).querySelector(s)},$$=function(s,r){return[].slice.call((r||d).querySelectorAll(s))};var D=JSON.parse($('#im-land').textContent);var RM=w.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;function cl(x){return x<0?0:x>1?1:x}function pad(n,k){n=String(n);while(n.length<(k||2))n='0'+n;return n}";
-  return `(function(){'use strict';${helpers}\n${land.slice(a, b).trim()}\n})();`;
+  return `(function(){'use strict';${helpers}\n${land.slice(a, b).trim()}\n${TELEGRAM}\n})();`;
 }
 
 export function nekAssets() {
