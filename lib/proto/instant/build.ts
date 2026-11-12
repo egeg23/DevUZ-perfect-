@@ -17,13 +17,19 @@ import { salonHtml } from "@/lib/proto/instant/salon";
 import { turHtml } from "@/lib/proto/instant/tur";
 import { eduHtml } from "@/lib/proto/instant/edu";
 import { nedvHtml } from "@/lib/proto/instant/nedv";
+import { magazinHtml } from "@/lib/proto/instant/magazin";
+import { avtoservisHtml } from "@/lib/proto/instant/avtoservis";
+import { logistikaHtml } from "@/lib/proto/instant/logistika";
+import { stroitelstvoHtml } from "@/lib/proto/instant/stroitelstvo";
+import { uslugiHtml } from "@/lib/proto/instant/uslugi";
+import { avtosalonHtml } from "@/lib/proto/instant/avtosalon";
 import { instantProblems, tailsIn, type InstantProblem } from "@/lib/proto/instant/check";
 import { brandColor, clean, handleOf, imageUrl } from "@/lib/proto/instant/safe";
 import { LIMITS, instantMissing, type InstantSite } from "@/lib/proto/instant/types";
 import { pageProblems, withoutDashes } from "@/lib/proto/plain-text";
 import { newSeed, stampHtml, type Stamp } from "@/lib/proto/stamp";
 
-const TEMPLATES = { stomatologiya: dentalHtml, medcentr: medcentrHtml, mebel: mebelHtml, restoran: restoranHtml, turagentstvo: (s: InstantSite) => turHtml(s), "uchebnyy-centr": eduHtml, nedvizhimost: nedvHtml, "salon-krasoty": salonHtml } as const;
+const TEMPLATES = { stomatologiya: dentalHtml, medcentr: medcentrHtml, mebel: mebelHtml, restoran: restoranHtml, turagentstvo: (s: InstantSite) => turHtml(s), "uchebnyy-centr": eduHtml, nedvizhimost: nedvHtml, "salon-krasoty": salonHtml, magazin: magazinHtml, avtoservis: avtoservisHtml, logistika: logistikaHtml, stroitelstvo: stroitelstvoHtml, uslugi: uslugiHtml, avtosalon: avtosalonHtml } as const;
 
 const plain = (text: string | null, max: number) => {
   const out = clean(text, max);

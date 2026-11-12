@@ -1,7 +1,7 @@
 // Хвосты прошлых клиентов для «Макета в боте» (lib/proto/instant/tails).
 //
 // Шаблоны собраны из макетов Nek Dental Studio, «Сияния Севера» (стоматология)
-// Shox International Hospital (медцентр), vTashkente (мебель), Agora (ресторан), SEM Travel (турагентство) и Aipply Academy, MedAcademy (учебный центр) и ShahaR.Uz (недвижимость); в макете нового клиента не должно остаться ни строки о них:
+// Shox International Hospital (медцентр), vTashkente (мебель), Agora (ресторан), SEM Travel (турагентство), Greenwell (интернет-магазин) и Aipply Academy, MedAcademy (учебный центр) и ShahaR.Uz (недвижимость), AUTOMECHANIC (автосервис); в макете нового клиента не должно остаться ни строки о них:
 // название, телефон, почта, домен, ник, адрес, врачи, авторы отзывов,
 // лицензия. Список пишется отсюда из их data.mjs, а не руками:
 //
@@ -17,6 +17,10 @@ import * as syanie from "../syanie/data.mjs";
 import * as shox from "../shox-hospital/data.mjs";
 import * as agora from "../agora/data.mjs";
 import * as sem from "../semtravel/data.mjs";
+import * as gw from "../greenwell/data.mjs";
+import * as cargo from "../cargopro/data.mjs";
+import * as fintax from "../fintax/data.mjs";
+import * as samist from "../samist/data.mjs";
 
 const VTASHKENTE = [
   "vTashkente",
@@ -120,8 +124,64 @@ export function tails() {
     "ЖК «Нур»",
     "ЖК «Зарафшон»",
     "Олтин Водий",
+    // Greenwell — шаблон интернет-магазина с 12.11.2026 (lib/proto/instant/magazin).
+    gw.BRAND.name,
+    gw.BRAND.site,
+    gw.BRAND.tg,
+    "Inso Farm",
+    // Названия их банок («Магний Цитрат») — обычные названия товара в аптеке клиента, их не берём.
+    // AUTOMECHANIC — шаблон автосервиса (lib/proto/instant/avtoservis). Факты — в их gen.mjs (F).
+    "AUTOMECHANIC",
+    "automechanic.uz",
+    "tadjiyev_u",
+    "автостоянка № 75",
+    "75-son avtoturargoh",
+    "10 квартал, дом 23/1",
+    "10-kvartal, 23/1",
+    "77 Lubricants",
+    // CARGO PRO GROUP — шаблон логистики с 12.11.2026 (lib/proto/instant/logistika).
+    cargo.COMPANY.name,
+    cargo.COMPANY.email,
+    new URL(cargo.COMPANY.site).hostname,
+    "cargoprogroup",
+    "cargoprogroup_bot",
+    "Абдуллы Каххара",
+    "Abdulla Qahhor",
+    "Lider Cargo",
+    "LBM Driver",
+    // LIDER PROF PROEKT — шаблон стройки и ремонта с 12.11.2026 (lib/proto/instant/stroitelstvo).
+    // Факты — в их gen.mjs (F, REVIEW), отдельного data.mjs нет: переписаны отсюда.
+    "LIDER PROF",
+    "lider-prof.uz",
+    "liderprof",
+    "lppuz",
+    "lider_prof_proekt",
+    "liderprofproekt",
+    "3-й проезд Хотира",
+    "Xotira 3-tor",
+    "Алексей Иванов",
+    "Маркетолог LOGI",
+    // FinTax — шаблон «Услуги для бизнеса» с 12.11.2026 (lib/proto/instant/uslugi).
+    "FinTax",
+    fintax.CONTACT.tg,
+    fintax.CONTACT.email,
+    "fintax.uz",
+    "fintaxcompany",
+    "Кушбеги",
+    "Qushbegi",
+    ...fintax.TEAM.flatMap((p) => [p.ru[0], p.uz[0]]),
+    // SAMIST AUTO — шаблон автосалона (lib/proto/instant/avtosalon). Марки
+    // (Isuzu, FAW) — чужие торговые знаки, а не их факт: у клиента они могут быть свои.
+    samist.BRAND.name,
+    samist.BRAND.legal,
+    "SIA AUTO",
+    "samist.autoline",
+    samist.BRAND.ru.addr,
+    samist.BRAND.uz.addr,
+    "кольцевая автомобильная дорога, 120А",
+    "aylanma avtomobil yo‘li, 120A",
   ];
-  const phones = [nek.CLINIC.tel, syanie.BRAND.phoneRaw, ...shox.BRANCHES.map((b) => b.tel), VTASHKENTE_PHONE, agora.BRAND.tel, sem.BRAND.phoneRaw, sem.BRAND.phone2Raw, "+998771233300", "+998934453569"].filter(Boolean).map((p) => p.replace(/\D/g, ""));
+  const phones = [nek.CLINIC.tel, syanie.BRAND.phoneRaw, ...shox.BRANCHES.map((b) => b.tel), VTASHKENTE_PHONE, agora.BRAND.tel, sem.BRAND.phoneRaw, sem.BRAND.phone2Raw, "+998771233300", "+998934453569", "+998909656131", "+998712764431", ...cargo.COMPANY.phones.map(([, raw]) => raw), "+998993050999", "+998993060999", fintax.CONTACT.phone, samist.BRAND.tel, ...samist.BRAND.more.map(([, t]) => t)].filter(Boolean).map((p) => p.replace(/\D/g, ""));
   return {
     text: [...new Set(text.map((s) => s.trim()).filter((s) => s.length >= 5))].sort(),
     phones: [...new Set(phones)].sort(),

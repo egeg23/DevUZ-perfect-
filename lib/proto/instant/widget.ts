@@ -135,6 +135,11 @@ const BOOK: Partial<Record<InstantNiche, Record<InstantLocale, string>>> = {
   "uchebnyy-centr": { ru: "Записаться на курс", uz: "Kursga yozilish" },
   nedvizhimost: { ru: "Подобрать объект", uz: "Obyekt tanlash" },
   "salon-krasoty": { ru: "Записаться", uz: "Yozilish" },
+  magazin: { ru: "В корзину", uz: "Savatga" },
+  logistika: { ru: "Рассчитать доставку", uz: "Yetkazishni hisoblash" },
+  stroitelstvo: { ru: "Рассчитать ремонт", uz: "Ta’mirni hisoblash" },
+  uslugi: { ru: "Оставить заявку", uz: "Ariza qoldirish" },
+  avtosalon: { ru: "Записаться на тест-драйв", uz: "Test-drayvga yozilish" },
 };
 
 /**
@@ -153,6 +158,12 @@ const SKIN: Record<InstantNiche, Skin> = {
   "uchebnyy-centr": { bg: "#f2f4fc", fg: "#0a0e33", card: "#fff", mute: "#b4b8d4", accent: "#1d22d8", serif: false },
   nedvizhimost: { bg: "#f9f7f3", fg: "#131f19", card: "#fff", mute: "#b9beb6", accent: "#4d6630", serif: false },
   "salon-krasoty": { bg: "#f7f2ec", fg: "#1a213b", card: "#fff", mute: "#bdb9c2", accent: "#dc4468", serif: true },
+  magazin: { bg: "#f6f8f5", fg: "#0f1c15", card: "#fff", mute: "#c3d1c8", accent: "#00573a", serif: false },
+  avtoservis: { bg: "#101217", fg: "#eef1f5", card: "#1a1d22", mute: "#5a606b", accent: "#d61f2c", serif: false },
+  logistika: { bg: "#0c1329", fg: "#f4f6fc", card: "#16204a", mute: "#3a4570", accent: "#f08a24", serif: false },
+  stroitelstvo: { bg: "#f2efe9", fg: "#141518", card: "#fbfaf7", mute: "#cfc9be", accent: "#d7262b", serif: false },
+  uslugi: { bg: "#f5f2ea", fg: "#151a29", card: "#fffdf8", mute: "#b9bcc6", accent: "#161a28", serif: true },
+  avtosalon: { bg: "#0b0c0e", fg: "#f3f4f6", card: "#1a1d22", mute: "#5c6068", accent: "#ec3237", serif: false },
 };
 /** Сфера не названа — мини-сайт в цветах чата. */
 const PLAIN: Skin = {

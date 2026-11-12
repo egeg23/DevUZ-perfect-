@@ -161,7 +161,7 @@ test("макет в боте: без виджетов — тот же ход о�
   assert.ok(f.sent.some((m) => /Готово/.test(m.html)));
 });
 
-test("макет в боте: ниша без шаблона — вручную за 12 часов, кейсы сферы и лид, без сборки", async () => {
+test("макет в боте: «Другое», сферу не узнали — универсальный макет «Услуги для бизнеса», а не ручной путь", async () => {
   const f = fake();
   await startInstant(ctx, f.deps);
   await ask(f.deps, "shop.example");
@@ -169,10 +169,29 @@ test("макет в боте: ниша без шаблона — вручную 
   assert.match(f.sent.at(-1)!.html, /чем занимается компания/, "«Другое» — не тупик: спрашиваем сферу словами");
   assert.equal(f.flow()?.stage, "q_what");
   await ask(f.deps, "разводим страусов");
-  assert.match(f.sent.at(-1)!.html, /дизайнер вручную, пришлём сюда в течение 12 часов/);
-  assert.match(f.sent.at(-1)!.html, /devuz\.studio\/ru\/cases/, "кейсы сферы или все кейсы");
-  assert.deepEqual(f.leads, ["soon"]);
-  assert.ok(!f.log.some((l) => l.startsWith("widget")));
+  assert.ok(f.log.some((l) => l.startsWith("widget")), "сборка на глазах, как у любой сферы");
+  assert.ok(f.log.includes("save:0"), "макет собран и прошёл проверку");
+  assert.deepEqual(f.leads, ["built"]);
+  assert.ok(!f.sent.some((m) => /дизайнер вручную/.test(m.html)), "ручной путь — только когда сборка не прошла");
+});
+
+test("макет в боте: «Ремонт стиральных машин» без сайта — сфера не узнана, собирается «Услуги для бизнеса»", async () => {
+  const { nicheFromWords } = await import("@/lib/proto/instant/bot");
+  assert.equal(nicheFromWords("Ремонт стиральных машин"), "uslugi");
+  assert.equal(nicheFromWords("разводим страусов"), "uslugi");
+  const f = fake();
+  await startInstant(ctx, f.deps);
+  await handleInstantButton(ctx, ["im", "nosite"], f.deps);
+  await handleInstantButton(ctx, ["im", "n", "general"], f.deps);
+  await ask(f.deps, "Ремонт стиральных машин");
+  assert.equal(f.flow()?.stage, "q_name");
+  assert.equal(f.flow()?.niche, "uslugi");
+  await ask(f.deps, "Мастер Плюс");
+  await ask(f.deps, "+998 90 111 22 33");
+  await ask(f.deps, "нет");
+  await ask(f.deps, "Диагностика\nЗамена насоса - 250 000 сум");
+  assert.ok(f.log.includes("save:0"));
+  assert.deepEqual(f.leads, ["built"]);
 });
 
 test("макет в боте: сайта нет — четыре вопроса и сборка из ответов", async () => {

@@ -12,7 +12,10 @@ import { siteFromAnswers } from "@/lib/proto/instant/read";
 import { tails } from "../scripts/protos/instant/tails.mjs";
 import { nekAssets } from "../scripts/protos/instant/nek-assets.mjs";
 import assetsFile from "@/content/proto-instant/nek-assets.json" with { type: "json" };
-import { EXAMPLE, EXAMPLE_MEBEL, EXAMPLE_MED, EXAMPLE_REST, EXAMPLE_TUR, EXAMPLE_EDU, EXAMPLE_NEDV, EXAMPLE_SALON } from "../scripts/protos/instant/preview-data.mjs";
+import { EXAMPLE, EXAMPLE_MEBEL, EXAMPLE_MED, EXAMPLE_REST, EXAMPLE_TUR, EXAMPLE_EDU, EXAMPLE_NEDV, EXAMPLE_SALON, EXAMPLE_AVTO } from "../scripts/protos/instant/preview-data.mjs";
+import { automechanicAssets } from "../scripts/protos/instant/automechanic-assets.mjs";
+import amFile from "@/content/proto-instant/automechanic-assets.json" with { type: "json" };
+import { AVTOSERVIS_LAYERS, AVTOSERVIS_PHOTOS } from "@/lib/proto/instant/avtoservis";
 import { shoxAssets } from "../scripts/protos/instant/shox-assets.mjs";
 import shoxFile from "@/content/proto-instant/shox-assets.json" with { type: "json" };
 import { MEDCENTR_PHOTOS } from "@/lib/proto/instant/medcentr";
@@ -34,6 +37,10 @@ import { NEDV_BACKS, NEDV_PHOTOS } from "@/lib/proto/instant/nedv";
 import { panelAssets } from "../scripts/protos/instant/panel-assets.mjs";
 import panelFile from "@/content/proto-instant/panel-assets.json" with { type: "json" };
 import { hasAdmin } from "@/lib/proto/instant/admin";
+import { liderprofAssets } from "../scripts/protos/instant/liderprof-assets.mjs";
+import lpFile from "@/content/proto-instant/liderprof-assets.json" with { type: "json" };
+import { STROI_HERO, STROI_PANO, STROI_PHOTOS } from "@/lib/proto/instant/stroitelstvo";
+import { EXAMPLE_STROI } from "../scripts/protos/instant/preview-data.mjs";
 
 /**
  * «Макет в боте» (CLAUDE.md): шаблон ниши из наших макетов, данные клиента —
@@ -480,7 +487,7 @@ test("админка: у всех семи сфер — на данных кли
       if (mark) assert.ok(a.includes(mark));
     }
   }
-  for (const n of ["stomatologiya", "medcentr", "mebel", "restoran", "turagentstvo", "uchebnyy-centr", "nedvizhimost", "salon-krasoty"] as const) assert.ok(hasAdmin(n), `${n}: админка есть`);
+  for (const n of ["stomatologiya", "medcentr", "mebel", "restoran", "turagentstvo", "uchebnyy-centr", "nedvizhimost", "salon-krasoty", "stroitelstvo"] as const) assert.ok(hasAdmin(n), `${n}: админка есть`);
 });
 
 test("админка ресторана: блюда клиента в меню, демо-заказы только из блюд с ценой", () => {
@@ -692,4 +699,184 @@ test("сборка из ответов в боте проходит у кажд�
     const site = siteFromAnswers({ niche, locale, name: "Лолипопыч", phone: "+998 91 234 56 78", address: "Чиланзар", services: "Ногти" });
     assert.deepEqual(buildInstant(site, SEED).problems, [], `${niche} ${locale}`);
   }
+});
+
+test("интернет-магазин: магазин нашего макета Greenwell, свежий, без Greenwell, защита та же", async () => {
+  const { greenwellShopAssets } = await import("../scripts/protos/instant/greenwell-shop-assets.mjs");
+  const gwFile = (await import("@/content/proto-instant/greenwell-shop-assets.json", { with: { type: "json" } })).default;
+  const { EXAMPLE_SHOP } = await import("../scripts/protos/instant/preview-data.mjs");
+  assert.deepEqual(gwFile, greenwellShopAssets(), "node scripts/protos/instant/greenwell-shop-assets.mjs");
+  const shop = EXAMPLE_SHOP as InstantSite;
+  const { html, problems, stamp } = buildInstant(shop, SEED);
+  assert.deepEqual(problems, []);
+  assert.ok(html.includes(gwFile.css.slice(0, 200)), "стили магазина Greenwell");
+  assert.ok(html.includes('id="gw-data"') && html.includes('class="tabbar"') && html.includes('id="sheet"'), "оболочка магазина Greenwell");
+  assert.ok(html.includes("/ru/mockup-terms") && html.includes('class="dz-vid"'));
+  assert.ok(stamp.signals.some((s) => s.startsWith("js:")), "метка числа скрипта");
+  assert.ok(stamp.signals.filter((s) => s.startsWith("text:")).length >= 4, "две ловушки");
+  for (const gw of ["Greenwell", "greenwell", "Inso Farm", "GREEN10", "Uzum Market", "/protos/greenwell", "Руставели", "gw-demo-1"]) assert.ok(!html.includes(gw), gw);
+  assert.deepEqual(tailsIn(html), []);
+  assert.ok(buildInstant({ ...shop, perks: ["Как у Greenwell"] }, SEED).problems.some((p) => p.code === "tail"), "Greenwell — хвост");
+  assert.deepEqual(buildInstant({ ...shop, locale: "uz", tagline: null, about: null }, SEED).problems, []);
+});
+
+test("интернет-магазин: товары — услуги клиента, цена только его, без цены — «цена по запросу» и вопрос в чат", async () => {
+  const { EXAMPLE_SHOP } = await import("../scripts/protos/instant/preview-data.mjs");
+  const { MAGAZIN_PHOTOS, shopPrice } = await import("@/lib/proto/instant/magazin");
+  const shop = EXAMPLE_SHOP as InstantSite;
+  const { html, pages } = buildInstant(shop, SEED);
+  const admin = pages.admin ?? "";
+  const data = JSON.parse(html.match(/<script type="application\/json" id="gw-data">([\s\S]*?)<\/script>/)![1]);
+  assert.deepEqual(data.products.map((p: { n: string }) => p.n), shop.services.map((s) => s.name));
+  assert.deepEqual(data.products.map((p: { price: number }) => p.price), [420000, 180000, 350000, 0, 210000, 0], "цена числом — только с сайта клиента");
+  assert.ok(data.products.every((p: { rating: number; reviews: number }) => !p.rating && !p.reviews), "оценок и отзывов чужой витрины нет");
+  assert.equal(data.ui.ask, "Цена по запросу");
+  assert.equal(data.chat, "https://t.me/uyutniy_dom_demo");
+  assert.equal(shopPrice("от 1 200 000 сум"), 1200000);
+  assert.equal(shopPrice("20 $"), 0, "доллары в корзину не идут: валюта магазина сумы");
+  for (const photo of MAGAZIN_PHOTOS) assert.ok(existsSync(`public${photo}`), photo);
+  // Админка — панель магазина Greenwell; заказ с сайта шаблона пишется в ту же память, что она читает.
+  assert.ok(hasAdmin("magazin"));
+  assert.ok(admin.includes("'ms-demo-1'") && !admin.includes("'mb-demo-1'"), "своя память у магазина");
+  assert.ok(html.includes("KEY='ms-demo-1'"));
+  assert.ok(admin.includes("Уютный Дом") && admin.includes("Комплект постельного белья"));
+  const none = buildInstant({ ...shop, services: [], perks: [], telegram: null, instagram: null }, SEED);
+  assert.deepEqual(none.problems, []);
+});
+
+const avto = EXAMPLE_AVTO as InstantSite;
+
+test("автосервис: пример собирается без замечаний на двух языках, защита та же", () => {
+  for (const locale of ["ru", "uz"] as const) {
+    const { html, problems, stamp } = buildInstant({ ...avto, locale }, SEED);
+    assert.deepEqual(problems, [], locale);
+    assert.ok(html.includes("Гараж Восток"));
+    assert.ok(html.includes(`/${locale}/mockup-terms`) && html.includes('class="dz-vid"'));
+    assert.ok(stamp.signals.some((s) => s.startsWith("js:")), "метка числа скрипта AUTOMECHANIC");
+    assert.ok(stamp.signals.filter((s) => s.startsWith("text:")).length >= 4, "две ловушки");
+  }
+  assert.deepEqual(buildInstant({ ...avto, tagline: null, about: null, perks: [] }, SEED).problems, []);
+});
+
+test("автосервис: стили и скрипт нашего макета AUTOMECHANIC, свежие, без AUTOMECHANIC", () => {
+  assert.deepEqual(amFile, automechanicAssets(), "node scripts/protos/instant/automechanic-assets.mjs");
+  const { html } = buildInstant(avto, SEED);
+  assert.ok(html.includes(".scroll-hint{display:inline-flex") && html.includes(amFile.js.slice(0, 120)), "стили и скрипт AUTOMECHANIC на странице");
+  assert.ok(html.includes('data-scene="hero"') && html.includes('data-l="rimf"') && html.includes('id="book"'), "сцена с подъёмником и запись в три шага");
+  for (const am of ["AUTOMECHANIC", "automechanic", "Aral", "77 Lubricants", "1991", "Чиланзар", "BMW", "tadjiyev", "/protos/automechanic"]) assert.ok(!html.includes(am), am);
+  assert.deepEqual(tailsIn(html), []);
+  assert.ok(buildInstant({ ...avto, perks: ["Как у AUTOMECHANIC"] }, SEED).problems.some((p) => p.code === "tail"), "AUTOMECHANIC — хвост");
+});
+
+test("автосервис: прайс и цены только клиента, нет данных — блока нет, запись в их Telegram", () => {
+  const { html } = buildInstant(avto, SEED);
+  assert.ok(html.includes('id="uslugi"') && html.includes("от 150 000 сум"), "цена клиента");
+  assert.ok(html.includes("Цену назовёт мастер-приёмщик"), "нет цены — словами, без числа");
+  assert.ok(html.includes('"tgUrl":"https://t.me/garazh_vostok_demo"'), "заявка в их Telegram");
+  assert.ok(html.includes("as-demo-1"), "заявка с макета — в админку");
+  const none = buildInstant({ ...avto, services: [], perks: [], telegram: null, address: null, hours: null }, SEED);
+  assert.deepEqual(none.problems, []);
+  assert.ok(!none.html.includes('id="uslugi"') && !none.html.includes("t.me/"), "нет услуг и Telegram — нет блока и ссылок");
+});
+
+test("автосервис: слои сцены и фото ниши лежат в репозитории, админка на ключе сайта", () => {
+  assert.ok(instantReady("avtoservis"));
+  for (const photo of AVTOSERVIS_PHOTOS) {
+    assert.ok(existsSync(`public${photo}`), photo);
+    assert.ok(existsSync(`public${photo.replace("-1200", "-900")}`), photo);
+  }
+  for (const layer of AVTOSERVIS_LAYERS) assert.ok(existsSync(`public${layer}`), layer);
+  const a = buildInstant(avto, SEED).pages.admin;
+  assert.ok(a && a.includes("'as-demo-1'") && !a.includes("'nk-demo-1'"), "админка читает заявки сайта автосервиса");
+  assert.ok(a.includes("Панель автосервиса") && !/Главный врач|Пациент/.test(a.replace(/"[a-z_]+":"[^"]*"/g, "")), "слова сервиса, не клиники");
+});
+
+test("логистика: наш макет Cargo Pro, пример собирается без замечаний, защита та же", async () => {
+  // Владелец, 12.11.2026: «Мы теряем лидов из-за того, что они нажимают "другая ниша"… выведем больше ниш которые у нас есть».
+  const { EXAMPLE_LOGI } = await import("../scripts/protos/instant/preview-data.mjs");
+  const { cargoproAssets } = await import("../scripts/protos/instant/cargopro-assets.mjs");
+  const cpFile = (await import("@/content/proto-instant/cargopro-assets.json", { with: { type: "json" } })).default;
+  const { LOGISTIKA_PHOTOS, modeOf } = await import("@/lib/proto/instant/logistika");
+  assert.deepEqual(cpFile, cargoproAssets(), "node scripts/protos/instant/cargopro-assets.mjs");
+  const logi = EXAMPLE_LOGI as InstantSite;
+  const { html, problems, stamp, pages } = buildInstant(logi, SEED);
+  assert.deepEqual(problems, []);
+  assert.ok(instantReady("logistika") && hasAdmin("logistika"));
+  for (const c of ['class="top"', 'class="hero"', 'class="qc glass', 'class="velo"', 'id="services"', 'id="calc"', 'id="track"', 'id="customs"', 'class="tsum glass"']) assert.ok(html.includes(c), c);
+  assert.ok(html.includes("/ru/mockup-terms") && html.includes('class="dz-vid"'));
+  assert.ok(stamp.signals.some((s) => s.startsWith("js:")), "метка числа скрипта");
+  assert.ok(stamp.signals.filter((s) => s.startsWith("text:")).length >= 4, "две ловушки");
+  assert.ok(html.includes("IDLE=3000") && html.includes("classList.add('hide')"), "шапка прячется и возвращается через 3 секунды");
+  for (const s of logi.services) assert.ok(html.includes(s.name), s.name);
+  assert.ok(html.includes("от 9 $ за кг"), "цена клиента его словами");
+  // Ни имени, ни ставок, ни направлений Cargo Pro: конструктор тарифов не берётся.
+  for (const s of ["CARGO PRO", "cargoprogroup", "CPG-", "Гуанчжоу", "Silk Way", "flydubai", "/protos/cargopro", "cp-req-1", "Lider Cargo"]) assert.ok(!html.includes(s) && !(pages.admin ?? "").includes(s), s);
+  assert.deepEqual(tailsIn(html), []);
+  assert.ok(tailsIn("Звоните в CARGO PRO GROUP, info@cargoprogroup.com").length >= 2, "хвосты Cargo Pro ловятся");
+  // Заявка с сайта и статус из админки — одни ключи памяти.
+  assert.ok(html.includes("lg-req-1") && html.includes("lg-panel-1") && (pages.admin ?? "").includes("lg-req-1") && (pages.admin ?? "").includes("lg-panel-1"));
+  assert.equal(modeOf("Ж/д контейнеры"), "rail");
+  assert.equal(modeOf("Таможенное оформление"), "customs");
+  assert.equal(modeOf("Автоперевозки фурами"), "auto");
+  for (const photo of LOGISTIKA_PHOTOS) assert.ok(existsSync(`public${photo}`) && existsSync(`public${photo.replace("-1200", "-900")}`), photo);
+  const uz = buildInstant({ ...logi, locale: "uz", tagline: null, about: null }, SEED);
+  assert.deepEqual(uz.problems, []);
+  assert.ok(uz.html.includes("/uz/mockup-terms") && uz.html.includes("Hisobga ariza"));
+});
+
+test("логистика: нет таможни, видов транспорта и чата — без блоков и без выбора транспорта", async () => {
+  const { EXAMPLE_LOGI } = await import("../scripts/protos/instant/preview-data.mjs");
+  const bare = buildInstant({ ...(EXAMPLE_LOGI as InstantSite), services: [{ name: "Переезды", price: null }], perks: [], telegram: null, about: null, color: null }, SEED);
+  assert.deepEqual(bare.problems, []);
+  assert.ok(!bare.html.includes('id="customs"'), "таможни у компании нет — блока нет");
+  assert.ok(!bare.html.includes('data-qm="air"') && !bare.html.includes('data-m="sea"'), "чужих видов транспорта не обещаем");
+  assert.ok(!bare.html.includes('href="https://t.me/'), "нет чата — нет ссылки");
+});
+
+const stroi = EXAMPLE_STROI as InstantSite;
+
+test("стройка и ремонт: пример собирается без замечаний, защита та же", () => {
+  const { html, problems, stamp, pages } = buildInstant(stroi, SEED);
+  assert.deepEqual(problems, []);
+  assert.ok(html.includes("Мастер Дом") && html.includes('id="uslugi"') && html.includes('id="raschet"') && html.includes('id="pano-v"'));
+  assert.ok(html.includes("/ru/mockup-terms") && html.includes('class="dz-vid"'));
+  assert.ok(stamp.signals.some((s) => s.startsWith("js:")), "метка числа скрипта Lider Prof");
+  assert.ok(stamp.signals.filter((s) => s.startsWith("text:")).length >= 4, "две ловушки");
+  assert.ok(pages.admin && pages.kp, "админка и КП рядом с макетом");
+  const uz = buildInstant({ ...stroi, locale: "uz", tagline: null, about: null, source: "namuna" }, SEED);
+  assert.deepEqual(uz.problems, []);
+  for (const w of ["Наши услуги", "Расчёт ремонта", "Отправить на расчёт", "Почему мы"]) assert.ok(!uz.html.includes(w), w);
+});
+
+test("стройка и ремонт: наш макет Lider Prof, стили и скрипт свежие, без Lider Prof", () => {
+  // Владелец, 12.11.2026: «выведем больше ниш которые у нас есть, также переодевать просто».
+  assert.deepEqual(lpFile, liderprofAssets(), "node scripts/protos/instant/liderprof-assets.mjs");
+  const { html } = buildInstant(stroi, SEED);
+  assert.ok(html.includes(lpFile.css.slice(0, 200)), "стили Lider Prof на странице");
+  for (const c of ['class="hero2 dark"', 'class="path"', 'class="pgrid"', 'class="calc rv', 'class="pano rv', 'class="final dark"', 'class="dock"']) assert.ok(html.includes(c), c);
+  for (const s of ["LIDER", "Lider", "lider-prof", "lppuz", "/protos/lider-prof", "Олимпийск", "ARK Residence", "DreamLand"]) assert.ok(!html.includes(s), s);
+  assert.ok(!/<script[^>]+src=/.test(html) && !/<iframe/i.test(html));
+  assert.deepEqual(tailsIn(html), []);
+  assert.ok(tailsIn("Проект от LIDER PROF PROEKT, пишите @lppuz").length >= 2, "хвост Lider Prof ловится");
+  assert.ok(html.includes("is-away") && html.includes("IDLE = 3000"), "шапка прячется при прокрутке и возвращается через 3 секунды");
+  assert.ok(html.includes("--red:hsl("), "красный Lider Prof — в цвет клиента");
+  assert.ok(html.includes("fe-leads-1"), "заявка с расчёта приходит в админку");
+});
+
+test("стройка и ремонт: услуги и цены клиента, нет данных — нет блока, без чата ссылки нет", () => {
+  const { html } = buildInstant(stroi, SEED);
+  for (const s of stroi.services) assert.ok(html.includes(s.name), s.name);
+  assert.ok(html.includes("от 120 $ за м²") && html.includes("Цену назовём после замера"));
+  assert.ok(html.includes("https://t.me/masterdom_demo"));
+  const bare = buildInstant({ ...stroi, services: [], perks: [], telegram: null, instagram: null }, SEED);
+  assert.deepEqual(bare.problems, []);
+  assert.ok(!bare.html.includes('id="uslugi"') && !bare.html.includes('id="pochemu"'), "нет услуг и преимуществ — нет блоков");
+  assert.ok(!bare.html.includes("t.me/"), "нет Telegram — нет ссылок в Telegram");
+  assert.ok(bare.html.includes('"tg":""'), "без чата заявка только копируется");
+});
+
+test("стройка и ремонт: нейтральные фото ниши лежат в репозитории", () => {
+  assert.ok(instantReady("stroitelstvo") && hasAdmin("stroitelstvo"));
+  for (const photo of [...STROI_PHOTOS, STROI_HERO, STROI_PANO]) assert.ok(existsSync(`public${photo}`), photo);
+  for (const photo of STROI_PHOTOS) assert.ok(existsSync(`public${photo.replace("-1200", "-640")}`), photo);
 });

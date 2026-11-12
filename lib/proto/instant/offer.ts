@@ -35,6 +35,7 @@ function fromPlan(plan: string, id: string, ru: string | null, uz: string): Offe
 }
 
 const OFFERS: Record<InstantNiche, () => OfferAddon[]> = {
+  logistika: () => LOGISTIKA_ADDONS(),
   // Nek Dental Studio.
   stomatologiya: () => [
     fromPlan("nek", "admin", null, "Klinika paneli: yozuv, messenjerlar, jadval"),
@@ -103,6 +104,50 @@ const OFFERS: Record<InstantNiche, () => OfferAddon[]> = {
     fromPlan("karomat", "gift", null, "Sovg‘a sertifikatlari"),
     fromPlan("karomat", "pay", null, "Click, Payme, Uzum orqali to‘lov"),
   ],
+  // Интернет-магазин: допы нашего макета Greenwell.
+  magazin: () => [
+    fromPlan("greenwell", "abandoned", null, "Tashlab ketilgan savat: Telegram yoki SMS eslatma"),
+    fromPlan("greenwell", "tgbot", null, "Do‘konning Telegram-boti"),
+    fromPlan("greenwell", "crm", null, "Buyurtmalar amoCRM yoki Bitrix24 ga"),
+    fromPlan("greenwell", "promo", null, "Paneldan promokodlar va aksiyalar"),
+  ],
+  // Автосервис: допы нашего макета AUTOMECHANIC и панель, напоминания, отзывы из плана Nek (цены оттуда).
+  avtoservis: () => [
+    fromPlan("automechanic", "tg", null, "Telegramga buyurtmalar"),
+    fromPlan("automechanic", "pwa", null, "Sayt ilova kabi"),
+    fromPlan("automechanic", "route", null, "Yandex va Google Xaritalarda yo‘nalish"),
+    fromPlan("automechanic", "uz", null, "O‘zbekcha versiya"),
+    fromPlan("nek", "admin", "Панель сервиса: запись, мессенджеры, расписание мастеров", "Servis paneli: yozuv, messenjerlar, ustalar jadvali"),
+    fromPlan("nek", "remind", "Напоминание клиенту о ТО", "Mijozga TXK eslatmasi"),
+    fromPlan("nek", "reviews", null, "Saytda Google sharhlari"),
+  ],
+  // Стройка и ремонт: допы нашего макета Lider Prof (расчёт, просмотр 360°, заставка, отзывы, движение).
+  stroitelstvo: () => [
+    fromPlan("lider-prof", "calc", "Расчёт ремонта по площади, с заявкой и планом", "Maydon bo‘yicha ta’mir hisobi, ariza va reja bilan"),
+    fromPlan("lider-prof", "pano", "Просмотр 360° ваших объектов", "Obyektlaringizni 360° ko‘rish"),
+    fromPlan("lider-prof", "filters", "Работы с фильтром по видам ремонта", "Ta’mir turlari bo‘yicha saralangan ishlar"),
+    fromPlan("lider-prof", "stats", "Цифры объекта на виду: площадь, сроки, этапы", "Obyekt raqamlari ko‘zga tashlanadi: maydon, muddat, bosqichlar"),
+    fromPlan("lider-prof", "intro", "Влёт в логотип", "Logotipga uchib kirish"),
+    fromPlan("lider-prof", "trust", "Отзывы заказчиков и карта объектов", "Buyurtmachilar sharhlari va obyektlar xaritasi"),
+    fromPlan("lider-prof", "motion", "Своё движение у каждого блока", "Har bir blokda o‘z harakati"),
+  ],
+  // «Услуги для бизнеса» и всё, чью сферу не узнали: общие допы наших макетов, без слов одной сферы.
+  uslugi: () => [
+    fromPlan("semtravel", "crm", "Заявки сразу в amoCRM или Bitrix24", "Arizalar darhol amoCRM yoki Bitrix24 ga"),
+    fromPlan("semtravel", "cabinet", "Кабинет клиента: статус заявки и документы", "Mijoz kabineti: ariza holati va hujjatlar"),
+    fromPlan("nek", "chat", "Чат на сайте: ответы или менеджер", "Saytdagi chat: javoblar yoki menejer"),
+    fromPlan("semtravel", "pay", null, "Click, Payme, Uzum orqali onlayn to‘lov"),
+    fromPlan("karomat", "tgbot", "Telegram-бот: заявки и ответы клиентам", "Telegram-bot: arizalar va mijozlarga javoblar"),
+    fromPlan("karomat", "reviews", "Отзывы с Яндекс Карт и Google на сайте", "Saytda Yandex Xaritalar va Google sharhlari"),
+  ],
+  // Автосалон: допы нашего макета SAMIST AUTO (кредит, трейд-ин и тест-драйв уже на макете).
+  avtosalon: () => [
+    fromPlan("samist", "admin", null, "Arizalar va mavjudlik paneli"),
+    fromPlan("samist", "tgbot", null, "Telegram-bot: mavjudlik, narxlar, ariza"),
+    fromPlan("samist", "pick", "Подбор машины под задачу", "Vazifaga qarab mashina tanlash"),
+    fromPlan("samist", "compare", null, "Uchtagacha modelni taqqoslash"),
+    fromPlan("samist", "seo", null, "Qidiruv uchun model sahifalari"),
+  ],
 };
 
 /**
@@ -115,6 +160,15 @@ export const OFFER_ADDON_DISCOUNT = 0.3;
 export function offerAddonPrice(planPrice: number): number {
   return Math.max(5, Math.round((planPrice * (1 - OFFER_ADDON_DISCOUNT)) / 5) * 5);
 }
+
+// Логистика: допы нашего макета CARGO PRO GROUP (кабинет клиента и курс ЦБ не входят: допы вместе до 1 500 $).
+const LOGISTIKA_ADDONS = (): OfferAddon[] => [
+  fromPlan("cargopro", "admin", null, "Arizalar va yuklar paneli"),
+  fromPlan("cargopro", "track", null, "Yukni raqam bo‘yicha kuzatish"),
+  fromPlan("cargopro", "bot", null, "Telegram-bot: hisob va yuk holati"),
+  fromPlan("cargopro", "docs", null, "Bojxona hujjatlari bo‘yicha maslahat"),
+  fromPlan("cargopro", "seo", "Страницы направлений под запросы клиентов", "Mijozlar so‘rovlari uchun yo‘nalish sahifalari"),
+];
 
 export function offerAddons(niche: InstantNiche): OfferAddon[] {
   return OFFERS[niche]().map((a) => ({ ...a, price: offerAddonPrice(a.price) }));
