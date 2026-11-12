@@ -93,7 +93,7 @@ def video():
         keys.append(n - 1)
     mp4 = os.path.join(lst, "m.mp4")
     subprocess.run(["ffmpeg", "-v", "error", "-y", "-framerate", str(FPS), "-i", os.path.join(lst, "%05d.jpg"), "-vf", "scale=720:-2:flags=lanczos",
-                    "-c:v", "libx264", "-preset", "slow", "-tune", "film", "-crf", "25", "-g", "3", "-keyint_min", "1", "-bf", "0",
+                    "-c:v", "libx264", "-preset", "slow", "-tune", "film", "-crf", "27", "-g", "3", "-keyint_min", "1", "-bf", "0",
                     "-pix_fmt", "yuv420p", "-profile:v", "high", "-movflags", "+faststart", "-an", mp4], check=True)
     os.makedirs(OUT, exist_ok=True)
     seal(open(mp4, "rb").read(), os.path.join(OUT, "m.bin"))

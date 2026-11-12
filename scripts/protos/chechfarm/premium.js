@@ -83,7 +83,13 @@ if(hs){
     poke();
     var cn=navigator.connection;
     if(!W.crypto||!crypto.subtle||!W.createImageBitmap||(cn&&cn.saveData))done();
-    else{var go=VID?loadVid:loadScene;if(d.readyState==='complete')setTimeout(go,300);else addEventListener('load',function(){setTimeout(go,300)})}
+    else{
+      /* Телефон: сцена оживает сразу кадрами (первая пачка — секунды), видео
+         качается рядом и подхватывает, когда пришло целиком. Одно видео без
+         кадров держало сцену на шести опорных кадрах, пока не скачаются все
+         12 МБ (владелец, 12.11.2026: «тупо меняются кадры, всего несколько»). */
+      var go=function(){loadScene();if(VID)loadVid()};
+      if(d.readyState==='complete')setTimeout(go,300);else addEventListener('load',function(){setTimeout(go,300)})}
   }
   /* Пачки по K.scene.pack: 12 байт nonce + AES-GCM; внутри число кадров,
      длины, WebP подряд. Ключ — /promo/scene. Сцена стартует с первой
@@ -99,7 +105,8 @@ if(hs){
      отказывает — тогда сцена идёт кадрами-картинками, а не стоит. */
   function loadVid(){
     var dead=false,show=function(k){hn.textContent=Math.floor(k*100);hb.style.transform='scaleX('+k.toFixed(3)+')'};
-    var fail=function(){if(dead||vok)return;dead=true;VID=false;hs.classList.remove('vid');loadScene()};
+    /* Видео не вышло — кадры уже идут, им и остаётся сцена. */
+    var fail=function(){if(dead||vok)return;dead=true;VID=false;hs.classList.remove('vid');if(W.cfFrames)W.cfFrames()};
     fetch(K.img+'/seq/m.bin').then(function(r){if(!r.ok)throw 0;var len=+r.headers.get('content-length')||0;
       if(!r.body||!r.body.getReader||!len)return r.arrayBuffer();
       var rd=r.body.getReader(),parts=[],got=0;
@@ -108,7 +115,9 @@ if(hs){
       .then(function(k){return crypto.subtle.decrypt({name:'AES-GCM',iv:new Uint8Array(buf,0,12)},k,new Uint8Array(buf,12))})})
     .then(function(x){
       vd.addEventListener('loadeddata',function(){if(dead)return;show(1);
-        var on=function(){if(dead||vok)return;try{vd.pause()}catch(e){}vok=true;ready=true;hs.classList.add('cv','vid');done();drawn=-1;vgo();poke()};
+        var on=function(){if(dead||vok)return;try{vd.pause()}catch(e){}vok=true;ready=true;hs.classList.add('cv','vid');done();
+          /* Кадры больше не нужны: память телефону. */
+          for(var q in bm)if(bm[q]&&bm[q].close)bm[q].close();bm={};bmN=[];raw=[];drawn=-1;vgo();poke()};
         var p;try{p=vd.play()}catch(e){fail();return}
         if(p&&p.then)p.then(on,fail);else on()},{once:true});
       vd.addEventListener('seeked',function(){if(vseek>=0){var s=vseek;vseek=-1;vd.currentTime=s}});
@@ -117,19 +126,21 @@ if(hs){
   function loadScene(){
     var PK=S.pack,NP=Math.ceil(F/PK),left=[],tries={},got=0,key=null,i;
     for(i=0;i<NP;i++)left.push(i);
-    function show(){hn.textContent=Math.floor(got/NP*100);hb.style.transform='scaleX('+(got/NP).toFixed(3)+')';if(got>=NP)done()}
-    function start(){if(ready)return;ready=true;size();hs.classList.add('cv');drawn=-1;poke()}
+    /* Пока видео качается, счёт в углу ведёт оно. */
+    function show(){if(VID||vok)return;hn.textContent=Math.floor(got/NP*100);hb.style.transform='scaleX('+(got/NP).toFixed(3)+')';if(got>=NP)done()}
+    W.cfFrames=function(){show();next()};
+    function start(){if(ready||vok)return;ready=true;size();hs.classList.add('cv');drawn=-1;poke()}
     function pick(){var f=frameOf(Math.max(0,cur))/PK,bi=0,bd=1e9;left.forEach(function(k,j){var dd=k+.5-f;dd=dd<0?-dd*1.6:dd;if(dd<bd){bd=dd;bi=j}});return left.splice(bi,1)[0]}
     function unpack(k,buf){var v=new DataView(buf),n=v.getUint32(0,true),o=4+4*n;for(var j=0;j<n;j++){var len=v.getUint32(4+4*j,true);raw[k*PK+j]=buf.slice(o,o+len);o+=len}}
-    function next(){if(!left.length)return;var k=pick();
+    function next(){if(vok||!left.length)return;var k=pick();
       var ac=W.AbortController?new AbortController():null,tm=setTimeout(function(){if(ac)ac.abort()},25000);
       fetch(K.img+'/seq/'+(DESK?'d':'p')+pad(k)+'.bin',ac?{signal:ac.signal}:{}).then(function(r){if(!r.ok)throw 0;return r.arrayBuffer()})
       .then(function(buf){return crypto.subtle.decrypt({name:'AES-GCM',iv:new Uint8Array(buf,0,12)},key,new Uint8Array(buf,12))})
-      .then(function(x){clearTimeout(tm);unpack(k,x);got++;show();start();drawn=-1;poke();next()},
+      .then(function(x){clearTimeout(tm);if(vok)return;unpack(k,x);got++;show();start();drawn=-1;poke();next()},
         function(){clearTimeout(tm);tries[k]=(tries[k]||0)+1;if(tries[k]<3)left.push(k);else{got++;show()}next()})}
     keyBytes(2)
     .then(function(b){return crypto.subtle.importKey('raw',b,'AES-GCM',false,['decrypt'])})
-    .then(function(k){key=k;next();next()})
+    .then(function(k){key=k;next();if(!VID)next()})
     .catch(done)}
 }
 
