@@ -2,7 +2,7 @@ import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dzIntroSolo } from "../../../lib/proto/dz-video.mjs";
 import { LANGS, COMPANY, SERVICES, CUSTOMS, FACTS, PARTNERS, HUBS, VELO } from "./data.mjs";
 import { BASE, ADDONS, OFFER_HOURS, ALL, MODULES, ALL_MODULES, ALL_TMS } from "./plan.mjs";
-import { LANES, EXTRA, FX, DIM } from "./tariffs.mjs";
+import { LANES, EXTRA, FX, DIM, CATS, CAT_DEF, BAND_DEF, WAIT_DEF, DEMO_WAIT, TPL_KEYS, CITY, DIST } from "./tariffs.mjs";
 import { PANEL_UI } from "./panel-ui.mjs";
 import { DISPATCH_UI } from "./dispatch-ui.mjs";
 import { COMPARE } from "./super-ui.mjs";
@@ -44,19 +44,6 @@ const PANEL_CSS = strip(readFileSync(DIR + "panel.css", "utf8")).replace(/\n\s*/
 /* Супер-админка (super.js) вставляется в замыкание диспетчерской: автопарк, брокер, интеграции. */
 const DISP_JS = strip(readFileSync(DIR + "dispatch.js", "utf8").replace("/*@@SUPER@@*/", () => readFileSync(DIR + "super.js", "utf8")).replace("/*@@SETTINGS@@*/", () => readFileSync(DIR + "settings.js", "utf8"))).replace(/\n\s*\n/g, "\n");
 const DISP_CSS = strip(readFileSync(DIR + "dispatch.css", "utf8")).replace(/\n\s*/g, "");
-/* Настройки супер-админки (владелец, 31.10.2026: «Для карго давай сделаем раздел настройки…»). Умолчания одни
-   для сайта, диспетчерской и кабинета клиента, поэтому без правок в настройках ничего не меняется. */
-const CATS = ["gen", "frag", "dg", "ref", "oog", "val", "ltl"];
-/* Наценка по категории груза, % к перевозке: опасный — как «опасный или температурный» в тарифах (EXTRA.danger),
-   рефрижератор и негабарит — как ставка диспетчерской до настроек (×1,4 и ×2,2), хрупкий и ценный — оценка DevUz. */
-const CAT_DEF = { gen: 0, frag: 10, dg: EXTRA.danger, ref: 40, oog: 120, val: 15, ltl: 0 };
-/* Коэффициент по плотности, кг/м³: плотный груз дешевле за кг, демо-значения; to: 0 — «свыше». */
-const BAND_DEF = [{ to: 150, k: 1 }, { to: 300, k: 1 }, { to: 500, k: 0.95 }, { to: 0, k: 0.9 }];
-/* Ожидание: заложено в цену и бесплатно сверх, по этапам (часы); ставка $/ч, рефрижератор дороже; демо-значения. */
-const WAIT_DEF = { plan: { load: 3, cus: 4, unl: 3 }, free: { load: 2, cus: 1, unl: 2 }, rate: 15, rateRef: 25, round: 0, cap: 0, payer: "client" };
-/* Факт ожидания в демо-рейсах: CPG-24109 стоял на погрузке 6 ч 20 мин → сверх нормы 1 ч 20 мин × 15 $ = 20 $. */
-const DEMO_WAIT = { "CPG-24109": { load: 6.33, cus: 4, unl: 0 } };
-const TPL_KEYS = ["dep", "cus", "arr", "doc", "idle"];
 const BASE_URL = "__PROTO_BASE__";
 const TERMS = (l) => `https://devuz.studio/${l}/mockup-terms`;
 const FONTS = "https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700&family=Onest:wght@400;700&display=swap";
@@ -689,16 +676,6 @@ ${PANEL_JS}</script>
   if (/[А-Яа-яЁё]/.test(DISP_JS + DISP_CSS)) throw new Error("dispatch: кириллица в коде диспетчерской");
 })();
 
-const CITY = {
-  tas: ["Ташкент", "Toshkent"], sam: ["Самарканд", "Samarqand"], bux: ["Бухара", "Buxoro"], nav: ["Навои", "Navoiy"], fer: ["Фергана", "Farg‘ona"], and: ["Андижан", "Andijon"],
-  nuk: ["Нукус", "Nukus"], ter: ["Термез", "Termiz"], alm: ["Алматы", "Almati"], bis: ["Бишкек", "Bishkek"],
-};
-/* Районы Ташкента для сборного рейса (адреса забора — демо). Старт — их офис в Яккасарайском районе. */
-const DIST = {
-  base: ["Старт: офис, Яккасарай", "Start: ofis, Yakkasaroy"], chi: ["Чиланзар", "Chilonzor"], yun: ["Юнусабад", "Yunusobod"], mu: ["Мирзо-Улугбек", "Mirzo Ulug‘bek"],
-  ser: ["Сергели", "Sergeli"], shy: ["Шайхантахур", "Shayxontohur"], uch: ["Учтепа", "Uchtepa"], bek: ["Бектемир", "Bektemir"], yas: ["Яшнабад", "Yashnobod"],
-  olm: ["Алмазар", "Olmazor"], mir: ["Мирабад", "Mirobod"], exit: ["Выезд на М-39, на Самарканд", "M-39 ga chiqish, Samarqandga"],
-};
 function dispatchPage(l) {
   const t = T(l), i = l === "ru" ? 0 : 1;
   const ui = Object.fromEntries(Object.entries(DISPATCH_UI).map(([k, v]) => [k, v[i]]));

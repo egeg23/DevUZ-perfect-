@@ -10,7 +10,7 @@ import { dentalHtml } from "@/lib/proto/instant/dental";
 import { medcentrHtml } from "@/lib/proto/instant/medcentr";
 import { kpHtml } from "@/lib/proto/instant/kp";
 import { MOCKUP_TERMS_PATH } from "@/content/mockup-terms";
-import { adminHtml } from "@/lib/proto/instant/admin";
+import { adminHtml, panelHtml } from "@/lib/proto/instant/admin";
 import { mebelHtml } from "@/lib/proto/instant/mebel";
 import { restoranHtml } from "@/lib/proto/instant/restoran";
 import { salonHtml } from "@/lib/proto/instant/salon";
@@ -97,7 +97,7 @@ export type InstantBuild = {
    * от сборки; `admin` — админка сферы из нашего макета (lib/proto/instant/admin),
    * у сферы без панели её нет.
    */
-  pages: { kp: string; admin?: string };
+  pages: { kp: string; admin?: string; panel?: string };
 };
 
 export function buildInstant(raw: InstantSite, seed = newSeed(), now = new Date()): InstantBuild {
@@ -126,6 +126,17 @@ export function buildInstant(raw: InstantSite, seed = newSeed(), now = new Date(
     if (/<script[^>]+src=/i.test(panel) || /<iframe/i.test(panel)) problems.push({ code: "admin-net", text: "Админка: скрипт или страница со стороны." });
     for (const p of pageProblems(panel, site.name)) problems.push({ code: `admin-${p.code}`, text: `Админка: ${p.text}` });
     pages.admin = panel;
+  }
+  // Вторая панель (у логистики — «Обычная админка» рядом с супер-админкой): те же проверки.
+  const second = panelHtml(site);
+  if (second) {
+    const pn = stampHtml(second, stamped.stamp.seed).html;
+    const left = tailsIn(pn, site);
+    if (left.length) problems.push({ code: "panel-tail", text: `Панель: хвост прошлого макета: ${left.slice(0, 3).join(", ")}` });
+    if (!pn.includes(MOCKUP_TERMS_PATH)) problems.push({ code: "panel-terms", text: "Панель: нет ссылки на условия макета." });
+    if (/<script[^>]+src=/i.test(pn) || /<iframe/i.test(pn)) problems.push({ code: "panel-net", text: "Панель: скрипт или страница со стороны." });
+    for (const p of pageProblems(pn, site.name)) problems.push({ code: `panel-${p.code}`, text: `Панель: ${p.text}` });
+    pages.panel = pn;
   }
   return { site, html: stamped.html, stamp: stamped.stamp, problems, pages };
 }

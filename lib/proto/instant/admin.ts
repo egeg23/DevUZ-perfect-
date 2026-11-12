@@ -927,7 +927,7 @@ function logistikaAdmin(site: InstantSite): string {
     ? `<img src="${esc(logo)}" alt="${nm}" referrerpolicy="no-referrer" style="height:32px;width:auto;max-width:140px;object-fit:contain">`
     : `<b style="font:700 16px/1.2 var(--hd)">${nm}</b>`;
   const pd = {
-    l, site: PROTO_BASE, home: PROTO_BASE, disp: PROTO_BASE, ui, mark, name: site.name,
+    l, site: PROTO_BASE, home: PROTO_BASE, disp: `${PROTO_BASE}/admin`, ui, mark, name: site.name,
     lanes: (cargo.lanes as { id: string; ru: string; uz: string; air: unknown; auto: unknown; rail: unknown; sea: unknown }[]).map((x) => ({ id: x.id, n: l === "uz" ? x.uz : x.ru, air: x.air, auto: x.auto, rail: x.rail, sea: x.sea })),
   };
   const terms = l === "uz" ? ["DevUz Studio maketi, demo ma’lumotlar.", "Foydalanish shartlari"] : ["Макет DevUz Studio, демо-данные.", "Условия использования"];
@@ -947,8 +947,64 @@ ${cargo.panelJs}</script>
   );
 }
 
+// ── Логистика: «Супер-админка» CARGO PRO GROUP ──────────────────────
+/**
+ * Владелец, 13.11.2026: «Для макета логистики используем "супер админку" как в
+ * оригинале, сделай такую же с теми же функциями». Диспетчерская Cargo Pro
+ * целиком: грузы раскладываются по машинам по кузову, весу и объёму, сборный
+ * рейс по районам, машины и водители на карте, рейсы со статусом для клиента,
+ * рейтинг и выбор водителя, автопарк с документами, пакет брокера, интеграции
+ * 1С, Битрикс24 и Telegram, настройки тарифов, ожидания, ролей и уведомлений.
+ * Это страница `admin` макета (её открывает «🛠 Админка» в боте); обычная
+ * админка — страница `panel`, обе ссылаются друг на друга. Статус рейса
+ * отсюда (lg-panel-1) клиент видит на сайте в «Мои заявки», заявка с сайта
+ * (lg-req-1) приходит сюда рейсом. Машины, водители, грузы — демо.
+ */
+function logistikaSuperAdmin(site: InstantSite): string {
+  const l = site.locale;
+  const i = l === "uz" ? 1 : 0;
+  const nm = esc(site.name);
+  const named = (x: string) => x.split("{name}").join(site.name);
+  const ui = Object.fromEntries(Object.entries(cargo.dispUi as Record<string, string[]>).map(([k, v]) => [k, named(v[i])]));
+  const logo = imageUrl(site.logo);
+  const mark = logo
+    ? `<img src="${esc(logo)}" alt="${nm}" referrerpolicy="no-referrer" style="height:32px;width:auto;max-width:140px;object-fit:contain">`
+    : `<b style="font:700 16px/1.2 var(--hd)">${nm}</b>`;
+  const d = cargo.disp as {
+    city: Record<string, string[]>; dist: Record<string, string[]>; trips: unknown; tar: unknown; wt: unknown; dw: unknown;
+    tpl: Record<string, Record<string, string>>;
+  };
+  const byLang = (o: Record<string, string[]>) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, v[i]]));
+  const tpl = Object.fromEntries(Object.entries(d.tpl).map(([x, o]) => [x, Object.fromEntries(Object.entries(o).map(([k, v]) => [k, named(v)]))]));
+  const url = site.source && /^https?:\/\//.test(site.source) ? site.source : site.name;
+  const dd = {
+    l, ui, site: PROTO_BASE, home: PROTO_BASE, panel: `${PROTO_BASE}/panel`, mark, name: site.name, url, tel: site.phone ?? "",
+    city: byLang(d.city), dist: byLang(d.dist), trips: d.trips, tar: d.tar, wt: d.wt, dw: d.dw, tpl,
+    co: { name: site.name, addr: site.address ?? site.city ?? "", tel: site.phone ?? "", email: "" },
+  };
+  const terms = l === "uz"
+    ? ["DevUz Studio maketi, demo ma’lumotlar: mashinalar, haydovchilar, yuklar va yo‘nalishlar o‘ylab topilgan.", "Foydalanish shartlari"]
+    : ["Макет DevUz Studio, демо-данные: машины, водители, грузы и маршруты выдуманы.", "Условия использования"];
+  return page(
+    l,
+    `${nm} · ${l === "uz" ? "super admin panel · demo" : "супер-админка · демо"}`,
+    esc(l === "uz"
+      ? "Logistika super admin paneli: yuklarni mashinalarga taqsimlash, xaritada haydovchilar, mijoz uchun holatli reyslar, avtopark, integratsiyalar va sozlamalar. Demo ma’lumotlar."
+      : "Супер-админка логистики: распределение грузов по машинам, водители на карте, рейсы со статусом для клиента, автопарк, интеграции и настройки. Демо-данные."),
+    "https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700&family=Onest:wght@400;700&display=swap",
+    `${cargo.css}${cargo.panelCss}${cargo.dispCss}:root{${logistikaPalette(site.color)}}.pn-brand{gap:10px}`,
+    `<body class="pn dp">
+<div id="app"></div>
+<footer class="pn-foot">${terms[0]} <a href="${esc(mockupTermsUrl(l))}" target="_blank" rel="noopener">${terms[1]}</a></footer>
+<script type="application/json" id="dp-data">${json(dd)}</script>
+<script>
+${cargo.dispJs}</script>
+</body>`,
+  );
+}
+
 const ADMINS: Partial<Record<InstantNiche, (site: InstantSite) => string>> = {
-  logistika: logistikaAdmin,
+  logistika: logistikaSuperAdmin,
   stomatologiya: (s) => clinicAdmin(s, "stomatologiya"),
   medcentr: (s) => clinicAdmin(s, "medcentr"),
   restoran: restoranAdmin,
@@ -967,6 +1023,14 @@ const ADMINS: Partial<Record<InstantNiche, (site: InstantSite) => string>> = {
 /** Админка сферы на данных клиента; у сферы без нашей панели — null. */
 export function adminHtml(site: InstantSite): string | null {
   return ADMINS[site.niche]?.(site) ?? null;
+}
+
+/**
+ * Вторая панель рядом с админкой: у логистики, как в оригинале Cargo Pro,
+ * админка — «Супер-админка», а «Обычная админка» — страница `panel`.
+ */
+export function panelHtml(site: InstantSite): string | null {
+  return site.niche === "logistika" ? logistikaAdmin(site) : null;
 }
 
 export function hasAdmin(niche: InstantNiche): boolean {

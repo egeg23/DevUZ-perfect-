@@ -12,7 +12,7 @@ import { siteFromAnswers } from "@/lib/proto/instant/read";
 import { tails } from "../scripts/protos/instant/tails.mjs";
 import { nekAssets } from "../scripts/protos/instant/nek-assets.mjs";
 import assetsFile from "@/content/proto-instant/nek-assets.json" with { type: "json" };
-import { EXAMPLE, EXAMPLE_MEBEL, EXAMPLE_MED, EXAMPLE_REST, EXAMPLE_TUR, EXAMPLE_EDU, EXAMPLE_NEDV, EXAMPLE_SALON, EXAMPLE_AVTO } from "../scripts/protos/instant/preview-data.mjs";
+import { EXAMPLE, EXAMPLE_MEBEL, EXAMPLE_MED, EXAMPLE_REST, EXAMPLE_TUR, EXAMPLE_EDU, EXAMPLE_NEDV, EXAMPLE_SALON, EXAMPLE_AVTO, EXAMPLE_LOGI } from "../scripts/protos/instant/preview-data.mjs";
 import { automechanicAssets } from "../scripts/protos/instant/automechanic-assets.mjs";
 import amFile from "@/content/proto-instant/automechanic-assets.json" with { type: "json" };
 import { AVTOSERVIS_LAYERS, AVTOSERVIS_PHOTOS } from "@/lib/proto/instant/avtoservis";
@@ -879,6 +879,21 @@ test("стройка и ремонт: нейтральные фото ниши �
   assert.ok(instantReady("stroitelstvo") && hasAdmin("stroitelstvo"));
   for (const photo of [...STROI_PHOTOS, STROI_HERO, STROI_PANO]) assert.ok(existsSync(`public${photo}`), photo);
   for (const photo of STROI_PHOTOS) assert.ok(existsSync(`public${photo.replace("-1200", "-640")}`), photo);
+});
+
+/* Владелец, 13.11.2026: «Для макета логистики используем "супер админку" как в оригинале,
+   сделай такую же с теми же функциями». */
+test("логистика: админка — супер-админка Cargo Pro, обычная — рядом, без их имени и адресов", () => {
+  const b = buildInstant(EXAMPLE_LOGI as InstantSite, "0".repeat(32));
+  assert.deepEqual(b.problems, []);
+  const sup = b.pages.admin ?? "", pn = b.pages.panel ?? "";
+  assert.ok(sup.includes('<body class="pn dp">') && sup.includes('id="dp-data"'), "админка не супер-админка");
+  for (const tab of ["'plan'", "'route'", "'map'", "'fleet'", "'int'"]) assert.ok(sup.includes(tab), `в супер-админке нет раздела ${tab}`);
+  assert.ok(sup.includes("/panel") && pn.includes("/admin"), "панели не ссылаются друг на друга");
+  for (const bad of ["CARGO PRO", "cargoprogroup", "Lider Cargo", "LBM Driver", "CPG-", "Яккасарай", "'cp-"]) {
+    assert.ok(!sup.includes(bad) && !pn.includes(bad), `в панелях логистики осталось «${bad}»`);
+  }
+  assert.ok(sup.includes("'lg-panel-1'") && sup.includes("'lg-req-1'"), "супер-админка не на ключах шаблона");
 });
 
 /* Владелец, 13.11.2026: «Для макетов которые делаются через тг бот примени эти новые 2 правила»:
