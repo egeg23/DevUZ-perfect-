@@ -60,7 +60,7 @@ const AUD_POINTS = {
 
 /* Что нужно от компании, чтобы сайт вышел: вместо пустых заготовок. */
 const NEEDS = [
-  ["mark", { ru: ["Логотип и фирменный стиль", "Пока на сайте наш знак-концепт"], uz: ["Logotip va firma uslubi", "Hozircha saytda bizning konsept belgimiz"], en: ["Logo and brand style", "The site uses our concept mark for now"] }],
+  ["mark", { ru: ["Фирменный стиль: цвета и шрифты", "Логотип компании уже на сайте"], uz: ["Firma uslubi: ranglar va shriftlar", "Kompaniya logotipi saytda turibdi"], en: ["Brand style: colours and fonts", "The company logo is already on the site"] }],
   ["hist", { ru: ["История, география, филиалы", "Блок «Факты о компании»"], uz: ["Tarix, geografiya, filiallar", "«Kompaniya haqida faktlar» bloki"], en: ["History, geography, branches", "The company facts block"] }],
   ["team", { ru: ["Руководство и команда", "Фото, имя, должность"], uz: ["Rahbariyat va jamoa", "Rasm, ism, lavozim"], en: ["Leadership and team", "Photo, name, role"] }],
   ["prod", { ru: ["Перечень продуктов", "И кто утверждает медицинские тексты"], uz: ["Mahsulotlar ro‘yxati", "Va tibbiy matnlarni kim tasdiqlaydi"], en: ["Product list", "And who approves medical texts"] }],

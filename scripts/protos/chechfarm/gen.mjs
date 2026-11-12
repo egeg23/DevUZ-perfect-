@@ -89,9 +89,10 @@ const ICON = {
   panel: I('<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M3 9h6"/>'),
 };
 
-/* Знак: концепт до логотипа компании. Капсула из двух половин (здоровье и
-   ценность) и лист в просвете. */
-const MARK = `<svg class="mk" viewBox="0 0 40 40" aria-hidden="true" focusable="false"><g transform="rotate(-38 20 20)"><path class="a" d="M20 8h-4.5a8 8 0 0 0 0 16H20Z" transform="translate(0 4)"/><path class="b" d="M20 8h4.5a8 8 0 0 1 0 16H20Z" transform="translate(0 4)"/></g><path class="c" d="M20 14c3 2.5 3.4 6.8.6 11.5-3.3-3-3.8-7.6-.6-11.5Z"/></svg>`;
+/* Знак — орёл с логотипа компании (владелец, 12.11.2026: «Берем их логотип»):
+   контуры сняты с их файла, mark.json; красное — .a, синее перо — .b. */
+const MARKJ = JSON.parse(readFileSync(DIR + "mark.json", "utf8"));
+const MARK = `<svg class="mk" viewBox="0 0 40 40" aria-hidden="true" focusable="false"><path class="a" fill-rule="evenodd" d="${MARKJ.a.d}"/><path class="b" d="${MARKJ.b.d}"/></svg>`;
 const LOGO = (l) => `<a class="logo" href="${href(l)}" aria-label="CZECHFARM alliance">${MARK}<span class="word"><b>CZECHFARM</b><small aria-hidden="true">${[..."ALLIANCE"].map((c) => `<i>${c}</i>`).join("")}</small></span></a>`;
 
 const NAV = [
@@ -139,7 +140,7 @@ ${PROD ? `<div><b>${t("Связь", "Aloqa", "Contact")}</b><ul><li data-live-wr
 <div class="rights"><p>© ${new Date().getFullYear()} CZECHFARM alliance. Health. Trust. Value.</p><p>${t("Информация на сайте не заменяет консультацию врача.", "Saytdagi ma’lumot shifokor maslahatining o‘rnini bosmaydi.", "Information on this website does not replace a doctor’s consultation.")} <a href="${href(l, "privacy")}">${t("Политика обработки данных", "Ma’lumotlarni qayta ishlash siyosati", "Privacy policy")}</a></p></div>
 ` : `<div><b>${t("Связь", "Aloqa", "Contact")}</b><ul><li>${t("Телефон, почта и адрес появятся после согласования с компанией", "Telefon, pochta va manzil kompaniya bilan kelishilgach chiqadi", "Phone, email and address will appear once the company confirms them")}</li><li><a href="${href(l, "contacts")}#form">${t("Написать в компанию", "Kompaniyaga yozish", "Write to the company")}</a></li><li><a href="${href(l, "panel")}">${t("Вход для сотрудников", "Xodimlar uchun kirish", "Staff sign-in")}</a></li></ul></div>
 </div>
-<div class="rights"><p>${t("Это макет DevUz Studio: так может выглядеть сайт CZECHFARM. Тексты собраны по техническому заданию компании. Названий препаратов, производителей, цифр, адресов и контактов на макете нет: их даёт и утверждает компания. Знак: концепт до получения логотипа. Продукты и новости с пометкой «демо» добавлены из демо-панели.", "Bu DevUz Studio maketi: CZECHFARM sayti shunday ko‘rinishi mumkin. Matnlar kompaniyaning texnik topshirig‘i asosida. Maketda dori nomlari, ishlab chiqaruvchilar, raqamlar, manzil va kontaktlar yo‘q: ularni kompaniya beradi va tasdiqlaydi. Belgi: logotip olingunga qadar konsept. «Demo» belgili mahsulot va yangiliklar demo-paneldan qo‘shilgan.", "A DevUz Studio mockup of how the CZECHFARM website could look. Texts follow the company’s brief. There are no product names, manufacturers, figures, addresses or contacts: the company provides and approves them. The mark is a concept until we receive the logo. Products and news marked “demo” come from the demo panel.")}</p>
+<div class="rights"><p>${t("Это макет DevUz Studio: так может выглядеть сайт CZECHFARM. Тексты собраны по техническому заданию компании. Названий препаратов, производителей, цифр, адресов и контактов на макете нет: их даёт и утверждает компания. Знак: логотип компании. Продукты и новости с пометкой «демо» добавлены из демо-панели.", "Bu DevUz Studio maketi: CZECHFARM sayti shunday ko‘rinishi mumkin. Matnlar kompaniyaning texnik topshirig‘i asosida. Maketda dori nomlari, ishlab chiqaruvchilar, raqamlar, manzil va kontaktlar yo‘q: ularni kompaniya beradi va tasdiqlaydi. Belgi: kompaniya logotipi. «Demo» belgili mahsulot va yangiliklar demo-paneldan qo‘shilgan.", "A DevUz Studio mockup of how the CZECHFARM website could look. Texts follow the company’s brief. There are no product names, manufacturers, figures, addresses or contacts: the company provides and approves them. The mark is the company logo. Products and news marked “demo” come from the demo panel.")}</p>
 <p>${t("Макет принадлежит DevUz Studio и используется только по договору.", "Maket DevUz Studio’ga tegishli va faqat shartnoma asosida ishlatiladi.", "The mockup belongs to DevUz Studio and may be used only under contract.")} <a href="${TERMS(l)}">${t("Условия использования макета", "Maketdan foydalanish shartlari", "Mockup terms of use")}</a></p></div>
 `}</div></footer>`;
 }
@@ -544,7 +545,7 @@ const INTRO_CSS = `.cfi{position:fixed;inset:0;z-index:2147482000;background-col
 .cfi.out .cfi-skip{opacity:0}
 html.cfi .top .logo{opacity:0}html.cfi .rise{opacity:0;transform:translateY(18px)}html.cfi .hs h1 .w>span{transform:translateY(105%)}
 .cfi-fly{position:fixed;z-index:2147482001;margin:0;pointer-events:none;color:#f1ece1;transition:opacity .25s,transform 1s cubic-bezier(.65,0,.35,1),color 1s}
-.cfi-fly.lnd{color:var(--ink)}`;
+.cfi-fly.lnd{color:var(--ink)}.cfi-fly .word b{color:inherit;transition:color 1s}.cfi-fly.lnd .word b{color:var(--navy)}.cfi-fly .mk .b{fill:#fff;transition:fill 1s}.cfi-fly.lnd .mk .b{fill:var(--navy)}`;
 const INTRO_JS = `(function(){var o=document.getElementById('cfi'),r=document.documentElement;if(!o)return;
 var force=/[?&]intro=1/.test(location.search),seen=false;try{seen=!!sessionStorage.getItem('cf-intro')}catch(e){}
 var ok=!r.classList.contains('rm')&&(force||!seen)&&!(navigator.connection&&navigator.connection.saveData);

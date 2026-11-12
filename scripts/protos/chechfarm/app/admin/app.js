@@ -57,7 +57,7 @@
   var NAV = [["home", "Сводка"], ["leads", "Обращения"], ["accounts", "Партнёры и клиенты"], ["bc", "Рассылки в бот", "head"], ["products", "Продукты"], ["news", "Новости"], ["ir", "Комната инвестора", "head"], ["pages", "Страницы сайта", "head"], ["site", "Сайт и бот"], ["connect", "Подключения"], ["team", "Команда"], ["log", "История", "head"]];
   function shell() {
     app.className = "";
-    app.innerHTML = '<div class="shell"><nav class="side" id="side"><div class="brand">CZECHFARM<small>ALLIANCE · ПАНЕЛЬ</small></div>' +
+    app.innerHTML = '<div class="shell"><nav class="side" id="side"><div class="brand"><img class="bmk" src="/protos/chechfarm/icon.svg" alt="" width="32" height="32">CZECHFARM<small>ALLIANCE · ПАНЕЛЬ</small></div>' +
       NAV.filter(function (n) { return !n[2] || staff(); }).map(function (n) { return '<a href="#' + n[0] + '" data-s="' + n[0] + '">' + n[1] + (n[0] === "leads" ? '<span class="n" id="nfresh" hidden></span>' : "") + "</a>"; }).join("") +
       '<div class="me">' + h(ME.name) + " · " + h(M.roles[ME.role]) + '<br><a href="/" target="_blank" rel="noopener">Открыть сайт</a><br><button class="btn" id="out">Выйти</button></div></nav><main id="main"></main></div>';
     $("#out").addEventListener("click", function () { api("/logout", {}).then(boot); });
@@ -216,29 +216,51 @@
   function drawPages(main, j) {
     var b = head(main, "Страницы сайта"), hidden = j.hidden.slice(), rtl = j.lang === "ar" ? ' dir="rtl"' : "";
     var site = "/" + (j.lang === "ru" ? "" : j.lang + "/") + (j.page === "home" || j.page === "*" ? "" : j.page);
-    b.innerHTML = '<p class="note">Здесь правится любой текст сайта: выберите страницу и язык, поменяйте текст в нужном блоке и нажмите «Сохранить». Пустое поле — текст как был. Блок можно убрать со страницы галочкой «Показывать». Продукты, новости, контакты и заголовки для поиска правятся в своих разделах.</p>' +
+    b.innerHTML = '<p class="note">Здесь правится любой текст сайта: выберите страницу и язык, поменяйте текст в нужном блоке и нажмите «Сохранить». Пустое поле — текст как был. Блок можно убрать со страницы галочкой «Показывать», переставить стрелками и заменить в нём картинку. Продукты, новости, контакты и заголовки для поиска правятся в своих разделах.</p>' +
       '<div class="card grid"><div class="grid g2"><label class="f">Страница<select id="pgp">' + ["*"].concat(M.pages).map(function (p) { return '<option value="' + p + '"' + (p === j.page ? " selected" : "") + ">" + h(PAGE_NAME[p] || p) + "</option>"; }).join("") + '</select></label>' +
       '<label class="f">Язык<select id="pgl">' + M.langs.map(function (l) { return '<option value="' + l + '"' + (l === j.lang ? " selected" : "") + ">" + h(LANG_NAME[l] || l) + "</option>"; }).join("") + '</select></label></div>' +
       '<div class="row"><input class="i" id="pgq" placeholder="Найти текст на странице"><span class="sp"></span><a class="btn" href="' + site + '" target="_blank" rel="noopener">Открыть страницу</a><button class="btn pri" id="pgs">Сохранить</button></div></div>' +
       (j.blocks.length ? j.blocks.map(function (bl) {
-        var off = hidden.indexOf(bl.id) >= 0, ch = bl.texts.filter(function (t) { return t.val; }).length;
-        return '<details class="card pgb" data-b="' + h(bl.id) + '"' + (ch || j.blocks.length === 1 ? " open" : "") + '><summary><b>' + h(bl.name) + '</b> <span class="note">текстов: ' + bl.texts.length + (ch ? ", изменено: " + ch : "") + (off ? ", скрыт" : "") + "</span></summary>" +
+        var off = hidden.indexOf(bl.id) >= 0, ch = bl.texts.filter(function (t) { return t.val; }).length + bl.images.filter(function (t) { return t.val; }).length;
+        return '<details class="card pgb" data-b="' + h(bl.id) + '"' + (bl.canMove ? " data-mv" : "") + (ch || j.blocks.length === 1 ? " open" : "") + '><summary><b>' + h(bl.name) + '</b> <span class="note">текстов: ' + bl.texts.length + (bl.images.length ? ", картинок: " + bl.images.length : "") + (ch ? ", изменено: " + ch : "") + (off ? ", скрыт" : "") + "</span>" +
+          (bl.canMove ? '<span class="sp"></span><button type="button" class="btn pgm" data-up aria-label="Поднять блок «' + h(bl.name) + '» выше" title="Выше">↑</button><button type="button" class="btn pgm" data-down aria-label="Опустить блок «' + h(bl.name) + '» ниже" title="Ниже">↓</button>' : "") + "</summary>" +
+          bl.images.map(function (im) {
+            return '<div class="pgi" data-ih="' + im.h + '" data-def="' + h(im.src) + '" data-v="' + h(im.val) + '"><img src="' + h(im.val || im.src) + '" alt="Картинка блока" loading="lazy"><div class="grid"><span class="note">Картинка блока. Замена встанет на всех языках. Лучше того же формата кадра, JPG, PNG или WebP до 15 МБ.</span><div class="row"><label class="btn">Заменить картинку<input type="file" accept="image/jpeg,image/png,image/webp" hidden></label><button type="button" class="btn" data-iback' + (im.val ? "" : " hidden") + ">Вернуть исходную</button></div></div></div>";
+          }).join("") +
           (bl.canHide ? '<label class="chk"><input type="checkbox" data-show="' + h(bl.id) + '"' + (off ? "" : " checked") + "> Показывать блок на странице</label>" : "") +
           '<div class="grid">' + bl.texts.map(function (t) {
             var big = t.def.length > 70;
             return '<label class="f pgt" data-find="' + h((t.def + " " + t.val).toLowerCase()) + '"><span class="pgd"' + rtl + ">" + h(t.def) + "</span>" + (big ? '<textarea rows="' + Math.min(6, Math.ceil(t.def.length / 80) + 1) + '"' : '<input') + rtl + ' data-h="' + t.h + '" data-def="' + h(t.def) + '" placeholder="как на сайте сейчас"' + (big ? ">" + h(t.val) + "</textarea>" : ' value="' + h(t.val) + '">') + "</label>";
           }).join("") + "</div></details>";
       }).join("") : '<div class="card note">На этой странице нет текстов для правки.</div>') +
-      (j.stale.length ? '<h2>Правки, которые больше не применяются</h2><div class="card grid"><p class="note">Исходный текст на сайте изменился после обновления, поэтому эти правки не видны. Перенесите нужное в блок выше, затем уберите.</p>' + j.stale.map(function (t) { return '<div class="row"><span><span class="note">' + h(t.def) + "</span><br>" + h(t.val) + '</span><span class="sp"></span><button class="btn" data-drop="' + t.h + '" data-def="' + h(t.def) + '">Убрать</button></div>'; }).join("") + "</div>" : "");
+      (j.stale.length ? '<h2>Правки, которые больше не применяются</h2><div class="card grid"><p class="note">Исходный текст на сайте изменился после обновления, поэтому эти правки не видны. Перенесите нужное в блок выше, затем уберите.</p>' + j.stale.map(function (t) { return '<div class="row"><span><span class="note">' + h(t.def) + "</span><br>" + (t.img ? "своя картинка" : h(t.val)) + '</span><span class="sp"></span><button class="btn" data-drop="' + t.h + '" data-def="' + h(t.def) + '">Убрать</button></div>'; }).join("") + "</div>" : "");
     function go() { pgSel = { lang: $("#pgl").value, page: $("#pgp").value }; pages(main).catch(fail); }
     $("#pgp").addEventListener("change", go); $("#pgl").addEventListener("change", go);
     $("#pgq").addEventListener("input", function (e) { var q = e.target.value.trim().toLowerCase(); $$(".pgt", b).forEach(function (x) { x.hidden = !!q && x.getAttribute("data-find").indexOf(q) < 0; }); if (q) $$(".pgb", b).forEach(function (d) { d.open = !!$(".pgt:not([hidden])", d); }); });
-    function send(texts) {
+    /* Порядок: стрелка меняет блок местами с соседним; на сайт уходит по «Сохранить». */
+    var moved = false;
+    $$(".pgm", b).forEach(function (x) { x.addEventListener("click", function (e) {
+      e.preventDefault();
+      var d = x.closest(".pgb"), up = x.hasAttribute("data-up"), o = up ? d.previousElementSibling : d.nextElementSibling;
+      if (!o || !o.hasAttribute("data-mv")) { toast(up ? "Выше некуда: первый блок страницы стоит на месте" : "Это последний блок", true); return; }
+      d.parentNode.insertBefore(up ? d : o, up ? o : d); moved = true; x.focus();
+      toast("Порядок поменяется на сайте после «Сохранить»");
+    }); });
+    $$(".pgi", b).forEach(function (x) {
+      var inp = $("input[type=file]", x), back = $("[data-iback]", x);
+      inp.addEventListener("change", function () { upload(inp).then(function (url) { x.setAttribute("data-v", url); $("img", x).src = url; back.hidden = false; toast("Картинка загружена. Нажмите «Сохранить»"); }).catch(fail); });
+      back.addEventListener("click", function () { x.setAttribute("data-v", ""); $("img", x).src = x.getAttribute("data-def"); back.hidden = true; toast("Исходная картинка вернётся после «Сохранить»"); });
+    });
+    function send(texts, only) {
       var hide = []; $$("[data-show]", b).forEach(function (c) { if (!c.checked) hide.push(c.getAttribute("data-show")); });
-      return api("/pages", { lang: j.lang, page: j.page, texts: texts, hide: hide }).then(function (n) { toast("Сохранено, на сайте уже видно"); drawPages(main, n); }).catch(fail);
+      var images = {}, order = null;
+      if (!only) { $$(".pgi", b).forEach(function (x) { images[x.getAttribute("data-ih")] = { v: x.getAttribute("data-v"), def: x.getAttribute("data-def") }; }); if (moved || j.order.length) order = $$(".pgb[data-mv]", b).map(function (d) { return d.getAttribute("data-b"); }); }
+      return api("/pages", { lang: j.lang, page: j.page, texts: texts, hide: hide, images: images, order: order }).then(function (n) { toast("Сохранено, на сайте уже видно"); drawPages(main, n); }).catch(fail);
     }
     $("#pgs").addEventListener("click", function () { var t = {}; $$("[data-h]", b).forEach(function (i) { t[i.getAttribute("data-h")] = { v: i.value.trim(), def: i.getAttribute("data-def") }; }); send(t); });
-    $$("[data-drop]", b).forEach(function (x) { x.addEventListener("click", function () { var t = {}; t[x.getAttribute("data-drop")] = { v: "", def: x.getAttribute("data-def") }; send(t); }); });
+    $$("[data-drop]", b).forEach(function (x) { x.addEventListener("click", function () { var t = {}; var k = x.getAttribute("data-drop"), o = { v: "", def: x.getAttribute("data-def") };
+      if (k.charAt(0) === "i") { var im = {}; im[k] = o; api("/pages", { lang: j.lang, page: j.page, images: im }).then(function (n) { toast("Убрано"); drawPages(main, n); }).catch(fail); }
+      else { t[k] = o; send(t, true); } }); });
   }
 
   /* ── Сайт и бот ────────────────────────────────────────────────── */

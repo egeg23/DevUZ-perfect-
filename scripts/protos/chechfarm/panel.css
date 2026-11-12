@@ -24,7 +24,7 @@ p{margin:0}
 .brand{display:flex;align-items:center;gap:10px;padding:6px 8px 18px;color:#fff}
 .brand b{display:block;font:700 16px var(--disp);letter-spacing:.08em}
 .brand small{display:block;font-size:12px;color:#8fa6a0}
-.mk{width:34px;height:34px;flex:none}.mk .a{fill:#3fbfae}.mk .b{fill:var(--gold2)}.mk .c{fill:var(--deep)}
+.mk{width:34px;height:34px;flex:none}.mk .a{fill:#f61116}.mk .b{fill:#fff}
 .nav{display:flex;flex-direction:column;gap:2px}
 .nav a{display:flex;align-items:center;gap:12px;min-height:44px;padding:8px 12px;border-radius:10px;font-weight:700;transition:background .15s}
 .nav a:hover{background:rgb(255 255 255 / .06);color:#fff}
