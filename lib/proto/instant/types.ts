@@ -16,7 +16,7 @@ import { PHONE_DIGITS } from "@/lib/proto/instant/safe";
 export type InstantLocale = "ru" | "uz";
 
 /** Ниши, у которых есть шаблон. Остальные — «скоро» и лид менеджеру. */
-export const INSTANT_NICHES = ["stomatologiya", "medcentr", "mebel", "restoran", "turagentstvo", "uchebnyy-centr", "nedvizhimost", "salon-krasoty"] as const;
+export const INSTANT_NICHES = ["stomatologiya", "medcentr", "mebel", "restoran", "turagentstvo", "uchebnyy-centr", "nedvizhimost", "salon-krasoty", "magazin"] as const;
 export type InstantNiche = (typeof INSTANT_NICHES)[number];
 
 /**
@@ -35,6 +35,7 @@ export const INSTANT_NICHE_LABEL: Readonly<Record<InstantNiche, { ru: string; uz
   "uchebnyy-centr": { ru: "учебный центр", uz: "o‘quv markazi", pl: "centrum szkoleniowe" },
   nedvizhimost: { ru: "недвижимость", uz: "ko‘chmas mulk", pl: "nieruchomości" },
   "salon-krasoty": { ru: "салон красоты", uz: "go‘zallik saloni", pl: "salon urody" },
+  magazin: { ru: "интернет-магазин", uz: "internet-do‘kon", pl: "sklep internetowy" },
 };
 
 export function instantReady(niche: string): niche is InstantNiche {

@@ -17,7 +17,7 @@
  *   стоматология, медцентр — панель клиники Nek Dental Studio;
  *   ресторан — панель Agora (вход кодом, брони, заказы, меню и стоп-лист);
  *   турагентство — панель Sunday; учебный центр — панель FinTax;
- *   мебель — панель магазина Greenwell; недвижимость — панель Soffice.
+ *   мебель и интернет-магазин — панель магазина Greenwell; недвижимость — панель Soffice.
  * У этих четырёх своей панели в макете сферы нет — выбор владельца,
  * 11.11.2026: «Да, делай по своей рекомендации».
  *
@@ -32,6 +32,7 @@ import { priceNumber, RESTORAN_PHOTOS, restoranPalette, RESTORAN_TIMES } from "@
 import { brandColor, esc, hexToHsl, imageUrl } from "@/lib/proto/instant/safe";
 import { TUR_PHOTOS } from "@/lib/proto/instant/tur";
 import { MEBEL_PHOTOS } from "@/lib/proto/instant/mebel";
+import { MAGAZIN_PHOTOS, shopPrice } from "@/lib/proto/instant/magazin";
 import { NEDV_PHOTOS } from "@/lib/proto/instant/nedv";
 import { LIMITS, type InstantLocale, type InstantNiche, type InstantSite } from "@/lib/proto/instant/types";
 import { PROTO_BASE } from "@/lib/proto/pages";
@@ -406,7 +407,17 @@ export function sumPrice(price: string | null): number {
   return n >= 50_000 ? n : 0;
 }
 
-function mebelAdmin(site: InstantSite): string {
+/** Товары магазина без цены числом — с демо-ценой в сумах, подписано «демо». */
+const SHOP_DEMO_PRICE = [320_000, 185_000, 540_000, 95_000, 260_000, 410_000, 150_000, 720_000];
+const SHOP_FALLBACK: Pair[] = [["Товар", "Mahsulot"], ["Новинка", "Yangilik"], ["Хит продаж", "Xit"], ["Подарочный набор", "Sovg‘a to‘plami"]];
+
+/**
+ * Панель магазина Greenwell: у мебели (заказы — замеры и сборка) и у
+ * интернет-магазина (заказы — с сайта шаблона, память `ms-demo-1`, товары —
+ * те же номера, что у магазина: g0, g1…).
+ */
+function mebelAdmin(site: InstantSite, kind: "mebel" | "magazin" = "mebel"): string {
+  const shop = kind === "magazin";
   const l = site.locale;
   const i = l === "uz" ? 1 : 0;
   const t = (p: Pair) => p[i];
@@ -414,23 +425,27 @@ function mebelAdmin(site: InstantSite): string {
   const base = panels.greenwell.ui as Record<string, string[]>;
   const ui = Object.fromEntries(Object.entries(base).map(([k, v]) => [k, (MEBEL_UI[k] ?? v)[i].split("{name}").join(nm)]));
   const own = site.photos.map(imageUrl).filter((u): u is string => Boolean(u));
-  const items = site.services.length ? site.services.slice(0, 8).map((x) => ({ n: x.name, p: sumPrice(x.price) })) : MEBEL_FALLBACK.map((x) => ({ n: t(x), p: 0 }));
+  const items = site.services.length
+    ? site.services.slice(0, shop ? 12 : 8).map((x) => ({ n: x.name, p: shop ? shopPrice(x.price) : sumPrice(x.price) }))
+    : (shop ? SHOP_FALLBACK : MEBEL_FALLBACK).map((x) => ({ n: t(x), p: 0 }));
+  const demoPrice = shop ? SHOP_DEMO_PRICE : MEBEL_DEMO_PRICE;
   const products = items.map((x, k) => ({
-    id: `m${k}`, cat: "all", price: x.p || MEBEL_DEMO_PRICE[k % MEBEL_DEMO_PRICE.length], old: null, count: 1, form: "", rating: 0, reviews: 0,
+    id: `${shop ? "g" : "m"}${k}`, cat: "all", price: x.p || demoPrice[k % demoPrice.length], old: null, count: 1, form: "", rating: 0, reviews: 0,
     orders: `${[60, 45, 38, 30, 22, 18, 14, 10][k] ?? 10}+`, g: 0, c: false, back: 0, n: x.n, s: "", b: [], alt: "", how: "", comp: "", tags: [], rev: [], uzum: "",
   }));
-  const ph = Object.fromEntries(products.map((p, k) => [p.id, own[k % Math.max(own.length, 1)] ?? MEBEL_PHOTOS[k % MEBEL_PHOTOS.length].replace("-1200", "-900")]));
+  const stock = shop ? MAGAZIN_PHOTOS : MEBEL_PHOTOS.map((x) => x.replace("-1200", "-900"));
+  const ph = Object.fromEntries(products.map((p, k) => [p.id, own[k % Math.max(own.length, 1)] ?? stock[k % stock.length]]));
   const me = l === "uz" ? "Siz (ega)" : "Вы (владелец)";
   const managers = l === "uz" ? ["Dilnoza", "Aziz", "Madina"] : ["Дилноза", "Азиз", "Мадина"];
   const couriers = l === "uz" ? ["Sherzod", "Behzod", "Ulug‘bek", "Jasur"] : ["Шерзод", "Бехзод", "Улугбек", "Жасур"];
   const roles: Record<string, string> = { [me]: l === "uz" ? "Ega" : "Владелец" };
-  managers.forEach((m, k) => (roles[m] = [t(["Старший менеджер", "Katta menejer"]), t(["Замеры и заказы", "O‘lchov va buyurtmalar"]), t(["Отзывы и поддержка", "Sharhlar va qo‘llab-quvvatlash"])][k]));
-  couriers.forEach((c) => (roles[c] = t(["Доставка и сборка", "Yetkazish va yig‘ish"])));
+  managers.forEach((m, k) => (roles[m] = [t(["Старший менеджер", "Katta menejer"]), shop ? t(["Заказы", "Buyurtmalar"]) : t(["Замеры и заказы", "O‘lchov va buyurtmalar"]), t(["Отзывы и поддержка", "Sharhlar va qo‘llab-quvvatlash"])][k]));
+  couriers.forEach((c) => (roles[c] = shop ? t(["Доставка", "Yetkazish"]) : t(["Доставка и сборка", "Yetkazish va yig‘ish"])));
   const first = products[0]?.id ?? "m0";
   const pd = {
     lang: l, img: "", ph, name: site.name, ui, products,
-    cats: [{ id: "all", n: t(["Изделия", "Mahsulotlar"]) }],
-    shop: { delivery: 150_000, freeFrom: 5_000_000, pointsRate: 0, pointsMaxShare: 0, reviewPts: 0, reviewPhotoPts: 0, welcome: 0, promo: {}, levels: [] },
+    cats: [{ id: "all", n: shop ? t(["Товары", "Mahsulotlar"]) : t(["Изделия", "Mahsulotlar"]) }],
+    shop: { delivery: shop ? 25_000 : 150_000, freeFrom: shop ? 500_000 : 5_000_000, pointsRate: 0, pointsMaxShare: 0, reviewPts: 0, reviewPhotoPts: 0, welcome: 0, promo: {}, levels: [] },
     nasiya: [{ id: "uzum", n: "Uzum Nasiya", c: "#7000ff", terms: { 3: 0, 6: 8, 12: 16 } }, { id: "alif", n: "Alif Nasiya", c: "#00a651", terms: { 3: 0, 6: 9, 12: 18 } }],
     pays: [{ id: "click", n: "Click" }, { id: "payme", n: "Payme" }, { id: "uzumbank", n: "Uzum Bank" }, { id: "card", n: "Uzcard / Humo" }, { id: "cash", n: t(["Наличными при доставке", "Yetkazishda naqd"]) }, { id: "nasiya", n: t(["Рассрочка", "Muddatli to‘lov"]) }],
     couriers, managers, roles, me,
@@ -444,28 +459,33 @@ function mebelAdmin(site: InstantSite): string {
     costShare: Object.fromEntries(products.map((p, k) => [p.id, [0.46, 0.5, 0.44, 0.52, 0.48, 0.45, 0.5, 0.47][k % 8]])),
     stock: Object.fromEntries(products.map((p, k) => [p.id, [6, 14, 9, 3, 11, 20, 7, 5][k % 8]])),
     logActs: [
-      { k: "st", who: "m", v: [t(["Замер назначен", "O‘lchov belgilandi"]), t(["В производстве", "Ishlab chiqarishda"])] }, { k: "st", who: "c", v: [t(["Доставлен и собран", "Yetkazildi va yig‘ildi"])] },
+      shop
+        ? { k: "st", who: "m", v: [t(["Собран", "Yig‘ildi"]), t(["Передан курьеру", "Kuryerga berildi"])] }
+        : { k: "st", who: "m", v: [t(["Замер назначен", "O‘lchov belgilandi"]), t(["В производстве", "Ishlab chiqarishda"])] },
+      { k: "st", who: "c", v: [shop ? t(["Доставлен", "Yetkazildi"]) : t(["Доставлен и собран", "Yetkazildi va yig‘ildi"])] },
       { k: "cour", who: "m", v: couriers },
-      { k: "call", who: "m", v: [t(["подтвердил замер", "o‘lchovni tasdiqladi"]), t(["перенёс доставку на субботу", "yetkazishni shanbaga ko‘chirdi"]), t(["уточнил цвет фасадов", "fasad rangini aniqladi"])] },
+      { k: "call", who: "m", v: shop
+        ? [t(["подтвердил заказ", "buyurtmani tasdiqladi"]), t(["перенёс доставку на субботу", "yetkazishni shanbaga ko‘chirdi"]), t(["уточнил адрес", "manzilni aniqladi"])]
+        : [t(["подтвердил замер", "o‘lchovni tasdiqladi"]), t(["перенёс доставку на субботу", "yetkazishni shanbaga ko‘chirdi"]), t(["уточнил цвет фасадов", "fasad rangini aniqladi"])] },
       { k: "rvok", who: "m", v: products.slice(0, 3).map((p) => p.n) }, { k: "reply", who: "m", v: products.slice(0, 2).map((p) => p.n) },
     ],
     pending: [
-      { id: first, a: t(["Камола", "Kamola"]), d: "14.10", r: 5, t: t(["Замерщик приехал вовремя, собрали аккуратно за один день.", "O‘lchovchi o‘z vaqtida keldi, bir kunda ehtiyotkorlik bilan yig‘ishdi."]), o: "Z-10466", photo: 1 },
-      { id: products[1]?.id ?? first, a: t(["Рустам", "Rustam"]), d: "14.10", r: 4, t: t(["Качество хорошее, но доставку перенесли на день.", "Sifat yaxshi, lekin yetkazishni bir kunga ko‘chirishdi."]), o: "Z-10461" },
-      { id: products[2]?.id ?? first, a: t(["[[t:0]]", "[[t:0]]"]), d: "13.10", r: 2, t: t(["Одна дверца закрывается неровно. Хочу, чтобы мастер приехал и поправил.", "Bitta eshik notekis yopiladi. Usta kelib to‘g‘rilashini xohlayman."]), o: "Z-10455" },
+      { id: first, a: t(["Камола", "Kamola"]), d: "14.10", r: 5, t: (shop ? t(["Привезли вовремя, всё как на фото.", "O‘z vaqtida olib kelishdi, hammasi suratdagidek."]) : t(["Замерщик приехал вовремя, собрали аккуратно за один день.", "O‘lchovchi o‘z vaqtida keldi, bir kunda ehtiyotkorlik bilan yig‘ishdi."])), o: "Z-10466", photo: 1 },
+      { id: products[1]?.id ?? first, a: t(["Рустам", "Rustam"]), d: "14.10", r: 4, t: (shop ? t(["Товар хороший, но доставку перенесли на день.", "Mahsulot yaxshi, lekin yetkazishni bir kunga ko‘chirishdi."]) : t(["Качество хорошее, но доставку перенесли на день.", "Sifat yaxshi, lekin yetkazishni bir kunga ko‘chirishdi."])), o: "Z-10461" },
+      { id: products[2]?.id ?? first, a: t(["[[t:0]]", "[[t:0]]"]), d: "13.10", r: 2, t: (shop ? t(["Пришёл не тот размер. Хочу обменять.", "Boshqa o‘lcham keldi. Almashtirmoqchiman."]) : t(["Одна дверца закрывается неровно. Хочу, чтобы мастер приехал и поправил.", "Bitta eshik notekis yopiladi. Usta kelib to‘g‘rilashini xohlayman."])), o: "Z-10455" },
     ],
-    replyTpl: t(["Спасибо за отзыв! Рады, что мебель понравилась.", "Sharh uchun rahmat! Mebel yoqqanidan xursandmiz."]),
-    cmpReply: t(["Извините за это. Мастер приедет завтра и всё поправит бесплатно.", "Buning uchun uzr. Usta ertaga kelib, hammasini bepul to‘g‘rilaydi."]),
+    replyTpl: shop ? t(["Спасибо за отзыв! Рады, что покупка понравилась.", "Sharh uchun rahmat! Xarid yoqqanidan xursandmiz."]) : t(["Спасибо за отзыв! Рады, что мебель понравилась.", "Sharh uchun rahmat! Mebel yoqqanidan xursandmiz."]),
+    cmpReply: shop ? t(["Извините за это. Курьер заберёт товар и привезёт нужный размер.", "Buning uchun uzr. Kuryer mahsulotni olib, kerakli o‘lchamni olib keladi."]) : t(["Извините за это. Мастер приедет завтра и всё поправит бесплатно.", "Buning uchun uzr. Usta ertaga kelib, hammasini bepul to‘g‘rilaydi."]),
     geo: t(["Ташкент|Ташкентская обл.|Самарканд|Фергана|Наманган|Другие", "Toshkent|Toshkent vil.|Samarqand|Farg‘ona|Namangan|Boshqalar"]).split("|").map((n, k) => [n, [58, 14, 8, 7, 5, 8][k]]),
-    topPages: [[t(["Главная", "Bosh sahifa"]), 64], [products[0]?.n ?? "", 24], [t(["Каталог", "Katalog"]), 19], [products[1]?.n ?? products[0]?.n ?? "", 12], [t(["Заявка на замер", "O‘lchovga ariza"]), 9]],
+    topPages: [[t(["Главная", "Bosh sahifa"]), 64], [products[0]?.n ?? "", 24], [t(["Каталог", "Katalog"]), 19], [products[1]?.n ?? products[0]?.n ?? "", 12], [shop ? t(["Корзина", "Savat"]) : t(["Заявка на замер", "O‘lchovga ariza"]), 9]],
     searches: products.slice(0, 6).map((p, k) => [p.n.toLowerCase(), [42, 31, 24, 18, 11, 7][k]]),
     // Заказов мебели в день в разы меньше, чем у магазина биодобавок.
-    k: 0.25,
+    k: shop ? 0.6 : 0.25,
   };
   const ic = (k: string) => `<svg class="ic" aria-hidden="true"><use href="#i-${k}"/></svg>`;
   const nav: [string, string, Pair, string?][] = [
     ["dash", "grid", ["Сводка", "Umumiy"]], ["orders", "box", ["Заказы", "Buyurtmalar"], "orders"], ["reviews", "star", ["Отзывы", "Sharhlar"], "reviews"],
-    ["goods", "tag", ["Изделия и прибыль", "Mahsulotlar va foyda"]], ["logistics", "truck", ["Доставка и сборка", "Yetkazish va yig‘ish"]], ["nasiya", "cal", ["Рассрочка", "Muddatli to‘lov"]],
+    ["goods", "tag", shop ? ["Товары и прибыль", "Mahsulotlar va foyda"] : ["Изделия и прибыль", "Mahsulotlar va foyda"]], ["logistics", "truck", shop ? ["Доставка", "Yetkazish"] : ["Доставка и сборка", "Yetkazish va yig‘ish"]], ["nasiya", "cal", ["Рассрочка", "Muddatli to‘lov"]],
     ["traffic", "chart", ["Посещаемость", "Tashriflar"]], ["log", "list", ["История менеджеров", "Menejerlar tarixi"]],
   ];
   const sprite = `<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>${Object.entries(panels.greenwell.icons as Record<string, string>).map(([k, v]) => `<symbol id="i-${k}" viewBox="0 0 24 24" stroke="currentColor">${v}</symbol>`).join("")}</defs></svg>`;
@@ -477,7 +497,9 @@ function mebelAdmin(site: InstantSite): string {
   return page(
     l,
     `${nm} · ${l === "uz" ? "do‘kon paneli · demo" : "панель магазина · демо"}`,
-    esc(l === "uz" ? "Mebel do‘koni paneli: buyurtmalar tarixi bilan, sharhlar, foyda, yetkazish va yig‘ish, muddatli to‘lov, tashriflar. Demo ma’lumotlar." : "Панель мебельного магазина: заказы с историей, отзывы, прибыль, доставка и сборка, рассрочка, посещаемость. Демо-данные."),
+    esc(shop
+      ? (l === "uz" ? "Internet-do‘kon paneli: saytdan buyurtmalar tarixi bilan, sharhlar, foyda, yetkazish, muddatli to‘lov, tashriflar. Demo ma’lumotlar." : "Панель интернет-магазина: заказы с сайта с историей, отзывы, прибыль, доставка, рассрочка, посещаемость. Демо-данные.")
+      : (l === "uz" ? "Mebel do‘koni paneli: buyurtmalar tarixi bilan, sharhlar, foyda, yetkazish va yig‘ish, muddatli to‘lov, tashriflar. Demo ma’lumotlar." : "Панель мебельного магазина: заказы с историей, отзывы, прибыль, доставка и сборка, рассрочка, посещаемость. Демо-данные.")),
     "https://fonts.googleapis.com/css2?family=Manrope:wght@400;700&family=Montserrat:wght@400;700&display=swap",
     `${panels.greenwell.css}:root{${palette}}`,
     `<body class="panel" data-lang="${l}">
@@ -499,7 +521,7 @@ ${sprite}
 <div id="toast" role="status" aria-live="polite"></div>
 <script type="application/json" id="gp-data">${json(pd)}</script>
 <script>
-${panels.greenwell.js}</script>
+${shop ? panels.greenwell.js.split("'mb-demo-1'").join("'ms-demo-1'").split("'mb-panel-1'").join("'ms-panel-1'") : panels.greenwell.js}</script>
 </body>`,
   );
 }
@@ -720,7 +742,8 @@ const ADMINS: Partial<Record<InstantNiche, (site: InstantSite) => string>> = {
   restoran: restoranAdmin,
   turagentstvo: tourAdmin,
   "uchebnyy-centr": eduAdmin,
-  mebel: mebelAdmin,
+  mebel: (s) => mebelAdmin(s, "mebel"),
+  magazin: (s) => mebelAdmin(s, "magazin"),
   nedvizhimost: nedvAdmin,
   "salon-krasoty": salonAdmin,
 };

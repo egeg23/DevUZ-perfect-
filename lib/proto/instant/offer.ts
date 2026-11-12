@@ -103,6 +103,13 @@ const OFFERS: Record<InstantNiche, () => OfferAddon[]> = {
     fromPlan("karomat", "gift", null, "Sovg‘a sertifikatlari"),
     fromPlan("karomat", "pay", null, "Click, Payme, Uzum orqali to‘lov"),
   ],
+  // Интернет-магазин: допы нашего макета Greenwell.
+  magazin: () => [
+    fromPlan("greenwell", "abandoned", null, "Tashlab ketilgan savat: Telegram yoki SMS eslatma"),
+    fromPlan("greenwell", "tgbot", null, "Do‘konning Telegram-boti"),
+    fromPlan("greenwell", "crm", null, "Buyurtmalar amoCRM yoki Bitrix24 ga"),
+    fromPlan("greenwell", "promo", null, "Paneldan promokodlar va aksiyalar"),
+  ],
 };
 
 /**

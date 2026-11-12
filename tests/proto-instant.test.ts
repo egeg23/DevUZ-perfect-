@@ -693,3 +693,46 @@ test("сборка из ответов в боте проходит у кажд�
     assert.deepEqual(buildInstant(site, SEED).problems, [], `${niche} ${locale}`);
   }
 });
+
+test("интернет-магазин: магазин нашего макета Greenwell, свежий, без Greenwell, защита та же", async () => {
+  const { greenwellShopAssets } = await import("../scripts/protos/instant/greenwell-shop-assets.mjs");
+  const gwFile = (await import("@/content/proto-instant/greenwell-shop-assets.json", { with: { type: "json" } })).default;
+  const { EXAMPLE_SHOP } = await import("../scripts/protos/instant/preview-data.mjs");
+  assert.deepEqual(gwFile, greenwellShopAssets(), "node scripts/protos/instant/greenwell-shop-assets.mjs");
+  const shop = EXAMPLE_SHOP as InstantSite;
+  const { html, problems, stamp } = buildInstant(shop, SEED);
+  assert.deepEqual(problems, []);
+  assert.ok(html.includes(gwFile.css.slice(0, 200)), "стили магазина Greenwell");
+  assert.ok(html.includes('id="gw-data"') && html.includes('class="tabbar"') && html.includes('id="sheet"'), "оболочка магазина Greenwell");
+  assert.ok(html.includes("/ru/mockup-terms") && html.includes('class="dz-vid"'));
+  assert.ok(stamp.signals.some((s) => s.startsWith("js:")), "метка числа скрипта");
+  assert.ok(stamp.signals.filter((s) => s.startsWith("text:")).length >= 4, "две ловушки");
+  for (const gw of ["Greenwell", "greenwell", "Inso Farm", "GREEN10", "Uzum Market", "/protos/greenwell", "Руставели", "gw-demo-1"]) assert.ok(!html.includes(gw), gw);
+  assert.deepEqual(tailsIn(html), []);
+  assert.ok(buildInstant({ ...shop, perks: ["Как у Greenwell"] }, SEED).problems.some((p) => p.code === "tail"), "Greenwell — хвост");
+  assert.deepEqual(buildInstant({ ...shop, locale: "uz", tagline: null, about: null }, SEED).problems, []);
+});
+
+test("интернет-магазин: товары — услуги клиента, цена только его, без цены — «цена по запросу» и вопрос в чат", async () => {
+  const { EXAMPLE_SHOP } = await import("../scripts/protos/instant/preview-data.mjs");
+  const { MAGAZIN_PHOTOS, shopPrice } = await import("@/lib/proto/instant/magazin");
+  const shop = EXAMPLE_SHOP as InstantSite;
+  const { html, pages } = buildInstant(shop, SEED);
+  const admin = pages.admin ?? "";
+  const data = JSON.parse(html.match(/<script type="application\/json" id="gw-data">([\s\S]*?)<\/script>/)![1]);
+  assert.deepEqual(data.products.map((p: { n: string }) => p.n), shop.services.map((s) => s.name));
+  assert.deepEqual(data.products.map((p: { price: number }) => p.price), [420000, 180000, 350000, 0, 210000, 0], "цена числом — только с сайта клиента");
+  assert.ok(data.products.every((p: { rating: number; reviews: number }) => !p.rating && !p.reviews), "оценок и отзывов чужой витрины нет");
+  assert.equal(data.ui.ask, "Цена по запросу");
+  assert.equal(data.chat, "https://t.me/uyutniy_dom_demo");
+  assert.equal(shopPrice("от 1 200 000 сум"), 1200000);
+  assert.equal(shopPrice("20 $"), 0, "доллары в корзину не идут: валюта магазина сумы");
+  for (const photo of MAGAZIN_PHOTOS) assert.ok(existsSync(`public${photo}`), photo);
+  // Админка — панель магазина Greenwell; заказ с сайта шаблона пишется в ту же память, что она читает.
+  assert.ok(hasAdmin("magazin"));
+  assert.ok(admin.includes("'ms-demo-1'") && !admin.includes("'mb-demo-1'"), "своя память у магазина");
+  assert.ok(html.includes("KEY='ms-demo-1'"));
+  assert.ok(admin.includes("Уютный Дом") && admin.includes("Комплект постельного белья"));
+  const none = buildInstant({ ...shop, services: [], perks: [], telegram: null, instagram: null }, SEED);
+  assert.deepEqual(none.problems, []);
+});

@@ -1,7 +1,7 @@
 // Хвосты прошлых клиентов для «Макета в боте» (lib/proto/instant/tails).
 //
 // Шаблоны собраны из макетов Nek Dental Studio, «Сияния Севера» (стоматология)
-// Shox International Hospital (медцентр), vTashkente (мебель), Agora (ресторан), SEM Travel (турагентство) и Aipply Academy, MedAcademy (учебный центр) и ShahaR.Uz (недвижимость); в макете нового клиента не должно остаться ни строки о них:
+// Shox International Hospital (медцентр), vTashkente (мебель), Agora (ресторан), SEM Travel (турагентство), Greenwell (интернет-магазин) и Aipply Academy, MedAcademy (учебный центр) и ShahaR.Uz (недвижимость); в макете нового клиента не должно остаться ни строки о них:
 // название, телефон, почта, домен, ник, адрес, врачи, авторы отзывов,
 // лицензия. Список пишется отсюда из их data.mjs, а не руками:
 //
@@ -17,6 +17,7 @@ import * as syanie from "../syanie/data.mjs";
 import * as shox from "../shox-hospital/data.mjs";
 import * as agora from "../agora/data.mjs";
 import * as sem from "../semtravel/data.mjs";
+import * as gw from "../greenwell/data.mjs";
 
 const VTASHKENTE = [
   "vTashkente",
@@ -120,6 +121,12 @@ export function tails() {
     "ЖК «Нур»",
     "ЖК «Зарафшон»",
     "Олтин Водий",
+    // Greenwell — шаблон интернет-магазина с 12.11.2026 (lib/proto/instant/magazin).
+    gw.BRAND.name,
+    gw.BRAND.site,
+    gw.BRAND.tg,
+    "Inso Farm",
+    // Названия их банок («Магний Цитрат») — обычные названия товара в аптеке клиента, их не берём.
   ];
   const phones = [nek.CLINIC.tel, syanie.BRAND.phoneRaw, ...shox.BRANCHES.map((b) => b.tel), VTASHKENTE_PHONE, agora.BRAND.tel, sem.BRAND.phoneRaw, sem.BRAND.phone2Raw, "+998771233300", "+998934453569"].filter(Boolean).map((p) => p.replace(/\D/g, ""));
   return {
