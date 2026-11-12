@@ -36,7 +36,7 @@ function pick(){return innerWidth/innerHeight<0.8?'9':'16'}
 function frameSrc(i){return K.img+'/s'+fmtK+'/'+(i<10?'00':i<100?'0':'')+i+'.webp'}
 function setFmt(){
   var f=pick();if(f===fmtK)return;fmtK=f;
-  bmClear();blobs=[];N=K.frames['s'+f];SEG=K.frames['seg'+f].concat([N-1]);imgs=new Array(N);ready=new Array(N);queue=[];
+  bmClear();blobs=[];tries=[];AHEAD=f==='9'?14:26;BACK=f==='9'?4:8;N=K.frames['s'+f];SEG=K.frames['seg'+f].concat([N-1]);imgs=new Array(N);ready=new Array(N);queue=[];
   /* Сначала редкие кадры по всей длине (каждый 16-й, 8-й, 4-й, 2-й),
      потом остальные: как бы быстро ни листали, рядом всегда есть кадр. */
   load(0);fill(vidFmt()?[16,8]:[16,8,4,2,1]);
@@ -52,13 +52,17 @@ function fill(ks){var seen={};queue.forEach(function(i){seen[i]=1});ks.forEach(f
 /* Где можно, кадр грузится файлом (blob) и раскодируется в фоне
    (createImageBitmap из blob): из картинки браузер раскодирует его в
    основном потоке, и прокрутка ждёт (аудит 28.10.2026). */
-var BLOB=!!(window.createImageBitmap&&window.fetch&&window.Blob),blobs=[];
-function load(i){if(imgs[i])return;active++;
-  if(BLOB){imgs[i]=1;fetch(frameSrc(i)).then(function(r){if(!r.ok)throw 0;return r.blob()}).then(function(b){blobs[i]=b;ready[i]=1;active--;if(Math.abs(i-st.f)<AHEAD)want(st.f);pump()},function(){active--;pump()});return}
+var BLOB=!!(window.createImageBitmap&&window.fetch&&window.Blob),blobs=[],tries=[];
+/* Кадр не пришёл (502 во время выкатки, обрыв сети) — спрашиваем ещё раз
+   через 0,7 с, всего до трёх раз, как в Nek. Раньше кадр после одного
+   отказа больше не просился, и сцена стояла пустой или на дальнем кадре. */
+function miss(i,f){active--;if(f===fmtK&&(tries[i]=(tries[i]||0)+1)<3)setTimeout(function(){if(f!==fmtK)return;imgs[i]=0;queue.push(i);pump()},700);pump()}
+function load(i){if(imgs[i])return;active++;var f=fmtK;
+  if(BLOB){imgs[i]=1;fetch(frameSrc(i)).then(function(r){if(!r.ok)throw 0;return r.blob()}).then(function(b){active--;if(f!==fmtK){pump();return}blobs[i]=b;ready[i]=1;if(Math.abs(i-st.f)<AHEAD)want(st.f);pump()},function(){miss(i,f)});return}
   var im=new Image();im.decoding='async';imgs[i]=im;
   var ok=function(){ready[i]=1;active--;if(Math.abs(i-st.f)<3||i===0)paint(true);pump()};
   im.onload=function(){if(im.decode)im.decode().then(ok,ok);else ok()};
-  im.onerror=function(){active--;pump()};im.src=frameSrc(i)}
+  im.onerror=function(){miss(i,f)};im.src=frameSrc(i)}
 /* Догружаем по очереди, ближние к текущему кадру первыми; шесть сразу.
    Пока идёт кино — по два, чтобы не отнимать у него сеть. */
 var pumping=false,soft=false;
@@ -98,12 +102,17 @@ function paint(force){
    держит раскодированными не все кадры и выбрасывает их, а потом
    раскодирует кадр прямо при показе, на прокрутке (аудит 28.10.2026: по
    7 мс на кадр и больше). Здесь кадры впереди раскодируются заранее, вне
-   основного потока, а дальние отпускаются, чтобы телефону хватало памяти. */
-var bm={},bmWait={},bmN=0,BACK=8,AHEAD=26;
+   основного потока, а дальние отпускаются, чтобы телефону хватало памяти.
+   Окно смотрит по ходу прокрутки (вверх тоже). Телефону — узкое, как в
+   Nek: 14 кадров вперёд, 4 назад, держим около 24. Там кадры — только
+   запасной путь, когда видео не завелось, а 35 раскодированных кадров
+   720×1280 — это 130 МБ, и в Nek с широким окном телефон тормозил хуже. */
+var bm={},bmWait={},bmN=0,BACK=8,AHEAD=26,wDir=1,wF=0;
 function bmClear(){for(var k in bm){try{bm[k].close()}catch(e){}}bm={};bmWait={}}
-function want(f){if(!BLOB)return;var c=Math.floor(f),k,i;
-  for(k in bm){i=+k;if(i<c-BACK*2||i>c+AHEAD*2){try{bm[k].close()}catch(e){}delete bm[k]}}
-  for(k=0;k<=AHEAD&&bmN<4;k++){[c+k,c-k].forEach(function(j){if(j<0||j>=N||bm[j]||bmWait[j]||!ready[j]||bmN>=4||(j<c&&c-j>BACK))return;
+function want(f){if(!BLOB)return;var c=Math.floor(f),k,i,ph=fmtK==='9',fw=ph?AHEAD+4:AHEAD*2,bw=ph?BACK+2:BACK*2;
+  if(f!==wF){wDir=f>wF?1:-1;wF=f}
+  for(k in bm){i=(+k-c)*wDir;if(i<-bw||i>fw){try{bm[k].close()}catch(e){}delete bm[k]}}
+  for(k=0;k<=AHEAD&&bmN<4;k++){[c+k*wDir,c-k*wDir].forEach(function(j,n){if(j<0||j>=N||bm[j]||bmWait[j]||!ready[j]||bmN>=4||(n&&k>BACK))return;
     var src=blobs[j];bmWait[j]=1;bmN++;createImageBitmap(src).then(function(x){bmN--;delete bmWait[j];if(blobs[j]!==src||Math.abs(j-st.f)>AHEAD*2){x.close();return}bm[j]=x;if(Math.abs(j-st.f)<3||shownF<0)paint(true);want(st.f)},function(){bmN--;delete bmWait[j]})})}}
 /* Телефон, как у SamAuto: сцена — одно видео s9.mp4 (все 868 кадров, ключевой
    каждый третий, без B-кадров), прокрутка его перематывает, iPhone делает
@@ -112,21 +121,31 @@ function want(f){if(!BLOB)return;var c=Math.floor(f),k,i;
    скролл выглядит дорого, а тут лагает»). Видео качается целиком в память,
    пока идёт кино, и играет оттуда: перемотка не ждёт сеть. Следующая
    перемотка — только после seeked, иначе Safari копит их и отстаёт. iOS
-   рисует перемотку после первого play(): он сразу и на паузу, в
-   энергосбережении — по первому касанию. Не пришло — кадры. */
+   рисует перемотку только после первого play(): он сразу и на паузу. В
+   энергосбережении и во встроенных браузерах (Telegram, Instagram) play()
+   без нажатия отказывает, а прокрутка нажатием не считается: сцена стояла
+   на первом кадре видео (владелец, 11.11.2026, про Nek, SamAuto и Samist:
+   «не двигаются кадры»). Поэтому видео включается, только когда play()
+   прошёл; отказ, ошибка или 20 с без первого кадра — сцена идёт
+   кадрами-картинками, как на компьютере. */
 var sv=$('#sv'),VOK=!!(sv&&sv.canPlayType&&sv.canPlayType('video/mp4; codecs="avc1.640020"')!==''),vState=0,vOn=false,vWant=-1,VF=24,VN=868;
 function vidFmt(){return VOK&&fmtK==='9'&&vState>=0}
 function vShow(){var on=vState===2&&fmtK==='9';if(on===vOn)return;vOn=on;stage.classList.toggle('vid',on);shownF=-1;paint(true)}
 function vSeek(t){if(sv.seeking){vWant=t;return}vWant=-1;if(Math.abs(sv.currentTime-t)>.4/VF)sv.currentTime=t}
-function vFail(){if(vState<0)return;vState=-1;vOn=false;stage.classList.remove('vid');if(fmtK==='9'){fill([4,2,1]);pump()}}
+/* Видео не завелось — оно отпускает память (11 МБ файла и декодер), сцена
+   догружает кадры телефона и рисует ближний сразу. */
+function vFail(){if(vState<0)return;vState=-1;vOn=false;stage.classList.remove('vid');
+  try{var u=sv.getAttribute('src');if(u){sv.removeAttribute('src');sv.load();URL.revokeObjectURL(u)}}catch(e){}
+  if(fmtK==='9'){fill([4,2,1]);pump()}shownF=-1;paint(true)}
 function vidLoad(){if(!VOK||vState)return;vState=1;
   fetch(sv.getAttribute('data-v9')).then(function(r){if(!r.ok)throw 0;return r.blob()}).then(function(b){
-    sv.addEventListener('loadeddata',function(){if(vState<0)return;vState=2;VN=Math.max(2,Math.round(sv.duration*VF)||VN);
-      var prime=function(){try{var p=sv.play();if(p&&p.then)p.then(function(){sv.pause();shownF=-1;paint(true)},function(){})}catch(e){}};prime();
-      addEventListener('touchstart',function(){if(sv.paused&&sv.currentTime===0)prime()},{once:true,passive:true});
-      vShow()},{once:true});
+    sv.addEventListener('loadeddata',function(){if(vState!==1)return;VN=Math.max(2,Math.round(sv.duration*VF)||VN);
+      var on=function(){if(vState!==1)return;try{sv.pause()}catch(e){}vState=2;vShow()},p;
+      try{p=sv.play()}catch(e){vFail();return}
+      if(p&&p.then)p.then(on,vFail);else on()},{once:true});
     sv.addEventListener('seeked',function(){if(vWant>=0)vSeek(vWant)});
     sv.addEventListener('error',vFail,{once:true});
+    setTimeout(function(){if(vState===1)vFail()},20000);
     sv.preload='auto';sv.src=URL.createObjectURL(b);sv.load()},vFail)}
 function seg(k,f){var a=SEG[k],b=SEG[k+1];return clamp((f-a)/Math.max(1,b-a))}
 function render(){

@@ -1819,6 +1819,22 @@ test("Сияние Севера: страница на русском — усл
   assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
 });
 
+/* Владелец, 12.11.2026: «чтобы там тоже была плавность прокрутки, как и
+   везде». Тот же site.js идёт и на рабочий сайт клиники (SY_PROD=1). */
+test("Сияние Севера: телефону пролёт видео, отказ play() — сразу кадрами, кадр спрашивается до трёх раз", async () => {
+  const { readFileSync, existsSync } = await import("node:fs");
+  const js = readFileSync("scripts/protos/syanie/site.js", "utf8");
+  const page = bundlePages("syanie")!.html;
+  assert.ok(existsSync("public/protos/syanie/s9.mp4") && page.includes('id="sv"'), "нет видео пролёта телефону");
+  assert.match(js, /p\.then\(on,vFail\)/, "отказ play() не включает кадры: iPhone в энергосбережении стоит на первом кадре");
+  assert.doesNotMatch(js, /sv\.play\(\)[^\n]*,function\(\)\{\}\)/, "отказ play() проглатывается");
+  assert.match(js, /var on=function\(\)\{if\(vState!==1\)return;.*?vState=2;vShow\(\)\}/, "видео включается до того, как play() прошёл");
+  assert.match(js, /setTimeout\(function\(\)\{if\(vState===1\)vFail\(\)\},20000\)/, "нет запасного пути, если видео не дало первый кадр за 20 с");
+  assert.match(js, /\(tries\[i\]=\(tries\[i\]\|\|0\)\+1\)<3/, "кадр после отказа больше не просится");
+  assert.match(js, /AHEAD=f==='9'\?14:26;BACK=f==='9'\?4:8/, "телефону окно распаковки шире, чем у Nek");
+  assert.ok(page.includes("p.then(on,vFail)"), "в сборке старый site.js");
+});
+
 test("Сияние Севера: цены клиники — с их сайта, сайт 100 000 ₽ на 48 часов, админка 25 000 ₽, всё вместе не больше 200 000 ₽", async () => {
   const D = await import("../scripts/protos/syanie/data.mjs");
   assert.deepEqual(D.PRICES.map((p: { price: number }) => p.price), [179900, 259900]);
