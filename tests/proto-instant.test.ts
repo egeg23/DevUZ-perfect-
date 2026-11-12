@@ -28,8 +28,8 @@ import vtFile from "@/content/proto-instant/vtashkente-assets.json" with { type:
 import { aipplyAssets } from "../scripts/protos/instant/aipply-assets.mjs";
 import apFile from "@/content/proto-instant/aipply-assets.json" with { type: "json" };
 import { EDU_PHOTOS } from "@/lib/proto/instant/edu";
-import { shaharAssets } from "../scripts/protos/instant/shahar-assets.mjs";
-import shFile from "@/content/proto-instant/shahar-assets.json" with { type: "json" };
+import { maveraAssets } from "../scripts/protos/instant/mavera-assets.mjs";
+import mvFile from "@/content/proto-instant/mavera-assets.json" with { type: "json" };
 import { NEDV_BACKS, NEDV_PHOTOS } from "@/lib/proto/instant/nedv";
 import { panelAssets } from "../scripts/protos/instant/panel-assets.mjs";
 import panelFile from "@/content/proto-instant/panel-assets.json" with { type: "json" };
@@ -385,29 +385,43 @@ const nedv = EXAMPLE_NEDV as InstantSite;
 test("недвижимость: пример собирается без замечаний, защита та же", () => {
   const { html, problems, stamp } = buildInstant(nedv, SEED);
   assert.deepEqual(problems, []);
-  assert.ok(html.includes("Агентство Ключ") && html.includes('id="podbor"') && html.includes('id="search"'));
+  assert.ok(html.includes("Агентство Ключ") && html.includes('id="book"') && html.includes('id="genplan"') && html.includes('id="picker"'));
   assert.ok(html.includes("/ru/mockup-terms") && html.includes('class="dz-vid"'));
-  assert.ok(stamp.signals.some((s) => s.startsWith("js:")), "метка числа скрипта ShahaR");
+  assert.ok(stamp.signals.some((s) => s.startsWith("js:")), "метка числа скрипта");
   assert.ok(stamp.signals.filter((s) => s.startsWith("text:")).length >= 4, "две ловушки");
-  assert.deepEqual(buildInstant({ ...nedv, locale: "uz", tagline: null, about: null }, SEED).problems, [], "узбекское «shahar» — не хвост");
+  const uz = buildInstant({ ...nedv, locale: "uz", tagline: null, about: null }, SEED);
+  assert.deepEqual(uz.problems, []);
+  assert.ok(uz.html.includes("/uz/mockup-terms") && uz.html.includes("Korpus"));
 });
 
-test("недвижимость: стили и скрипт нашего макета ShahaR, свежие, без ShahaR, поиск ведёт в подбор", () => {
-  assert.deepEqual(shFile, shaharAssets(), "node scripts/protos/instant/shahar-assets.mjs");
+test("недвижимость: наш макет MAVERA «Премиум»: снимок свежий, те же блоки, без MAVERA и её чисел", () => {
+  // Владелец, 12.11.2026: «Можно взять MAVERA целиком, просто заменим логотип компании».
+  assert.deepEqual(mvFile, maveraAssets(), "node scripts/protos/instant/mavera-assets.mjs");
   const { html } = buildInstant(nedv, SEED);
-  for (const s of ["ShahaR", "operator_shahar", "Shaharuz_bot", "/protos/shahar/", "sh-kit-v1"]) assert.ok(!html.includes(s), s);
-  assert.ok(!/<script[^>]+src=/.test(html), "без скриптов со стороны");
-  assert.ok(html.includes("var bk=$('book');if(bk)"), "каталога нет: поиск заполняет заявку");
-  assert.ok(html.includes("--bh:"), "цвет клиента поверх их зелёного");
+  assert.ok(html.includes('data-world="premium"') && html.includes('data-palette="ivory"'), "мир и палитра «Премиума»");
+  for (const c of ["w-slab", "w-rise", "w-rail", "w-glow", "w-word", "w-kenburns", "w-parallax", "--mv-accent"]) assert.ok(html.includes(c), c);
+  assert.equal((html.match(/<g role="button"/g) ?? []).length, 7, "генплан: те же семь корпусов");
+  assert.equal((html.match(/<button type="button" data-s="[fbs]"/g) ?? []).length, 180, "шахматка: те же клетки");
+  for (const s of ["MAVERA", "mavera", "Чинор", "Дарё", "Олтин", "Зарафшон", "млн", "за м²", "/images/mavera", "_next/"]) assert.ok(!html.includes(s), s);
+  assert.ok(!/<script[^>]+src=/.test(html) && !/<iframe/.test(html), "без скриптов и страниц со стороны");
+  assert.ok(html.includes("--w-accent:hsl("), "акцент макета в цвет клиента");
+  assert.ok(html.includes("nv-leads-1"), "заявка с макета приходит в админку");
+  assert.ok(html.includes("mvx-away") && html.includes("3000"), "шапка прячется и возвращается через 3 секунды");
+  assert.ok(html.includes("prefers-reduced-motion:reduce"));
+  // Услуги клиента вместо их ЖК: имя и цена слово в слово.
+  for (const s of nedv.services) assert.ok(html.includes(s.name), s.name);
+  assert.ok(html.includes("от 1% от сделки"));
   assert.deepEqual(tailsIn(html), []);
+  assert.ok(tailsIn("Купите квартиру в ЖК «Чинор» от MAVERA").length >= 2, "хвосты MAVERA ловятся");
 });
 
 test("недвижимость: нет услуг, преимуществ и чата — без блоков и без ссылки в Telegram", () => {
-  const bare = buildInstant({ ...nedv, services: [], perks: [], telegram: null, instagram: null, city: null, about: null }, SEED);
+  const bare = buildInstant({ ...nedv, services: [], perks: [], telegram: null, instagram: null, city: null, about: null, color: null }, SEED);
   assert.deepEqual(bare.problems, []);
-  assert.ok(!bare.html.includes('id="uslugi"'), "нет услуг — нет блока");
+  assert.ok(!bare.html.includes('id="projects"') && !bare.html.includes('name="svc"'), "нет услуг — нет ленты и выбора услуги");
   assert.ok(!bare.html.includes('href="https://t.me/'), "нет чата — нет ссылки");
-  assert.ok(bare.html.includes('"adminUrl":""'), "без чата заявка только копируется");
+  assert.ok(bare.html.includes('"chat":""'), "без чата заявка только копируется");
+  assert.ok(!bare.html.includes("--w-accent:hsl("), "нет цвета клиента — палитра макета");
 });
 
 test("недвижимость: нейтральные фото ниши лежат в репозитории", () => {

@@ -98,6 +98,17 @@ export function tails() {
     "cityshahar",
     "RR 0007",
     "14/СОР-01",
+    // MAVERA — шаблон недвижимости с 12.11.2026 (lib/proto/instant/nedv, снимок «Премиума» с витрины).
+    // Названия их ЖК — обычные слова (чинор, бахор, нур), поэтому только вместе с «ЖК».
+    "MAVERA",
+    "mavera.uz",
+    "ЖК «Чинор»",
+    "ЖК «Дарё»",
+    "ЖК «Бахор»",
+    "ЖК «Олтин Водий»",
+    "ЖК «Нур»",
+    "ЖК «Зарафшон»",
+    "Олтин Водий",
   ];
   const phones = [nek.CLINIC.tel, syanie.BRAND.phoneRaw, ...shox.BRANCHES.map((b) => b.tel), VTASHKENTE_PHONE, agora.BRAND.tel, sem.BRAND.phoneRaw, sem.BRAND.phone2Raw, "+998771233300"].filter(Boolean).map((p) => p.replace(/\D/g, ""));
   return {
