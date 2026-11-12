@@ -19,6 +19,24 @@ export type InstantLocale = "ru" | "uz";
 export const INSTANT_NICHES = ["stomatologiya", "medcentr", "mebel", "restoran", "turagentstvo", "uchebnyy-centr", "nedvizhimost", "salon-krasoty"] as const;
 export type InstantNiche = (typeof INSTANT_NICHES)[number];
 
+/**
+ * Как сфера называется человеку: по-русски и по-узбекски — те же слова, что
+ * на кнопках бота, по-польски — для инструкции и помощника. Новая сфера без
+ * названия не соберётся: список сфер помощник сотруднику берёт отсюда, а не
+ * из текста инструкции (12.11.2026 он ответил «для трёх ниш», когда их было
+ * восемь: длинный абзац инструкции обрезался на третьей).
+ */
+export const INSTANT_NICHE_LABEL: Readonly<Record<InstantNiche, { ru: string; uz: string; pl: string }>> = {
+  stomatologiya: { ru: "стоматология", uz: "stomatologiya", pl: "stomatologia" },
+  medcentr: { ru: "медцентр", uz: "tibbiyot markazi", pl: "centrum medyczne" },
+  mebel: { ru: "мебель", uz: "mebel", pl: "meble" },
+  restoran: { ru: "ресторан", uz: "restoran", pl: "restauracja" },
+  turagentstvo: { ru: "турагентство", uz: "turagentlik", pl: "biuro podróży" },
+  "uchebnyy-centr": { ru: "учебный центр", uz: "o‘quv markazi", pl: "centrum szkoleniowe" },
+  nedvizhimost: { ru: "недвижимость", uz: "ko‘chmas mulk", pl: "nieruchomości" },
+  "salon-krasoty": { ru: "салон красоты", uz: "go‘zallik saloni", pl: "salon urody" },
+};
+
 export function instantReady(niche: string): niche is InstantNiche {
   return (INSTANT_NICHES as readonly string[]).includes(niche);
 }

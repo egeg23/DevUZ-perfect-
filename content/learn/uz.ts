@@ -184,7 +184,7 @@ export const uz: LearnCopy = {
         deadline: {
           title: "12 soat va parol",
           paras: [
-            "Maketni odam yig‘adi, bot ularni o‘zi tayyorlamaydi. Mijozga havola — va’da qilinganidek 12 soat ichida. Muddatdan 2 soat oldin eslatma o‘zi qo‘yiladi.",
+            "Sovuq kontakt bo‘yicha maketni odam yig‘adi, bot bunday mijozlarga ularni o‘zi tayyorlamaydi (alohida yo‘l: mijoz studiya botida /maket buyrug‘i bilan maketni o‘zi yig‘ishi mumkin). Mijozga havola — va’da qilinganidek 12 soat ichida. Muddatdan 2 soat oldin eslatma o‘zi qo‘yiladi.",
             "Maket parol bilan yopiladi: «Maketlar» → «Parol yaratish». Besh raqam, 24 soat amal qiladi. «Mijoz uchun nusxalash» tayyor matn beradi: havola, parol, u qaysi soatgacha amal qilishi va shartlarga havola.",
             "Har bir mijozga — o‘z paroli. Parol bir marta ko‘rsatiladi: yo‘qotsangiz, yangisini yarating.",
           ],

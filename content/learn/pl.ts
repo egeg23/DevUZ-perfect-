@@ -184,7 +184,7 @@ export const pl: LearnCopy = {
         deadline: {
           title: "12 godzin i hasło",
           paras: [
-            "Makietę składa człowiek, bot sam ich nie robi. Link do klienta — w 12 godzin, jak obiecano. Przypomnienie na 2 godziny przed terminem ustawia się samo.",
+            "Makietę po zimnym kontakcie składa człowiek, takim klientom bot sam ich nie robi (osobna droga: klient może sam złożyć makietę w bocie studia komendą /maket). Link do klienta — w 12 godzin, jak obiecano. Przypomnienie na 2 godziny przed terminem ustawia się samo.",
             "Makietę zamyka się hasłem: «Makiety» → «Wygeneruj hasło». Pięć cyfr, ważne 24 godziny. «Kopiuj dla klienta» daje gotowy tekst: link, hasło, do której godziny działa i link do warunków.",
             "Każdy klient dostaje własne hasło. Hasło pokazuje się raz: zgubiłeś — wygeneruj nowe.",
           ],

@@ -192,3 +192,36 @@ test("обрезка по границе предложения", () => {
   const word = clipReply("слово ".repeat(200));
   assert.ok(word.length <= HELPER_MAX_CHARS && word.endsWith("…"));
 });
+
+test("макет в боте: помощник называет все сферы с шаблоном, список из кода и влезает в кусок целиком", async () => {
+  // Владелец, 12.11.2026, на ответ «бот может собрать макет для трёх ниш»:
+  // «Но ниш у нас больше же которые предлагаем. Поправь».
+  const { INSTANT_NICHES, INSTANT_NICHE_LABEL } = await import("@/lib/proto/instant/types");
+  const { nicheRows } = await import("@/lib/proto/instant/bot");
+  const asks = {
+    ru: ["Для каких ниш бот собирает макет?", "бот сам может собрать макет клиенту?", "какие сферы есть в /maket"],
+    uz: ["Bot qaysi sohalar uchun maket yig‘adi?"],
+    pl: ["Dla jakich branż bot składa makietę?"],
+  } as const;
+  for (const lang of ["ru", "uz", "pl"] as const) {
+    const all = knowledgeFor(manager, lang);
+    const chunk = all.find((c) => c.id === "instant-mockup");
+    assert.ok(chunk, lang);
+    for (const n of INSTANT_NICHES) assert.ok(chunk.text.includes(INSTANT_NICHE_LABEL[n][lang]), `${lang}: ${n}`);
+    assert.ok(chunk.text.includes(String(INSTANT_NICHES.length)), `${lang}: число сфер`);
+    assert.ok(chunk.text.length <= 900, `${lang}: модель видит кусок целиком (${chunk.text.length})`);
+    assert.doesNotMatch(chunk.text, LONG_DASH, lang);
+    for (const q of asks[lang]) assert.equal(pickChunks(q, all)[0]?.id, "instant-mockup", `${lang}: «${q}»`);
+  }
+  // Названия сфер — те же слова, что на кнопках бота.
+  for (const lang of ["ru", "uz"] as const) {
+    const buttons = nicheRows(lang).flat().map((b) => b.text.toLowerCase());
+    for (const n of INSTANT_NICHES) assert.ok(buttons.includes(INSTANT_NICHE_LABEL[n][lang].toLowerCase()), `${lang}: кнопка ${n}`);
+  }
+  // Урок «Обучения» больше не говорит, что бот макетов не делает вовсе.
+  const lesson = knowledgeFor(manager, "ru").find((c) => c.text.includes("собирает человек") && c.id.startsWith("learn-"));
+  assert.ok(lesson && /\/maket/.test(lesson.text), "урок отличает макет по касанию от макета в боте");
+  // И в инструкции список сфер стоит в начале пункта, до обрезки.
+  const help = knowledgeFor(manager, "ru").find((c) => c.text.includes("Готовые шаблоны есть у восьми сфер"));
+  assert.ok(help && help.text.indexOf("недвижимость") < 900);
+});
