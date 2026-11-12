@@ -5,10 +5,12 @@ import { services } from "@/content/services";
 import { bodyFor, helpAnchor } from "@/lib/admin/help";
 import { plainText, wordSearch, type HelpIndexEntry } from "@/lib/admin/help-search";
 import { LADDER, PROMO } from "@/lib/admin/mockup-offer";
+import { PROTOTYPE_HOURS } from "@/lib/admin/outreach";
 import { OBJECTIONS, objectionReply } from "@/lib/admin/objections";
 import { SECTIONS, opens, type Role, type Viewer } from "@/lib/admin/roles";
 import { anthropic } from "@/lib/model-road";
 import { modelTroubleSays } from "@/lib/model-trouble";
+import { INSTANT_NICHES, INSTANT_NICHE_LABEL } from "@/lib/proto/instant/types";
 import { aiMarkers, withoutDashes } from "@/lib/proto/plain-text";
 
 /**
@@ -134,6 +136,31 @@ function pricesChunk(locale: ContentLocale): Chunk {
   return { id: "prices", title, text, keys: "цена цены стоимость сколько стоит прайс narx narxi cena price" };
 }
 
+/**
+ * «Макет в боте» — из кода, а не из инструкции: сферы с шаблоном берутся из
+ * INSTANT_NICHES. Владелец, 12.11.2026, на ответ помощника «бот может собрать
+ * макет для трёх ниш»: «Но ниш у нас больше же которые предлагаем. Поправь».
+ * Длинный абзац инструкции обрезался по CHUNK_CHARS на третьей сфере, а урок
+ * «Обучения» говорил «макет собирает человек». Этот кусок короткий и стоит
+ * первым: при равном счёте слов выбирается он.
+ */
+function instantChunk(locale: ContentLocale): Chunk {
+  const list = INSTANT_NICHES.map((n) => INSTANT_NICHE_LABEL[n][locale]).join(", ");
+  const n = INSTANT_NICHES.length;
+  const text = {
+    ru: `Бот студии сам собирает макет клиенту за 2 минуты, готовые шаблоны есть у ${n} сфер: ${list}. Клиент пишет боту /maket, выбирает язык, присылает адрес сайта или Instagram (или нажимает «Сайта нет» и отвечает на четыре вопроса), выбирает сферу и получает ссылку на макет, админку и КП с ценой на 48 часов. Другой сфере макет соберёт дизайнер вручную за ${PROTOTYPE_HOURS} часов: команде придёт карточка «Нужен макет вручную». Клиенту один макет на аккаунт. Сотруднику без ограничений: напишите боту /maket и соберите макет для своего клиента. Макет по холодному касанию по-прежнему собирает человек в «Прототипах».`,
+    uz: `Studiya boti mijozga maketni 2 daqiqada o‘zi yig‘adi, tayyor shablonlar ${n} ta sohada bor: ${list}. Mijoz botga /maket yozadi, tilni tanlaydi, sayt yoki Instagram manzilini yuboradi (yoki «Sayt yo‘q» tugmasini bosib, to‘rtta savolga javob beradi), sohani tanlaydi va maket havolasi, admin panel hamda 48 soatlik narx bilan tijorat taklifini oladi. Boshqa soha uchun maketni dizayner ${PROTOTYPE_HOURS} soat ichida qo‘lda yig‘adi: jamoaga qo‘lda maket kerakligi haqida kartochka keladi. Mijozga bitta akkauntga bitta maket. Xodimga cheklovsiz: botga /maket yozing va o‘z mijozingiz uchun maket yig‘ing. Sovuq kontakt bo‘yicha maketni avvalgidek odam yig‘adi.`,
+    pl: `Bot studia sam składa klientowi makietę w 2 minuty, gotowe szablony ma ${n} branż: ${list}. Klient pisze do bota /maket, wybiera język, przysyła adres strony albo Instagrama (albo naciska przycisk bez strony i odpowiada na cztery pytania), wybiera branżę i dostaje link do makiety, panel i ofertę z ceną na 48 godzin. Dla innej branży makietę ręcznie złoży projektant w ${PROTOTYPE_HOURS} godzin: zespół dostanie kartę o makiecie ręcznej. Klient dostaje jedną makietę na konto. Pracownik bez ograniczeń: napisz do bota /maket i złóż makietę dla swojego klienta. Makietę po zimnym kontakcie nadal składa człowiek.`,
+  }[locale];
+  const title = { ru: "Макет в боте: бот собирает сам", uz: "Botdagi maket: bot o‘zi yig‘adi", pl: "Makieta w bocie: bot składa sam" }[locale];
+  return {
+    id: "instant-mockup",
+    title,
+    text,
+    keys: "макет макеты бот сам собрать собирает собирать ниша ниши сфера сферы шаблон шаблоны /maket maket maketni soha sohalar shablon yig‘adi makieta makiety branża branże szablon",
+  };
+}
+
 /** Готовые ответы на возражения — те же, что у бота касаний и кнопок менеджера. */
 function objectionChunks(locale: ContentLocale): Chunk[] {
   const lang = locale === "uz" ? "uz" : "ru";
@@ -227,6 +254,7 @@ export function knowledgeFor(viewer: Viewer, lang: HelperLang): Chunk[] {
 function allKnowledge(viewer: Viewer, lang: HelperLang): Chunk[] {
   const locale = contentLocale(lang);
   return [
+    instantChunk(locale),
     pricesChunk(locale),
     ...objectionChunks(locale),
     ...serviceChunks(locale),
