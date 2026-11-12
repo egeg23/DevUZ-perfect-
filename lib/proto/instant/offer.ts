@@ -140,6 +140,14 @@ const OFFERS: Record<InstantNiche, () => OfferAddon[]> = {
     fromPlan("karomat", "tgbot", "Telegram-бот: заявки и ответы клиентам", "Telegram-bot: arizalar va mijozlarga javoblar"),
     fromPlan("karomat", "reviews", "Отзывы с Яндекс Карт и Google на сайте", "Saytda Yandex Xaritalar va Google sharhlari"),
   ],
+  // Автосалон: допы нашего макета SAMIST AUTO (кредит, трейд-ин и тест-драйв уже на макете).
+  avtosalon: () => [
+    fromPlan("samist", "admin", null, "Arizalar va mavjudlik paneli"),
+    fromPlan("samist", "tgbot", null, "Telegram-bot: mavjudlik, narxlar, ariza"),
+    fromPlan("samist", "pick", "Подбор машины под задачу", "Vazifaga qarab mashina tanlash"),
+    fromPlan("samist", "compare", null, "Uchtagacha modelni taqqoslash"),
+    fromPlan("samist", "seo", null, "Qidiruv uchun model sahifalari"),
+  ],
 };
 
 /**

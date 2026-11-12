@@ -41,6 +41,7 @@ import { logistikaPalette } from "@/lib/proto/instant/logistika";
 import { LIMITS, type InstantLocale, type InstantNiche, type InstantSite } from "@/lib/proto/instant/types";
 import { PROTO_BASE } from "@/lib/proto/pages";
 import { SALON_DEMO_JS, SALON_EXT_JS } from "@/lib/proto/instant/salon-admin";
+import { avtosalonAdmin } from "@/lib/proto/instant/avtosalon-admin";
 
 type Pair = [string, string];
 const json = (v: unknown) => JSON.stringify(v).replace(/</g, "\\u003c");
@@ -960,6 +961,7 @@ const ADMINS: Partial<Record<InstantNiche, (site: InstantSite) => string>> = {
   avtoservis: avtoservisAdmin,
   stroitelstvo: stroiAdmin,
   uslugi: uslugiAdmin,
+  avtosalon: avtosalonAdmin,
 };
 
 /** Админка сферы на данных клиента; у сферы без нашей панели — null. */

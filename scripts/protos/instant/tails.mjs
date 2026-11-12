@@ -20,6 +20,7 @@ import * as sem from "../semtravel/data.mjs";
 import * as gw from "../greenwell/data.mjs";
 import * as cargo from "../cargopro/data.mjs";
 import * as fintax from "../fintax/data.mjs";
+import * as samist from "../samist/data.mjs";
 
 const VTASHKENTE = [
   "vTashkente",
@@ -169,8 +170,18 @@ export function tails() {
     "Кушбеги",
     "Qushbegi",
     ...fintax.TEAM.flatMap((p) => [p.ru[0], p.uz[0]]),
+    // SAMIST AUTO — шаблон автосалона (lib/proto/instant/avtosalon). Марки
+    // (Isuzu, FAW) — чужие торговые знаки, а не их факт: у клиента они могут быть свои.
+    samist.BRAND.name,
+    samist.BRAND.legal,
+    "SIA AUTO",
+    "samist.autoline",
+    samist.BRAND.ru.addr,
+    samist.BRAND.uz.addr,
+    "кольцевая автомобильная дорога, 120А",
+    "aylanma avtomobil yo‘li, 120A",
   ];
-  const phones = [nek.CLINIC.tel, syanie.BRAND.phoneRaw, ...shox.BRANCHES.map((b) => b.tel), VTASHKENTE_PHONE, agora.BRAND.tel, sem.BRAND.phoneRaw, sem.BRAND.phone2Raw, "+998771233300", "+998934453569", "+998909656131", "+998712764431", ...cargo.COMPANY.phones.map(([, raw]) => raw), "+998993050999", "+998993060999", fintax.CONTACT.phone].filter(Boolean).map((p) => p.replace(/\D/g, ""));
+  const phones = [nek.CLINIC.tel, syanie.BRAND.phoneRaw, ...shox.BRANCHES.map((b) => b.tel), VTASHKENTE_PHONE, agora.BRAND.tel, sem.BRAND.phoneRaw, sem.BRAND.phone2Raw, "+998771233300", "+998934453569", "+998909656131", "+998712764431", ...cargo.COMPANY.phones.map(([, raw]) => raw), "+998993050999", "+998993060999", fintax.CONTACT.phone, samist.BRAND.tel, ...samist.BRAND.more.map(([, t]) => t)].filter(Boolean).map((p) => p.replace(/\D/g, ""));
   return {
     text: [...new Set(text.map((s) => s.trim()).filter((s) => s.length >= 5))].sort(),
     phones: [...new Set(phones)].sort(),
