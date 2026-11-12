@@ -12,7 +12,10 @@ import { siteFromAnswers } from "@/lib/proto/instant/read";
 import { tails } from "../scripts/protos/instant/tails.mjs";
 import { nekAssets } from "../scripts/protos/instant/nek-assets.mjs";
 import assetsFile from "@/content/proto-instant/nek-assets.json" with { type: "json" };
-import { EXAMPLE, EXAMPLE_MEBEL, EXAMPLE_MED, EXAMPLE_REST, EXAMPLE_TUR, EXAMPLE_EDU, EXAMPLE_NEDV, EXAMPLE_SALON } from "../scripts/protos/instant/preview-data.mjs";
+import { EXAMPLE, EXAMPLE_MEBEL, EXAMPLE_MED, EXAMPLE_REST, EXAMPLE_TUR, EXAMPLE_EDU, EXAMPLE_NEDV, EXAMPLE_SALON, EXAMPLE_AVTO } from "../scripts/protos/instant/preview-data.mjs";
+import { automechanicAssets } from "../scripts/protos/instant/automechanic-assets.mjs";
+import amFile from "@/content/proto-instant/automechanic-assets.json" with { type: "json" };
+import { AVTOSERVIS_LAYERS, AVTOSERVIS_PHOTOS } from "@/lib/proto/instant/avtoservis";
 import { shoxAssets } from "../scripts/protos/instant/shox-assets.mjs";
 import shoxFile from "@/content/proto-instant/shox-assets.json" with { type: "json" };
 import { MEDCENTR_PHOTOS } from "@/lib/proto/instant/medcentr";
@@ -735,4 +738,51 @@ test("интернет-магазин: товары — услуги клиен�
   assert.ok(admin.includes("Уютный Дом") && admin.includes("Комплект постельного белья"));
   const none = buildInstant({ ...shop, services: [], perks: [], telegram: null, instagram: null }, SEED);
   assert.deepEqual(none.problems, []);
+});
+
+const avto = EXAMPLE_AVTO as InstantSite;
+
+test("автосервис: пример собирается без замечаний на двух языках, защита та же", () => {
+  for (const locale of ["ru", "uz"] as const) {
+    const { html, problems, stamp } = buildInstant({ ...avto, locale }, SEED);
+    assert.deepEqual(problems, [], locale);
+    assert.ok(html.includes("Гараж Восток"));
+    assert.ok(html.includes(`/${locale}/mockup-terms`) && html.includes('class="dz-vid"'));
+    assert.ok(stamp.signals.some((s) => s.startsWith("js:")), "метка числа скрипта AUTOMECHANIC");
+    assert.ok(stamp.signals.filter((s) => s.startsWith("text:")).length >= 4, "две ловушки");
+  }
+  assert.deepEqual(buildInstant({ ...avto, tagline: null, about: null, perks: [] }, SEED).problems, []);
+});
+
+test("автосервис: стили и скрипт нашего макета AUTOMECHANIC, свежие, без AUTOMECHANIC", () => {
+  assert.deepEqual(amFile, automechanicAssets(), "node scripts/protos/instant/automechanic-assets.mjs");
+  const { html } = buildInstant(avto, SEED);
+  assert.ok(html.includes(".scroll-hint{display:inline-flex") && html.includes(amFile.js.slice(0, 120)), "стили и скрипт AUTOMECHANIC на странице");
+  assert.ok(html.includes('data-scene="hero"') && html.includes('data-l="rimf"') && html.includes('id="book"'), "сцена с подъёмником и запись в три шага");
+  for (const am of ["AUTOMECHANIC", "automechanic", "Aral", "77 Lubricants", "1991", "Чиланзар", "BMW", "tadjiyev", "/protos/automechanic"]) assert.ok(!html.includes(am), am);
+  assert.deepEqual(tailsIn(html), []);
+  assert.ok(buildInstant({ ...avto, perks: ["Как у AUTOMECHANIC"] }, SEED).problems.some((p) => p.code === "tail"), "AUTOMECHANIC — хвост");
+});
+
+test("автосервис: прайс и цены только клиента, нет данных — блока нет, запись в их Telegram", () => {
+  const { html } = buildInstant(avto, SEED);
+  assert.ok(html.includes('id="uslugi"') && html.includes("от 150 000 сум"), "цена клиента");
+  assert.ok(html.includes("Цену назовёт мастер-приёмщик"), "нет цены — словами, без числа");
+  assert.ok(html.includes('"tgUrl":"https://t.me/garazh_vostok_demo"'), "заявка в их Telegram");
+  assert.ok(html.includes("as-demo-1"), "заявка с макета — в админку");
+  const none = buildInstant({ ...avto, services: [], perks: [], telegram: null, address: null, hours: null }, SEED);
+  assert.deepEqual(none.problems, []);
+  assert.ok(!none.html.includes('id="uslugi"') && !none.html.includes("t.me/"), "нет услуг и Telegram — нет блока и ссылок");
+});
+
+test("автосервис: слои сцены и фото ниши лежат в репозитории, админка на ключе сайта", () => {
+  assert.ok(instantReady("avtoservis"));
+  for (const photo of AVTOSERVIS_PHOTOS) {
+    assert.ok(existsSync(`public${photo}`), photo);
+    assert.ok(existsSync(`public${photo.replace("-1200", "-900")}`), photo);
+  }
+  for (const layer of AVTOSERVIS_LAYERS) assert.ok(existsSync(`public${layer}`), layer);
+  const a = buildInstant(avto, SEED).pages.admin;
+  assert.ok(a && a.includes("'as-demo-1'") && !a.includes("'nk-demo-1'"), "админка читает заявки сайта автосервиса");
+  assert.ok(a.includes("Панель автосервиса") && !/Главный врач|Пациент/.test(a.replace(/"[a-z_]+":"[^"]*"/g, "")), "слова сервиса, не клиники");
 });

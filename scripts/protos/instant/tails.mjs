@@ -1,7 +1,7 @@
 // Хвосты прошлых клиентов для «Макета в боте» (lib/proto/instant/tails).
 //
 // Шаблоны собраны из макетов Nek Dental Studio, «Сияния Севера» (стоматология)
-// Shox International Hospital (медцентр), vTashkente (мебель), Agora (ресторан), SEM Travel (турагентство), Greenwell (интернет-магазин) и Aipply Academy, MedAcademy (учебный центр) и ShahaR.Uz (недвижимость); в макете нового клиента не должно остаться ни строки о них:
+// Shox International Hospital (медцентр), vTashkente (мебель), Agora (ресторан), SEM Travel (турагентство), Greenwell (интернет-магазин) и Aipply Academy, MedAcademy (учебный центр) и ShahaR.Uz (недвижимость), AUTOMECHANIC (автосервис); в макете нового клиента не должно остаться ни строки о них:
 // название, телефон, почта, домен, ник, адрес, врачи, авторы отзывов,
 // лицензия. Список пишется отсюда из их data.mjs, а не руками:
 //
@@ -127,8 +127,17 @@ export function tails() {
     gw.BRAND.tg,
     "Inso Farm",
     // Названия их банок («Магний Цитрат») — обычные названия товара в аптеке клиента, их не берём.
+    // AUTOMECHANIC — шаблон автосервиса (lib/proto/instant/avtoservis). Факты — в их gen.mjs (F).
+    "AUTOMECHANIC",
+    "automechanic.uz",
+    "tadjiyev_u",
+    "автостоянка № 75",
+    "75-son avtoturargoh",
+    "10 квартал, дом 23/1",
+    "10-kvartal, 23/1",
+    "77 Lubricants",
   ];
-  const phones = [nek.CLINIC.tel, syanie.BRAND.phoneRaw, ...shox.BRANCHES.map((b) => b.tel), VTASHKENTE_PHONE, agora.BRAND.tel, sem.BRAND.phoneRaw, sem.BRAND.phone2Raw, "+998771233300", "+998934453569"].filter(Boolean).map((p) => p.replace(/\D/g, ""));
+  const phones = [nek.CLINIC.tel, syanie.BRAND.phoneRaw, ...shox.BRANCHES.map((b) => b.tel), VTASHKENTE_PHONE, agora.BRAND.tel, sem.BRAND.phoneRaw, sem.BRAND.phone2Raw, "+998771233300", "+998934453569", "+998909656131", "+998712764431"].filter(Boolean).map((p) => p.replace(/\D/g, ""));
   return {
     text: [...new Set(text.map((s) => s.trim()).filter((s) => s.length >= 5))].sort(),
     phones: [...new Set(phones)].sort(),

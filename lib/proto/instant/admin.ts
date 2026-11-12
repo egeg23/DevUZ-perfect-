@@ -18,6 +18,8 @@
  *   ресторан — панель Agora (вход кодом, брони, заказы, меню и стоп-лист);
  *   турагентство — панель Sunday; учебный центр — панель FinTax;
  *   мебель и интернет-магазин — панель магазина Greenwell; недвижимость — панель Soffice.
+ *   мебель — панель магазина Greenwell; недвижимость — панель Soffice;
+ *   автосервис — панель клиники Nek словами сервиса.
  * У этих четырёх своей панели в макете сферы нет — выбор владельца,
  * 11.11.2026: «Да, делай по своей рекомендации».
  *
@@ -170,6 +172,66 @@ function clinicAdmin(site: InstantSite, niche: "stomatologiya" | "medcentr"): st
 <script type="application/json" id="pn-data">${json(pd)}</script>
 <script>
 ${panels.nek.js}</script>
+</body>`,
+  );
+}
+
+// ── Панель автосервиса: та же панель Nek, словами сервиса ─────────────
+/**
+ * Своей панели у макета AUTOMECHANIC нет (там конструктор и превью «Сверх
+ * сайта»), поэтому у автосервиса — панель клиники Nek как есть: записи,
+ * расписание по мастерам, сообщения всех каналов, подключения, роли.
+ * Слова клиники заменены словами сервиса, ключ памяти — как у сайта шаблона
+ * (lib/proto/instant/avtoservis): запись с макета приходит первой строкой.
+ */
+const AVTO_UI: Record<string, Pair> = {
+  title: ["Панель автосервиса", "Avtoservis paneli"],
+  r_doc: ["Владелец", "Ega"], r_adm: ["Мастер-приёмщик", "Usta-qabulchi"],
+  revHide: ["видит владелец", "ega ko‘radi"], came: ["Машины приняты", "Qabul qilingan mashinalar"],
+  src: ["Откуда клиенты", "Mijozlar qayerdan"], s_trip: ["По рекомендации", "Tavsiya bo‘yicha"], s_quiz: ["Карты", "Xaritalar"],
+  who: ["Клиент", "Mijoz"], st_came: ["Машина приехала", "Mashina keldi"], a_came: ["Машина приехала", "Mashina keldi"],
+  note_came: ["отметил приезд", "kelganini belgiladi"], doctor: ["Мастер", "Usta"],
+  m_ph: ["Ответ клиенту", "Mijozga javob"], m_book: ["Записать в цех", "Sexga yozish"],
+  c_sub: ["Вставьте ключ один раз, дальше всё работает само. Подключения меняет владелец.", "Kalitni bir marta qo‘ying, keyin hammasi o‘zi ishlaydi. Ulanishlarni ega o‘zgartiradi."],
+  c_ro: ["Подключения меняет владелец. Вы видите, что подключено.", "Ulanishlarni ega o‘zgartiradi. Siz nima ulanganini ko‘rasiz."],
+  c_wz_e: ["Все чаты клиентов приходят в «Сообщения», ответ уходит в тот же канал.", "Mijozlarning barcha chatlari «Xabarlar»ga keladi, javob o‘sha kanalga ketadi."],
+  c_tg_t: ["Telegram-бот мастеру-приёмщику", "Usta-qabulchi uchun Telegram-bot"],
+  c_crm_e: ["Каждая запись становится сделкой с контактом клиента, этап возвращается в панель.", "Har bir yozuv mijoz kontakti bilan bitimga aylanadi, bosqich panelga qaytadi."],
+  c_rem_t: ["Напоминания клиентам", "Mijozlarga eslatmalar"],
+  c_rem_e: ["Сообщение в WhatsApp за сутки и за два часа до записи. Работает через Wazzup.", "Yozuvdan bir kun va ikki soat oldin WhatsApp’da xabar. Wazzup orqali ishlaydi."],
+};
+const AVTO_MASTERS: Pair[] = [["Мастер по ходовой", "Yurish qismi ustasi"], ["Моторист", "Motorchi"], ["Электрик", "Elektrik"], ["Диагност", "Diagnost"]];
+
+function avtoservisAdmin(site: InstantSite): string {
+  const l = site.locale;
+  const i = l === "uz" ? 1 : 0;
+  const t = (p: Pair) => p[i];
+  const ui = Object.fromEntries(Object.entries({ ...NEK_UI, ...AVTO_UI }).map(([k, v]) => [k, v[i]]));
+  const services = site.services.slice(0, LIMITS.services);
+  // Те же id услуг, что в форме записи шаблона (avtoservis.ts): заявки с сайта сходятся.
+  const svc = services.length ? services.map((s, k) => ({ id: `s${k}`, n: s.name })) : [{ id: "x", n: l === "uz" ? "Diagnostika" : "Диагностика" }];
+  const docs = site.doctors.length ? site.doctors.slice(0, 5).map((d) => ({ n: d.name, r: d.role ?? "" })) : AVTO_MASTERS.map((p) => ({ n: t(p), r: "" }));
+  const pd = {
+    l, ui, name: site.name, mark: markOf(site, "pn-mark"), cur: l === "uz" ? "so‘m" : "сум", k: 2500,
+    site: PROTO_BASE, home: PROTO_BASE,
+    svc, docs, wd: WD[l], names: NAMES[l], trap: "[[t:0]] [[t:1]]",
+    threads: clinicThreads(l, svc.map((s) => s.id)), langs: [],
+  };
+  const name = esc(site.name);
+  const terms = l === "uz" ? ["DevUz Studio maketi, demo ma’lumotlar. Maketdan foydalanib, siz", "maket shartlarini qabul qilasiz"] : ["Макет DevUz Studio, демо-данные. Пользуясь макетом, вы принимаете", "условия макета"];
+  const js = panels.nek.js.replace("var KEY='nk-demo-1';", "var KEY='as-demo-1';");
+  return page(
+    l,
+    `${name} · ${t(AVTO_UI.title).toLowerCase()} · ${t(NEK_UI.demo)}`,
+    esc(l === "uz" ? "Avtoservis paneli: saytdan yozuvlar, ustalar jadvali, holatlar, tarix va rollar. Demo ma’lumotlar." : "Панель автосервиса: записи с сайта, расписание по мастерам, статусы, история и роли. Демо-данные."),
+    "https://fonts.googleapis.com/css2?family=Cormorant:wght@400;700&family=Manrope:wght@400;700&display=swap",
+    `${nek.css}:root{${dentalPalette(site.color)}}${panels.nek.css}`,
+    `<body class="pn">
+<div id="app"></div>
+<footer class="pn-foot">${terms[0]} <a href="${esc(mockupTermsUrl(l))}" target="_blank" rel="noopener">${terms[1]}</a>.</footer>
+<script type="application/json" id="pn-data">${json(pd)}</script>
+<script>
+${js}</script>
 </body>`,
   );
 }
@@ -746,6 +808,7 @@ const ADMINS: Partial<Record<InstantNiche, (site: InstantSite) => string>> = {
   magazin: (s) => mebelAdmin(s, "magazin"),
   nedvizhimost: nedvAdmin,
   "salon-krasoty": salonAdmin,
+  avtoservis: avtoservisAdmin,
 };
 
 /** Админка сферы на данных клиента; у сферы без нашей панели — null. */

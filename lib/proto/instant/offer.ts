@@ -110,6 +110,16 @@ const OFFERS: Record<InstantNiche, () => OfferAddon[]> = {
     fromPlan("greenwell", "crm", null, "Buyurtmalar amoCRM yoki Bitrix24 ga"),
     fromPlan("greenwell", "promo", null, "Paneldan promokodlar va aksiyalar"),
   ],
+  // Автосервис: допы нашего макета AUTOMECHANIC и панель, напоминания, отзывы из плана Nek (цены оттуда).
+  avtoservis: () => [
+    fromPlan("automechanic", "tg", null, "Telegramga buyurtmalar"),
+    fromPlan("automechanic", "pwa", null, "Sayt ilova kabi"),
+    fromPlan("automechanic", "route", null, "Yandex va Google Xaritalarda yo‘nalish"),
+    fromPlan("automechanic", "uz", null, "O‘zbekcha versiya"),
+    fromPlan("nek", "admin", "Панель сервиса: запись, мессенджеры, расписание мастеров", "Servis paneli: yozuv, messenjerlar, ustalar jadvali"),
+    fromPlan("nek", "remind", "Напоминание клиенту о ТО", "Mijozga TXK eslatmasi"),
+    fromPlan("nek", "reviews", null, "Saytda Google sharhlari"),
+  ],
 };
 
 /**

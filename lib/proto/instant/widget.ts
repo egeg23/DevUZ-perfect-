@@ -155,6 +155,7 @@ const SKIN: Record<InstantNiche, Skin> = {
   nedvizhimost: { bg: "#f9f7f3", fg: "#131f19", card: "#fff", mute: "#b9beb6", accent: "#4d6630", serif: false },
   "salon-krasoty": { bg: "#f7f2ec", fg: "#1a213b", card: "#fff", mute: "#bdb9c2", accent: "#dc4468", serif: true },
   magazin: { bg: "#f6f8f5", fg: "#0f1c15", card: "#fff", mute: "#c3d1c8", accent: "#00573a", serif: false },
+  avtoservis: { bg: "#101217", fg: "#eef1f5", card: "#1a1d22", mute: "#5a606b", accent: "#d61f2c", serif: false },
 };
 /** Сфера не названа — мини-сайт в цветах чата. */
 const PLAIN: Skin = {
