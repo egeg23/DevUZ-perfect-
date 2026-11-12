@@ -67,7 +67,7 @@ test("после входа и по логотипу: все — на «Глав
   assert.equal(homeOf({ role: "head", section_access: { "/admin/hq": false } }), "/admin", "закрыли — домой в лиды");
   assert.match(read("components/admin/shell.tsx"), /href=\{homeOf\(staff\)\}/);
   assert.match(read("app/admin/login/actions.ts"), /redirect\(to === "\/admin" \? homeOf\(staff\) : to\)/);
-  assert.match(read("app/admin/enter/[[...to]]/route.ts"), /asked === "\/admin" \? homeOf\(staff\) : asked/);
+  assert.match(read("app/admin/enter/[[...to]]/route.ts"), /wanted === "\/admin" \? homeOf\(staff\) : wanted/);
 });
 
 test("сравнение: последние 7 дней против 7 дней до них, будущее не в счёте", () => {

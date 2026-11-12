@@ -29,6 +29,7 @@ import {
   unanswered,
   whenText,
   type IdleLead,
+  type PressedButton,
   type TidyAnswer,
 } from "@/lib/admin/lead-tidy";
 import { wants } from "@/lib/admin/notify-prefs";
@@ -37,7 +38,7 @@ import { isWorkday } from "@/lib/admin/portion";
 import { NOT_MOVES as PULSE_NOT_MOVES, todayInTashkent } from "@/lib/admin/pulse";
 import type { Staff } from "@/lib/admin/session";
 import { createTasks } from "@/lib/admin/task-store";
-import { enterUrl, esc, sendMessage, sendWithButtons, sendWithRows, setButtons } from "@/lib/qualify/telegram";
+import { esc, sendMessage, sendWithButtons, sendWithRows, setButtons } from "@/lib/qualify/telegram";
 import { siteUrl } from "@/lib/seo";
 import { serviceClient } from "@/lib/supabase";
 
@@ -253,7 +254,10 @@ export async function runLeadTidy(now: Date = new Date()): Promise<{ asked: numb
     for (const [i, part] of parts.entries()) {
       const text = batchText(
         part.map((l) => ({
-          label: `<a href="${enterUrl(`/admin/leads/${l.id}`)}">${esc(l.label)}</a>`,
+          // Обычный адрес карточки: у того, кто уже в панели, открывается
+          // сразу. Адрес входа (/admin/enter) без подписи Telegram входом
+          // не был никогда — вход по нажатию даёт кнопка «🔓» в ряду лида.
+          label: `<a href="${siteUrl}/admin/leads/${l.id}">${esc(l.label)}</a>`,
           movedAt: l.movedAt,
           waitStreak: l.waitStreak,
         })),
@@ -279,7 +283,7 @@ export async function runLeadTidy(now: Date = new Date()): Promise<{ asked: numb
 
 export type TidyResult = "ok" | "forbidden" | "gone" | "failed" | "nowait";
 
-type Keyboard = readonly (readonly { text: string; callback_data?: string }[])[];
+type Keyboard = readonly (readonly PressedButton[])[];
 
 /** Чем кончилось решение по лиду — для бота и для «Главной» менеджера. */
 export type TidyDecision =
