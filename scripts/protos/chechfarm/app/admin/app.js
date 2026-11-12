@@ -55,12 +55,37 @@
 
   /* ── Каркас ────────────────────────────────────────────────────── */
   var NAV = [["home", "Сводка"], ["leads", "Обращения"], ["accounts", "Партнёры и клиенты"], ["bc", "Рассылки в бот", "head"], ["products", "Продукты"], ["news", "Новости"], ["ir", "Комната инвестора", "head"], ["pages", "Страницы сайта", "head"], ["site", "Сайт и бот"], ["connect", "Подключения"], ["team", "Команда"], ["log", "История", "head"]];
+  /* Значки разделов — свои контуры, как в панели Agora (Glassy V7 + CRM). */
+  var IC = {
+    home: '<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+    leads: '<path d="M4 5h16v11H8l-4 4z"/><path d="M8 10h8M8 13h5"/>',
+    accounts: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18.5 14.8c1.7.8 2.7 2.5 3 5.2"/>',
+    bc: '<path d="M3 10v4l11 5V5z"/><path d="M14 8.5a4 4 0 0 1 0 7M7 15l1.5 5h3l-1-4"/>',
+    products: '<rect x="4" y="9" width="16" height="12" rx="2"/><path d="M8 9V6a4 4 0 0 1 8 0v3M12 12.5v5M9.5 15h5"/>',
+    news: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M7 12h10M7 16h6"/>',
+    ir: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+    pages: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 13h8M8 16h5"/>',
+    site: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.7 5.6 3.7 9s-1.2 6.4-3.7 9c-2.5-2.6-3.7-5.6-3.7-9S9.5 5.6 12 3z"/>',
+    connect: '<path d="M9 7V3M15 7V3M6 7h12v4a6 6 0 0 1-12 0zM12 17v4"/>',
+    team: '<circle cx="12" cy="8" r="4"/><path d="M4 21c.8-4.2 3.9-6.5 8-6.5s7.2 2.3 8 6.5"/>',
+    log: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    out: '<path d="M15 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4M10 8l-4 4 4 4M6 12h10"/>',
+    web: '<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
+    go: '<path d="M7 17L17 7M9 7h8v8"/>',
+    menu: '<path d="M4 7h16M4 12h16M4 17h16"/>'
+  };
+  function ic(k) { return '<svg viewBox="0 0 24 24" aria-hidden="true">' + (IC[k] || "") + "</svg>"; }
   function shell() {
     app.className = "";
-    app.innerHTML = '<div class="shell"><nav class="side" id="side"><div class="brand"><img class="bmk" src="/protos/chechfarm/icon.svg" alt="" width="32" height="32">CZECHFARM<small>ALLIANCE · ПАНЕЛЬ</small></div>' +
-      NAV.filter(function (n) { return !n[2] || staff(); }).map(function (n) { return '<a href="#' + n[0] + '" data-s="' + n[0] + '">' + n[1] + (n[0] === "leads" ? '<span class="n" id="nfresh" hidden></span>' : "") + "</a>"; }).join("") +
-      '<div class="me">' + h(ME.name) + " · " + h(M.roles[ME.role]) + '<br><a href="/" target="_blank" rel="noopener">Открыть сайт</a><br><button class="btn" id="out">Выйти</button></div></nav><main id="main"></main></div>';
+    var first = String(ME.name || "").trim().charAt(0).toUpperCase() || "C";
+    app.innerHTML = '<div class="shell"><nav class="side glass" id="side"><a class="brand" href="#home"><img class="bmk" src="/admin/eagle.svg" alt="" width="34" height="34"><span>CZECHFARM<small>ALLIANCE · ПАНЕЛЬ</small></span></a>' +
+      NAV.filter(function (n) { return !n[2] || staff(); }).map(function (n) { return '<a href="#' + n[0] + '" data-s="' + n[0] + '">' + ic(n[0]) + "<span>" + n[1] + "</span>" + (n[0] === "leads" ? '<span class="n" id="nfresh" hidden></span>' : "") + "</a>"; }).join("") +
+      '<a class="web" href="/" target="_blank" rel="noopener">' + ic("web") + "<span>Открыть сайт</span></a></nav>" +
+      '<div class="work"><header class="top glass"><button class="btn burger" id="bg" aria-label="Меню">' + ic("menu") + '</button><div class="org"><img src="/admin/eagle.svg" alt="" width="30" height="30"><span><b>CZECHFARM Alliance</b><small>czechfarm.org</small></span></div><span class="sp"></span>' +
+      '<div class="me"><span class="av">' + h(first) + '</span><span><b>' + h(ME.name) + "</b><small>" + h(M.roles[ME.role]) + '</small></span><button class="btn ico" id="out" title="Выйти" aria-label="Выйти">' + ic("out") + "</button></div></header>" +
+      '<main id="main"></main></div></div>';
     $("#out").addEventListener("click", function () { api("/logout", {}).then(boot); });
+    $("#bg").addEventListener("click", function () { $("#side").classList.toggle("open"); });
     window.addEventListener("hashchange", route);
   }
   function route() {
@@ -72,13 +97,15 @@
     Promise.resolve(V(main, hs.split("/")[1])).catch(fail);
     api("/summary").then(function (s) { var n = $("#nfresh"); if (n) { n.hidden = !s.fresh; n.textContent = s.fresh; } }).catch(function () {});
   }
-  function head(main, title, extra) { main.innerHTML = '<button class="btn burger" id="bg">Меню</button><div class="row"><h1>' + title + '</h1><span class="sp"></span>' + (extra || "") + "</div><div id='body'></div>"; $("#bg").addEventListener("click", function () { $("#side").classList.toggle("open"); }); return $("#body", main); }
+  function head(main, title, extra, sub) { main.innerHTML = '<div class="row hd"><div><h1>' + title + "</h1>" + (sub ? '<p class="lead">' + sub + "</p>" : "") + '</div><span class="sp"></span>' + (extra || "") + "</div><div id='body'></div>"; return $("#body", main); }
 
   /* ── Сводка ────────────────────────────────────────────────────── */
   function home(main) {
     return api("/summary").then(function (s) {
-      var b = head(main, "Сводка");
-      b.innerHTML = '<div class="grid g4">' + [["Новые", s.fresh], ["Без ответственного", s.noOwner], ["За сутки", s.day], ["За неделю", s.week]].map(function (x) { return '<div class="card stat"><b>' + x[1] + "</b><span>" + x[0] + "</span></div>"; }).join("") + "</div>" +
+      var hr = new Date().getHours(), hi = hr < 5 ? "Доброй ночи" : hr < 12 ? "Доброе утро" : hr < 18 ? "Добрый день" : "Добрый вечер";
+      var b = head(main, hi + ", " + h(String(ME.name || "").split(" ")[0]), "", "Что пришло с сайта и из бота, и что ждёт решения.");
+      b.innerHTML = '<div class="grid g4">' + [["Новые обращения", s.fresh, "leads", "ждут ответа"], ["Без ответственного", s.noOwner, "team", "никто не взял"], ["За сутки", s.day, "log", "обращений"], ["За неделю", s.week, "ir", "обращений"]].map(function (x, i) { return '<a class="card stat k' + (i ? "" : " hot") + '" href="#leads"><i>' + ic(x[2]) + "</i><span>" + x[0] + "</span><b>" + x[1] + "</b><small>" + x[3] + "</small></a>"; }).join("") + "</div>" +
+        (s.fresh || s.noOwner ? '<a class="card crm k" href="#leads"><i>' + ic("leads") + "</i><span><b>" + s.fresh + "</b> новых, <em>" + s.noOwner + ' без ответственного</em></span><span class="go">' + ic("go") + "</span></a>" : "") +
         "<h2>Темы за неделю</h2><div class='card'>" + Object.keys(s.byKind).filter(function (k) { return s.byKind[k]; }).map(function (k) { return h(M.kinds[k]) + ": <b>" + s.byKind[k] + "</b>"; }).join(" · ") + (Object.keys(s.byKind).some(function (k) { return s.byKind[k]; }) ? "" : '<span class="note">Обращений за неделю не было</span>') + "</div>" +
         "<h2>На сайте</h2><div class='card'>Продуктов опубликовано: <b>" + s.products + "</b> · новостей: <b>" + s.news + "</b></div>" +
         (s.todo.length ? "<h2>Что осталось сделать</h2><div class='card'><ul>" + s.todo.map(function (t) { return "<li>" + h(t) + "</li>"; }).join("") + "</ul></div>" : "");
