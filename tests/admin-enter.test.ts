@@ -13,6 +13,7 @@
  */
 import assert from "node:assert/strict";
 import { createHash, createHmac } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
 import { checkTelegramAuth, dataCheckString, destinationFrom } from "@/lib/admin/tg-auth";
@@ -132,4 +133,36 @@ test("после входа возвращают только на наш же �
   assert.equal(returnTo("https://evil.example/x"), "/admin");
   assert.equal(returnTo("//evil.example"), "/admin");
   assert.equal(returnTo("/admin/../../etc"), "/admin");
+});
+
+/**
+ * Владелец, 12.11.2026: «когда нажимаешь на переход в лида сразу бы
+ * открывалась панель без запроса пароля в боте». Название лида в «Порядке в
+ * лидах» вело на /admin/enter/leads/… обычной ссылкой — без подписи
+ * Telegram, и это всегда кончалось страницей входа, даже у того, кто в
+ * панели уже сидит; после /login человек оказывался на «Главной».
+ */
+test("адрес входа без подписи — обычная ссылка на свою страницу, сессию не заводит", () => {
+  const route = readFileSync(new URL("../app/admin/enter/[[...to]]/route.ts", import.meta.url), "utf8");
+  const plain = route.indexOf('if (!query.get("hash") && !query.get("id")) {');
+  const limit = route.indexOf("rateLimit(`admin-enter:");
+  const session = route.indexOf("createSession(");
+  assert.ok(plain > 0, "путь без подписи есть");
+  assert.ok(plain < limit, "до лимита: открыть подряд десять лидов — работа, не подбор");
+  assert.ok(plain < session, "и до сессии");
+  const block = route.slice(plain, route.indexOf("}", plain));
+  assert.match(block, /NextResponse\.redirect\(absoluteUrl\(asked\.slice\(1\)\)\)/, "ведёт туда, куда собран путь");
+  assert.doesNotMatch(block, /createSession|cookies\.set\(SESSION_COOKIE/, "входа без подписи нет");
+  // Куда ведёт: только адрес панели, собранный из сегментов.
+  assert.equal(destinationFrom(["leads", "f5984cd0-29a3-4271-b7d1-a97a5c8b73a9"]), "/admin/leads/f5984cd0-29a3-4271-b7d1-a97a5c8b73a9");
+  assert.equal(destinationFrom(["..", "..", "etc"]), "/admin");
+});
+
+test("кнопка «открыть панель» после разворота на вход ведёт туда, куда человек шёл", () => {
+  const route = readFileSync(new URL("../app/admin/enter/[[...to]]/route.ts", import.meta.url), "utf8");
+  assert.match(route, /asked === "\/admin" \? returnTo\(request\.cookies\.get\(NEXT_COOKIE\)\?\.value\) : asked/);
+  assert.match(route, /response\.cookies\.set\(NEXT_COOKIE, "", \{ path: "\/admin", maxAge: 0 \}\)/, "память отработала — стирается");
+  // Сама память — только наш адрес: чужое из куки не возвращается.
+  assert.equal(returnTo("/admin/leads/abc"), "/admin/leads/abc");
+  assert.equal(returnTo("//evil.example"), "/admin");
 });

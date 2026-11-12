@@ -204,7 +204,9 @@ type Update = {
       chat: { id: number };
       text?: string;
       /** Клавиатура сообщения — по ней «Порядок в лидах» гасит ряд нажатого лида. */
-      reply_markup?: { inline_keyboard?: { text: string; callback_data?: string }[][] };
+      reply_markup?: {
+        inline_keyboard?: { text: string; callback_data?: string; url?: string; login_url?: { url?: string } }[][];
+      };
     };
     from?: TelegramUser;
   };

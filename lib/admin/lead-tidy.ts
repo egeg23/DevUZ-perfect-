@@ -228,14 +228,41 @@ export const TIDY_BUTTONS = {
 
 const ICON = { won: "🏆", lost: "❌", wait: "⏳" } as const;
 
-export type TidyButton = { text: string; callback_data: string };
+/**
+ * Кнопка порции: ответ по лиду или вход в его карточку. `panel` — путь в
+ * панели; отправка превращает его в кнопку входа, где Telegram сам
+ * подтверждает, кто нажал (см. Button в lib/qualify/telegram.ts).
+ */
+export type TidyButton = { text: string; callback_data: string } | { text: string; panel: string };
 
-/** Кнопки одной порции: ряд на лид — «🏆 1», «❌ 1», «⏳ 1» (у отложившего трижды — без ⏳). */
+/** Кнопка так, как её присылает Telegram вместе с нажатием. */
+export type PressedButton = {
+  text: string;
+  callback_data?: string;
+  url?: string;
+  login_url?: { url?: string };
+  panel?: string;
+};
+
+const OPEN_ICON = "🔓";
+
+/**
+ * Кнопки одной порции: ряд на лид — «🏆 1», «❌ 1», «⏳ 1» (у отложившего
+ * трижды — без ⏳) и «🔓 1» — карточка этого лида одним нажатием.
+ *
+ * Владелец, 12.11.2026: «когда нажимаешь на переход в лида сразу бы
+ * открывалась панель без запроса пароля в боте». Название лида в тексте —
+ * обычная ссылка: подписать её Telegram не может, и в браузере без входа
+ * она упирается в страницу входа. Кнопка входит сама.
+ */
 export function batchRows(leads: readonly IdleLead[], from = 1): TidyButton[][] {
   return leads.map((lead, i) => {
     const n = from + i;
     const answers = canWait(lead) ? (["won", "lost", "wait"] as const) : (["won", "lost"] as const);
-    return answers.map((a) => ({ text: `${ICON[a]} ${n}`, callback_data: tidyCallback(a, lead.id) }));
+    return [
+      ...answers.map((a) => ({ text: `${ICON[a]} ${n}`, callback_data: tidyCallback(a, lead.id) })),
+      { text: `${OPEN_ICON} ${n}`, panel: `/admin/leads/${lead.id}` },
+    ];
   });
 }
 
@@ -245,21 +272,38 @@ export function doneLabel(answer: "won" | "lost" | "wait", n: number | null): st
   return n ? `${n} · ${what}` : what;
 }
 
+/** Адрес карточки лида в кнопке: вход по кнопке или обычная ссылка. */
+const CARD_URL = /\/admin\/(?:enter\/)?leads\/([0-9a-f-]{36})(?:[/?#]|$)/i;
+
 /**
- * Перестроить клавиатуру после нажатия: ряд этого лида — одной надписью,
- * остальные — как были. Клавиатура приходит из самого нажатия (Telegram
- * присылает её вместе с сообщением).
+ * Вернуть кнопку в наш вид. Кнопка входа приходит от Telegram адресом, а
+ * не путём: путь достаём из него же, и только карточку лида — чужой адрес
+ * в кнопку не попадёт.
+ */
+function kept(button: PressedButton): TidyButton {
+  if (button.callback_data) return { text: button.text, callback_data: button.callback_data };
+  if (button.panel && CARD_URL.test(button.panel)) return { text: button.text, panel: button.panel };
+  const id = CARD_URL.exec(button.login_url?.url ?? button.url ?? "")?.[1];
+  return id ? { text: button.text, panel: `/admin/leads/${id.toLowerCase()}` } : { text: button.text, callback_data: "noop" };
+}
+
+/**
+ * Перестроить клавиатуру после нажатия: в ряду этого лида вместо ответов —
+ * одна надпись, «🔓» остаётся (после «🏆» карточку открывают, чтобы завести
+ * проект); остальные ряды — как были. Клавиатура приходит из самого нажатия
+ * (Telegram присылает её вместе с сообщением).
  */
 export function afterPress(
-  keyboard: readonly (readonly { text: string; callback_data?: string }[])[],
+  keyboard: readonly (readonly PressedButton[])[],
   leadId: string,
   answer: "won" | "lost" | "wait",
 ): TidyButton[][] {
   return keyboard.map((row) => {
     const hit = row.some((b) => (b.callback_data ?? "").endsWith(`:${leadId}`));
-    if (!hit) return row.map((b) => ({ text: b.text, callback_data: b.callback_data ?? "noop" }));
+    if (!hit) return row.map(kept);
     const n = Number(/(\d+)\s*$/.exec(row[0]?.text ?? "")?.[1] ?? 0) || null;
-    return [{ text: doneLabel(answer, n), callback_data: "noop" }];
+    const open = row.filter((b) => !b.callback_data).map(kept).filter((b) => "panel" in b);
+    return [{ text: doneLabel(answer, n), callback_data: "noop" }, ...open];
   });
 }
 

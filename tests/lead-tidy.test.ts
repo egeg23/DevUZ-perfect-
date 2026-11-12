@@ -107,8 +107,9 @@ test("порции до восьми: сводка и кнопки на кажд
   assert.deepEqual(parts.map((p) => p.length), [8, 8, 3]);
   const rows = batchRows(parts[1], 9);
   assert.equal(rows.length, 8);
-  assert.deepEqual(rows[0].map((b) => b.text), ["🏆 9", "❌ 9", "⏳ 9"]);
-  assert.ok(rows.every((r) => r.every((b) => b.callback_data.length <= 64)));
+  assert.deepEqual(rows[0].map((b) => b.text), ["🏆 9", "❌ 9", "⏳ 9", "🔓 9"]);
+  assert.ok(rows.every((r) => r.every((b) => !("callback_data" in b) || b.callback_data.length <= 64)));
+  assert.deepEqual(rows[0][3], { text: "🔓 9", panel: `/admin/leads/${parts[1][0].id}` }, "карточка лида — кнопкой входа");
   const text = batchText(parts[1].map((l) => ({ label: l.label, movedAt: l.movedAt })), now, 2, 3, 9);
   assert.match(text, /^Часть 2 из 3:\n<b>9\.<\/b> Ромашка — 8 дней/);
   assert.match(tidySummary(19, 10), /У вас 19 лидов/);
@@ -120,15 +121,46 @@ test("нажатие гасит только ряд своего лида", () =
   const b = lead({ id: "bbbbbbbb-0000-0000-0000-000000000002" });
   const kb = batchRows([a, b]);
   const after = afterPress(kb, a.id, "won");
-  assert.deepEqual(after[0], [{ text: "1 · 🏆 выиграли", callback_data: "noop" }]);
+  assert.deepEqual(after[0], [
+    { text: "1 · 🏆 выиграли", callback_data: "noop" },
+    { text: "🔓 1", panel: `/admin/leads/${a.id}` },
+  ]);
   assert.deepEqual(after[1], kb[1]);
+});
+
+test("«🔓» переживает нажатие: Telegram возвращает кнопку адресом, мы — снова путём", () => {
+  const a = lead({ id: "aaaaaaaa-0000-0000-0000-000000000001" });
+  const b = lead({ id: "bbbbbbbb-0000-0000-0000-000000000002" });
+  // Так клавиатура приходит вместе с нажатием: кнопка входа — login_url,
+  // а пока домен боту не привязан — обычная url на ту же карточку.
+  const pressed = [
+    [
+      { text: "🏆 1", callback_data: tidyCallback("won", a.id) },
+      { text: "🔓 1", login_url: { url: `https://devuz.studio/admin/enter/leads/${a.id}` } },
+    ],
+    [
+      { text: "🏆 2", callback_data: tidyCallback("won", b.id) },
+      { text: "🔓 2", url: `https://devuz.studio/admin/leads/${b.id}` },
+    ],
+    [{ text: "3 · ❌ проиграли", callback_data: "noop" }, { text: "🔓 3", login_url: { url: "https://evil.example/admin/x" } }],
+  ];
+  const after = afterPress(pressed, a.id, "lost");
+  assert.deepEqual(after[0], [
+    { text: "1 · ❌ проиграли", callback_data: "noop" },
+    { text: "🔓 1", panel: `/admin/leads/${a.id}` },
+  ]);
+  assert.deepEqual(after[1][1], { text: "🔓 2", panel: `/admin/leads/${b.id}` });
+  assert.deepEqual(after[2][1], { text: "🔓 3", callback_data: "noop" }, "чужой адрес в кнопку входа не попадает");
+  const store = read("lib/admin/lead-tidy-store.ts");
+  assert.match(store, /<a href="\$\{siteUrl\}\/admin\/leads\/\$\{l\.id\}">/, "название лида — обычный адрес карточки");
+  assert.doesNotMatch(store, /enterUrl/, "адрес входа без подписи Telegram — не вход");
 });
 
 test("«ещё в работе» — срок шага и задача; третий раз подряд — последний", () => {
   assert.equal(WAIT_LIMIT, 3);
   assert.equal(canWait({ waitStreak: 2 }), true, "третий раз ещё можно — и о нём узнает руководитель");
   assert.equal(canWait({ waitStreak: 3 }), false);
-  assert.deepEqual(batchRows([lead({ waitStreak: 3 })])[0].map((b) => b.text), ["🏆 1", "❌ 1"], "у отложившего трижды — без ⏳");
+  assert.deepEqual(batchRows([lead({ waitStreak: 3 })])[0].map((b) => b.text), ["🏆 1", "❌ 1", "🔓 1"], "у отложившего трижды — без ⏳");
   for (const t of ["w1", "w3", "w7"] as const) {
     assert.deepEqual(parseTidyCallback(tidyCallback(t, ID).split(":")), { answer: t, leadId: ID });
   }
