@@ -23,7 +23,7 @@ import { OFFER_MS, announceText } from "@/lib/admin/mockup-offer";
 import { PROTOTYPE_HOURS } from "@/lib/admin/outreach";
 import { CIRCLE_NICHES, CIRCLE_NICHE_RU, isCircleNiche, type CircleNiche } from "@/lib/admin/sales-after-reply";
 import { buildInstant, type InstantBuild } from "@/lib/proto/instant/build";
-import { DAILY_CAP, limitVerdict, mayUseInstant, siteUrlOf } from "@/lib/proto/instant/limits";
+import { limitVerdict, mayUseInstant, siteUrlOf } from "@/lib/proto/instant/limits";
 import { offerAddons } from "@/lib/proto/instant/offer";
 import { readClientSite, siteFromAnswers, type ReadResult } from "@/lib/proto/instant/read";
 import type { Flow } from "@/lib/proto/instant/store";
@@ -63,7 +63,7 @@ export type Deps = {
   saveFlow: (chatId: number, flow: Flow) => Promise<void>;
   dropFlow: (chatId: number) => Promise<void>;
   claimBuild: (chatId: number, flow: Flow) => Promise<boolean>;
-  counts: (tgId: number) => Promise<{ mine: number; today: number; link: string | null } | null>;
+  counts: (tgId: number) => Promise<{ mine: number; link: string | null; draft?: boolean } | null>;
   read: (url: string, niche: InstantNiche, locale: InstantLocale, onStep: (s: BuildStep, site?: InstantSite) => Promise<void>) => Promise<ReadResult>;
   /** Пауза между шагами виджета: сборка идёт миллисекунды, а человек должен успеть увидеть шаг. */
   pace?: (ms: number) => Promise<void>;
@@ -85,7 +85,7 @@ export type LeadInput = {
   site: string | null;
   link: string | null;
   phone: string | null;
-  why: "built" | "soon" | "failed" | "day";
+  why: "built" | "soon" | "failed";
 };
 
 /**
@@ -94,7 +94,7 @@ export type LeadInput = {
  */
 export const MANUAL_HOURS = PROTOTYPE_HOURS;
 
-/** Лид, которому макет собирают руками: сферы без шаблона, дневной потолок, сборка не прошла. */
+/** Лид, которому макет собирают руками: сферы без шаблона или сборка не прошла. */
 export const manualWhy = (why: LeadInput["why"]) => why !== "built";
 
 /** Ниши кружков → ниши кейсов (forNiches в content/cases.ts). */
@@ -239,7 +239,11 @@ const fresh = (ctx: Ctx, stage: Flow["stage"]): Flow => ({
   at: new Date().toISOString(),
 });
 
-/** Проверка лимита. Отказ — сообщение клиенту; «day» — ещё и лид менеджеру. */
+/**
+ * Проверка лимита: клиенту один макет на аккаунт, сотруднику без лимита.
+ * Отказ — сообщение клиенту. Прошлая сборка не прошла проверку (черновик) —
+ * ссылки на неё нет: макет собирает дизайнер, об этом и говорим.
+ */
 async function allowed(ctx: Ctx, deps: Deps): Promise<boolean> {
   const counts = await deps.counts(ctx.tgId);
   // База не ответила — лимит не проверить: не собираем, говорим честно.
@@ -247,14 +251,9 @@ async function allowed(ctx: Ctx, deps: Deps): Promise<boolean> {
     await deps.send(ctx.chatId, T[ctx.locale].later);
     return false;
   }
-  const verdict = limitVerdict({ staff: Boolean(ctx.staffId), mine: counts.mine, today: counts.today, cap: DAILY_CAP });
-  if (verdict === "has") {
-    await deps.send(ctx.chatId, T[ctx.locale].has(counts.link ? deps.protoUrl(counts.link) : ""));
-    return false;
-  }
-  if (verdict === "day") {
-    await deps.send(ctx.chatId, manualText(ctx.locale, "general"));
-    await deps.lead({ ctx, name: ctx.username ? `@${ctx.username}` : "", niche: "general", site: null, link: null, phone: null, why: "day" });
+  if (limitVerdict({ staff: Boolean(ctx.staffId), mine: counts.mine }) === "has") {
+    const link = counts.link && !counts.draft ? deps.protoUrl(counts.link) : "";
+    await deps.send(ctx.chatId, link ? T[ctx.locale].has(link) : T[ctx.locale].failed);
     return false;
   }
   return true;
@@ -629,7 +628,7 @@ export async function runBuild(ctx: Ctx, flow: Flow, deps: Deps): Promise<void> 
   );
   // КП на бланке рядом с макетом: та же цена и те же допы, выбрать и посчитать.
   await deps.send(ctx.chatId, `${priceText(locale, deps.now(), build.site.niche)}\n\n${T[locale].kp}`, [[{ text: T[locale].kpBtn, url: `${link}/kp` }]]);
-  // Сборка сотрудника — тестовая: лида в очередь менеджерам нет.
+  // Сборка сотрудника: лида в очередь менеджерам нет.
   if (ctx.staffId) return;
   const leadId = await deps.lead({ ctx, name, niche, site: flow.url, link, phone: build.site.phone, why: "built" });
   if (leadId) await deps.setLead(saved.id, leadId);

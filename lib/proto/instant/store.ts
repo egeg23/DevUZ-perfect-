@@ -13,7 +13,7 @@
 import { record } from "@/lib/admin/audit";
 import { newAccessToken } from "@/lib/store/access";
 import type { InstantBuild } from "@/lib/proto/instant/build";
-import { RUN_HOLD_MS, tashkentDayStart } from "@/lib/proto/instant/limits";
+import { RUN_HOLD_MS } from "@/lib/proto/instant/limits";
 import type { InstantLocale, InstantNiche } from "@/lib/proto/instant/types";
 import { serviceClient } from "@/lib/supabase";
 
@@ -119,21 +119,45 @@ export async function claimBuild(chatId: number, flow: Flow): Promise<boolean> {
   return Boolean(again?.length);
 }
 
-/** Макеты этого аккаунта и все макеты в боте за сегодня по Ташкенту. */
-export async function instantCounts(tgId: number, now = new Date()): Promise<{ mine: number; today: number; link: string | null } | null> {
+/**
+ * Макет этого аккаунта: есть ли, ссылка на последний и не черновик ли он
+ * (сборка не прошла проверку: клиенту его не показываем, макет собирает
+ * дизайнер).
+ */
+export async function instantCounts(tgId: number): Promise<{ mine: number; link: string | null; draft: boolean } | null> {
   const db = serviceClient();
   if (!db) return null;
-  const [mine, today] = await Promise.all([
-    db.from("protos").select("token").eq("facts->instant->>tg", String(tgId)).order("created_at", { ascending: false }).limit(1),
-    db
-      .from("protos")
-      .select("id", { count: "exact", head: true })
-      .not("facts->instant", "is", null)
-      .gte("created_at", tashkentDayStart(now).toISOString()),
-  ]);
-  if (mine.error || today.error) return null;
-  const token = mine.data?.[0]?.token as string | undefined;
-  return { mine: mine.data?.length ?? 0, today: today.count ?? 0, link: token ?? null };
+  const mine = await db
+    .from("protos")
+    .select("token, status")
+    .eq("facts->instant->>tg", String(tgId))
+    .order("created_at", { ascending: false })
+    .limit(1);
+  if (mine.error) return null;
+  const last = mine.data?.[0] as { token?: string; status?: string } | undefined;
+  return { mine: mine.data?.length ?? 0, link: last?.token ?? null, draft: last?.status === "draft" };
+}
+
+/** Сколько держится одна заявка «макет вручную» от аккаунта: повтор в эти дни второго лида не заводит. */
+export const MANUAL_HOLD_DAYS = 7;
+const manualKey = (tgId: number) => `instant-manual:${tgId}`;
+
+/**
+ * Заявка «макет вручную» от этого аккаунта: первая за MANUAL_HOLD_DAYS — да,
+ * повтор — нет. Поток открыт всем: человек, который трижды нажал сферу без
+ * шаблона, не должен стать тремя карточками «🔥 Нужен макет вручную». База
+ * не ответила — да: лучше лишняя карточка, чем потерянный клиент.
+ */
+export async function claimManual(tgId: number, now = new Date()): Promise<boolean> {
+  const db = serviceClient();
+  if (!db) return true;
+  const key = manualKey(tgId);
+  const { data, error } = await db.from("stats_snapshots").select("computed_at").eq("key", key).maybeSingle();
+  if (error) return true;
+  const last = data?.computed_at ? new Date(String(data.computed_at)).getTime() : 0;
+  if (last && now.getTime() - last < MANUAL_HOLD_DAYS * 86_400_000) return false;
+  await db.from("stats_snapshots").upsert({ key, payload: { tg: String(tgId) }, computed_at: now.toISOString() });
+  return true;
 }
 
 /** Записать готовый макет: сразу «ушёл клиенту» — ссылка уходит в эту же минуту. */
@@ -159,7 +183,7 @@ export async function saveInstantProto(
         name: build.site.name,
         source: build.site.source,
         locale: build.site.locale,
-        // Сборка сотрудника — тестовая: в «Макетах» с пометкой, лида нет.
+        // Сборка сотрудника — в «Макетах» с пометкой «собрал сотрудник», лида нет.
         instant: { tg: String(who.tgId), username: who.username, staff: who.staffId, test: Boolean(who.staffId), site: build.site },
       },
       html: build.html,

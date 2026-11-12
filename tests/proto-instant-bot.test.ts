@@ -13,15 +13,15 @@ import { EXAMPLE } from "@/scripts/protos/instant/preview-data.mjs";
 import type { InstantSite } from "@/lib/proto/instant/types";
 const example = EXAMPLE as InstantSite;
 import { PROTOTYPE_HOURS } from "@/lib/admin/outreach";
-import { INSTANT_SOURCE, MANUAL_SOURCE, instantLeadInput, manualHeading, sourceOf } from "@/lib/proto/instant/bot-deps";
-import { DAILY_CAP, MOCKUP_BOT_OPEN, limitVerdict, mayUseInstant, siteUrlOf, tashkentDayStart } from "@/lib/proto/instant/limits";
+import { INSTANT_SOURCE, MANUAL_SOURCE, READ_SLOTS, inSlot, instantLeadInput, manualHeading, sourceOf } from "@/lib/proto/instant/bot-deps";
+import { MOCKUP_BOT_OPEN, limitVerdict, mayUseInstant, siteUrlOf } from "@/lib/proto/instant/limits";
 import type { Flow } from "@/lib/proto/instant/store";
 import { INSTANT_NICHES, emptySite } from "@/lib/proto/instant/types";
-import { PILOT_NEWS, PILOT_TEXT } from "@/lib/proto/instant/announce-store";
+import { OPEN_NEWS, OPEN_TEXT } from "@/lib/proto/instant/announce-store";
 import { STEPS, STEP_WAIT, stepCaption, widgetHtml, widgetState } from "@/lib/proto/instant/widget";
 
 /**
- * «Макет в боте» (CLAUDE.md): 1 аккаунт — 1 макет, 30 в день на всех,
+ * «Макет в боте» (CLAUDE.md): 1 аккаунт — 1 макет, дневного потолка нет,
  * сотрудники без лимита; виджет — в пределах Telegram и без сети; шаги
  * виджета — после настоящих шагов сборки; в конце цена и лид.
  */
@@ -29,7 +29,7 @@ import { STEPS, STEP_WAIT, stepCaption, widgetHtml, widgetState } from "@/lib/pr
 const ctx: Ctx = { chatId: 77, tgId: 77, username: "client_demo", locale: "ru", staffId: null, role: null };
 const owner: Ctx = { chatId: 5, tgId: 5, username: "owner_demo", locale: "ru", staffId: "s-admin", role: "admin" };
 
-function fake(over: Partial<Deps> = {}, counts = { mine: 0, today: 0, link: null as string | null }) {
+function fake(over: Partial<Deps> = {}, counts: { mine: number; link: string | null; draft?: boolean } = { mine: 0, link: null }) {
   const log: string[] = [];
   const sent: { html: string; rows?: unknown }[] = [];
   const leads: string[] = [];
@@ -94,29 +94,31 @@ function fake(over: Partial<Deps> = {}, counts = { mine: 0, today: 0, link: null
 
 const ask = (deps: Deps, text: string) => handleInstantText(ctx.chatId, async () => ctx, text, deps);
 
-test("макет в боте: лимиты — один на аккаунт, 30 в день, сотрудник без лимита", () => {
-  assert.equal(DAILY_CAP, 30);
-  assert.equal(limitVerdict({ staff: false, mine: 0, today: 0 }), "ok");
-  assert.equal(limitVerdict({ staff: false, mine: 1, today: 0 }), "has");
-  assert.equal(limitVerdict({ staff: false, mine: 0, today: 30 }), "day");
-  assert.equal(limitVerdict({ staff: true, mine: 5, today: 99 }), "ok");
-  assert.equal(tashkentDayStart(new Date("2026-11-10T20:30:00Z")).toISOString(), "2026-11-10T19:00:00.000Z");
+test("макет в боте: лимиты — один на аккаунт, сотрудник без лимита, дневного потолка нет", () => {
+  assert.equal(limitVerdict({ staff: false, mine: 0 }), "ok");
+  assert.equal(limitVerdict({ staff: false, mine: 1 }), "has");
+  assert.equal(limitVerdict({ staff: true, mine: 5 }), "ok");
+  const limits = readFileSync(new URL("../lib/proto/instant/limits.ts", import.meta.url), "utf8");
+  assert.doesNotMatch(limits, /DAILY_CAP/, "владелец, 12.11.2026: «Нет лимита 30 в день»");
+  const store = readFileSync(new URL("../lib/proto/instant/store.ts", import.meta.url), "utf8");
+  assert.doesNotMatch(store, /tashkentDayStart|today/, "макеты за день больше не считаем");
 });
 
 test("макет в боте: второй макет тому же аккаунту не собирается", async () => {
-  const f = fake({}, { mine: 1, today: 3, link: "old" });
+  const f = fake({}, { mine: 1, link: "old" });
   await startInstant(ctx, f.deps);
   assert.match(f.sent[0].html, /уже собран/);
   assert.match(f.sent[0].html, /proto\/old/);
   assert.equal(f.flow(), null);
 });
 
-test("макет в боте: дневной лимит — честный ответ и лид менеджеру", async () => {
-  const f = fake({}, { mine: 0, today: 30, link: null });
+test("макет в боте: прошлая сборка не прошла проверку — ссылки на черновик нет, макет за дизайнером", async () => {
+  const f = fake({}, { mine: 1, link: "draft-token", draft: true });
   await startInstant(ctx, f.deps);
   assert.match(f.sent[0].html, /дизайнер вручную/);
-  assert.match(f.sent[0].html, /devuz\.studio\/ru\/cases/);
-  assert.deepEqual(f.leads, ["day"]);
+  assert.doesNotMatch(f.sent[0].html, /draft-token/);
+  assert.deepEqual(f.leads, [], "лид по этой сборке уже заведён");
+  assert.equal(f.flow(), null);
 });
 
 test("макет в боте: адрес → ниша → виджет по настоящим шагам → ссылка, цена, лид", async () => {
@@ -272,40 +274,72 @@ test("адрес сайта: домен да, Instagram и ник — нет", (
   assert.equal(siteUrlOf("https://user:pw@clinic.uz"), null);
 });
 
-test("пилот: пока поток закрыт, клиенту и менеджеру — как раньше, ничего не уходит", async () => {
-  assert.equal(MOCKUP_BOT_OPEN, false, "владелец, 10.11.2026: «Для всех пока не открываем»");
-  assert.ok(mayUseInstant("admin") && mayUseInstant("head"));
-  assert.ok(!mayUseInstant("manager") && !mayUseInstant(null));
+test("открыто всем: клиенту и менеджеру поток доступен, откат флагом возвращает пилот", async () => {
+  assert.equal(MOCKUP_BOT_OPEN, true, "владелец, 12.11.2026: «Открываем для всех»");
+  assert.ok(mayUseInstant(null) && mayUseInstant("manager") && mayUseInstant("admin"));
+  assert.ok(mayUseInstant("admin", false) && mayUseInstant("head", false));
+  assert.ok(!mayUseInstant("manager", false) && !mayUseInstant(null, false));
   for (const who of [ctx, { ...ctx, staffId: "s-m", role: "manager" }]) {
-    const f = fake({ open: false });
-    await startInstant(who, f.deps);
-    await handleInstantButton(who, ["im", "n", "stomatologiya"], f.deps);
-    assert.equal(f.sent.length, 0);
-    assert.equal(f.flow(), null);
+    const closed = fake({ open: false });
+    await startInstant(who, closed.deps);
+    await handleInstantButton(who, ["im", "n", "stomatologiya"], closed.deps);
+    assert.equal(closed.sent.length, 0, "откат: как до пилота");
+    assert.equal(closed.flow(), null);
+    const opened = fake({ open: true });
+    await startInstant(who, opened.deps);
+    assert.match(opened.sent[0].html, /Пришлите адрес/);
   }
 });
 
-test("пилот: Егору и Александру — без лимита, макет тестовый, лида нет", async () => {
-  const f = fake({ open: false }, { mine: 3, today: 99, link: "old" });
-  await startInstant(owner, f.deps);
-  assert.match(f.sent[0].html, /Пришлите адрес/);
-  await handleInstantText(owner.chatId, async () => owner, "dentanur.example", f.deps);
-  await handleInstantButton(owner, ["im", "n", "stomatologiya"], f.deps);
-  assert.ok(f.log.includes("save:0"), "проверки те же, что в боевом");
-  assert.ok(f.sent.some((m) => /Готово/.test(m.html)));
-  assert.deepEqual(f.leads, [], "тестовая сборка лида не заводит");
-  assert.ok(!f.log.includes("setLead"));
-  const soon = fake({ open: false });
-  await startInstant(owner, soon.deps);
-  await handleInstantButton(owner, ["im", "nosite"], soon.deps);
-  await handleInstantButton(owner, ["im", "n", "restoran"], soon.deps);
-  assert.deepEqual(soon.leads, []);
+test("сотруднику, и менеджеру тоже, — без лимита, лида из его сборки нет", async () => {
+  for (const who of [owner, { ...ctx, chatId: 9, tgId: 9, staffId: "s-m", role: "manager" }]) {
+    const f = fake({}, { mine: 3, link: "old" });
+    await startInstant(who, f.deps);
+    assert.match(f.sent[0].html, /Пришлите адрес/);
+    await handleInstantText(who.chatId, async () => who, "dentanur.example", f.deps);
+    await handleInstantButton(who, ["im", "n", "stomatologiya"], f.deps);
+    assert.ok(f.log.includes("save:0"), "проверки те же, что у клиента");
+    assert.ok(f.sent.some((m) => /Готово/.test(m.html)));
+    assert.deepEqual(f.leads, [], "сборка сотрудника лида не заводит");
+    assert.ok(!f.log.includes("setLead"));
+  }
 });
 
-test("пилот: уведомление Егору и Александру — один раз, как запустить", () => {
-  assert.equal(PILOT_NEWS, "instant-pilot:v1");
-  assert.match(PILOT_TEXT, /\/maket/);
-  assert.match(PILOT_TEXT, /тестовый, из бота/);
+test("команде — одно сообщение «открыт всем»: как это выглядит у клиента и что делать самим", () => {
+  assert.equal(OPEN_NEWS, "instant-open:v1");
+  assert.match(OPEN_TEXT, /\/maket/);
+  assert.match(OPEN_TEXT, /один макет на аккаунт/);
+  assert.match(OPEN_TEXT, /из бота, собрал сотрудник/);
+  assert.match(OPEN_TEXT, /🔥 Нужен макет вручную/);
+  const src = readFileSync(new URL("../lib/proto/instant/announce-store.ts", import.meta.url), "utf8");
+  assert.match(src, /!MOCKUP_BOT_OPEN \|\| !messageWindow\(now\)/, "ночью и при откате не уходит");
+  assert.match(readFileSync(new URL("../app/api/reminders/sweep/route.ts", import.meta.url), "utf8"), /sendInstantOpenNote\(/);
+});
+
+test("рассылка всем: одна заявка «макет вручную» с аккаунта за 7 дней, сайты читаем не больше четырёх разом", async () => {
+  const store = readFileSync(new URL("../lib/proto/instant/store.ts", import.meta.url), "utf8");
+  assert.match(store, /MANUAL_HOLD_DAYS = 7/);
+  const deps = readFileSync(new URL("../lib/proto/instant/bot-deps.ts", import.meta.url), "utf8");
+  assert.match(deps, /manualWhy\(input\.why\) && !\(await claimManual\(input\.ctx\.tgId\)/, "повтор второй карточкой не становится");
+  assert.match(deps, /inSlot\(\(\) => readClientSite\(/);
+  assert.equal(READ_SLOTS, 4);
+  let now = 0;
+  let peak = 0;
+  const order: number[] = [];
+  const job = (n: number) => async () => {
+    now += 1;
+    peak = Math.max(peak, now);
+    await new Promise((r) => setTimeout(r, 5));
+    now -= 1;
+    order.push(n);
+    return n;
+  };
+  const done = await Promise.all([1, 2, 3, 4, 5, 6, 7].map((n) => inSlot(job(n), 2)));
+  assert.deepEqual(done, [1, 2, 3, 4, 5, 6, 7]);
+  assert.equal(peak, 2, "больше двух разом не идёт");
+  assert.equal(order.length, 7, "никто не потерялся");
+  await assert.rejects(inSlot(async () => { throw new Error("сайт упал"); }, 2));
+  assert.equal(await inSlot(async () => "ok", 2), "ok", "место после сбоя освобождается");
 });
 
 test("виджет: имя, цвет и услуги клиента в состоянии, не больше 1024 байт, только textContent", () => {
@@ -522,7 +556,7 @@ test("ручной путь: срок одним числом, кейсы — н
   }
   assert.match(caseLinks("salon-krasoty", "uz")[0].url, /devuz\.studio\/uz\/cases$/, "кейсов сферы нет — все кейсы");
   assert.equal(sourceOf("built"), INSTANT_SOURCE);
-  for (const why of ["soon", "day", "failed"] as const) assert.equal(sourceOf(why), MANUAL_SOURCE);
+  for (const why of ["soon", "failed"] as const) assert.equal(sourceOf(why), MANUAL_SOURCE);
   assert.ok(INBOUND_SOURCES.includes(MANUAL_SOURCE), "в ступенях продажи — входящий");
   const head = manualHeading({ niche: "mebel", site: "https://mebel.example/" });
   assert.match(head, /🔥 <b>Нужен макет вручную · /);
