@@ -191,9 +191,24 @@ test("инструкция в блоке: шаги со ссылками на к
   assert.match(block, /\/api\/ai-staff\/instagram/);
   assert.match(block, /STUDIO_REDIRECT_PATH/);
   assert.match(block, /IG_REDIRECT_PATH/);
-  for (const key of ["a1", "a2", "a3", "a4", "a5", "a6", "b1", "b2", "b3", "b4", "b5", "b6"] as const) {
+  const keys = ["a1", "a2", "a3", "a4", "a5", "a6", "b1", "b2", "b3", "b4", "b5", "b6", "b7", "b8", "b9", "b10", "b11", "b12"] as const;
+  for (const key of keys) {
     assert.ok(bloggerKeysDict[key].ru.length > 40, key);
+    // Шаги словами, без цепочек «→» и «>» (владелец, 12.11.2026).
+    for (const lang of ["ru", "uz", "pl"] as const) assert.doesNotMatch(bloggerKeysDict[key][lang], /→|>/, `${key}.${lang}`);
   }
+  // Номер шага — в тексте («Шаг 1 —»), а не номером списка.
+  assert.equal(bloggerKeysDict.stepNo.ru(1), "Шаг 1 —");
+  assert.match(block, /t\.stepNo\(n\)/);
+  assert.doesNotMatch(block, /list-decimal/);
+  for (let n = 1; n <= 12; n++) assert.match(block, new RegExp(`step\\(\\s*${n},\\s*t\\.b${n}\\b`), `b${n}`);
+  // Свой номер Instagram, а не общий номер приложения: так 12.11.2026 вышло «Недействительный запрос».
+  assert.match(bloggerKeysDict.b3.ru, /Недействительный запрос/);
+  // Почему только тестировщики и как опубликовать: «тесты», подтверждение компании, проверка, публикация.
+  assert.match(bloggerKeysDict.b9.ru, /Проверьте требования к тестированию/);
+  assert.match(bloggerKeysDict.b10.ru, /Подтверждение компании/);
+  assert.match(bloggerKeysDict.b11.ru, /instagram_business_manage_messages/);
+  assert.match(bloggerKeysDict.b12.ru, /Опубликовать/);
   // Короткий токен и Graph API Explorer названы в шагах.
   assert.match(bloggerKeysDict.a4.ru, /60 дней/);
 });
