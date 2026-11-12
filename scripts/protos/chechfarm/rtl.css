@@ -14,7 +14,6 @@ body *{letter-spacing:0}
 .mv-left{transform:translateX(28px)}
 .mv-right{transform:translateX(-28px)}
 .mv.in{transform:none}
-.hs-load{right:auto;left:var(--g);justify-items:start}
 .vs-sw i{left:auto;right:4px}
 .vs[data-on="1"] .vs-sw i{transform:translateX(-100%)}
 /* Стрелки «вперёд» смотрят влево. */
@@ -30,5 +29,5 @@ svg text{unicode-bidi:plaintext}
 .hs h1{line-height:1.22}
 .hs h1 .w{padding-bottom:.14em}
 /* Кадр первого экрана и шапок разделов зеркально: предмет уходит от текста влево. */
-.hs-media,.ph-img{transform:scaleX(-1)}
+.ph-img{transform:scaleX(-1)}
 #formula .h2{unicode-bidi:plaintext}

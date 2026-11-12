@@ -6,11 +6,22 @@
  * premium.js, стили — в premium.css. Факты — те же, только из ТЗ.
  */
 import { PARTNER_STEPS, AUDIENCES } from "./data.mjs";
+import { readFileSync } from "node:fs";
 import { withAr } from "./ar.mjs";
 import { BASE, ADDONS, ALL, OFFER_HOURS, RATE } from "./plan.mjs";
 
-/* Сцена: кадров столько, сколько нарезал scene.py (seq/d/f00…). */
-export const SCENE_FRAMES = 48;
+/* Сцена первого экрана: число кадров, пачки и места ключевых кадров — как
+   нарезал scene.py (scene.json). */
+export const SCENE = JSON.parse(readFileSync(new URL("./scene.json", import.meta.url), "utf8"));
+
+/* Подписи сцены на ключевых кадрах (владелец, 12.11.2026): полная баночка,
+   коробка, полёт, полка аптеки. */
+const CAPS = [
+  { ru: ["Масштабируем выпуск ваших препаратов", "От первой партии до объёма, который нужен рынку."], uz: ["Preparatlaringiz ishlab chiqarilishini kengaytiramiz", "Birinchi partiyadan bozorga kerakli hajmgacha."], en: ["We scale up production of your medicines", "From the first batch to the volume the market needs."] },
+  { ru: ["Упаковываем под ключ", "Полная упаковка продукции, готовая к дистрибуции."], uz: ["To‘liq qadoqlaymiz", "Mahsulot distribyutsiyaga tayyor holda qadoqlanadi."], en: ["We package it in full", "Finished packaging, ready for distribution."] },
+  { ru: ["Организуем логистику", "Доставляем продукцию по всему Узбекистану."], uz: ["Logistikani tashkil qilamiz", "Mahsulotni butun O‘zbekiston bo‘ylab yetkazamiz."], en: ["We handle logistics", "Delivery across Uzbekistan."] },
+  { ru: ["Ваш бренд на полке аптеки", "Точки сбыта уже налажены: бренд встаёт туда, где его видят."], uz: ["Brendingiz dorixona javonida", "Sotuv nuqtalari yo‘lga qo‘yilgan: brend ko‘rinadigan joyda turadi."], en: ["Your brand on the pharmacy shelf", "Points of sale are in place: your brand stands where people see it."] },
+];
 
 /* Стеклянные блоки на кадре steps: левый край, правый, верх, низ — в долях кадра. */
 const BLOCKS = [
@@ -59,7 +70,7 @@ const NEEDS = [
   ["ir", { ru: ["Материалы для инвесторов", "Презентация, показатели"], uz: ["Investorlar uchun materiallar", "Taqdimot, ko‘rsatkichlar"], en: ["Investor materials", "Presentation, figures"] }],
 ];
 
-withAr(BLOCKS); withAr(AUD_POINTS);
+withAr(BLOCKS); withAr(AUD_POINTS); withAr(CAPS);
 
 export function makeBlocks({ T, href, ICON, IMG, L3, CHAIN, pad, BASE_URL }) {
   const usd = (n) => `${String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ")} $`;
@@ -67,14 +78,17 @@ export function makeBlocks({ T, href, ICON, IMG, L3, CHAIN, pad, BASE_URL }) {
   /* ── Сцена первого экрана ──────────────────────────────────────────── */
   function heroScene(l, inner) {
     const t = T(l);
+    const P = (i, m) => `${IMG}/seq/p-${m ? "m" : "d"}-${i}.webp`;
     return `<section class="hs" id="hero" aria-label="CZECHFARM"><div class="hs-stick">
 <div class="hs-media" aria-hidden="true">
-<picture class="hs-a"><source media="(max-width: 899px) and (orientation: portrait)" srcset="${IMG}/hero-m-1080.webp"><img src="${IMG}/hero-2400.webp" srcset="${IMG}/hero-900.webp 900w, ${IMG}/hero-1400.webp 1400w, ${IMG}/hero-2400.webp 2400w" sizes="100vw" alt="" fetchpriority="high"></picture>
-<picture class="hs-b"><source media="(max-width: 899px) and (orientation: portrait)" srcset="${IMG}/open-m-1080.webp"><img src="${IMG}/open-2400.webp" srcset="${IMG}/open-1400.webp 1400w, ${IMG}/open-2400.webp 2400w" sizes="100vw" alt="" loading="lazy"></picture>
+${[0, 1, 2, 3, 4, 5].map((i) => `<picture class="hs-p"><source media="(max-width: 899px), (orientation: portrait)" srcset="${P(i, 1)}"><img src="${P(i)}" alt="" ${i ? 'loading="lazy"' : 'fetchpriority="high"'}></picture>`).join("")}
 <canvas class="hs-cv"></canvas><span class="hs-veil"></span></div>
-${inner}
+<div class="hs-intro">${inner}</div>
+${CAPS.map((c, i) => `<div class="hs-cap"><p class="hs-no">${pad(i + 1)} / ${pad(CAPS.length)}</p><h2>${c[l][0]}</h2><p>${c[l][1]}</p>${i === CAPS.length - 1 ? `<a class="btn btn-pri" href="${href(l, "partners")}"><span>${t("Запустить бренд", "Brendni ishga tushirish", "Launch a brand")}</span>${ICON.arrow}</a>` : ""}</div>`).join("\n")}
+<div class="hs-steps" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
 <div class="hs-load" id="hs-load" aria-hidden="true"><span><b id="hs-n">0</b>%</span><i><u id="hs-b"></u></i><small>${t("сцена загружается", "sahna yuklanmoqda", "scene loading")}</small></div>
-<p class="hs-hint" aria-hidden="true"><span></span>${t("Листайте: капсула раскроется", "Aylantiring: kapsula ochiladi", "Scroll: the capsule opens")}</p>
+<p class="hs-hint" aria-hidden="true"><span></span>${t("Листайте: путь препарата", "Aylantiring: preparat yo‘li", "Scroll: the product’s journey")}</p>
+<a class="hs-skip" href="#launch">${t("Пропустить сцену", "Sahnani o‘tkazib yuborish", "Skip the scene")}</a>
 </div></section>`;
   }
 

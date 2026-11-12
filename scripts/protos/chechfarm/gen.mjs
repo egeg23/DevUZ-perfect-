@@ -4,7 +4,7 @@ import { LANGS, PILLARS, CHAIN, PARTNER_STEPS, PRODUCT_FIELDS, IR_DOCS } from ".
 import * as DATA from "./data.mjs";
 import { tr, withAr, arMissing } from "./ar.mjs";
 import { PANEL_UI } from "./panel-ui.mjs";
-import { makeBlocks, SCENE_FRAMES } from "./blocks.mjs";
+import { makeBlocks, SCENE } from "./blocks.mjs";
 import { makeLaunch } from "./launch.mjs";
 
 /*
@@ -438,7 +438,7 @@ function K(l, p) {
     page: p || "home",
     base: BASE_URL,
     img: IMG,
-    scene: { n: SCENE_FRAMES },
+    scene: SCENE,
     aud: PB.audCta(l),
     steps: PARTNER_STEPS.map((x) => x[l]),
     offer: PROD ? null : PB.offerData(l),
@@ -507,7 +507,7 @@ function page(l, p) {
 <meta property="og:type" content="website">
 <link rel="icon" type="image/svg+xml" href="${IMG}/icon.svg">
 <link rel="apple-touch-icon" href="${IMG}/apple-180.png">
-${isHome ? `<link rel="preload" as="image" href="${IMG}/hero-2400.webp" imagesrcset="${IMG}/hero-900.webp 900w, ${IMG}/hero-1400.webp 1400w, ${IMG}/hero-2400.webp 2400w" imagesizes="100vw" media="(min-width: 900px), (orientation: landscape)">\n<link rel="preload" as="image" href="${IMG}/hero-m-1080.webp" media="(max-width: 899px) and (orientation: portrait)">` : ""}
+${isHome ? `<link rel="preload" as="image" href="${IMG}/seq/p-d-0.webp" media="(min-width: 900px) and (orientation: landscape)">\n<link rel="preload" as="image" href="${IMG}/seq/p-m-0.webp" media="(max-width: 899px), (orientation: portrait)">` : ""}
 ${LANGS.filter((x) => x !== l).map((x) => `<link rel="alternate" hreflang="${x}" href="${PROD ? "__SITE_URL__" : ""}${href(x, p)}">`).join("\n")}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

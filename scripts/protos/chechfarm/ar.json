@@ -119,7 +119,6 @@
  "Walk the brand’s path": "اسلك طريق العلامة",
  "Brand formula": "معادلة العلامة",
  "scene loading": "جارٍ تحميل المشهد",
- "Scroll: the capsule opens": "مرّر: الكبسولة تنفتح",
  "Your brand’s path": "طريق علامتك التجارية",
  "Type in your product <b>and take it to market</b>": "اكتب اسم منتجك <b>وأوصله إلى السوق</b>",
  "This is what a turnkey launch looks like: from a product nobody here knows to a brand on pharmacy shelves.": "هكذا يبدو الإطلاق بنظام تسليم المفتاح: من منتج لا يعرفه أحد هنا إلى علامة تجارية على رفوف الصيدليات.",
@@ -355,5 +354,15 @@
  "That did not work. Check your connection and try again.": "لم ينجح ذلك. تحقق من الاتصال وحاول مرة أخرى.",
  "Choose: partner or client": "اختر: شريك أم عميل",
  "Please agree to data processing": "يلزم الموافقة على معالجة البيانات",
- "The password needs at least 8 characters": "كلمة المرور 8 أحرف على الأقل"
+ "The password needs at least 8 characters": "كلمة المرور 8 أحرف على الأقل",
+ "We scale up production of your medicines": "نوسّع إنتاج أدويتكم",
+ "From the first batch to the volume the market needs.": "من أول دفعة إلى الحجم الذي يحتاجه السوق.",
+ "We package it in full": "نتولى التعبئة والتغليف كاملًا",
+ "Finished packaging, ready for distribution.": "تغليف نهائي جاهز للتوزيع.",
+ "We handle logistics": "ننظّم الخدمات اللوجستية",
+ "Delivery across Uzbekistan.": "توصيل إلى جميع أنحاء أوزبكستان.",
+ "Your brand on the pharmacy shelf": "علامتكم على رف الصيدلية",
+ "Points of sale are in place: your brand stands where people see it.": "نقاط البيع جاهزة: علامتكم في المكان الذي يراها فيه الناس.",
+ "Scroll: the product’s journey": "مرّر: رحلة المنتج",
+ "Skip the scene": "تخطَّ المشهد"
 }

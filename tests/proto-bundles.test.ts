@@ -2139,7 +2139,7 @@ test("SamAuto: D-MAX из-под покрывала, разлёт, фара, п�
 });
 
 test("CZECHFARM: 7 страниц и панель на ru, uz, en — условия, noindex, видео DevUz, шапка 3 с, цепочка, формы в панель, только факты из ТЗ", async () => {
-  const { existsSync, readdirSync, statSync } = await import("node:fs");
+  const { existsSync, readdirSync, readFileSync, statSync } = await import("node:fs");
   const site = bundlePages("chechfarm");
   assert.ok(site);
   const all: Record<string, string> = { "": site.html, ...site.pages };
@@ -2204,9 +2204,21 @@ test("CZECHFARM: 7 страниц и панель на ru, uz, en — услов
   assert.ok(statSync(`${pub}/intro3d.js`).size < 600_000, "заставка тяжелее 600 КБ");
   assert.ok(existsSync(`${pub}/studio-2048.webp`), "нет студии для отражений заставки");
   /* Кадры сцены — только шифром, ключ в хранилище (lib/proto/promo SCENES). */
+  /* Сцена «путь препарата» (владелец, 12.11.2026): завод, баночка, коробка, полёт, полка
+     аптеки. Кадры пачками шифром, открыты только шесть постеров компьютеру и телефону. */
   const seq = readdirSync(`${pub}/seq`);
-  assert.equal(seq.length, 48, "в сцене не 48 кадров");
-  assert.ok(seq.every((f) => /^f\d\d\.bin$/.test(f)), "кадры сцены лежат незашифрованными");
+  const scene = JSON.parse(readFileSync("scripts/protos/chechfarm/scene.json", "utf8"));
+  assert.ok(scene.d >= 200 && scene.p >= 200, "кадров сцены меньше 200 компьютеру или телефону");
+  assert.equal(scene.dk.length, 6, "в сцене не шесть ключевых кадров");
+  assert.equal(seq.filter((f) => /^[dp]\d\d\.bin$/.test(f)).length, Math.ceil(scene.d / scene.pack) + Math.ceil(scene.p / scene.pack), "пачек сцены не столько, сколько в scene.json");
+  assert.deepEqual(seq.filter((f) => !f.endsWith(".bin")).sort(), ["d", "m"].flatMap((k) => [0, 1, 2, 3, 4, 5].map((i) => `p-${k}-${i}.webp`)).sort(), "открыто лежит не только шесть постеров");
+  assert.ok(seq.reduce((n, f) => n + statSync(`${pub}/seq/${f}`).size, 0) < 45 * 1048576, "сцена тяжелее 45 МБ");
+  for (const [path, page] of Object.entries(all)) {
+    if (path.replace(/^(uz|en)\/?/, "") !== "") continue;
+    assert.equal((page.match(/class="hs-cap"/g) ?? []).length, 4, `${path}: в сцене не четыре подписи`);
+    assert.equal((page.match(/class="hs-p"/g) ?? []).length, 6, `${path}: в сцене не шесть постеров`);
+    assert.ok(page.includes('class="hs-skip" href="#launch"'), `${path}: сцену нельзя пропустить`);
+  }
   const { SCENES } = await import("@/lib/proto/promo");
   assert.equal(SCENES.chechfarm, "SCENE_KEY_CHECHFARM");
   /* Допы — за половину цены (владелец, 26.10.2026), основа — PROMO корпоративного сайта. */
