@@ -151,3 +151,18 @@
 .kt-sum small{color:rgb(229 244 240 / .6);font-size:12px}
 @media (max-width:999px){.kit-side{position:static}.kit-base{flex-direction:column}.kb-p{justify-items:start}}
 @media (max-width:520px){.kit-row{flex-wrap:wrap}.kit-pr{width:100%;justify-items:start;display:flex;gap:10px;align-items:baseline;padding-left:54px}}
+
+/* Шапка и фон над сценой первого экрана: тёмные (на телефоне светлая капсула
+   и светлый фон при «пружине» прокрутки мигали поверх сцены). */
+html:has(.hs){background:var(--deep)}
+html:has(.hs) body{background:var(--paper)}
+.top-in{transition:background-color .35s,box-shadow .35s}
+.on-dark .top-in{background:rgb(7 26 24 / .58);box-shadow:inset 0 1px 0 rgb(255 255 255 / .14),inset 0 0 0 1px rgb(229 244 240 / .12),0 18px 40px -24px rgb(0 0 0 / .6)}
+.on-dark .top-in::before{opacity:.35}
+.on-dark .top .logo{color:#fff}.on-dark .top .word b{color:#fff}.on-dark .top .mk .b{fill:#fff}
+.on-dark .top .ic-btn{background:rgb(255 255 255 / .12);color:#fff}
+.on-dark .top .nav a{color:rgb(255 255 255 / .78)}.on-dark .top .nav a:hover{background:rgb(255 255 255 / .1)}
+.on-dark .top .nav a[aria-current="page"]{color:#fff;background:rgb(255 255 255 / .12)}
+.on-dark .top .lang{background:rgb(255 255 255 / .1)}.on-dark .top .lang a{color:rgb(255 255 255 / .7)}
+.on-dark .top .lang a[aria-current]{background:#fff;color:var(--ink)}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.on-dark .top-in{background:rgb(7 26 24 / .94)}}

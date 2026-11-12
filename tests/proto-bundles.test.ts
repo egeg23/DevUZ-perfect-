@@ -2165,7 +2165,7 @@ test("CZECHFARM: 7 страниц и панель на ru, uz, en — услов
   for (const [path, page] of Object.entries(all)) {
     const lang = path.startsWith("uz") ? "uz" : path.startsWith("en") ? "en" : "ru";
     assert.doesNotMatch(page, /@@[A-Z]+@@/, `${path}: метка сборки осталась в странице`);
-    assert.ok(page.includes(`<html lang="${lang}">`), `${path}: язык страницы`);
+    assert.ok(new RegExp(`<html lang="${lang}"( class="on-dark")?>`).test(page), `${path}: язык страницы`);
     assert.ok(page.includes(`https://devuz.studio/${lang}/mockup-terms`), `${path}: нет условий на языке страницы`);
     assert.match(page, /<meta name="robots" content="noindex/, `${path}: нет noindex`);
     assert.match(page, /prefers-reduced-motion/, `${path}: анимацию нечем выключить`);
@@ -2203,6 +2203,8 @@ test("CZECHFARM: 7 страниц и панель на ru, uz, en — услов
     /* Знак — орёл с логотипа компании (владелец, 12.11.2026: «Берем их логотип»), не наш концепт-капсула. */
     assert.match(page, /<svg class="mk"[^>]*><path class="a" fill-rule="evenodd" d="M[^"]{800,}"\/><path class="b" d="M[^"]{300,}"\/><\/svg>/, `${path}: в шапке не логотип компании`);
     assert.doesNotMatch(page, /rotate\(-38 20 20\)|концепт до получения логотипа/, `${path}: остался знак-концепт`);
+    /* Над тёмной сценой шапка и строка браузера тёмные (владелец, 12.11.2026: «белые штуки мелькают при скролле»). */
+    if (path === "" || /^(uz|en)$/.test(path)) assert.ok(page.includes('class="on-dark"') && page.includes('<meta name="theme-color" content="#071a18">'), `${path}: главная без тёмной шапки над сценой`);
     if (p === "" || p === "about" || p === "investors") assert.equal((page.match(/class="ch-n"/g) ?? []).length, 14, `${path}: в цепочке не 7 шагов на двух схемах`);
     if (p === "investors") assert.equal((page.match(/class="gb-b"/g) ?? []).length, 7, `${path}: не семь стеклянных блоков`);
     if (p === "partners") assert.equal((page.match(/class="gl-r"/g) ?? []).length, 5, `${path}: не пять маршрутов на глобусе`);

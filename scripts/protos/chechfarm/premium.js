@@ -56,8 +56,14 @@ if(hs){
     hs.classList.toggle('moved',p>.01);hs.classList.toggle('end',p>.97)}
   function loop(){raf=0;var dl=want-cur;cur=cur<0||Math.abs(dl)<.0003?want:cur+dl*.13;
     if(ready&&cur!==drawn){draw();drawn=cur}paint(cur);if(vis&&cur!==want)raf=requestAnimationFrame(loop)}
-  function poke(){want=prog();if(!raf&&vis)raf=requestAnimationFrame(loop)}
+  /* Пока шапка над тёмной сценой (владелец, 12.11.2026, на телефоне: «белые
+     штуки мелькают при скролле»): шапка тёмным стеклом, цвет строки браузера
+     тёмный. Светлая капсула и светлая строка мигали поверх сцены. */
+  var tc=$('meta[name="theme-color"]'),dark=null;
+  function tone(){var on=hs.getBoundingClientRect().bottom>72;if(on===dark)return;dark=on;root.classList.toggle('on-dark',on);if(tc)tc.setAttribute('content',on?'#071a18':'#f5f3ee')}
+  function poke(){tone();want=prog();if(!raf&&vis)raf=requestAnimationFrame(loop)}
   function done(){hl.classList.add('ok')}
+  tone();addEventListener('scroll',tone,{passive:true});
   if(REDUCED){done()}
   else{
     addEventListener('scroll',poke,{passive:true});addEventListener('resize',function(){if(ready)size();drawn=-1;poke()});
