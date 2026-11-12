@@ -1,23 +1,27 @@
 /**
- * Шаблон «Учебный центр» — главная нашего макета Aipply Academy
- * (scripts/protos/aipply/gen.mjs), переодетая под клиента.
+ * Шаблон «Учебный центр»: наш макет MedAcademy, вариант B «Лаборатория»
+ * (витрина cases.devuz.studio/medacademy/b), переодетый под клиента.
  *
- * Владелец, 11.11.2026: «Остальные категории тоже делаем по принципу как
- * сделали со стоматологией». Отсюда устройство: стили и скрипт Aipply — те
- * же файлы (content/proto-instant/aipply-assets.json, пишет
- * scripts/protos/instant/aipply-assets.mjs), разметка — те же блоки и
- * классы: первый экран с сеткой, полосами в цвет бренда и «жидким стеклом»
- * (параллакс по глубине), слова по одному и перебор направлений, бегущая
- * строка, «Чему научитесь» с орбитами, бенто преимуществ, запись на курс
- * со стеклянной карточкой, «Как добраться» со схемой, подвал и док.
+ * Владелец, 12.11.2026: «Для обучающего центра мы делали для медиков 2
+ * варианта, вот там был фиолетовый с зеленым, круто выглядели - Прицепить
+ * туда их логотип и погнали». Отсюда устройство: стили — собранные стили
+ * того макета (scripts/protos/instant/medacademy/style.css → content/
+ * proto-instant/medacademy-assets.json, пишет medacademy-assets.mjs),
+ * разметка — те же блоки и классы: шапка-капсула, первый экран с
+ * молекулами на холсте, формулой в заголовке, плитками-«элементами» и
+ * наклонной карточкой с фото, лаймовая бегущая строка, светлый раздел
+ * курсов с вкладками и цветными карточками, преподаватели карточками с
+ * оборотом, лаймовый блок контактов. Скрипт написан заново без библиотек
+ * (scripts/protos/instant/medacademy/client.js): там был React.
  *
- * Что от Aipply не берётся, потому что это про них, а не дизайн: их знак и
- * влёт в него, фото преподавателя, ноутбук «Kompyuter noldan», тест
- * уровня, их цифры (выпускники, скидка 20%, коворкинг), метро, конструктор
- * цены. Нет данных клиента — блока нет; нет фото — нейтральные фото ниши
- * (public/protos/_niche/uchebnyy-centr). Числа — только клиента.
+ * Что от MedAcademy не берётся, потому что это про них, а не дизайн: их
+ * знак и название, фото преподавателей и учебника, баллы DTM и калькулятор
+ * балла, экспресс-тест по биологии, цены, часы и число лекций, отзывы,
+ * адрес и контакты, заглушки допов («Кабинет», «Сертификат», «Блог»).
+ * Нет данных клиента: блока нет; нет фото: нейтральные фото ниши
+ * (public/protos/_niche/uchebnyy-centr). Числа только клиента.
  */
-import assets from "@/content/proto-instant/aipply-assets.json" with { type: "json" };
+import assets from "@/content/proto-instant/medacademy-assets.json" with { type: "json" };
 import { dzIntroSolo } from "@/lib/proto/dz-video.mjs";
 import { mockupTermsUrl } from "@/lib/proto/booking";
 import { LIMITS, type InstantLocale, type InstantSite } from "@/lib/proto/instant/types";
@@ -33,38 +37,40 @@ const P = (ru: string, uz: string): Pair => ({ ru, uz });
 const C = {
   kind: P("Учебный центр", "O‘quv markazi"),
   h1: P("Учитесь у тех, кто объясняет понятно", "Tushunarli tushuntiradiganlardan o‘rganing"),
-  lead: P("Курсы и занятия:", "Kurslar va darslar:"),
-  leadPlain: P("Курсы в группах и индивидуально. Оставьте заявку: подберём группу и время.", "Guruhda va yakka tartibda kurslar. Ariza qoldiring: guruh va vaqtni tanlaymiz."),
-  sign: P("Записаться на курс", "Kursga yozilish"),
+  result: P("результат", "natija"),
+  lead: P("Курсы в группах и индивидуально. Напишите нам: подберём группу и время.", "Guruhda va yakka tartibda kurslar. Bizga yozing: guruh va vaqtni tanlaymiz."),
+  sign: P("Записаться", "Yozilish"),
   courses: P("Курсы и цены", "Kurslar va narxlar"),
-  call: P("Позвонить", "Qo‘ng‘iroq qilish"),
-  learnKick: P("Направления", "Yo‘nalishlar"),
-  learnH: P("Чему научитесь", "Nimani o‘rganasiz"),
-  learnLead: P("Направления с вашего сайта, в том же порядке.", "Saytingizdagi yo‘nalishlar, o‘sha tartibda."),
-  plusKick: P("Преимущества", "Afzalliklar"),
-  plusH: P("Почему выбирают нас", "Nega bizni tanlashadi"),
-  plusLead: P("Вашими словами, как на сайте.", "Saytdagidek, o‘z so‘zlaringiz bilan."),
-  odKick: P("Первый шаг", "Birinchi qadam"),
-  odH: P("Запишитесь на курс", "Kursga yoziling"),
-  odLead: P("Напишите, какое направление интересно. Администратор подберёт группу и время и ответит в Telegram.", "Qaysi yo‘nalish qiziqligini yozing. Administrator guruh va vaqtni tanlab, Telegramda javob beradi."),
-  priceAsk: P("Цену уточняйте", "Narxini aniqlang"),
-  whereKick: P("Как добраться", "Joylashuv"),
-  whereH: P("Ждём на занятиях", "Darslarda kutamiz"),
-  whereLead: P("Это схема, а не карта: точный путь откройте на карте.", "Bu sxema, xarita emas: aniq yo‘lni xaritada oching."),
-  scheme: P("Схема", "Sxema"),
-  addr: P("Адрес", "Manzil"),
-  hours: P("Часы", "Ish vaqti"),
-  phone: P("Телефон", "Telefon"),
-  openMap: P("Открыть на карте", "Xaritada ochish"),
+  course: P("Курс", "Kurs"),
+  coursesKick: P("Курсы", "Kurslar"),
+  coursesH: P("Выберите курс", "Kursni tanlang"),
+  price: P("Стоимость", "Narxi"),
+  priceAsk: P("Цену уточняйте при записи", "Narxini yozilishda aniqlang"),
+  hoursShort: P("Часы", "Ish vaqti"),
+  where: P("Где", "Qayerda"),
+  teachersKick: P("Преподаватели", "O‘qituvchilar"),
+  teachersH: P("Знают предмет. Объяснят и вам.", "Fanni biladi. Sizga ham tushuntiradi."),
+  teachersLead: P("Нажмите на карточку: на обороте, как записаться к преподавателю.", "Kartochkani bosing: orqa tomonida o‘qituvchiga qanday yozilish yozilgan."),
+  teacher: P("Преподаватель", "O‘qituvchi"),
+  flip: P("показать оборот", "orqa tomonini ko‘rsatish"),
+  toTeacher: P("Напишите нам и назовите преподавателя: подберём группу и время.", "Bizga yozing va o‘qituvchini ayting: guruh va vaqtni tanlaymiz."),
   flowKick: P("Предложение DevUz Studio", "DevUz Studio taklifi"),
   flowH: P("Так заявка придёт вам в Telegram", "Ariza sizga Telegramda shunday keladi"),
+  flowLead: P("Ученик нажимает «Записаться», пишет в чат центра, а администратор видит курс и вопрос сразу.", "O‘quvchi «Yozilish»ni bosadi, markaz chatiga yozadi, administrator esa kurs va savolni darhol ko‘radi."),
   demo: P("пример", "namuna"),
   demoTitle: P("Заявка на курс с сайта", "Saytdan kursga ariza"),
   demoCourse: P("Курс: вечерняя группа", "Kurs: kechki guruh"),
   demoName: P("Имя", "Ism"),
   demoNote: P("Вопрос: можно ли заниматься рядом с «[[t:1]]»?", "Savol: «[[t:1]]» yonida o‘qisa bo‘ladimi?"),
+  contactsKick: P("Контакты", "Aloqa"),
+  contactsH: P("Напишите. Ответим и подберём курс.", "Yozing. Javob beramiz va kurs tanlaymiz."),
+  addr: P("Адрес", "Manzil"),
+  hours: P("Часы работы", "Ish vaqti"),
+  phone: P("Телефон", "Telefon"),
+  call: P("Позвонить", "Qo‘ng‘iroq qilish"),
   sections: P("Разделы", "Bo‘limlar"),
-  contacts: P("На связи", "Aloqa"),
+  top: P("наверх", "yuqoriga"),
+  about: P("Коротко о центре", "Markaz haqida qisqacha"),
   rights: P("Макет DevUz Studio. Пользуясь макетом, вы принимаете", "DevUz Studio maketi. Maketdan foydalanib, siz qabul qilasiz:"),
   terms: P("условия макета", "maket shartlari"),
   source: P("Данные:", "Ma’lumotlar:"),
@@ -72,41 +78,50 @@ const C = {
   skip: P("К содержанию", "Mazmunga o‘tish"),
   desc: P("Курсы, цены и запись на занятия.", "Kurslar, narxlar va darslarga yozilish."),
   hello: P("Здравствуйте! Хочу записаться на курс.", "Assalomu alaykum! Kursga yozilmoqchiman."),
-  sent: P("Текст скопирован. Открываем чат: вставьте его и отправьте.", "Matn nusxalandi. Chat ochilmoqda: uni qo‘yib yuboring."),
+  helloCourse: P("Здравствуйте! Хочу записаться на курс «{c}».", "Assalomu alaykum! «{c}» kursiga yozilmoqchiman."),
 } as const;
 
-const I = (dd: string, w = 1.8) =>
-  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${dd}</svg>`;
-/** Значки — те же, что у Aipply. */
-const ICON = {
-  tg: I('<path d="M21 4 3 11l6 2.5M21 4l-3.5 16-8.5-6.5M21 4 9 13.5V19l3-3.5"/>'),
-  phone: I('<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/>'),
-  arrow: I('<path d="M5 12h14M13 6l6 6-6 6"/>', 2),
-  check: I('<path d="m5 12 5 5 9-10"/>', 2),
-  map: I('<path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/>'),
-  doc: I('<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/>'),
-  ai: I('<path d="M12 3c.5 3.8 2.2 5.5 6 6-3.8.5-5.5 2.2-6 6-.5-3.8-2.2-5.5-6-6 3.8-.5 5.5-2.2 6-6z"/>'),
-  globe: I('<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>'),
-  clock: I('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'),
-  users: I('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a5.5 5.5 0 0 1 3.5 6"/>'),
-  cert: I('<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M7 8h10M7 11h6"/><circle cx="16.5" cy="17" r="2.5"/><path d="m15 19-1 3 2.5-1.2L19 22l-1-3"/>'),
-  translate: I('<path d="M4 5h9M8.5 3v2c0 4-2 7-5 8.5M6 9c1 2.5 3 4.2 6 5"/><path d="m13 21 4-9 4 9M14.5 18h5"/>'),
-  chart: I('<path d="M3 20h18"/><path d="M6 16v-4M11 16V8M16 16v-6M21 16V5"/>'),
-  star: I('<path d="m12 3 2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6 6.6 19.5l1.2-6L3.3 9.3l6.1-.7z"/>'),
-  pc: I('<rect x="4" y="4" width="16" height="11" rx="1.5"/><path d="M2 19h20l-1.5-4h-17z"/>'),
-  ig: I('<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".8"/>'),
-};
-const ORBIT = ["doc", "ai", "globe", "cert", "translate", "chart", "pc", "star"] as const;
+const ICONS = assets.icons as Record<string, string>;
+const icon = (k: string, cls: string) => `<svg viewBox="0 0 24 24" fill="none" class="${cls}" aria-hidden="true">${ICONS[k]}</svg>`;
 
-/** Синие Aipply — в цвет бренда клиента: три тона одного оттенка. Солнечный жёлтый кнопок остаётся. */
+/** Цвета плиток и карточек макета: фиолетовый, розовый, лайм, голубой, белый. */
+const TILE = ["bg-[#8d66ff] text-white", "bg-[#e995be] text-[#191337]", "bg-[#cff846] text-[#191337]"];
+const CARD = ["bg-[#8d66ff] text-white", "bg-[#e995be] text-[#191337]", "bg-[#7dc2e3] text-[#191337]", "bg-white text-[#191337]"];
+const BACK = ["bg-[#8d66ff] text-white", "bg-[#e995be] text-[#191337]", "bg-[#7dc2e3] text-[#191337]", "bg-[#8d66ff] text-white"];
+
+/**
+ * Фиолетовый и лайм макета стоят переменными. Своего цвета у клиента нет:
+ * остаётся фиолетовый с лаймом. Есть: фон уходит в его оттенок (такой же
+ * тёмный), фиолетовые плитки красятся в его цвет, лайм остаётся: на тёмном
+ * фоне он и есть акцент макета.
+ */
 function palette(color: string | null): string {
   const hex = brandColor(color);
-  const [h, s0] = hex ? hexToHsl(hex) : [230, 100];
-  const s = Math.min(Math.max(s0, 55), 100);
-  return [`--royal:hsl(${h} ${s}% 34%)`, `--royal2:hsl(${h} ${s}% 46%)`, `--azure:hsl(${(h + 12) % 360} ${s}% 41%)`, `--sky:hsl(${(h + 22) % 360} ${s}% 47%)`].join(";");
+  if (!hex) return "";
+  const [h, s0] = hexToHsl(hex);
+  const s = Math.min(Math.max(s0, 35), 60);
+  return [
+    `--ma-night:hsl(${h} ${s}% 15%)`,
+    `--ma-bg:hsl(${h} ${s}% 15%)`,
+    `--ma-surface:hsl(${h} ${s}% 18%)`,
+    `--ma-surface-2:hsl(${h} ${s}% 22%)`,
+    `--ma-accent-ink:hsl(${h} ${s}% 15%)`,
+    `--ma-on-deep:hsl(${h} ${s}% 15%)`,
+    `--ma-deep:hsl(${h} 100% 98%)`,
+    `--ma-pop:hsl(${h} ${Math.max(s0, 70)}% 66%)`,
+    `--ma-pop-deep:hsl(${h} ${Math.max(s0, 60)}% 42%)`,
+  ].join(";");
 }
 
-/** Собрать страницу. Данные — уже очищенные (lib/proto/instant/build, normalizeSite). */
+/** Знак плитки-«элемента»: две буквы названия курса, как Ch и Bi у макета. */
+function symbol(name: string): string {
+  const letters = name.replace(/[^\p{L}]+/gu, "");
+  const a = letters.slice(0, 1).toUpperCase();
+  const b = letters.slice(1, 2).toLowerCase();
+  return a + b;
+}
+
+/** Собрать страницу. Данные уже очищенные (lib/proto/instant/build, normalizeSite). */
 export function eduHtml(site: InstantSite): string {
   const l: InstantLocale = site.locale;
   const t = (p: Pair) => p[l];
@@ -116,135 +131,208 @@ export function eduHtml(site: InstantSite): string {
   const wa = waHref(site.whatsapp);
   const ig = handleOf(site.instagram);
   const logo = imageUrl(site.logo);
-  const chat = tg ? `https://t.me/${tg}` : wa;
   const own = site.photos.map(imageUrl).filter((u): u is string => Boolean(u));
   const services = site.services.slice(0, LIMITS.services);
+  const doctors = site.doctors.slice(0, LIMITS.doctors);
   const perks = site.perks.slice(0, LIMITS.perks);
-  const pic = (k: number) => (own.length ? own[k % own.length] : EDU_PHOTOS[k % EDU_PHOTOS.length]);
-  const hello = t(C.hello);
+  const photo = own[0] ?? EDU_PHOTOS[0];
 
-  /** Кнопка записи: Aipply копирует текст и открывает чат (client.js, data-tg). Чата нет — звонок. */
-  const signBtn = (cls: string, label: string, text = hello) =>
-    chat ? `<a class="btn ${cls}" href="${esc(chat)}" data-tg="${esc(text)}">${ICON.tg}${label}</a>` : tel ? `<a class="btn ${cls}" href="${esc(tel)}">${ICON.phone}${label}</a>` : "";
-  const head = (kicker: string, h: string, lead: string, anim = "rise") =>
-    `<div class="sec-head rv a-${anim}"><div><span class="kicker"><i></i>${kicker}</span><h2 style="margin-top:12px">${h}</h2>${lead ? `<p class="sub">${lead}</p>` : ""}</div></div>`;
+  /** Запись: чат центра с готовым текстом, как у макета. Чата нет: звонок. */
+  const chatHref = (text: string) =>
+    tg ? `https://t.me/${tg}?text=${encodeURIComponent(text)}` : wa ? `${wa}${wa.includes("?") ? "&" : "?"}text=${encodeURIComponent(text)}` : null;
+  const signHref = (text = t(C.hello)) => chatHref(text) ?? tel;
+  const sign = (cls: string, text?: string, withIcon = false) => {
+    const href = signHref(text);
+    if (!href) return "";
+    const ext = href.startsWith("tel:") ? "" : ' target="_blank" rel="noopener noreferrer"';
+    return `<a href="${esc(href)}"${ext} class="${cls}">${withIcon ? icon(href.startsWith("tel:") ? "phone" : "tg", "h-6 w-6") : ""}${t(C.sign)}</a>`;
+  };
 
   const nav: [string, Pair][] = [
-    ...(services.length ? [["#dastur", C.learnKick] as [string, Pair]] : []),
-    ["#ochiq", C.odKick],
-    ["#joy", C.whereKick],
+    ...(services.length ? [["#courses", C.coursesKick] as [string, Pair]] : []),
+    ...(doctors.length ? [["#teachers", C.teachersKick] as [string, Pair]] : []),
+    ["#contacts", C.contactsKick],
   ];
-  const mark = logo ? `<img src="${esc(logo)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()" class="im-mark">` : "";
+  const mark = (cls: string) =>
+    logo
+      ? `<img alt="${name}" src="${esc(logo)}" referrerpolicy="no-referrer" onerror="this.replaceWith(document.createTextNode(this.alt))" class="${cls} w-auto im-mark">`
+      : `<span class="ma-display text-base im-name">${name}</span>`;
 
-  const header = `<header class="top"><div class="wrap">
-<a class="logo im-logo" href="#hero" aria-label="${name}">${mark}<span>${name}</span></a>
-<nav class="nav" aria-label="${t(C.sections)}">${nav.map(([u, n]) => `<a href="${u}">${t(n)}</a>`).join("")}</nav>
-<div class="top-r">${tel ? `<a class="top-tel" href="${esc(tel)}">${esc(site.phone ?? "")}</a>` : ""}<a class="btn btn-sun btn-sm top-cta" href="#ochiq">${t(C.sign)}</a></div>
-</div></header>`;
-
-  // Первый экран: сетка с загорающимися клетками, полосы, слова по одному.
-  const CELLS = [[3, 2, 0], [7, 1, 1.4], [10, 4, 2.6], [5, 6, 3.8], [12, 2, 4.4], [14, 6, 0.8], [9, 8, 2], [16, 3, 3.2], [2, 9, 5], [18, 7, 1.1], [11, 10, 4], [20, 2, 2.4]];
-  const grid = `<div class="grid-bg" aria-hidden="true"><svg><defs><pattern id="gp" width="56" height="56" patternUnits="userSpaceOnUse"><path class="gl" d="M56 0H0V56"/></pattern></defs><rect width="100%" height="100%" fill="url(#gp)" style="animation:none;opacity:1"/>${CELLS.map(([x, y, dl]) => `<rect x="${x * 56 + 1}" y="${y * 56 + 1}" width="55" height="55" style="--dl:${dl}s"/>`).join("")}</svg></div>`;
-  const STR: [string, string, string, string, string, number, number][] = [
-    ["62%", "8%", "46vw", "56px", "var(--royal)", 0.55, 1.6],
-    ["70%", "22%", "40vw", "56px", "var(--azure)", 0.5, 1.1],
-    ["66%", "36%", "44vw", "56px", "var(--sky)", 0.45, 0.6],
-    ["-12%", "70%", "30vw", "28px", "var(--azure)", 0.25, 2.2],
-    ["-8%", "80%", "26vw", "28px", "var(--sky)", 0.2, 1.4],
-  ];
-  const h1 = site.tagline ?? t(C.h1);
-  const words = h1.split(/\s+/).filter(Boolean);
-  const rot = services.slice(0, 5).map((s) => s.name);
-  const fl = (cls: string, ic: keyof typeof ICON, b: string, dep: number) =>
-    `<div class="fl glass lq ${cls}" data-depth="${dep}"><span class="ic">${ICON[ic]}</span><div><b>${esc(b)}</b></div></div>`;
-  const hero = `<section class="hero" id="hero" aria-label="${name}">
-${grid}
-<div class="stripes" aria-hidden="true">${STR.map(([x, y, w, h, c, o, dep]) => `<i data-depth="${dep}" data-base="skewX(-34deg) rotate(9deg)" style="--x:${x};--y:${y};--w:${w};--h:${h};--c:${c};--o:${o}"></i>`).join("")}</div>
-<div class="hero-in"><div class="wrap"><div class="hero-grid">
-<div>
-<span class="kicker hi" style="color:var(--on2)"><i></i>${name}${site.city ? ` · ${esc(site.city)}` : ""}</span>
-<h1 style="margin-top:16px">${words.map((w, i) => `<span class="tw${i === 0 ? " em" : ""}" style="--i:${i}">${esc(w)}</span>`).join(" ")}</h1>
-<p class="lead hi" style="--d:200ms">${
-    rot.length >= 2
-      ? `${t(C.lead)} <span class="rot" aria-hidden="true">${rot.map((w, k) => `<span${k === 0 ? ' class="on"' : ""}>${esc(w)}</span>`).join("")}</span><span class="vh">${esc(rot.join(", "))}</span>`
-      : site.about
-        ? esc(site.about)
-        : t(C.leadPlain)
-  }</p>
-<div class="cta hero-go hi" style="--d:280ms">${signBtn("btn-sun shim", t(C.sign))}${services.length ? `<a class="btn btn-ghost" href="#dastur">${t(C.courses)}${ICON.arrow}</a>` : ""}</div>
-${perks.length ? `<div class="trust hi" style="--d:360ms">${perks.slice(0, 3).map((p) => `<span class="glass">${ICON.check}${esc(p)}</span>`).join("")}</div>` : ""}
+  const header = `<header class="sticky top-0 z-50 px-3 pt-3 sm:px-5 im-head" id="head">
+<div class="mx-auto flex min-h-16 max-w-7xl items-center gap-3 rounded-[2rem] py-2 bg-ma-surface-2/95 pl-5 pr-2 shadow-[0_15px_35px_-18px_rgb(0_0_0/0.7)] ring-1 ring-white/10">
+<a href="#top" class="shrink-0 im-brand" aria-label="${name}: ${t(C.top)}">${mark("h-9")}</a>
+<nav aria-label="${t(C.sections)}" class="ml-4 hidden items-center gap-5 text-sm lg:flex">${nav.map(([u, n]) => `<a href="${u}" class="text-ma-ink-2 transition-colors hover:text-ma-accent">${t(n)}</a>`).join("")}</nav>
+<span class="ml-auto"></span>
+${sign("ma-btn min-h-12 px-5 text-sm")}
 </div>
-<div class="hero-art hi" style="--d:160ms">
-<div class="hero-ring" aria-hidden="true"></div>
-<div class="hero-ph" data-depth="0.5" data-base="translateX(-50%)"><img src="${esc(pic(0))}" alt="" width="896" height="1120" fetchpriority="high" referrerpolicy="no-referrer"></div>
-${perks[3] ? fl("a", "users", perks[3], 2.2) : ""}${perks[4] ? fl("b", "star", perks[4], 1.6) : ""}${perks[5] ? fl("c", "cert", perks[5], 2.8) : ""}
+</header>`;
+
+  // Заголовок-формула макета («Химия + биология = медвуз»): два коротких курса клиента. Длинные названия: слоган.
+  const [s1, s2] = services;
+  const short = (s?: { name: string }) => Boolean(s && s.name.length <= 10 && !/\d/.test(s.name));
+  const h1 = site.tagline
+    ? esc(site.tagline)
+    : short(s1) && short(s2)
+      ? `${esc(s1.name)} <span class="text-[#e995be]">+</span> ${esc(s2.name)} <span class="text-ma-accent">=</span> <span class="text-ma-accent">${t(C.result)}</span>`
+      : esc(t(C.h1));
+  const stick = perks.filter((p) => p.length <= 24).slice(0, 2);
+
+  const hero = `<section id="top" class="relative isolate -mt-[4.75rem] overflow-hidden pt-[4.75rem]">
+<div aria-hidden="true" class="pointer-events-none absolute inset-0 -z-10"><canvas class="h-full w-full opacity-70" id="mol"></canvas><div class="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-ma-bg to-transparent"></div></div>
+<div class="mx-auto grid max-w-7xl gap-10 px-4 pb-16 pt-12 sm:px-6 lg:grid-cols-12 lg:pb-24 lg:pt-20">
+<div class="lg:col-span-7">
+<p class="inline-flex items-center gap-2 rounded-full bg-white/5 px-4 py-2 text-sm text-ma-ink-2 ring-1 ring-white/10">${icon("pin", "h-4 w-4 text-ma-accent")}${esc(site.city ? `${t(C.kind)} · ${site.city}` : t(C.kind))}</p>
+<h1 class="ma-display mt-6 text-5xl sm:text-6xl lg:text-7xl im-h1">${h1}</h1>
+<p class="mt-6 max-w-xl text-lg text-ma-ink-2">${esc(site.about ?? t(C.lead))}</p>
+<div class="mt-8 flex flex-col gap-3 sm:flex-row">${sign("ma-btn min-h-14 px-7 text-lg", undefined, true)}${services.length ? `<a href="#courses" class="ma-btn ma-btn-ghost min-h-14 px-7 text-lg">${t(C.courses)}</a>` : ""}</div>
+${
+  services.length >= 3
+    ? `<ul class="mt-12 grid grid-cols-3 gap-3 sm:max-w-lg">${services
+        .slice(0, 3)
+        .map(
+          (s, i) => `<li data-in="drop" style="--i:${i}" class="ma-in"><div class="flex aspect-square flex-col justify-between rounded-2xl p-3 sm:p-4 ${TILE[i]} im-tile">
+<span class="text-xs font-bold opacity-80">${t(C.course)}</span>
+<span class="ma-display text-4xl normal-case sm:text-5xl">${esc(symbol(s.name))}</span>
+<span class="text-xs font-bold leading-tight im-clip">${esc(s.name)}</span>
+</div></li>`,
+        )
+        .join("")}</ul>`
+    : ""
+}
 </div>
-</div></div></div>
-</section>
-${services.length >= 3 ? `<div class="mq" aria-hidden="true"><div class="mq-row">${[0, 1].map(() => services.map((s, i) => `<span>${ICON[ORBIT[i % ORBIT.length]]}${esc(s.name)}</span>`).join("")).join("")}</div></div>` : ""}`;
-
-  // Чему научитесь: орбиты значков и список направлений клиента.
-  const ring = (k: number) => services.filter((_, i) => i % 2 === k);
-  const orb = (items: typeof services, rad: number, tm: number, rev: boolean, off: number) =>
-    items.map((x, i) => `<span class="orb-i${rev ? " rev" : ""}" style="--rad:${rad}px;--t:${tm}s;--dl:${((-tm * i) / items.length).toFixed(2)}s"><span title="${esc(x.name)}">${ICON[ORBIT[(i * 2 + off) % ORBIT.length]]}</span></span>`).join("");
-  const learn = services.length
-    ? `<section id="dastur"><div class="wrap">
-${head(t(C.learnKick), t(C.learnH), t(C.learnLead))}
-<div class="learn">
-<div class="orb rv a-pop" aria-hidden="true"><span class="orb-r" style="--in:22%"></span><span class="orb-r" style="--in:4%"></span><span class="orb-c im-orb">${mark || `<b>${esc(site.name.slice(0, 1))}</b>`}</span>${orb(ring(0), 128, 26, false, 0)}${orb(ring(1), 206, 40, true, 1)}</div>
-<ol class="learn-list">${services.map((s, k) => `<li class="rv a-type" style="--d:${k * 60}ms">${esc(s.name)}${s.price ? ` <span class="im-pr">${esc(s.price)}</span>` : ""}</li>`).join("")}</ol>
+<div class="relative mx-auto w-full max-w-md lg:col-span-5">
+<div class="ma-float relative rotate-[-3deg]" style="--r:-3deg">
+<div class="relative aspect-[3/4] overflow-hidden rounded-[2rem] ring-8 ring-white"><img alt="" src="${esc(photo)}" referrerpolicy="no-referrer" fetchpriority="high" class="object-cover im-fill"></div>
+${stick[0] ? `<span class="absolute -left-3 top-8 z-10 rotate-[-8deg] rounded-full bg-ma-accent px-4 py-2 text-sm font-bold text-ma-accent-ink shadow-lg">${esc(stick[0])}</span>` : ""}
+${stick[1] ? `<span class="absolute -right-2 bottom-10 z-10 rotate-[6deg] rounded-full bg-[#e995be] px-4 py-2 text-sm font-bold text-[#191337] shadow-lg">${esc(stick[1])}</span>` : ""}
 </div>
-</div></section>`
-    : "";
-
-  // Преимущества бенто: только слова клиента.
-  const size = ["w2", "", "", "h2", "", ""];
-  const tone = ["blue", "", "", "sun", "", ""];
-  const motion = ["win", "key", "slide", "pop", "rise", "key"];
-  const plus = perks.length >= 2
-    ? `<section class="dark"><div class="wrap">
-${head(t(C.plusKick), t(C.plusH), t(C.plusLead))}
-<div class="bento">${perks.map((p, k) => `<div class="bn ${size[k]} ${tone[k]} rv a-${motion[k]}" style="--d:${(k % 4) * 70}ms"><span class="spot" aria-hidden="true"></span><span class="ic">${ICON[ORBIT[k % ORBIT.length]]}</span><h3>${esc(p)}</h3></div>`).join("")}</div>
-</div></section>`
-    : "";
-
-  // Запись: стеклянная карточка с курсами и ценами клиента.
-  const bars: [string, string, string, number, number][] = [["-6%", "12%", "50%", 0.1, 1.4], ["40%", "30%", "64%", 0.14, 0.8], ["-10%", "62%", "44%", 0.08, 1.8], ["52%", "78%", "56%", 0.12, 1.1]];
-  const od = `<section class="od" id="ochiq"><div class="od-bg" aria-hidden="true">${bars.map(([x, y, w, o, k]) => `<i data-k="${k}" style="--x:${x};--y:${y};--w:${w};--o:${o}"></i>`).join("")}</div>
-<div class="wrap"><div class="od-in">
-<div class="rv a-left"><span class="kicker"><i></i>${t(C.odKick)}</span><h2 style="margin-top:12px">${t(C.odH)}</h2><p class="lead" style="color:hsl(200 100% 92%)">${t(C.odLead)}</p>
-<div class="im-tg"><div class="im-tg-h">${ICON.tg}<b>${t(C.demoTitle)}</b><small>${t(C.demo)}</small></div><p>${t(C.demoCourse)}<br>${t(C.demoName)}: [[t:0]]<br>${t(C.demoNote)}</p></div></div>
-<div class="od-card glass lq rv a-win"><span class="beam" aria-hidden="true"></span><h3>${t(services.length ? C.courses : C.odH)}</h3>${services.length ? `<ul class="od-gain">${services.slice(0, 6).map((s) => `<li><b class="num im-pp">${s.price ? esc(s.price) : "·"}</b><span>${esc(s.name)}</span></li>`).join("")}</ul>` : ""}${signBtn("btn-sun shim", t(C.sign))}</div>
-</div></div></section>`;
-
-  // Как добраться: схема и карточка с контактами.
-  const map = site.address ? `https://yandex.uz/maps/?text=${encodeURIComponent(site.address)}` : null;
-  const where =
-    site.address || tel || chat
-      ? `<section id="joy"><div class="wrap">
-${head(t(C.whereKick), t(C.whereH), site.address ? t(C.whereLead) : "")}
-<div class="where">
-<div class="map rv a-pop" aria-hidden="true"><span class="road" style="left:-5%;top:60%;width:110%;transform:rotate(-4deg)"></span><span class="road" style="left:52%;top:-5%;width:14px;height:110%"></span><span class="here"><span class="pin"><i></i><i></i></span><span>${name}</span></span><em>${t(C.scheme)}</em></div>
-<div class="panel rv a-slide"><h3>${name}</h3><dl>${site.address ? `<dt>${t(C.addr)}</dt><dd>${esc(site.address)}</dd>` : ""}${site.hours ? `<dt>${t(C.hours)}</dt><dd>${esc(site.hours)}</dd>` : ""}${tel ? `<dt>${t(C.phone)}</dt><dd><a href="${esc(tel)}">${esc(site.phone ?? "")}</a></dd>` : ""}${tg ? `<dt>Telegram</dt><dd><a href="https://t.me/${esc(tg)}">@${esc(tg)}</a></dd>` : wa ? `<dt>WhatsApp</dt><dd><a href="${esc(wa)}">WhatsApp</a></dd>` : ""}${ig ? `<dt>Instagram</dt><dd><a href="https://instagram.com/${esc(ig)}">@${esc(ig)}</a></dd>` : ""}</dl>
-<div class="cta">${map ? `<a class="btn btn-main" href="${esc(map)}" target="_blank" rel="noopener">${ICON.map}${t(C.openMap)}</a>` : ""}${tel ? `<a class="btn btn-ghost" href="${esc(tel)}">${ICON.phone}${t(C.call)}</a>` : ""}</div></div>
+${own.length ? "" : `<p class="ma-muted mt-6 text-xs">${t(C.stock)}</p>`}
 </div>
-${own.length ? "" : `<p class="im-stock">${t(C.stock)}</p>`}
-</div></section>`
+</div>
+</section>`;
+
+  const run = [...perks, ...services.map((s) => s.name)].slice(0, 10);
+  const marquee =
+    run.length >= 3
+      ? `<div class="overflow-hidden bg-ma-accent py-4 text-ma-accent-ink motion-reduce:overflow-x-auto" aria-label="${t(C.about)}">
+<ul class="ma-marquee flex w-max gap-8 whitespace-nowrap">${[false, true].map((hid) => run.map((x) => `<li aria-hidden="${hid}" class="ma-display flex items-center gap-8 text-xl">${esc(x)}${icon("mol", "h-6 w-6")}</li>`).join("")).join("")}</ul>
+</div>`
       : "";
 
-  const footer = `<footer><div class="wrap">
-<div class="cols">
-<div><b>${name}</b><ul>${site.about ? `<li>${esc(site.about)}</li>` : ""}${site.address ? `<li>${esc(site.address)}</li>` : ""}</ul></div>
-<div><b>${t(C.contacts)}</b><ul>${tel ? `<li><a href="${esc(tel)}">${esc(site.phone ?? "")}</a></li>` : ""}${chat ? `<li><a href="${esc(chat)}">${tg ? "Telegram" : "WhatsApp"}</a></li>` : ""}${ig ? `<li><a href="https://instagram.com/${esc(ig)}">Instagram</a></li>` : ""}</ul></div>
-<div><b>${t(C.sections)}</b><ul>${nav.map(([u, n]) => `<li><a href="${u}">${t(n)}</a></li>`).join("")}</ul></div>
+  // Курсы: вкладки и панель, как «Выбери формулу». Цифры макета (часы, лекции, файлы) не берём: карточки из контактов клиента.
+  const tabs = services.slice(0, 6);
+  const facts: [Pair | string, string][] = [
+    ...(site.hours ? [[C.hoursShort, site.hours] as [Pair, string]] : []),
+    ...(site.city ? [[C.where, site.city] as [Pair, string]] : []),
+    ...(site.phone ? [[C.phone, site.phone] as [Pair, string]] : []),
+    ...(tg ? [["Telegram", `@${tg}`] as [string, string]] : []),
+  ].slice(0, 4);
+  const panel = (s: (typeof tabs)[number], k: number) => `<div role="tabpanel" id="cp-${k}" aria-labelledby="ct-${k}" class="ma-pop mt-8 grid gap-4 lg:grid-cols-12"${k ? " hidden" : ""}>
+<div class="rounded-[1.5rem] bg-[#191337] p-6 text-[#e5e4ee] sm:p-10 lg:col-span-7">
+${icon("mol", "h-12 w-12 text-ma-accent")}
+<h3 class="ma-display mt-6 text-4xl sm:text-5xl">${esc(s.name)}</h3>
+${site.about ? `<p class="mt-4 max-w-xl text-[#cfcde0]">${esc(site.about)}</p>` : ""}
+${perks.length ? `<ul class="mt-6 flex flex-wrap gap-2">${perks.map((p) => `<li class="rounded-full bg-white/10 px-3 py-1.5 text-sm">${esc(p)}</li>`).join("")}</ul>` : ""}
 </div>
-<div class="rights"><span>${t(C.rights)} <a href="${esc(mockupTermsUrl(l))}" target="_blank" rel="noopener">${t(C.terms)}</a>. ${t(C.source)} ${esc(site.source)}</span></div>
-</div></footer>`;
+<div class="grid gap-4 sm:grid-cols-2 lg:col-span-5 lg:grid-cols-2">
+${facts.map(([label, value], i) => `<div class="rounded-[1.5rem] p-5 ${CARD[i]}"><p class="text-sm font-bold opacity-80">${typeof label === "string" ? label : t(label)}</p><p class="ma-display mt-2 text-xl normal-case im-fact">${esc(value)}</p></div>`).join("")}
+<div class="flex flex-col justify-between rounded-[1.5rem] bg-ma-accent p-5 text-ma-accent-ink sm:col-span-2">
+<p class="text-sm font-bold">${t(C.price)}</p>
+<p class="ma-display mt-2 ${s.price ? "text-4xl" : "text-2xl"} im-price">${esc(s.price ?? t(C.priceAsk))}</p>
+${sign("mt-4 inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#191337] px-6 font-bold text-white", t(C.helloCourse).replace("{c}", s.name))}
+</div>
+</div>
+</div>`;
+  const courses = tabs.length
+    ? `<section id="courses" class="scroll-mt-24 bg-ma-deep text-ma-on-deep">
+<div class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:py-24">
+<p class="ma-eyebrow text-[#5d2fcc]">${t(C.coursesKick)}</p>
+<h2 class="ma-display mt-4 text-4xl sm:text-5xl">${t(C.coursesH)}</h2>
+${
+  tabs.length > 1
+    ? `<div role="tablist" aria-label="${t(C.coursesKick)}" class="mt-8 inline-flex flex-wrap gap-1 rounded-[2rem] bg-[#191337] p-1" id="tabs">${tabs
+        .map((s, k) => `<button type="button" role="tab" id="ct-${k}" aria-controls="cp-${k}" aria-selected="${k === 0}" class="min-h-12 rounded-full px-5 text-sm font-bold transition-colors ${k === 0 ? "bg-ma-accent text-ma-accent-ink" : "text-[#e5e4ee] hover:text-white"}">${esc(s.name)}</button>`)
+        .join("")}</div>`
+    : ""
+}
+${tabs.map(panel).join("\n")}
+${
+  services.length > tabs.length
+    ? `<p class="mt-6 flex flex-wrap gap-2 text-sm">${services
+        .slice(tabs.length)
+        .map((s) => `<span class="inline-flex items-center gap-1.5 rounded-full bg-[#191337]/10 px-3 py-1.5">${icon("check", "h-4 w-4")}${esc(s.name)}${s.price ? `: ${esc(s.price)}` : ""}</span>`)
+        .join("")}</p>`
+    : ""
+}
+</div>
+</section>`
+    : "";
 
-  const dock = signBtn("btn-sun shim", t(C.sign)) ? `<div class="dock" id="dock">${signBtn("btn-sun shim", t(C.sign))}</div>` : "";
-  const L = { tg: chat ?? tel ?? "", sent: t(C.sent), copied: "", kitBase: 0, kitN: "", empty: "" };
-  const LQ = `<svg class="lq-defs" aria-hidden="true" focusable="false"><filter id="lq" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="0.011 0.019" numOctaves="2" result="n"/><feGaussianBlur in="n" stdDeviation="2.5" result="nb"/><feDisplacementMap in="SourceGraphic" in2="nb" scale="22" xChannelSelector="R" yChannelSelector="G"/></filter></svg>`;
+  // Преподаватели: карточка с оборотом. Фото и баллов у клиента нет: буква имени и его должность.
+  const teachers = doctors.length
+    ? `<section id="teachers" class="scroll-mt-24">
+<div class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:py-24">
+<div data-in="slide" style="--i:0" class="ma-in"><p class="ma-eyebrow text-ma-accent">${t(C.teachersKick)}</p><h2 class="ma-display mt-4 max-w-4xl text-4xl sm:text-5xl">${t(C.teachersH)}</h2><p class="ma-muted mt-4">${t(C.teachersLead)}</p></div>
+<ul class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4 im-team">${doctors
+        .map(
+          (d, i) => `<li data-in="tilt" style="--i:${i % 4}" class="ma-in [perspective:1200px]">
+<button type="button" aria-pressed="false" aria-label="${esc(d.name)}: ${t(C.flip)}" class="ma-flip relative block aspect-[3/4] w-full text-left" data-flipped="false">
+<span class="absolute inset-0 overflow-hidden rounded-[1.5rem] bg-ma-surface-2">
+<span class="ma-display absolute inset-0 flex items-center justify-center text-7xl text-ma-accent im-ava" aria-hidden="true">${esc(symbol(d.name))}</span>
+<span class="absolute inset-x-3 bottom-3 rounded-2xl bg-[#191337]/90 p-4"><span class="block text-xs font-bold uppercase tracking-wider text-ma-accent">${esc(d.role ?? t(C.teacher))}</span><span class="mt-1 block text-lg font-bold text-white">${esc(d.name)}</span></span>
+</span>
+<span class="ma-back absolute inset-0 flex flex-col rounded-[1.5rem] ${BACK[i % 4]} p-6">
+<span class="text-xs font-bold uppercase tracking-wider">${esc(d.role ?? t(C.teacher))}</span>
+<span class="ma-display mt-2 text-2xl">${esc(d.name)}</span>
+<span class="mt-auto space-y-1 text-sm"><span class="flex gap-2">${icon("check", "h-4 w-4 shrink-0")}${t(C.toTeacher)}</span></span>
+</span>
+</button></li>`,
+        )
+        .join("")}</ul>
+</div>
+</section>`
+    : "";
 
+  // Ловушки и то, что мы предлагаем: заявка в Telegram. Карточка макета (ma-card).
+  const flow = `<section id="flow" class="scroll-mt-24">
+<div class="mx-auto grid max-w-7xl gap-8 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:py-24">
+<div data-in="slide" style="--i:0" class="ma-in"><p class="ma-eyebrow text-ma-accent">${t(C.flowKick)}</p><h2 class="ma-display mt-4 text-4xl sm:text-5xl">${t(C.flowH)}</h2><p class="ma-muted mt-4 max-w-xl">${t(C.flowLead)}</p></div>
+<div data-in="rise" style="--i:1" class="ma-in ma-card p-6 sm:p-8">
+<p class="flex items-center gap-2 text-sm font-bold">${icon("tg", "h-6 w-6 text-ma-accent")}${t(C.demoTitle)}<span class="ml-auto rounded-full bg-white/10 px-3 py-1.5 text-xs">${t(C.demo)}</span></p>
+<p class="mt-4 text-lg text-ma-ink-2 im-demo">${t(C.demoCourse)}<br>${t(C.demoName)}: [[t:0]]<br>${t(C.demoNote)}</p>
+</div>
+</div>
+</section>`;
+
+  const map = site.address ? `https://yandex.uz/maps/?text=${encodeURIComponent(site.address)}` : null;
+  const cell = (ic: string, label: string, body: string) =>
+    `<div class="rounded-[1.5rem] bg-[#191337]/10 p-5">${icon(ic, "h-6 w-6")}<p class="mt-3 text-sm font-bold opacity-80">${label}</p><p class="mt-1 break-words font-bold">${body}</p></div>`;
+  const link = (href: string, text: string, ext = true) => `<a href="${esc(href)}"${ext ? ' target="_blank" rel="noopener noreferrer"' : ""} class="underline-offset-4 hover:underline">${esc(text)}</a>`;
+  const chat = signHref();
+  const contacts = `<section id="contacts" class="scroll-mt-24 px-3 pb-3 sm:px-5 sm:pb-5">
+<div class="mx-auto grid max-w-7xl gap-10 overflow-hidden rounded-[2rem] bg-ma-accent p-6 text-ma-accent-ink sm:p-10 lg:grid-cols-2 lg:p-14">
+<div>
+<p class="ma-eyebrow">${t(C.contactsKick)}</p>
+<h2 class="ma-display mt-4 text-5xl sm:text-6xl">${t(C.contactsH)}</h2>
+${chat ? `<a href="${esc(chat)}"${chat.startsWith("tel:") ? "" : ' target="_blank" rel="noopener noreferrer"'} class="mt-8 inline-flex min-h-14 items-center gap-2 rounded-full bg-[#191337] px-7 text-lg font-bold text-white transition-transform hover:-translate-y-0.5 motion-reduce:transform-none">${icon(chat.startsWith("tel:") ? "phone" : "tg", "h-6 w-6")}${tg ? `@${esc(tg)}` : wa ? "WhatsApp" : esc(site.phone ?? t(C.call))}</a>` : ""}
+</div>
+<div class="grid gap-3 sm:grid-cols-2">
+${site.address && map ? cell("pin", t(C.addr), link(map, site.address)) : ""}
+${tel ? cell("phone", t(C.phone), link(tel, site.phone ?? "", false)) : ""}
+${site.hours ? cell("clock", t(C.hours), esc(site.hours)) : ""}
+${ig ? cell("ig", "Instagram", link(`https://instagram.com/${ig}`, `@${ig}`)) : ""}
+</div>
+</div>
+</section>`;
+
+  const round = "flex h-11 w-11 items-center justify-center rounded-full bg-white/5 ring-1 ring-white/10 hover:bg-white/10";
+  const footer = `<footer class="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-10 sm:flex-row sm:items-center sm:px-6">
+${mark("h-11")}
+<p class="ma-muted text-xs sm:mx-auto">${t(C.rights)} <a href="${esc(mockupTermsUrl(l))}" target="_blank" rel="noopener" class="underline underline-offset-4">${t(C.terms)}</a>. ${t(C.source)} ${esc(site.source)}</p>
+<div class="flex gap-2">${tg ? `<a href="https://t.me/${esc(tg)}" target="_blank" rel="noopener noreferrer" aria-label="Telegram" class="${round}">${icon("tg", "h-5 w-5")}</a>` : ""}${ig ? `<a href="https://instagram.com/${esc(ig)}" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="${round}">${icon("ig", "h-5 w-5")}</a>` : ""}${tel ? `<a href="${esc(tel)}" aria-label="${t(C.call)}" class="${round}">${icon("phone", "h-5 w-5")}</a>` : ""}</div>
+</footer>`;
+
+  const tint = palette(site.color);
   return `<!doctype html>
 <html lang="${l}">
 <head>
@@ -253,48 +341,47 @@ ${own.length ? "" : `<p class="im-stock">${t(C.stock)}</p>`}
 <title>${name} · ${t(C.kind).toLowerCase()}</title>
 <meta name="description" content="${esc(`${site.name}. ${t(C.desc)}`)}">
 <meta name="robots" content="noindex, nofollow, noarchive">
-<meta name="theme-color" content="#060a2e">
+<meta name="theme-color" content="#191337">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700&family=Onest:wght@400;700&display=swap">
-<script>(function(){var r=document.documentElement;r.classList.add('js');r.classList.add('intro-off')})()</script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Commissioner:wght@400;700&display=swap">
 <style>${assets.css}
-:root{${palette(site.color)}}
-.im-logo{display:flex;align-items:center;gap:10px;min-width:0}
-.im-logo span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:46vw}
-.im-mark{height:32px;width:auto;max-width:96px;object-fit:contain}
-.hero h1{overflow-wrap:anywhere}
-.im-orb b{font:700 40px/1 var(--head);color:#fff}
-.im-orb img{max-width:70%;max-height:70%;object-fit:contain}
-.learn-list li{flex-wrap:wrap;min-width:0}
-.im-pr{color:var(--mut);font-size:14px}
-.od-gain li{min-width:0}
-.od-gain span{min-width:0;overflow-wrap:anywhere}
-.map .here span{max-width:40vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.od-gain b.im-pp{font-size:18px;line-height:1.25;min-width:0;max-width:52%;overflow-wrap:anywhere}
-.hero-ph img{border-radius:28px;object-fit:cover;aspect-ratio:4/5}
-.im-stock{margin:24px 0 0;color:var(--mut);font-size:14px}
-.im-tg{margin-top:24px;max-width:420px;padding:16px;border-radius:16px;background:hsl(0 0% 100% / .1);border:1px solid hsl(0 0% 100% / .2);color:hsl(200 100% 94%)}
-.im-tg-h{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-.im-tg-h svg{width:20px;height:20px}
-.im-tg-h small{margin-left:auto;opacity:.7;font-size:12px}
-.im-tg p{margin:0;line-height:1.7}</style>
+html{scroll-behavior:smooth;background:var(--ma-bg,#191337)}
+body{margin:0;overflow-x:clip}
+[data-ma="b"]{--font-ma-dela:"Dela Gothic One";--ma-body-font:"Commissioner",ui-sans-serif,system-ui,sans-serif;--ma-night:#191337;--ma-pop-deep:#5d2fcc${tint ? `;${tint}` : ""}}
+.im-head{transition:transform .45s cubic-bezier(.22,1,.36,1),opacity .3s}
+.im-head.is-away{transform:translate3d(0,-130%,0);opacity:0;pointer-events:none}
+.im-brand{min-width:0;display:flex;align-items:center}
+.im-name{display:block;max-width:46vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.im-mark{max-width:9rem;object-fit:contain}
+.im-h1{overflow-wrap:anywhere}
+.im-fill{position:absolute;inset:0;height:100%;width:100%}
+.im-tile{min-width:0;overflow:hidden}
+.im-clip{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.im-fact,.im-price{overflow-wrap:anywhere;text-transform:none}
+.im-ava{opacity:.9}
+@media (max-width:639px){.im-team{grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem}.im-team .im-ava{font-size:3rem;padding-bottom:3rem}.im-team .text-lg{font-size:.9rem;line-height:1.25}.im-team .ma-back{padding:1rem}.im-team .ma-back .text-2xl{font-size:1.05rem}.im-team .p-4{padding:.6rem .7rem}.im-team .tracking-wider{letter-spacing:0;overflow-wrap:anywhere;font-size:.65rem}}
+.im-demo{line-height:1.7}
+.im-skip{position:absolute;left:-999px;top:0}
+.im-skip:focus{left:12px;top:12px;z-index:90;background:var(--ma-accent);color:var(--ma-accent-ink);padding:10px 14px;border-radius:999px}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.im-head{transition:none}}</style>
 </head>
-<body class="home" data-page="">
-${LQ}
+<body>
 ${dzIntroSolo(l)}
-<a class="skip" href="#main">${t(C.skip)}</a>
+<a class="im-skip" href="#main">${t(C.skip)}</a>
+<div data-ma="b" class="min-h-dvh">
 ${header}
 <main id="main">
 ${hero}
-${learn}
-${plus}
-${od}
-${where}
+${marquee}
+${courses}
+${teachers}
+${flow}
+${contacts}
 </main>
 ${footer}
-${dock}
-<script type="application/json" id="i18n">${JSON.stringify(L).replace(/</g, "\\u003c")}</script>
+</div>
 <script>
 ${assets.js}</script>
 </body>

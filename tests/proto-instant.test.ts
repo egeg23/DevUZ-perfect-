@@ -25,8 +25,8 @@ import { TUR_PHOTOS, destsOf, usdPrice } from "@/lib/proto/instant/tur";
 import agFile from "@/content/proto-instant/agora-assets.json" with { type: "json" };
 import { vtashkenteAssets } from "../scripts/protos/instant/vtashkente-assets.mjs";
 import vtFile from "@/content/proto-instant/vtashkente-assets.json" with { type: "json" };
-import { aipplyAssets } from "../scripts/protos/instant/aipply-assets.mjs";
-import apFile from "@/content/proto-instant/aipply-assets.json" with { type: "json" };
+import { medacademyAssets } from "../scripts/protos/instant/medacademy-assets.mjs";
+import maFile from "@/content/proto-instant/medacademy-assets.json" with { type: "json" };
 import { EDU_PHOTOS } from "@/lib/proto/instant/edu";
 import { shaharAssets } from "../scripts/protos/instant/shahar-assets.mjs";
 import shFile from "@/content/proto-instant/shahar-assets.json" with { type: "json" };
@@ -354,25 +354,50 @@ const edu = EXAMPLE_EDU as InstantSite;
 test("учебный центр: пример собирается без замечаний, защита та же", () => {
   const { html, problems, stamp } = buildInstant(edu, SEED);
   assert.deepEqual(problems, []);
-  assert.ok(html.includes("Ступени") && html.includes('id="dastur"') && html.includes('id="ochiq"'));
+  assert.ok(html.includes("Ступени") && html.includes('id="courses"') && html.includes('id="contacts"'));
   assert.ok(html.includes("/ru/mockup-terms") && html.includes('class="dz-vid"'));
-  assert.ok(stamp.signals.some((s) => s.startsWith("js:")), "метка числа скрипта Aipply");
+  assert.ok(stamp.signals.some((s) => s.startsWith("js:")), "метка числа скрипта");
   assert.ok(stamp.signals.filter((s) => s.startsWith("text:")).length >= 4, "две ловушки");
-  assert.deepEqual(buildInstant({ ...edu, locale: "uz", tagline: null, about: null }, SEED).problems, []);
+  const uz = buildInstant({ ...edu, locale: "uz", tagline: null, about: null, source: "namuna" }, SEED);
+  assert.deepEqual(uz.problems, []);
+  // Узбекская версия: наших русских подписей нет (русское остаётся только в данных клиента).
+  for (const s of ["Записаться", "Выберите курс", "Стоимость", "Контакты", "Преподаватели"]) assert.ok(!uz.html.includes(s), s);
 });
 
-test("учебный центр: стили и скрипт нашего макета Aipply, свежие, без Aipply", () => {
-  assert.deepEqual(apFile, aipplyAssets(), "node scripts/protos/instant/aipply-assets.mjs");
+test("учебный центр: наш макет MedAcademy B, стили и скрипт свежие, без MedAcademy", () => {
+  // 12.11.2026, владелец: «там был фиолетовый с зеленым, круто выглядели - Прицепить туда их логотип и погнали».
+  assert.deepEqual(maFile, medacademyAssets(), "node scripts/protos/instant/medacademy-assets.mjs");
   const { html } = buildInstant(edu, SEED);
-  for (const s of ["Aipply", "aipply", "/protos/aipply", "ap-kit-v1"]) assert.ok(!html.includes(s), s);
-  assert.ok(!/<script[^>]+src=/.test(html), "без скриптов со стороны");
+  assert.ok(html.includes('data-ma="b"') && html.includes("ma-marquee") && html.includes('role="tablist"') && html.includes('id="mol"'), "блоки макета: мир B, бегущая строка, вкладки курсов, молекулы");
+  assert.ok(html.includes("Dela+Gothic+One") && html.includes("#cff846"), "шрифт и лайм макета");
+  for (const s of ["MedAcademy", "medacademy", "DTM", "Aipply", "aipply", "number-flow", "/_next/"]) assert.ok(!html.includes(s), s);
+  assert.ok(!/<script[^>]+src=/.test(html) && !/<iframe/i.test(html), "без скриптов и страниц со стороны");
+  assert.ok(!html.includes("@font-face"), "шрифты макета в страницу не вшиты");
   assert.deepEqual(tailsIn(html), []);
+  assert.ok(tailsIn("курсы MedAcademy, пишите @medacademy_admin").length >= 2, "хвост MedAcademy ловится");
+  assert.ok(html.includes("is-away") && html.includes("IDLE = 3000"), "шапка прячется при прокрутке и возвращается через 3 секунды");
+  assert.ok(html.includes("prefers-reduced-motion"));
 });
 
-test("учебный центр: нет курсов и Telegram — без блока и без ссылки", () => {
-  const bare = buildInstant({ ...edu, services: [], telegram: null, instagram: null }, SEED);
+test("учебный центр: цвет клиента красит фон, без цвета остаётся фиолетовый с лаймом", () => {
+  const own = buildInstant(edu, SEED).html;
+  assert.ok(own.includes("--ma-night:hsl("), "фон в оттенке клиента");
+  const plain = buildInstant({ ...edu, color: null }, SEED).html;
+  assert.ok(!/--ma-night:hsl/.test(plain) && plain.includes("--ma-night:#191337"), "фиолетовый макета");
+});
+
+test("учебный центр: курсы и цены клиента, преподаватели только названные, нет данных — нет блока", () => {
+  const people = [{ name: "Анна Петрова", role: "Английский язык" }, { name: "Тимур Алиев", role: null }];
+  const full = buildInstant({ ...edu, doctors: people }, SEED);
+  assert.deepEqual(full.problems, []);
+  assert.equal((full.html.match(/role="tabpanel"/g) ?? []).length, edu.services.length);
+  assert.ok(full.html.includes("350 000 сум в месяц") && full.html.includes("Цену уточняйте при записи"));
+  assert.equal((full.html.match(/class="ma-flip /g) ?? []).length, 2);
+  assert.ok(!buildInstant(edu, SEED).html.includes('id="teachers"'), "преподавателей не назвали: блока нет");
+  const bare = buildInstant({ ...edu, services: [], perks: [], telegram: null, instagram: null }, SEED);
   assert.deepEqual(bare.problems, []);
   assert.ok(!bare.html.includes("t.me/"), "без чата клиента ссылки нет");
+  assert.ok(!bare.html.includes('id="courses"') && !bare.html.includes("ma-marquee flex"), "без курсов нет ни раздела, ни бегущей строки");
 });
 
 test("учебный центр: нейтральные фото ниши лежат в репозитории", () => {
