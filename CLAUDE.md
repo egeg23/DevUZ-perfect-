@@ -159,7 +159,9 @@ CRM — amoCRM или Bitrix24, какая окажется; наполнени�
   ghcr.io, `deploy/remote.sh` по SSH ставит Docker, `/opt/czechfarm`, сайт на
   `127.0.0.1:3000` и Caddy или файл nginx компании; не поднялся — прошлый
   образ обратно. Идёт, только когда заведены переменная `CZECHFARM_DOMAIN` и
-  секреты `CZECHFARM_HOST`, `CZECHFARM_USER`, `CZECHFARM_SSH_KEY`; ключ кадров
+  секреты `CZECHFARM_HOST`, `CZECHFARM_USER`, `CZECHFARM_SSH_KEY` (или
+  `CZECHFARM_PASSWORD`); сервер — Timeweb Cloud, Нидерланды, домен
+  czechfarm.org (владелец, 12.11.2026); ключ кадров
   сцены — `CZECHFARM_SCENE_KEY` (в хранилище `app.SCENE_KEY_CHECHFARM`). Наш
   сервер этот сайт не выкатывает (`paths-ignore`).
 - Журнал задачи публичный: ключи, код установки и `.env` не печатать.
