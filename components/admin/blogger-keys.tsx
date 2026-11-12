@@ -93,9 +93,11 @@ export function BloggerKeys({
     </label>
   );
 
-  const step = (text: string, extra?: React.ReactNode) => (
+  // «Шаг 1 — …» словами, а не номером списка: владелец пересказывает шаги
+  // голосом и в переписке, номер должен быть в самом тексте.
+  const step = (n: number, text: string, extra?: React.ReactNode) => (
     <li>
-      {text}
+      <b className="font-semibold text-text">{t.stepNo(n)}</b> {text}
       {extra ? <div className="mt-1">{extra}</div> : null}
     </li>
   );
@@ -154,10 +156,11 @@ export function BloggerKeys({
           ) : null}
           <details open={!partA}>
             <summary className="cursor-pointer text-xs text-blue-soft">{t.howTo}</summary>
-            <ol className="mt-2 list-decimal space-y-2 pl-5 text-xs leading-relaxed text-muted">
-              {step(t.a1, link("https://business.facebook.com/"))}
-              {step(t.a2, link("https://developers.facebook.com/apps/"))}
+            <ol className="mt-2 space-y-2 text-xs leading-relaxed text-muted">
+              {step(1, t.a1, link("https://business.facebook.com/"))}
+              {step(2, t.a2, link("https://developers.facebook.com/apps/"))}
               {step(
+                3,
                 t.a3,
                 <>
                   {link("https://developers.facebook.com/tools/explorer/")}
@@ -166,9 +169,9 @@ export function BloggerKeys({
                   </span>
                 </>,
               )}
-              {step(t.a4, link("https://developers.facebook.com/tools/debug/accesstoken/"))}
-              {step(t.a5)}
-              {step(t.a6)}
+              {step(4, t.a4, link("https://developers.facebook.com/tools/debug/accesstoken/"))}
+              {step(5, t.a5)}
+              {step(6, t.a6)}
             </ol>
           </details>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -185,25 +188,33 @@ export function BloggerKeys({
           <p className="text-xs text-muted">{t.partBWhy}</p>
           <details open={!partB}>
             <summary className="cursor-pointer text-xs text-blue-soft">{t.howTo}</summary>
-            <ol className="mt-2 list-decimal space-y-2 pl-5 text-xs leading-relaxed text-muted">
-              {step(t.b1, link("https://developers.facebook.com/apps/"))}
-              {step(t.b2)}
+            <ol className="mt-2 space-y-2 text-xs leading-relaxed text-muted">
+              {step(1, t.b1, link("https://developers.facebook.com/apps/"))}
+              {step(2, t.b2)}
+              {step(3, t.b3)}
+              {step(4, t.b4)}
               {step(
-                t.b3,
+                5,
+                t.b5,
                 <div className="space-y-1">
                   <Copyable label={t.webhookUrl} value={`${siteUrl}/api/ai-staff/instagram`} t={t} />
                   {verify ? <Copyable label={t.verify} value={verify} t={t} /> : <p className="text-gold">{t.verify}: {t.verifyLater}</p>}
                 </div>,
               )}
               {step(
-                t.b4,
+                6,
+                t.b6,
                 <div className="space-y-1">
                   <Copyable label={t.redirectUrls} value={`${siteUrl}${STUDIO_REDIRECT_PATH}`} t={t} />
                   <Copyable label={t.redirectUrls} value={`${siteUrl}${IG_REDIRECT_PATH}`} t={t} />
                 </div>,
               )}
-              {step(t.b5)}
-              {step(t.b6)}
+              {step(7, t.b7)}
+              {step(8, t.b8)}
+              {step(9, t.b9)}
+              {step(10, t.b10)}
+              {step(11, t.b11)}
+              {step(12, t.b12)}
             </ol>
           </details>
           <div className="grid gap-3 sm:grid-cols-2">
