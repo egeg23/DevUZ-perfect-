@@ -109,7 +109,7 @@ if (PROD) for (const v of Object.values(EXTRA_NAV)) v.push(tr(v[2]));
 const navName = (p, l) => (NAV.find((n) => n[0] === p) || [p, EXTRA_NAV[p] || EXTRA_NAV.privacy])[1][LANGS.indexOf(l)];
 const L3 = (o, l) => o[l];
 const PB = makeBlocks({ T, href, ICON, IMG, L3, CHAIN, pad, BASE_URL });
-const LB = makeLaunch({ T, href, ICON, pad });
+const LB = makeLaunch({ T, href, ICON, pad, img: IMG });
 
 /* ── Шапка, меню, подвал ───────────────────────────────────────────── */
 function headerHtml(l, p) {
@@ -244,7 +244,7 @@ function pillarsBlock(l, withHead = true) {
   const mv = ["mv-left", "mv-up", "mv-right"];
   return `<section class="sec" id="formula"><div class="wrap">
 ${withHead ? `<div class="sec-h mv mv-up"><p class="kicker">${t("Формула бренда", "Brend formulasi", "Brand formula")}</p><h2 class="h2">Health. Trust. <b>Value.</b></h2><p class="lead">${t("Три смысла, на которых стоит компания. Каждый следующий держится на предыдущем.", "Kompaniya tayanadigan uchta ma’no. Har biri oldingisiga tayanadi.", "Three ideas the company stands on. Each one rests on the one before.")}</p></div>` : ""}
-<div class="pill3">${PILLARS.map((p, i) => `<article class="pl mv ${mv[i]}" data-k="${p.id}" style="--d:${i * 120}ms"><span class="pl-i">${ICON[p.id]}</span><span class="pl-w">${p.word}</span><h3>${L3(p, l)[0]}</h3><p>${L3(p, l)[1]}</p></article>`).join("")}</div>
+<div class="pill3">${PILLARS.map((p, i) => `<article class="pl mv ${mv[i]}" data-k="${p.id}" style="--d:${i * 120}ms"><span class="pl-i"><img src="${IMG}/launch/${p.id}.webp" alt="" width="256" height="256" loading="lazy" decoding="async"></span><span class="pl-w">${p.word}</span><h3>${L3(p, l)[0]}</h3><p>${L3(p, l)[1]}</p></article>`).join("")}</div>
 </div></section>`;
 }
 function portfolioTeaser(l) {

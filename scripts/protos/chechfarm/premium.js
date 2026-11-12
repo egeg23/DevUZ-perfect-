@@ -31,6 +31,18 @@ if(hs){
   for(i0=0;i0<KF.length;i0++){HS.push([TOT,TOT+HOLD[i0]]);SEG.push([TOT,TOT+HOLD[i0],KF[i0],KF[i0]]);TOT+=HOLD[i0];if(i0<KF.length-1){SEG.push([TOT,TOT+1,KF[i0],KF[i0+1]]);TOT+=1}}
   function sm(t){t=cl(t);return t*t*(3-2*t)}
   function frameOf(p){var u=cl(p)*TOT;for(var i=0;i<SEG.length;i++){var g=SEG[i];if(u<=g[1]||i===SEG.length-1){var t=g[1]>g[0]?cl((u-g[0])/(g[1]-g[0])):0;return g[2]+(g[3]-g[2])*(.5*t+.5*sm(t))}}return F-1}
+  /* Телефону — одно видео seq/m.bin (H.264, ключевой каждый третий кадр) под
+     тем же шифром: перемотка аппаратная, картинки не распаковываются. Кадры
+     по одному телефон распаковывать не успевал (владелец, 12.11.2026: «на
+     таблетках пролёт всё так же лагает»). Не умеет mp4, видео не пришло или
+     play() отказал — кадрами, как раньше. Приём и грабли — из Nek. */
+  var vd=$('.hs-vd',hs),VN=S.v||0,VK=S.vk||[],FPS=S.fps||24,vseek=-1,vok=false;
+  var VID=!DESK&&VN>1&&VK.length===KF.length&&!!vd&&!!vd.canPlayType&&vd.canPlayType('video/mp4; codecs="avc1.640020"')!=='';
+  /* Кадр сцены → кадр видео: между ключевыми кадрами доля та же. */
+  function vframe(f){var s=0;while(s<KF.length-2&&f>KF[s+1])s++;return VK[s]+(VK[s+1]-VK[s])*cl((f-KF[s])/(KF[s+1]-KF[s]))}
+  /* Следующая перемотка — только когда прошлая встала (seeked), иначе Safari
+     копит запросы и отстаёт. */
+  function vgo(){var t=(Math.round(vframe(frameOf(cur)))+.5)/FPS;if(vd.seeking){vseek=t;return}vseek=-1;if(Math.abs(vd.currentTime-t)>.4/FPS)vd.currentTime=t}
   function prog(){var r=hs.getBoundingClientRect(),span=r.height-innerHeight;return span>0?cl(-r.top/span):0}
   function size(){cv.width=Math.round(cv.clientWidth*dpr);cv.height=Math.round(cv.clientHeight*dpr);drawn=-1}
   function want4(i){if(bm[i]||bm[i]===0||!raw[i])return;bm[i]=0;
@@ -55,7 +67,7 @@ if(hs){
       posters.forEach(function(pp,j){pp.style.opacity=j<=s?'1':j===s+1?t.toFixed(3):'0'})}
     hs.classList.toggle('moved',p>.01);hs.classList.toggle('end',p>.97)}
   function loop(){raf=0;var dl=want-cur;cur=cur<0||Math.abs(dl)<.0003?want:cur+dl*.13;
-    if(ready&&cur!==drawn){draw();drawn=cur}paint(cur);if(vis&&cur!==want)raf=requestAnimationFrame(loop)}
+    if(vok){if(cur!==drawn){vgo();drawn=cur}}else if(ready&&cur!==drawn){draw();drawn=cur}paint(cur);if(vis&&cur!==want)raf=requestAnimationFrame(loop)}
   /* Пока шапка над тёмной сценой (владелец, 12.11.2026, на телефоне: «белые
      штуки мелькают при скролле»): шапка тёмным стеклом, цвет строки браузера
      тёмный. Светлая капсула и светлая строка мигали поверх сцены. */
@@ -66,17 +78,42 @@ if(hs){
   tone();addEventListener('scroll',tone,{passive:true});
   if(REDUCED){done()}
   else{
-    addEventListener('scroll',poke,{passive:true});addEventListener('resize',function(){if(ready)size();drawn=-1;poke()});
+    addEventListener('scroll',poke,{passive:true});addEventListener('resize',function(){if(ready&&!vok)size();drawn=-1;poke()});
     if('IntersectionObserver' in W)new IntersectionObserver(function(es){vis=es[0].isIntersecting;if(vis)poke()}).observe(hs);
     poke();
     var cn=navigator.connection;
     if(!W.crypto||!crypto.subtle||!W.createImageBitmap||(cn&&cn.saveData))done();
-    else if(d.readyState==='complete')setTimeout(loadScene,300);else addEventListener('load',function(){setTimeout(loadScene,300)});
+    else{var go=VID?loadVid:loadScene;if(d.readyState==='complete')setTimeout(go,300);else addEventListener('load',function(){setTimeout(go,300)})}
   }
   /* Пачки по K.scene.pack: 12 байт nonce + AES-GCM; внутри число кадров,
      длины, WebP подряд. Ключ — /promo/scene. Сцена стартует с первой
      пачкой, дальше качается ближайшая к месту прокрутки, по две сразу;
      молчащая 25 с — заново, потом пропуск. Счёт до 100% в углу. */
+  /* Ключ спрашиваем до трёх раз: один отказ сервера (502 во время выкатки,
+     обрыв сети) не должен оставлять сцену на первом кадре. */
+  function keyBytes(n){return fetch(K.base+'/promo/scene',{credentials:'same-origin'}).then(function(r){if(!r.ok)throw 0;return r.arrayBuffer()})
+    .catch(function(e){if(n>0)return new Promise(function(ok){setTimeout(ok,900)}).then(function(){return keyBytes(n-1)});throw e})}
+  /* Видео — одним файлом с ходом загрузки, потом в <video> из памяти:
+     перемотка не ждёт сеть. iOS рисует кадры перемотки только после play();
+     в энергосбережении и во встроенных браузерах play() без нажатия
+     отказывает — тогда сцена идёт кадрами-картинками, а не стоит. */
+  function loadVid(){
+    var dead=false,show=function(k){hn.textContent=Math.floor(k*100);hb.style.transform='scaleX('+k.toFixed(3)+')'};
+    var fail=function(){if(dead||vok)return;dead=true;VID=false;hs.classList.remove('vid');loadScene()};
+    fetch(K.img+'/seq/m.bin').then(function(r){if(!r.ok)throw 0;var len=+r.headers.get('content-length')||0;
+      if(!r.body||!r.body.getReader||!len)return r.arrayBuffer();
+      var rd=r.body.getReader(),parts=[],got=0;
+      return(function pump(){return rd.read().then(function(x){if(x.done)return new Blob(parts).arrayBuffer();parts.push(x.value);got+=x.value.length;show(got/len*.98);return pump()})})()})
+    .then(function(buf){return keyBytes(2).then(function(b){return crypto.subtle.importKey('raw',b,'AES-GCM',false,['decrypt'])})
+      .then(function(k){return crypto.subtle.decrypt({name:'AES-GCM',iv:new Uint8Array(buf,0,12)},k,new Uint8Array(buf,12))})})
+    .then(function(x){
+      vd.addEventListener('loadeddata',function(){if(dead)return;show(1);
+        var on=function(){if(dead||vok)return;try{vd.pause()}catch(e){}vok=true;ready=true;hs.classList.add('cv','vid');done();drawn=-1;vgo();poke()};
+        var p;try{p=vd.play()}catch(e){fail();return}
+        if(p&&p.then)p.then(on,fail);else on()},{once:true});
+      vd.addEventListener('seeked',function(){if(vseek>=0){var s=vseek;vseek=-1;vd.currentTime=s}});
+      vd.addEventListener('error',fail,{once:true});setTimeout(function(){if(!vok)fail()},20000);
+      vd.preload='auto';vd.src=URL.createObjectURL(new Blob([x],{type:'video/mp4'}));vd.load()},fail)}
   function loadScene(){
     var PK=S.pack,NP=Math.ceil(F/PK),left=[],tries={},got=0,key=null,i;
     for(i=0;i<NP;i++)left.push(i);
@@ -90,7 +127,7 @@ if(hs){
       .then(function(buf){return crypto.subtle.decrypt({name:'AES-GCM',iv:new Uint8Array(buf,0,12)},key,new Uint8Array(buf,12))})
       .then(function(x){clearTimeout(tm);unpack(k,x);got++;show();start();drawn=-1;poke();next()},
         function(){clearTimeout(tm);tries[k]=(tries[k]||0)+1;if(tries[k]<3)left.push(k);else{got++;show()}next()})}
-    fetch(K.base+'/promo/scene',{credentials:'same-origin'}).then(function(r){if(!r.ok)throw 0;return r.arrayBuffer()})
+    keyBytes(2)
     .then(function(b){return crypto.subtle.importKey('raw',b,'AES-GCM',false,['decrypt'])})
     .then(function(k){key=k;next();next()})
     .catch(done)}

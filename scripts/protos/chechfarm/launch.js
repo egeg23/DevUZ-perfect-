@@ -12,18 +12,21 @@ function ssSet(v){try{sessionStorage.setItem('cf-launch',JSON.stringify(v))}catc
 
 var ln=$('#ln');
 if(ln){
-  var nm=$('#ln-name'),og=$('#ln-org'),steps=$$('.ln-steps button',ln),cap=$('.ln-cap',ln),next=$('#ln-next'),go=$('#ln-go'),s=0,auto=!REDUCED,vis=false,timer=0,N=L.stages.length;
-  var COLORS=[['#0b5a53','#e5c98f'],['#284a7a','#9fd1c9'],['#a8432f','#f2e6cc'],['#5b3d8a','#e5c98f'],['#8a6420','#d7ebe6']];
+  var nm=$('#ln-name'),og=$('#ln-org'),steps=$$('.ln-steps button',ln),capN=$('.ln-capn',ln),capT=$('.ln-capt',ln),capD=$('.ln-capd',ln),next=$('#ln-next'),go=$('#ln-go'),s=0,auto=!REDUCED,vis=false,timer=0,N=L.stages.length;
+  /* Цвет фирменной коробки — от названия: поворот оттенка рендера. */
+  var HUES=[0,28,-16,0,44];
   function name(){return (nm.value||'').trim()||L.mine}
   function paint(){
-    var n=name(),h=0;for(var i=0;i<n.length;i++)h=(h*31+n.charCodeAt(i))>>>0;var c=COLORS[h%COLORS.length];
-    ln.style.setProperty('--bc',c[0]);ln.style.setProperty('--bc2',c[1]);
-    var t=$('.bx-name',ln);t.textContent=n;t.setAttribute('font-size',String(Math.max(13,Math.min(26,250/Math.max(n.length,1)))));
+    var n=name(),h=0;for(var i=0;i<n.length;i++)h=(h*31+n.charCodeAt(i))>>>0;ln.style.setProperty('--hue',HUES[h%HUES.length]+'deg');
+    var t=$('.bx-name',ln);t.textContent=n;fit()
     $('.bx-org',ln).textContent=L.madeIn+og.value;
     $('span',go).textContent=fill(L.talk,{n:n});
     ssSet({n:(nm.value||'').trim(),o:og.value,msg:fill(L.msg,{n:n,o:og.value})})}
+  /* Название — во всю ширину лицевой стороны коробки, не шире её. */
+  function fit(){var t=$('.bx-name',ln),w=$('.bx-lab',ln).clientWidth||120,n=Math.max(t.textContent.length,1);t.style.fontSize=Math.max(9,Math.min(w*.2,w*1.55/n)).toFixed(1)+'px'}
+  W.addEventListener('resize',fit);
   function set(i){s=i;ln.setAttribute('data-s',String(i));steps.forEach(function(b,j){b.parentNode.classList.toggle('on',j<=i);b.setAttribute('aria-current',j===i?'step':'false')});
-    cap.textContent=L.stages[i][1];next.hidden=i>=N-1;go.classList.toggle('show',i>=N-1)}
+    capN.textContent='0'+i;capT.textContent=L.stages[i][0];capD.textContent=L.stages[i][1];next.hidden=i>=N-1;go.classList.toggle('show',i>=N-1)}
   function stop(){auto=false;clearInterval(timer)}
   steps.forEach(function(b){b.addEventListener('click',function(){stop();set(+b.getAttribute('data-s'))})});
   next.addEventListener('click',function(){stop();set(Math.min(N-1,s+1))});

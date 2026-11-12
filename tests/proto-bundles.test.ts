@@ -2205,6 +2205,14 @@ test("CZECHFARM: 7 страниц и панель на ru, uz, en — услов
     assert.doesNotMatch(page, /rotate\(-38 20 20\)|концепт до получения логотипа/, `${path}: остался знак-концепт`);
     /* Над тёмной сценой шапка и строка браузера тёмные (владелец, 12.11.2026: «белые штуки мелькают при скролле»). */
     if (path === "" || /^(uz|en)$/.test(path)) assert.ok(page.includes('class="on-dark"') && page.includes('<meta name="theme-color" content="#071a18">'), `${path}: главная без тёмной шапки над сценой`);
+    /* Владелец, 12.11.2026: «на таблетках пролёт всё так же лагает», «коробка
+       перекрывает текст»: телефону — видео, сцена бренда не липнет к экрану. */
+    if (path === "" || /^(uz|en)$/.test(path)) {
+      assert.ok(page.includes('<video class="hs-vd" muted playsinline') && /"v":\d+,"vk":\[0,/.test(page), `${path}: телефону нет видео сцены`);
+      assert.ok(page.includes("function loadVid()") && page.includes("p.then(on,fail)"), `${path}: отказ play() не ведёт к кадрам`);
+      assert.ok(page.includes("/launch/box1.webp") && page.includes("/launch/bg3.webp") && page.includes('class="ln-cap"'), `${path}: сцена бренда не из рендеров`);
+      assert.ok(!/\.ln-stage\{[^}]*position:sticky/.test(page), `${path}: сцена бренда липнет к экрану и закрывает текст`);
+    }
     if (p === "" || p === "about" || p === "investors") assert.equal((page.match(/class="ch-n"/g) ?? []).length, 14, `${path}: в цепочке не 7 шагов на двух схемах`);
     if (p === "investors") assert.equal((page.match(/class="gb-b"/g) ?? []).length, 7, `${path}: не семь стеклянных блоков`);
     if (p === "partners") assert.equal((page.match(/class="gl-r"/g) ?? []).length, 5, `${path}: не пять маршрутов на глобусе`);

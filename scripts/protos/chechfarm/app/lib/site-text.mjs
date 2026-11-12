@@ -70,7 +70,7 @@ function split(html) {
    «Делаем»): свои файлы сайта, кроме кадров сцены. Ключ — отпечаток адреса с
    буквой i впереди, одна замена на все языки. Подставляется только файл,
    загруженный через панель. */
-const IMG = /<img\b[^>]*>/g, SRC = /\ssrc="(\/protos\/chechfarm\/(?!seq\/)[^"]+)"/;
+const IMG = /<img\b[^>]*>/g, SRC = /\ssrc="(\/protos\/chechfarm\/(?!seq\/|launch\/)[^"]+)"/;
 export const imgKey = (src) => "i" + hashOf(src);
 export const UPLOADED = /^\/uploads\/[0-9a-f]{32}\.(?:jpg|png|webp)$/;
 function outside(html, fn) {
