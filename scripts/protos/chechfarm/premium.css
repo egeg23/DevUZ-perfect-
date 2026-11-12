@@ -2,10 +2,7 @@
 .hs{position:relative;height:600vh;background:var(--deep);color:#fff}
 .hs-stick{position:sticky;top:0;height:100vh;height:100svh;overflow:hidden;display:flex;align-items:flex-end}
 .hs-media{position:absolute;inset:0;pointer-events:none}
-.hs-p,.hs-p img,.hs-cv,.hs-vd{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.hs-vd{opacity:0;pointer-events:none;transition:opacity .5s}
-.hs.vid .hs-vd{opacity:1}
-.hs.vid .hs-cv{opacity:0}
+.hs-p,.hs-p img,.hs-cv{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .hs-p{opacity:0;will-change:opacity}
 .hs-p:first-child{opacity:1}
 .hs-cv{opacity:0;transition:opacity .5s}

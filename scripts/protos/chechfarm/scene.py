@@ -1,7 +1,6 @@
 """Сцена первого экрана CZECHFARM: ролики → кадры WebP и видео телефона → шифр.
 
 SCENE_KEY=<64 hex> python3 -I scene.py <папка с роликами и ключевыми кадрами>
-VIDEO=1 … — только видео телефона (m.bin), кадры не трогаем.
 
 Владелец, 12.11.2026: «вау анимацию скрола в хиро секции. Из ролика можно
 взять завод. Оттуда падает упаковка, летит вниз, наполняется таблетками,
@@ -18,8 +17,6 @@ Kling 3.0 между шестью ключевыми кадрами nano banana 
   пачками по PACK, зашифрованы. Пачка = 4 байта числа кадров, по 4 байта
   длины каждого, потом сами WebP подряд (как у Cosmo World: сотни отдельных
   файлов с телефона не успевали прийти);
-- m.bin — видео телефона: все кадры роликов m-*, H.264 720, под тем же шифром;
-  кадры pNN.bin остаются запасным путём (телефон не умеет mp4, play() отказал);
 - p-<d|m>-<0…5>.webp — шесть открытых постеров: их видно, пока сцена
   грузится, без движения и когда ключ не пришёл.
 Шифр как у SamAuto (samauto/seal.py): AES-256-GCM, файл = 12 байт nonce +
@@ -71,45 +68,6 @@ def cut(src_fmt, width, q, tmp):
     return frames, keys
 
 
-FPS = 24
-
-
-def video():
-    """Телефону — одно видео m.bin: все кадры вертикальных роликов подряд (на
-    стыке ключевой кадр один раз), H.264, ключевой каждый третий, без B-кадров.
-    Телефон перематывает его аппаратно; кадры-картинки он распаковывать не
-    успевал (владелец, 12.11.2026: «на таблетках пролёт всё так же лагает»).
-    Приём из Nek и SamAuto. Возвращает число кадров и места ключевых."""
-    lst = tempfile.mkdtemp()
-    n, keys = 0, [0]
-    for ci, c in enumerate(CLIPS):
-        part = os.path.join(lst, c)
-        os.makedirs(part)
-        subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", os.path.join(SRC, f"m-{c}.mp4"), "-vsync", "0", "-q:v", "2", os.path.join(part, "%04d.jpg")], check=True)
-        fs = sorted(os.listdir(part))[1 if ci else 0:]
-        for f in fs:
-            os.rename(os.path.join(part, f), os.path.join(lst, f"{n:05d}.jpg"))
-            n += 1
-        keys.append(n - 1)
-    mp4 = os.path.join(lst, "m.mp4")
-    subprocess.run(["ffmpeg", "-v", "error", "-y", "-framerate", str(FPS), "-i", os.path.join(lst, "%05d.jpg"), "-vf", "scale=720:-2:flags=lanczos",
-                    "-c:v", "libx264", "-preset", "slow", "-tune", "film", "-crf", "27", "-g", "3", "-keyint_min", "1", "-bf", "0",
-                    "-pix_fmt", "yuv420p", "-profile:v", "high", "-movflags", "+faststart", "-an", mp4], check=True)
-    os.makedirs(OUT, exist_ok=True)
-    seal(open(mp4, "rb").read(), os.path.join(OUT, "m.bin"))
-    print("видео", n, "кадров,", round(os.path.getsize(mp4) / 1048576, 1), "МБ", file=sys.stderr)
-    shutil.rmtree(lst)
-    return {"v": n, "vk": keys, "fps": FPS}
-
-
-META = os.path.join(HERE, "scene.json")
-if os.environ.get("VIDEO"):
-    # Только видео телефона: кадры не трогаем, их шифр в git не меняется.
-    m = json.load(open(META))
-    m.update(video())
-    json.dump(m, open(META, "w"))
-    sys.exit(0)
-
 if os.path.isdir(OUT):
     shutil.rmtree(OUT)
 os.makedirs(OUT)
@@ -130,6 +88,5 @@ for fmt, suf, width in (("d", "", 1920), ("m", "m", 828)):
         im = Image.open(os.path.join(SRC, f"k{i}{suf}.png")).convert("RGB")
         im = im.resize((width, round(im.height * width / im.width)), Image.LANCZOS)
         im.save(os.path.join(OUT, f"p-{fmt}-{i}.webp"), "WEBP", quality=80, method=6)
-meta.update(video())
-json.dump(meta, open(META, "w"))
+json.dump(meta, open(os.path.join(HERE, "scene.json"), "w"))
 print(meta, file=sys.stderr)
