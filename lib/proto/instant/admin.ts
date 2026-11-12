@@ -36,6 +36,8 @@ import { TUR_PHOTOS } from "@/lib/proto/instant/tur";
 import { MEBEL_PHOTOS } from "@/lib/proto/instant/mebel";
 import { MAGAZIN_PHOTOS, shopPrice } from "@/lib/proto/instant/magazin";
 import { NEDV_PHOTOS } from "@/lib/proto/instant/nedv";
+import cargo from "@/content/proto-instant/cargopro-assets.json" with { type: "json" };
+import { logistikaPalette } from "@/lib/proto/instant/logistika";
 import { LIMITS, type InstantLocale, type InstantNiche, type InstantSite } from "@/lib/proto/instant/types";
 import { PROTO_BASE } from "@/lib/proto/pages";
 import { SALON_DEMO_JS, SALON_EXT_JS } from "@/lib/proto/instant/salon-admin";
@@ -798,7 +800,48 @@ ${panels.syanie.js}</script>
   );
 }
 
+// ── Панель логистики: «Обычная админка» CARGO PRO GROUP ──────────────
+/**
+ * Заявки, грузы со статусом, клиенты, история и роли (менеджер не видит
+ * выручку и маржу). Заявка с сайта шаблона (lg-req-1) — первой строкой,
+ * статус груза отсюда (lg-panel-1) виден клиенту в «Мои заявки».
+ * Демо-направления и суммы — ориентир рынка из конструктора Cargo Pro,
+ * с пометкой «демо-данные»; их городов, клиентов и номеров нет.
+ */
+function logistikaAdmin(site: InstantSite): string {
+  const l = site.locale;
+  const i = l === "uz" ? 1 : 0;
+  const nm = esc(site.name);
+  const ui = Object.fromEntries(Object.entries(cargo.ui as Record<string, string[]>).map(([k, v]) => [k, v[i]]));
+  ui.title = l === "uz" ? "Admin panel: arizalar va yuklar" : "Админка: заявки и грузы";
+  if (site.city) ui.tas = site.city;
+  const logo = imageUrl(site.logo);
+  const mark = logo
+    ? `<img src="${esc(logo)}" alt="${nm}" referrerpolicy="no-referrer" style="height:32px;width:auto;max-width:140px;object-fit:contain">`
+    : `<b style="font:700 16px/1.2 var(--hd)">${nm}</b>`;
+  const pd = {
+    l, site: PROTO_BASE, home: PROTO_BASE, disp: PROTO_BASE, ui, mark, name: site.name,
+    lanes: (cargo.lanes as { id: string; ru: string; uz: string; air: unknown; auto: unknown; rail: unknown; sea: unknown }[]).map((x) => ({ id: x.id, n: l === "uz" ? x.uz : x.ru, air: x.air, auto: x.auto, rail: x.rail, sea: x.sea })),
+  };
+  const terms = l === "uz" ? ["DevUz Studio maketi, demo ma’lumotlar.", "Foydalanish shartlari"] : ["Макет DevUz Studio, демо-данные.", "Условия использования"];
+  return page(
+    l,
+    `${nm} · ${l === "uz" ? "admin panel · demo" : "админка · демо"}`,
+    esc(l === "uz" ? "Logistika admin paneli: saytdan arizalar, yuklar va holatlar, mijozlar, tarix va rollar. Demo ma’lumotlar." : "Админка логистики: заявки с сайта, грузы и статусы, клиенты, история и роли. Демо-данные."),
+    "https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700&family=Onest:wght@400;700&display=swap",
+    `${cargo.css}${cargo.panelCss}:root{${logistikaPalette(site.color)}}.pn-brand{gap:10px}`,
+    `<body class="pn">
+<div id="app"></div>
+<footer class="pn-foot">${terms[0]} <a href="${esc(mockupTermsUrl(l))}" target="_blank" rel="noopener">${terms[1]}</a></footer>
+<script type="application/json" id="pn-data">${json(pd)}</script>
+<script>
+${cargo.panelJs}</script>
+</body>`,
+  );
+}
+
 const ADMINS: Partial<Record<InstantNiche, (site: InstantSite) => string>> = {
+  logistika: logistikaAdmin,
   stomatologiya: (s) => clinicAdmin(s, "stomatologiya"),
   medcentr: (s) => clinicAdmin(s, "medcentr"),
   restoran: restoranAdmin,

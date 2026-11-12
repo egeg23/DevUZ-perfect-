@@ -786,3 +786,45 @@ test("автосервис: слои сцены и фото ниши лежат 
   assert.ok(a && a.includes("'as-demo-1'") && !a.includes("'nk-demo-1'"), "админка читает заявки сайта автосервиса");
   assert.ok(a.includes("Панель автосервиса") && !/Главный врач|Пациент/.test(a.replace(/"[a-z_]+":"[^"]*"/g, "")), "слова сервиса, не клиники");
 });
+
+test("логистика: наш макет Cargo Pro, пример собирается без замечаний, защита та же", async () => {
+  // Владелец, 12.11.2026: «Мы теряем лидов из-за того, что они нажимают "другая ниша"… выведем больше ниш которые у нас есть».
+  const { EXAMPLE_LOGI } = await import("../scripts/protos/instant/preview-data.mjs");
+  const { cargoproAssets } = await import("../scripts/protos/instant/cargopro-assets.mjs");
+  const cpFile = (await import("@/content/proto-instant/cargopro-assets.json", { with: { type: "json" } })).default;
+  const { LOGISTIKA_PHOTOS, modeOf } = await import("@/lib/proto/instant/logistika");
+  assert.deepEqual(cpFile, cargoproAssets(), "node scripts/protos/instant/cargopro-assets.mjs");
+  const logi = EXAMPLE_LOGI as InstantSite;
+  const { html, problems, stamp, pages } = buildInstant(logi, SEED);
+  assert.deepEqual(problems, []);
+  assert.ok(instantReady("logistika") && hasAdmin("logistika"));
+  for (const c of ['class="top"', 'class="hero"', 'class="qc glass', 'class="velo"', 'id="services"', 'id="calc"', 'id="track"', 'id="customs"', 'class="tsum glass"']) assert.ok(html.includes(c), c);
+  assert.ok(html.includes("/ru/mockup-terms") && html.includes('class="dz-vid"'));
+  assert.ok(stamp.signals.some((s) => s.startsWith("js:")), "метка числа скрипта");
+  assert.ok(stamp.signals.filter((s) => s.startsWith("text:")).length >= 4, "две ловушки");
+  assert.ok(html.includes("IDLE=3000") && html.includes("classList.add('hide')"), "шапка прячется и возвращается через 3 секунды");
+  for (const s of logi.services) assert.ok(html.includes(s.name), s.name);
+  assert.ok(html.includes("от 9 $ за кг"), "цена клиента его словами");
+  // Ни имени, ни ставок, ни направлений Cargo Pro: конструктор тарифов не берётся.
+  for (const s of ["CARGO PRO", "cargoprogroup", "CPG-", "Гуанчжоу", "Silk Way", "flydubai", "/protos/cargopro", "cp-req-1", "Lider Cargo"]) assert.ok(!html.includes(s) && !(pages.admin ?? "").includes(s), s);
+  assert.deepEqual(tailsIn(html), []);
+  assert.ok(tailsIn("Звоните в CARGO PRO GROUP, info@cargoprogroup.com").length >= 2, "хвосты Cargo Pro ловятся");
+  // Заявка с сайта и статус из админки — одни ключи памяти.
+  assert.ok(html.includes("lg-req-1") && html.includes("lg-panel-1") && (pages.admin ?? "").includes("lg-req-1") && (pages.admin ?? "").includes("lg-panel-1"));
+  assert.equal(modeOf("Ж/д контейнеры"), "rail");
+  assert.equal(modeOf("Таможенное оформление"), "customs");
+  assert.equal(modeOf("Автоперевозки фурами"), "auto");
+  for (const photo of LOGISTIKA_PHOTOS) assert.ok(existsSync(`public${photo}`) && existsSync(`public${photo.replace("-1200", "-900")}`), photo);
+  const uz = buildInstant({ ...logi, locale: "uz", tagline: null, about: null }, SEED);
+  assert.deepEqual(uz.problems, []);
+  assert.ok(uz.html.includes("/uz/mockup-terms") && uz.html.includes("Hisobga ariza"));
+});
+
+test("логистика: нет таможни, видов транспорта и чата — без блоков и без выбора транспорта", async () => {
+  const { EXAMPLE_LOGI } = await import("../scripts/protos/instant/preview-data.mjs");
+  const bare = buildInstant({ ...(EXAMPLE_LOGI as InstantSite), services: [{ name: "Переезды", price: null }], perks: [], telegram: null, about: null, color: null }, SEED);
+  assert.deepEqual(bare.problems, []);
+  assert.ok(!bare.html.includes('id="customs"'), "таможни у компании нет — блока нет");
+  assert.ok(!bare.html.includes('data-qm="air"') && !bare.html.includes('data-m="sea"'), "чужих видов транспорта не обещаем");
+  assert.ok(!bare.html.includes('href="https://t.me/'), "нет чата — нет ссылки");
+});

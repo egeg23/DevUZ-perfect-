@@ -35,6 +35,7 @@ function fromPlan(plan: string, id: string, ru: string | null, uz: string): Offe
 }
 
 const OFFERS: Record<InstantNiche, () => OfferAddon[]> = {
+  logistika: () => LOGISTIKA_ADDONS(),
   // Nek Dental Studio.
   stomatologiya: () => [
     fromPlan("nek", "admin", null, "Klinika paneli: yozuv, messenjerlar, jadval"),
@@ -132,6 +133,15 @@ export const OFFER_ADDON_DISCOUNT = 0.3;
 export function offerAddonPrice(planPrice: number): number {
   return Math.max(5, Math.round((planPrice * (1 - OFFER_ADDON_DISCOUNT)) / 5) * 5);
 }
+
+// Логистика: допы нашего макета CARGO PRO GROUP (кабинет клиента и курс ЦБ не входят: допы вместе до 1 500 $).
+const LOGISTIKA_ADDONS = (): OfferAddon[] => [
+  fromPlan("cargopro", "admin", null, "Arizalar va yuklar paneli"),
+  fromPlan("cargopro", "track", null, "Yukni raqam bo‘yicha kuzatish"),
+  fromPlan("cargopro", "bot", null, "Telegram-bot: hisob va yuk holati"),
+  fromPlan("cargopro", "docs", null, "Bojxona hujjatlari bo‘yicha maslahat"),
+  fromPlan("cargopro", "seo", "Страницы направлений под запросы клиентов", "Mijozlar so‘rovlari uchun yo‘nalish sahifalari"),
+];
 
 export function offerAddons(niche: InstantNiche): OfferAddon[] {
   return OFFERS[niche]().map((a) => ({ ...a, price: offerAddonPrice(a.price) }));

@@ -18,6 +18,7 @@ import * as shox from "../shox-hospital/data.mjs";
 import * as agora from "../agora/data.mjs";
 import * as sem from "../semtravel/data.mjs";
 import * as gw from "../greenwell/data.mjs";
+import * as cargo from "../cargopro/data.mjs";
 
 const VTASHKENTE = [
   "vTashkente",
@@ -136,8 +137,18 @@ export function tails() {
     "10 квартал, дом 23/1",
     "10-kvartal, 23/1",
     "77 Lubricants",
+    // CARGO PRO GROUP — шаблон логистики с 12.11.2026 (lib/proto/instant/logistika).
+    cargo.COMPANY.name,
+    cargo.COMPANY.email,
+    new URL(cargo.COMPANY.site).hostname,
+    "cargoprogroup",
+    "cargoprogroup_bot",
+    "Абдуллы Каххара",
+    "Abdulla Qahhor",
+    "Lider Cargo",
+    "LBM Driver",
   ];
-  const phones = [nek.CLINIC.tel, syanie.BRAND.phoneRaw, ...shox.BRANCHES.map((b) => b.tel), VTASHKENTE_PHONE, agora.BRAND.tel, sem.BRAND.phoneRaw, sem.BRAND.phone2Raw, "+998771233300", "+998934453569", "+998909656131", "+998712764431"].filter(Boolean).map((p) => p.replace(/\D/g, ""));
+  const phones = [nek.CLINIC.tel, syanie.BRAND.phoneRaw, ...shox.BRANCHES.map((b) => b.tel), VTASHKENTE_PHONE, agora.BRAND.tel, sem.BRAND.phoneRaw, sem.BRAND.phone2Raw, "+998771233300", "+998934453569", "+998909656131", "+998712764431", ...cargo.COMPANY.phones.map(([, raw]) => raw)].filter(Boolean).map((p) => p.replace(/\D/g, ""));
   return {
     text: [...new Set(text.map((s) => s.trim()).filter((s) => s.length >= 5))].sort(),
     phones: [...new Set(phones)].sort(),
