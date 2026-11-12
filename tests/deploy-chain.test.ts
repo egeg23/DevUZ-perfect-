@@ -315,3 +315,18 @@ test("панель SIA: образ из GitHub, на сервере только
   assert.doesNotMatch(script, /cat "\$D\/\.env"|echo "\$\(k\)"/, "ключи панели попадают в журнал");
   assert.match(read("deploy/nginx-devuz.conf"), /include \/etc\/nginx\/snippets\/devuz-extra\/\*\.conf;/, "nginx сайта не подключает дополнительные пути");
 });
+
+/**
+ * 12.11.2026: образ сайта — 5,7 ГБ, на диске сервера 3 ГБ свободных. Код читает
+ * файлы с диска по пути, вычисленному при работе, и трассировка Next клала в
+ * standalone весь проект: вторую копию public (1 ГБ кадров макетов) и docs/.
+ * public лежит в образе отдельным слоем на том же месте, docs сервер не читает.
+ */
+test("в сборку сервера не едут public и docs: public — отдельным слоем образа", () => {
+  const config = read("next.config.ts");
+  const excludes = config.slice(config.indexOf("outputFileTracingExcludes"));
+  assert.match(excludes, /"\*\*": \[[^\]]*"\.\/public\/\*\*\/\*"/, "public не трассируется в standalone");
+  assert.match(excludes, /"\*\*": \[[^\]]*"\.\/docs\/\*\*\/\*"/, "docs не трассируется в standalone");
+  assert.doesNotMatch(excludes.slice(0, excludes.indexOf("}")), /kp\//, "kp/send и памятка нужны боту — их не исключаем");
+  assert.match(read("Dockerfile"), /COPY --from=build \/app\/public \.\/public/, "public приходит в образ отдельно");
+});
