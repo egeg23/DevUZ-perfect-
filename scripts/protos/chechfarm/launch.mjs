@@ -6,7 +6,13 @@
  * 10 000 000 $. Цифр сверх этого нет.
  *
  *   «Путь вашего бренда» (#launch): производитель вписывает название и страну,
- *   безымянная коробка проходит бренд → маркетинг → точки сбыта → под ключ;
+ *   безымянная коробка проходит бренд → маркетинг → точки сбыта → под ключ.
+ *   Сцена — рендеры Higgsfield (владелец, 12.11.2026: «отрисуй что можно и
+ *   нужно через higgsfield», «коробка перекрывает текст и неуклюже стоит»):
+ *   четыре фона этапов и коробка, пустая и фирменная, вырезанные
+ *   (public/protos/chechfarm/launch); название препарата код пишет на её
+ *   лицевой стороне. Подпись этапа стоит внутри карточки, на телефоне сцена
+ *   не прилипает к экрану и текст не закрывает;
  *   «Сам или с CZECHFARM» (#compare): два сценария одним переключателем.
  * Поведение — launch.js, стили — launch.css.
  */
@@ -33,21 +39,16 @@ const COMPARE = [
   { ru: ["Кто ведёт", "Вы из другой страны", "Команда на месте, полный комплект"], uz: ["Kim boshqaradi", "Siz boshqa mamlakatdan", "Joyidagi jamoa, to‘liq to‘plam"], en: ["Who runs it", "You, from another country", "A team on the ground, the full set"] },
 ];
 
-/* Полки: где стоят маленькие коробки на сцене точек сбыта. */
-const SHELF = [];
-for (let r = 0; r < 3; r++) for (let c = 0; c < 6; c++) SHELF.push([388 + c * 38, 108 + r * 92]);
-
 withAr(ORIGINS); withAr(STAGES); withAr(COMPARE);
 
-export function makeLaunch({ T, href, ICON, pad }) {
-  const box = (cls) => `<g class="${cls}"><path class="bx-side" d="M0 0 L36 -22 L36 158 L0 180Z" transform="translate(140 0)"/><path class="bx-top" d="M0 0 L140 0 L176 -22 L36 -22Z"/><rect class="bx-front" width="140" height="180" rx="4"/><rect class="bx-band" y="112" width="140" height="22"/><text class="bx-q" x="70" y="104" text-anchor="middle">?</text><text class="bx-name" x="70" y="72" text-anchor="middle"></text><text class="bx-org" x="70" y="160" text-anchor="middle"></text><g class="bx-mk" transform="translate(58 18) scale(.6)"><path d="M20 8h-4.5a8 8 0 0 0 0 16H20Z" class="m-a"/><path d="M20 8h4.5a8 8 0 0 1 0 16H20Z" class="m-b"/></g></g>`;
+export function makeLaunch({ T, href, ICON, pad, img }) {
 
   function launchBlock(l) {
     const t = T(l);
     const aud = [
-      ["doctors", 92, 76, t("Врачи", "Shifokorlar", "Doctors")],
-      ["pharmacies", 92, 336, t("Аптеки", "Dorixonalar", "Pharmacies")],
-      ["patients", 92, 206, t("Пациенты", "Bemorlar", "Patients")],
+      ["doctors", t("Врачи", "Shifokorlar", "Doctors")],
+      ["patients", t("Пациенты", "Bemorlar", "Patients")],
+      ["pharmacies", t("Аптеки", "Dorixonalar", "Pharmacies")],
     ];
     return `<section class="sec ln-sec" id="launch"><div class="wrap">
 <div class="sec-h mv mv-up"><p class="kicker">${t("Путь вашего бренда", "Brendingiz yo‘li", "Your brand’s path")}</p><h2 class="h2">${t("Впишите свой препарат <b>и проведите его на рынок</b>", "Doringizni yozing <b>va uni bozorga olib chiqing</b>", "Type in your product <b>and take it to market</b>")}</h2><p class="lead">${t("Так выглядит запуск под ключ: от препарата, который здесь никто не знает, до бренда на полках аптек.", "Kalit topshirish asosida ishga tushirish shunday ko‘rinadi: bu yerda hech kim bilmaydigan doridan dorixona peshtaxtasidagi brendgacha.", "This is what a turnkey launch looks like: from a product nobody here knows to a brand on pharmacy shelves.")}</p></div>
@@ -59,16 +60,13 @@ export function makeLaunch({ T, href, ICON, pad }) {
 <div class="ln-ctl"><button type="button" class="btn btn-pri" id="ln-next"><span>${t("Дальше", "Keyingisi", "Next")}</span>${ICON.arrow}</button><button type="button" class="btn btn-line" id="ln-reset">${t("Сначала", "Boshidan", "Start over")}</button></div>
 <a class="btn btn-gold ln-go" id="ln-go" href="${href(l, "partners")}#form">${ICON.send}<span>${t("Обсудить запуск", "Ishga tushirishni muhokama qilish", "Discuss the launch")}</span></a>
 </div>
-<div class="ln-stage" aria-hidden="true"><svg viewBox="0 0 640 440" class="ln-svg">
-<defs><linearGradient id="ln-fl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fbfaf7"/><stop offset="1" stop-color="#ebe7de"/></linearGradient></defs>
-<rect width="640" height="440" rx="24" fill="url(#ln-fl)"/>
-<g class="ln-shelf">${[0, 1, 2].map((r) => `<rect x="372" y="${196 + r * 92}" width="236" height="8" rx="3" class="sh-b"/>`).join("")}<rect x="372" y="60" width="6" height="292" class="sh-b"/><rect x="602" y="60" width="6" height="292" class="sh-b"/><text x="490" y="44" text-anchor="middle" class="sh-t">${t("Аптечные полки", "Dorixona peshtaxtalari", "Pharmacy shelves")}</text>
-${SHELF.map(([x, y], i) => `<g class="mini" style="--i:${i}" transform="translate(${x} ${y})"><rect class="mini-b" width="28" height="84" rx="2"/><rect class="mini-s" y="52" width="28" height="9"/></g>`).join("")}</g>
-<g class="ln-aud">${aud.map(([id, x, y, name]) => `<g class="au-n" transform="translate(${x} ${y})"><circle r="30" class="au-c"/><circle r="30" class="au-r"/><g transform="translate(-12 -12)" class="au-ic">${ICON[id].replace("<svg ", '<svg width="24" height="24" ')}</g><text y="50" text-anchor="middle">${name}</text></g><path class="au-l" d="M${x + 32} ${y} L250 ${200}"/>`).join("")}</g>
-<g transform="translate(250 130)"><g class="ln-box">${box("bx")}</g></g>
-<g class="ln-seal" transform="translate(490 120) rotate(-8)"><rect x="-92" y="-26" width="184" height="52" rx="10"/><text text-anchor="middle" y="9">${t("ПОД КЛЮЧ", "KALIT TOPSHIRISH", "TURNKEY")}</text></g>
-<text class="ln-cap" x="320" y="420" text-anchor="middle"></text>
-</svg></div>
+<div class="ln-stage">
+<div class="ln-bg" aria-hidden="true">${[0, 1, 2, 3].map((i) => `<img class="ln-b" data-b="${i}" src="${img}/launch/bg${i}.webp" alt="" width="1280" height="956" loading="lazy" decoding="async">`).join("")}</div>
+<ul class="ln-aud" aria-hidden="true">${aud.map(([id, name], i) => `<li style="--i:${i}"><i>${ICON[id]}</i>${name}</li>`).join("")}</ul>
+<div class="ln-box" aria-hidden="true"><img class="bx0" src="${img}/launch/box0.webp" alt="" width="469" height="760" loading="lazy" decoding="async"><img class="bx1" src="${img}/launch/box1.webp" alt="" width="469" height="760" loading="lazy" decoding="async"><span class="bx-q">?</span><span class="bx-lab"><b class="bx-name"></b><small class="bx-org"></small></span></div>
+<p class="ln-seal" aria-hidden="true">${t("ПОД КЛЮЧ", "KALIT TOPSHIRISH", "TURNKEY")}</p>
+<div class="ln-cap" aria-live="polite"><span class="ln-capn"></span><b class="ln-capt"></b><p class="ln-capd"></p></div>
+</div>
 </div>
 <p class="note" style="margin-top:14px">${t("Схема для наглядности: название и страну вписываете вы, ничего никуда не отправляется, пока вы не нажмёте «Обсудить запуск».", "Ko‘rgazmali sxema: nom va mamlakatni o‘zingiz yozasiz, «Ishga tushirishni muhokama qilish»ni bosmaguningizcha hech narsa yuborilmaydi.", "An illustrative diagram: you type the name and country; nothing is sent until you press “Discuss the launch”.")}</p>
 </div></section>`;
