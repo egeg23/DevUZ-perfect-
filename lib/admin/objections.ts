@@ -119,6 +119,12 @@ const PAYBACK: Readonly<Record<CircleNiche, { ru: string; uz: string }>> = {
   turagentstvo: { ru: "Один проданный тур окупает сайт", uz: "Bitta sotilgan tur saytni qoplaydi" },
   "uchebnyy-centr": { ru: "Один ученик на годовой курс окупает сайт", uz: "Yillik kursga yozilgan bitta o‘quvchi saytni qoplaydi" },
   nedvizhimost: { ru: "Одна сделка окупает сайт много раз", uz: "Bitta bitim saytni bir necha bor qoplaydi" },
+  avtoservis: { ru: "Сайт окупают несколько новых машин на ремонт", uz: "Saytni ta’mirga kelgan bir nechta yangi mashina qoplaydi" },
+  avtosalon: { ru: "Одна проданная машина окупает сайт много раз", uz: "Bitta sotilgan mashina saytni bir necha bor qoplaydi" },
+  magazin: { ru: "Сайт окупают первые заказы с доставкой", uz: "Saytni yetkazib berishli birinchi buyurtmalar qoplaydi" },
+  stroitelstvo: { ru: "Один объект на ремонт или стройку окупает сайт целиком", uz: "Ta’mir yoki qurilishga bitta obyekt saytni to‘liq qoplaydi" },
+  logistika: { ru: "Сайт окупают один-два постоянных клиента на перевозки", uz: "Saytni tashishga bir-ikki doimiy mijoz qoplaydi" },
+  uslugi: { ru: "Сайт окупают один-два новых клиента на обслуживание", uz: "Saytni xizmatga bir-ikki yangi mijoz qoplaydi" },
 };
 
 /** Готовый ответ на возражение — на языке клиента. */

@@ -125,7 +125,7 @@ test("czechfarm: страницы на четырёх языках, без сл�
     assert.ok(!html.includes("id=\"kit\""), "блок цены макета на боевом сайте");
   }
   const ar = readFileSync(dir + "ar/index.html", "utf8");
-  assert.match(ar, /<html lang="ar" dir="rtl">/);
+  assert.match(ar, /<html lang="ar" dir="rtl"( class="on-dark")?>/);
   const text = ar.slice(ar.indexOf("<body")).replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<svg[\s\S]*?<\/svg>/g, "").replace(/<[^>]+>/g, " ");
   const latin = [...new Set(text.match(/[A-Za-z]{4,}/g) || [])].filter((w) => !["CZECHFARM", "Health", "Trust", "Value", "alliance"].includes(w));
   assert.deepEqual(latin, [], "английский на арабской главной");

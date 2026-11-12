@@ -17,7 +17,9 @@
  *   стоматология, медцентр — панель клиники Nek Dental Studio;
  *   ресторан — панель Agora (вход кодом, брони, заказы, меню и стоп-лист);
  *   турагентство — панель Sunday; учебный центр — панель FinTax;
- *   мебель — панель магазина Greenwell; недвижимость — панель Soffice.
+ *   мебель и интернет-магазин — панель магазина Greenwell; недвижимость — панель Soffice;
+ *   автосервис — панель клиники Nek словами сервиса;
+ *   услуги для бизнеса (и «Другое») — та же панель FinTax, словами любой сферы услуг.
  * У этих четырёх своей панели в макете сферы нет — выбор владельца,
  * 11.11.2026: «Да, делай по своей рекомендации».
  *
@@ -32,10 +34,14 @@ import { priceNumber, RESTORAN_PHOTOS, restoranPalette, RESTORAN_TIMES } from "@
 import { brandColor, esc, hexToHsl, imageUrl } from "@/lib/proto/instant/safe";
 import { TUR_PHOTOS } from "@/lib/proto/instant/tur";
 import { MEBEL_PHOTOS } from "@/lib/proto/instant/mebel";
+import { MAGAZIN_PHOTOS, shopPrice } from "@/lib/proto/instant/magazin";
 import { NEDV_PHOTOS } from "@/lib/proto/instant/nedv";
+import cargo from "@/content/proto-instant/cargopro-assets.json" with { type: "json" };
+import { logistikaPalette } from "@/lib/proto/instant/logistika";
 import { LIMITS, type InstantLocale, type InstantNiche, type InstantSite } from "@/lib/proto/instant/types";
 import { PROTO_BASE } from "@/lib/proto/pages";
 import { SALON_DEMO_JS, SALON_EXT_JS } from "@/lib/proto/instant/salon-admin";
+import { avtosalonAdmin } from "@/lib/proto/instant/avtosalon-admin";
 
 type Pair = [string, string];
 const json = (v: unknown) => JSON.stringify(v).replace(/</g, "\\u003c");
@@ -169,6 +175,66 @@ function clinicAdmin(site: InstantSite, niche: "stomatologiya" | "medcentr"): st
 <script type="application/json" id="pn-data">${json(pd)}</script>
 <script>
 ${panels.nek.js}</script>
+</body>`,
+  );
+}
+
+// ── Панель автосервиса: та же панель Nek, словами сервиса ─────────────
+/**
+ * Своей панели у макета AUTOMECHANIC нет (там конструктор и превью «Сверх
+ * сайта»), поэтому у автосервиса — панель клиники Nek как есть: записи,
+ * расписание по мастерам, сообщения всех каналов, подключения, роли.
+ * Слова клиники заменены словами сервиса, ключ памяти — как у сайта шаблона
+ * (lib/proto/instant/avtoservis): запись с макета приходит первой строкой.
+ */
+const AVTO_UI: Record<string, Pair> = {
+  title: ["Панель автосервиса", "Avtoservis paneli"],
+  r_doc: ["Владелец", "Ega"], r_adm: ["Мастер-приёмщик", "Usta-qabulchi"],
+  revHide: ["видит владелец", "ega ko‘radi"], came: ["Машины приняты", "Qabul qilingan mashinalar"],
+  src: ["Откуда клиенты", "Mijozlar qayerdan"], s_trip: ["По рекомендации", "Tavsiya bo‘yicha"], s_quiz: ["Карты", "Xaritalar"],
+  who: ["Клиент", "Mijoz"], st_came: ["Машина приехала", "Mashina keldi"], a_came: ["Машина приехала", "Mashina keldi"],
+  note_came: ["отметил приезд", "kelganini belgiladi"], doctor: ["Мастер", "Usta"],
+  m_ph: ["Ответ клиенту", "Mijozga javob"], m_book: ["Записать в цех", "Sexga yozish"],
+  c_sub: ["Вставьте ключ один раз, дальше всё работает само. Подключения меняет владелец.", "Kalitni bir marta qo‘ying, keyin hammasi o‘zi ishlaydi. Ulanishlarni ega o‘zgartiradi."],
+  c_ro: ["Подключения меняет владелец. Вы видите, что подключено.", "Ulanishlarni ega o‘zgartiradi. Siz nima ulanganini ko‘rasiz."],
+  c_wz_e: ["Все чаты клиентов приходят в «Сообщения», ответ уходит в тот же канал.", "Mijozlarning barcha chatlari «Xabarlar»ga keladi, javob o‘sha kanalga ketadi."],
+  c_tg_t: ["Telegram-бот мастеру-приёмщику", "Usta-qabulchi uchun Telegram-bot"],
+  c_crm_e: ["Каждая запись становится сделкой с контактом клиента, этап возвращается в панель.", "Har bir yozuv mijoz kontakti bilan bitimga aylanadi, bosqich panelga qaytadi."],
+  c_rem_t: ["Напоминания клиентам", "Mijozlarga eslatmalar"],
+  c_rem_e: ["Сообщение в WhatsApp за сутки и за два часа до записи. Работает через Wazzup.", "Yozuvdan bir kun va ikki soat oldin WhatsApp’da xabar. Wazzup orqali ishlaydi."],
+};
+const AVTO_MASTERS: Pair[] = [["Мастер по ходовой", "Yurish qismi ustasi"], ["Моторист", "Motorchi"], ["Электрик", "Elektrik"], ["Диагност", "Diagnost"]];
+
+function avtoservisAdmin(site: InstantSite): string {
+  const l = site.locale;
+  const i = l === "uz" ? 1 : 0;
+  const t = (p: Pair) => p[i];
+  const ui = Object.fromEntries(Object.entries({ ...NEK_UI, ...AVTO_UI }).map(([k, v]) => [k, v[i]]));
+  const services = site.services.slice(0, LIMITS.services);
+  // Те же id услуг, что в форме записи шаблона (avtoservis.ts): заявки с сайта сходятся.
+  const svc = services.length ? services.map((s, k) => ({ id: `s${k}`, n: s.name })) : [{ id: "x", n: l === "uz" ? "Diagnostika" : "Диагностика" }];
+  const docs = site.doctors.length ? site.doctors.slice(0, 5).map((d) => ({ n: d.name, r: d.role ?? "" })) : AVTO_MASTERS.map((p) => ({ n: t(p), r: "" }));
+  const pd = {
+    l, ui, name: site.name, mark: markOf(site, "pn-mark"), cur: l === "uz" ? "so‘m" : "сум", k: 2500,
+    site: PROTO_BASE, home: PROTO_BASE,
+    svc, docs, wd: WD[l], names: NAMES[l], trap: "[[t:0]] [[t:1]]",
+    threads: clinicThreads(l, svc.map((s) => s.id)), langs: [],
+  };
+  const name = esc(site.name);
+  const terms = l === "uz" ? ["DevUz Studio maketi, demo ma’lumotlar. Maketdan foydalanib, siz", "maket shartlarini qabul qilasiz"] : ["Макет DevUz Studio, демо-данные. Пользуясь макетом, вы принимаете", "условия макета"];
+  const js = panels.nek.js.replace("var KEY='nk-demo-1';", "var KEY='as-demo-1';");
+  return page(
+    l,
+    `${name} · ${t(AVTO_UI.title).toLowerCase()} · ${t(NEK_UI.demo)}`,
+    esc(l === "uz" ? "Avtoservis paneli: saytdan yozuvlar, ustalar jadvali, holatlar, tarix va rollar. Demo ma’lumotlar." : "Панель автосервиса: записи с сайта, расписание по мастерам, статусы, история и роли. Демо-данные."),
+    "https://fonts.googleapis.com/css2?family=Cormorant:wght@400;700&family=Manrope:wght@400;700&display=swap",
+    `${nek.css}:root{${dentalPalette(site.color)}}${panels.nek.css}`,
+    `<body class="pn">
+<div id="app"></div>
+<footer class="pn-foot">${terms[0]} <a href="${esc(mockupTermsUrl(l))}" target="_blank" rel="noopener">${terms[1]}</a>.</footer>
+<script type="application/json" id="pn-data">${json(pd)}</script>
+<script>
+${js}</script>
 </body>`,
   );
 }
@@ -332,24 +398,88 @@ const EDU_TARIFFS: Pair[] = [["Группа", "Guruh"], ["Интенсив", "In
 const EDU_STAFF: Pair[] = [["Малика А.", "Malika A."], ["Бехруз Т.", "Behruz T."], ["Нодира С.", "Nodira S."], ["Отабек Р.", "Otabek R."]];
 const EDU_HEADS: Pair[] = [["Вы (владелец)", "Siz (ega)"], ["Шахло К.", "Shahlo K."], ["Жавохир М.", "Javohir M."]];
 
+/** Слова сферы для панели FinTax: подписи, виды клиентов, четыре тарифа, команда, заголовок. */
+type FintaxWords = { ui: Record<string, Pair>; kinds: Record<string, Pair>; tariffs: Pair[]; staff: Pair[]; heads: Pair[]; title: Pair; desc: Pair; lo?: number[]; hi?: number[] };
+
 function eduAdmin(site: InstantSite): string {
+  return fintaxAdmin(site, {
+    ui: EDU_UI, kinds: EDU_KINDS, tariffs: EDU_TARIFFS, staff: EDU_STAFF, heads: EDU_HEADS,
+    title: ["панель учебного центра · демо", "o‘quv markazi paneli · demo"],
+    desc: ["Панель учебного центра: заявки с сайта, ученики, курсы, команда и роли, история. Демо-данные.", "O‘quv markazi paneli: saytdan arizalar, o‘quvchilar, kurslar, jamoa va rollar, tarix. Demo ma’lumotlar."],
+  });
+}
+
+// ── Панель «Услуг для бизнеса»: та же FinTax ───────────────────────────
+/**
+ * Шаблон услуг — универсальный (на него падает «Другое»), поэтому подписи
+ * FinTax про бухгалтерию, отчёты и налоги — общими словами любой сферы
+ * услуг. Клиенту-бухгалтерии они тоже подходят.
+ */
+const USLUGI_UI: Record<string, Pair> = {
+  n_clients: ["Клиенты", "Mijozlar"], n_tariffs: ["Услуги", "Xizmatlar"],
+  role_head: ["Руководитель", "Rahbar"],
+  r_owner: ["Всё: заявки, клиентов с суммами, выручку в месяц, услуги на сайте, команду и историю.", "Hammasi: arizalar, summalari bilan mijozlar, oylik tushum, saytdagi xizmatlar, jamoa va tarix."],
+  r_head: ["Заявки, клиентов, ответственных и сроки, суммы и услуги на сайте.", "Arizalar, mijozlar, mas’ullar va muddatlar, summalar va saytdagi xizmatlar."],
+  r_manager: ["Заявки и клиентов без денег: не видит выручку и суммы, не правит услуги и команду.", "Arizalar va mijozlar pulsiz: tushum va summalarni ko‘rmaydi, xizmatlar va jamoani o‘zgartirmaydi."],
+  pickNote: ["«Подбор услуги»: человек сам ответил на вопросы, услуга уже в заявке.", "«Xizmat tanlash»: odam savollarga o‘zi javob berdi, xizmat allaqachon arizada."],
+  mix: ["Клиенты по услугам", "Xizmatlar bo‘yicha mijozlar"], soon: ["Сроки на неделе", "Haftadagi muddatlar"],
+  col_tariff: ["Услуга", "Xizmat"], col_acc: ["Ответственный", "Mas’ul"],
+  col_docs: ["Задач за месяц", "Oylik vazifalar"], col_rep: ["Ближайший срок", "Eng yaqin muddat"],
+  src_pick: ["Подбор услуги", "Xizmat tanlash"],
+  cs_wait: ["Ждём ответ клиента", "Mijoz javobini kutyapmiz"],
+  rep_vat: ["Встреча с клиентом", "Mijoz bilan uchrashuv"], rep_pay: ["Оплата за месяц", "Oylik to‘lov"], rep_fin: ["Сдача работы", "Ishni topshirish"],
+  pickH: ["Из подбора услуги", "Xizmat tanlovidan"], docs: ["Задач в месяц", "Oyiga vazifalar"], staffN: ["Человек в команде клиента", "Mijoz jamoasidagi kishilar"],
+  tax: ["Формат", "Format"], tax_usn: ["Разово", "Bir martalik"], tax_vat: ["По договору", "Shartnoma bo‘yicha"], ved: ["Срочно", "Shoshilinch"],
+  pickWhy: ["Человек пришёл с ответами: на звонке не нужно спрашивать задачу заново.", "Odam javoblar bilan keldi: qo‘ng‘iroqda vazifani qayta so‘rash shart emas."],
+  clientsHelp: ["Кто ведёт клиента, сколько задач сделано и что ближайшее.", "Mijozni kim olib boradi, nechta vazifa bajarildi va eng yaqini nima."],
+  noMoney: ["Суммы видят владелец и руководитель.", "Summalarni egasi va rahbar ko‘radi."],
+  gotAll: ["Работа сдана", "Ish topshirildi"],
+  tariffsHelp: ["Строка цены выходит на сайт: в карточку услуги и в текст заявки.", "Narx qatori saytga chiqadi: xizmat kartochkasiga va ariza matniga."],
+  tariffsRo: ["Цены услуг меняют владелец и руководитель.", "Xizmat narxlarini egasi va rahbar o‘zgartiradi."],
+  peopleNote: ["Имена и роли демо: впишете своих сотрудников.", "Ismlar va rollar demo: xodimlaringizni yozasiz."],
+  a_acc: ["назначил ответственного", "mas’ul tayinladi"], a_docs: ["отметил, что работа сдана", "ish topshirilganini belgiladi"], a_price: ["изменил цену услуги", "xizmat narxini o‘zgartirdi"],
+};
+const USLUGI_TARIFFS: Pair[] = [["Разовая задача", "Bir martalik vazifa"], ["Пакет услуг", "Xizmatlar paketi"], ["Абонемент", "Abonement"], ["Под ключ", "To‘liq"]];
+const USLUGI_STAFF: Pair[] = [["Малика А.", "Malika A."], ["Бехруз Т.", "Behruz T."], ["Нодира С.", "Nodira S."], ["Отабек Р.", "Otabek R."]];
+const USLUGI_HEADS: Pair[] = [["Вы (владелец)", "Siz (ega)"], ["Шахло К.", "Shahlo K."], ["Жавохир М.", "Javohir M."]];
+
+function uslugiAdmin(site: InstantSite): string {
+  const services = site.services.slice(0, LIMITS.services);
+  // Чем человек пришёл: услуги клиента (те же значения, что у формы на сайте), остальное — «Другое».
+  const kinds: Record<string, Pair> = Object.fromEntries([...services.map((s, k): [string, Pair] => [`s${k}`, [s.name, s.name]]), ["other", ["Другое", "Boshqa"]]]);
+  // Люди компании, если названы, — ответственные; иначе демо-имена.
+  const staff: Pair[] = site.doctors.length ? site.doctors.slice(0, 4).map((d): Pair => [d.name, d.name]) : USLUGI_STAFF;
+  return fintaxAdmin(site, {
+    ui: USLUGI_UI,
+    kinds,
+    tariffs: USLUGI_TARIFFS,
+    staff,
+    heads: USLUGI_HEADS,
+    lo: [0.4, 0.8, 1.2, 2],
+    hi: [0.9, 1.6, 2.4, 4],
+    title: ["панель заявок · демо", "arizalar paneli · demo"],
+    desc: ["Панель сайта: заявки с сайта, клиенты, услуги, команда и роли, история. Демо-данные.", "Sayt paneli: saytdan arizalar, mijozlar, xizmatlar, jamoa va rollar, tarix. Demo ma’lumotlar."],
+  });
+}
+
+function fintaxAdmin(site: InstantSite, w: FintaxWords): string {
   const l = site.locale;
   const i = l === "uz" ? 1 : 0;
   const t = (p: Pair) => p[i];
   const nm = esc(site.name);
   const base = panels.fintax.ui as Record<string, string[]>;
-  const ui = Object.fromEntries(Object.entries(base).map(([k, v]) => [k, (EDU_UI[k] ?? v)[i].split("{name}").join(nm)]));
+  const ui = Object.fromEntries(Object.entries(base).map(([k, v]) => [k, (w.ui[k] ?? v)[i].split("{name}").join(nm)]));
   const services = site.services.slice(0, LIMITS.services);
   // Панель FinTax держит ровно четыре тарифа: курсы клиента, недостающие — форматами занятий.
-  const four = [0, 1, 2, 3].map((k) => (services[k] ? { n: services[k].name, p: services[k].price ?? "" } : { n: t(EDU_TARIFFS[k]), p: "" }));
+  const four = [0, 1, 2, 3].map((k) => (services[k] ? { n: services[k].name, p: services[k].price ?? "" } : { n: t(w.tariffs[k]), p: "" }));
   const pd = {
     lang: l, ui,
     names: NAMES[l].map((x, k) => `${x} ${(l === "uz" ? "ABDEFGHIKL" : "АБВГДЕЖЗИК")[k]}.`),
-    staff: EDU_STAFF.map((p, k) => ({ n: t(p), r: services[k]?.name ?? t(EDU_TARIFFS[k]) })),
-    heads: EDU_HEADS.map(t),
+    staff: w.staff.map((p, k) => ({ n: t(p), r: services[k]?.name ?? t(w.tariffs[k % w.tariffs.length]) })),
+    heads: w.heads.map(t),
     // Сколько платят в месяц, млн сум (демо): от группы к индивидуальным.
-    tariffs: four.map((x, k) => ({ id: ["ip", "small", "mid", "big"][k], n: x.n, p: x.p, lo: [0.3, 0.5, 0.8, 0.4][k], hi: [0.6, 0.9, 1.6, 0.8][k] })),
-    kinds: Object.fromEntries(Object.entries(EDU_KINDS).map(([k, v]) => [k, t(v)])),
+    tariffs: four.map((x, k) => ({ id: ["ip", "small", "mid", "big"][k], n: x.n, p: x.p, lo: (w.lo ?? [0.3, 0.5, 0.8, 0.4])[k], hi: (w.hi ?? [0.6, 0.9, 1.6, 0.8])[k] })),
+    kinds: Object.fromEntries(Object.entries(w.kinds).map(([k, v]) => [k, t(v)])),
     services: services.map((s) => s.name),
     site: PROTO_BASE, prices: PROTO_BASE, tg: site.telegram ? `https://t.me/${esc(site.telegram.replace(/^@/, ""))}` : "",
   };
@@ -360,8 +490,8 @@ function eduAdmin(site: InstantSite): string {
   const palette = hex ? (() => { const [h, s0] = hexToHsl(hex); const sat = Math.min(Math.max(s0, 35), 80); return `--teal:hsl(${h} ${sat}% 18%);--teal2:hsl(${h} ${sat}% 34%);--mint:hsl(${h} ${Math.round(sat * 0.5)}% 92%);--deep:hsl(${h} ${sat}% 12%)`; })() : "";
   return page(
     l,
-    `${nm} · ${l === "uz" ? "o‘quv markazi paneli · demo" : "панель учебного центра · демо"}`,
-    esc(l === "uz" ? "O‘quv markazi paneli: saytdan arizalar, o‘quvchilar, kurslar, jamoa va rollar, tarix. Demo ma’lumotlar." : "Панель учебного центра: заявки с сайта, ученики, курсы, команда и роли, история. Демо-данные."),
+    `${nm} · ${t(w.title)}`,
+    esc(t(w.desc)),
     "https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;700&family=Playfair+Display:wght@400;700&display=swap",
     `${panels.fintax.css}:root{${palette}}html,body{overflow-x:clip}.brand .logo img{height:30px;width:auto;max-width:140px;object-fit:contain}`,
     `<body class="panel" data-lang="${l}">
@@ -388,6 +518,48 @@ ${panels.fintax.js}</script>
   );
 }
 
+// ── Панель стройки и ремонта: та же FinTax, словами ремонта ───────────
+/** Подписи FinTax про бухгалтерию — словами ремонтной компании. Остальные — как у FinTax. */
+const STROI_UI: Record<string, Pair> = {
+  demoNote: ["Демо-панель макета DevUz Studio: цифры и объекты с пометкой «демо» придуманы для показа, заявки с сайта в этом браузере настоящие.", "DevUz Studio maketining demo paneli: «demo» belgili raqamlar va obyektlar ko‘rsatish uchun o‘ylab topilgan, shu brauzerdagi saytdan arizalar haqiqiy."],
+  n_clients: ["Объекты", "Obyektlar"], n_tariffs: ["Услуги и цены", "Xizmatlar va narxlar"],
+  role_head: ["Главный прораб", "Bosh prorab"],
+  r_owner: ["Всё: заявки, объекты с суммами, выручку в месяц, услуги на сайте, бригады и историю.", "Hammasi: arizalar, summalari bilan obyektlar, oylik tushum, saytdagi xizmatlar, brigadalar va tarix."],
+  r_head: ["Заявки, объекты, бригады и сроки, суммы и услуги на сайте.", "Arizalar, obyektlar, brigadalar va muddatlar, summalar va saytdagi xizmatlar."],
+  r_manager: ["Заявки и объекты без денег: не видит выручку и суммы, не правит услуги и команду.", "Arizalar va obyektlar pulsiz: tushum va summalarni ko‘rmaydi, xizmatlar va jamoani o‘zgartirmaydi."],
+  k_client: ["Стали объектами", "Obyekt bo‘ldi"], clientsN: ["объектов", "obyekt"],
+  pickNote: ["«Расчёт ремонта»: заказчик сам описал объект, площадь и работы уже в заявке.", "«Ta’mir hisobi»: buyurtmachi obyektni o‘zi tasvirladi, maydon va ishlar allaqachon arizada."],
+  mix: ["Объекты по услугам", "Xizmatlar bo‘yicha obyektlar"], soon: ["Работы на неделе", "Haftadagi ishlar"],
+  co: ["Заказчик", "Buyurtmachi"], col_tariff: ["Услуга", "Xizmat"], col_acc: ["Прораб", "Prorab"], col_co: ["Объект", "Obyekt"],
+  col_docs: ["Этапов сделано", "Bajarilgan bosqichlar"], col_rep: ["Ближайшее", "Eng yaqini"],
+  src_pick: ["Расчёт ремонта", "Ta’mir hisobi"], s_offer: ["Назначили замер", "O‘lchov belgilandi"], s_client: ["Объект в работе", "Obyekt ishda"],
+  cs_wait: ["Ждём аванс", "Avans kutilmoqda"], cs_late: ["Отстаёт от графика", "Jadvaldan ortda"],
+  rep_vat: ["Замер", "O‘lchov"], rep_pay: ["Оплата этапа", "Bosqich to‘lovi"], rep_fin: ["Сдача объекта", "Obyektni topshirish"],
+  pickH: ["Из расчёта ремонта", "Ta’mir hisobidan"], docs: ["Этапов в работе", "Ishdagi bosqichlar"], staffN: ["Человек в бригаде", "Brigadadagi kishilar"],
+  tax: ["Тип объекта", "Obyekt turi"], tax_usn: ["Квартира", "Kvartira"], tax_vat: ["Дом", "Uy"], ved: ["Коммерция", "Tijorat"],
+  pickWhy: ["Заказчик пришёл с площадью и списком работ: на замере не нужно спрашивать заново.", "Buyurtmachi maydon va ishlar ro‘yxati bilan keldi: o‘lchovda qayta so‘rash shart emas."],
+  stNote: ["Статус сразу виден заказчику на сайте. «Объект в работе» добавляет его в «Объекты».", "Holat saytda buyurtmachiga darhol ko‘rinadi. «Obyekt ishda» uni «Obyektlar»ga qo‘shadi."],
+  clientsHelp: ["Кто ведёт объект, сколько этапов сделано и что ближайшее.", "Obyektni kim olib boradi, nechta bosqich bajarildi va eng yaqini nima."],
+  noMoney: ["Суммы видят владелец и главный прораб.", "Summalarni egasi va bosh prorab ko‘radi."],
+  since: ["в работе с", "ishda:"], gotAll: ["Оплата получена", "To‘lov olindi"],
+  tariffsHelp: ["Строка цены выходит на сайт: в услуги и в текст заявки.", "Narx qatori saytga chiqadi: xizmatlarga va ariza matniga."],
+  tariffsRo: ["Цены услуг меняют владелец и главный прораб.", "Xizmat narxlarini egasi va bosh prorab o‘zgartiradi."],
+  people: ["Команда {name}", "{name} jamoasi"], peopleNote: ["Имена и роли демо: впишете своих прорабов и мастеров.", "Ismlar va rollar demo: prorab va ustalaringizni yozasiz."],
+  a_acc: ["назначил прораба", "prorab tayinladi"], a_docs: ["отметил оплату этапа", "bosqich to‘lovini belgiladi"], a_price: ["изменил цену услуги", "xizmat narxini o‘zgartirdi"],
+};
+const STROI_KINDS: Record<string, Pair> = { ip: ["Квартиры", "Kvartiralar"], opt: ["Новостройки", "Yangi binolar"], retail: ["Частные дома", "Xususiy uylar"], serv: ["Офисы", "Ofislar"], prod: ["Магазины и кафе", "Do‘kon va kafelar"] };
+const STROI_TARIFFS: Pair[] = [["Дизайн-проект", "Dizayn loyiha"], ["Черновые работы", "Qora ishlar"], ["Чистовая отделка", "Oq pardoz"], ["Под ключ", "Kalit topshirish"]];
+const STROI_STAFF: Pair[] = [["Рустам Х.", "Rustam X."], ["Бахтиёр Н.", "Baxtiyor N."], ["Илхом С.", "Ilhom S."], ["Сардор М.", "Sardor M."]];
+const STROI_HEADS: Pair[] = [["Вы (владелец)", "Siz (ega)"], ["Улугбек К.", "Ulug‘bek K."], ["Дилшод А.", "Dilshod A."]];
+
+function stroiAdmin(site: InstantSite): string {
+  return fintaxAdmin(site, {
+    ui: STROI_UI, kinds: STROI_KINDS, tariffs: STROI_TARIFFS, staff: STROI_STAFF, heads: STROI_HEADS,
+    title: ["панель ремонтной компании · демо", "ta’mir kompaniyasi paneli · demo"],
+    desc: ["Панель ремонтной компании: заявки с сайта, объекты, услуги и цены, бригады и роли, история. Демо-данные.", "Ta’mir kompaniyasi paneli: saytdan arizalar, obyektlar, xizmatlar va narxlar, brigadalar va rollar, tarix. Demo ma’lumotlar."],
+  });
+}
+
 // ── Панель мебели: магазин Greenwell ─────────────────────────────────
 /** Подписи Greenwell, которые про их витрину на Uzum, — словами мебельной компании. */
 const MEBEL_UI: Record<string, Pair> = {
@@ -406,7 +578,17 @@ export function sumPrice(price: string | null): number {
   return n >= 50_000 ? n : 0;
 }
 
-function mebelAdmin(site: InstantSite): string {
+/** Товары магазина без цены числом — с демо-ценой в сумах, подписано «демо». */
+const SHOP_DEMO_PRICE = [320_000, 185_000, 540_000, 95_000, 260_000, 410_000, 150_000, 720_000];
+const SHOP_FALLBACK: Pair[] = [["Товар", "Mahsulot"], ["Новинка", "Yangilik"], ["Хит продаж", "Xit"], ["Подарочный набор", "Sovg‘a to‘plami"]];
+
+/**
+ * Панель магазина Greenwell: у мебели (заказы — замеры и сборка) и у
+ * интернет-магазина (заказы — с сайта шаблона, память `ms-demo-1`, товары —
+ * те же номера, что у магазина: g0, g1…).
+ */
+function mebelAdmin(site: InstantSite, kind: "mebel" | "magazin" = "mebel"): string {
+  const shop = kind === "magazin";
   const l = site.locale;
   const i = l === "uz" ? 1 : 0;
   const t = (p: Pair) => p[i];
@@ -414,23 +596,27 @@ function mebelAdmin(site: InstantSite): string {
   const base = panels.greenwell.ui as Record<string, string[]>;
   const ui = Object.fromEntries(Object.entries(base).map(([k, v]) => [k, (MEBEL_UI[k] ?? v)[i].split("{name}").join(nm)]));
   const own = site.photos.map(imageUrl).filter((u): u is string => Boolean(u));
-  const items = site.services.length ? site.services.slice(0, 8).map((x) => ({ n: x.name, p: sumPrice(x.price) })) : MEBEL_FALLBACK.map((x) => ({ n: t(x), p: 0 }));
+  const items = site.services.length
+    ? site.services.slice(0, shop ? 12 : 8).map((x) => ({ n: x.name, p: shop ? shopPrice(x.price) : sumPrice(x.price) }))
+    : (shop ? SHOP_FALLBACK : MEBEL_FALLBACK).map((x) => ({ n: t(x), p: 0 }));
+  const demoPrice = shop ? SHOP_DEMO_PRICE : MEBEL_DEMO_PRICE;
   const products = items.map((x, k) => ({
-    id: `m${k}`, cat: "all", price: x.p || MEBEL_DEMO_PRICE[k % MEBEL_DEMO_PRICE.length], old: null, count: 1, form: "", rating: 0, reviews: 0,
+    id: `${shop ? "g" : "m"}${k}`, cat: "all", price: x.p || demoPrice[k % demoPrice.length], old: null, count: 1, form: "", rating: 0, reviews: 0,
     orders: `${[60, 45, 38, 30, 22, 18, 14, 10][k] ?? 10}+`, g: 0, c: false, back: 0, n: x.n, s: "", b: [], alt: "", how: "", comp: "", tags: [], rev: [], uzum: "",
   }));
-  const ph = Object.fromEntries(products.map((p, k) => [p.id, own[k % Math.max(own.length, 1)] ?? MEBEL_PHOTOS[k % MEBEL_PHOTOS.length].replace("-1200", "-900")]));
+  const stock = shop ? MAGAZIN_PHOTOS : MEBEL_PHOTOS.map((x) => x.replace("-1200", "-900"));
+  const ph = Object.fromEntries(products.map((p, k) => [p.id, own[k % Math.max(own.length, 1)] ?? stock[k % stock.length]]));
   const me = l === "uz" ? "Siz (ega)" : "Вы (владелец)";
   const managers = l === "uz" ? ["Dilnoza", "Aziz", "Madina"] : ["Дилноза", "Азиз", "Мадина"];
   const couriers = l === "uz" ? ["Sherzod", "Behzod", "Ulug‘bek", "Jasur"] : ["Шерзод", "Бехзод", "Улугбек", "Жасур"];
   const roles: Record<string, string> = { [me]: l === "uz" ? "Ega" : "Владелец" };
-  managers.forEach((m, k) => (roles[m] = [t(["Старший менеджер", "Katta menejer"]), t(["Замеры и заказы", "O‘lchov va buyurtmalar"]), t(["Отзывы и поддержка", "Sharhlar va qo‘llab-quvvatlash"])][k]));
-  couriers.forEach((c) => (roles[c] = t(["Доставка и сборка", "Yetkazish va yig‘ish"])));
+  managers.forEach((m, k) => (roles[m] = [t(["Старший менеджер", "Katta menejer"]), shop ? t(["Заказы", "Buyurtmalar"]) : t(["Замеры и заказы", "O‘lchov va buyurtmalar"]), t(["Отзывы и поддержка", "Sharhlar va qo‘llab-quvvatlash"])][k]));
+  couriers.forEach((c) => (roles[c] = shop ? t(["Доставка", "Yetkazish"]) : t(["Доставка и сборка", "Yetkazish va yig‘ish"])));
   const first = products[0]?.id ?? "m0";
   const pd = {
     lang: l, img: "", ph, name: site.name, ui, products,
-    cats: [{ id: "all", n: t(["Изделия", "Mahsulotlar"]) }],
-    shop: { delivery: 150_000, freeFrom: 5_000_000, pointsRate: 0, pointsMaxShare: 0, reviewPts: 0, reviewPhotoPts: 0, welcome: 0, promo: {}, levels: [] },
+    cats: [{ id: "all", n: shop ? t(["Товары", "Mahsulotlar"]) : t(["Изделия", "Mahsulotlar"]) }],
+    shop: { delivery: shop ? 25_000 : 150_000, freeFrom: shop ? 500_000 : 5_000_000, pointsRate: 0, pointsMaxShare: 0, reviewPts: 0, reviewPhotoPts: 0, welcome: 0, promo: {}, levels: [] },
     nasiya: [{ id: "uzum", n: "Uzum Nasiya", c: "#7000ff", terms: { 3: 0, 6: 8, 12: 16 } }, { id: "alif", n: "Alif Nasiya", c: "#00a651", terms: { 3: 0, 6: 9, 12: 18 } }],
     pays: [{ id: "click", n: "Click" }, { id: "payme", n: "Payme" }, { id: "uzumbank", n: "Uzum Bank" }, { id: "card", n: "Uzcard / Humo" }, { id: "cash", n: t(["Наличными при доставке", "Yetkazishda naqd"]) }, { id: "nasiya", n: t(["Рассрочка", "Muddatli to‘lov"]) }],
     couriers, managers, roles, me,
@@ -444,28 +630,33 @@ function mebelAdmin(site: InstantSite): string {
     costShare: Object.fromEntries(products.map((p, k) => [p.id, [0.46, 0.5, 0.44, 0.52, 0.48, 0.45, 0.5, 0.47][k % 8]])),
     stock: Object.fromEntries(products.map((p, k) => [p.id, [6, 14, 9, 3, 11, 20, 7, 5][k % 8]])),
     logActs: [
-      { k: "st", who: "m", v: [t(["Замер назначен", "O‘lchov belgilandi"]), t(["В производстве", "Ishlab chiqarishda"])] }, { k: "st", who: "c", v: [t(["Доставлен и собран", "Yetkazildi va yig‘ildi"])] },
+      shop
+        ? { k: "st", who: "m", v: [t(["Собран", "Yig‘ildi"]), t(["Передан курьеру", "Kuryerga berildi"])] }
+        : { k: "st", who: "m", v: [t(["Замер назначен", "O‘lchov belgilandi"]), t(["В производстве", "Ishlab chiqarishda"])] },
+      { k: "st", who: "c", v: [shop ? t(["Доставлен", "Yetkazildi"]) : t(["Доставлен и собран", "Yetkazildi va yig‘ildi"])] },
       { k: "cour", who: "m", v: couriers },
-      { k: "call", who: "m", v: [t(["подтвердил замер", "o‘lchovni tasdiqladi"]), t(["перенёс доставку на субботу", "yetkazishni shanbaga ko‘chirdi"]), t(["уточнил цвет фасадов", "fasad rangini aniqladi"])] },
+      { k: "call", who: "m", v: shop
+        ? [t(["подтвердил заказ", "buyurtmani tasdiqladi"]), t(["перенёс доставку на субботу", "yetkazishni shanbaga ko‘chirdi"]), t(["уточнил адрес", "manzilni aniqladi"])]
+        : [t(["подтвердил замер", "o‘lchovni tasdiqladi"]), t(["перенёс доставку на субботу", "yetkazishni shanbaga ko‘chirdi"]), t(["уточнил цвет фасадов", "fasad rangini aniqladi"])] },
       { k: "rvok", who: "m", v: products.slice(0, 3).map((p) => p.n) }, { k: "reply", who: "m", v: products.slice(0, 2).map((p) => p.n) },
     ],
     pending: [
-      { id: first, a: t(["Камола", "Kamola"]), d: "14.10", r: 5, t: t(["Замерщик приехал вовремя, собрали аккуратно за один день.", "O‘lchovchi o‘z vaqtida keldi, bir kunda ehtiyotkorlik bilan yig‘ishdi."]), o: "Z-10466", photo: 1 },
-      { id: products[1]?.id ?? first, a: t(["Рустам", "Rustam"]), d: "14.10", r: 4, t: t(["Качество хорошее, но доставку перенесли на день.", "Sifat yaxshi, lekin yetkazishni bir kunga ko‘chirishdi."]), o: "Z-10461" },
-      { id: products[2]?.id ?? first, a: t(["[[t:0]]", "[[t:0]]"]), d: "13.10", r: 2, t: t(["Одна дверца закрывается неровно. Хочу, чтобы мастер приехал и поправил.", "Bitta eshik notekis yopiladi. Usta kelib to‘g‘rilashini xohlayman."]), o: "Z-10455" },
+      { id: first, a: t(["Камола", "Kamola"]), d: "14.10", r: 5, t: (shop ? t(["Привезли вовремя, всё как на фото.", "O‘z vaqtida olib kelishdi, hammasi suratdagidek."]) : t(["Замерщик приехал вовремя, собрали аккуратно за один день.", "O‘lchovchi o‘z vaqtida keldi, bir kunda ehtiyotkorlik bilan yig‘ishdi."])), o: "Z-10466", photo: 1 },
+      { id: products[1]?.id ?? first, a: t(["Рустам", "Rustam"]), d: "14.10", r: 4, t: (shop ? t(["Товар хороший, но доставку перенесли на день.", "Mahsulot yaxshi, lekin yetkazishni bir kunga ko‘chirishdi."]) : t(["Качество хорошее, но доставку перенесли на день.", "Sifat yaxshi, lekin yetkazishni bir kunga ko‘chirishdi."])), o: "Z-10461" },
+      { id: products[2]?.id ?? first, a: t(["[[t:0]]", "[[t:0]]"]), d: "13.10", r: 2, t: (shop ? t(["Пришёл не тот размер. Хочу обменять.", "Boshqa o‘lcham keldi. Almashtirmoqchiman."]) : t(["Одна дверца закрывается неровно. Хочу, чтобы мастер приехал и поправил.", "Bitta eshik notekis yopiladi. Usta kelib to‘g‘rilashini xohlayman."])), o: "Z-10455" },
     ],
-    replyTpl: t(["Спасибо за отзыв! Рады, что мебель понравилась.", "Sharh uchun rahmat! Mebel yoqqanidan xursandmiz."]),
-    cmpReply: t(["Извините за это. Мастер приедет завтра и всё поправит бесплатно.", "Buning uchun uzr. Usta ertaga kelib, hammasini bepul to‘g‘rilaydi."]),
+    replyTpl: shop ? t(["Спасибо за отзыв! Рады, что покупка понравилась.", "Sharh uchun rahmat! Xarid yoqqanidan xursandmiz."]) : t(["Спасибо за отзыв! Рады, что мебель понравилась.", "Sharh uchun rahmat! Mebel yoqqanidan xursandmiz."]),
+    cmpReply: shop ? t(["Извините за это. Курьер заберёт товар и привезёт нужный размер.", "Buning uchun uzr. Kuryer mahsulotni olib, kerakli o‘lchamni olib keladi."]) : t(["Извините за это. Мастер приедет завтра и всё поправит бесплатно.", "Buning uchun uzr. Usta ertaga kelib, hammasini bepul to‘g‘rilaydi."]),
     geo: t(["Ташкент|Ташкентская обл.|Самарканд|Фергана|Наманган|Другие", "Toshkent|Toshkent vil.|Samarqand|Farg‘ona|Namangan|Boshqalar"]).split("|").map((n, k) => [n, [58, 14, 8, 7, 5, 8][k]]),
-    topPages: [[t(["Главная", "Bosh sahifa"]), 64], [products[0]?.n ?? "", 24], [t(["Каталог", "Katalog"]), 19], [products[1]?.n ?? products[0]?.n ?? "", 12], [t(["Заявка на замер", "O‘lchovga ariza"]), 9]],
+    topPages: [[t(["Главная", "Bosh sahifa"]), 64], [products[0]?.n ?? "", 24], [t(["Каталог", "Katalog"]), 19], [products[1]?.n ?? products[0]?.n ?? "", 12], [shop ? t(["Корзина", "Savat"]) : t(["Заявка на замер", "O‘lchovga ariza"]), 9]],
     searches: products.slice(0, 6).map((p, k) => [p.n.toLowerCase(), [42, 31, 24, 18, 11, 7][k]]),
     // Заказов мебели в день в разы меньше, чем у магазина биодобавок.
-    k: 0.25,
+    k: shop ? 0.6 : 0.25,
   };
   const ic = (k: string) => `<svg class="ic" aria-hidden="true"><use href="#i-${k}"/></svg>`;
   const nav: [string, string, Pair, string?][] = [
     ["dash", "grid", ["Сводка", "Umumiy"]], ["orders", "box", ["Заказы", "Buyurtmalar"], "orders"], ["reviews", "star", ["Отзывы", "Sharhlar"], "reviews"],
-    ["goods", "tag", ["Изделия и прибыль", "Mahsulotlar va foyda"]], ["logistics", "truck", ["Доставка и сборка", "Yetkazish va yig‘ish"]], ["nasiya", "cal", ["Рассрочка", "Muddatli to‘lov"]],
+    ["goods", "tag", shop ? ["Товары и прибыль", "Mahsulotlar va foyda"] : ["Изделия и прибыль", "Mahsulotlar va foyda"]], ["logistics", "truck", shop ? ["Доставка", "Yetkazish"] : ["Доставка и сборка", "Yetkazish va yig‘ish"]], ["nasiya", "cal", ["Рассрочка", "Muddatli to‘lov"]],
     ["traffic", "chart", ["Посещаемость", "Tashriflar"]], ["log", "list", ["История менеджеров", "Menejerlar tarixi"]],
   ];
   const sprite = `<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>${Object.entries(panels.greenwell.icons as Record<string, string>).map(([k, v]) => `<symbol id="i-${k}" viewBox="0 0 24 24" stroke="currentColor">${v}</symbol>`).join("")}</defs></svg>`;
@@ -477,7 +668,9 @@ function mebelAdmin(site: InstantSite): string {
   return page(
     l,
     `${nm} · ${l === "uz" ? "do‘kon paneli · demo" : "панель магазина · демо"}`,
-    esc(l === "uz" ? "Mebel do‘koni paneli: buyurtmalar tarixi bilan, sharhlar, foyda, yetkazish va yig‘ish, muddatli to‘lov, tashriflar. Demo ma’lumotlar." : "Панель мебельного магазина: заказы с историей, отзывы, прибыль, доставка и сборка, рассрочка, посещаемость. Демо-данные."),
+    esc(shop
+      ? (l === "uz" ? "Internet-do‘kon paneli: saytdan buyurtmalar tarixi bilan, sharhlar, foyda, yetkazish, muddatli to‘lov, tashriflar. Demo ma’lumotlar." : "Панель интернет-магазина: заказы с сайта с историей, отзывы, прибыль, доставка, рассрочка, посещаемость. Демо-данные.")
+      : (l === "uz" ? "Mebel do‘koni paneli: buyurtmalar tarixi bilan, sharhlar, foyda, yetkazish va yig‘ish, muddatli to‘lov, tashriflar. Demo ma’lumotlar." : "Панель мебельного магазина: заказы с историей, отзывы, прибыль, доставка и сборка, рассрочка, посещаемость. Демо-данные.")),
     "https://fonts.googleapis.com/css2?family=Manrope:wght@400;700&family=Montserrat:wght@400;700&display=swap",
     `${panels.greenwell.css}:root{${palette}}`,
     `<body class="panel" data-lang="${l}">
@@ -499,7 +692,7 @@ ${sprite}
 <div id="toast" role="status" aria-live="polite"></div>
 <script type="application/json" id="gp-data">${json(pd)}</script>
 <script>
-${panels.greenwell.js}</script>
+${shop ? panels.greenwell.js.split("'mb-demo-1'").join("'ms-demo-1'").split("'mb-panel-1'").join("'ms-panel-1'") : panels.greenwell.js}</script>
 </body>`,
   );
 }
@@ -714,15 +907,61 @@ ${panels.syanie.js}</script>
   );
 }
 
+// ── Панель логистики: «Обычная админка» CARGO PRO GROUP ──────────────
+/**
+ * Заявки, грузы со статусом, клиенты, история и роли (менеджер не видит
+ * выручку и маржу). Заявка с сайта шаблона (lg-req-1) — первой строкой,
+ * статус груза отсюда (lg-panel-1) виден клиенту в «Мои заявки».
+ * Демо-направления и суммы — ориентир рынка из конструктора Cargo Pro,
+ * с пометкой «демо-данные»; их городов, клиентов и номеров нет.
+ */
+function logistikaAdmin(site: InstantSite): string {
+  const l = site.locale;
+  const i = l === "uz" ? 1 : 0;
+  const nm = esc(site.name);
+  const ui = Object.fromEntries(Object.entries(cargo.ui as Record<string, string[]>).map(([k, v]) => [k, v[i]]));
+  ui.title = l === "uz" ? "Admin panel: arizalar va yuklar" : "Админка: заявки и грузы";
+  if (site.city) ui.tas = site.city;
+  const logo = imageUrl(site.logo);
+  const mark = logo
+    ? `<img src="${esc(logo)}" alt="${nm}" referrerpolicy="no-referrer" style="height:32px;width:auto;max-width:140px;object-fit:contain">`
+    : `<b style="font:700 16px/1.2 var(--hd)">${nm}</b>`;
+  const pd = {
+    l, site: PROTO_BASE, home: PROTO_BASE, disp: PROTO_BASE, ui, mark, name: site.name,
+    lanes: (cargo.lanes as { id: string; ru: string; uz: string; air: unknown; auto: unknown; rail: unknown; sea: unknown }[]).map((x) => ({ id: x.id, n: l === "uz" ? x.uz : x.ru, air: x.air, auto: x.auto, rail: x.rail, sea: x.sea })),
+  };
+  const terms = l === "uz" ? ["DevUz Studio maketi, demo ma’lumotlar.", "Foydalanish shartlari"] : ["Макет DevUz Studio, демо-данные.", "Условия использования"];
+  return page(
+    l,
+    `${nm} · ${l === "uz" ? "admin panel · demo" : "админка · демо"}`,
+    esc(l === "uz" ? "Logistika admin paneli: saytdan arizalar, yuklar va holatlar, mijozlar, tarix va rollar. Demo ma’lumotlar." : "Админка логистики: заявки с сайта, грузы и статусы, клиенты, история и роли. Демо-данные."),
+    "https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700&family=Onest:wght@400;700&display=swap",
+    `${cargo.css}${cargo.panelCss}:root{${logistikaPalette(site.color)}}.pn-brand{gap:10px}`,
+    `<body class="pn">
+<div id="app"></div>
+<footer class="pn-foot">${terms[0]} <a href="${esc(mockupTermsUrl(l))}" target="_blank" rel="noopener">${terms[1]}</a></footer>
+<script type="application/json" id="pn-data">${json(pd)}</script>
+<script>
+${cargo.panelJs}</script>
+</body>`,
+  );
+}
+
 const ADMINS: Partial<Record<InstantNiche, (site: InstantSite) => string>> = {
+  logistika: logistikaAdmin,
   stomatologiya: (s) => clinicAdmin(s, "stomatologiya"),
   medcentr: (s) => clinicAdmin(s, "medcentr"),
   restoran: restoranAdmin,
   turagentstvo: tourAdmin,
   "uchebnyy-centr": eduAdmin,
-  mebel: mebelAdmin,
+  mebel: (s) => mebelAdmin(s, "mebel"),
+  magazin: (s) => mebelAdmin(s, "magazin"),
   nedvizhimost: nedvAdmin,
   "salon-krasoty": salonAdmin,
+  avtoservis: avtoservisAdmin,
+  stroitelstvo: stroiAdmin,
+  uslugi: uslugiAdmin,
+  avtosalon: avtosalonAdmin,
 };
 
 /** Админка сферы на данных клиента; у сферы без нашей панели — null. */

@@ -21,7 +21,7 @@
 import { cases } from "@/content/cases";
 import { OFFER_MS, announceText } from "@/lib/admin/mockup-offer";
 import { PROTOTYPE_HOURS } from "@/lib/admin/outreach";
-import { CIRCLE_NICHES, CIRCLE_NICHE_RU, isCircleNiche, type CircleNiche } from "@/lib/admin/sales-after-reply";
+import { CIRCLE_NICHES, CIRCLE_NICHE_RU, circleNicheOf, isCircleNiche, type CircleNiche } from "@/lib/admin/sales-after-reply";
 import { buildInstant, type InstantBuild } from "@/lib/proto/instant/build";
 import { limitVerdict, mayUseInstant, siteUrlOf } from "@/lib/proto/instant/limits";
 import { offerAddons } from "@/lib/proto/instant/offer";
@@ -108,6 +108,12 @@ const CASE_NICHES: Record<CircleNiche, readonly string[]> = {
   turagentstvo: ["turagentstvo"],
   "uchebnyy-centr": ["uchebnyy-centr"],
   nedvizhimost: ["nedvizhimost", "agentstvo-nedvizhimosti"],
+  avtoservis: ["avtoservis"],
+  avtosalon: ["avtoservis"],
+  magazin: ["internet-magazin"],
+  stroitelstvo: ["stroitelnaya-kompaniya"],
+  logistika: ["logistika"],
+  uslugi: ["yurfirma", "svyaz"],
 };
 
 /**
@@ -141,6 +147,7 @@ const T = {
     badUrl: "Не похоже на адрес сайта. Пришлите адрес вида <code>clinic.uz</code> или нажмите «Сайта нет».",
     niche: "Чем занимается ваша компания? Выберите, и я возьму готовый макет под вашу сферу.",
     other: "Другое",
+    qWhat: "Напишите в двух словах, чем занимается компания, например <code>ремонт квартир</code> или <code>юридические услуги</code>. Возьму самый близкий наш макет.",
     qName: "Как называется ваша компания?",
     qPhone: "Телефон для записи, например <code>+998 90 123 45 67</code>",
     qAddress: "Адрес, как его ищут клиенты. Нет адреса — напишите «нет».",
@@ -170,6 +177,7 @@ const T = {
     badUrl: "Bu sayt manziliga o‘xshamaydi. <code>clinic.uz</code> ko‘rinishidagi manzilni yuboring yoki «Sayt yo‘q» tugmasini bosing.",
     niche: "Kompaniyangiz nima bilan shug‘ullanadi? Tanlang, sohangizga mos tayyor maketni olaman.",
     other: "Boshqa",
+    qWhat: "Kompaniya nima bilan shug‘ullanishini ikki so‘zda yozing, masalan <code>kvartira ta’miri</code> yoki <code>yuridik xizmatlar</code>. Eng yaqin maketimizni olaman.",
     qName: "Kompaniyangiz nomi qanday?",
     qPhone: "Yozilish uchun telefon, masalan <code>+998 90 123 45 67</code>",
     qAddress: "Mijozlar qidiradigan manzil. Manzil yo‘q bo‘lsa — «yo‘q» deb yozing.",
@@ -206,6 +214,12 @@ const NICHE_UZ: Record<CircleNiche, string> = {
   turagentstvo: "Turagentlik",
   "uchebnyy-centr": "O‘quv markazi",
   nedvizhimost: "Ko‘chmas mulk",
+  avtoservis: "Avtoservis",
+  avtosalon: "Avtosalon",
+  magazin: "Internet-do‘kon",
+  stroitelstvo: "Qurilish va ta’mir",
+  logistika: "Logistika",
+  uslugi: "Biznes xizmatlari",
 };
 
 /** Допы ниши — те же, что в КП (lib/proto/instant/offer): цены из планов наших макетов. */
@@ -430,8 +444,16 @@ export async function handleInstantText(
       return true;
     }
     case "niche":
-      await deps.send(ctx.chatId, t.niche, nicheRows(flow.locale));
+    case "q_what": {
+      // Сферу написали словами (в ответ на «Другое» или вместо кнопки) — ближайший макет.
+      if (value.length < 2) {
+        await deps.send(ctx.chatId, t.niche, nicheRows(flow.locale));
+        return true;
+      }
+      const next = { ...flow, answers: { ...flow.answers, what: value.slice(0, 120) } };
+      await chooseNiche(ctx, next, nicheFromWords(value), deps);
       return true;
+    }
     case "q_name":
       await deps.saveFlow(ctx.chatId, { ...flow, stage: "q_phone", answers: { ...flow.answers, name: value.slice(0, 60) } });
       await deps.send(ctx.chatId, t.qPhone);
@@ -494,7 +516,31 @@ export async function handleInstantButton(ctx: Ctx, parts: readonly string[], de
     return;
   }
   if (parts[1] !== "n" || !isCircleNiche(parts[2]) || flow.stage === "building") return;
-  const niche = parts[2];
+  if (parts[2] === "general") {
+    // «Другое» — не тупик (владелец, 12.11.2026: «Мы теряем лидов из-за того,
+    // что они нажимают "другая ниша"»): спрашиваем словами и берём ближайший макет.
+    await deps.saveFlow(ctx.chatId, { ...flow, stage: "q_what" });
+    await deps.send(ctx.chatId, t.qWhat);
+    return;
+  }
+  await chooseNiche(ctx, flow, parts[2], deps);
+}
+
+/**
+ * Сфера словами клиента → наш макет: те же слова, что узнают нишу кружка
+ * (circleNicheOf). Не узнали — универсальный макет «Услуги для бизнеса»,
+ * а пока его нет — ручной путь.
+ */
+export const FALLBACK_NICHE = "uslugi" as const;
+
+export function nicheFromWords(text: string): CircleNiche {
+  const hit = circleNicheOf({ label: text });
+  if (hit !== "general") return hit;
+  return instantReady(FALLBACK_NICHE) ? FALLBACK_NICHE : "general";
+}
+
+async function chooseNiche(ctx: Ctx, flow: Flow, niche: CircleNiche, deps: Deps): Promise<void> {
+  const t = T[flow.locale];
   if (!instantReady(niche)) {
     await deps.dropFlow(ctx.chatId);
     await deps.send(ctx.chatId, manualText(flow.locale, niche));

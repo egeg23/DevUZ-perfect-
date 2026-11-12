@@ -129,8 +129,10 @@ test("3. кружок ниши: своя ниша, нет — общий; общ
   assert.equal(circleNicheOf({ niche: "agentstvo-nedvizhimosti" }), "nedvizhimost");
   assert.equal(circleNicheOf({ niche: null, label: "Dental Clinic Smile" }), "stomatologiya");
   assert.equal(circleNicheOf({ niche: null, label: "", host: "mebel-lux.uz" }), "mebel");
-  assert.equal(circleNicheOf({ niche: "avtoservis", label: "Hunter" }), "general");
-  assert.equal(CIRCLE_NICHES.length, 9);
+  assert.equal(circleNicheOf({ niche: "svyaz", label: "Hunter" }), "general");
+  assert.equal(circleNicheOf({ niche: "avtoservis", label: "Hunter" }), "avtoservis");
+  assert.equal(circleNicheOf({ niche: null, label: "Автосалон Chevrolet" }), "avtosalon", "автосалон — не салон красоты");
+  assert.equal(CIRCLE_NICHES.length, 15);
 
   const saved = [
     { id: 50, date: 5, bytes: 500 }, // кружок стоматологии, ru
@@ -156,15 +158,15 @@ test("3. кружок ниши: своя ниша, нет — общий; общ
   assert.deepEqual(slotOfFileKey("tg-circle-file"), { lang: "ru", niche: "general" });
   assert.deepEqual(slotOfFileKey("tg-circle-file:ru:restoran"), { lang: "ru", niche: "restoran" });
 
-  // Каких не хватает: 8 ниш × 2 языка минус загруженные и лежащие в «Избранном».
+  // Каких не хватает: 14 ниш × 2 языка минус загруженные и лежащие в «Избранном».
   const missing = missingNicheSlots(new Map([["ru:mebel", {}]]), [{ nicheSavedAt: { "uz:mebel": 1 } }]);
-  assert.equal(missing.length, 14);
+  assert.equal(missing.length, 26);
   assert.ok(!missing.some((s) => s.niche === "mebel"));
 
   // Бот: после языка — ниша кнопками, в пределе Telegram.
   const rows = circleNicheButtons("uz", 123456789);
   const buttons = rows.flat();
-  assert.equal(buttons.length, 9);
+  assert.equal(buttons.length, 15);
   for (const b of buttons) assert.ok(Buffer.byteLength(b.callback_data) <= 64, b.callback_data);
   assert.deepEqual(circleNicheChoice(buttons[2].callback_data.split(":")), { lang: "uz", niche: "stomatologiya", messageId: 123456789 });
   assert.equal(circleChoice(buttons[2].callback_data.split(":")), null, "кнопка ниши — не кнопка языка");

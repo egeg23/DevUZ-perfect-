@@ -9,7 +9,8 @@
 # только скачивает и запускает (scripts/protos/chechfarm/app/deploy/remote.sh).
 #
 # Выкатка идёт, только когда заведена переменная репозитория CZECHFARM_DOMAIN
-# и секреты CZECHFARM_HOST, CZECHFARM_USER, CZECHFARM_SSH_KEY (порт —
+# и секреты CZECHFARM_HOST, CZECHFARM_USER, CZECHFARM_SSH_KEY или
+# CZECHFARM_PASSWORD (пароль сервера, если ключа нет; порт —
 # CZECHFARM_PORT, код первого входа — CZECHFARM_SETUP_CODE, ключ кадров сцены —
 # CZECHFARM_SCENE_KEY). Что попросить у компании —
 # scripts/protos/chechfarm/app/README.md. Репозиторий открытый: журнал задачи
@@ -146,6 +147,7 @@ jobs:
           host: ${{ secrets.CZECHFARM_HOST }}
           username: ${{ secrets.CZECHFARM_USER }}
           key: ${{ secrets.CZECHFARM_SSH_KEY }}
+          password: ${{ secrets.CZECHFARM_PASSWORD }}
           port: ${{ secrets.CZECHFARM_PORT || 22 }}
           envs: CF_SCRIPT,CF_APP,CF_CADDY,CF_DOMAIN,CF_PORT,CF_COMMIT,CF_SETUP,CF_SCENE,CF_FRONT,GH_TOKEN,GH_ACTOR
           command_timeout: 25m

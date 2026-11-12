@@ -311,4 +311,10 @@ export const circleNicheNames = defineDict({
   turagentstvo: { ru: "Турагентство", uz: "Turagentlik", pl: "Biuro podróży" },
   "uchebnyy-centr": { ru: "Учебный центр", uz: "O‘quv markazi", pl: "Centrum szkoleniowe" },
   nedvizhimost: { ru: "Недвижимость", uz: "Ko‘chmas mulk", pl: "Nieruchomości" },
+  avtoservis: { ru: "Автосервис", uz: "Avtoservis", pl: "Warsztat samochodowy" },
+  avtosalon: { ru: "Автосалон", uz: "Avtosalon", pl: "Salon samochodowy" },
+  magazin: { ru: "Интернет-магазин", uz: "Internet-do‘kon", pl: "Sklep internetowy" },
+  stroitelstvo: { ru: "Стройка и ремонт", uz: "Qurilish va ta’mir", pl: "Budowa i remont" },
+  logistika: { ru: "Логистика", uz: "Logistika", pl: "Logistyka" },
+  uslugi: { ru: "Услуги для бизнеса", uz: "Biznes xizmatlari", pl: "Usługi dla firm" },
 });

@@ -109,7 +109,7 @@ if (PROD) for (const v of Object.values(EXTRA_NAV)) v.push(tr(v[2]));
 const navName = (p, l) => (NAV.find((n) => n[0] === p) || [p, EXTRA_NAV[p] || EXTRA_NAV.privacy])[1][LANGS.indexOf(l)];
 const L3 = (o, l) => o[l];
 const PB = makeBlocks({ T, href, ICON, IMG, L3, CHAIN, pad, BASE_URL });
-const LB = makeLaunch({ T, href, ICON, pad });
+const LB = makeLaunch({ T, href, ICON, pad, img: IMG });
 
 /* ── Шапка, меню, подвал ───────────────────────────────────────────── */
 function headerHtml(l, p) {
@@ -244,7 +244,7 @@ function pillarsBlock(l, withHead = true) {
   const mv = ["mv-left", "mv-up", "mv-right"];
   return `<section class="sec" id="formula"><div class="wrap">
 ${withHead ? `<div class="sec-h mv mv-up"><p class="kicker">${t("Формула бренда", "Brend formulasi", "Brand formula")}</p><h2 class="h2">Health. Trust. <b>Value.</b></h2><p class="lead">${t("Три смысла, на которых стоит компания. Каждый следующий держится на предыдущем.", "Kompaniya tayanadigan uchta ma’no. Har biri oldingisiga tayanadi.", "Three ideas the company stands on. Each one rests on the one before.")}</p></div>` : ""}
-<div class="pill3">${PILLARS.map((p, i) => `<article class="pl mv ${mv[i]}" data-k="${p.id}" style="--d:${i * 120}ms"><span class="pl-i">${ICON[p.id]}</span><span class="pl-w">${p.word}</span><h3>${L3(p, l)[0]}</h3><p>${L3(p, l)[1]}</p></article>`).join("")}</div>
+<div class="pill3">${PILLARS.map((p, i) => `<article class="pl mv ${mv[i]}" data-k="${p.id}" style="--d:${i * 120}ms"><span class="pl-i"><img src="${IMG}/launch/${p.id}.webp" alt="" width="256" height="256" loading="lazy" decoding="async"></span><span class="pl-w">${p.word}</span><h3>${L3(p, l)[0]}</h3><p>${L3(p, l)[1]}</p></article>`).join("")}</div>
 </div></section>`;
 }
 function portfolioTeaser(l) {
@@ -495,14 +495,14 @@ function page(l, p) {
   const isHome = p === "";
   const dz = isHome && !PROD ? dzIntroSolo(l === "en" ? "ru" : l).replace(">Пропустить<", l === "en" ? ">Skip<" : ">Пропустить<") : "";
   return `<!doctype html>
-<html lang="${l}"${l === "ar" ? ' dir="rtl"' : ""}>
+<html lang="${l}"${l === "ar" ? ' dir="rtl"' : ""}${isHome ? ' class="on-dark"' : ""}>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>${TITLES[p][LANGS.indexOf(l)]}</title>
 <meta name="description" content="${DESC[LANGS.indexOf(l)]}">
 <meta name="robots" content="${PROD ? "index, follow" : "noindex, nofollow, noarchive"}">${PROD ? `\n<link rel="canonical" href="__SITE_URL__${href(l, p)}">\n<meta property="og:url" content="__SITE_URL__${href(l, p)}">` : ""}
-<meta name="theme-color" content="#f5f3ee">
+<meta name="theme-color" content="${isHome ? "#071a18" : "#f5f3ee"}">
 <meta property="og:title" content="${TITLES[p][LANGS.indexOf(l)]}">
 <meta property="og:description" content="${DESC[LANGS.indexOf(l)]}">
 <meta property="og:type" content="website">
@@ -545,7 +545,7 @@ const INTRO_CSS = `.cfi{position:fixed;inset:0;z-index:2147482000;background-col
 .cfi.out .cfi-skip{opacity:0}
 html.cfi .top .logo{opacity:0}html.cfi .rise{opacity:0;transform:translateY(18px)}html.cfi .hs h1 .w>span{transform:translateY(105%)}
 .cfi-fly{position:fixed;z-index:2147482001;margin:0;pointer-events:none;color:#f1ece1;transition:opacity .25s,transform 1s cubic-bezier(.65,0,.35,1),color 1s}
-.cfi-fly.lnd{color:var(--ink)}.cfi-fly .word b{color:inherit;transition:color 1s}.cfi-fly.lnd .word b{color:var(--navy)}.cfi-fly .mk .b{fill:#fff;transition:fill 1s}.cfi-fly.lnd .mk .b{fill:var(--navy)}`;
+.cfi-fly.lnd{color:var(--ink)}.cfi-fly .word b{color:inherit;transition:color 1s}.cfi-fly.lnd .word b{color:var(--navy)}.cfi-fly .mk .b{fill:#fff;transition:fill 1s}.cfi-fly.lnd .mk .b{fill:var(--navy)}.on-dark .cfi-fly.lnd .word b{color:#fff}.on-dark .cfi-fly.lnd .mk .b{fill:#fff}`;
 const INTRO_JS = `(function(){var o=document.getElementById('cfi'),r=document.documentElement;if(!o)return;
 var force=/[?&]intro=1/.test(location.search),seen=false;try{seen=!!sessionStorage.getItem('cf-intro')}catch(e){}
 var ok=!r.classList.contains('rm')&&(force||!seen)&&!(navigator.connection&&navigator.connection.saveData);

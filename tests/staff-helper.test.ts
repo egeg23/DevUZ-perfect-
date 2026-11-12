@@ -222,6 +222,6 @@ test("макет в боте: помощник называет все сфер�
   const lesson = knowledgeFor(manager, "ru").find((c) => c.text.includes("собирает человек") && c.id.startsWith("learn-"));
   assert.ok(lesson && /\/maket/.test(lesson.text), "урок отличает макет по касанию от макета в боте");
   // И в инструкции список сфер стоит в начале пункта, до обрезки.
-  const help = knowledgeFor(manager, "ru").find((c) => c.text.includes("Готовые шаблоны есть у восьми сфер"));
-  assert.ok(help && help.text.indexOf("недвижимость") < 900);
+  const help = knowledgeFor(manager, "ru").find((c) => c.text.includes("Готовые шаблоны есть у четырнадцати сфер"));
+  assert.ok(help && help.text.indexOf("услуги для бизнеса") < 900);
 });
