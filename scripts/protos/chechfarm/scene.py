@@ -33,9 +33,11 @@ assert len(KEY) == 32, "ключ — 32 байта"
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "../../../public/protos/chechfarm/seq")
 CLIPS = "abcde"
-N = 48          # кадров из каждого ролика
 PACK = 24
-FMT = {"d": (1920, 72), "p": (720, 72)}  # ширина и качество WebP; телефону — ролики m-*
+# Ширина, качество WebP и кадров из каждого ролика; телефону — ролики m-*.
+# 48 кадров на ролик было мало (владелец, 12.11.2026: «очень грубый переход»):
+# один взмах пальца пролистывал ролик целиком. Телефону 97 (как у Nek), компьютеру 73.
+FMT = {"d": (1920, 68, 73), "p": (720, 66, 97)}
 
 
 def seal(data, path):
@@ -49,7 +51,7 @@ def count(path):
     return int(out.stdout.strip())
 
 
-def cut(src_fmt, width, q, tmp):
+def cut(src_fmt, width, q, N, tmp):
     """Кадры всех роликов подряд; первый кадр следующего ролика — тот же ключевой, его пропускаем."""
     frames, keys = [], [0]
     for ci, c in enumerate(CLIPS):
