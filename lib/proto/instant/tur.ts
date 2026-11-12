@@ -31,6 +31,7 @@ import { rgbOf } from "@/lib/proto/instant/dental";
 import turagentstvoMedia from "@/content/proto-instant/turagentstvo-media.json" with { type: "json" };
 import { flyParts } from "@/lib/proto/instant/fly";
 
+import { tourCard, turSearch } from "@/lib/proto/instant/tur-search";
 const IMG = "/protos/_niche/turagentstvo";
 export const TUR_PHOTOS = ["hero.webp", "hero-s.webp", "hero-9.webp"].map((f) => `${IMG}/${f}`);
 
@@ -233,7 +234,9 @@ export function turHtml(site: InstantSite, now = new Date()): string {
     : "";
   const chips = dests.map((d, i) => `<button type="button" class="chip" data-dest="${d.id}" aria-pressed="${i === 0}">${esc(d[l])}<small>${usd(d.price)}</small></button>`).join("");
   const monthChips = months.map(([m, n], i) => `<button type="button" class="chip" data-m="${m}" data-g="mk" aria-pressed="${i === 0}">${n}</button>`).join("");
+  const xs = turSearch({ l, img: IMG, services, dests, all: DESTS, city: site.city });
   const search = `<div class="srch" id="poisk">
+${xs.tabs}
 <div class="tabs" role="tablist" aria-label="${t(C.where)}" style="display:none"><button type="button" role="tab" id="tb-know" aria-selected="true" aria-controls="pn-know">${ic("search")}<span>${t(C.tabKnow)}</span></button></div>
 <div class="pn" id="pn-know" role="tabpanel" aria-labelledby="tb-know">
 ${dests.length ? `<div class="fld"><span class="fl">${t(C.where)}</span><div class="chips scroll-x" role="group" aria-label="${t(C.where)}" data-g="dest">${chips}</div></div>` : ""}
@@ -309,10 +312,10 @@ ${head(t(C.kartaKick), `<span id="karta-h">${t(C.kartaH)}</span>`, t(C.kartaP))}
   const usl = services.length
     ? `<section class="usl" id="uslugi"><div class="wrap">
 ${head(t(C.uslKick), t(C.uslH))}
-<div class="usl-g">${services
+<div class="tks">${services
         .map((s, i) => {
-          const href = ask(s.name);
-          return `<article class="uc rv" style="--d:${i * 80}ms">${ic(serviceIcon(s.name), "uc-i")}<h3>${esc(s.name)}</h3><b class="uc-f">${s.price ? esc(s.price) : t(C.priceAsk)}</b>${href ? `<p><a href="${esc(href)}"${chat ? ' target="_blank" rel="noopener"' : ""}>${t(C.ask)}</a></p>` : ""}</article>`;
+          const d = DESTS.find((x) => x.words.test(s.name));
+          return tourCard({ name: s.name, price: s.price, img: `${IMG}/${d ? d.img : "hero"}-s.webp`, alt: d ? d[l] : "", ask: t(C.priceAsk), cta: t(C.find), delay: i * 80 });
         })
         .join("")}</div>
 </div></section>`
@@ -411,6 +414,7 @@ ${tel ? `<a class="btn btn-line" href="${esc(tel)}">${ic("phone")}<span>${t(C.ca
 .im-tg-h small{margin-left:auto;color:var(--mute);font-size:12px}
 .im-tg p{margin:0;line-height:1.7}</style>
 ${fly.css}
+${xs.css}
 </head>
 <body class="site">
 ${dzIntroSolo(l)}
@@ -432,10 +436,12 @@ ${ct}
 ${footer}
 ${dock}
 ${bron}
+${xs.overlay}
 <script type="application/json" id="tr-data">${json(data)}</script>
 <script>
 ${assets.js}</script>
 ${fly.script}
+${xs.js}
 </body>
 </html>`;
 }
