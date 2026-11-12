@@ -208,7 +208,7 @@ const NICHE_UZ: Record<CircleNiche, string> = {
   general: "Boshqa",
   medcentr: "Tibbiyot markazi",
   stomatologiya: "Stomatologiya",
-  mebel: "Mebel",
+  mebel: "Mebel-ta’mir",
   restoran: "Restoran",
   "salon-krasoty": "Go‘zallik saloni",
   turagentstvo: "Turagentlik",

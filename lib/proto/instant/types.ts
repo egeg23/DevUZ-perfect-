@@ -29,7 +29,7 @@ export type InstantNiche = (typeof INSTANT_NICHES)[number];
 export const INSTANT_NICHE_LABEL: Readonly<Record<InstantNiche, { ru: string; uz: string; pl: string }>> = {
   stomatologiya: { ru: "стоматология", uz: "stomatologiya", pl: "stomatologia" },
   medcentr: { ru: "медцентр", uz: "tibbiyot markazi", pl: "centrum medyczne" },
-  mebel: { ru: "мебель", uz: "mebel", pl: "meble" },
+  mebel: { ru: "мебель-ремонт", uz: "mebel-ta’mir", pl: "meble-remont" },
   restoran: { ru: "ресторан", uz: "restoran", pl: "restauracja" },
   turagentstvo: { ru: "турагентство", uz: "turagentlik", pl: "biuro podróży" },
   "uchebnyy-centr": { ru: "учебный центр", uz: "o‘quv markazi", pl: "centrum szkoleniowe" },
