@@ -495,14 +495,14 @@ function page(l, p) {
   const isHome = p === "";
   const dz = isHome && !PROD ? dzIntroSolo(l === "en" ? "ru" : l).replace(">Пропустить<", l === "en" ? ">Skip<" : ">Пропустить<") : "";
   return `<!doctype html>
-<html lang="${l}"${l === "ar" ? ' dir="rtl"' : ""}>
+<html lang="${l}"${l === "ar" ? ' dir="rtl"' : ""}${isHome ? ' class="on-dark"' : ""}>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>${TITLES[p][LANGS.indexOf(l)]}</title>
 <meta name="description" content="${DESC[LANGS.indexOf(l)]}">
 <meta name="robots" content="${PROD ? "index, follow" : "noindex, nofollow, noarchive"}">${PROD ? `\n<link rel="canonical" href="__SITE_URL__${href(l, p)}">\n<meta property="og:url" content="__SITE_URL__${href(l, p)}">` : ""}
-<meta name="theme-color" content="#f5f3ee">
+<meta name="theme-color" content="${isHome ? "#071a18" : "#f5f3ee"}">
 <meta property="og:title" content="${TITLES[p][LANGS.indexOf(l)]}">
 <meta property="og:description" content="${DESC[LANGS.indexOf(l)]}">
 <meta property="og:type" content="website">
@@ -545,7 +545,7 @@ const INTRO_CSS = `.cfi{position:fixed;inset:0;z-index:2147482000;background-col
 .cfi.out .cfi-skip{opacity:0}
 html.cfi .top .logo{opacity:0}html.cfi .rise{opacity:0;transform:translateY(18px)}html.cfi .hs h1 .w>span{transform:translateY(105%)}
 .cfi-fly{position:fixed;z-index:2147482001;margin:0;pointer-events:none;color:#f1ece1;transition:opacity .25s,transform 1s cubic-bezier(.65,0,.35,1),color 1s}
-.cfi-fly.lnd{color:var(--ink)}.cfi-fly .word b{color:inherit;transition:color 1s}.cfi-fly.lnd .word b{color:var(--navy)}.cfi-fly .mk .b{fill:#fff;transition:fill 1s}.cfi-fly.lnd .mk .b{fill:var(--navy)}`;
+.cfi-fly.lnd{color:var(--ink)}.cfi-fly .word b{color:inherit;transition:color 1s}.cfi-fly.lnd .word b{color:var(--navy)}.cfi-fly .mk .b{fill:#fff;transition:fill 1s}.cfi-fly.lnd .mk .b{fill:var(--navy)}.on-dark .cfi-fly.lnd .word b{color:#fff}.on-dark .cfi-fly.lnd .mk .b{fill:#fff}`;
 const INTRO_JS = `(function(){var o=document.getElementById('cfi'),r=document.documentElement;if(!o)return;
 var force=/[?&]intro=1/.test(location.search),seen=false;try{seen=!!sessionStorage.getItem('cf-intro')}catch(e){}
 var ok=!r.classList.contains('rm')&&(force||!seen)&&!(navigator.connection&&navigator.connection.saveData);
