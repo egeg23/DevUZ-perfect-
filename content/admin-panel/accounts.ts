@@ -305,7 +305,7 @@ export const circleNicheNames = defineDict({
   general: { ru: "Общий", uz: "Umumiy", pl: "Ogólne" },
   medcentr: { ru: "Медцентр", uz: "Tibbiyot markazi", pl: "Centrum medyczne" },
   stomatologiya: { ru: "Стоматология", uz: "Stomatologiya", pl: "Stomatologia" },
-  mebel: { ru: "Мебель", uz: "Mebel", pl: "Meble" },
+  mebel: { ru: "Мебель-ремонт", uz: "Mebel-ta’mir", pl: "Meble-remont" },
   restoran: { ru: "Ресторан", uz: "Restoran", pl: "Restauracja" },
   "salon-krasoty": { ru: "Салон красоты", uz: "Go‘zallik saloni", pl: "Salon urody" },
   turagentstvo: { ru: "Турагентство", uz: "Turagentlik", pl: "Biuro podróży" },

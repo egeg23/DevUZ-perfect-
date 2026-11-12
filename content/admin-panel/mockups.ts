@@ -227,7 +227,7 @@ export const mockupNicheDict = defineDict({
   eksport: { ru: "Экспорт продуктов", uz: "Mahsulot eksporti", pl: "Eksport żywności" },
   turagentstvo: { ru: "Турагентство", uz: "Turagentlik", pl: "Biuro podróży" },
   okna: { ru: "Окна и двери", uz: "Deraza va eshiklar", pl: "Okna i drzwi" },
-  mebel: { ru: "Мебель", uz: "Mebel", pl: "Meble" },
+  mebel: { ru: "Мебель-ремонт", uz: "Mebel-ta’mir", pl: "Meble-remont" },
   hosting: { ru: "Домены и хостинг", uz: "Domen va hosting", pl: "Domeny i hosting" },
   dveri: { ru: "Двери", uz: "Eshiklar", pl: "Drzwi" },
   svyaz: { ru: "Связь и интернет", uz: "Aloqa va internet", pl: "Telekomunikacja" },

@@ -199,7 +199,7 @@ export const CIRCLE_NICHE_RU: Readonly<Record<CircleNiche, string>> = {
   general: "Общий",
   medcentr: "Медцентр",
   stomatologiya: "Стоматология",
-  mebel: "Мебель",
+  mebel: "Мебель-ремонт",
   restoran: "Ресторан",
   "salon-krasoty": "Салон красоты",
   turagentstvo: "Турагентство",
