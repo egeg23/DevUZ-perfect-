@@ -9,7 +9,7 @@ import { routeNewLead } from "@/lib/admin/lead-queue-store";
 import { CIRCLE_NICHE_RU } from "@/lib/admin/sales-after-reply";
 import { MOCKUP_BOT_OPEN } from "@/lib/proto/instant/limits";
 import { failDetail, readClientSite } from "@/lib/proto/instant/read";
-import { claimBuild, dropFlow, flowOf, instantCounts, saveBotLang, saveFlow, saveInstantProto, setProtoLead } from "@/lib/proto/instant/store";
+import { claimBuild, claimManual, dropFlow, flowOf, instantCounts, saveBotLang, saveFlow, saveInstantProto, setProtoLead } from "@/lib/proto/instant/store";
 import { MANUAL_HOURS, manualWhy, type Deps, type LeadInput } from "@/lib/proto/instant/bot";
 import { esc } from "@/lib/proto/instant/safe";
 import { protoUrl } from "@/lib/proto/store";
@@ -23,7 +23,7 @@ import type { QualifyToolInput } from "@/lib/qualify/types";
 
 /** Источник лида: «макет в боте» — отдельно, чтобы видеть в ступенях продажи. */
 export const INSTANT_SOURCE = "mockup";
-/** Макет соберут руками: сферы без шаблона, дневной потолок, сборка не прошла. */
+/** Макет соберут руками: сферы без шаблона или сборка не прошла. */
 export const MANUAL_SOURCE = "mockup-manual";
 
 export const sourceOf = (why: LeadInput["why"]) => (manualWhy(why) ? MANUAL_SOURCE : INSTANT_SOURCE);
@@ -41,7 +41,6 @@ const WHY: Record<LeadInput["why"], string> = {
   built: "собрал себе макет в боте студии",
   soon: "хотел макет в боте, для его сферы шаблона пока нет: нужен макет вручную",
   failed: "хотел макет в боте, автоматически не собрался: нужен макет вручную",
-  day: "хотел макет в боте, сегодня исчерпан дневной лимит: нужен макет вручную",
 };
 
 /** Лид без диалога — как у формы: грейды худшие, суть — в заметке. */
@@ -92,6 +91,8 @@ export function instantLeadInput(input: LeadInput): QualifyToolInput {
 }
 
 async function lead(input: LeadInput): Promise<string | null> {
+  // Один аккаунт — одна заявка «макет вручную» за MANUAL_HOLD_DAYS: повтор второй карточкой не становится.
+  if (manualWhy(input.why) && !(await claimManual(input.ctx.tgId).catch(() => true))) return null;
   const scored = scoreLead(instantLeadInput(input), input.ctx.locale);
   const requestNo = newRequestNo();
   const origin = { tgUsername: input.ctx.username ?? undefined, entryPath: "bot:/maket", entryRef: null };
@@ -127,6 +128,29 @@ export async function siteOpens(url: string): Promise<string | null> {
   }
 }
 
+/**
+ * Сколько сайтов клиентов читаем одновременно. Поток открыт всем, и после
+ * рассылки адреса придут разом: чтение сайта (несколько страниц и модель) —
+ * самое тяжёлое в сборке, а сервер общий с сайтом и ботом. Остальные ждут
+ * своей очереди на шаге «читаем сайт».
+ */
+export const READ_SLOTS = 4;
+let reading = 0;
+const queue: (() => void)[] = [];
+
+export async function inSlot<T>(run: () => Promise<T>, slots = READ_SLOTS): Promise<T> {
+  // Свободного места нет — ждём, пока закончивший передаст своё (счётчик он не уменьшает).
+  if (reading >= slots) await new Promise<void>((go) => queue.push(go));
+  else reading += 1;
+  try {
+    return await run();
+  } finally {
+    const next = queue.shift();
+    if (next) next();
+    else reading -= 1;
+  }
+}
+
 export function realDeps(): Deps {
   return {
     send: (chatId, html, rows) => (rows?.length ? sendRowsForId(chatId, html, rows) : sendForId(chatId, html)),
@@ -140,7 +164,7 @@ export function realDeps(): Deps {
     claimBuild,
     counts: (tgId) => instantCounts(tgId),
     reachable: siteOpens,
-    read: (url, niche, locale, onStep) => readClientSite(url, niche, locale, { onStep }),
+    read: (url, niche, locale, onStep) => inSlot(() => readClientSite(url, niche, locale, { onStep })),
     save: (build, ctx) => saveInstantProto(build, { tgId: ctx.tgId, username: ctx.username, staffId: ctx.staffId }),
     lead,
     setLead: setProtoLead,

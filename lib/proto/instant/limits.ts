@@ -1,24 +1,24 @@
 /**
- * Лимиты «Макета в боте» (владелец, 10.11.2026: «Но нужны лимиты: 1 аккаунт
- * - 1 макет»).
+ * Лимиты «Макета в боте».
+ *
+ * Владелец, 10.11.2026: «Но нужны лимиты: 1 аккаунт - 1 макет». 12.11.2026:
+ * «Открываем для всех. Любой подписчик бота получает только 1 макет.
+ * Менеджеры и сотрудники могут делать их без ограничений. Нет лимита 30 в
+ * день.»
  *
  * - один Telegram-аккаунт — один макет навсегда;
- * - на всех — не больше `DAILY_CAP` в день по Ташкенту (меняет владелец);
- * - сотрудники — без лимита: проверяют, как это выглядит у клиента.
+ * - сотрудники (любая роль, по базе) — без лимита;
+ * - дневного потолка на всех нет.
  */
-export const DAILY_CAP = 30;
 
 /**
- * Кому открыт поток. Владелец, 10.11.2026: «Пока что открой доступ только мне
- * и Александру с этой функцией, пусть бот пришлет нам уведомление, хочу
- * посмотреть как это выглядит. Для всех пока не открываем.»
+ * Кому открыт поток. С 12.11.2026 — всем, кто пишет боту («Открываем для
+ * всех»). До этого, с 10.11.2026, был пилот: только владелец и руководитель.
  *
- * false — только активные сотрудники с ролью admin и head (по базе, не по
- * нику), без лимита и без лида в очередь: их макеты — тестовые. true — всем
- * клиентам с лимитами ниже. Остальным бот ведёт себя как раньше: /maket —
- * неизвестная команда.
+ * Откат — false: поток снова только активным admin и head (по базе, не по
+ * нику), остальным /maket — неизвестная команда, приветствие прежнее.
  */
-export const MOCKUP_BOT_OPEN = false;
+export const MOCKUP_BOT_OPEN = true;
 export const PILOT_ROLES: readonly string[] = ["admin", "head"];
 
 /** Пускать ли в поток. */
@@ -29,19 +29,12 @@ export function mayUseInstant(role: string | null, open = MOCKUP_BOT_OPEN): bool
 /** Сколько ждём, пока идёт одна сборка: второй запрос того же человека — «уже собираем». */
 export const RUN_HOLD_MS = 5 * 60_000;
 
-export type LimitVerdict = "ok" | "has" | "day";
+export type LimitVerdict = "ok" | "has";
 
-export function limitVerdict(input: { staff: boolean; mine: number; today: number; cap?: number }): LimitVerdict {
+/** Клиенту — один макет на аккаунт, сотруднику — сколько нужно. */
+export function limitVerdict(input: { staff: boolean; mine: number }): LimitVerdict {
   if (input.staff) return "ok";
-  if (input.mine > 0) return "has";
-  if (input.today >= (input.cap ?? DAILY_CAP)) return "day";
-  return "ok";
-}
-
-/** Начало дня по Ташкенту (UTC+5, без перехода на летнее время). */
-export function tashkentDayStart(now: Date): Date {
-  const shifted = new Date(now.getTime() + 5 * 3600_000);
-  return new Date(Date.UTC(shifted.getUTCFullYear(), shifted.getUTCMonth(), shifted.getUTCDate()) - 5 * 3600_000);
+  return input.mine > 0 ? "has" : "ok";
 }
 
 /** Похоже ли на адрес сайта: домен с точкой, можно с https://. */

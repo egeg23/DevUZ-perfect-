@@ -1,35 +1,42 @@
 /**
- * «Макет в боте готов к просмотру» — один раз Егору и Александру.
+ * «Макет в боте открыт всем» — один раз каждому сотруднику.
  *
- * Владелец, 10.11.2026: «Пока что открой доступ только мне и Александру с
- * этой функцией, пусть бот пришлет нам уведомление, хочу посмотреть как это
- * выглядит». Свип зовёт после выкатки; сообщение — в личку активным admin и
- * head с привязанным Telegram, с 08:00 до 21:00 по Ташкенту (messageWindow),
- * отметка `instant-pilot:v1` в team_news_sent до отправки. Не дошло —
- * отметка снимается, следующий проход попробует снова.
+ * Владелец, 12.11.2026: «Открываем для всех. Любой подписчик бота получает
+ * только 1 макет. Менеджеры и сотрудники могут делать их без ограничений».
+ * Лиды «макет в боте» и карточки «🔥 Нужен макет вручную» пойдут очередью, а
+ * у каждого сотрудника появилась команда /maket: команда должна узнать это
+ * от бота, а не от первого клиента. Свип зовёт после выкатки; сообщение — в
+ * личку активным сотрудникам с привязанным Telegram, с 08:00 до 21:00 по
+ * Ташкенту (messageWindow), отметка `instant-open:v1` в team_news_sent до
+ * отправки. Не дошло — отметка снимается, следующий проход попробует снова.
+ *
+ * Пока поток закрыт (MOCKUP_BOT_OPEN = false, откат) — ничего не уходит.
  */
 import { messageWindow } from "@/lib/admin/tasks";
-import { MOCKUP_BOT_OPEN, PILOT_ROLES } from "@/lib/proto/instant/limits";
+import { MOCKUP_BOT_OPEN } from "@/lib/proto/instant/limits";
+import { MANUAL_HOURS } from "@/lib/proto/instant/bot";
 import { sendMessage } from "@/lib/qualify/telegram";
 import { serviceClient } from "@/lib/supabase";
 
-export const PILOT_NEWS = "instant-pilot:v1";
+export const OPEN_NEWS = "instant-open:v1";
 
-export const PILOT_TEXT = [
-  "🧪 <b>Макет в боте готов к просмотру</b>",
+export const OPEN_TEXT = [
+  "🚀 <b>Макет в боте открыт всем клиентам</b>",
   "",
-  "Напишите мне /maket, пришлите адрес сайта стоматологии (или нажмите «Сайта нет») и выберите «Стоматология». Через минуту-две придёт ссылка на макет и цена, как увидит клиент.",
+  "Каждому, кто впервые пишет боту студии, бот теперь сам предлагает собрать макет сайта за 2 минуты: язык, адрес сайта или Instagram, сфера, и клиент получает ссылку на макет, админку и КП на 48 часов.",
   "",
-  "Пока функцию видите только вы с Александром, клиентам и менеджерам она закрыта. Ваши сборки без лимита, лид из них не заводится, в «Макетах» они с пометкой «тестовый, из бота».",
+  "• Клиенту — один макет на аккаунт. Собрал — вам приходит лид «макет в боте» обычной очередью, со ссылкой на макет.",
+  `• Сферы нет в списке или сборка не прошла — карточка «🔥 Нужен макет вручную»: клиенту обещано ${MANUAL_HOURS} часов.`,
+  "• Вам — без ограничений: напишите мне /maket и соберите макет для своего клиента. Такие сборки лидом не становятся, в «Макетах» они с пометкой «из бота, собрал сотрудник».",
 ].join("\n");
 
-export async function sendInstantPilotNote(now: Date = new Date()): Promise<number> {
-  if (MOCKUP_BOT_OPEN || !messageWindow(now)) return 0;
+export async function sendInstantOpenNote(now: Date = new Date()): Promise<number> {
+  if (!MOCKUP_BOT_OPEN || !messageWindow(now)) return 0;
   const db = serviceClient();
   if (!db) return 0;
   const [{ data: readers }, { data: done }] = await Promise.all([
-    db.from("staff").select("id, telegram_user_id").eq("is_active", true).in("role", [...PILOT_ROLES]),
-    db.from("team_news_sent").select("staff_id").eq("news_id", PILOT_NEWS),
+    db.from("staff").select("id, telegram_user_id").eq("is_active", true).not("telegram_user_id", "is", null),
+    db.from("team_news_sent").select("staff_id").eq("news_id", OPEN_NEWS),
   ]);
   const already = new Set((done ?? []).map((r) => r.staff_id as string));
   let sent = 0;
@@ -38,11 +45,11 @@ export async function sendInstantPilotNote(now: Date = new Date()): Promise<numb
     if (!chat || already.has(r.id as string)) continue;
     const { data: claimed } = await db
       .from("team_news_sent")
-      .upsert({ news_id: PILOT_NEWS, staff_id: r.id }, { onConflict: "news_id,staff_id", ignoreDuplicates: true })
+      .upsert({ news_id: OPEN_NEWS, staff_id: r.id }, { onConflict: "news_id,staff_id", ignoreDuplicates: true })
       .select("staff_id");
     if (!claimed?.length) continue;
-    if (await sendMessage(chat, PILOT_TEXT)) sent += 1;
-    else await db.from("team_news_sent").delete().eq("news_id", PILOT_NEWS).eq("staff_id", r.id);
+    if (await sendMessage(chat, OPEN_TEXT)) sent += 1;
+    else await db.from("team_news_sent").delete().eq("news_id", OPEN_NEWS).eq("staff_id", r.id);
   }
   return sent;
 }

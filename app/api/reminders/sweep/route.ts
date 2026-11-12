@@ -17,7 +17,7 @@ import { runSilence } from "@/lib/admin/silence-store";
 import { sendStaffReport } from "@/lib/admin/staff-report-store";
 import { sendBotSubsReport } from "@/lib/admin/bot-subs-report-store";
 import { sendHelperStats } from "@/lib/admin/helper-stats-store";
-import { sendInstantPilotNote } from "@/lib/proto/instant/announce-store";
+import { sendInstantOpenNote } from "@/lib/proto/instant/announce-store";
 import { sendStaffWeek } from "@/lib/admin/staff-week-store";
 import { runTraceMonth } from "@/lib/proto/trace-month-store";
 import { sendNightReplies } from "@/lib/admin/night-replies-store";
@@ -322,9 +322,9 @@ async function sweep(): Promise<Response> {
     // Кто сколько спросил помощника в боте — каждый день с 18:00
     // (lib/admin/helper-stats-store).
     await sendHelperStats(new Date()).catch((error) => console.error("помощник, сводка:", error));
-    // «Макет в боте готов к просмотру» — один раз Егору и Александру
+    // «Макет в боте открыт всем» — один раз каждому сотруднику
     // (lib/proto/instant/announce-store), днём.
-    await sendInstantPilotNote(new Date()).catch((error) => console.error("макет в боте, уведомление:", error));
+    await sendInstantOpenNote(new Date()).catch((error) => console.error("макет в боте, уведомление:", error));
     // Подписчики бота за день — с 20:00 (lib/admin/bot-subs-report-store).
     await sendBotSubsReport(new Date()).catch((error) => console.error("подписчики бота, сводка:", error));
   });

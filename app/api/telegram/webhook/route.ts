@@ -833,8 +833,8 @@ async function handleLearnButton(query: NonNullable<Update["callback_query"]>, p
  * Приветствие холодного старта (владелец, 11.11.2026: «фишка с макетом
  * прямо в боте… стала прям основой при первом обращении клиента»): новому
  * человеку — «пришлите сайт или Instagram, соберём макет» с кнопками
- * «Собрать макет» и «У меня другой вопрос». Пока поток закрыт
- * (MOCKUP_BOT_OPEN) — прежнее приветствие всем, кроме admin и head. Разговор,
+ * «Собрать макет» и «У меня другой вопрос». С 12.11.2026 поток открыт всем
+ * (MOCKUP_BOT_OPEN); при откате — прежнее приветствие всем, кроме admin и head. Разговор,
  * который уже идёт, новым приветствием не перебиваем.
  */
 async function welcome(chatId: number, from: TelegramUser | undefined, locale: Locale, existing: ReturnType<typeof sessionFor>) {
@@ -909,7 +909,7 @@ async function handleClient(message: NonNullable<Update["message"]>) {
     }
 
     // «Макет в боте»: ссылка t.me/<бот>?start=maket с сайта и из рекламы.
-    // Пока поток закрыт (MOCKUP_BOT_OPEN), остальным — обычный холодный старт.
+    // Поток закрыт (откат MOCKUP_BOT_OPEN) — остальным обычный холодный старт.
     if (payload === INSTANT_START) {
       const ictx = await instantCtx(chat.id, message.from, locale);
       if (instantOpenFor(ictx)) {
@@ -992,7 +992,7 @@ async function handleClient(message: NonNullable<Update["message"]>) {
   }
 
   // «Макет в боте» командой: /maket (и /mockup), по-узбекски — та же.
-  // Пока поток закрыт, остальным это неизвестная команда, как раньше.
+  // Поток закрыт (откат MOCKUP_BOT_OPEN) — остальным это неизвестная команда.
   if (/^\/(maket|mockup)(@\w+)?$/i.test(text)) {
     const ictx = await instantCtx(chat.id, message.from, locale);
     if (instantOpenFor(ictx)) {
