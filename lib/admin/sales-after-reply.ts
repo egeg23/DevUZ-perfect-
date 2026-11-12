@@ -177,6 +177,15 @@ export const CIRCLE_NICHES = [
   "turagentstvo",
   "uchebnyy-centr",
   "nedvizhimost",
+  // 12.11.2026 (владелец: «Мы теряем лидов из-за того, что они нажимают
+  // "другая ниша"… выведем больше ниш которые у нас есть, также
+  // переодевать»): сферы наших готовых макетов, для «Макета в боте».
+  "avtoservis",
+  "avtosalon",
+  "magazin",
+  "stroitelstvo",
+  "logistika",
+  "uslugi",
 ] as const;
 
 export type CircleNiche = (typeof CIRCLE_NICHES)[number];
@@ -196,6 +205,12 @@ export const CIRCLE_NICHE_RU: Readonly<Record<CircleNiche, string>> = {
   turagentstvo: "Турагентство",
   "uchebnyy-centr": "Учебный центр",
   nedvizhimost: "Недвижимость",
+  avtoservis: "Автосервис",
+  avtosalon: "Автосалон",
+  magazin: "Интернет-магазин",
+  stroitelstvo: "Стройка и ремонт",
+  logistika: "Логистика",
+  uslugi: "Услуги для бизнеса",
 };
 
 /**
@@ -204,6 +219,9 @@ export const CIRCLE_NICHE_RU: Readonly<Record<CircleNiche, string>> = {
  * Не узнали — общий кружок.
  */
 const NICHE_WORDS: readonly [Exclude<CircleNiche, "general">, RegExp][] = [
+  // Авто — раньше салона красоты: «автосалон» иначе ушёл бы в «салон».
+  ["avtoservis", /avto\s*servis|автосервис|auto\s*service|сто\b|шиномонтаж|автомойк|kuzov|кузов|ремонт\s+(?:авто|машин)|avto\s*ta['ʻ‘`]?mir|detailing|детейлинг/iu],
+  ["avtosalon", /avto\s*salon|автосалон|автодилер|dealer|диллер|дилер|автомобил|car\s*(?:sale|shop)|avtomobil/iu],
   ["stomatologiya", /stomat|стомат|dent|tish/iu],
   ["medcentr", /med(?:cent|markaz|ical|\b)|клиник|clinic|klinik|медиц|медцентр|shifo|diagnost|диагност/iu],
   ["mebel", /mebel|мебел|furnit|кухн/iu],
@@ -211,7 +229,12 @@ const NICHE_WORDS: readonly [Exclude<CircleNiche, "general">, RegExp][] = [
   ["salon-krasoty", /salon|салон|beauty|krasot|красот|barber|барбер|nail|маникюр|kosmet|космет/iu],
   ["turagentstvo", /tur(?:agent|ist|izm)|туристи|турагент|travel|tour|sayohat/iu],
   ["uchebnyy-centr", /uchebn|учебн|o['ʻ‘`]?quv|education|academy|академ|курс|school|школ|maktab|shkoly|language/iu],
+  // Ремонт — раньше недвижимости: «ремонт квартир» — не продажа квартир.
+  ["stroitelstvo", /ремонт|remont|архитект|arxitekt|architect|interyer|интерьер|interior|дизайн\s+интер|qurilish|стройматер|отделк/iu],
   ["nedvizhimost", /nedvizh|недвиж|realt|риелт|zastroy|застрой|stroitel|строител|uy-joy|kvartir|квартир/iu],
+  ["logistika", /logist|логист|cargo|карго|груз|yuk\s|доставк|dostavka|перевоз|tashish|freight|экспедир/iu],
+  ["magazin", /magazin|магазин|shop|store|do['ʻ‘`]?kon|дўкон|savdo|торгов|оптов|optom|одежд|kiyim|обув|косметик|электрон|техник|товар/iu],
+  ["uslugi", /бухгалт|buxgalter|accounting|юрист|yurist|юридич|lawyer|адвокат|advokat|консалт|consult|аудит|audit|налог|soliq|страхов|sug['ʻ‘`]?urta|агентств|agency|маркетинг|marketing|реклам|reklama|клининг|cleaning|охран|ivent|event|ивент|праздник|фото|photo|печат|polygraph|полиграф|it\b|айти|разработ/iu],
 ];
 
 export function circleNicheOf(p: { niche?: unknown; label?: unknown; host?: unknown }): CircleNiche {

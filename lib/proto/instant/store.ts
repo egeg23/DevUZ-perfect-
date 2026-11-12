@@ -17,7 +17,7 @@ import { RUN_HOLD_MS } from "@/lib/proto/instant/limits";
 import type { InstantLocale, InstantNiche } from "@/lib/proto/instant/types";
 import { serviceClient } from "@/lib/supabase";
 
-export type FlowStage = "lang" | "greet" | "url" | "niche" | "q_name" | "q_phone" | "q_address" | "q_services" | "building";
+export type FlowStage = "lang" | "greet" | "url" | "niche" | "q_what" | "q_name" | "q_phone" | "q_address" | "q_services" | "building";
 
 export type Flow = {
   stage: FlowStage;
@@ -25,7 +25,7 @@ export type Flow = {
   url: string | null;
   nosite: boolean;
   niche: InstantNiche | null;
-  answers: { name?: string; phone?: string; address?: string; services?: string; instagram?: string };
+  answers: { what?: string; name?: string; phone?: string; address?: string; services?: string; instagram?: string };
   /** Почему прошлый адрес не прочитался — для разбора сбоев, без данных клиента. */
   fail?: string;
   /** Куда идти после выбора языка: к предложению макета или сразу к адресу сайта. */
