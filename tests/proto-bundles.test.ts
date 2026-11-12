@@ -2211,6 +2211,8 @@ test("CZECHFARM: 7 страниц и панель на ru, uz, en — услов
          движок сцены — пролёт Nek как есть: видео телефону, отказ play() — кадрами. */
       assert.ok(page.includes("function loadVid()") && page.includes("p.then(on,fail)") && page.includes("function viaImg("), `${path}: сцена не на движке салона`);
       assert.match(page, /<canvas class="hs-cv"><\/canvas><video muted playsinline/, `${path}: в сцене нет видео`);
+      /* Владелец, 13.11.2026: «скачет» при смене направления и «белая полоска»: высота сцены пикселями, фон над сценой тёмный. */
+      assert.ok(page.includes("function hsFix()") && page.includes("html.on-dark,html.on-dark body{background:#071a18}"), `${path}: сцена на vh или светлый фон над ней`);
       assert.ok(page.includes("/launch/box1.webp") && page.includes("/launch/bg3.webp") && page.includes('class="ln-cap"'), `${path}: сцена бренда не из рендеров`);
       assert.ok(!/\.ln-stage\{[^}]*position:sticky/.test(page), `${path}: сцена бренда липнет к экрану и закрывает текст`);
     }

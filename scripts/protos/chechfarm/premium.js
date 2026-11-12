@@ -48,6 +48,14 @@ if(hs){
   function tone(){var on=hs.getBoundingClientRect().bottom>72;if(on===dark)return;dark=on;root.classList.toggle('on-dark',on);if(tc)tc.setAttribute('content',on?'#071a18':'#f5f3ee')}
   function poke(){tone();want=prog();if(!raf)raf=requestAnimationFrame(loop)}
   tone();addEventListener('scroll',tone,{passive:true});
+  /* Высота сцены — в пикселях от первой высоты окна, заново только при
+     повороте. Во встроенном браузере Telegram панель выезжает при смене
+     направления прокрутки, vh пересчитывается, и 1000vh сдвигали всю
+     страницу на сотни точек (владелец, 13.11.2026: «когда я начинаю
+     скролить в другую сторону, скачет»). */
+  var hsK=0,hsW=0;
+  function hsFix(){if(innerWidth===hsW)return;hsW=innerWidth;hs.style.height='';hsK=hsK||hs.offsetHeight/innerHeight;hs.style.height=Math.round(hsK*innerHeight)+'px'}
+  if(!REDUCED){hsFix();addEventListener('resize',hsFix)}
   if(REDUCED)$('#hs-load').classList.add('ok');
   else{addEventListener('scroll',poke,{passive:true});addEventListener('resize',poke);poke()}
 }
