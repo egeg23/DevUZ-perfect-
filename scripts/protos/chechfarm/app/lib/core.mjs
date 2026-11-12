@@ -138,8 +138,8 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
       const c = tgClient(tk, fetchImpl), me = await c.me();
       const hook = token(24);
       if (publicUrl) await c.setHook(`${publicUrl}/api/tg/hook`, hook);
-      try { await c.commands([{ command: "start", description: "Начать" }, { command: "faq", description: "Частые вопросы" }]); } catch { /* не критично */ }
       setS("tg.token", tk); setS("tg.bot", me.username || ""); setS("tg.secret", hook);
+      await botProfile.push();
       note(by, `Подключил Telegram-бота @${me.username}`);
       return { bot: me.username };
     },
@@ -323,6 +323,46 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
   }
 
   /* ── Telegram: вебхук ───────────────────────────────────────────── */
+  /* Оформление бота (владелец DevUz, 12.11.2026: «упаковка их телеграмм
+     бота»): имя, строка в профиле, текст до «Начать», меню команд, кнопки под
+     строкой ввода и картинка в приветствии. Аватар Telegram даёт поставить
+     только через @BotFather: панель отдаёт готовый файл и шаги. */
+  const BOT_LOOK = {
+    name: "CZECHFARM alliance",
+    about: "Официальный бот CZECHFARM alliance: вопросы, обращения и новости компании.",
+    desc: "Здравствуйте! Это официальный бот CZECHFARM alliance.\n\nЗдесь можно:\n• получить ответы на частые вопросы\n• написать команде компании\n• привязать кабинет партнёра или клиента\n• получать новости компании\n\nНажмите «Начать».",
+  };
+  const BOT_LIMIT = { name: 64, about: 120, desc: 512 };
+  const BOT_COMMANDS = [["start", "Начать"], ["faq", "Частые вопросы"], ["cabinet", "Кабинет партнёра и клиента"], ["contacts", "Контакты компании"], ["site", "Сайт компании"]];
+  const BOT_KEYS = { faq: "❓ Частые вопросы", ask: "✍️ Написать нам", cabinet: "👤 Кабинет", site: "🌐 Сайт" };
+  const botKeyboard = () => ({ keyboard: [[{ text: BOT_KEYS.faq }, { text: BOT_KEYS.ask }], ...(publicUrl ? [[{ text: BOT_KEYS.cabinet }, { text: BOT_KEYS.site }]] : [])], resize_keyboard: true, is_persistent: true });
+  const botProfile = {
+    get: () => ({ ...Object.fromEntries(Object.keys(BOT_LOOK).map((k) => [k, getS("look." + k) || BOT_LOOK[k]])), card: getS("look.card") !== "0", cardUrl: publicUrl ? `${publicUrl}/protos/chechfarm/bot/hello.jpg` : "", pushed: getS("look.pushed"), limits: BOT_LIMIT, commands: BOT_COMMANDS.filter((c) => publicUrl || !["cabinet", "site"].includes(c[0])) }),
+    /* Отправляет оформление в Telegram; что не принялось — словами, остальное применяется. */
+    async push() {
+      if (!getS("tg.token")) return ["Бот ещё не подключён"];
+      const c = tg(), p = botProfile.get(), bad = [];
+      const step = async (what, fn) => { try { await fn(); } catch (e) { bad.push(`${what}: ${e.message}`); } };
+      await step("имя", () => c.name(p.name));
+      await step("строка в профиле", () => c.about(p.about));
+      await step("описание", () => c.desc(p.desc));
+      await step("меню команд", () => c.commands(p.commands.map(([command, description]) => ({ command, description }))));
+      await step("кнопка меню", () => c.menu());
+      setS("look.pushed", bad.length ? "" : String(now()));
+      return bad;
+    },
+    async save(b, by) {
+      for (const k of Object.keys(BOT_LOOK)) if (typeof b?.[k] === "string") {
+        const v = String(b[k]).replace(/\r/g, "").trim().slice(0, BOT_LIMIT[k]);
+        if (k === "name" && v.length < 3) throw new Error("Имя бота: от 3 знаков");
+        setS("look." + k, v === BOT_LOOK[k] ? "" : v);
+      }
+      if (typeof b?.card === "boolean") setS("look.card", b.card ? "" : "0");
+      const bad = await botProfile.push();
+      note(by, "Поменял оформление Telegram-бота");
+      return { ...botProfile.get(), bad };
+    },
+  };
   const BOT_TEXT = {
     hello: "Здравствуйте! Это бот CZECHFARM alliance. Напишите вопрос: на частые ответим сразу, остальное передадим команде, и вам ответят здесь же.",
     taken: "Спасибо! Передали команде CZECHFARM, ответ придёт в этот чат.",
@@ -332,7 +372,19 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
     who: "Подскажите, кто вы: так мы будем присылать вам то, что важно именно вам.",
     kindPartner: "Отлично, вы с нами как партнёр. Кабинет партнёра — на сайте, раздел «Кабинет».",
     kindClient: "Отлично! Пишите сюда любой вопрос, команда ответит.",
+    ask: "Напишите вопрос одним сообщением. Команда CZECHFARM ответит вам здесь же.",
   };
+  /* Приветствие: картинка с подписью и кнопки под строкой ввода. */
+  async function sendHello(chat) {
+    const p = botProfile.get(), extra = { reply_markup: botKeyboard() };
+    if (p.card && p.cardUrl) { try { return await tg().photo(chat, p.cardUrl, botText("hello"), extra); } catch { /* картинка не ушла — текстом */ } }
+    return tg().send(chat, botText("hello"), extra);
+  }
+  const linkButton = (text, url) => ({ reply_markup: { inline_keyboard: [[{ text, url }]] } });
+  function sendContacts(chat) {
+    const c = contacts.get(), rows = [c.phone && `Телефон: ${c.phone}`, c.email && `Почта: ${c.email}`, c.address && `Адрес: ${c.address}`].filter(Boolean);
+    return tg().send(chat, rows.length ? `Контакты CZECHFARM alliance\n\n${rows.join("\n")}` : "Контакты скоро появятся. Напишите вопрос сюда, команда ответит.", publicUrl ? linkButton("Открыть страницу контактов", `${publicUrl}/contacts`) : {});
+  }
   const botText = (k) => getS("bot." + k) || BOT_TEXT[k];
   function sendFaq(chat, lead) {
     const list = faqList();
@@ -418,12 +470,16 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
 
     /* Клиент. */
     if (u.start !== null) {
-      await bot.send(u.chat, botText("hello"));
+      await sendHello(u.chat);
       const me = db.get("select kind, account_id from bot_users where chat = ?", u.chat);
       if (me && (me.kind || me.account_id)) return sendFaq(u.chat, "");
       return bot.send(u.chat, botText("who"), { reply_markup: { inline_keyboard: [[{ text: "Я партнёр", callback_data: "kind:partner" }, { text: "Я клиент", callback_data: "kind:client" }]] } });
     }
-    if (u.text === "/faq") return sendFaq(u.chat, "");
+    if (u.text === "/faq" || u.text === BOT_KEYS.faq) return sendFaq(u.chat, "");
+    if (u.text === BOT_KEYS.ask) return bot.send(u.chat, botText("ask"));
+    if (u.text === "/contacts") return sendContacts(u.chat);
+    if (publicUrl && (u.text === "/cabinet" || u.text === BOT_KEYS.cabinet)) return bot.send(u.chat, "Кабинет партнёра и клиента: ваши обращения и их статус.", linkButton("Открыть кабинет", `${publicUrl}/account`));
+    if (publicUrl && (u.text === "/site" || u.text === BOT_KEYS.site)) return bot.send(u.chat, "Сайт CZECHFARM alliance: о компании, продукты, партнёрам и инвесторам.", linkButton("Открыть сайт", publicUrl));
     const hit = faqMatch(u.text, faqList());
     const open = db.get("select id from leads where tg_chat = ? and status in ('new', 'work', 'meet') and at > ? order by id desc", u.chat, now() - 7 * 864e5);
     if (hit && !open) return bot.send(u.chat, hit.a);
@@ -526,6 +582,28 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
       contacts: contacts.get(),
     };
   }
+  /* Тексты и блоки страниц из панели (site-text.mjs): правка — на язык и
+     страницу, страница «*» — шапка и подвал; скрытые блоки — на страницу. */
+  const pageOk = (p) => p === "*" || PAGES.includes(p);
+  const site = {
+    texts: (lang, page) => Object.fromEntries(db.all("select h, v from site_text where lang = ? and page in ('*', ?)", lang, page).map((r) => [r.h, r.v])),
+    own: (lang, page) => db.all("select h, v, def from site_text where lang = ? and page = ?", lang, page),
+    hidden: (page) => getS("site.hide." + page).split(",").filter(Boolean),
+    /* texts: { отпечаток: { v, def } }; пустое v — вернуть как в сборке. */
+    save({ lang, page, texts, hide }, by) {
+      if (!LANGS.includes(lang) || !pageOk(page)) throw new Error("Нет такой страницы");
+      let n = 0;
+      db.tx(() => { for (const [h, x] of Object.entries(texts || {})) {
+        if (!/^[0-9a-f]{12}$/.test(h)) continue;
+        const v = cut(x?.v, 1200).replace(/\s+/g, " "), def = cut(x?.def, 1200);
+        if (v && v !== def) db.run("insert into site_text(lang, page, h, v, def) values(?, ?, ?, ?, ?) on conflict(lang, page, h) do update set v = excluded.v, def = excluded.def", lang, page, h, v, def);
+        else db.run("delete from site_text where lang = ? and page = ? and h = ?", lang, page, h);
+        n++;
+      } });
+      if (Array.isArray(hide) && page !== "*") setS("site.hide." + page, hide.filter((x) => /^[\w-]{1,40}$/.test(x)).slice(0, 30).join(","));
+      changed(); note(by, `Поменял страницу сайта «${page === "*" ? "шапка и подвал" : page}» (${lang})${n ? `: текстов ${n}` : ""}`);
+    },
+  };
   const seoFor = (lang, page) => db.get("select t, d from seo where k = ?", `${lang}:${page}`) || null;
 
   /* ── Комната инвестора ──────────────────────────────────────────── */
@@ -583,7 +661,7 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
   const log = () => db.all("select l.at, l.who, l.t, l.lead_id, ld.no from log l left join leads ld on ld.id = l.lead_id order by l.id desc limit 300");
 
   return {
-    aud, users, auth, connect, settingsView, leads, faq, products, news, seo, contacts, ir, summary, log, live, seoFor,
+    aud, users, auth, connect, settingsView, leads, faq, products, news, seo, contacts, ir, summary, log, live, seoFor, site, botProfile,
     hook, tgSecret: () => getS("tg.secret"), counters: () => ({ metrika: getS("seo.metrika"), yandex: getS("seo.yandex"), google: getS("seo.google") }),
     version: () => version, leadText,
   };

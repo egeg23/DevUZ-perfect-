@@ -398,3 +398,98 @@ test("czechfarm: регистрация партнёров и клиентов, 
     assert.equal((await a.call("/api/acc/login", { email: "a@apteka.uz", pass: "x" }, { "Content-Type": "text/plain" })).status, 415);
   } finally { await a.close(); }
 });
+
+test("czechfarm: страницы сайта из панели — текст любого блока, скрытие блока, шапка на всех страницах", async () => {
+  const a = await boot();
+  try {
+    await owner(a);
+    const v = (await a.call("/api/admin/pages?lang=ru&page=home")).json;
+    const ids = v.blocks.map((b: any) => b.id);
+    for (const id of ["hero", "launch", "mission", "contact", "data"]) assert.ok(ids.includes(id), `нет блока ${id}`);
+    const hero = v.blocks.find((b: any) => b.id === "hero");
+    assert.ok(!hero.canHide, "первый экран можно скрыть");
+    const cap = hero.texts.find((t: any) => t.def === "Организуем логистику");
+    assert.ok(cap, "подписи сцены нет среди текстов");
+    const data = v.blocks.find((b: any) => b.id === "data").texts[0];
+    /* Правка экранируется, блок скрывается стилем, текст скрипта меняется в данных. */
+    const saved = await a.adminPost("/pages", { lang: "ru", page: "home", texts: { [cap.h]: { v: "Везём <b>сами</b>", def: cap.def }, [data.h]: { v: "Подпись из панели", def: data.def } }, hide: ["compare", "hero"] });
+    assert.equal(saved.status, 200);
+    assert.equal(saved.json.blocks.find((b: any) => b.id === "hero").texts.find((t: any) => t.h === cap.h).val, "Везём <b>сами</b>");
+    const home = (await a.call("/")).text;
+    assert.ok(home.includes("Везём &lt;b&gt;сами&lt;/b&gt;") && !home.includes(">Организуем логистику<"), "правка не на сайте или не экранирована");
+    assert.ok(home.includes("Подпись из панели") && home.includes('"live":{'), "текст скрипта не поменялся или сломались данные страницы");
+    assert.match(home, /<style>#compare,a\[href\$="#compare"\]\{display:none!important\}<\/style>/, "блок не скрыт");
+    assert.doesNotMatch(home, /#hero,a\[href/, "первый экран скрыт");
+    assert.ok((await a.call("/uz/")).text.includes("Logistikani tashkil qilamiz"), "правка русской страницы попала на узбекскую");
+    assert.ok(!(await a.call("/about")).text.includes("Везём"), "правка главной попала на другую страницу");
+    /* Шапка и подвал — страница «*», на всех страницах языка. */
+    const bar = (await a.call("/api/admin/pages?lang=en&page=*")).json.blocks[0];
+    const item = bar.texts.find((t: any) => t.def === "Contacts");
+    await a.adminPost("/pages", { lang: "en", page: "*", texts: { [item.h]: { v: "Get in touch", def: item.def } } });
+    for (const p of ["/en/", "/en/about", "/en/investors"]) assert.ok((await a.call(p)).text.includes(">Get in touch<"), `${p}: шапка не поменялась`);
+    assert.ok(!(await a.call("/contacts")).text.includes("Get in touch"));
+    /* Пустое поле возвращает текст сборки; чужая страница и менеджер — отказ. */
+    await a.adminPost("/pages", { lang: "ru", page: "home", texts: { [cap.h]: { v: "", def: cap.def } }, hide: [] });
+    const back = (await a.call("/")).text;
+    assert.ok(back.includes(">Организуем логистику<") && !back.includes("#compare,a"));
+    assert.equal((await a.adminPost("/pages", { lang: "ru", page: "nope", texts: {} })).status, 400);
+    /* Правка, исходный текст которой сменился в новой сборке, не применяется и видна как устаревшая. */
+    a.db.run("insert into site_text(lang, page, h, v, def) values('ru', 'home', 'aaaaaaaaaaaa', 'Старая правка', 'Старый текст')");
+    assert.deepEqual((await a.call("/api/admin/pages?lang=ru&page=home")).json.stale, [{ h: "aaaaaaaaaaaa", def: "Старый текст", val: "Старая правка" }]);
+    await a.adminPost("/users", { name: "Менеджер", login: "manager1", pass: "длинный-пароль", role: "manager" });
+    await a.adminPost("/logout", {}); a.setCookie("");
+    await a.adminPost("/login", { login: "manager1", pass: "длинный-пароль" });
+    assert.equal((await a.call("/api/admin/pages?lang=ru&page=home")).status, 403);
+    assert.equal((await a.adminPost("/pages", { lang: "ru", page: "home", texts: {} })).status, 403);
+    assert.equal((await a.adminPost("/site/bot", { name: "Чужой бот" })).status, 403);
+  } finally { await a.close(); }
+});
+
+test("czechfarm: оформление Telegram-бота — имя, описания, меню, приветствие с картинкой и кнопками", async () => {
+  const a = await boot();
+  try {
+    await owner(a);
+    /* До подключения оформление сохраняется, но в Telegram не уходит. */
+    const early = (await a.adminPost("/site/bot", { name: "CZECHFARM бот", about: "Строка профиля", desc: "Текст до «Начать»", card: true })).json.bot;
+    assert.deepEqual(early.bad, ["Бот ещё не подключён"]);
+    assert.equal(a.net.calls.filter((c) => c.url.includes("api.telegram.org")).length, 0);
+    await a.adminPost("/connect/tg", { token: "123456:" + "A".repeat(35) });
+    const sent = (m: string) => a.net.calls.filter((c) => c.url.endsWith("/" + m));
+    assert.equal(sent("setMyName")[0].body.name, "CZECHFARM бот");
+    assert.equal(sent("setMyShortDescription")[0].body.short_description, "Строка профиля");
+    assert.equal(sent("setMyDescription")[0].body.description, "Текст до «Начать»");
+    assert.deepEqual(sent("setMyCommands")[0].body.commands.map((c: any) => c.command), ["start", "faq", "cabinet", "contacts", "site"]);
+    assert.equal(sent("setChatMenuButton")[0].body.menu_button.type, "commands");
+    const look = (await a.call("/api/admin/site")).json.bot;
+    assert.ok(look.on && look.pushed && look.username === "czechfarm_bot");
+    assert.equal((await a.adminPost("/site/bot", { name: "яя" })).status, 400, "имя из двух знаков");
+    /* /start: картинка с приветствием и кнопки под строкой ввода. */
+    a.net.calls.length = 0;
+    const msg = (text: string, id = 900) => a.tg({ message: { message_id: 1, date: 1, chat: { id, type: "private" }, from: { first_name: "Гость" }, text } });
+    await msg("/start");
+    const hello = sent("sendPhoto")[0];
+    assert.equal(hello.body.photo, "https://czechfarm.test/protos/chechfarm/bot/hello.jpg");
+    assert.match(hello.body.caption, /CZECHFARM alliance/);
+    assert.deepEqual(hello.body.reply_markup.keyboard.flat().map((k: any) => k.text), ["❓ Частые вопросы", "✍️ Написать нам", "👤 Кабинет", "🌐 Сайт"]);
+    /* Кнопки и команды не становятся обращениями. */
+    a.net.calls.length = 0;
+    await msg("✍️ Написать нам"); await msg("👤 Кабинет"); await msg("/site"); await msg("/contacts"); await msg("❓ Частые вопросы");
+    assert.equal(a.db.get("select count(*) n from leads").n, 0, "кнопка бота стала обращением");
+    const texts = sent("sendMessage").map((c) => c.body);
+    assert.match(texts[0].text, /одним сообщением/);
+    assert.equal(texts[1].reply_markup.inline_keyboard[0][0].url, "https://czechfarm.test/account");
+    assert.equal(texts[2].reply_markup.inline_keyboard[0][0].url, "https://czechfarm.test");
+    assert.match(texts[3].text, /Контакты скоро появятся/);
+    await a.adminPost("/site/contacts", { phone: "+998 00 000 00 00", email: "info@example.test" });
+    a.net.calls.length = 0;
+    await msg("/contacts");
+    assert.match(sent("sendMessage")[0].body.text, /Телефон: \+998 00 000 00 00\nПочта: info@example\.test/);
+    /* Картинку можно выключить: приветствие текстом, кнопки остаются. */
+    await a.adminPost("/site/bot", { card: false });
+    a.net.calls.length = 0;
+    await msg("/start", 901);
+    assert.equal(sent("sendPhoto").length, 0);
+    assert.ok(sent("sendMessage")[0].body.reply_markup.keyboard);
+    for (const f of ["hello.jpg", "avatar.jpg"]) assert.ok(existsSync(`public/protos/chechfarm/bot/${f}`), `нет ${f}`);
+  } finally { await a.close(); }
+});
