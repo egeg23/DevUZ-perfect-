@@ -28,7 +28,7 @@ import { offerAddons } from "@/lib/proto/instant/offer";
 import { readClientSite, siteFromAnswers, type ReadResult } from "@/lib/proto/instant/read";
 import type { Flow } from "@/lib/proto/instant/store";
 import { instantReady, type InstantLocale, type InstantNiche, type InstantSite } from "@/lib/proto/instant/types";
-import { stepCaption, widgetHtml, widgetState, type BuildFail, type BuildStep, type WidgetInfo } from "@/lib/proto/instant/widget";
+import { STEP_WAIT, stepCaption, widgetHtml, widgetState, type BuildFail, type BuildStep, type WidgetInfo } from "@/lib/proto/instant/widget";
 
 /** Сколько виден каждый шаг сборки в виджете. */
 export const STEP_SHOW_MS = 1200;
@@ -429,6 +429,15 @@ export async function handleInstantButton(ctx: Ctx, parts: readonly string[], de
   await runBuild(ctx, next, deps);
 }
 
+/** Адрес сайта без https:// и www. — для строки браузера в виджете. */
+function hostOf(url: string): string | null {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "") || null;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Сборка с виджетом. Каждый шаг виджета — после настоящего шага:
  * сайт прочитан, логотип и цвета взяты, услуги разобраны, страница собрана,
@@ -448,18 +457,30 @@ export async function runBuild(ctx: Ctx, flow: Flow, deps: Deps): Promise<void> 
     return;
   }
 
-  const widget = await deps.sendWidget(ctx.chatId, { html: widgetHtml(locale, niche), chatData: widgetState("read"), caption: stepCaption(locale, "read") });
+  // Адрес сайта клиента — в строку браузера виджета с первого кадра.
+  const host = flow.url && !flow.nosite ? hostOf(flow.url) : null;
+  const widget = await deps.sendWidget(ctx.chatId, { html: widgetHtml(locale, niche), chatData: widgetState("read", false, { host }), caption: stepCaption(locale, "read") });
   // Приложение без виджетов (или метод не принят) — тот же ход обычным сообщением.
   const status = widget === null ? await deps.send(ctx.chatId, stepCaption(locale, "read")) : null;
-  let info: WidgetInfo = {};
+  let info: WidgetInfo = { host };
   const learn = (x: InstantSite) => {
-    info = { name: x.name, color: x.color, services: x.services.map((v) => v.name) };
+    info = {
+      host,
+      name: x.name,
+      color: x.color,
+      services: x.services.map((v) => v.name),
+      prices: x.services.map((v) => v.price),
+      sub: x.tagline || x.city,
+      phone: x.phone,
+    };
   };
   const pace = deps.pace ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
   const step = async (s: BuildStep, failed: BuildFail | false = false) => {
     // Постановка поверх настоящих шагов (владелец, 10.11.2026: «показывай
     // прям интерактивно… как ты собираешь»): каждый шаг виден не меньше секунды.
-    if (!failed && s !== "read") await pace(STEP_SHOW_MS);
+    // С виджетом ждём, пока доиграет сцена прошлого шага (STEP_WAIT): подпись
+    // не убегает вперёд картинки. Без виджета — по-старому.
+    if (!failed && s !== "read") await pace(widget ? Math.max(STEP_SHOW_MS, STEP_WAIT[s]) : STEP_SHOW_MS);
     if (widget) {
       await deps.editWidget(ctx.chatId, widget, widgetState(s, failed, info));
       await deps.editCaption(ctx.chatId, widget, stepCaption(locale, s, failed));

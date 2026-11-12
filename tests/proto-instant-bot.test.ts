@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { deflateSync } from "node:zlib";
 
@@ -15,9 +16,9 @@ import { PROTOTYPE_HOURS } from "@/lib/admin/outreach";
 import { INSTANT_SOURCE, MANUAL_SOURCE, instantLeadInput, manualHeading, sourceOf } from "@/lib/proto/instant/bot-deps";
 import { DAILY_CAP, MOCKUP_BOT_OPEN, limitVerdict, mayUseInstant, siteUrlOf, tashkentDayStart } from "@/lib/proto/instant/limits";
 import type { Flow } from "@/lib/proto/instant/store";
-import { emptySite } from "@/lib/proto/instant/types";
+import { INSTANT_NICHES, emptySite } from "@/lib/proto/instant/types";
 import { PILOT_NEWS, PILOT_TEXT } from "@/lib/proto/instant/announce-store";
-import { STEPS, stepCaption, widgetHtml, widgetState } from "@/lib/proto/instant/widget";
+import { STEPS, STEP_WAIT, stepCaption, widgetHtml, widgetState } from "@/lib/proto/instant/widget";
 
 /**
  * «Макет в боте» (CLAUDE.md): 1 аккаунт — 1 макет, 30 в день на всех,
@@ -316,7 +317,61 @@ test("виджет: имя, цвет и услуги клиента в сост�
   assert.ok(Buffer.byteLength(widgetState("done", false, { name: "я".repeat(500), services: long })) <= 1024);
   assert.equal(JSON.parse(widgetState("brand", false, { color: "red;}" })).c, undefined, "чужой цвет не проходит");
   const html = widgetHtml("ru");
-  assert.ok(html.includes("textContent=s.n") && html.includes("e.textContent=list"), "данные клиента не разметкой");
+  assert.ok(html.includes("e.textContent=t") && html.includes("ty($('nm'),n"), "данные клиента не разметкой");
+  assert.doesNotMatch(html, /innerHTML|insertAdjacentHTML|document\.write/, "данные клиента только через textContent");
+});
+
+test("виджет: сайт собирается на глазах — в виде шаблона сферы, с ценами, телефоном и адресом клиента", () => {
+  const st = JSON.parse(
+    widgetState("services", false, {
+      name: "Диванный мир",
+      host: "divanmir.uz",
+      phone: "+998 90 123 45 67",
+      sub: "Мебель  на заказ,\nТашкент",
+      services: ["Диваны", "Кухни", "Шкафы"],
+      prices: ["от 3 млн сум", null, "от 2 млн сум"],
+    }),
+  );
+  assert.equal(st.u, "divanmir.uz");
+  assert.equal(st.p, "+998 90 123 45 67");
+  assert.equal(st.g, "Мебель на заказ, Ташкент");
+  assert.deepEqual(st.r, ["от 3 млн сум", "", "от 2 млн сум"], "цены по порядку услуг");
+  assert.equal(JSON.parse(widgetState("services", false, { services: ["Диваны"], prices: [null] })).r, undefined, "цен нет — поля нет");
+  const fat = widgetState("done", false, { name: "я".repeat(500), sub: "ю".repeat(500), host: "h".repeat(500), services: Array(9).fill("услуга ".repeat(20)), prices: Array(9).fill("цена ".repeat(20)) });
+  assert.ok(Buffer.byteLength(fat) <= 1024);
+  const cut = JSON.parse(fat);
+  assert.equal((cut.r ?? []).length <= (cut.s ?? []).length, true, "цен не больше, чем услуг");
+
+  // Вид мини-сайта — как у шаблона сферы: мебель тёмная, стоматология светлая с засечками.
+  const mebel = widgetHtml("ru", "mebel");
+  const dental = widgetHtml("ru", "stomatologiya");
+  assert.ok(mebel.includes("background:#121110") && mebel.includes("--a:#cf3d1c") && mebel.includes("Заказать замер"));
+  assert.ok(dental.includes("background:#f8f4ef") && /\.h1\{[^}]*serif/.test(dental));
+  assert.ok(widgetHtml("ru").includes("var(--tg-theme-secondary-bg-color)"), "без сферы — в цветах чата");
+
+  // Пределы профиля виджетов Telegram: чего нет в профиле, клиент молча выбросит.
+  for (const niche of INSTANT_NICHES) {
+    for (const locale of ["ru", "uz"] as const) {
+      const html = widgetHtml(locale, niche);
+      assert.ok(deflateSync(Buffer.from(html), { level: 9 }).length <= 4000, `${niche} ${locale}: запас до 4096`);
+      assert.doesNotMatch(html, /clip-path|text-shadow|color-mix|oklch|backdrop-filter|filter:|perspective|translate3d|rotate[XY]|vh[;}]|inset:|@container|:has\(/, `${niche}: вне профиля`);
+      assert.doesNotMatch(html, /opacity|blur\(/, "прозрачность и размытие — не больше 16 элементов, не используем вовсе");
+      assert.doesNotMatch(html, /offset(Top|Left|Parent|Height)|scroll(Top|IntoView)/, "раскладку читаем только getBoundingClientRect");
+      assert.doesNotMatch(html, /font(-family)?:[^;}]*(Georgia|Arial|Helvetica|Manrope|Roboto)/i, "только системные семейства шрифтов");
+    }
+  }
+  // Сцена на каждый шаг; пересозданный виджет на последнем шаге ставит всё сразу.
+  assert.ok(mebel.includes("st().k>=L") && mebel.includes("k>i+1"));
+  assert.ok(mebel.includes("prefers-reduced-motion"));
+});
+
+test("бот ждёт сцену виджета перед следующим шагом, без виджета — как раньше", async () => {
+  assert.ok(STEP_WAIT.build >= 3000 && STEP_WAIT.done >= 2000, "сцены услуг и проверки успевают доиграть");
+  assert.ok(Object.values(STEP_WAIT).reduce((a, b) => a + b, 0) <= 14000, "вся постановка не дольше 14 секунд");
+  const src = readFileSync(new URL("../lib/proto/instant/bot.ts", import.meta.url), "utf8");
+  assert.match(src, /pace\(widget \? Math\.max\(STEP_SHOW_MS, STEP_WAIT\[s\]\) : STEP_SHOW_MS\)/);
+  assert.match(src, /widgetState\("read", false, \{ host \}\)/, "адрес сайта — в строке браузера с первого кадра");
+  assert.match(src, /prices: x\.services\.map\(\(v\) => v\.price\)/);
 });
 
 test("медцентр: допы с ценами — из плана нашего макета Shox", () => {
@@ -467,8 +522,8 @@ test("КП: сборка кладёт его страницей kp, бот да�
 });
 
 test("макет в боте: кнопка в виджете сборки — по сфере", () => {
-  assert.match(widgetHtml("ru"), /<span class="bk">Записаться<\/span>/);
-  assert.match(widgetHtml("ru", "stomatologiya"), /<span class="bk">Записаться<\/span>/);
-  assert.match(widgetHtml("ru", "restoran"), /<span class="bk">Забронировать<\/span>/);
-  assert.match(widgetHtml("uz", "nedvizhimost"), /<span class="bk">Obyekt tanlash<\/span>/);
+  assert.match(widgetHtml("ru"), /<span class="bk z" id="bk">Записаться<\/span>/);
+  assert.match(widgetHtml("ru", "stomatologiya"), /<span class="bk z" id="bk">Записаться<\/span>/);
+  assert.match(widgetHtml("ru", "restoran"), /<span class="bk z" id="bk">Забронировать<\/span>/);
+  assert.match(widgetHtml("uz", "nedvizhimost"), /<span class="bk z" id="bk">Obyekt tanlash<\/span>/);
 });
