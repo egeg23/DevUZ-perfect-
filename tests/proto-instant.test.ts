@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { existsSync } from "node:fs";
+import { existsSync, statSync as fileStat } from "node:fs";
 import { test } from "node:test";
 
 import tailsFile from "@/content/proto-instant/tails.json" with { type: "json" };
@@ -585,6 +585,28 @@ test("салон красоты: капля падает к ногтю, подб
   assert.ok(html.includes("https://t.me/myata_pudra_demo"), "заявка уходит в Telegram салона");
   assert.ok(html.includes("prefers-reduced-motion:reduce"), "без движения — капли нет, ноготь уже покрыт");
   assert.ok(html.includes("3000"), "шапка возвращается через 3 секунды");
+});
+
+test("салон красоты: капля идёт своей полосой, ноготь на фото руки, подтёки, работы и отзывы примером", () => {
+  for (const locale of ["ru", "uz"] as const) {
+    const { html, problems } = buildInstant({ ...salon, locale }, SEED);
+    assert.deepEqual(problems, []);
+    // 12.11.2026, владелец: «Капелька которая падает не должна попадать на текст»: полоса справа, текст в неё не заходит.
+    assert.ok(html.includes("--lane:") && html.includes("padding-right:var(--lane)"), "у капли своя полоса");
+    assert.ok(/id="nail"[^>]*>\s*<img[^>]+hand\.webp/.test(html), "ноготь: фото руки, а не рисунок");
+    assert.equal((html.match(/<i style="left:[^"]+" data-k=/g) ?? []).length, 8, "подтёки первого экрана");
+    assert.equal((html.match(/_niche\/salon-krasoty\/w\d\.webp/g) ?? []).length, 6, "шесть кадров работ");
+    assert.ok(html.includes("ba-before.webp") && html.includes("ba-after.webp") && html.includes('type="range"'), "до и после ползунком");
+    assert.ok(html.indexOf('id="works"') > html.indexOf('id="services"') && html.indexOf('class="revs"') > html.indexOf('id="nail"'), "порядок блоков");
+  }
+  const { html } = buildInstant(salon, SEED);
+  // Отзывы и кадры работ не клиента: это сказано на странице, чужих чисел и имён прошлых клиентов нет.
+  assert.equal((html.match(/Пример отзыва/g) ?? []).length, 3);
+  assert.ok(html.includes("Кадры для примера"));
+  for (const f of ["hand", "hand-nails", "hand-gloss", "hand-tips", "ba-before", "ba-after", "w1", "w2", "w3", "w4", "w5", "w6"]) {
+    const size = fileStat(`public/protos/_niche/salon-krasoty/${f}.webp`).size;
+    assert.ok(size > 0 && size < 400_000, `${f}.webp: ${size}`);
+  }
 });
 
 test("админка салона: все каналы в одном окне, статьи, акции и сайт, без сети и без имени прошлого клиента", () => {
