@@ -37,6 +37,10 @@ import { NEDV_BACKS, NEDV_PHOTOS } from "@/lib/proto/instant/nedv";
 import { panelAssets } from "../scripts/protos/instant/panel-assets.mjs";
 import panelFile from "@/content/proto-instant/panel-assets.json" with { type: "json" };
 import { hasAdmin } from "@/lib/proto/instant/admin";
+import { liderprofAssets } from "../scripts/protos/instant/liderprof-assets.mjs";
+import lpFile from "@/content/proto-instant/liderprof-assets.json" with { type: "json" };
+import { STROI_HERO, STROI_PANO, STROI_PHOTOS } from "@/lib/proto/instant/stroitelstvo";
+import { EXAMPLE_STROI } from "../scripts/protos/instant/preview-data.mjs";
 
 /**
  * «Макет в боте» (CLAUDE.md): шаблон ниши из наших макетов, данные клиента —
@@ -483,7 +487,7 @@ test("админка: у всех семи сфер — на данных кли
       if (mark) assert.ok(a.includes(mark));
     }
   }
-  for (const n of ["stomatologiya", "medcentr", "mebel", "restoran", "turagentstvo", "uchebnyy-centr", "nedvizhimost", "salon-krasoty"] as const) assert.ok(hasAdmin(n), `${n}: админка есть`);
+  for (const n of ["stomatologiya", "medcentr", "mebel", "restoran", "turagentstvo", "uchebnyy-centr", "nedvizhimost", "salon-krasoty", "stroitelstvo"] as const) assert.ok(hasAdmin(n), `${n}: админка есть`);
 });
 
 test("админка ресторана: блюда клиента в меню, демо-заказы только из блюд с ценой", () => {
@@ -827,4 +831,52 @@ test("логистика: нет таможни, видов транспорта
   assert.ok(!bare.html.includes('id="customs"'), "таможни у компании нет — блока нет");
   assert.ok(!bare.html.includes('data-qm="air"') && !bare.html.includes('data-m="sea"'), "чужих видов транспорта не обещаем");
   assert.ok(!bare.html.includes('href="https://t.me/'), "нет чата — нет ссылки");
+});
+
+const stroi = EXAMPLE_STROI as InstantSite;
+
+test("стройка и ремонт: пример собирается без замечаний, защита та же", () => {
+  const { html, problems, stamp, pages } = buildInstant(stroi, SEED);
+  assert.deepEqual(problems, []);
+  assert.ok(html.includes("Мастер Дом") && html.includes('id="uslugi"') && html.includes('id="raschet"') && html.includes('id="pano-v"'));
+  assert.ok(html.includes("/ru/mockup-terms") && html.includes('class="dz-vid"'));
+  assert.ok(stamp.signals.some((s) => s.startsWith("js:")), "метка числа скрипта Lider Prof");
+  assert.ok(stamp.signals.filter((s) => s.startsWith("text:")).length >= 4, "две ловушки");
+  assert.ok(pages.admin && pages.kp, "админка и КП рядом с макетом");
+  const uz = buildInstant({ ...stroi, locale: "uz", tagline: null, about: null, source: "namuna" }, SEED);
+  assert.deepEqual(uz.problems, []);
+  for (const w of ["Наши услуги", "Расчёт ремонта", "Отправить на расчёт", "Почему мы"]) assert.ok(!uz.html.includes(w), w);
+});
+
+test("стройка и ремонт: наш макет Lider Prof, стили и скрипт свежие, без Lider Prof", () => {
+  // Владелец, 12.11.2026: «выведем больше ниш которые у нас есть, также переодевать просто».
+  assert.deepEqual(lpFile, liderprofAssets(), "node scripts/protos/instant/liderprof-assets.mjs");
+  const { html } = buildInstant(stroi, SEED);
+  assert.ok(html.includes(lpFile.css.slice(0, 200)), "стили Lider Prof на странице");
+  for (const c of ['class="hero2 dark"', 'class="path"', 'class="pgrid"', 'class="calc rv', 'class="pano rv', 'class="final dark"', 'class="dock"']) assert.ok(html.includes(c), c);
+  for (const s of ["LIDER", "Lider", "lider-prof", "lppuz", "/protos/lider-prof", "Олимпийск", "ARK Residence", "DreamLand"]) assert.ok(!html.includes(s), s);
+  assert.ok(!/<script[^>]+src=/.test(html) && !/<iframe/i.test(html));
+  assert.deepEqual(tailsIn(html), []);
+  assert.ok(tailsIn("Проект от LIDER PROF PROEKT, пишите @lppuz").length >= 2, "хвост Lider Prof ловится");
+  assert.ok(html.includes("is-away") && html.includes("IDLE = 3000"), "шапка прячется при прокрутке и возвращается через 3 секунды");
+  assert.ok(html.includes("--red:hsl("), "красный Lider Prof — в цвет клиента");
+  assert.ok(html.includes("fe-leads-1"), "заявка с расчёта приходит в админку");
+});
+
+test("стройка и ремонт: услуги и цены клиента, нет данных — нет блока, без чата ссылки нет", () => {
+  const { html } = buildInstant(stroi, SEED);
+  for (const s of stroi.services) assert.ok(html.includes(s.name), s.name);
+  assert.ok(html.includes("от 120 $ за м²") && html.includes("Цену назовём после замера"));
+  assert.ok(html.includes("https://t.me/masterdom_demo"));
+  const bare = buildInstant({ ...stroi, services: [], perks: [], telegram: null, instagram: null }, SEED);
+  assert.deepEqual(bare.problems, []);
+  assert.ok(!bare.html.includes('id="uslugi"') && !bare.html.includes('id="pochemu"'), "нет услуг и преимуществ — нет блоков");
+  assert.ok(!bare.html.includes("t.me/"), "нет Telegram — нет ссылок в Telegram");
+  assert.ok(bare.html.includes('"tg":""'), "без чата заявка только копируется");
+});
+
+test("стройка и ремонт: нейтральные фото ниши лежат в репозитории", () => {
+  assert.ok(instantReady("stroitelstvo") && hasAdmin("stroitelstvo"));
+  for (const photo of [...STROI_PHOTOS, STROI_HERO, STROI_PANO]) assert.ok(existsSync(`public${photo}`), photo);
+  for (const photo of STROI_PHOTOS) assert.ok(existsSync(`public${photo.replace("-1200", "-640")}`), photo);
 });

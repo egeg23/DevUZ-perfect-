@@ -397,24 +397,35 @@ const EDU_TARIFFS: Pair[] = [["Группа", "Guruh"], ["Интенсив", "In
 const EDU_STAFF: Pair[] = [["Малика А.", "Malika A."], ["Бехруз Т.", "Behruz T."], ["Нодира С.", "Nodira S."], ["Отабек Р.", "Otabek R."]];
 const EDU_HEADS: Pair[] = [["Вы (владелец)", "Siz (ega)"], ["Шахло К.", "Shahlo K."], ["Жавохир М.", "Javohir M."]];
 
+/** Слова сферы для панели FinTax: подписи, виды клиентов, четыре тарифа, команда, заголовок. */
+type FintaxWords = { ui: Record<string, Pair>; kinds: Record<string, Pair>; tariffs: Pair[]; staff: Pair[]; heads: Pair[]; title: Pair; desc: Pair };
+
 function eduAdmin(site: InstantSite): string {
+  return fintaxAdmin(site, {
+    ui: EDU_UI, kinds: EDU_KINDS, tariffs: EDU_TARIFFS, staff: EDU_STAFF, heads: EDU_HEADS,
+    title: ["панель учебного центра · демо", "o‘quv markazi paneli · demo"],
+    desc: ["Панель учебного центра: заявки с сайта, ученики, курсы, команда и роли, история. Демо-данные.", "O‘quv markazi paneli: saytdan arizalar, o‘quvchilar, kurslar, jamoa va rollar, tarix. Demo ma’lumotlar."],
+  });
+}
+
+function fintaxAdmin(site: InstantSite, w: FintaxWords): string {
   const l = site.locale;
   const i = l === "uz" ? 1 : 0;
   const t = (p: Pair) => p[i];
   const nm = esc(site.name);
   const base = panels.fintax.ui as Record<string, string[]>;
-  const ui = Object.fromEntries(Object.entries(base).map(([k, v]) => [k, (EDU_UI[k] ?? v)[i].split("{name}").join(nm)]));
+  const ui = Object.fromEntries(Object.entries(base).map(([k, v]) => [k, (w.ui[k] ?? v)[i].split("{name}").join(nm)]));
   const services = site.services.slice(0, LIMITS.services);
   // Панель FinTax держит ровно четыре тарифа: курсы клиента, недостающие — форматами занятий.
-  const four = [0, 1, 2, 3].map((k) => (services[k] ? { n: services[k].name, p: services[k].price ?? "" } : { n: t(EDU_TARIFFS[k]), p: "" }));
+  const four = [0, 1, 2, 3].map((k) => (services[k] ? { n: services[k].name, p: services[k].price ?? "" } : { n: t(w.tariffs[k]), p: "" }));
   const pd = {
     lang: l, ui,
     names: NAMES[l].map((x, k) => `${x} ${(l === "uz" ? "ABDEFGHIKL" : "АБВГДЕЖЗИК")[k]}.`),
-    staff: EDU_STAFF.map((p, k) => ({ n: t(p), r: services[k]?.name ?? t(EDU_TARIFFS[k]) })),
-    heads: EDU_HEADS.map(t),
+    staff: w.staff.map((p, k) => ({ n: t(p), r: services[k]?.name ?? t(w.tariffs[k]) })),
+    heads: w.heads.map(t),
     // Сколько платят в месяц, млн сум (демо): от группы к индивидуальным.
     tariffs: four.map((x, k) => ({ id: ["ip", "small", "mid", "big"][k], n: x.n, p: x.p, lo: [0.3, 0.5, 0.8, 0.4][k], hi: [0.6, 0.9, 1.6, 0.8][k] })),
-    kinds: Object.fromEntries(Object.entries(EDU_KINDS).map(([k, v]) => [k, t(v)])),
+    kinds: Object.fromEntries(Object.entries(w.kinds).map(([k, v]) => [k, t(v)])),
     services: services.map((s) => s.name),
     site: PROTO_BASE, prices: PROTO_BASE, tg: site.telegram ? `https://t.me/${esc(site.telegram.replace(/^@/, ""))}` : "",
   };
@@ -425,8 +436,8 @@ function eduAdmin(site: InstantSite): string {
   const palette = hex ? (() => { const [h, s0] = hexToHsl(hex); const sat = Math.min(Math.max(s0, 35), 80); return `--teal:hsl(${h} ${sat}% 18%);--teal2:hsl(${h} ${sat}% 34%);--mint:hsl(${h} ${Math.round(sat * 0.5)}% 92%);--deep:hsl(${h} ${sat}% 12%)`; })() : "";
   return page(
     l,
-    `${nm} · ${l === "uz" ? "o‘quv markazi paneli · demo" : "панель учебного центра · демо"}`,
-    esc(l === "uz" ? "O‘quv markazi paneli: saytdan arizalar, o‘quvchilar, kurslar, jamoa va rollar, tarix. Demo ma’lumotlar." : "Панель учебного центра: заявки с сайта, ученики, курсы, команда и роли, история. Демо-данные."),
+    `${nm} · ${t(w.title)}`,
+    esc(t(w.desc)),
     "https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;700&family=Playfair+Display:wght@400;700&display=swap",
     `${panels.fintax.css}:root{${palette}}html,body{overflow-x:clip}.brand .logo img{height:30px;width:auto;max-width:140px;object-fit:contain}`,
     `<body class="panel" data-lang="${l}">
@@ -451,6 +462,48 @@ ${sprite}
 ${panels.fintax.js}</script>
 </body>`,
   );
+}
+
+// ── Панель стройки и ремонта: та же FinTax, словами ремонта ───────────
+/** Подписи FinTax про бухгалтерию — словами ремонтной компании. Остальные — как у FinTax. */
+const STROI_UI: Record<string, Pair> = {
+  demoNote: ["Демо-панель макета DevUz Studio: цифры и объекты с пометкой «демо» придуманы для показа, заявки с сайта в этом браузере настоящие.", "DevUz Studio maketining demo paneli: «demo» belgili raqamlar va obyektlar ko‘rsatish uchun o‘ylab topilgan, shu brauzerdagi saytdan arizalar haqiqiy."],
+  n_clients: ["Объекты", "Obyektlar"], n_tariffs: ["Услуги и цены", "Xizmatlar va narxlar"],
+  role_head: ["Главный прораб", "Bosh prorab"],
+  r_owner: ["Всё: заявки, объекты с суммами, выручку в месяц, услуги на сайте, бригады и историю.", "Hammasi: arizalar, summalari bilan obyektlar, oylik tushum, saytdagi xizmatlar, brigadalar va tarix."],
+  r_head: ["Заявки, объекты, бригады и сроки, суммы и услуги на сайте.", "Arizalar, obyektlar, brigadalar va muddatlar, summalar va saytdagi xizmatlar."],
+  r_manager: ["Заявки и объекты без денег: не видит выручку и суммы, не правит услуги и команду.", "Arizalar va obyektlar pulsiz: tushum va summalarni ko‘rmaydi, xizmatlar va jamoani o‘zgartirmaydi."],
+  k_client: ["Стали объектами", "Obyekt bo‘ldi"], clientsN: ["объектов", "obyekt"],
+  pickNote: ["«Расчёт ремонта»: заказчик сам описал объект, площадь и работы уже в заявке.", "«Ta’mir hisobi»: buyurtmachi obyektni o‘zi tasvirladi, maydon va ishlar allaqachon arizada."],
+  mix: ["Объекты по услугам", "Xizmatlar bo‘yicha obyektlar"], soon: ["Работы на неделе", "Haftadagi ishlar"],
+  co: ["Заказчик", "Buyurtmachi"], col_tariff: ["Услуга", "Xizmat"], col_acc: ["Прораб", "Prorab"], col_co: ["Объект", "Obyekt"],
+  col_docs: ["Этапов сделано", "Bajarilgan bosqichlar"], col_rep: ["Ближайшее", "Eng yaqini"],
+  src_pick: ["Расчёт ремонта", "Ta’mir hisobi"], s_offer: ["Назначили замер", "O‘lchov belgilandi"], s_client: ["Объект в работе", "Obyekt ishda"],
+  cs_wait: ["Ждём аванс", "Avans kutilmoqda"], cs_late: ["Отстаёт от графика", "Jadvaldan ortda"],
+  rep_vat: ["Замер", "O‘lchov"], rep_pay: ["Оплата этапа", "Bosqich to‘lovi"], rep_fin: ["Сдача объекта", "Obyektni topshirish"],
+  pickH: ["Из расчёта ремонта", "Ta’mir hisobidan"], docs: ["Этапов в работе", "Ishdagi bosqichlar"], staffN: ["Человек в бригаде", "Brigadadagi kishilar"],
+  tax: ["Тип объекта", "Obyekt turi"], tax_usn: ["Квартира", "Kvartira"], tax_vat: ["Дом", "Uy"], ved: ["Коммерция", "Tijorat"],
+  pickWhy: ["Заказчик пришёл с площадью и списком работ: на замере не нужно спрашивать заново.", "Buyurtmachi maydon va ishlar ro‘yxati bilan keldi: o‘lchovda qayta so‘rash shart emas."],
+  stNote: ["Статус сразу виден заказчику на сайте. «Объект в работе» добавляет его в «Объекты».", "Holat saytda buyurtmachiga darhol ko‘rinadi. «Obyekt ishda» uni «Obyektlar»ga qo‘shadi."],
+  clientsHelp: ["Кто ведёт объект, сколько этапов сделано и что ближайшее.", "Obyektni kim olib boradi, nechta bosqich bajarildi va eng yaqini nima."],
+  noMoney: ["Суммы видят владелец и главный прораб.", "Summalarni egasi va bosh prorab ko‘radi."],
+  since: ["в работе с", "ishda:"], gotAll: ["Оплата получена", "To‘lov olindi"],
+  tariffsHelp: ["Строка цены выходит на сайт: в услуги и в текст заявки.", "Narx qatori saytga chiqadi: xizmatlarga va ariza matniga."],
+  tariffsRo: ["Цены услуг меняют владелец и главный прораб.", "Xizmat narxlarini egasi va bosh prorab o‘zgartiradi."],
+  people: ["Команда {name}", "{name} jamoasi"], peopleNote: ["Имена и роли демо: впишете своих прорабов и мастеров.", "Ismlar va rollar demo: prorab va ustalaringizni yozasiz."],
+  a_acc: ["назначил прораба", "prorab tayinladi"], a_docs: ["отметил оплату этапа", "bosqich to‘lovini belgiladi"], a_price: ["изменил цену услуги", "xizmat narxini o‘zgartirdi"],
+};
+const STROI_KINDS: Record<string, Pair> = { ip: ["Квартиры", "Kvartiralar"], opt: ["Новостройки", "Yangi binolar"], retail: ["Частные дома", "Xususiy uylar"], serv: ["Офисы", "Ofislar"], prod: ["Магазины и кафе", "Do‘kon va kafelar"] };
+const STROI_TARIFFS: Pair[] = [["Дизайн-проект", "Dizayn loyiha"], ["Черновые работы", "Qora ishlar"], ["Чистовая отделка", "Oq pardoz"], ["Под ключ", "Kalit topshirish"]];
+const STROI_STAFF: Pair[] = [["Рустам Х.", "Rustam X."], ["Бахтиёр Н.", "Baxtiyor N."], ["Илхом С.", "Ilhom S."], ["Сардор М.", "Sardor M."]];
+const STROI_HEADS: Pair[] = [["Вы (владелец)", "Siz (ega)"], ["Улугбек К.", "Ulug‘bek K."], ["Дилшод А.", "Dilshod A."]];
+
+function stroiAdmin(site: InstantSite): string {
+  return fintaxAdmin(site, {
+    ui: STROI_UI, kinds: STROI_KINDS, tariffs: STROI_TARIFFS, staff: STROI_STAFF, heads: STROI_HEADS,
+    title: ["панель ремонтной компании · демо", "ta’mir kompaniyasi paneli · demo"],
+    desc: ["Панель ремонтной компании: заявки с сайта, объекты, услуги и цены, бригады и роли, история. Демо-данные.", "Ta’mir kompaniyasi paneli: saytdan arizalar, obyektlar, xizmatlar va narxlar, brigadalar va rollar, tarix. Demo ma’lumotlar."],
+  });
 }
 
 // ── Панель мебели: магазин Greenwell ─────────────────────────────────
@@ -852,6 +905,7 @@ const ADMINS: Partial<Record<InstantNiche, (site: InstantSite) => string>> = {
   nedvizhimost: nedvAdmin,
   "salon-krasoty": salonAdmin,
   avtoservis: avtoservisAdmin,
+  stroitelstvo: stroiAdmin,
 };
 
 /** Админка сферы на данных клиента; у сферы без нашей панели — null. */

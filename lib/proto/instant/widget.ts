@@ -137,6 +137,7 @@ const BOOK: Partial<Record<InstantNiche, Record<InstantLocale, string>>> = {
   "salon-krasoty": { ru: "Записаться", uz: "Yozilish" },
   magazin: { ru: "В корзину", uz: "Savatga" },
   logistika: { ru: "Рассчитать доставку", uz: "Yetkazishni hisoblash" },
+  stroitelstvo: { ru: "Рассчитать ремонт", uz: "Ta’mirni hisoblash" },
 };
 
 /**
@@ -158,6 +159,7 @@ const SKIN: Record<InstantNiche, Skin> = {
   magazin: { bg: "#f6f8f5", fg: "#0f1c15", card: "#fff", mute: "#c3d1c8", accent: "#00573a", serif: false },
   avtoservis: { bg: "#101217", fg: "#eef1f5", card: "#1a1d22", mute: "#5a606b", accent: "#d61f2c", serif: false },
   logistika: { bg: "#0c1329", fg: "#f4f6fc", card: "#16204a", mute: "#3a4570", accent: "#f08a24", serif: false },
+  stroitelstvo: { bg: "#f2efe9", fg: "#141518", card: "#fbfaf7", mute: "#cfc9be", accent: "#d7262b", serif: false },
 };
 /** Сфера не названа — мини-сайт в цветах чата. */
 const PLAIN: Skin = {

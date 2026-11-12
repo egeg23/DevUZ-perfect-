@@ -121,6 +121,16 @@ const OFFERS: Record<InstantNiche, () => OfferAddon[]> = {
     fromPlan("nek", "remind", "Напоминание клиенту о ТО", "Mijozga TXK eslatmasi"),
     fromPlan("nek", "reviews", null, "Saytda Google sharhlari"),
   ],
+  // Стройка и ремонт: допы нашего макета Lider Prof (расчёт, просмотр 360°, заставка, отзывы, движение).
+  stroitelstvo: () => [
+    fromPlan("lider-prof", "calc", "Расчёт ремонта по площади, с заявкой и планом", "Maydon bo‘yicha ta’mir hisobi, ariza va reja bilan"),
+    fromPlan("lider-prof", "pano", "Просмотр 360° ваших объектов", "Obyektlaringizni 360° ko‘rish"),
+    fromPlan("lider-prof", "filters", "Работы с фильтром по видам ремонта", "Ta’mir turlari bo‘yicha saralangan ishlar"),
+    fromPlan("lider-prof", "stats", "Цифры объекта на виду: площадь, сроки, этапы", "Obyekt raqamlari ko‘zga tashlanadi: maydon, muddat, bosqichlar"),
+    fromPlan("lider-prof", "intro", "Влёт в логотип", "Logotipga uchib kirish"),
+    fromPlan("lider-prof", "trust", "Отзывы заказчиков и карта объектов", "Buyurtmachilar sharhlari va obyektlar xaritasi"),
+    fromPlan("lider-prof", "motion", "Своё движение у каждого блока", "Har bir blokda o‘z harakati"),
+  ],
 };
 
 /**

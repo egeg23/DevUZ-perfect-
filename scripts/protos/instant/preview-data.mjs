@@ -340,3 +340,32 @@ export const EXAMPLE_LOGI = {
   photos: [],
   source: "пример, выдуманная компания",
 };
+
+// Выдуманная ремонтная компания — пример шаблона «Стройка и ремонт».
+export const EXAMPLE_STROI = {
+  niche: "stroitelstvo",
+  locale: "ru",
+  name: "Мастер Дом",
+  tagline: null,
+  about: "Делаем ремонт квартир и домов в Ташкенте: от черновых работ до расстановки мебели.",
+  city: "Ташкент",
+  color: "#c2622d",
+  logo: null,
+  services: [
+    { name: "Ремонт квартир под ключ", price: "от 120 $ за м²" },
+    { name: "Дизайн-проект", price: "от 15 $ за м²" },
+    { name: "Черновые работы", price: null },
+    { name: "Ванная под ключ", price: "от 1 500 $" },
+    { name: "Электрика и сантехника", price: null },
+  ],
+  doctors: [],
+  perks: ["Смета до начала работ", "Свои бригады", "Фотоотчёт каждый день", "Гарантия на работы"],
+  phone: "+998 90 300 40 50",
+  telegram: "masterdom_demo",
+  whatsapp: null,
+  instagram: "masterdom_demo",
+  address: "Ташкент, Чиланзар, ул. Примерная, 7",
+  hours: "Пн-Сб 9:00-19:00",
+  photos: [],
+  source: "пример, выдуманная ремонтная компания",
+};
