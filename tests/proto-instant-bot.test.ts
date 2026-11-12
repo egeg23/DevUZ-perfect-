@@ -248,11 +248,19 @@ test("сбой посреди сборки — крестик на шаге, б�
   assert.doesNotMatch(widgetHtml("ru") + widgetHtml("uz"), /передали менеджеру|menejerga topshirdik/);
 });
 
-test("цена: спецусловия 48 часов из PROMO и допы из плана нашего макета", () => {
+test("цена: спецусловия 48 часов из PROMO и допы из плана нашего макета, на 30% дешевле", async () => {
+  const { offerAddonPrice, offerAddons } = await import("@/lib/proto/instant/offer");
+  assert.equal(offerAddonPrice(200), 140);
+  assert.equal(offerAddonPrice(155), 110, "до 5 $");
   const text = priceText("ru", new Date("2026-11-10T10:00:00Z"));
   assert.ok(text.includes(`${PROMO.landing.price} $`));
   const nek = (plans as { id: string; addons: { id: string; price: number }[] }[]).find((p) => p.id === "nek")!;
-  for (const id of ["admin", "chat"]) assert.ok(text.includes(`${nek.addons.find((a) => a.id === id)!.price} $`), id);
+  for (const id of ["admin", "chat"]) {
+    const plan = nek.addons.find((a) => a.id === id)!.price;
+    assert.ok(text.includes(`: ${offerAddonPrice(plan)} $`), id);
+    assert.equal(offerAddons("stomatologiya").find((a) => a.id === `nek-${id}`)!.price, offerAddonPrice(plan));
+    assert.ok(offerAddonPrice(plan) < plan);
+  }
   assert.ok(!/Тбилиси|Пролёт/.test(text), "допы Nek для Тбилиси не идут");
   assert.ok(!/[ЀЁ-ӿ]{3}/.test(priceText("uz", new Date()).split("\n").slice(-7).join(" ")), "узбекские допы без кириллицы");
 });
@@ -410,16 +418,16 @@ test("бот ждёт сцену виджета перед следующим ш
 
 test("медцентр: допы с ценами — из плана нашего макета Shox", () => {
   const ru = priceText("ru", new Date("2026-11-10T10:00:00Z"), "medcentr");
-  assert.ok(ru.includes("Telegram-бот записи: 300 $"));
-  assert.ok(ru.includes("Админ-панель для записи и работы с пациентами: 450 $"));
+  assert.ok(ru.includes("Telegram-бот записи: 210 $"));
+  assert.ok(ru.includes("Админ-панель для записи и работы с пациентами: 315 $"));
   assert.ok(!ru.includes("Улыбка"), "допы стоматологии не путаются");
   assert.ok(!/[ЀЁ-ӿ]{3}/.test(priceText("uz", new Date(), "medcentr").split("\n").slice(-7).join(" ")), "узбекские допы без кириллицы");
 });
 
 test("мебель: допы с ценами — из планов наших макетов (Enotmebel, Usemtau, Karomat)", () => {
   const ru = priceText("ru", new Date("2026-11-10T10:00:00Z"), "mebel");
-  assert.ok(ru.includes("Панель заявок и замеров: статусы, менеджеры: 450 $"));
-  assert.ok(ru.includes("Рассрочка Uzum Nasiya и Alif: 80 $"));
+  assert.ok(ru.includes("Панель заявок и замеров: статусы, менеджеры: 315 $"));
+  assert.ok(ru.includes("Рассрочка Uzum Nasiya и Alif: 55 $"));
   assert.ok(!ru.includes("Telegram-бот записи"), "допы медцентра не путаются");
   assert.ok(!/[ЀЁ-ӿ]{3}/.test(priceText("uz", new Date(), "mebel").split("\n").slice(-7).join(" ")), "узбекские допы без кириллицы");
 });

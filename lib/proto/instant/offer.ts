@@ -105,8 +105,19 @@ const OFFERS: Record<InstantNiche, () => OfferAddon[]> = {
   ],
 };
 
+/**
+ * Владелец, 12.11.2026: «Цены в коммерческом, которые идут после макетов, на
+ * допы снизь на 30% по каждому допу». Скидка — от цены плана нашего макета,
+ * до 5 $; сами планы (договоры, макеты руками) не меняются.
+ */
+export const OFFER_ADDON_DISCOUNT = 0.3;
+
+export function offerAddonPrice(planPrice: number): number {
+  return Math.max(5, Math.round((planPrice * (1 - OFFER_ADDON_DISCOUNT)) / 5) * 5);
+}
+
 export function offerAddons(niche: InstantNiche): OfferAddon[] {
-  return OFFERS[niche]();
+  return OFFERS[niche]().map((a) => ({ ...a, price: offerAddonPrice(a.price) }));
 }
 
 export function offerBase(locale: InstantLocale) {
