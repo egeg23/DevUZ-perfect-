@@ -78,7 +78,7 @@ jobs:
           curl -fsS http://127.0.0.1:3999/ar/ | grep -q 'dir="rtl"'
           curl -fsS http://127.0.0.1:3999/en/products | grep -q '"live":{'
           curl -fsS http://127.0.0.1:3999/admin | grep -q "/admin/app.js"
-          curl -fsS -o /dev/null http://127.0.0.1:3999/protos/chechfarm/hero-2400.webp
+          curl -fsS -o /dev/null http://127.0.0.1:3999/protos/chechfarm/seq/p-d-0.webp
           curl -fsS http://127.0.0.1:3999/api/admin/state | grep -q '"setup":true'
           kill %1
       - name: Метка образа HTTPS

@@ -110,11 +110,12 @@ for (const w of [390, 768, 1440]) {
   await pg.fill("#q", "нет такого"); ok((await pg.textContent("#catalog")).includes("Ничего не нашлось"), `${w}: поиск не фильтрует`);
   await pg.goto(`${BASE}/uz/news`, { waitUntil: "load" });
   ok(await pg.$eval("html", (e) => e.lang === "uz"), `${w}: узбекская страница`);
-  // Сцена: на компьютере кадры приходят до 100% и рисуются; на телефоне — смена кадров.
+  // Сцена: кадры приходят пачками и рисуются; на ключевом кадре видна подпись.
   await pg.goto(`${BASE}/`, { waitUntil: "load" });
-  if (w >= 900) { await pg.waitForFunction(() => document.querySelector(".hs").classList.contains("cv"), null, { timeout: 20000 }).catch(() => {}); ok(await pg.$eval(".hs", (e) => e.classList.contains("cv")), `${w}: кадры сцены не загрузились`); }
-  await pg.evaluate(() => { const h = document.querySelector(".hs"); scrollTo(0, (h.offsetHeight - innerHeight) * 0.8); }); await pg.waitForTimeout(500);
-  if (w < 900) ok(+(await pg.$eval(".hs-b", (e) => e.style.opacity)) > 0.5, `${w}: на телефоне капсула не раскрывается`);
+  await pg.waitForFunction(() => document.querySelector(".hs").classList.contains("cv"), null, { timeout: 20000 }).catch(() => {});
+  ok(await pg.$eval(".hs", (e) => e.classList.contains("cv")), `${w}: кадры сцены не загрузились`);
+  await pg.evaluate(() => { const h = document.querySelector(".hs"); scrollTo(0, (h.offsetHeight - innerHeight) * 0.74); }); await pg.waitForTimeout(900);
+  ok((await pg.$$(".hs-cap.on")).length === 1, `${w}: на ключевом кадре сцены нет подписи`);
   // Аудитория меняет кнопку первого экрана и запоминается.
   await pg.locator("#as-t-investors").evaluate((e) => e.scrollIntoView({ block: "center" })); await pg.locator("#as-t-investors").click();
   ok(await pg.isVisible("#as-p-investors") && !(await pg.isVisible("#as-p-patients")), `${w}: аудитория не переключилась`);
