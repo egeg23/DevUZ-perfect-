@@ -10,7 +10,7 @@ import { extname, join, normalize, resolve, sep } from "node:path";
 import { openDb } from "./lib/db.mjs";
 import { makeCore, ROLES, STATUS, KINDS, LANGS, PAGES, CONTACT_KEYS, SEGMENTS, ACC_STATUS } from "./lib/core.mjs";
 import { sameSecret } from "./lib/crypt.mjs";
-import { blocksOf, applyTexts, hideBlocks } from "./lib/site-text.mjs";
+import { blocksOf, applyTexts, applyImages, orderBlocks, hideBlocks } from "./lib/site-text.mjs";
 
 const MIME = {
   ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8",
@@ -100,10 +100,13 @@ export function createApp({ core, siteDir, adminDir, dataDir = "", setupCode = "
     const list = star ? (chrome ? [chrome] : []) : blocks;
     const own = Object.fromEntries(core.site.own(lang, pg).map((r) => [r.h, r]));
     const known = new Set();
-    for (const b of list) for (const t of b.texts) { known.add(t.h); t.val = own[t.h]?.v || ""; }
+    for (const b of list) { for (const t of b.texts) { known.add(t.h); t.val = own[t.h]?.v || ""; } for (const i of b.images) { known.add(i.h); i.val = own[i.h]?.v || ""; } }
+    /* Блоки — в том порядке, в каком они стоят на сайте сейчас. */
+    const order = star ? [] : core.site.order(pg);
+    if (order.length) { const rank = (b) => { const i = order.indexOf(b.id); return b.canMove ? (i < 0 ? 500 + list.indexOf(b) : i) : (b.id === "data" ? 9999 : -1); }; list.sort((x, y) => rank(x) - rank(y)); }
     /* Правки, исходный текст которых в новой версии сайта уже другой. */
-    const stale = Object.values(own).filter((r) => !known.has(r.h)).map((r) => ({ h: r.h, def: r.def, val: r.v }));
-    return { lang, page: pg, blocks: list, hidden: star ? [] : core.site.hidden(pg), stale };
+    const stale = Object.values(own).filter((r) => !known.has(r.h)).map((r) => ({ h: r.h, def: r.def, val: r.v, img: r.h[0] === "i" }));
+    return { lang, page: pg, blocks: list, hidden: star ? [] : core.site.hidden(pg), order, stale };
   }
   let cache = new Map(), seen = 0;
   function page(lang, pg) {
@@ -114,7 +117,8 @@ export function createApp({ core, siteDir, adminDir, dataDir = "", setupCode = "
       let html = existsSync(f) ? readFileSync(f, "utf8") : "";
       if (html) {
         html = html.split("__SITE_URL__").join(publicUrl);
-        html = hideBlocks(applyTexts(html, core.site.texts(lang, pg || "home")), core.site.hidden(pg || "home"));
+        const own = core.site.texts(lang, pg || "home");
+        html = hideBlocks(orderBlocks(applyImages(applyTexts(html, own), own), core.site.order(pg || "home")), core.site.hidden(pg || "home"));
         html = html.replace('"live":null', '"live":' + JSON.stringify(core.live(lang)).replace(/</g, "\\u003c"));
         const s = core.seoFor(lang, pg || "home");
         if (s?.t) html = html.replace(/<title>[^<]*<\/title>/, `<title>${esc(s.t)}</title>`).replace(/(<meta property="og:title" content=")[^"]*"/, `$1${esc(s.t)}"`);

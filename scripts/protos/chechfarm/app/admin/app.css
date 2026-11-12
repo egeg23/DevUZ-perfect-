@@ -70,3 +70,8 @@ tr.click{cursor:pointer}tr.click:hover td{background:#fbfaf7}
 .botlook img.av{width:120px;height:120px;border-radius:50%;object-fit:cover}
 .chk{display:flex;gap:8px;align-items:center}
 @media (max-width:700px){.botlook{grid-template-columns:1fr}}
+.pgm{min-width:44px;min-height:36px;padding:4px 10px}
+.pgi{display:grid;grid-template-columns:200px minmax(0,1fr);gap:14px;align-items:center;margin-bottom:14px}
+.pgi img{width:200px;height:120px;object-fit:cover;border-radius:10px;border:1px solid var(--line);background:#e9e6de}
+@media (max-width:600px){.pgi{grid-template-columns:1fr}.pgi img{width:100%;height:auto;max-height:200px}}
+.side .brand .bmk{float:left;width:32px;height:32px;margin-right:10px;border-radius:8px}

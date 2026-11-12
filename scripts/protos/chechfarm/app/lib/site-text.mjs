@@ -61,27 +61,65 @@ function split(html) {
   let depth = 0, cur = null;
   for (const m of main.matchAll(/<section\b[^>]*>|<\/section>/g)) {
     if (m[0] !== "</section>") { if (depth === 0) cur = { at: m.index, id: starts.find((s) => s.at === m.index).id }; depth++; }
-    else { depth--; if (depth === 0 && cur) { parts.push({ id: cur.id, html: main.slice(cur.at, m.index + 10) }); cur = null; } }
+    else { depth--; if (depth === 0 && cur) { parts.push({ id: cur.id || "s" + (parts.length + 1), named: !!cur.id, at: a + cur.at, end: a + m.index + 10, html: main.slice(cur.at, m.index + 10) }); cur = null; } }
   }
   return { chrome: html.slice(0, a) + html.slice(b), parts };
 }
 
-/* Блоки страницы для панели: { id, name, canHide, texts: [{ h, def }] }. */
+/* Картинки блока (владелец DevUz, 12.11.2026: замена картинок из панели —
+   «Делаем»): свои файлы сайта, кроме кадров сцены. Ключ — отпечаток адреса с
+   буквой i впереди, одна замена на все языки. Подставляется только файл,
+   загруженный через панель. */
+const IMG = /<img\b[^>]*>/g, SRC = /\ssrc="(\/protos\/chechfarm\/(?!seq\/)[^"]+)"/;
+export const imgKey = (src) => "i" + hashOf(src);
+export const UPLOADED = /^\/uploads\/[0-9a-f]{32}\.(?:jpg|png|webp)$/;
+function outside(html, fn) {
+  let out = "", last = 0;
+  for (const m of html.matchAll(RAW)) { out += fn(html.slice(last, m.index)) + m[0]; last = m.index + m[0].length; }
+  return out + fn(html.slice(last));
+}
+export function applyImages(html, map) {
+  if (!map || !Object.keys(map).some((k) => k[0] === "i")) return html;
+  return outside(html, (chunk) => chunk.replace(IMG, (tag) => {
+    const m = SRC.exec(tag), v = m && map[imgKey(m[1])];
+    if (!v || !UPLOADED.test(v)) return tag;
+    return tag.replace(SRC, ` src="${v}"`).replace(/\s(?:srcset|sizes|width|height)="[^"]*"/g, "");
+  }));
+}
+
+/* Порядок блоков страницы (тот же день: «перестановка блоков»): первый блок
+   остаётся первым, остальные встают в названном порядке, не названные — следом
+   как в сборке. Разметка между блоками остаётся на месте. */
+export function orderBlocks(html, order) {
+  const want = (order || []).filter((x) => /^[\w-]+$/.test(x));
+  if (!want.length) return html;
+  const move = split(html).parts.slice(1);
+  if (move.length < 2) return html;
+  const by = new Map(move.map((p) => [p.id, p]));
+  const seq = [...new Set(want)].filter((id) => by.has(id)).map((id) => by.get(id));
+  for (const p of move) if (!seq.includes(p)) seq.push(p);
+  if (seq.every((p, i) => p === move[i])) return html;
+  let out = "", last = 0;
+  move.forEach((slot, i) => { out += html.slice(last, slot.at) + seq[i].html; last = slot.end; });
+  return out + html.slice(last);
+}
+
+/* Блоки страницы для панели: { id, name, canHide, canMove, texts: [{ h, def }], images: [{ h, src }] }. */
 export function blocksOf(html) {
   const { chrome, parts } = split(html);
   const seen = new Set();
   const texts = (chunk) => { const list = []; eachText(chunk, (t) => { const h = hashOf(t); if (!seen.has(h)) { seen.add(h); list.push({ h, def: t }); } return null; }); return list; };
   const bar = texts(chrome.replace(DATA, ""));
+  const images = (chunk) => { const list = []; outside(chunk, (c) => { for (const m of c.matchAll(IMG)) { const s = SRC.exec(m[0]); if (s && !seen.has(imgKey(s[1]))) { seen.add(imgKey(s[1])); list.push({ h: imgKey(s[1]), src: s[1] }); } } return c; }); return list; };
   const blocks = parts.map((p, i) => {
-    const tx = texts(p.html);
-    const id = p.id || "s" + (i + 1);
-    return { id, name: BLOCK_NAMES[id] || (tx[0] ? tx.slice(0, 2).map((x) => x.def).join(" ").slice(0, 60) : "Блок " + (i + 1)), canHide: !!p.id && !KEEP.has(id), texts: tx };
-  }).filter((b) => b.texts.length);
+    const tx = texts(p.html), id = p.id;
+    return { id, name: BLOCK_NAMES[id] || (tx[0] ? tx.slice(0, 2).map((x) => x.def).join(" ").slice(0, 60) : "Блок " + (i + 1)), canHide: p.named && !KEEP.has(id), canMove: i > 0 && parts.length > 2, texts: tx, images: images(p.html) };
+  }).filter((b) => b.texts.length || b.images.length);
   const data = [];
   const m = DATA.exec(html);
   if (m) { try { walkData(JSON.parse(m[2]), (s) => { const h = hashOf(s); if (!seen.has(h)) { seen.add(h); data.push({ h, def: s }); } return null; }); } catch { /* данные не разобрались — без них */ } }
-  if (data.length) blocks.push({ id: "data", name: BLOCK_NAMES.data, canHide: false, texts: data });
-  return { blocks, chrome: bar.length ? { id: "chrome", name: BLOCK_NAMES.chrome, canHide: false, texts: bar } : null };
+  if (data.length) blocks.push({ id: "data", name: BLOCK_NAMES.data, canHide: false, canMove: false, texts: data, images: [] });
+  return { blocks, chrome: bar.length ? { id: "chrome", name: BLOCK_NAMES.chrome, canHide: false, canMove: false, texts: bar, images: [] } : null };
 }
 
 /* Подставляет правки: map — { отпечаток: текст }. */

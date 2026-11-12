@@ -7,6 +7,7 @@ import { sealer, hashPass, checkPass, token, sha } from "./crypt.mjs";
 import { tgClient, tgUpdate, faqMatch } from "./tg.mjs";
 import { crmClient, amoBase, b24Base, KIND_NAME, leadText } from "./crm.mjs";
 import { makeAudience, SEGMENTS, ACC_STATUS } from "./audience.mjs";
+import { UPLOADED } from "./site-text.mjs";
 
 export const STATUS = { new: "Новое", work: "В работе", meet: "Назначена встреча", done: "Ответ отправлен", spam: "Спам" };
 export const ROLES = { owner: "Владелец", head: "Руководитель", manager: "Менеджер" };
@@ -586,11 +587,12 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
      страницу, страница «*» — шапка и подвал; скрытые блоки — на страницу. */
   const pageOk = (p) => p === "*" || PAGES.includes(p);
   const site = {
-    texts: (lang, page) => Object.fromEntries(db.all("select h, v from site_text where lang = ? and page in ('*', ?)", lang, page).map((r) => [r.h, r.v])),
-    own: (lang, page) => db.all("select h, v, def from site_text where lang = ? and page = ?", lang, page),
+    texts: (lang, page) => Object.fromEntries(db.all("select h, v from site_text where lang in ('*', ?) and page in ('*', ?)", lang, page).map((r) => [r.h, r.v])),
+    own: (lang, page) => db.all("select h, v, def from site_text where lang in ('*', ?) and page = ?", lang, page),
     hidden: (page) => getS("site.hide." + page).split(",").filter(Boolean),
+    order: (page) => getS("site.order." + page).split(",").filter(Boolean),
     /* texts: { отпечаток: { v, def } }; пустое v — вернуть как в сборке. */
-    save({ lang, page, texts, hide }, by) {
+    save({ lang, page, texts, hide, images, order }, by) {
       if (!LANGS.includes(lang) || !pageOk(page)) throw new Error("Нет такой страницы");
       let n = 0;
       db.tx(() => { for (const [h, x] of Object.entries(texts || {})) {
@@ -599,9 +601,19 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
         if (v && v !== def) db.run("insert into site_text(lang, page, h, v, def) values(?, ?, ?, ?, ?) on conflict(lang, page, h) do update set v = excluded.v, def = excluded.def", lang, page, h, v, def);
         else db.run("delete from site_text where lang = ? and page = ? and h = ?", lang, page, h);
         n++;
+      }
+      /* Картинки: одна на все языки, только файл, загруженный через панель. */
+      for (const [h, x] of Object.entries(images || {})) {
+        if (!/^i[0-9a-f]{12}$/.test(h)) continue;
+        const v = String(x?.v || "");
+        if (v && !UPLOADED.test(v)) throw new Error("Картинку нужно загрузить через панель");
+        if (v) db.run("insert into site_text(lang, page, h, v, def) values('*', ?, ?, ?, ?) on conflict(lang, page, h) do update set v = excluded.v, def = excluded.def", page, h, v, cut(x?.def, 300));
+        else db.run("delete from site_text where lang = '*' and page = ? and h = ?", page, h);
+        n++;
       } });
+      if (Array.isArray(order) && page !== "*") setS("site.order." + page, order.filter((x) => /^[\w-]{1,40}$/.test(x)).slice(0, 30).join(","));
       if (Array.isArray(hide) && page !== "*") setS("site.hide." + page, hide.filter((x) => /^[\w-]{1,40}$/.test(x)).slice(0, 30).join(","));
-      changed(); note(by, `Поменял страницу сайта «${page === "*" ? "шапка и подвал" : page}» (${lang})${n ? `: текстов ${n}` : ""}`);
+      changed(); note(by, `Поменял страницу сайта «${page === "*" ? "шапка и подвал" : page}» (${lang})${n ? `: правок ${n}` : ""}`);
     },
   };
   const seoFor = (lang, page) => db.get("select t, d from seo where k = ?", `${lang}:${page}`) || null;

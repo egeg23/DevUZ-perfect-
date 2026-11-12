@@ -435,13 +435,58 @@ test("czechfarm: страницы сайта из панели — текст л
     assert.equal((await a.adminPost("/pages", { lang: "ru", page: "nope", texts: {} })).status, 400);
     /* Правка, исходный текст которой сменился в новой сборке, не применяется и видна как устаревшая. */
     a.db.run("insert into site_text(lang, page, h, v, def) values('ru', 'home', 'aaaaaaaaaaaa', 'Старая правка', 'Старый текст')");
-    assert.deepEqual((await a.call("/api/admin/pages?lang=ru&page=home")).json.stale, [{ h: "aaaaaaaaaaaa", def: "Старый текст", val: "Старая правка" }]);
+    assert.deepEqual((await a.call("/api/admin/pages?lang=ru&page=home")).json.stale, [{ h: "aaaaaaaaaaaa", def: "Старый текст", val: "Старая правка", img: false }]);
     await a.adminPost("/users", { name: "Менеджер", login: "manager1", pass: "длинный-пароль", role: "manager" });
     await a.adminPost("/logout", {}); a.setCookie("");
     await a.adminPost("/login", { login: "manager1", pass: "длинный-пароль" });
     assert.equal((await a.call("/api/admin/pages?lang=ru&page=home")).status, 403);
     assert.equal((await a.adminPost("/pages", { lang: "ru", page: "home", texts: {} })).status, 403);
     assert.equal((await a.adminPost("/site/bot", { name: "Чужой бот" })).status, 403);
+  } finally { await a.close(); }
+});
+
+test("czechfarm: страницы сайта из панели — замена картинки и порядок блоков", async () => {
+  /* Владелец, 12.11.2026, на «замены картинок и перестановки блоков в панели нет»: «Делаем». */
+  const a = await boot();
+  try {
+    await owner(a);
+    const v = (await a.call("/api/admin/pages?lang=ru&page=about")).json;
+    const withImg = v.blocks.find((b: any) => b.images.length);
+    assert.ok(withImg, "картинки страницы «О компании» нет в панели");
+    const im = withImg.images[0];
+    assert.match(im.src, /^\/protos\/chechfarm\/flask-/);
+    assert.ok(!(await a.call("/api/admin/pages?lang=ru&page=home")).json.blocks.some((b: any) => b.images.length), "кадры сцены предлагаются к замене");
+    /* Чужой адрес картинкой не становится: только файл, загруженный через панель. */
+    assert.equal((await a.adminPost("/pages", { lang: "ru", page: "about", images: { [im.h]: { v: "https://evil.example/x.png", def: im.src } } })).status, 400);
+    const png = "data:image/png;base64," + Buffer.from("89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d49444154789c6360606060000000050001a5f645400000000049454e44ae426082", "hex").toString("base64");
+    const up = await a.adminPost("/upload", { data: png });
+    assert.match(up.json.url, /^\/uploads\/[0-9a-f]{32}\.png$/);
+    const saved = await a.adminPost("/pages", { lang: "ru", page: "about", images: { [im.h]: { v: up.json.url, def: im.src } } });
+    assert.equal(saved.json.blocks.find((b: any) => b.id === withImg.id).images[0].val, up.json.url);
+    for (const path of ["/about", "/uz/about", "/ar/about"]) {
+      const html = (await a.call(path)).text;
+      assert.ok(html.includes(`<img src="${up.json.url}"`) && !/<img[^>]*flask-/.test(html), `${path}: картинка не заменена`);
+      assert.doesNotMatch(html, new RegExp(`<img src="${up.json.url}"[^>]*srcset=`), `${path}: остались размеры прежней картинки`);
+    }
+    await a.adminPost("/pages", { lang: "ru", page: "about", images: { [im.h]: { v: "", def: im.src } } });
+    assert.match((await a.call("/about")).text, /<img[^>]*flask-1200\.webp/, "исходная картинка не вернулась");
+
+    /* Порядок: первый экран на месте, остальные — как сказано, на всех языках. */
+    const home = (await a.call("/api/admin/pages?lang=ru&page=home")).json;
+    assert.ok(!home.blocks.find((b: any) => b.id === "hero").canMove && home.blocks.find((b: any) => b.id === "mission").canMove);
+    const pos = (html: string, id: string) => html.indexOf(`id="${id}"`);
+    const before = (await a.call("/")).text;
+    assert.ok(pos(before, "launch") < pos(before, "mission") && pos(before, "mission") < pos(before, "contact"));
+    const moved = await a.adminPost("/pages", { lang: "ru", page: "home", texts: {}, hide: [], order: ["hero", "mission", "contact", "нет-такого", "launch"] });
+    assert.deepEqual(moved.json.blocks.filter((b: any) => b.canMove).slice(0, 3).map((b: any) => b.id), ["mission", "contact", "launch"]);
+    for (const path of ["/", "/en/"]) {
+      const html = (await a.call(path)).text;
+      assert.ok(pos(html, "hero") < pos(html, "mission") && pos(html, "mission") < pos(html, "contact") && pos(html, "contact") < pos(html, "launch") && pos(html, "launch") < pos(html, "compare"), `${path}: порядок блоков не тот`);
+      assert.equal(html.length, (path === "/" ? before : (await a.call("/en/")).text).length, `${path}: при перестановке потерялась разметка`);
+      assert.equal((html.match(/<section\b/g) || []).length, (before.match(/<section\b/g) || []).length);
+    }
+    await a.adminPost("/pages", { lang: "ru", page: "home", texts: {}, hide: [], order: [] });
+    assert.equal((await a.call("/")).text, before, "порядок сборки не вернулся");
   } finally { await a.close(); }
 });
 

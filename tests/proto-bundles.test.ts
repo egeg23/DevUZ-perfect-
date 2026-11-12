@@ -2200,6 +2200,9 @@ test("CZECHFARM: 7 страниц и панель на ru, uz, en — услов
     } else assert.ok(!page.includes('id="cfi"'), `${path}: заставка не на главной`);
     if (!path.endsWith("panel")) assert.ok(page.includes('aria-label="CZECHFARM alliance"') && page.includes("<i>A</i><i>L</i><i>L</i><i>I</i><i>A</i><i>N</i><i>C</i><i>E</i>"), `${path}: в логотипе нет ALLIANCE`);
     assert.doesNotMatch(page, /CHECHFARM/, `${path}: старое имя CHECHFARM на странице`);
+    /* Знак — орёл с логотипа компании (владелец, 12.11.2026: «Берем их логотип»), не наш концепт-капсула. */
+    assert.match(page, /<svg class="mk"[^>]*><path class="a" fill-rule="evenodd" d="M[^"]{800,}"\/><path class="b" d="M[^"]{300,}"\/><\/svg>/, `${path}: в шапке не логотип компании`);
+    assert.doesNotMatch(page, /rotate\(-38 20 20\)|концепт до получения логотипа/, `${path}: остался знак-концепт`);
     if (p === "" || p === "about" || p === "investors") assert.equal((page.match(/class="ch-n"/g) ?? []).length, 14, `${path}: в цепочке не 7 шагов на двух схемах`);
     if (p === "investors") assert.equal((page.match(/class="gb-b"/g) ?? []).length, 7, `${path}: не семь стеклянных блоков`);
     if (p === "partners") assert.equal((page.match(/class="gl-r"/g) ?? []).length, 5, `${path}: не пять маршрутов на глобусе`);

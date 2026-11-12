@@ -9,7 +9,7 @@
    клавиша, нажатие — пропуск. Сбой — оверлей снимается, сайт как обычно. */
 import {
   WebGLRenderer, Scene, PerspectiveCamera, Group, Mesh, MeshPhysicalMaterial, MeshBasicMaterial,
-  ExtrudeGeometry, LatheGeometry, PlaneGeometry, Shape, Vector2, Vector3, Color, Fog, PMREMGenerator,
+  ExtrudeGeometry, ShapePath, PlaneGeometry, Vector3, Color, Fog, PMREMGenerator,
   TextureLoader, EquirectangularReflectionMapping, ACESFilmicToneMapping, SRGBColorSpace,
   DirectionalLight, PointLight, BufferGeometry, Float32BufferAttribute, Points, PointsMaterial,
   AdditiveBlending, CanvasTexture, Box3,
@@ -17,6 +17,7 @@ import {
 import { Font } from "three/examples/jsm/loaders/FontLoader.js";
 import LIT from "./lit.json";
 import ONE from "./one.json";
+import MARKJ from "../mark.json";
 
 (function () {
   var box = document.getElementById("cfi");
@@ -28,7 +29,7 @@ import ONE from "./one.json";
 
   var lit = new Font(LIT), one = new Font(ONE);
   var WORD = "CZECHFARM", SMALL = "ALLIANCE", TRACK = 0.08;
-  var TEAL = "#0b5a53", GOLD = "#b98a3a", GOLD2 = "#e5c98f", DEEP = "#071a18";
+  var GOLD2 = "#e5c98f", DEEP = "#071a18";
 
   /* Размеры логотипа шапки в em слова: всё 3D раскладывается по ним. */
   function measure() {
@@ -83,12 +84,12 @@ import ONE from "./one.json";
   scene.fog = new Fog(DEEP, 6, 20);
   var cam = new PerspectiveCamera(58, 1, 0.05, 60);
 
-  /* Материалы: буквы — фарфор, ALLIANCE — золото, капсула — бирюза и золото. */
+  /* Материалы: буквы — фарфор, ALLIANCE — красный, орёл — красный и фарфор
+     (синее перо на тёмном не читается; в шапке оно синее). */
   var mWord = new MeshPhysicalMaterial({ color: "#f1ece1", roughness: 0.26, clearcoat: 1, clearcoatRoughness: 0.08, envMapIntensity: 1.15 });
-  var mSmall = new MeshPhysicalMaterial({ color: GOLD2, metalness: 0.6, roughness: 0.3, emissive: GOLD, emissiveIntensity: 0.35, envMapIntensity: 1.4, transparent: true, opacity: 0 });
-  var mTeal = new MeshPhysicalMaterial({ color: TEAL, roughness: 0.18, clearcoat: 1, clearcoatRoughness: 0.05, envMapIntensity: 1.2 });
-  var mGold = new MeshPhysicalMaterial({ color: GOLD, metalness: 0.85, roughness: 0.22, clearcoat: 1, envMapIntensity: 1.3 });
-  var mLeaf = new MeshPhysicalMaterial({ color: "#ffffff", roughness: 0.3, clearcoat: 1, envMapIntensity: 1 });
+  var mSmall = new MeshPhysicalMaterial({ color: "#ff3b3f", metalness: 0.2, roughness: 0.3, emissive: "#f61116", emissiveIntensity: 0.45, envMapIntensity: 1.4, transparent: true, opacity: 0 });
+  var mTeal = new MeshPhysicalMaterial({ color: "#d90a10", roughness: 0.3, clearcoat: 1, clearcoatRoughness: 0.05, envMapIntensity: 1.2 });
+  var mGold = new MeshPhysicalMaterial({ color: "#f1ece1", roughness: 0.26, clearcoat: 1, clearcoatRoughness: 0.08, envMapIntensity: 1.15 });
 
   /* Слово: каждая буква отдельно, шаг — как в шапке (ширина + .08em). */
   var word = new Group(), letters = [], DEPTH = 0.34;
@@ -114,31 +115,25 @@ import ONE from "./one.json";
     scene.add(m); small.push(m);
   });
 
-  /* Знак: капсула из двух половин (как в SVG: viewBox 40, поворот −38°) и лист. */
-  var mk = M.mk || { x: xl - 1.4, y: 0, w: 1.8 }, u = mk.w / 40;
-  var r = 8 * u, L = 12.5 * u, flat = 4.5 * u, prof = [new Vector2(0, 0), new Vector2(r, 0), new Vector2(r, 0.002)];
-  for (var a = 0; a <= 16; a++) {
-    var t = (a / 16) * Math.PI / 2;
-    prof.push(new Vector2(r * Math.cos(t), flat + r * Math.sin(t)));
+  /* Знак: орёл с логотипа компании (контуры — mark.json, viewBox 40): красная
+     часть и перо отдельными телами, слетаются с двух сторон. */
+  var mk = M.mk || { x: xl - 1.4, y: 0, w: 1.8 }, u = mk.w / 40, MD = 5 * u;
+  function body(cmds, mat) {
+    var sp = new ShapePath(), X = function (x) { return (x - 20) * u; }, Y = function (y) { return -(y - 20) * u; };
+    cmds.forEach(function (c) {
+      if (c[0] === "M") sp.moveTo(X(c[1]), Y(c[2]));
+      else if (c[0] === "L") sp.lineTo(X(c[1]), Y(c[2]));
+      else sp.bezierCurveTo(X(c[1]), Y(c[2]), X(c[3]), Y(c[4]), X(c[5]), Y(c[6]));
+    });
+    var g = new ExtrudeGeometry(sp.toShapes(false), { depth: MD, curveSegments: 10, bevelEnabled: true, bevelThickness: 0.5 * u, bevelSize: 0.3 * u, bevelSegments: 3 });
+    g.translate(0, 0, -MD);
+    return new Mesh(g, mat);
   }
-  var halfG = new LatheGeometry(prof, 48);
-  var pill = new Group(), hTeal = new Mesh(halfG, mTeal), hGold = new Mesh(halfG, mGold);
-  hTeal.rotation.z = Math.PI / 2; hGold.rotation.z = -Math.PI / 2;
   var tealArm = new Group(), goldArm = new Group();
-  tealArm.add(hTeal); goldArm.add(hGold); pill.add(tealArm, goldArm);
-  pill.rotation.z = (38 * Math.PI) / 180;
+  tealArm.add(body(MARKJ.a.cmds, mTeal)); goldArm.add(body(MARKJ.b.cmds, mGold));
   var mark3 = new Group();
-  mark3.position.set(mk.x, mk.y, -r);
-  mark3.add(pill);
-  var lf = new Shape(), P = function (x, y) { return [(x - 20) * u, -(y - 20) * u]; };
-  lf.moveTo.apply(lf, P(20, 14));
-  lf.bezierCurveTo.apply(lf, P(23, 16.5).concat(P(23.4, 20.8), P(20.6, 25.5)));
-  lf.bezierCurveTo.apply(lf, P(17.3, 22.5).concat(P(16.8, 17.9), P(20, 14)));
-  var leafG = new ExtrudeGeometry(lf, { depth: 0.04, bevelEnabled: true, bevelThickness: 0.015, bevelSize: 0.012, bevelSegments: 3, curveSegments: 16 });
-  var leaf = new Mesh(leafG, mLeaf);
-  leaf.position.set(0, 0, r + 0.005);
-  leaf.scale.setScalar(0.001);
-  mark3.add(leaf);
+  mark3.position.set(mk.x, mk.y, 0);
+  mark3.add(tealArm, goldArm);
   scene.add(mark3);
   mark3.visible = false;
 
@@ -201,7 +196,7 @@ import ONE from "./one.json";
   function sine(t) { return 0.5 - Math.cos(Math.PI * t) / 2; }
   function clamp(t) { return t < 0 ? 0 : t > 1 ? 1 : t; }
   function back(t) { var c = 1.4; return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2); }
-  var T_FLY = 3.5, T_PULL = 2.0, T_MARK = 4.4, T_SMALL = 5.0, T_LEAF = 5.55, T_END = 6.4;
+  var T_FLY = 3.5, T_PULL = 2.0, T_MARK = 4.4, T_SMALL = 5.0, T_END = 6.4;
   var portrait = H > W;
   var flyY = top + (portrait ? 0.8 : 0.5), flyZ = portrait ? 1.35 : 0.7;
   var x0 = xl - 0.9, x1 = xr - 0.4;
@@ -235,14 +230,13 @@ import ONE from "./one.json";
     glint.position.set(cam.position.x + 0.8, cam.position.y - 0.1, cam.position.z - 0.4);
     glint.intensity = t < T_FLY + 0.6 ? 7 : Math.max(0, 7 - (t - T_FLY - 0.6) * 6);
 
-    /* Капсула: половины летят навстречу и смыкаются, потом лист. */
+    /* Орёл: красная часть и перо летят навстречу и смыкаются. */
     var mt = clamp((t - T_MARK) / 1.15);
     mark3.visible = t >= T_MARK;
     var j = back(mt);
     tealArm.position.x = -(1 - j) * 3.2; goldArm.position.x = (1 - j) * 3.2;
     tealArm.rotation.x = (1 - mt) * 4.2; goldArm.rotation.x = -(1 - mt) * 4.2;
-    mark3.position.z = -r - (1 - ease(mt)) * 1.5;
-    leaf.scale.setScalar(Math.max(0.001, back(clamp((t - T_LEAF) / 0.45))));
+    mark3.position.z = -(1 - ease(mt)) * 1.5;
     small.forEach(function (m, i) {
       var st = clamp((t - T_SMALL - i * 0.05) / 0.55);
       m.position.y = m.userData.y - (1 - ease(st)) * 0.35;
