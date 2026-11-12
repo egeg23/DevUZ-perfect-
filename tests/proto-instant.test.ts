@@ -535,6 +535,23 @@ test("сцена по прокрутке: видео отказало в зап�
 // Салон красоты (владелец, 11.11.2026: «влетаем в дверь… капля лака, которая падает через всю страницу»).
 const salon = EXAMPLE_SALON as InstantSite;
 
+test("турагентство: поиск туров, авиабилетов и отелей из Apollo, цены только клиента", () => {
+  for (const locale of ["ru", "uz"] as const) {
+    const { html, problems } = buildInstant({ ...(EXAMPLE_TUR as InstantSite), locale }, SEED);
+    assert.deepEqual(problems, []);
+    assert.equal((html.match(/data-xm="(tours|air|hotel)"/g) ?? []).length, 3, "три вкладки поиска");
+    assert.ok(html.includes('id="xr"') && html.includes('id="xr-pl"') && html.includes('id="xr-g"'), "экран поиска с дугой перелёта");
+    assert.ok(html.includes("data-tour="), "карточки туров клиента открывают поиск");
+    // От Apollo не берём их туроператоров, число туров и цены.
+    assert.ok(!/anex\s?tour|coral\s?travel|pegas|sunmar|apollo/i.test(html), "чужих брендов нет");
+  }
+  // Клиент без услуг и цен: поиск есть, выдача без чисел («цена по запросу»).
+  const bare = buildInstant({ ...(EXAMPLE_TUR as InstantSite), services: [] }, SEED);
+  assert.deepEqual(bare.problems, []);
+  assert.ok(bare.html.includes('id="xq"') && !/id="xq-f" hidden/.test(bare.html), "без стран клиента «Куда» вводят текстом");
+  assert.ok(bare.html.includes("цена по запросу"));
+});
+
 test("салон красоты: пример собирается без замечаний на двух языках, защита та же", () => {
   for (const locale of ["ru", "uz"] as const) {
     const b = buildInstant({ ...salon, locale }, SEED);
