@@ -1,5 +1,5 @@
 /* Премиум-блоки: сцена, стеклянные блоки, глобус, аудитории, стоимость. */
-.hs{position:relative;height:600vh;background:var(--deep);color:#fff}
+.hs{position:relative;height:1000vh;background:var(--deep);color:#fff}
 .hs-stick{position:sticky;top:0;height:100vh;height:100svh;overflow:hidden;display:flex;align-items:flex-end}
 .hs-media{position:absolute;inset:0;pointer-events:none}
 .hs-p,.hs-p img,.hs-cv{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
@@ -49,7 +49,7 @@
 .hs-skip{position:absolute;z-index:3;right:var(--g);bottom:24px;padding:8px 0;font-size:14px;color:rgb(255 255 255 / .82);opacity:0;pointer-events:none;transition:opacity .3s}
 .hs.moved:not(.end) .hs-skip{opacity:1;pointer-events:auto}
 @media (min-width:900px){.hs-steps{display:grid}.hs-cap p{font-size:20px}}
-@media (max-width:899px){.hs{height:520vh}.hs-veil{background:linear-gradient(0deg,rgb(7 26 24 / .92) 0%,rgb(7 26 24 / .7) 34%,rgb(7 26 24 / 0) 64%),linear-gradient(180deg,rgb(7 26 24 / .55),rgb(7 26 24 / 0) 18%)}.hs .hero-in{padding-bottom:72px;gap:18px}.hs .hero-in>div:first-child{gap:16px!important}.hs h1{font-size:40px}.hs .lead{font-size:16px}.hs-intro::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgb(7 26 24 / .8),rgb(7 26 24 / .5) 55%,rgb(7 26 24 / .3))}.hs-cap{bottom:88px}.hs-load{top:auto;bottom:20px;right:auto;left:var(--g);justify-items:start}.hs-hint{display:none}.hs-skip{bottom:16px}}
+@media (max-width:899px){.hs{height:1000vh}.hs-veil{background:linear-gradient(0deg,rgb(7 26 24 / .92) 0%,rgb(7 26 24 / .7) 34%,rgb(7 26 24 / 0) 64%),linear-gradient(180deg,rgb(7 26 24 / .55),rgb(7 26 24 / 0) 18%)}.hs .hero-in{padding-bottom:72px;gap:18px}.hs .hero-in>div:first-child{gap:16px!important}.hs h1{font-size:40px}.hs .lead{font-size:16px}.hs-intro::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgb(7 26 24 / .8),rgb(7 26 24 / .5) 55%,rgb(7 26 24 / .3))}.hs-cap{bottom:88px}.hs-load{top:auto;bottom:20px;right:auto;left:var(--g);justify-items:start}.hs-hint{display:none}.hs-skip{bottom:16px}}
 .rm .hs{height:auto}
 .rm .hs-cap,.rm .hs-steps,.rm .hs-skip,.rm .hs-hint,.rm .hs-load{display:none}
 

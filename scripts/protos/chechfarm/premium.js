@@ -25,7 +25,7 @@ var hs=$('.hs');
 if(hs){
   var cv=$('.hs-cv',hs),cx=cv.getContext('2d'),posters=$$('.hs-p',hs),caps=$$('.hs-cap',hs),intro=$('.hs-intro',hs),dots=$$('.hs-steps i',hs),hl=$('#hs-load'),hn=$('#hs-n'),hb=$('#hs-b'),words=$$('h1 .w>span',hs);
   var DESK=false;try{DESK=matchMedia('(min-width: 900px) and (orientation: landscape)').matches}catch(e){}
-  var S=K.scene,F=DESK?S.d:S.p,KF=DESK?S.dk:S.pk,raw=[],bm={},bmN=[],MAXB=14,ready=false,want=0,cur=-1,drawn=-1,raf=0,vis=true,dpr=Math.min(W.devicePixelRatio||1,2);
+  var S=K.scene,F=DESK?S.d:S.p,KF=DESK?S.dk:S.pk,raw=[],bm={},bmN=[],MAXB=DESK?20:26,ready=false,want=0,cur=-1,drawn=-1,raf=0,vis=true,dir=1,dpr=Math.min(W.devicePixelRatio||1,2);
   /* Шкала сцены: стоянка на ключевом кадре, потом ролик до следующего. */
   var HOLD=[.2,0,.35,.35,.35,.55],SEG=[],TOT=0,HS=[],i0;
   for(i0=0;i0<KF.length;i0++){HS.push([TOT,TOT+HOLD[i0]]);SEG.push([TOT,TOT+HOLD[i0],KF[i0],KF[i0]]);TOT+=HOLD[i0];if(i0<KF.length-1){SEG.push([TOT,TOT+1,KF[i0],KF[i0+1]]);TOT+=1}}
@@ -35,12 +35,13 @@ if(hs){
   function size(){cv.width=Math.round(cv.clientWidth*dpr);cv.height=Math.round(cv.clientHeight*dpr);drawn=-1}
   function want4(i){if(bm[i]||bm[i]===0||!raw[i])return;bm[i]=0;
     createImageBitmap(new Blob([raw[i]],{type:'image/webp'})).then(function(im){bm[i]=im;bmN.push(i);
-      var f=frameOf(cur);while(bmN.length>MAXB){var o=bmN.shift();if(Math.abs(o-f)>4&&bm[o]&&bm[o].close){bm[o].close();delete bm[o]}else{bmN.push(o);break}}
+      var f=frameOf(cur);while(bmN.length>MAXB){var o=bmN.shift();if(Math.abs(o-f)>13&&bm[o]&&bm[o].close){bm[o].close();delete bm[o]}else{bmN.push(o);break}}
       drawn=-1;poke()},function(){delete bm[i]})}
   function cover(im,a){var cw=cv.width,ch=cv.height,s=Math.max(cw/im.width,ch/im.height),w=im.width*s,h=im.height*s;cx.globalAlpha=a;cx.drawImage(im,(cw-w)*.5,(ch-h)*.5,w,h)}
   function nearest(i){for(var k=0;k<F;k++){if(bm[i-k])return bm[i-k];if(bm[i+k])return bm[i+k]}return null}
   function draw(){var f=frameOf(cur),i=Math.floor(f),k=f-i;
-    for(var j=-2;j<=4;j++)want4(Math.max(0,Math.min(F-1,i+j)));
+    /* Впереди по ходу прокрутки кадры распаковываются заранее: иначе на быстром взмахе видны одни опорные. */
+    for(var j=-3;j<=12;j++)want4(Math.max(0,Math.min(F-1,i+j*dir)));
     /* Нужный кадр не пришёл — ближайший пришедший. */
     if(!raw[i]){for(var q=1;q<F;q++){if(raw[i-q]){i=i-q;k=0;break}if(raw[i+q]){i=i+q;k=0;break}}want4(i)}
     var A=bm[i]||nearest(i);if(!A)return;cover(A,1);var B=bm[i+1];if(B&&k>.02)cover(B,k);cx.globalAlpha=1}
@@ -54,7 +55,7 @@ if(hs){
     if(!ready){var s=0;while(s<KF.length-2&&f>KF[s+1])s++;var t=sm((f-KF[s])/(KF[s+1]-KF[s]));
       posters.forEach(function(pp,j){pp.style.opacity=j<=s?'1':j===s+1?t.toFixed(3):'0'})}
     hs.classList.toggle('moved',p>.01);hs.classList.toggle('end',p>.97)}
-  function loop(){raf=0;var dl=want-cur;cur=cur<0||Math.abs(dl)<.0003?want:cur+dl*.13;
+  function loop(){raf=0;var dl=want-cur;if(cur>=0&&dl)dir=dl>0?1:-1;cur=cur<0||Math.abs(dl)<.0003?want:cur+dl*.13;
     if(ready&&cur!==drawn){draw();drawn=cur}paint(cur);if(vis&&cur!==want)raf=requestAnimationFrame(loop)}
   /* Пока шапка над тёмной сценой (владелец, 12.11.2026, на телефоне: «белые
      штуки мелькают при скролле»): шапка тёмным стеклом, цвет строки браузера
