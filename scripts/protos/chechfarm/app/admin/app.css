@@ -58,3 +58,15 @@ tr.click{cursor:pointer}tr.click:hover td{background:#fbfaf7}
 }
 @media (max-width:520px){.g2,.g4{grid-template-columns:1fr}.hist div{grid-template-columns:1fr}}
 .side .btn{color:var(--ink)}
+
+/* Страницы сайта: блоки раскрываются, над полем — текст, который на сайте сейчас. */
+.pgb{margin-top:12px}.pgb summary{cursor:pointer;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}.pgb[open] summary{margin-bottom:12px}
+.pgb .chk{display:flex;gap:8px;align-items:center;margin-bottom:12px}
+.pgt .pgd{display:block;color:var(--ink2,#566);font-size:13px;line-height:1.4;margin-bottom:4px;overflow-wrap:anywhere}
+.pgt[hidden]{display:none}
+#pgq{max-width:340px}
+.botlook{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:18px;align-items:start}
+.botlook img{width:100%;height:auto;border-radius:12px;border:1px solid var(--line);margin-bottom:8px}
+.botlook img.av{width:120px;height:120px;border-radius:50%;object-fit:cover}
+.chk{display:flex;gap:8px;align-items:center}
+@media (max-width:700px){.botlook{grid-template-columns:1fr}}

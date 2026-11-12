@@ -10,6 +10,7 @@ import { extname, join, normalize, resolve, sep } from "node:path";
 import { openDb } from "./lib/db.mjs";
 import { makeCore, ROLES, STATUS, KINDS, LANGS, PAGES, CONTACT_KEYS, SEGMENTS, ACC_STATUS } from "./lib/core.mjs";
 import { sameSecret } from "./lib/crypt.mjs";
+import { blocksOf, applyTexts, hideBlocks } from "./lib/site-text.mjs";
 
 const MIME = {
   ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8",
@@ -87,6 +88,23 @@ export function createApp({ core, siteDir, adminDir, dataDir = "", setupCode = "
 
   /* Страница сайта: файл из образа + то, что правится в панели (продукты,
      новости, контакты, заголовки, счётчики). Сжатая копия живёт до правки. */
+  const pageFile = (lang, pg) => join(siteDir, ...(lang === "ru" ? [] : [lang]), ...(pg ? [pg] : []), "index.html");
+  /* Блоки и тексты страницы для панели: что написано в сборке и что поменяли. */
+  function pagesView(lang, pg) {
+    if (!LANGS.includes(lang)) lang = "ru";
+    const star = pg === "*";
+    if (!star && !PAGES.includes(pg)) throw new HttpError(400, "Нет такой страницы");
+    const f = pageFile(lang, star || pg === "home" ? "" : pg);
+    const html = existsSync(f) ? readFileSync(f, "utf8").split("__SITE_URL__").join(publicUrl) : "";
+    const { blocks, chrome } = blocksOf(html);
+    const list = star ? (chrome ? [chrome] : []) : blocks;
+    const own = Object.fromEntries(core.site.own(lang, pg).map((r) => [r.h, r]));
+    const known = new Set();
+    for (const b of list) for (const t of b.texts) { known.add(t.h); t.val = own[t.h]?.v || ""; }
+    /* Правки, исходный текст которых в новой версии сайта уже другой. */
+    const stale = Object.values(own).filter((r) => !known.has(r.h)).map((r) => ({ h: r.h, def: r.def, val: r.v }));
+    return { lang, page: pg, blocks: list, hidden: star ? [] : core.site.hidden(pg), stale };
+  }
   let cache = new Map(), seen = 0;
   function page(lang, pg) {
     if (core.version() !== seen) { cache = new Map(); seen = core.version(); }
@@ -96,6 +114,7 @@ export function createApp({ core, siteDir, adminDir, dataDir = "", setupCode = "
       let html = existsSync(f) ? readFileSync(f, "utf8") : "";
       if (html) {
         html = html.split("__SITE_URL__").join(publicUrl);
+        html = hideBlocks(applyTexts(html, core.site.texts(lang, pg || "home")), core.site.hidden(pg || "home"));
         html = html.replace('"live":null', '"live":' + JSON.stringify(core.live(lang)).replace(/</g, "\\u003c"));
         const s = core.seoFor(lang, pg || "home");
         if (s?.t) html = html.replace(/<title>[^<]*<\/title>/, `<title>${esc(s.t)}</title>`).replace(/(<meta property="og:title" content=")[^"]*"/, `$1${esc(s.t)}"`);
@@ -173,9 +192,13 @@ export function createApp({ core, siteDir, adminDir, dataDir = "", setupCode = "
     if (M === "POST" && path === "/upload") { const b = await body(req, 22 * 1024 * 1024); const f = saveFile(b.data, uploadsDir, ["jpg", "png", "webp", "pdf"], 15 * 1048576); return { url: "/uploads/" + f.name }; }
 
     /* Сайт: контакты — любой; заголовки и счётчики — руководитель и владелец (в макете менеджер SEO не видит). */
-    if (M === "GET" && path === "/site") return { contacts: core.contacts.get(), seo: user.role === "manager" ? null : core.seo.all(), counters: user.role === "manager" ? null : core.counters(), faq: core.faq.list(), botTexts: core.faq.texts() };
+    if (M === "GET" && path === "/site") return { contacts: core.contacts.get(), seo: user.role === "manager" ? null : core.seo.all(), counters: user.role === "manager" ? null : core.counters(), faq: core.faq.list(), botTexts: core.faq.texts(), bot: { ...core.botProfile.get(), on: core.settingsView().tg.on, username: core.settingsView().tg.bot } };
     if (M === "POST" && path === "/site/contacts") { core.contacts.save(await body(req), who); return { ok: true }; }
     if (M === "POST" && path === "/site/seo") { lead(); core.seo.save(await body(req), who); return { seo: core.seo.all() }; }
+    if (M === "POST" && path === "/site/bot") { lead(); return { bot: await core.botProfile.save(await body(req), who) }; }
+    /* Страницы сайта: тексты каждого блока и какие блоки показывать — руководитель и владелец. */
+    if (M === "GET" && path === "/pages") { lead(); const q = new URL(req.url, "http://x").searchParams; return pagesView(q.get("lang") || "ru", q.get("page") || "home"); }
+    if (M === "POST" && path === "/pages") { lead(); const b = await body(req, 512 * 1024); core.site.save(b, who); return pagesView(b.lang, b.page); }
     if (M === "POST" && path === "/site/counters") { lead(); core.connect.counters(await body(req), who); return { ok: true }; }
     if (M === "POST" && path === "/site/faq") { const b = await body(req, 256 * 1024); if (b.texts) core.faq.setTexts(b.texts, who); return { faq: core.faq.save(b.faq, who), botTexts: core.faq.texts() }; }
 

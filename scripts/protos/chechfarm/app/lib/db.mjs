@@ -57,6 +57,8 @@ create table if not exists accounts(
 create table if not exists account_sessions(id text primary key, account_id integer not null, created_at integer not null, last_at integer not null);
 create table if not exists acc_codes(code text primary key, account_id integer not null, until integer not null);
 `;
+/* Правки текстов страниц из панели: страница «*» — шапка и подвал на всех страницах. */
+const SITE_TEXT = "create table if not exists site_text(lang text not null, page text not null, h text not null, v text not null, def text not null default '', primary key(lang, page, h))";
 /* Колонки, добавленные после первой выкатки: в базе, созданной раньше, их нет. */
 const LATER = ["alter table leads add column account_id integer"];
 
@@ -65,6 +67,7 @@ export function openDb(file) {
   const db = new DatabaseSync(file);
   db.exec("pragma journal_mode = wal; pragma foreign_keys = on; pragma busy_timeout = 5000;");
   db.exec(SCHEMA);
+  db.exec(SITE_TEXT);
   for (const sql of LATER) { try { db.exec(sql); } catch { /* колонка уже есть */ } }
   const st = new Map();
   const q = (sql) => { let s = st.get(sql); if (!s) { s = db.prepare(sql); st.set(sql, s); } return s; };

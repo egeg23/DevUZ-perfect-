@@ -25,6 +25,11 @@ export function tgClient(token, fetchImpl = fetch) {
     edit: (chat, messageId, text, extra = {}) => call("editMessageText", { chat_id: chat, message_id: messageId, text: String(text).slice(0, 4096), disable_web_page_preview: true, ...extra }),
     answer: (id, text) => call("answerCallbackQuery", { callback_query_id: id, text: String(text || "").slice(0, 190) }),
     commands: (list) => call("setMyCommands", { commands: list }),
+    /* Оформление бота: имя, строка в профиле, текст до «Начать», кнопка меню. */
+    name: (name) => call("setMyName", { name: String(name).slice(0, 64) }),
+    about: (text) => call("setMyShortDescription", { short_description: String(text).slice(0, 120) }),
+    desc: (text) => call("setMyDescription", { description: String(text).slice(0, 512) }),
+    menu: () => call("setChatMenuButton", { menu_button: { type: "commands" } }),
   };
 }
 

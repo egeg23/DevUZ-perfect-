@@ -54,7 +54,7 @@
   }
 
   /* ── Каркас ────────────────────────────────────────────────────── */
-  var NAV = [["home", "Сводка"], ["leads", "Обращения"], ["accounts", "Партнёры и клиенты"], ["bc", "Рассылки в бот", "head"], ["products", "Продукты"], ["news", "Новости"], ["ir", "Комната инвестора", "head"], ["site", "Сайт и бот"], ["connect", "Подключения"], ["team", "Команда"], ["log", "История", "head"]];
+  var NAV = [["home", "Сводка"], ["leads", "Обращения"], ["accounts", "Партнёры и клиенты"], ["bc", "Рассылки в бот", "head"], ["products", "Продукты"], ["news", "Новости"], ["ir", "Комната инвестора", "head"], ["pages", "Страницы сайта", "head"], ["site", "Сайт и бот"], ["connect", "Подключения"], ["team", "Команда"], ["log", "История", "head"]];
   function shell() {
     app.className = "";
     app.innerHTML = '<div class="shell"><nav class="side" id="side"><div class="brand">CZECHFARM<small>ALLIANCE · ПАНЕЛЬ</small></div>' +
@@ -68,7 +68,7 @@
     $$("#side a").forEach(function (a) { if (a.getAttribute("data-s") === (sec === "lead" ? "leads" : sec)) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
     $("#side").classList.remove("open");
     var main = $("#main"); main.innerHTML = '<p class="note">Загружаем…</p>';
-    var V = { accounts: accounts, bc: broadcasts, home: home, leads: leads, lead: lead, products: products, news: news, ir: ir, site: site, connect: connect, team: team, log: logV }[sec] || home;
+    var V = { accounts: accounts, bc: broadcasts, home: home, leads: leads, lead: lead, products: products, news: news, ir: ir, pages: pages, site: site, connect: connect, team: team, log: logV }[sec] || home;
     Promise.resolve(V(main, hs.split("/")[1])).catch(fail);
     api("/summary").then(function (s) { var n = $("#nfresh"); if (n) { n.hidden = !s.fresh; n.textContent = s.fresh; } }).catch(function () {});
   }
@@ -206,14 +206,58 @@
     });
   }
 
+  /* ── Страницы сайта: тексты каждого блока и какие блоки показывать ── */
+  var PAGE_NAME = { "*": "Шапка, меню и подвал (все страницы)", home: "Главная", about: "О компании", products: "Продукты", partners: "Партнёрам", investors: "Инвесторам", news: "Новости", contacts: "Контакты", privacy: "Политика данных", account: "Кабинет" };
+  var LANG_NAME = { ru: "Русский", uz: "Узбекский", en: "Английский", ar: "Арабский" };
+  var pgSel = { lang: "ru", page: "home" };
+  function pages(main) {
+    return api("/pages?lang=" + pgSel.lang + "&page=" + encodeURIComponent(pgSel.page)).then(function (j) { drawPages(main, j); });
+  }
+  function drawPages(main, j) {
+    var b = head(main, "Страницы сайта"), hidden = j.hidden.slice(), rtl = j.lang === "ar" ? ' dir="rtl"' : "";
+    var site = "/" + (j.lang === "ru" ? "" : j.lang + "/") + (j.page === "home" || j.page === "*" ? "" : j.page);
+    b.innerHTML = '<p class="note">Здесь правится любой текст сайта: выберите страницу и язык, поменяйте текст в нужном блоке и нажмите «Сохранить». Пустое поле — текст как был. Блок можно убрать со страницы галочкой «Показывать». Продукты, новости, контакты и заголовки для поиска правятся в своих разделах.</p>' +
+      '<div class="card grid"><div class="grid g2"><label class="f">Страница<select id="pgp">' + ["*"].concat(M.pages).map(function (p) { return '<option value="' + p + '"' + (p === j.page ? " selected" : "") + ">" + h(PAGE_NAME[p] || p) + "</option>"; }).join("") + '</select></label>' +
+      '<label class="f">Язык<select id="pgl">' + M.langs.map(function (l) { return '<option value="' + l + '"' + (l === j.lang ? " selected" : "") + ">" + h(LANG_NAME[l] || l) + "</option>"; }).join("") + '</select></label></div>' +
+      '<div class="row"><input class="i" id="pgq" placeholder="Найти текст на странице"><span class="sp"></span><a class="btn" href="' + site + '" target="_blank" rel="noopener">Открыть страницу</a><button class="btn pri" id="pgs">Сохранить</button></div></div>' +
+      (j.blocks.length ? j.blocks.map(function (bl) {
+        var off = hidden.indexOf(bl.id) >= 0, ch = bl.texts.filter(function (t) { return t.val; }).length;
+        return '<details class="card pgb" data-b="' + h(bl.id) + '"' + (ch || j.blocks.length === 1 ? " open" : "") + '><summary><b>' + h(bl.name) + '</b> <span class="note">текстов: ' + bl.texts.length + (ch ? ", изменено: " + ch : "") + (off ? ", скрыт" : "") + "</span></summary>" +
+          (bl.canHide ? '<label class="chk"><input type="checkbox" data-show="' + h(bl.id) + '"' + (off ? "" : " checked") + "> Показывать блок на странице</label>" : "") +
+          '<div class="grid">' + bl.texts.map(function (t) {
+            var big = t.def.length > 70;
+            return '<label class="f pgt" data-find="' + h((t.def + " " + t.val).toLowerCase()) + '"><span class="pgd"' + rtl + ">" + h(t.def) + "</span>" + (big ? '<textarea rows="' + Math.min(6, Math.ceil(t.def.length / 80) + 1) + '"' : '<input') + rtl + ' data-h="' + t.h + '" data-def="' + h(t.def) + '" placeholder="как на сайте сейчас"' + (big ? ">" + h(t.val) + "</textarea>" : ' value="' + h(t.val) + '">') + "</label>";
+          }).join("") + "</div></details>";
+      }).join("") : '<div class="card note">На этой странице нет текстов для правки.</div>') +
+      (j.stale.length ? '<h2>Правки, которые больше не применяются</h2><div class="card grid"><p class="note">Исходный текст на сайте изменился после обновления, поэтому эти правки не видны. Перенесите нужное в блок выше, затем уберите.</p>' + j.stale.map(function (t) { return '<div class="row"><span><span class="note">' + h(t.def) + "</span><br>" + h(t.val) + '</span><span class="sp"></span><button class="btn" data-drop="' + t.h + '" data-def="' + h(t.def) + '">Убрать</button></div>'; }).join("") + "</div>" : "");
+    function go() { pgSel = { lang: $("#pgl").value, page: $("#pgp").value }; pages(main).catch(fail); }
+    $("#pgp").addEventListener("change", go); $("#pgl").addEventListener("change", go);
+    $("#pgq").addEventListener("input", function (e) { var q = e.target.value.trim().toLowerCase(); $$(".pgt", b).forEach(function (x) { x.hidden = !!q && x.getAttribute("data-find").indexOf(q) < 0; }); if (q) $$(".pgb", b).forEach(function (d) { d.open = !!$(".pgt:not([hidden])", d); }); });
+    function send(texts) {
+      var hide = []; $$("[data-show]", b).forEach(function (c) { if (!c.checked) hide.push(c.getAttribute("data-show")); });
+      return api("/pages", { lang: j.lang, page: j.page, texts: texts, hide: hide }).then(function (n) { toast("Сохранено, на сайте уже видно"); drawPages(main, n); }).catch(fail);
+    }
+    $("#pgs").addEventListener("click", function () { var t = {}; $$("[data-h]", b).forEach(function (i) { t[i.getAttribute("data-h")] = { v: i.value.trim(), def: i.getAttribute("data-def") }; }); send(t); });
+    $$("[data-drop]", b).forEach(function (x) { x.addEventListener("click", function () { var t = {}; t[x.getAttribute("data-drop")] = { v: "", def: x.getAttribute("data-def") }; send(t); }); });
+  }
+
   /* ── Сайт и бот ────────────────────────────────────────────────── */
   function site(main) {
     return api("/site").then(function (j) {
       var b = head(main, "Сайт и бот");
+      var ro = staff() ? "" : " disabled";
       var seoKeys = []; if (j.seo) M.langs.forEach(function (l) { M.pages.forEach(function (p) { seoKeys.push(l + ":" + p); }); });
       b.innerHTML = '<h2>Контакты на сайте</h2><div class="card grid"><p class="note">Пустое поле на сайте не показывается.</p><div class="grid g2">' + M.contactKeys.map(function (k) { return '<label class="f">' + CT_NAME[k] + '<input data-c="' + k + '" value="' + h(j.contacts[k]) + '"></label>'; }).join("") + '</div><div class="row"><button class="btn pri" id="csave">Сохранить контакты</button></div></div>' +
+        '<h2>Оформление Telegram-бота</h2><div class="card grid">' +
+          '<p class="note">' + (j.bot.on ? "Бот @" + h(j.bot.username) + " подключён. " + (j.bot.pushed ? "Оформление в Telegram обновлено " + dt(+j.bot.pushed) + "." : "Оформление ещё не отправлено в Telegram: нажмите кнопку ниже.") : "Бот ещё не подключён: владелец вставляет токен в «Подключениях». Оформление можно подготовить заранее, оно применится при подключении.") + "</p>" +
+          '<div class="grid g2"><label class="f">Имя бота (до ' + j.bot.limits.name + ' знаков)<input id="bn" maxlength="' + j.bot.limits.name + '" value="' + h(j.bot.name) + '"' + ro + '></label><label class="f">Строка в профиле бота (до ' + j.bot.limits.about + ' знаков)<input id="ba" maxlength="' + j.bot.limits.about + '" value="' + h(j.bot.about) + '"' + ro + "></label></div>" +
+          '<label class="f">Что видит человек до кнопки «Начать» (до ' + j.bot.limits.desc + ' знаков)<textarea id="bd" rows="7" maxlength="' + j.bot.limits.desc + '"' + ro + ">" + h(j.bot.desc) + "</textarea></label>" +
+          '<div class="botlook"><div><img src="/protos/chechfarm/bot/hello.jpg" alt="Картинка приветствия" loading="lazy"><label class="chk"><input type="checkbox" id="bc"' + (j.bot.card ? " checked" : "") + ro + "> Показывать картинку в приветствии</label></div>" +
+          '<div><img class="av" src="/protos/chechfarm/bot/avatar.jpg" alt="Аватар бота" loading="lazy"><p class="note">Аватар Telegram разрешает поставить только через @BotFather: <a href="/protos/chechfarm/bot/avatar.jpg" download="czechfarm-bot-avatar.jpg">скачайте картинку</a>, напишите @BotFather команду /setuserpic, выберите бота и отправьте её фотографией.</p></div></div>' +
+          '<p class="note">Меню команд: ' + j.bot.commands.map(function (c) { return "/" + c[0] + " — " + h(c[1]); }).join(", ") + ". Под строкой ввода у человека кнопки «Частые вопросы», «Написать нам», «Кабинет» и «Сайт».</p>" +
+          (staff() ? '<div class="row"><button class="btn pri" id="bsave">Сохранить и отправить в Telegram</button></div>' : "") + "</div>" +
         '<h2>Частые вопросы в Telegram-боте</h2><div class="card grid"><p class="note">Клиент нажимает вопрос или пишет похожими словами — бот отвечает этим текстом. На остальное бот заводит обращение, и вы отвечаете клиенту из панели или ответом в Telegram.</p><div id="fq"></div><div class="row"><button class="btn" id="fadd">Добавить вопрос</button></div>' +
-        '<h2>Тексты бота</h2><div class="grid g2">' + Object.keys(j.botTexts).map(function (k) { return '<label class="f">' + ({ hello: "Приветствие", who: "Вопрос «кто вы» (партнёр или клиент)", kindPartner: "Ответ партнёру", kindClient: "Ответ клиенту", taken: "Обращение принято", more: "Клиент дописал", faq: "Заголовок частых вопросов", none: "Вопросов нет" }[k] || k) + '<textarea data-t="' + k + '">' + h(j.botTexts[k]) + "</textarea></label>"; }).join("") + '</div><div class="row"><button class="btn pri" id="fsave">Сохранить вопросы и тексты</button></div></div>' +
+        '<h2>Тексты бота</h2><div class="grid g2">' + Object.keys(j.botTexts).map(function (k) { return '<label class="f">' + ({ hello: "Приветствие", who: "Вопрос «кто вы» (партнёр или клиент)", kindPartner: "Ответ партнёру", kindClient: "Ответ клиенту", taken: "Обращение принято", more: "Клиент дописал", faq: "Заголовок частых вопросов", none: "Вопросов нет", ask: "Ответ на кнопку «Написать нам»" }[k] || k) + '<textarea data-t="' + k + '">' + h(j.botTexts[k]) + "</textarea></label>"; }).join("") + '</div><div class="row"><button class="btn pri" id="fsave">Сохранить вопросы и тексты</button></div></div>' +
         (j.seo ? '<h2>Заголовки страниц для поиска</h2><div class="card grid"><p class="note">Заголовок — до 60 знаков, описание — до 160. Пусто — стоит заголовок из сайта.</p><table class="resp"><thead><tr><th>Страница</th><th>Заголовок</th><th>Описание</th></tr></thead><tbody>' + seoKeys.map(function (k) { var v = j.seo[k] || {}, p = k.split(":"); return "<tr><td>" + PAGE_NAME[p[1]] + '<br><span class="note">' + LANG_NAME[p[0]] + '</span></td><td><input class="i" data-st="' + k + '" maxlength="120" value="' + h(v.t) + '"' + (p[0] === "ar" ? ' dir="rtl"' : "") + '></td><td><textarea class="i" data-sd="' + k + '" maxlength="300"' + (p[0] === "ar" ? ' dir="rtl"' : "") + ">" + h(v.d) + "</textarea></td></tr>"; }).join("") + '</tbody></table><div class="row"><button class="btn pri" id="ssave">Сохранить заголовки</button></div></div>' +
           '<h2>Счётчики и подтверждение сайта</h2><div class="card grid"><div class="grid g2"><label class="f">Яндекс Метрика: номер счётчика<input id="cm" value="' + h(j.counters.metrika) + '"></label><label class="f">Яндекс Вебмастер: код из meta yandex-verification<input id="cy" value="' + h(j.counters.yandex) + '"></label><label class="f">Google Search Console: код из meta google-site-verification<input id="cg" value="' + h(j.counters.google) + '"></label></div><div class="row"><button class="btn pri" id="ksave">Сохранить</button></div></div>' : "");
       var faq = j.faq.map(function (f) { return { q: f.q, a: f.a }; });
@@ -222,6 +266,13 @@
         $$("[data-fa]").forEach(function (x) { x.addEventListener("input", function () { faq[+x.getAttribute("data-fa")].a = x.value; }); });
         $$("[data-fx]").forEach(function (x) { x.addEventListener("click", function () { faq.splice(+x.getAttribute("data-fx"), 1); drawFaq(); }); }); }
       drawFaq();
+      $("#bsave") && $("#bsave").addEventListener("click", function () {
+        $("#bsave").disabled = true;
+        api("/site/bot", { name: $("#bn").value, about: $("#ba").value, desc: $("#bd").value, card: $("#bc").checked }).then(function (r) {
+          if (!j.bot.on) toast("Сохранено. Применится, когда подключите бота"); else if (r.bot.bad.length) toast("Сохранено, но Telegram принял не всё: " + r.bot.bad.join("; "), true); else toast("Оформление бота обновлено в Telegram");
+          site(main);
+        }).catch(function (e) { $("#bsave").disabled = false; fail(e); });
+      });
       $("#fadd").addEventListener("click", function () { faq.push({ q: "", a: "" }); drawFaq(); });
       $("#csave").addEventListener("click", function () { var c = {}; $$("[data-c]").forEach(function (i) { c[i.getAttribute("data-c")] = i.value.trim(); }); api("/site/contacts", c).then(function () { toast("Контакты на сайте обновлены"); }).catch(fail); });
       $("#fsave").addEventListener("click", function () { var t = {}; $$("[data-t]").forEach(function (i) { t[i.getAttribute("data-t")] = i.value; }); api("/site/faq", { faq: faq, texts: t }).then(function () { toast("Сохранено"); site(main); }).catch(fail); });
