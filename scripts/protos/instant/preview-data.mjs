@@ -369,3 +369,61 @@ export const EXAMPLE_STROI = {
   photos: [],
   source: "пример, выдуманная ремонтная компания",
 };
+
+// Выдуманная мастерская — пример шаблона «Услуги для бизнеса»: на него же
+// падает «Другое», когда сферу не узнали, поэтому пример не про бухгалтерию.
+export const EXAMPLE_USLUGI = {
+  niche: "uslugi",
+  locale: "ru",
+  name: "Мастер Плюс",
+  tagline: "Ремонт стиральных машин на дому",
+  about: "Приезжаем в день заявки, чиним на месте и даём гарантию на работу.",
+  city: "Ташкент",
+  color: "#e0702f",
+  logo: null,
+  services: [
+    { name: "Диагностика", price: "бесплатно при ремонте" },
+    { name: "Замена подшипников", price: "от 350 000 сум" },
+    { name: "Замена насоса", price: "от 250 000 сум" },
+    { name: "Ремонт платы управления", price: null },
+    { name: "Чистка от накипи", price: "150 000 сум" },
+    { name: "Установка и подключение", price: "120 000 сум" },
+  ],
+  doctors: [
+    { name: "Анвар Каримов", role: "Мастер" },
+    { name: "Ильдар Сафин", role: "Мастер" },
+  ],
+  perks: ["Приезжаем в день заявки", "Оригинальные запчасти", "Гарантия на работу", "Оплата после ремонта"],
+  phone: "+998 71 200 00 07",
+  telegram: "master_plus_demo",
+  whatsapp: "+998 90 200 00 07",
+  instagram: null,
+  address: "Ташкент, Чиланзар, ул. Примерная, 3",
+  hours: "Ежедневно 8:00-21:00",
+  photos: [],
+  source: "пример, выдуманная мастерская",
+};
+
+export const EXAMPLE_USLUGI_UZ = {
+  ...EXAMPLE_USLUGI,
+  locale: "uz",
+  tagline: "Kir yuvish mashinalarini uyda ta’mirlash",
+  about: "Ariza kunida kelamiz, joyida tuzatamiz va ishga kafolat beramiz.",
+  city: "Toshkent",
+  services: [
+    { name: "Diagnostika", price: "ta’mirda bepul" },
+    { name: "Podshipnik almashtirish", price: "350 000 so‘mdan" },
+    { name: "Nasos almashtirish", price: "250 000 so‘mdan" },
+    { name: "Boshqaruv platasini ta’mirlash", price: null },
+    { name: "Qasmoqdan tozalash", price: "150 000 so‘m" },
+    { name: "O‘rnatish va ulash", price: "120 000 so‘m" },
+  ],
+  doctors: [
+    { name: "Anvar Karimov", role: "Usta" },
+    { name: "Ildar Safin", role: "Usta" },
+  ],
+  perks: ["Ariza kunida kelamiz", "Original ehtiyot qismlar", "Ishga kafolat", "Ta’mirdan keyin to‘lov"],
+  address: "Toshkent, Chilonzor, Namuna ko‘chasi, 3",
+  hours: "Har kuni 8:00-21:00",
+  source: "namuna, o‘ylab topilgan ustaxona",
+};

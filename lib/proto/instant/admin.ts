@@ -17,9 +17,9 @@
  *   стоматология, медцентр — панель клиники Nek Dental Studio;
  *   ресторан — панель Agora (вход кодом, брони, заказы, меню и стоп-лист);
  *   турагентство — панель Sunday; учебный центр — панель FinTax;
- *   мебель и интернет-магазин — панель магазина Greenwell; недвижимость — панель Soffice.
- *   мебель — панель магазина Greenwell; недвижимость — панель Soffice;
- *   автосервис — панель клиники Nek словами сервиса.
+ *   мебель и интернет-магазин — панель магазина Greenwell; недвижимость — панель Soffice;
+ *   автосервис — панель клиники Nek словами сервиса;
+ *   услуги для бизнеса (и «Другое») — та же панель FinTax, словами любой сферы услуг.
  * У этих четырёх своей панели в макете сферы нет — выбор владельца,
  * 11.11.2026: «Да, делай по своей рекомендации».
  *
@@ -398,13 +398,66 @@ const EDU_STAFF: Pair[] = [["Малика А.", "Malika A."], ["Бехруз Т.
 const EDU_HEADS: Pair[] = [["Вы (владелец)", "Siz (ega)"], ["Шахло К.", "Shahlo K."], ["Жавохир М.", "Javohir M."]];
 
 /** Слова сферы для панели FinTax: подписи, виды клиентов, четыре тарифа, команда, заголовок. */
-type FintaxWords = { ui: Record<string, Pair>; kinds: Record<string, Pair>; tariffs: Pair[]; staff: Pair[]; heads: Pair[]; title: Pair; desc: Pair };
+type FintaxWords = { ui: Record<string, Pair>; kinds: Record<string, Pair>; tariffs: Pair[]; staff: Pair[]; heads: Pair[]; title: Pair; desc: Pair; lo?: number[]; hi?: number[] };
 
 function eduAdmin(site: InstantSite): string {
   return fintaxAdmin(site, {
     ui: EDU_UI, kinds: EDU_KINDS, tariffs: EDU_TARIFFS, staff: EDU_STAFF, heads: EDU_HEADS,
     title: ["панель учебного центра · демо", "o‘quv markazi paneli · demo"],
     desc: ["Панель учебного центра: заявки с сайта, ученики, курсы, команда и роли, история. Демо-данные.", "O‘quv markazi paneli: saytdan arizalar, o‘quvchilar, kurslar, jamoa va rollar, tarix. Demo ma’lumotlar."],
+  });
+}
+
+// ── Панель «Услуг для бизнеса»: та же FinTax ───────────────────────────
+/**
+ * Шаблон услуг — универсальный (на него падает «Другое»), поэтому подписи
+ * FinTax про бухгалтерию, отчёты и налоги — общими словами любой сферы
+ * услуг. Клиенту-бухгалтерии они тоже подходят.
+ */
+const USLUGI_UI: Record<string, Pair> = {
+  n_clients: ["Клиенты", "Mijozlar"], n_tariffs: ["Услуги", "Xizmatlar"],
+  role_head: ["Руководитель", "Rahbar"],
+  r_owner: ["Всё: заявки, клиентов с суммами, выручку в месяц, услуги на сайте, команду и историю.", "Hammasi: arizalar, summalari bilan mijozlar, oylik tushum, saytdagi xizmatlar, jamoa va tarix."],
+  r_head: ["Заявки, клиентов, ответственных и сроки, суммы и услуги на сайте.", "Arizalar, mijozlar, mas’ullar va muddatlar, summalar va saytdagi xizmatlar."],
+  r_manager: ["Заявки и клиентов без денег: не видит выручку и суммы, не правит услуги и команду.", "Arizalar va mijozlar pulsiz: tushum va summalarni ko‘rmaydi, xizmatlar va jamoani o‘zgartirmaydi."],
+  pickNote: ["«Подбор услуги»: человек сам ответил на вопросы, услуга уже в заявке.", "«Xizmat tanlash»: odam savollarga o‘zi javob berdi, xizmat allaqachon arizada."],
+  mix: ["Клиенты по услугам", "Xizmatlar bo‘yicha mijozlar"], soon: ["Сроки на неделе", "Haftadagi muddatlar"],
+  col_tariff: ["Услуга", "Xizmat"], col_acc: ["Ответственный", "Mas’ul"],
+  col_docs: ["Задач за месяц", "Oylik vazifalar"], col_rep: ["Ближайший срок", "Eng yaqin muddat"],
+  src_pick: ["Подбор услуги", "Xizmat tanlash"],
+  cs_wait: ["Ждём ответ клиента", "Mijoz javobini kutyapmiz"],
+  rep_vat: ["Встреча с клиентом", "Mijoz bilan uchrashuv"], rep_pay: ["Оплата за месяц", "Oylik to‘lov"], rep_fin: ["Сдача работы", "Ishni topshirish"],
+  pickH: ["Из подбора услуги", "Xizmat tanlovidan"], docs: ["Задач в месяц", "Oyiga vazifalar"], staffN: ["Человек в команде клиента", "Mijoz jamoasidagi kishilar"],
+  tax: ["Формат", "Format"], tax_usn: ["Разово", "Bir martalik"], tax_vat: ["По договору", "Shartnoma bo‘yicha"], ved: ["Срочно", "Shoshilinch"],
+  pickWhy: ["Человек пришёл с ответами: на звонке не нужно спрашивать задачу заново.", "Odam javoblar bilan keldi: qo‘ng‘iroqda vazifani qayta so‘rash shart emas."],
+  clientsHelp: ["Кто ведёт клиента, сколько задач сделано и что ближайшее.", "Mijozni kim olib boradi, nechta vazifa bajarildi va eng yaqini nima."],
+  noMoney: ["Суммы видят владелец и руководитель.", "Summalarni egasi va rahbar ko‘radi."],
+  gotAll: ["Работа сдана", "Ish topshirildi"],
+  tariffsHelp: ["Строка цены выходит на сайт: в карточку услуги и в текст заявки.", "Narx qatori saytga chiqadi: xizmat kartochkasiga va ariza matniga."],
+  tariffsRo: ["Цены услуг меняют владелец и руководитель.", "Xizmat narxlarini egasi va rahbar o‘zgartiradi."],
+  peopleNote: ["Имена и роли демо: впишете своих сотрудников.", "Ismlar va rollar demo: xodimlaringizni yozasiz."],
+  a_acc: ["назначил ответственного", "mas’ul tayinladi"], a_docs: ["отметил, что работа сдана", "ish topshirilganini belgiladi"], a_price: ["изменил цену услуги", "xizmat narxini o‘zgartirdi"],
+};
+const USLUGI_TARIFFS: Pair[] = [["Разовая задача", "Bir martalik vazifa"], ["Пакет услуг", "Xizmatlar paketi"], ["Абонемент", "Abonement"], ["Под ключ", "To‘liq"]];
+const USLUGI_STAFF: Pair[] = [["Малика А.", "Malika A."], ["Бехруз Т.", "Behruz T."], ["Нодира С.", "Nodira S."], ["Отабек Р.", "Otabek R."]];
+const USLUGI_HEADS: Pair[] = [["Вы (владелец)", "Siz (ega)"], ["Шахло К.", "Shahlo K."], ["Жавохир М.", "Javohir M."]];
+
+function uslugiAdmin(site: InstantSite): string {
+  const services = site.services.slice(0, LIMITS.services);
+  // Чем человек пришёл: услуги клиента (те же значения, что у формы на сайте), остальное — «Другое».
+  const kinds: Record<string, Pair> = Object.fromEntries([...services.map((s, k): [string, Pair] => [`s${k}`, [s.name, s.name]]), ["other", ["Другое", "Boshqa"]]]);
+  // Люди компании, если названы, — ответственные; иначе демо-имена.
+  const staff: Pair[] = site.doctors.length ? site.doctors.slice(0, 4).map((d): Pair => [d.name, d.name]) : USLUGI_STAFF;
+  return fintaxAdmin(site, {
+    ui: USLUGI_UI,
+    kinds,
+    tariffs: USLUGI_TARIFFS,
+    staff,
+    heads: USLUGI_HEADS,
+    lo: [0.4, 0.8, 1.2, 2],
+    hi: [0.9, 1.6, 2.4, 4],
+    title: ["панель заявок · демо", "arizalar paneli · demo"],
+    desc: ["Панель сайта: заявки с сайта, клиенты, услуги, команда и роли, история. Демо-данные.", "Sayt paneli: saytdan arizalar, mijozlar, xizmatlar, jamoa va rollar, tarix. Demo ma’lumotlar."],
   });
 }
 
@@ -421,10 +474,10 @@ function fintaxAdmin(site: InstantSite, w: FintaxWords): string {
   const pd = {
     lang: l, ui,
     names: NAMES[l].map((x, k) => `${x} ${(l === "uz" ? "ABDEFGHIKL" : "АБВГДЕЖЗИК")[k]}.`),
-    staff: w.staff.map((p, k) => ({ n: t(p), r: services[k]?.name ?? t(w.tariffs[k]) })),
+    staff: w.staff.map((p, k) => ({ n: t(p), r: services[k]?.name ?? t(w.tariffs[k % w.tariffs.length]) })),
     heads: w.heads.map(t),
     // Сколько платят в месяц, млн сум (демо): от группы к индивидуальным.
-    tariffs: four.map((x, k) => ({ id: ["ip", "small", "mid", "big"][k], n: x.n, p: x.p, lo: [0.3, 0.5, 0.8, 0.4][k], hi: [0.6, 0.9, 1.6, 0.8][k] })),
+    tariffs: four.map((x, k) => ({ id: ["ip", "small", "mid", "big"][k], n: x.n, p: x.p, lo: (w.lo ?? [0.3, 0.5, 0.8, 0.4])[k], hi: (w.hi ?? [0.6, 0.9, 1.6, 0.8])[k] })),
     kinds: Object.fromEntries(Object.entries(w.kinds).map(([k, v]) => [k, t(v)])),
     services: services.map((s) => s.name),
     site: PROTO_BASE, prices: PROTO_BASE, tg: site.telegram ? `https://t.me/${esc(site.telegram.replace(/^@/, ""))}` : "",
@@ -906,6 +959,7 @@ const ADMINS: Partial<Record<InstantNiche, (site: InstantSite) => string>> = {
   "salon-krasoty": salonAdmin,
   avtoservis: avtoservisAdmin,
   stroitelstvo: stroiAdmin,
+  uslugi: uslugiAdmin,
 };
 
 /** Админка сферы на данных клиента; у сферы без нашей панели — null. */

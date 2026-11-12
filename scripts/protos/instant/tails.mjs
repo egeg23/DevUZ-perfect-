@@ -19,6 +19,7 @@ import * as agora from "../agora/data.mjs";
 import * as sem from "../semtravel/data.mjs";
 import * as gw from "../greenwell/data.mjs";
 import * as cargo from "../cargopro/data.mjs";
+import * as fintax from "../fintax/data.mjs";
 
 const VTASHKENTE = [
   "vTashkente",
@@ -159,8 +160,17 @@ export function tails() {
     "Xotira 3-tor",
     "Алексей Иванов",
     "Маркетолог LOGI",
+    // FinTax — шаблон «Услуги для бизнеса» с 12.11.2026 (lib/proto/instant/uslugi).
+    "FinTax",
+    fintax.CONTACT.tg,
+    fintax.CONTACT.email,
+    "fintax.uz",
+    "fintaxcompany",
+    "Кушбеги",
+    "Qushbegi",
+    ...fintax.TEAM.flatMap((p) => [p.ru[0], p.uz[0]]),
   ];
-  const phones = [nek.CLINIC.tel, syanie.BRAND.phoneRaw, ...shox.BRANCHES.map((b) => b.tel), VTASHKENTE_PHONE, agora.BRAND.tel, sem.BRAND.phoneRaw, sem.BRAND.phone2Raw, "+998771233300", "+998934453569", "+998909656131", "+998712764431", ...cargo.COMPANY.phones.map(([, raw]) => raw), "+998993050999", "+998993060999"].filter(Boolean).map((p) => p.replace(/\D/g, ""));
+  const phones = [nek.CLINIC.tel, syanie.BRAND.phoneRaw, ...shox.BRANCHES.map((b) => b.tel), VTASHKENTE_PHONE, agora.BRAND.tel, sem.BRAND.phoneRaw, sem.BRAND.phone2Raw, "+998771233300", "+998934453569", "+998909656131", "+998712764431", ...cargo.COMPANY.phones.map(([, raw]) => raw), "+998993050999", "+998993060999", fintax.CONTACT.phone].filter(Boolean).map((p) => p.replace(/\D/g, ""));
   return {
     text: [...new Set(text.map((s) => s.trim()).filter((s) => s.length >= 5))].sort(),
     phones: [...new Set(phones)].sort(),

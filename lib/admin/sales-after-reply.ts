@@ -230,7 +230,8 @@ const NICHE_WORDS: readonly [Exclude<CircleNiche, "general">, RegExp][] = [
   ["turagentstvo", /tur(?:agent|ist|izm)|туристи|турагент|travel|tour|sayohat/iu],
   ["uchebnyy-centr", /uchebn|учебн|o['ʻ‘`]?quv|education|academy|академ|курс|school|школ|maktab|shkoly|language/iu],
   // Ремонт — раньше недвижимости: «ремонт квартир» — не продажа квартир.
-  ["stroitelstvo", /ремонт|remont|архитект|arxitekt|architect|interyer|интерьер|interior|дизайн\s+интер|qurilish|стройматер|отделк/iu],
+  // «Ремонт» — только помещений: «ремонт стиральных машин» — услуга, а не стройка.
+  ["stroitelstvo", /ремонт\s+(?:квартир|дом|офис|помещ|под\s+ключ|и\s+отделк)|(?:kvartira|uy|ofis)\s+ta['ʻ‘’`]?mir|remont\s+(?:kvartir|uy|ofis)|архитект|arxitekt|architect|interyer|интерьер|interior|дизайн\s+интер|qurilish|стройматер|отделк/iu],
   ["nedvizhimost", /nedvizh|недвиж|realt|риелт|zastroy|застрой|stroitel|строител|uy-joy|kvartir|квартир/iu],
   ["logistika", /logist|логист|cargo|карго|груз|yuk\s|доставк|dostavka|перевоз|tashish|freight|экспедир/iu],
   ["magazin", /magazin|магазин|shop|store|do['ʻ‘`]?kon|дўкон|savdo|торгов|оптов|optom|одежд|kiyim|обув|косметик|электрон|техник|товар/iu],

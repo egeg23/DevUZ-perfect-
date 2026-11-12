@@ -131,6 +131,15 @@ const OFFERS: Record<InstantNiche, () => OfferAddon[]> = {
     fromPlan("lider-prof", "trust", "Отзывы заказчиков и карта объектов", "Buyurtmachilar sharhlari va obyektlar xaritasi"),
     fromPlan("lider-prof", "motion", "Своё движение у каждого блока", "Har bir blokda o‘z harakati"),
   ],
+  // «Услуги для бизнеса» и всё, чью сферу не узнали: общие допы наших макетов, без слов одной сферы.
+  uslugi: () => [
+    fromPlan("semtravel", "crm", "Заявки сразу в amoCRM или Bitrix24", "Arizalar darhol amoCRM yoki Bitrix24 ga"),
+    fromPlan("semtravel", "cabinet", "Кабинет клиента: статус заявки и документы", "Mijoz kabineti: ariza holati va hujjatlar"),
+    fromPlan("nek", "chat", "Чат на сайте: ответы или менеджер", "Saytdagi chat: javoblar yoki menejer"),
+    fromPlan("semtravel", "pay", null, "Click, Payme, Uzum orqali onlayn to‘lov"),
+    fromPlan("karomat", "tgbot", "Telegram-бот: заявки и ответы клиентам", "Telegram-bot: arizalar va mijozlarga javoblar"),
+    fromPlan("karomat", "reviews", "Отзывы с Яндекс Карт и Google на сайте", "Saytda Yandex Xaritalar va Google sharhlari"),
+  ],
 };
 
 /**
