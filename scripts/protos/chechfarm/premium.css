@@ -6,7 +6,9 @@
 .hs-p{opacity:0;will-change:opacity}
 .hs-p:first-child{opacity:1}
 .hs-cv{opacity:0;transition:opacity .5s}
-.hs.cv .hs-cv{opacity:1}
+.hs.live .hs-cv{opacity:1}
+.hs-media video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;pointer-events:none}
+.hs.vid .hs-media video{display:block}
 .hs-veil{position:absolute;inset:0;background:linear-gradient(90deg,rgb(7 26 24 / .84) 0%,rgb(7 26 24 / .56) 30%,rgb(7 26 24 / 0) 60%),linear-gradient(0deg,rgb(7 26 24 / .62),rgb(7 26 24 / 0) 42%),linear-gradient(180deg,rgb(7 26 24 / .5),rgb(7 26 24 / 0) 20%)}
 .hs-intro{position:absolute;inset:0;z-index:2;display:flex;align-items:flex-end;will-change:opacity,transform}
 .hs-intro.off{pointer-events:none}

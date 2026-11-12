@@ -2207,8 +2207,10 @@ test("CZECHFARM: 7 страниц и панель на ru, uz, en — услов
     if (path === "" || /^(uz|en)$/.test(path)) assert.ok(page.includes('class="on-dark"') && page.includes('<meta name="theme-color" content="#071a18">'), `${path}: главная без тёмной шапки над сценой`);
     /* Владелец, 12.11.2026: «коробка перекрывает текст»: сцена бренда не липнет к экрану. */
     if (path === "" || /^(uz|en)$/.test(path)) {
-      /* Владелец, 12.11.2026: «Верни механику как было и не усложняй»: сцена — кадрами, без видео. */
-      assert.ok(!page.includes('hs-vd') && !page.includes('loadVid'), `${path}: в сцене осталось видео`);
+      /* Владелец, 13.11.2026: «возьми за основу как для салона красоты и повтори функции»:
+         движок сцены — пролёт Nek как есть: видео телефону, отказ play() — кадрами. */
+      assert.ok(page.includes("function loadVid()") && page.includes("p.then(on,fail)") && page.includes("function viaImg("), `${path}: сцена не на движке салона`);
+      assert.match(page, /<canvas class="hs-cv"><\/canvas><video muted playsinline/, `${path}: в сцене нет видео`);
       assert.ok(page.includes("/launch/box1.webp") && page.includes("/launch/bg3.webp") && page.includes('class="ln-cap"'), `${path}: сцена бренда не из рендеров`);
       assert.ok(!/\.ln-stage\{[^}]*position:sticky/.test(page), `${path}: сцена бренда липнет к экрану и закрывает текст`);
     }
@@ -2236,11 +2238,11 @@ test("CZECHFARM: 7 страниц и панель на ru, uz, en — услов
      аптеки. Кадры пачками шифром, открыты только шесть постеров компьютеру и телефону. */
   const seq = readdirSync(`${pub}/seq`);
   const scene = JSON.parse(readFileSync("scripts/protos/chechfarm/scene.json", "utf8"));
-  assert.ok(scene.d >= 200 && scene.p >= 200, "кадров сцены меньше 200 компьютеру или телефону");
-  assert.equal(scene.dk.length, 6, "в сцене не шесть ключевых кадров");
-  assert.equal(seq.filter((f) => /^[dp]\d\d\.bin$/.test(f)).length, Math.ceil(scene.d / scene.pack) + Math.ceil(scene.p / scene.pack), "пачек сцены не столько, сколько в scene.json");
-  assert.deepEqual(seq.filter((f) => !f.endsWith(".bin")).sort(), ["d", "m"].flatMap((k) => [0, 1, 2, 3, 4, 5].map((i) => `p-${k}-${i}.webp`)).sort(), "открыто лежит не только шесть постеров");
-  assert.ok(seq.reduce((n, f) => n + statSync(`${pub}/seq/${f}`).size, 0) < 45 * 1048576, "сцена тяжелее 45 МБ");
+  assert.ok(scene.n >= 300 && scene.vn >= 600, "кадров сцены мало");
+  for (const k of ["d", "m"]) assert.equal(readdirSync(`${pub}/seq/${k}`).filter((f) => /^f\d{3}\.bin$/.test(f)).length, scene.n, `${k}: кадров не столько, сколько в scene.json`);
+  assert.ok(seq.includes("m.bin") && !seq.some((f) => f.endsWith(".mp4")), "видео телефона нет или лежит открыто");
+  assert.deepEqual(seq.filter((f) => f.endsWith(".webp")).sort(), ["d", "m"].flatMap((k) => [0, 1, 2, 3, 4, 5].map((i) => `p-${k}-${i}.webp`)).sort(), "открыто лежит не только шесть постеров");
+  assert.deepEqual(seq.filter((f) => !f.endsWith(".webp")).sort(), ["d", "m", "m.bin"], "в папке сцены лишнее");
   for (const [path, page] of Object.entries(all)) {
     if (path.replace(/^(uz|en)\/?/, "") !== "") continue;
     assert.equal((page.match(/class="hs-cap"/g) ?? []).length, 4, `${path}: в сцене не четыре подписи`);

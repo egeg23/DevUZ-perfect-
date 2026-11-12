@@ -82,7 +82,7 @@ export function makeBlocks({ T, href, ICON, IMG, L3, CHAIN, pad, BASE_URL }) {
     return `<section class="hs" id="hero" aria-label="CZECHFARM"><div class="hs-stick">
 <div class="hs-media" aria-hidden="true">
 ${[0, 1, 2, 3, 4, 5].map((i) => `<picture class="hs-p"><source media="(max-width: 899px), (orientation: portrait)" srcset="${P(i, 1)}"><img src="${P(i)}" alt="" ${i ? 'loading="lazy"' : 'fetchpriority="high"'}></picture>`).join("")}
-<canvas class="hs-cv"></canvas><span class="hs-veil"></span></div>
+<canvas class="hs-cv"></canvas><video muted playsinline preload="none" disablepictureinpicture></video><span class="hs-veil"></span></div>
 <div class="hs-intro">${inner}</div>
 ${CAPS.map((c, i) => `<div class="hs-cap"><p class="hs-no">${pad(i + 1)} / ${pad(CAPS.length)}</p><h2>${c[l][0]}</h2><p>${c[l][1]}</p>${i === CAPS.length - 1 ? `<a class="btn btn-pri" href="${href(l, "partners")}"><span>${t("Запустить бренд", "Brendni ishga tushirish", "Launch a brand")}</span>${ICON.arrow}</a>` : ""}</div>`).join("\n")}
 <div class="hs-steps" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
