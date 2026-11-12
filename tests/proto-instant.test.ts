@@ -25,11 +25,11 @@ import { TUR_PHOTOS, destsOf, usdPrice } from "@/lib/proto/instant/tur";
 import agFile from "@/content/proto-instant/agora-assets.json" with { type: "json" };
 import { vtashkenteAssets } from "../scripts/protos/instant/vtashkente-assets.mjs";
 import vtFile from "@/content/proto-instant/vtashkente-assets.json" with { type: "json" };
-import { aipplyAssets } from "../scripts/protos/instant/aipply-assets.mjs";
-import apFile from "@/content/proto-instant/aipply-assets.json" with { type: "json" };
+import { medacademyAssets } from "../scripts/protos/instant/medacademy-assets.mjs";
+import maFile from "@/content/proto-instant/medacademy-assets.json" with { type: "json" };
 import { EDU_PHOTOS } from "@/lib/proto/instant/edu";
-import { shaharAssets } from "../scripts/protos/instant/shahar-assets.mjs";
-import shFile from "@/content/proto-instant/shahar-assets.json" with { type: "json" };
+import { maveraAssets } from "../scripts/protos/instant/mavera-assets.mjs";
+import mvFile from "@/content/proto-instant/mavera-assets.json" with { type: "json" };
 import { NEDV_BACKS, NEDV_PHOTOS } from "@/lib/proto/instant/nedv";
 import { panelAssets } from "../scripts/protos/instant/panel-assets.mjs";
 import panelFile from "@/content/proto-instant/panel-assets.json" with { type: "json" };
@@ -354,25 +354,51 @@ const edu = EXAMPLE_EDU as InstantSite;
 test("учебный центр: пример собирается без замечаний, защита та же", () => {
   const { html, problems, stamp } = buildInstant(edu, SEED);
   assert.deepEqual(problems, []);
-  assert.ok(html.includes("Ступени") && html.includes('id="dastur"') && html.includes('id="ochiq"'));
+  assert.ok(html.includes("Ступени") && html.includes('id="courses"') && html.includes('id="contacts"'));
   assert.ok(html.includes("/ru/mockup-terms") && html.includes('class="dz-vid"'));
-  assert.ok(stamp.signals.some((s) => s.startsWith("js:")), "метка числа скрипта Aipply");
+  assert.ok(stamp.signals.some((s) => s.startsWith("js:")), "метка числа скрипта");
   assert.ok(stamp.signals.filter((s) => s.startsWith("text:")).length >= 4, "две ловушки");
-  assert.deepEqual(buildInstant({ ...edu, locale: "uz", tagline: null, about: null }, SEED).problems, []);
+  const uz = buildInstant({ ...edu, locale: "uz", tagline: null, about: null, source: "namuna" }, SEED);
+  assert.deepEqual(uz.problems, []);
+  // Узбекская версия: наших русских подписей нет (русское остаётся только в данных клиента).
+  for (const s of ["Записаться", "Выберите курс", "Стоимость", "Контакты", "Преподаватели"]) assert.ok(!uz.html.includes(s), s);
 });
 
-test("учебный центр: стили и скрипт нашего макета Aipply, свежие, без Aipply", () => {
-  assert.deepEqual(apFile, aipplyAssets(), "node scripts/protos/instant/aipply-assets.mjs");
+test("учебный центр: наш макет MedAcademy B, стили и скрипт свежие, без MedAcademy", () => {
+  // 12.11.2026, владелец: «там был фиолетовый с зеленым, круто выглядели - Прицепить туда их логотип и погнали».
+  assert.deepEqual(maFile, medacademyAssets(), "node scripts/protos/instant/medacademy-assets.mjs");
   const { html } = buildInstant(edu, SEED);
-  for (const s of ["Aipply", "aipply", "/protos/aipply", "ap-kit-v1"]) assert.ok(!html.includes(s), s);
-  assert.ok(!/<script[^>]+src=/.test(html), "без скриптов со стороны");
+  assert.ok(html.includes('data-ma="b"') && html.includes("ma-marquee") && html.includes('role="tablist"') && html.includes('id="mol"'), "блоки макета: мир B, бегущая строка, вкладки курсов, молекулы");
+  assert.ok(html.includes("Dela+Gothic+One") && html.includes("#cff846"), "шрифт и лайм макета");
+  for (const s of ["MedAcademy", "medacademy", "DTM", "Aipply", "aipply", "number-flow", "/_next/"]) assert.ok(!html.includes(s), s);
+  assert.ok(!/<script[^>]+src=/.test(html) && !/<iframe/i.test(html), "без скриптов и страниц со стороны");
+  assert.ok(!html.includes("@font-face"), "шрифты макета в страницу не вшиты");
   assert.deepEqual(tailsIn(html), []);
+  assert.ok(tailsIn("курсы MedAcademy, пишите @medacademy_admin").length >= 2, "хвост MedAcademy ловится");
+  assert.ok(html.includes("is-away") && html.includes("IDLE = 3000"), "шапка прячется при прокрутке и возвращается через 3 секунды");
+  assert.ok(html.includes("prefers-reduced-motion"));
 });
 
-test("учебный центр: нет курсов и Telegram — без блока и без ссылки", () => {
-  const bare = buildInstant({ ...edu, services: [], telegram: null, instagram: null }, SEED);
+test("учебный центр: всегда фиолетовый с лаймом, цвет клиента макет не перекрашивает", () => {
+  // Владелец, 12.11.2026: «фиолетовый с зеленым, круто выглядели».
+  for (const color of [edu.color, null, "#1d6fd8"]) {
+    const html = buildInstant({ ...edu, color }, SEED).html;
+    assert.ok(!/--ma-night:hsl/.test(html) && html.includes("--ma-night:#191337"), "фиолетовый макета");
+  }
+});
+
+test("учебный центр: курсы и цены клиента, преподаватели только названные, нет данных — нет блока", () => {
+  const people = [{ name: "Анна Петрова", role: "Английский язык" }, { name: "Тимур Алиев", role: null }];
+  const full = buildInstant({ ...edu, doctors: people }, SEED);
+  assert.deepEqual(full.problems, []);
+  assert.equal((full.html.match(/role="tabpanel"/g) ?? []).length, edu.services.length);
+  assert.ok(full.html.includes("350 000 сум в месяц") && full.html.includes("Цену уточняйте при записи"));
+  assert.equal((full.html.match(/class="ma-flip /g) ?? []).length, 2);
+  assert.ok(!buildInstant(edu, SEED).html.includes('id="teachers"'), "преподавателей не назвали: блока нет");
+  const bare = buildInstant({ ...edu, services: [], perks: [], telegram: null, instagram: null }, SEED);
   assert.deepEqual(bare.problems, []);
   assert.ok(!bare.html.includes("t.me/"), "без чата клиента ссылки нет");
+  assert.ok(!bare.html.includes('id="courses"') && !bare.html.includes("ma-marquee flex"), "без курсов нет ни раздела, ни бегущей строки");
 });
 
 test("учебный центр: нейтральные фото ниши лежат в репозитории", () => {
@@ -385,29 +411,43 @@ const nedv = EXAMPLE_NEDV as InstantSite;
 test("недвижимость: пример собирается без замечаний, защита та же", () => {
   const { html, problems, stamp } = buildInstant(nedv, SEED);
   assert.deepEqual(problems, []);
-  assert.ok(html.includes("Агентство Ключ") && html.includes('id="podbor"') && html.includes('id="search"'));
+  assert.ok(html.includes("Агентство Ключ") && html.includes('id="book"') && html.includes('id="genplan"') && html.includes('id="picker"'));
   assert.ok(html.includes("/ru/mockup-terms") && html.includes('class="dz-vid"'));
-  assert.ok(stamp.signals.some((s) => s.startsWith("js:")), "метка числа скрипта ShahaR");
+  assert.ok(stamp.signals.some((s) => s.startsWith("js:")), "метка числа скрипта");
   assert.ok(stamp.signals.filter((s) => s.startsWith("text:")).length >= 4, "две ловушки");
-  assert.deepEqual(buildInstant({ ...nedv, locale: "uz", tagline: null, about: null }, SEED).problems, [], "узбекское «shahar» — не хвост");
+  const uz = buildInstant({ ...nedv, locale: "uz", tagline: null, about: null }, SEED);
+  assert.deepEqual(uz.problems, []);
+  assert.ok(uz.html.includes("/uz/mockup-terms") && uz.html.includes("Korpus"));
 });
 
-test("недвижимость: стили и скрипт нашего макета ShahaR, свежие, без ShahaR, поиск ведёт в подбор", () => {
-  assert.deepEqual(shFile, shaharAssets(), "node scripts/protos/instant/shahar-assets.mjs");
+test("недвижимость: наш макет MAVERA «Премиум»: снимок свежий, те же блоки, без MAVERA и её чисел", () => {
+  // Владелец, 12.11.2026: «Можно взять MAVERA целиком, просто заменим логотип компании».
+  assert.deepEqual(mvFile, maveraAssets(), "node scripts/protos/instant/mavera-assets.mjs");
   const { html } = buildInstant(nedv, SEED);
-  for (const s of ["ShahaR", "operator_shahar", "Shaharuz_bot", "/protos/shahar/", "sh-kit-v1"]) assert.ok(!html.includes(s), s);
-  assert.ok(!/<script[^>]+src=/.test(html), "без скриптов со стороны");
-  assert.ok(html.includes("var bk=$('book');if(bk)"), "каталога нет: поиск заполняет заявку");
-  assert.ok(html.includes("--bh:"), "цвет клиента поверх их зелёного");
+  assert.ok(html.includes('data-world="premium"') && html.includes('data-palette="ivory"'), "мир и палитра «Премиума»");
+  for (const c of ["w-slab", "w-rise", "w-rail", "w-glow", "w-word", "w-kenburns", "w-parallax", "--mv-accent"]) assert.ok(html.includes(c), c);
+  assert.equal((html.match(/<g role="button"/g) ?? []).length, 7, "генплан: те же семь корпусов");
+  assert.equal((html.match(/<button type="button" data-s="[fbs]"/g) ?? []).length, 180, "шахматка: те же клетки");
+  for (const s of ["MAVERA", "mavera", "Чинор", "Дарё", "Олтин", "Зарафшон", "млн", "за м²", "/images/mavera", "_next/"]) assert.ok(!html.includes(s), s);
+  assert.ok(!/<script[^>]+src=/.test(html) && !/<iframe/.test(html), "без скриптов и страниц со стороны");
+  assert.ok(html.includes("--w-accent:hsl("), "акцент макета в цвет клиента");
+  assert.ok(html.includes("nv-leads-1"), "заявка с макета приходит в админку");
+  assert.ok(html.includes("mvx-away") && html.includes("3000"), "шапка прячется и возвращается через 3 секунды");
+  assert.ok(html.includes("prefers-reduced-motion:reduce"));
+  // Услуги клиента вместо их ЖК: имя и цена слово в слово.
+  for (const s of nedv.services) assert.ok(html.includes(s.name), s.name);
+  assert.ok(html.includes("от 1% от сделки"));
   assert.deepEqual(tailsIn(html), []);
+  assert.ok(tailsIn("Купите квартиру в ЖК «Чинор» от MAVERA").length >= 2, "хвосты MAVERA ловятся");
 });
 
 test("недвижимость: нет услуг, преимуществ и чата — без блоков и без ссылки в Telegram", () => {
-  const bare = buildInstant({ ...nedv, services: [], perks: [], telegram: null, instagram: null, city: null, about: null }, SEED);
+  const bare = buildInstant({ ...nedv, services: [], perks: [], telegram: null, instagram: null, city: null, about: null, color: null }, SEED);
   assert.deepEqual(bare.problems, []);
-  assert.ok(!bare.html.includes('id="uslugi"'), "нет услуг — нет блока");
+  assert.ok(!bare.html.includes('id="projects"') && !bare.html.includes('name="svc"'), "нет услуг — нет ленты и выбора услуги");
   assert.ok(!bare.html.includes('href="https://t.me/'), "нет чата — нет ссылки");
-  assert.ok(bare.html.includes('"adminUrl":""'), "без чата заявка только копируется");
+  assert.ok(bare.html.includes('"chat":""'), "без чата заявка только копируется");
+  assert.ok(!bare.html.includes("--w-accent:hsl("), "нет цвета клиента — палитра макета");
 });
 
 test("недвижимость: нейтральные фото ниши лежат в репозитории", () => {
@@ -534,6 +574,23 @@ test("сцена по прокрутке: видео отказало в зап�
 
 // Салон красоты (владелец, 11.11.2026: «влетаем в дверь… капля лака, которая падает через всю страницу»).
 const salon = EXAMPLE_SALON as InstantSite;
+
+test("турагентство: поиск туров, авиабилетов и отелей из Apollo, цены только клиента", () => {
+  for (const locale of ["ru", "uz"] as const) {
+    const { html, problems } = buildInstant({ ...(EXAMPLE_TUR as InstantSite), locale }, SEED);
+    assert.deepEqual(problems, []);
+    assert.equal((html.match(/data-xm="(tours|air|hotel)"/g) ?? []).length, 3, "три вкладки поиска");
+    assert.ok(html.includes('id="xr"') && html.includes('id="xr-pl"') && html.includes('id="xr-g"'), "экран поиска с дугой перелёта");
+    assert.ok(html.includes("data-tour="), "карточки туров клиента открывают поиск");
+    // От Apollo не берём их туроператоров, число туров и цены.
+    assert.ok(!/anex\s?tour|coral\s?travel|pegas|sunmar|apollo/i.test(html), "чужих брендов нет");
+  }
+  // Клиент без услуг и цен: поиск есть, выдача без чисел («цена по запросу»).
+  const bare = buildInstant({ ...(EXAMPLE_TUR as InstantSite), services: [] }, SEED);
+  assert.deepEqual(bare.problems, []);
+  assert.ok(bare.html.includes('id="xq"') && !/id="xq-f" hidden/.test(bare.html), "без стран клиента «Куда» вводят текстом");
+  assert.ok(bare.html.includes("цена по запросу"));
+});
 
 test("салон красоты: пример собирается без замечаний на двух языках, защита та же", () => {
   for (const locale of ["ru", "uz"] as const) {
