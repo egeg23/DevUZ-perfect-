@@ -1,6 +1,7 @@
 import Script from "next/script";
 
 import { MetrikaHits } from "@/components/layout/metrika-hits";
+import { TEAM_COOKIE } from "@/lib/admin/return-to";
 
 /**
  * Веб-аналитика.
@@ -21,6 +22,13 @@ import { MetrikaHits } from "@/components/layout/metrika-hits";
  * Если идентификаторы не заданы, не рендерится вообще ничего: на локальной
  * разработке лишние запросы никому не нужны.
  */
+/**
+ * Устройство команды (кука ставится на каждом заходе в панель,
+ * TEAM_COOKIE в lib/admin/return-to.ts) — счётчики не включаются: визиты
+ * студии не должны выглядеть клиентами. Разбор трафика 13.11.2026.
+ */
+const TEAM_CHECK = `/(?:^|; )${TEAM_COOKIE}=1/.test(document.cookie)`;
+
 export function Analytics() {
   // Номер счётчика подставляется в код числом, как в сниппете Яндекса, а не
   // строкой. Отсюда и проверка: в разметку уходит только то, что состоит из
@@ -37,11 +45,11 @@ export function Analytics() {
       {ym ? (
         <>
           <Script id="yandex-metrika" strategy="lazyOnload">
-            {`(function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+            {`if(!${TEAM_CHECK}){(function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
             m[i].l=1*new Date();for(var j=0;j<document.scripts.length;j++){if(document.scripts[j].src===r){return;}}
             k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
             (window,document,"script","https://mc.yandex.ru/metrika/tag.js?id=${ym}","ym");
-            ym(${ym}, "init", {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});`}
+            ym(${ym}, "init", {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});}`}
           </Script>
           {/* Пиксель для тех, у кого выключен JavaScript. Отдаётся с
               сервера в разметке, а не через Script: Script — это как раз
@@ -57,13 +65,13 @@ export function Analytics() {
 
       {ga ? (
         <>
-          <Script
-            src={`https://www.googletagmanager.com/gtag/js?id=${ga}`}
-            strategy="lazyOnload"
-          />
+          {/* Тег Google вставляется скриптом, а не через src: так его можно
+              не включать на устройствах команды (TEAM_CHECK). */}
           <Script id="ga4" strategy="lazyOnload">
-            {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}
-            gtag('js',new Date());gtag('config',${JSON.stringify(ga)});`}
+            {`if(!${TEAM_CHECK}){var g=document.createElement("script");g.async=1;
+            g.src=${JSON.stringify(`https://www.googletagmanager.com/gtag/js?id=${ga}`)};document.head.appendChild(g);
+            window.dataLayer=window.dataLayer||[];window.gtag=function(){dataLayer.push(arguments);};
+            gtag('js',new Date());gtag('config',${JSON.stringify(ga)});}`}
           </Script>
         </>
       ) : null}

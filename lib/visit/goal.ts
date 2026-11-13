@@ -62,15 +62,39 @@ function counter(): number | null {
   return /^\d+$/.test(raw) ? Number(raw) : null;
 }
 
+/**
+ * Счётчик грузится в последнюю очередь (lazyOnload), и цель, достигнутая до
+ * его загрузки, раньше терялась молча. Разбор трафика 13.11.2026: за шесть
+ * недель «Отправил форму» — 0, а заявок с формы в базе три. Теперь цель
+ * ждёт счётчик до WAIT_MS и уходит, как только он появился.
+ */
+const WAIT_MS = 15_000;
+const STEP_MS = 500;
+
+function send(w: Analytics, id: number | null, name: Goal): boolean {
+  if (!id || !w.ym) return false;
+  w.ym(id, "reachGoal", name);
+  w.ym(id, "params", { goal: { [name]: 1 } });
+  return true;
+}
+
 export function goal(name: Goal): void {
   try {
     const w = window as Analytics;
     const id = counter();
-    if (id && w.ym) {
-      w.ym(id, "reachGoal", name);
-      w.ym(id, "params", { goal: { [name]: 1 } });
+    if (!send(w, id, name) && id) {
+      let waited = 0;
+      const timer = window.setInterval(() => {
+        waited += STEP_MS;
+        try {
+          if (send(w, id, name) || waited >= WAIT_MS) window.clearInterval(timer);
+        } catch {
+          window.clearInterval(timer);
+        }
+      }, STEP_MS);
     }
-    w.gtag?.("event", name);
+    if (w.gtag) w.gtag("event", name);
+    else window.setTimeout(() => w.gtag?.("event", name), WAIT_MS / 3);
   } catch {
     // Аналитика не имеет права ломать сайт.
   }

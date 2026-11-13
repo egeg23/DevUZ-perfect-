@@ -1,6 +1,14 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { NEXT_COOKIE, NEXT_TTL_SECONDS, SESSION_COOKIE, SESSION_MAX_AGE_SECONDS, wantedPath } from "@/lib/admin/return-to";
+import {
+  NEXT_COOKIE,
+  NEXT_TTL_SECONDS,
+  SESSION_COOKIE,
+  SESSION_MAX_AGE_SECONDS,
+  TEAM_COOKIE,
+  TEAM_MAX_AGE_SECONDS,
+  wantedPath,
+} from "@/lib/admin/return-to";
 import { adLocale, defaultLocale, isAdClick, isLocale, locales, matchLocale } from "@/lib/i18n";
 import { REF_COOKIE, REF_COOKIE_OPTIONS, formatRef, parseRef } from "@/lib/partners/ref-cookie";
 
@@ -62,6 +70,12 @@ function admin(request: NextRequest, pathname: string) {
       sameSite: "lax",
       path: "/admin",
       maxAge: SESSION_MAX_AGE_SECONDS,
+    });
+    response.cookies.set(TEAM_COOKIE, "1", {
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: TEAM_MAX_AGE_SECONDS,
     });
     return response;
   }

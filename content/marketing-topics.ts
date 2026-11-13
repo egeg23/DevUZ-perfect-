@@ -403,6 +403,16 @@ const nicheTopics: MarketingTopic[] = CHANNELS.flatMap((_, round) =>
  * Все темы в порядке выхода: объяснение, кейс, ошибка, ниша — и снова по
  * кругу. Объяснения первыми: у них самый большой спрос в поиске.
  */
+/**
+ * Кейсы западных брендов (Old Spice, Dollar Shave Club…) в очереди не стоят
+ * с 13.11.2026: разбор трафика — за пять недель из поиска на все статьи 2
+ * визита, а заказчик из Узбекистана так не ищет (владелец: «Делаем по
+ * очереди все из твоих рекомендаций»). Уже вышедшие остаются на сайте,
+ * вернуть в очередь — true. Список тем целый, кейсы пропускает только
+ * nextMarketingTopic.
+ */
+export const CASES_IN_ROTATION = false;
+
 export const MARKETING_TOPICS: MarketingTopic[] = (() => {
   const lists = [explainerTopics, caseTopics, mistakeTopics, nicheTopics];
   const out: MarketingTopic[] = [];
@@ -414,5 +424,5 @@ export const MARKETING_TOPICS: MarketingTopic[] = (() => {
 
 /** Следующая ненаписанная тема или null, если темы кончились. */
 export function nextMarketingTopic(done: ReadonlySet<string>): MarketingTopic | null {
-  return MARKETING_TOPICS.find((topic) => !done.has(topic.key)) ?? null;
+  return MARKETING_TOPICS.find((topic) => !done.has(topic.key) && (CASES_IN_ROTATION || topic.kind !== "case")) ?? null;
 }

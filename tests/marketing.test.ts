@@ -127,7 +127,8 @@ test("темы: ключи и адреса уникальны, у кейса е�
   }
   // По очереди: объяснение, кейс, ошибка, ниша — объяснения первыми.
   assert.deepEqual(MARKETING_TOPICS.slice(0, 4).map((t) => t.kind), ["explainer", "case", "mistake", "niche"]);
-  assert.equal(nextMarketingTopic(new Set([MARKETING_TOPICS[0].key]))?.key, MARKETING_TOPICS[1].key);
+  // Кейс (второй по списку) с 13.11.2026 пропускается — следом идёт ошибка.
+  assert.equal(nextMarketingTopic(new Set([MARKETING_TOPICS[0].key]))?.key, MARKETING_TOPICS[2].key);
   assert.equal(nextMarketingTopic(new Set(MARKETING_TOPICS.map((t) => t.key))), null);
 });
 
@@ -366,4 +367,16 @@ test("Google Trends — сначала напрямую, прокси — зап
   assert.match(kw, /return direct \? \[viaDirect, roadFetch\] : \[roadFetch\];/);
   assert.match(kw, /for \(const road of trendsRoads\(\)\)/);
   assert.match(kw, /Trends ответил\|Trends недоступен/, "на 429 и обрыве — следующая дорога");
+});
+
+test("кейсы западных брендов в очередь статей не идут, пока CASES_IN_ROTATION выключен", async () => {
+  const { nextMarketingTopic, MARKETING_TOPICS, CASES_IN_ROTATION } = await import("@/content/marketing-topics");
+  assert.equal(CASES_IN_ROTATION, false);
+  const done = new Set<string>();
+  for (let i = 0; i < MARKETING_TOPICS.length; i += 1) {
+    const topic = nextMarketingTopic(done);
+    if (!topic) break;
+    assert.notEqual(topic.kind, "case");
+    done.add(topic.key);
+  }
 });
