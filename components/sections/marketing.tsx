@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { MarketingCalculator } from "@/components/marketing/marketing-calculator";
+import { LazyMarketingCalculator } from "@/components/home/lazy-calculators";
 import { CodeBoot } from "@/components/ui/code-boot";
 import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
@@ -31,7 +31,7 @@ export function MarketingSection({ locale }: { locale: Locale }) {
             </div>
           </Reveal>
           <Reveal className="mt-12">
-            <MarketingCalculator locale={locale} copy={copy} />
+            <LazyMarketingCalculator locale={locale} copy={copy} />
           </Reveal>
           <Link
             href={localeHref(locale, MARKETING_PATH)}

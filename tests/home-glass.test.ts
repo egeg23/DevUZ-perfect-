@@ -206,3 +206,56 @@ test("фон первого экрана — пролёт по офису пет
   const globals = read("app/globals.css");
   assert.match(globals, /@keyframes nav-live-wave \{[^}]*transform/);
 });
+
+test("прежние блоки вернулись между «Продуктами» и заявкой, каждый «пишется кодом», без дублей «Стекла»", () => {
+  // Владелец, 13.11.2026: «Верни те блоки, которые были раньше, а те новые
+  // которые сделали — оставь на тех местах, где они сейчас», «Калькулятор с
+  // главной почему-то ушел».
+  const home = read("components/home/glass-home.tsx");
+  const order = [
+    "<HeroVideo",
+    "<ClientsSection",
+    "<InstantMaker",
+    'id="works"',
+    'id="products-title"',
+    "<ScaleSection",
+    "<StudioFilm",
+    "<ServicesSection",
+    "<CalculatorSection",
+    "<MarketingSection",
+    "<DevuzShowcase",
+    "<StackSection",
+    'id="process"',
+    'id="faq"',
+  ];
+  let at = -1;
+  for (const mark of order) {
+    const i = home.indexOf(mark);
+    assert.ok(i > at, `не на месте: ${mark}`);
+    at = i;
+  }
+  // Дубли блоков «Стекла» не возвращаются.
+  for (const dup of ["CompileScene", "BoxHero", "ProtoReel", "CasesSection", "ProcessSection", "FaqSection", "ContactSection"]) {
+    assert.ok(!home.includes(`<${dup}`), `дубль на главной: ${dup}`);
+  }
+  // Появление «пишется кодом»: блоки «Стекла» под первым экраном и прежние.
+  assert.ok((home.match(/<CodeBoot /g) ?? []).length >= 7);
+  for (const file of ["services", "calculator", "marketing", "devuz-showcase", "stack"]) {
+    assert.match(read(`components/sections/${file}.tsx`), /<CodeBoot /, file);
+  }
+  // Калькулятор: в строке кода нет старой цены.
+  assert.doesNotMatch(read("components/sections/calculator.tsx"), /UZS|\d{3} \d{3}/);
+  // Прежние блоки — в палитре «Самарканд» (они внутри `.sk` главной).
+  assert.match(home, /className=\{s\.legacy\}/);
+  assert.match(read("components/home/glass.module.css"), /\.legacy h2\s*\{[^}]*--font-prata/);
+});
+
+test("«пишется кодом»: при «меньше движения» и для блока на экране — сразу готово, на телефоне быстрее", () => {
+  const boot = read("components/ui/code-boot.tsx");
+  assert.match(boot, /prefers-reduced-motion: reduce/);
+  assert.match(boot, /calmIfVisible && node\.getBoundingClientRect\(\)\.top < window\.innerHeight/);
+  assert.match(boot, /max-width: 767px/);
+  // Только opacity и transform: вёрстка не сдвигается.
+  assert.match(boot, /transition-\[opacity,transform\]/);
+  assert.match(boot, /absolute inset-0/);
+});

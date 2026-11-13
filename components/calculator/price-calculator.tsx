@@ -30,7 +30,18 @@ type Currency = "uzs" | "usd";
  * чат: ассистент получает и услугу, и порядок бюджета, и состав работ — то
  * есть половина BANT закрыта ещё до первого вопроса.
  */
-export function PriceCalculator({ locale, dict }: { locale: Locale; dict: Dictionary }) {
+export function PriceCalculator({
+  locale,
+  dict,
+}: {
+  locale: Locale;
+  /**
+   * Только раздел калькулятора: компонент клиентский, и всё, что передано
+   * сюда, уезжает в браузер. Весь словарь сайта раздувал главную страницу
+   * на телефоне (13.11.2026, при возврате калькулятора на главную).
+   */
+  dict: Pick<Dictionary, "calculator">;
+}) {
   const [slug, setSlug] = useState(categories[0].slug);
   const [selection, setSelection] = useState<Selection>(() =>
     defaultSelection(categories[0].slug),
