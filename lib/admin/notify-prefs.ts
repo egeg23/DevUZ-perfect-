@@ -4,6 +4,7 @@ import type { Staff } from "@/lib/admin/session";
 import { record } from "@/lib/admin/audit";
 import type { Role } from "@/lib/admin/roles";
 import { serviceClient } from "@/lib/supabase";
+import { keepLeadOff, mergeLeadOff } from "@/lib/admin/lead-kinds";
 
 /**
  * Какие сообщения бота кому приходят.
@@ -298,9 +299,12 @@ export async function setNotices(
   const db = serviceClient();
   if (!db) return { ok: false, reason: "offline" };
 
+  // Снятые виды лидов (lib/admin/lead-kinds.ts) лежат в том же списке —
+  // форма «Что бот присылает» их не знает и стирать не должна.
+  const { data: current } = await db.from("staff").select("notify_off").eq("id", staffId).maybeSingle();
   const { data, error } = await db
     .from("staff")
-    .update({ notify_off: [...off] })
+    .update({ notify_off: keepLeadOff((current?.notify_off as string[] | null) ?? null, off) })
     .eq("id", staffId)
     .select("id")
     .maybeSingle();
@@ -313,6 +317,48 @@ export async function setNotices(
     targetId: staffId,
     ip,
     meta: { off: [...off] },
+  });
+  return { ok: true };
+}
+
+/**
+ * Записать снятые виды лидов (lib/admin/lead-kinds.ts). Галочки бота — как
+ * были. Кто вправе — `tunesLeadKinds` в действии; журнал — что было и что
+ * стало.
+ */
+export async function setLeadKinds(
+  staffId: string,
+  leadOff: readonly string[],
+  actor: Staff,
+  ip: string,
+): Promise<NoticesResult> {
+  const db = serviceClient();
+  if (!db) return { ok: false, reason: "offline" };
+  const { data: current, error: readError } = await db
+    .from("staff")
+    .select("notify_off")
+    .eq("id", staffId)
+    .maybeSingle();
+  if (readError) return { ok: false, reason: "failed" };
+  if (!current) return { ok: false, reason: "gone" };
+  const before = ((current.notify_off as string[] | null) ?? []).filter((v) => v.startsWith("lead:"));
+  const next = mergeLeadOff((current.notify_off as string[] | null) ?? null, leadOff);
+
+  const { data, error } = await db
+    .from("staff")
+    .update({ notify_off: next })
+    .eq("id", staffId)
+    .select("id")
+    .maybeSingle();
+  if (error) return { ok: false, reason: "failed" };
+  if (!data) return { ok: false, reason: "gone" };
+
+  await record("staff.lead_kinds", {
+    actorStaffId: actor.id,
+    targetType: "staff",
+    targetId: staffId,
+    ip,
+    meta: { before, after: next.filter((v) => v.startsWith("lead:")), self: actor.id === staffId },
   });
   return { ok: true };
 }

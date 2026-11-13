@@ -129,6 +129,15 @@ export const moreSections: Record<string, HelpEntry> = {
         },
       },
       {
+        id: "lead-kinds",
+        title: "«Jakie leady wysyłać» za pracownika",
+        roles: ["admin", "head"],
+        body: [
+          "Pod imieniem osoby, obok «Powiadomień», jest wiersz **«Leady · wszystkie rodzaje»** albo «Leady · 4 z 6 rodzajów». Kliknij: otworzy się sześć pól «Jakie leady wysyłać» — «Zimne kontakty», «Przetargi», «Sygnały z grup (skaut)», «Partnerzy i agencje», «Zgłoszenia ze strony i z bota», «Makieta z bota». Odznacz zbędne i kliknij **«Zapisz»**. Sam pracownik ustawia te same pola sobie w [Ustawieniach](/admin/settings), więc może je zmienić także po tobie; kto i kiedy zmieniał — w dzienniku.",
+          "Odznaczony rodzaj do osoby nie przychodzi i [kolejka](#leads-queue) go nie proponuje: lead trafia do tych, którzy mają ten rodzaj wybrany. Nie wybrał nikt — lead trafia do wszystkich jak dotąd, a ty dostajesz wiersz «🧭 … nie wybrał nikt», raz na lead (pod «Raportami»). Nocny równy udział i «Leady bez limitu» liczą się jak dotąd, po całej kolejce.",
+        ],
+      },
+      {
         id: "sections",
         title: "Dostęp do działów: zaznaczenia właściciela",
         roles: ["admin"],
@@ -833,6 +842,14 @@ export const moreSections: Record<string, HelpEntry> = {
             "**«Co bot mi wysyła»** pokazuje, ile rodzajów wiadomości bota do ciebie przychodzi, a link obok prowadzi do [Zespołu](/admin/team), do zaznaczeń pod twoim imieniem. Baza nie odpowiedziała — wiersz tak powie, a nie napisze «przychodzi wszystko».",
           ],
         },
+      },
+      {
+        id: "leads",
+        title: "«Jakie leady wysyłać»: wybierasz sam",
+        body: [
+          "W bloku **«Moje»** jest wiersz **«Jakie leady wysyłać»** — sześć pól według rodzaju leada: «Zimne kontakty» (klient odpowiedział na «Dzień dobry» z konta roboczego i zgodził się na makietę), «Przetargi» (loty zamówień publicznych znalezione przez skauta), «Sygnały z grup (skaut)» (ktoś w grupie Telegram szuka wykonawcy), «Partnerzy i agencje» (klient przyszedł z linku lub kodu partnera, od blogera albo agencji), «Zgłoszenia ze strony i z bota» (formularz, czat na stronie, rozmowa z botem, witryna, lista oczekujących DevUz Box) i «Makieta z bota». Domyślnie zaznaczone są wszystkie. Odznacz zbędne i kliknij **«Zapisz»** — u góry pojawi się plakietka, że zapisano. Rodzaj leada panel ustala sam po tym, skąd lead przyszedł, bez sieci neuronowej.",
+          "Odznaczony rodzaj to nie tylko «bot nie przyśle karty». [Kolejka](#leads-queue) też nie zaproponuje ci takiego leada: od razu trafia do osoby, która ma zaznaczone, i nie czeka u ciebie pół godziny. W nocy i poza godzinami pracy lead jak dotąd otwiera się wszystkim — ale tylko tym, którzy nie odznaczyli tego rodzaju. Jeśli tego rodzaju nie wybrał nikt, lead przychodzi do wszystkich jak dotąd, żeby klient nie przepadł, a kierownik i właściciel dostają wiersz «🧭 … nie wybrał nikt». Każdy zapis trafia do dziennika. Kierownik i właściciel mogą ustawić te pola także za ciebie — w «Zespół».",
+        ],
       },
       {
         id: "links",
