@@ -19,7 +19,8 @@ import { ProtoForm } from "./proto-form";
 import s from "./glass.module.css";
 
 /**
- * Главная «Стекло» — утверждённый владельцем макет (06.11.2026): первый
+ * Главная «Стекло» — утверждённый владельцем макет (06.11.2026), с 13.11.2026
+ * в палитре «Самарканд» (вид — glass.module.css, функции прежние): первый
  * экран с перепиской ИИ-сотрудника поверх ночного города, «Делали для»,
  * «Работы студии», «Продукты студии», «Прототип за 12 часов» с заявкой и
  * вопросы.
@@ -90,14 +91,14 @@ export function GlassHome({ locale, dict }: { locale: Locale; dict: Dictionary }
   const ready = byslug(READY_CASE);
 
   return (
-    <div className={cn(s.home, homeSerif.variable, homeSans.variable, homeSerifPl.variable)}>
+    <div className={cn("sk", s.home, homeSerif.variable, homeSans.variable, homeSerifPl.variable)}>
       {/* ── 1. Первый экран ── */}
       <section className={s.hero} aria-labelledby="home-title">
         <div className={s.photo} aria-hidden="true">
           <picture>
-            <source media="(max-width: 767px)" srcSet="/home/city-m.webp" />
+            <source media="(max-width: 767px)" srcSet="/home/city-sk-m.webp" />
             {/* eslint-disable-next-line @next/next/no-img-element -- фон с масками и своим кадрированием, оптимизатор картинок тут не нужен */}
-            <img src="/home/city.webp" alt="" width={2400} height={1340} fetchPriority="high" decoding="async" />
+            <img src="/home/city-sk.webp" alt="" width={2400} height={1340} fetchPriority="high" decoding="async" />
           </picture>
         </div>
 

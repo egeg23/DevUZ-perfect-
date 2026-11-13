@@ -13,7 +13,7 @@ export function Footer({ locale, dict }: { locale: Locale; dict: Dictionary }) {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="border-t border-line bg-surface/40">
+    <footer className="sk border-t border-line bg-surface/40">
       <Container className="py-16">
         <div className="grid gap-12 md:grid-cols-[1.6fr_1fr_1fr_1.2fr]">
           <div>
