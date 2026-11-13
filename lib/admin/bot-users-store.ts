@@ -81,7 +81,8 @@ export async function loadBotMockups(now: Date = new Date()): Promise<BotMockups
   const db = serviceClient();
   if (!db) return null;
   const cuts = mockupCuts(now);
-  const built = () => db.from("protos").select("id", { count: "exact", head: true }).not("facts->instant", "is", null).neq("status", "draft");
+  // Макеты с сайта (facts.instant.via = "site") без Telegram-аккаунта — не подписчики бота.
+  const built = () => db.from("protos").select("id", { count: "exact", head: true }).not("facts->instant->>tg", "is", null).neq("status", "draft");
   const clients = () => built().is("facts->instant->>staff", null);
   const answers = await Promise.all([
     clients().gte("created_at", cuts.today),

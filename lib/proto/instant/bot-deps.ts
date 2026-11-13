@@ -33,13 +33,17 @@ export const sourceOf = (why: LeadInput["why"]) => (manualWhy(why) ? MANUAL_SOUR
  * «🔥 Нужен прототип», с обещанным клиенту сроком. Ночью карточку держит
  * очередь (startQueue) до утра, как любую.
  */
-export function manualHeading(input: Pick<LeadInput, "niche" | "site">): string {
-  return `🔥 <b>Нужен макет вручную · ${esc(CIRCLE_NICHE_RU[input.niche])}</b>${input.site ? ` · ${esc(input.site)}` : ""}\nКлиенту в боте обещали макет за ${MANUAL_HOURS} часов: кто взял лид, собирает его в «Прототипах» и шлёт ссылку из карточки лида («Клиенту от бота студии»).`;
+export function manualHeading(input: Pick<LeadInput, "niche" | "site">, where: "bot" | "site" = "bot"): string {
+  const how =
+    where === "site"
+      ? `Клиенту на сайте обещали макет за ${MANUAL_HOURS} часов: кто взял лид, собирает его в «Прототипах» и пишет ему по контакту из карточки.`
+      : `Клиенту в боте обещали макет за ${MANUAL_HOURS} часов: кто взял лид, собирает его в «Прототипах» и шлёт ссылку из карточки лида («Клиенту от бота студии»).`;
+  return `🔥 <b>Нужен макет вручную · ${esc(CIRCLE_NICHE_RU[input.niche])}</b>${input.site ? ` · ${esc(input.site)}` : ""}\n${how}`;
 }
 
 const WHY: Record<LeadInput["why"], string> = {
   built: "собрал себе макет в боте студии",
-  soon: "хотел макет в боте, для его сферы шаблона пока нет: нужен макет вручную",
+  soon: "хотел макет в боте, для его сферы готового макета пока нет: нужен макет вручную",
   failed: "хотел макет в боте, автоматически не собрался: нужен макет вручную",
 };
 

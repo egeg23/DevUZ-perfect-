@@ -108,7 +108,7 @@ test("«собрали макет»: сегодня и вчера по Ташк�
 
   const store = read("lib/admin/bot-users-store.ts");
   assert.match(store, /count: "exact", head: true/, "счёт базы без строк: строками она отдаёт не больше 1000");
-  assert.match(store, /\.not\("facts->instant", "is", null\)\.neq\("status", "draft"\)/, "только готовые макеты из бота");
+  assert.match(store, /\.not\("facts->instant->>tg", "is", null\)\.neq\("status", "draft"\)/, "только готовые макеты из бота: с Telegram-аккаунтом, без макетов с сайта");
   assert.match(store, /\.is\("facts->instant->>staff", null\)/, "сборки сотрудников подписчикам не считаются");
   assert.match(store, /if \(answers\.some\(\(a\) => a\.error\)\)[\s\S]{0,200}return null/, "база не ответила: нуля не показываем");
 
