@@ -2026,3 +2026,12 @@
     transition: none;
   }
 }
+
+/* Меню сайта открыто на телефоне — кнопка чата уходит: она закрывала выбор
+   языка внизу меню (владелец, 13.11.2026). Флаг ставит шапка
+   (components/layout/header.tsx), сама кнопка — components/chat/chat-widget.tsx. */
+html[data-menu="open"] .chat-launch {
+  opacity: 0;
+  transform: translateY(1.5rem);
+  pointer-events: none;
+}

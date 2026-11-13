@@ -69,3 +69,11 @@ test("«Зарабатывай с нами» в строке шапки, «Пр�
   const burger = code.slice(code.indexOf("{open ?"));
   assert.match(burger, /\{links\.map\(\(link\) => \(/);
 });
+
+test("меню на телефоне открыто — кнопка «Написать менеджеру» прячется и не закрывает выбор языка", () => {
+  const header = readFileSync("components/layout/header.tsx", "utf8");
+  assert.match(header, /root\.dataset\.menu = "open"/);
+  assert.match(header, /delete root\.dataset\.menu/);
+  assert.match(readFileSync("components/chat/chat-widget.tsx", "utf8"), /chat-launch/);
+  assert.match(readFileSync("app/globals.css", "utf8"), /html\[data-menu="open"\] \.chat-launch \{[^}]*pointer-events: none/);
+});

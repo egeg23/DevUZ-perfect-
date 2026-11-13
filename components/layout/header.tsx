@@ -27,6 +27,18 @@ export function Header({ locale, dict }: { locale: Locale; dict: Dictionary }) {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // Меню на телефоне открыто — кнопка «Написать менеджеру» прячется: она
+  // закрывала выбор языка внизу меню (владелец, 13.11.2026). Знак — на <html>,
+  // кнопку чата прячет CSS (`.chat-launch` в globals.css).
+  useEffect(() => {
+    const root = document.documentElement;
+    if (open) root.dataset.menu = "open";
+    else delete root.dataset.menu;
+    return () => {
+      delete root.dataset.menu;
+    };
+  }, [open]);
+
   const links = [
     // DevUz Box: промо /box первым пунктом и своим видом (владелец, 02.11.2026:
     // «Вынеси в новую кнопку сверху в меню: Ai офис»).
