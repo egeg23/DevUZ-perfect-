@@ -8,8 +8,8 @@
    панели поверх фотографий, бирюзовое свечение снизу первого экрана, еле
    видный гирих за заголовком, кнопка и числа — золотом. Заголовки антиквой
    (Prata), текст — Onest. Границ между разделами нет: картинки не обрезаны,
-   их фон дорисован за краями и медленно гаснет в цвет страницы. Небо города
-   переведено в бирюзу в самом файле (city-sk*.webp), огни остались тёплыми.
+   их фон дорисован за краями и медленно гаснет в цвет страницы. Фон первого
+   экрана — пролёт по офису студии петлёй (hero-video.tsx), затемнённый.
 
    На телефоне размытия под стеклом нет: backdrop-filter на прокрутке —
    самое дорогое, что можно дать слабому телефону, а под панелью там и так
@@ -100,9 +100,11 @@
 
 .hero { position: relative; padding: 124px 0 96px; }
 
-/* Город целиком: дорисован за краями кадра и гаснет влево и вниз. Картинка
-   стоит от середины экрана, чтобы здание было за перепиской на любой
-   ширине; на широком мониторе слева просто ночь. */
+/* Фон — пролёт по офису студии петлёй, как гифка (владелец, 13.11.2026:
+   «Убери здание с фона… сделай просто гиф анимацией… но затемни сам фон»).
+   Кадр на весь первый экран, гаснет вниз в цвет страницы; поверх — тёмная
+   бирюза, плотнее у текста слева и у шапки, чтобы буквы читались. Постер
+   стоит сразу, ролик проявляется поверх, когда заиграл. */
 .photo {
   position: absolute;
   inset: 0 0 auto 0;
@@ -110,26 +112,28 @@
   overflow: hidden;
   pointer-events: none;
 }
-.photo img {
+.photo img,
+.photo video {
   position: absolute;
-  left: calc(50% - 630px);
-  top: -70px;
-  width: 1980px;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   max-width: none;
-  height: auto;
-  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 26%), linear-gradient(#000 44%, transparent 100%);
-  -webkit-mask-composite: source-in;
-  mask-image: linear-gradient(90deg, transparent 0, #000 26%), linear-gradient(#000 44%, transparent 100%);
-  mask-composite: intersect;
+  object-fit: cover;
+  object-position: 50% 40%;
+  -webkit-mask-image: linear-gradient(#000 52%, transparent 96%);
+  mask-image: linear-gradient(#000 52%, transparent 96%);
 }
+.photo video { opacity: 0; transition: opacity 1.2s ease; }
+.photo video[data-on] { opacity: 1; }
 .photo::after {
   content: "";
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgb(3 16 15 / 0.9) 0%, rgb(3 16 15 / 0.72) 36%, rgb(3 16 15 / 0.28) 66%, rgb(3 16 15 / 0.18) 100%),
-    linear-gradient(rgb(3 16 15 / 0.55), rgb(3 16 15 / 0) 30%),
-    radial-gradient(70% 42% at 50% 80%, rgb(63 214 200 / 0.18), rgb(19 128 124 / 0.08) 45%, transparent 72%);
+    linear-gradient(90deg, rgb(3 16 15 / 0.82) 0%, rgb(3 16 15 / 0.62) 42%, rgb(3 16 15 / 0.45) 70%, rgb(3 16 15 / 0.5) 100%),
+    linear-gradient(rgb(3 16 15 / 0.7), rgb(3 16 15 / 0.25) 22%, rgb(3 16 15 / 0.35) 60%, rgb(3 16 15 / 0.9)),
+    radial-gradient(70% 42% at 50% 80%, rgb(63 214 200 / 0.14), rgb(19 128 124 / 0.06) 45%, transparent 72%);
 }
 
 /* Гирих за заголовком: еле видная звезда Регистана, гаснет к краям маской. */
@@ -458,7 +462,6 @@
   .home { --edge: 20px; }
   .hero { padding: 96px 0 56px; }
   .photo { height: 760px; }
-  .photo img { left: -60vw; top: 0; width: 240vw; }
   .photo::after {
     background:
       linear-gradient(rgb(3 16 15 / 0.55), rgb(3 16 15 / 0.82) 55%, rgb(3 16 15 / 0.95)),

@@ -686,50 +686,42 @@
 .nav-live {
   position: relative;
   isolation: isolate;
-  overflow: hidden;
-  border: 1px solid color-mix(in oklab, var(--color-green) 28%, transparent);
-  background: color-mix(in oklab, var(--color-green) 7%, transparent);
-  transition: border-color 0.3s, background-color 0.3s;
 }
 
-.nav-live:hover {
-  border-color: color-mix(in oklab, var(--color-green) 55%, transparent);
-  background: color-mix(in oklab, var(--color-green) 12%, transparent);
-}
-
-/* Полосы «кода»: тонкие штрихи разной длины, уезжающие вверх. Ширина вдвое
-   больше пункта, чтобы шов при повторе не попадал в видимую часть. */
-.nav-live::before {
+/* «Кейсы»: два облака света, бирюза и золото, ходят волной навстречу друг
+   другу вокруг слова (владелец, 13.11.2026: «пусти анимированную амбиент
+   подсветку волной вокруг кейсов»). Свет за текстом, движется только
+   transform и opacity — ни раскладки, ни перерисовки. */
+.nav-live::before,
+.nav-live::after {
   content: "";
   position: absolute;
-  inset: -100% 0;
+  inset: -6px -14px;
   z-index: -1;
-  background-image: repeating-linear-gradient(
-      90deg,
-      color-mix(in oklab, var(--color-green) 22%, transparent) 0 3px,
-      transparent 3px 7px,
-      color-mix(in oklab, var(--color-blue-soft) 18%, transparent) 7px 9px,
-      transparent 9px 16px
-    ),
-    repeating-linear-gradient(
-      0deg,
-      transparent 0 6px,
-      color-mix(in oklab, var(--color-ink) 90%, transparent) 6px 12px
-    );
-  animation: nav-live-rain 7s linear infinite;
-  /* Штрихи гаснут к краям: иначе видно, что это плитка, а не код. */
-  mask-image: radial-gradient(120% 90% at 50% 50%, #000 35%, transparent 100%);
+  border-radius: 999px;
+  pointer-events: none;
+  filter: blur(9px);
+  animation: nav-live-wave 3.6s ease-in-out infinite alternate;
+}
+.nav-live::before {
+  background: radial-gradient(closest-side, color-mix(in oklab, var(--color-green) 75%, transparent), transparent);
+}
+.nav-live::after {
+  background: radial-gradient(closest-side, color-mix(in oklab, var(--color-gold) 60%, transparent), transparent);
+  animation-direction: alternate-reverse;
 }
 
-@keyframes nav-live-rain {
-  from { transform: translateY(0); }
-  to { transform: translateY(12px); }
+@keyframes nav-live-wave {
+  from { transform: translateX(-28%) scale(0.7, 0.85); opacity: 0.55; }
+  50% { opacity: 0.95; }
+  to { transform: translateX(28%) scale(1.05, 1); opacity: 0.6; }
 }
 
 /* Движение в шапке на каждой странице — то, от чего у части людей
    начинается головная боль. Остаётся подсветка, уходит анимация. */
 @media (prefers-reduced-motion: reduce) {
-  .nav-live::before { animation: none; }
+  .nav-live::before, .nav-live::after { animation: none; }
+  .nav-live::after { opacity: 0.5; }
 }
 
 /* ── Инструкция: пункт, найденный поиском ────────────────────────────────

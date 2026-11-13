@@ -40,9 +40,13 @@ export function Header({ locale, dict }: { locale: Locale; dict: Dictionary }) {
     // по-польски. На остальных языках своих статей нет, и пункт, за которым
     // пусто или чужой язык, в шапке не нужен.
     ...(isRazborLocale(locale)
-      ? [{ href: localeHref(locale, "razbor"), label: dict.nav.razbor, live: true }]
+      ? [{ href: localeHref(locale, "razbor"), label: dict.nav.razbor }]
       : []),
-    { href: localeHref(locale, "cases"), label: dict.nav.cases },
+    // «Кейсы» — с волной подсветки, «Разборы» — обычным текстом (владелец,
+    // 13.11.2026: «Кнопка "разборы" теряется из-за того что ее цвет
+    // выделяется. Сделай обычный текст как у всех, а вот раздел "кейсы"
+    // пусти анимированную амбиент подсветку волной вокруг кейсов»).
+    { href: localeHref(locale, "cases"), label: dict.nav.cases, live: true },
     // «Процесс» (якорь на главной) и «О студии» — только в мобильном меню и
     // в подвале: их место в строке шапки занял «Зарабатывай с нами»
     // (владелец, 28.09). Замерено на сборке при 1280 px — самой узкой
@@ -95,10 +99,10 @@ export function Header({ locale, dict }: { locale: Locale; dict: Dictionary }) {
                 "box" in link && link.box
                   ? "nav-box inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-[0.86rem] font-medium text-text"
                   : "live" in link && link.live
-                  ? // Единственный пункт с фоном: раздел новый, и он
-                    // обновляется каждый день. Анимация — на CSS и гаснет
-                    // при prefers-reduced-motion, см. globals.css.
-                    "nav-live whitespace-nowrap rounded-lg px-2.5 py-1 text-[0.86rem] text-text"
+                  ? // «Кейсы» — единственный пункт с подсветкой: свет волной ходит
+                    // вокруг слова. Только transform и opacity, при
+                    // prefers-reduced-motion стоит, см. globals.css.
+                    "nav-live whitespace-nowrap rounded-full px-2.5 py-1 text-[0.86rem] text-text"
                   : "link-underline whitespace-nowrap text-[0.86rem] text-muted transition-colors hover:text-text"
               }
             >

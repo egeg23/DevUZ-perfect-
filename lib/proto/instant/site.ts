@@ -241,7 +241,7 @@ export async function runSiteBuild(req: SiteRequest, deps: SiteDeps, emit: (e: S
     color: build.site.color,
     admin: Boolean(build.pages.admin),
     expires: new Date(at.getTime() + OFFER_MS).toISOString(),
-    addons: offerAddons(build.site.niche).map((x) => ({ name: x[req.locale], price: x.price })),
+    addons: offerAddons(build.site.niche).map((x) => ({ name: x[req.locale === "uz" ? "uz" : "ru"], price: x.price })),
   });
 }
 
