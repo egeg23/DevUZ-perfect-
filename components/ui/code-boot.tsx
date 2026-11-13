@@ -22,16 +22,25 @@ export function CodeBoot({
   /** Строка, которая печатается. Своя на каждый блок — в этом весь смысл. */
   code,
   className,
+  calmIfVisible = false,
 }: {
   children: ReactNode;
   code: string;
   className?: string;
+  /**
+   * Блок, который при запуске скрипта уже на экране, не прячется: его
+   * посетитель уже видит, и накладка поверх готового текста была бы миганием.
+   * Нужно на главной, где блоки стоят сразу под первым экраном.
+   */
+  calmIfVisible?: boolean;
 }) {
   /** null — ещё не начали, число — сколько символов уже напечатано. */
   const [typed, setTyped] = useState<number | null>(null);
   const [fading, setFading] = useState(false);
   const [done, setDone] = useState(false);
   const started = useRef(false);
+  /** Телефон: строка печатается вдвое быстрее — эффект есть, ждать меньше. */
+  const quick = useRef(false);
 
   const attach = useCallback((node: HTMLElement | null) => {
     if (!node || started.current) return;
@@ -40,7 +49,11 @@ export function CodeBoot({
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    if (reduced || typeof IntersectionObserver === "undefined") {
+    quick.current = window.matchMedia("(max-width: 767px)").matches;
+
+    const visible = calmIfVisible && node.getBoundingClientRect().top < window.innerHeight;
+
+    if (reduced || visible || typeof IntersectionObserver === "undefined") {
       // В этом режиме анимация не нужна, а контент нужен. Ничего не делаем:
       // накладка так и не появится, блок останется обычным.
       started.current = true;
@@ -65,7 +78,7 @@ export function CodeBoot({
 
     observer.observe(node);
     return () => observer.disconnect();
-  }, []);
+  }, [calmIfVisible]);
 
   useEffect(() => {
     if (typed === null || done) return;
@@ -83,7 +96,7 @@ export function CodeBoot({
     // Шаг подобран так, чтобы строка любой длины укладывалась примерно в
     // секунду: иначе длинная строка печатается вдвое дольше короткой, и
     // соседние блоки играют вразнобой.
-    const step = Math.max(12, Math.round(900 / code.length));
+    const step = Math.max(quick.current ? 8 : 12, Math.round((quick.current ? 450 : 900) / code.length));
     const timer = window.setTimeout(() => setTyped((n) => (n ?? 0) + 1), step);
     return () => window.clearTimeout(timer);
   }, [typed, code.length, done]);

@@ -3,7 +3,15 @@ import type { CSSProperties, ReactNode } from "react";
 
 import { homeSans, homeSerif, homeSerifPl } from "@/app/fonts-home";
 import { LogoMark } from "@/components/brand/logo";
+import { CalculatorSection } from "@/components/sections/calculator";
 import { ClientsSection } from "@/components/sections/clients";
+import { DevuzShowcase } from "@/components/sections/devuz-showcase";
+import { MarketingSection } from "@/components/sections/marketing";
+import { ScaleSection } from "@/components/sections/scale";
+import { ServicesSection } from "@/components/sections/services";
+import { StackSection } from "@/components/sections/stack";
+import { StudioFilm } from "@/components/sections/studio-film";
+import { CodeBoot } from "@/components/ui/code-boot";
 import { Reveal } from "@/components/ui/reveal";
 import { BOX_NAME, BOX_PATH, named } from "@/content/box";
 import { cases } from "@/content/cases";
@@ -183,6 +191,7 @@ export function GlassHome({ locale, dict }: { locale: Locale; dict: Dictionary }
 
       {/* «Собрать макет» — перед работами (владелец, 13.11.2026: «чтобы перед
           кейсами человек мог интерактивно… собрать себе макет»). */}
+      <CodeBoot code={"build({ site, niche }) → mockup"} calmIfVisible>
       <InstantMaker
         locale={locale}
         copy={siteInstantCopy[locale]}
@@ -191,8 +200,10 @@ export function GlassHome({ locale, dict }: { locale: Locale; dict: Dictionary }
         manualHours={PROTOTYPE_HOURS}
         prices={{ landing: PROMO.landing.price, landingOld: PROMO.landing.regular, corp: PROMO.corporate.price, corpOld: PROMO.corporate.regular }}
       />
+      </CodeBoot>
 
       {/* ── 2. Работы ── */}
+      <CodeBoot code={"cases.filter((c) => c.live).map(render)"} calmIfVisible>
       <section id="works" className={s.works} aria-labelledby="works-title">
         <div className={s.wrap}>
           <div className={s.top}>
@@ -236,7 +247,10 @@ export function GlassHome({ locale, dict }: { locale: Locale; dict: Dictionary }
         </div>
       </section>
 
+      </CodeBoot>
+
       {/* ── 3. Продукты ── */}
+      <CodeBoot code={"products.map((p) => <Product {...p} />)"} calmIfVisible>
       <section className={s.products} aria-labelledby="products-title">
         <div className={s.wrap}>
           <div className={s.top}>
@@ -318,7 +332,33 @@ export function GlassHome({ locale, dict }: { locale: Locale; dict: Dictionary }
         </div>
       </section>
 
+      </CodeBoot>
+
+      {/* Прежние блоки главной — обратно (владелец, 13.11.2026: «Верни те
+          блоки, которые были раньше, а те новые которые сделали — оставь на
+          тех местах, где они сейчас»). Порядок — как стояли до «Стекла»;
+          не вернулись только дубли блоков «Стекла»: первый экран
+          CompileScene, хиро коробки (коробка — в «Продуктах»), ролик SamAuto
+          (первая карточка «Работ»), кейсы («Работы» и «Все кейсы»), процесс
+          (шаги «за 12 часов» ниже), вопросы и форма контактов.
+          Цвета — палитра «Самарканд» через `.sk`, заголовки — шрифт главной
+          (.legacy). Каждый «пишется кодом» при подходе к экрану (CodeBoot). */}
+      <div className={s.legacy}>
+        <CodeBoot code={"const team = await studio.staff()"}>
+          <ScaleSection locale={locale} />
+        </CodeBoot>
+        <CodeBoot code={"film.play({ muted: true, loop: true })"}>
+          <StudioFilm locale={locale} />
+        </CodeBoot>
+        <ServicesSection locale={locale} dict={dict} />
+        <CalculatorSection locale={locale} dict={dict} />
+        <MarketingSection locale={locale} />
+        <DevuzShowcase locale={locale} dict={dict} />
+        <StackSection dict={dict} />
+      </div>
+
       {/* ── 4. Прототип за 12 часов ── */}
+      <CodeBoot code={"await telegram.send(SALES_CHAT, brief(lead))"} calmIfVisible>
       <section id="process" className={s.proto} aria-labelledby="proto-title">
         <div className={cn(s.wrap, s.protoGrid)}>
           <div className={s.protoText}>
@@ -356,7 +396,10 @@ export function GlassHome({ locale, dict }: { locale: Locale; dict: Dictionary }
         </div>
       </section>
 
+      </CodeBoot>
+
       {/* ── 5. Вопросы ── */}
+      <CodeBoot code={"faq.map((q) => <Answer key={q.id} />)"} calmIfVisible>
       <section id="faq" className={s.faq} aria-labelledby="faq-title">
         <div className={cn(s.wrap, s.faqGrid)}>
           <h2 id="faq-title" className={cn(s.serif, s.h2)}>
@@ -379,6 +422,7 @@ export function GlassHome({ locale, dict }: { locale: Locale; dict: Dictionary }
           </div>
         </div>
       </section>
+      </CodeBoot>
     </div>
   );
 }

@@ -506,3 +506,18 @@
   .w:hover img { transform: none; }
   .vid:hover img, .vid:hover video { transform: scale(var(--sc)); }
 }
+
+/* Прежние блоки главной (13.11.2026) — в палитре «Самарканд»: цвета берут
+   из `.sk`, здесь только то, чем они отличались от «Стекла»: черта сверху
+   у каждой секции и шрифт заголовков. */
+.legacy section {
+  border-top-color: transparent;
+}
+.legacy h2 {
+  font-family: var(--font-prata), Georgia, "Noto Serif SC", "Songti SC", serif;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+.home:lang(pl) .legacy h2 {
+  font-family: var(--font-playfair), Georgia, serif;
+}

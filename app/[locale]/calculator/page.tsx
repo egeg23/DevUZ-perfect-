@@ -49,7 +49,7 @@ export default async function CalculatorPage({
         </p>
 
         <div className="mt-14">
-          <PriceCalculator locale={locale} dict={dict} />
+          <PriceCalculator locale={locale} dict={{ calculator: dict.calculator }} />
         </div>
       </Container>
 
