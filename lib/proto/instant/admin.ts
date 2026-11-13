@@ -38,7 +38,7 @@ import { MAGAZIN_PHOTOS, shopPrice } from "@/lib/proto/instant/magazin";
 import { NEDV_PHOTOS } from "@/lib/proto/instant/nedv";
 import cargo from "@/content/proto-instant/cargopro-assets.json" with { type: "json" };
 import { logistikaPalette } from "@/lib/proto/instant/logistika";
-import { LIMITS, type InstantLocale, type InstantNiche, type InstantSite } from "@/lib/proto/instant/types";
+import { LIMITS, type InstantLocale, type InstantNiche, type InstantSite, type BaseSite, type BaseLocale } from "@/lib/proto/instant/types";
 import { PROTO_BASE } from "@/lib/proto/pages";
 import { SALON_DEMO_JS, SALON_EXT_JS } from "@/lib/proto/instant/salon-admin";
 import { avtosalonAdmin } from "@/lib/proto/instant/avtosalon-admin";
@@ -47,7 +47,7 @@ type Pair = [string, string];
 const json = (v: unknown) => JSON.stringify(v).replace(/</g, "\\u003c");
 
 /** Знак клиента для шапки панели: его логотип или первая буква. */
-function markOf(site: InstantSite, cls: string): string {
+function markOf(site: BaseSite, cls: string): string {
   const logo = imageUrl(site.logo);
   return logo
     ? `<img class="${cls}" src="${esc(logo)}" alt="" referrerpolicy="no-referrer" style="height:36px;width:auto;max-width:120px;object-fit:contain" onerror="this.remove()">`
@@ -120,11 +120,11 @@ const NEK_UI: Record<string, Pair> = {
   note_con: ["подключил", "uladi"], note_coff: ["отключил", "o‘chirdi"],
 };
 
-const NAMES: Record<InstantLocale, string[]> = {
+const NAMES: Record<BaseLocale, string[]> = {
   ru: ["Азиз", "Мадина", "Тимур", "Камола", "Сардор", "Нигора", "Рустам", "Дилноза", "Бобур", "Лола"],
   uz: ["Aziz", "Madina", "Timur", "Kamola", "Sardor", "Nigora", "Rustam", "Dilnoza", "Bobur", "Lola"],
 };
-const WD: Record<InstantLocale, string[]> = { ru: ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"], uz: ["Ya", "Du", "Se", "Ch", "Pa", "Ju", "Sh"] };
+const WD: Record<BaseLocale, string[]> = { ru: ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"], uz: ["Ya", "Du", "Se", "Ch", "Pa", "Ju", "Sh"] };
 
 /** Переписки демо: каналы Wazzup, слова пациентов без цен и без чужих фактов. */
 function clinicThreads(l: InstantLocale, svc: string[]) {
@@ -144,7 +144,7 @@ const DOC_FALLBACK: Record<"stomatologiya" | "medcentr", Pair[]> = {
   medcentr: [["Терапевт", "Terapevt"], ["Кардиолог", "Kardiolog"], ["Педиатр", "Pediatr"], ["Гинеколог", "Ginekolog"]],
 };
 
-function clinicAdmin(site: InstantSite, niche: "stomatologiya" | "medcentr"): string {
+function clinicAdmin(site: BaseSite, niche: "stomatologiya" | "medcentr"): string {
   const l = site.locale;
   const i = l === "uz" ? 1 : 0;
   const t = (p: Pair) => p[i];
@@ -205,7 +205,7 @@ const AVTO_UI: Record<string, Pair> = {
 };
 const AVTO_MASTERS: Pair[] = [["Мастер по ходовой", "Yurish qismi ustasi"], ["Моторист", "Motorchi"], ["Электрик", "Elektrik"], ["Диагност", "Diagnost"]];
 
-function avtoservisAdmin(site: InstantSite): string {
+function avtoservisAdmin(site: BaseSite): string {
   const l = site.locale;
   const i = l === "uz" ? 1 : 0;
   const t = (p: Pair) => p[i];
@@ -240,7 +240,7 @@ ${js}</script>
 }
 
 // ── Панель ресторана: Agora ───────────────────────────────────────────
-function restoranAdmin(site: InstantSite): string {
+function restoranAdmin(site: BaseSite): string {
   const l = site.locale;
   const i = l === "uz" ? 1 : 0;
   const nm = esc(site.name);
@@ -313,11 +313,11 @@ const TOUR_UI: Record<string, Pair> = {
   g_yes: ["Едет", "Boradi"],
   g_no: ["Не едут", "Bormaydi"],
 };
-const MONTHS: Record<InstantLocale, string[]> = {
+const MONTHS: Record<BaseLocale, string[]> = {
   ru: ["январь", "февраль", "март", "апрель", "май", "июнь", "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"],
   uz: ["yanvar", "fevral", "mart", "aprel", "may", "iyun", "iyul", "avgust", "sentabr", "oktabr", "noyabr", "dekabr"],
 };
-const WD_MON: Record<InstantLocale, string[]> = { ru: ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"], uz: ["Du", "Se", "Ch", "Pa", "Ju", "Sh", "Ya"] };
+const WD_MON: Record<BaseLocale, string[]> = { ru: ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"], uz: ["Du", "Se", "Ch", "Pa", "Ju", "Sh", "Ya"] };
 
 /** Цвет клиента поверх розового Sunday: акцент и его тёмный тон. Тёмно-синее стекло остаётся. */
 function sundayPalette(color: string | null): string {
@@ -329,7 +329,7 @@ function sundayPalette(color: string | null): string {
   return `--a:hsl(${h} ${s}% ${l}%);--a2:hsl(${h} ${s}% ${l - 8}%)`;
 }
 
-function tourAdmin(site: InstantSite): string {
+function tourAdmin(site: BaseSite): string {
   const l = site.locale;
   const i = l === "uz" ? 1 : 0;
   const nm = esc(site.name);
@@ -401,7 +401,7 @@ const EDU_HEADS: Pair[] = [["Вы (владелец)", "Siz (ega)"], ["Шахл�
 /** Слова сферы для панели FinTax: подписи, виды клиентов, четыре тарифа, команда, заголовок. */
 type FintaxWords = { ui: Record<string, Pair>; kinds: Record<string, Pair>; tariffs: Pair[]; staff: Pair[]; heads: Pair[]; title: Pair; desc: Pair; lo?: number[]; hi?: number[] };
 
-function eduAdmin(site: InstantSite): string {
+function eduAdmin(site: BaseSite): string {
   return fintaxAdmin(site, {
     ui: EDU_UI, kinds: EDU_KINDS, tariffs: EDU_TARIFFS, staff: EDU_STAFF, heads: EDU_HEADS,
     title: ["панель учебного центра · демо", "o‘quv markazi paneli · demo"],
@@ -443,7 +443,7 @@ const USLUGI_TARIFFS: Pair[] = [["Разовая задача", "Bir martalik va
 const USLUGI_STAFF: Pair[] = [["Малика А.", "Malika A."], ["Бехруз Т.", "Behruz T."], ["Нодира С.", "Nodira S."], ["Отабек Р.", "Otabek R."]];
 const USLUGI_HEADS: Pair[] = [["Вы (владелец)", "Siz (ega)"], ["Шахло К.", "Shahlo K."], ["Жавохир М.", "Javohir M."]];
 
-function uslugiAdmin(site: InstantSite): string {
+function uslugiAdmin(site: BaseSite): string {
   const services = site.services.slice(0, LIMITS.services);
   // Чем человек пришёл: услуги клиента (те же значения, что у формы на сайте), остальное — «Другое».
   const kinds: Record<string, Pair> = Object.fromEntries([...services.map((s, k): [string, Pair] => [`s${k}`, [s.name, s.name]]), ["other", ["Другое", "Boshqa"]]]);
@@ -462,7 +462,7 @@ function uslugiAdmin(site: InstantSite): string {
   });
 }
 
-function fintaxAdmin(site: InstantSite, w: FintaxWords): string {
+function fintaxAdmin(site: BaseSite, w: FintaxWords): string {
   const l = site.locale;
   const i = l === "uz" ? 1 : 0;
   const t = (p: Pair) => p[i];
@@ -552,7 +552,7 @@ const STROI_TARIFFS: Pair[] = [["Дизайн-проект", "Dizayn loyiha"], [
 const STROI_STAFF: Pair[] = [["Рустам Х.", "Rustam X."], ["Бахтиёр Н.", "Baxtiyor N."], ["Илхом С.", "Ilhom S."], ["Сардор М.", "Sardor M."]];
 const STROI_HEADS: Pair[] = [["Вы (владелец)", "Siz (ega)"], ["Улугбек К.", "Ulug‘bek K."], ["Дилшод А.", "Dilshod A."]];
 
-function stroiAdmin(site: InstantSite): string {
+function stroiAdmin(site: BaseSite): string {
   return fintaxAdmin(site, {
     ui: STROI_UI, kinds: STROI_KINDS, tariffs: STROI_TARIFFS, staff: STROI_STAFF, heads: STROI_HEADS,
     title: ["панель ремонтной компании · демо", "ta’mir kompaniyasi paneli · demo"],
@@ -587,7 +587,7 @@ const SHOP_FALLBACK: Pair[] = [["Товар", "Mahsulot"], ["Новинка", "Y
  * интернет-магазина (заказы — с сайта шаблона, память `ms-demo-1`, товары —
  * те же номера, что у магазина: g0, g1…).
  */
-function mebelAdmin(site: InstantSite, kind: "mebel" | "magazin" = "mebel"): string {
+function mebelAdmin(site: BaseSite, kind: "mebel" | "magazin" = "mebel"): string {
   const shop = kind === "magazin";
   const l = site.locale;
   const i = l === "uz" ? 1 : 0;
@@ -702,11 +702,11 @@ ${shop ? panels.greenwell.js.split("'mb-demo-1'").join("'ms-demo-1'").split("'mb
 const NEDV_DIST: [string, Pair][] = [["yunusabad", ["Юнусабад", "Yunusobod"]], ["mirabad", ["Мирабад", "Mirobod"]], ["chilanzar", ["Чиланзар", "Chilonzor"]], ["mirzo", ["Мирзо-Улугбек", "Mirzo Ulug‘bek"]], ["yakkasaray", ["Яккасарай", "Yakkasaroy"]], ["sergeli", ["Сергели", "Sergeli"]]];
 const NEDV_CLS = ["A", "B+", "B", "A+", "B", "B+"];
 const NEDV_MARKET: Record<string, number> = { "A+": 190000, A: 150000, "B+": 120000, B: 95000 };
-const NEDV_FIRST: Record<InstantLocale, string[]> = {
+const NEDV_FIRST: Record<BaseLocale, string[]> = {
   ru: ["Алишер", "Нигора", "Сардор", "Камила", "Бобур", "Лола", "Рустам", "Гульноза", "Ильхом", "Севара", "Дмитрий", "Анна"],
   uz: ["Alisher", "Nigora", "Sardor", "Kamila", "Bobur", "Lola", "Rustam", "Gulnoza", "Ilhom", "Sevara", "Dmitriy", "Anna"],
 };
-const NEDV_LAST: Record<InstantLocale, string[]> = {
+const NEDV_LAST: Record<BaseLocale, string[]> = {
   ru: ["Каримов", "Юсупова", "Ахмедов", "Рашидова", "Турсунов", "Саидова", "Комилов", "Ибрагимова"],
   uz: ["Karimov", "Yusupova", "Ahmedov", "Rashidova", "Tursunov", "Saidova", "Komilov", "Ibragimova"],
 };
@@ -715,7 +715,7 @@ const NEDV_UI: Record<string, Pair> = {
   objS: ["Дома, этажи и квартиры. Статус и ставка меняются здесь и сразу видны на сайте.", "Uylar, qavatlar va kvartiralar. Holat va stavka shu yerda o‘zgaradi va saytda darhol ko‘rinadi."],
 };
 
-function nedvAdmin(site: InstantSite): string {
+function nedvAdmin(site: BaseSite): string {
   const l = site.locale;
   const i = l === "uz" ? 1 : 0;
   const t = (p: Pair) => p[i];
@@ -813,7 +813,7 @@ function salonPalette(color: string | null): string {
   return `--onyx:hsl(${h} ${s}% ${l}%);--onyx2:hsl(${h} ${Math.min(s + 8, 70)}% ${Math.min(l + 30, 84)}%);--onyx-ink:#fff;--paper:#fbf6f1;--paper2:hsl(${h} 38% 94%);--ink:#2a1f24;--ink2:#35272d;--text:#2e2226;--f-d:'Cormorant Garamond',Georgia,serif;--f-t:'Onest',system-ui,sans-serif`;
 }
 
-function salonAdmin(site: InstantSite): string {
+function salonAdmin(site: BaseSite): string {
   const l = site.locale;
   const services = site.services.slice(0, LIMITS.services);
   const any = "Запись в салон";
@@ -915,7 +915,7 @@ ${panels.syanie.js}</script>
  * Демо-направления и суммы — ориентир рынка из конструктора Cargo Pro,
  * с пометкой «демо-данные»; их городов, клиентов и номеров нет.
  */
-function logistikaAdmin(site: InstantSite): string {
+function logistikaAdmin(site: BaseSite): string {
   const l = site.locale;
   const i = l === "uz" ? 1 : 0;
   const nm = esc(site.name);
@@ -960,7 +960,7 @@ ${cargo.panelJs}</script>
  * отсюда (lg-panel-1) клиент видит на сайте в «Мои заявки», заявка с сайта
  * (lg-req-1) приходит сюда рейсом. Машины, водители, грузы — демо.
  */
-function logistikaSuperAdmin(site: InstantSite): string {
+function logistikaSuperAdmin(site: BaseSite): string {
   const l = site.locale;
   const i = l === "uz" ? 1 : 0;
   const nm = esc(site.name);
@@ -1003,7 +1003,7 @@ ${cargo.dispJs}</script>
   );
 }
 
-const ADMINS: Partial<Record<InstantNiche, (site: InstantSite) => string>> = {
+const ADMINS: Partial<Record<InstantNiche, (site: BaseSite) => string>> = {
   logistika: logistikaSuperAdmin,
   stomatologiya: (s) => clinicAdmin(s, "stomatologiya"),
   medcentr: (s) => clinicAdmin(s, "medcentr"),
@@ -1021,7 +1021,7 @@ const ADMINS: Partial<Record<InstantNiche, (site: InstantSite) => string>> = {
 };
 
 /** Админка сферы на данных клиента; у сферы без нашей панели — null. */
-export function adminHtml(site: InstantSite): string | null {
+export function adminHtml(site: BaseSite): string | null {
   return ADMINS[site.niche]?.(site) ?? null;
 }
 
@@ -1029,7 +1029,7 @@ export function adminHtml(site: InstantSite): string | null {
  * Вторая панель рядом с админкой: у логистики, как в оригинале Cargo Pro,
  * админка — «Супер-админка», а «Обычная админка» — страница `panel`.
  */
-export function panelHtml(site: InstantSite): string | null {
+export function panelHtml(site: BaseSite): string | null {
   return site.niche === "logistika" ? logistikaAdmin(site) : null;
 }
 

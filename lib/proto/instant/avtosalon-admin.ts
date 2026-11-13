@@ -15,24 +15,24 @@ import assets from "@/content/proto-instant/samist-assets.json" with { type: "js
 import { mockupTermsUrl } from "@/lib/proto/booking";
 import { AVTOSALON_PHOTOS, avtosalonModels, avtosalonPalette } from "@/lib/proto/instant/avtosalon";
 import { esc, imageUrl } from "@/lib/proto/instant/safe";
-import type { InstantLocale, InstantSite } from "@/lib/proto/instant/types";
+import type { InstantLocale, InstantSite, BaseSite, BaseLocale } from "@/lib/proto/instant/types";
 import { PROTO_BASE } from "@/lib/proto/pages";
 
 const json = (v: unknown) => JSON.stringify(v).replace(/</g, "\\u003c");
 
-const NAMES: Record<InstantLocale, string[]> = {
+const NAMES: Record<BaseLocale, string[]> = {
   ru: ["Азиз", "Мадина", "Тимур", "Камола", "Сардор", "Нигора", "Рустам", "Дилноза", "Бобур", "Лола", "Жасур", "Севара"],
   uz: ["Aziz", "Madina", "Timur", "Kamola", "Sardor", "Nigora", "Rustam", "Dilnoza", "Bobur", "Lola", "Jasur", "Sevara"],
 };
 
-function markOf(site: InstantSite): string {
+function markOf(site: BaseSite): string {
   const logo = imageUrl(site.logo);
   return logo
     ? `<img src="${esc(logo)}" alt="" referrerpolicy="no-referrer" style="height:40px;width:auto;max-width:140px;object-fit:contain" onerror="this.remove()">`
     : `<span style="display:inline-grid;place-items:center;width:48px;height:48px;border-radius:14px;background:var(--a);color:#fff;font:700 20px/1 var(--hd)">${esc(site.name.slice(0, 1).toUpperCase())}</span>`;
 }
 
-export function avtosalonAdmin(site: InstantSite): string {
+export function avtosalonAdmin(site: BaseSite): string {
   const l = site.locale;
   const i = l === "uz" ? 1 : 0;
   const ui = Object.fromEntries(Object.entries(assets.panel.ui as Record<string, string[]>).map(([k, v]) => [k, v[i]]));

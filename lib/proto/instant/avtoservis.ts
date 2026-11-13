@@ -23,7 +23,7 @@ import assets from "@/content/proto-instant/automechanic-assets.json" with { typ
 import { dzIntroSolo } from "@/lib/proto/dz-video.mjs";
 import { mockupTermsUrl } from "@/lib/proto/booking";
 import { slotsOf } from "@/lib/proto/instant/dental";
-import { LIMITS, type InstantLocale, type InstantService, type InstantSite } from "@/lib/proto/instant/types";
+import { LIMITS, type InstantLocale, type InstantService, type InstantSite, type BaseSite } from "@/lib/proto/instant/types";
 import { brandColor, esc, handleOf, hexToHsl, imageUrl, telHref, waHref } from "@/lib/proto/instant/safe";
 
 const IMG = "/protos/_niche/avtoservis";
@@ -123,14 +123,14 @@ function palette(color: string | null): string {
 const json = (v: unknown) => JSON.stringify(v).replace(/</g, "\\u003c");
 
 /** Куда уходит заявка: Telegram → WhatsApp → звонок. */
-function goUrl(site: InstantSite): string {
+function goUrl(site: BaseSite): string {
   const tg = handleOf(site.telegram);
   if (tg) return `https://t.me/${tg}`;
   return waHref(site.whatsapp) ?? telHref(site.phone) ?? "#zapis";
 }
 
 /** Строки для client.js AUTOMECHANIC: те же ключи, слова про их сервис — под клиента. */
-function texts(site: InstantSite) {
+function texts(site: BaseSite) {
   const ru = site.locale === "ru";
   const tg = handleOf(site.telegram);
   const via = tg ? "Telegram" : waHref(site.whatsapp) ? "WhatsApp" : "";
@@ -166,7 +166,7 @@ function texts(site: InstantSite) {
 }
 
 /** Собрать страницу. Данные — уже очищенные (lib/proto/instant/build, normalizeSite). */
-export function avtoservisHtml(site: InstantSite): string {
+export function avtoservisHtml(site: BaseSite): string {
   const l: InstantLocale = site.locale;
   const t = (p: Pair) => p[l];
   const name = esc(site.name);

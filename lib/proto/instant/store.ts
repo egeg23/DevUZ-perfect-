@@ -14,7 +14,7 @@ import { record } from "@/lib/admin/audit";
 import { newAccessToken } from "@/lib/store/access";
 import type { InstantBuild } from "@/lib/proto/instant/build";
 import { RUN_HOLD_MS } from "@/lib/proto/instant/limits";
-import type { InstantLocale, InstantNiche } from "@/lib/proto/instant/types";
+import { INSTANT_LOCALES, type InstantLocale, type InstantNiche } from "@/lib/proto/instant/types";
 import { serviceClient } from "@/lib/supabase";
 
 export type FlowStage = "lang" | "greet" | "url" | "niche" | "q_what" | "q_name" | "q_phone" | "q_address" | "q_services" | "building";
@@ -81,7 +81,7 @@ export async function botLangOf(chatId: number): Promise<InstantLocale | null> {
   const { data, error } = await db.from("stats_snapshots").select("payload").eq("key", langKey(chatId)).maybeSingle();
   if (error) return null;
   const raw = (data?.payload as { locale?: string } | null)?.locale;
-  const locale = raw === "ru" || raw === "uz" ? raw : null;
+  const locale = (INSTANT_LOCALES as readonly string[]).includes(raw ?? "") ? (raw as InstantLocale) : null;
   if (langMemo.size > 2000) langMemo.clear();
   langMemo.set(chatId, { locale, at: Date.now() });
   return locale;

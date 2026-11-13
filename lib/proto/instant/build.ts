@@ -23,14 +23,27 @@ import { logistikaHtml } from "@/lib/proto/instant/logistika";
 import { stroitelstvoHtml } from "@/lib/proto/instant/stroitelstvo";
 import { uslugiHtml } from "@/lib/proto/instant/uslugi";
 import { avtosalonHtml } from "@/lib/proto/instant/avtosalon";
-import { instantProblems, tailsIn, type InstantProblem } from "@/lib/proto/instant/check";
+import { foreignWords, instantProblems, tailsIn, type InstantProblem } from "@/lib/proto/instant/check";
 import { brandColor, clean, handleOf, imageUrl } from "@/lib/proto/instant/safe";
-import { LIMITS, instantMissing, type InstantSite } from "@/lib/proto/instant/types";
+import { INSTANT_LOCALES, LIMITS, instantMissing, isBaseLocale, type BaseSite, type InstantLocale, type InstantNiche, type InstantSite } from "@/lib/proto/instant/types";
 import { pageProblems, withoutDashes } from "@/lib/proto/plain-text";
 import { newSeed, stampHtml, type Stamp } from "@/lib/proto/stamp";
 import { withTelegramFix } from "@/lib/proto/instant/telegram";
 
-const TEMPLATES = { stomatologiya: dentalHtml, medcentr: medcentrHtml, mebel: mebelHtml, restoran: restoranHtml, turagentstvo: (s: InstantSite) => turHtml(s), "uchebnyy-centr": eduHtml, nedvizhimost: nedvHtml, "salon-krasoty": salonHtml, magazin: magazinHtml, avtoservis: avtoservisHtml, logistika: logistikaHtml, stroitelstvo: stroitelstvoHtml, uslugi: uslugiHtml, avtosalon: avtosalonHtml } as const;
+const TEMPLATES: Record<InstantNiche, (s: BaseSite) => string> = { stomatologiya: dentalHtml, medcentr: medcentrHtml, mebel: mebelHtml, restoran: restoranHtml, turagentstvo: (s: BaseSite) => turHtml(s), "uchebnyy-centr": eduHtml, nedvizhimost: nedvHtml, "salon-krasoty": salonHtml, magazin: magazinHtml, avtoservis: avtoservisHtml, logistika: logistikaHtml, stroitelstvo: stroitelstvoHtml, uslugi: uslugiHtml, avtosalon: avtosalonHtml };
+/** Сферы с переводом шаблона на en, ar, pl (MOCKUP_EXTRA). */
+const EXTRA_TEMPLATES: Partial<Record<InstantNiche, (s: InstantSite) => string>> = { stomatologiya: dentalHtml, medcentr: medcentrHtml, restoran: restoranHtml };
+
+/**
+ * Страница сферы на языке клиента. Сфера без перевода на en, ar, pl сюда не
+ * доходит (бот ведёт её ручным путём, mockupSpeaks); на всякий случай — на
+ * русском, и проверка `lang` не пропустит такую страницу клиенту.
+ */
+function pageOf(site: InstantSite): string {
+  const extra = EXTRA_TEMPLATES[site.niche];
+  if (isBaseLocale(site.locale)) return TEMPLATES[site.niche](site as BaseSite);
+  return extra ? extra(site) : TEMPLATES[site.niche]({ ...site, locale: "ru" });
+}
 
 const plain = (text: string | null, max: number) => {
   const out = clean(text, max);
@@ -65,7 +78,7 @@ export function normalizeSite(raw: InstantSite): InstantSite {
   ).slice(0, LIMITS.perks);
   return {
     niche: raw.niche,
-    locale: raw.locale === "uz" ? "uz" : "ru",
+    locale: (INSTANT_LOCALES as readonly string[]).includes(raw.locale) ? (raw.locale as InstantLocale) : "ru",
     name: plain(raw.name, 60) ?? "",
     tagline: plain(raw.tagline, 80),
     about: plain(raw.about, 320),
@@ -102,9 +115,8 @@ export type InstantBuild = {
 
 export function buildInstant(raw: InstantSite, seed = newSeed(), now = new Date()): InstantBuild {
   const site = normalizeSite(raw);
-  const template = TEMPLATES[site.niche];
   const missing = instantMissing(site);
-  const page = withTelegramFix(template(site));
+  const page = withTelegramFix(pageOf(site));
   const problems = [
     ...missing.map((m) => ({ code: `missing:${m}`, text: m === "name" ? "Нет названия." : "Нет телефона, Telegram или WhatsApp." })),
     ...instantProblems(page, site),
@@ -113,10 +125,16 @@ export function buildInstant(raw: InstantSite, seed = newSeed(), now = new Date(
   // Слова-ловушки — после отпечатка: хвостом прошлого клиента стать не могут, но проверим.
   const late = tailsIn(stamped.html, site);
   if (late.length && !problems.some((p) => p.code === "tail")) problems.push({ code: "tail", text: `Хвост: ${late[0]}` });
+  const lateForeign = foreignWords(stamped.html, site);
+  if (lateForeign.length && !problems.some((p) => p.code === "lang")) problems.push({ code: "lang", text: `Русские слова после отпечатка: ${lateForeign.slice(0, 3).join(", ")}` });
   const kp = kpHtml(site, now);
   for (const p of pageProblems(kp, site.name)) problems.push({ code: `kp-${p.code}`, text: `КП: ${p.text}` });
+  const kpForeign = foreignWords(kp, site);
+  if (kpForeign.length) problems.push({ code: "kp-lang", text: `КП: русские слова на ${site.locale}: ${kpForeign.slice(0, 5).join(", ")}` });
   const pages: InstantBuild["pages"] = { kp };
-  const admin = adminHtml(site);
+  // Админки наших макетов — на русском и узбекском; на en, ar, pl макет идёт без админки.
+  const base = isBaseLocale(site.locale) ? (site as BaseSite) : null;
+  const admin = base && adminHtml(base);
   if (admin) {
     // Тот же отпечаток, что у макета: ловушки и числа скрипта — свои у клиента.
     const panel = stampHtml(admin, stamped.stamp.seed).html;
@@ -128,7 +146,7 @@ export function buildInstant(raw: InstantSite, seed = newSeed(), now = new Date(
     pages.admin = panel;
   }
   // Вторая панель (у логистики — «Обычная админка» рядом с супер-админкой): те же проверки.
-  const second = panelHtml(site);
+  const second = base && panelHtml(base);
   if (second) {
     const pn = stampHtml(second, stamped.stamp.seed).html;
     const left = tailsIn(pn, site);

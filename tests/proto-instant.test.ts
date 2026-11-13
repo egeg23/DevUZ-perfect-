@@ -908,3 +908,44 @@ test("макет из бота: высоты окна — на --tgvh, скри�
   assert.ok(out.indexOf("--tgvh',innerHeight") > out.indexOf('name="viewport"'), "скрипт стоит до meta viewport");
   assert.ok(assetsFile.scene.includes("function tgFix()") && assetsFile.scene.includes("function tgTone()"), "движок пролёта без высоты пикселями и тёмного фона");
 });
+
+// ── Макет на en, ar, pl (владелец, 13.11.2026: «В тг боте добавляем при старте еще языки (английский, арабский, польский)»).
+
+test("макет на en, ar, pl: у стоматологии, медцентра и ресторана каждая строка шаблона переведена", async () => {
+  const { DENTAL_TR } = await import("@/lib/proto/instant/tr/dental");
+  const { MEDCENTR_TR } = await import("@/lib/proto/instant/tr/medcentr");
+  const { RESTORAN_TR } = await import("@/lib/proto/instant/tr/restoran");
+  const { readFileSync } = await import("node:fs");
+  const { MOCKUP_EXTRA } = await import("@/lib/proto/instant/types");
+  assert.deepEqual([...MOCKUP_EXTRA], ["stomatologiya", "medcentr", "restoran"]);
+  const files = { dental: DENTAL_TR, medcentr: MEDCENTR_TR, restoran: RESTORAN_TR } as const;
+  for (const [file, table] of Object.entries(files)) {
+    const src = readFileSync(new URL(`../lib/proto/instant/${file}.ts`, import.meta.url), "utf8");
+    const ru = [...src.matchAll(/P\(\s*"((?:[^"\\]|\\.)*)"\s*,\s*"(?:[^"\\]|\\.)*"\s*\)/g), ...src.matchAll(/\bt\("((?:[^"\\]|\\.)*)",\s*"(?:[^"\\]|\\.)*"\)/g)].map((m) => m[1]).filter(Boolean);
+    const missing = [...new Set(ru.filter((x) => !table[x]))];
+    assert.deepEqual(missing, [], `${file}: нет перевода`);
+    for (const [k, v] of Object.entries(table)) {
+      assert.equal(v.length, 3, k);
+      for (const x of v) assert.ok(!/[Ѐ-ӿ]/.test(x), `${k}: кириллица в переводе`);
+      assert.ok(!/[—–]| - /.test(v.join(" ")), `${k}: длинное тире`);
+    }
+  }
+});
+
+test("макет на en, ar, pl: примеры трёх сфер проходят все проверки, арабский справа налево, без админки", () => {
+  const ex = { stomatologiya: example, medcentr: EXAMPLE_MED as InstantSite, restoran: EXAMPLE_REST as InstantSite };
+  for (const [niche, site] of Object.entries(ex)) {
+    for (const locale of ["en", "ar", "pl"] as const) {
+      const b = buildInstant({ ...site, locale }, SEED);
+      assert.deepEqual(b.problems.map((p) => `${p.code}: ${p.text}`), [], `${niche} ${locale}`);
+      assert.match(b.html, new RegExp(`<html lang="${locale}"${locale === "ar" ? ' dir="rtl"' : ""}>`));
+      assert.equal(b.pages.admin, undefined);
+      assert.match(b.pages.kp, new RegExp(`lang="${locale}"`));
+    }
+  }
+});
+
+test("макет на en, ar, pl: сфера без перевода на русском клиенту не уходит (проверка lang)", () => {
+  const b = buildInstant({ ...(EXAMPLE_MEBEL as InstantSite), locale: "en" }, SEED);
+  assert.ok(b.problems.some((p) => p.code === "lang"), "русский шаблон на английском макете — проблема");
+});

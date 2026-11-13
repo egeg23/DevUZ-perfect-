@@ -13,7 +13,7 @@ import tails from "@/content/proto-instant/tails.json" with { type: "json" };
 import { MOCKUP_TERMS_PATH } from "@/content/mockup-terms";
 import { visibleText } from "@/lib/proto/check";
 import { pageProblems } from "@/lib/proto/plain-text";
-import { sitePool, type InstantSite } from "@/lib/proto/instant/types";
+import { isBaseLocale, sitePool, type InstantSite } from "@/lib/proto/instant/types";
 import { unsupportedNumbers } from "@/lib/razbor/shift";
 
 export type InstantProblem = { code: string; text: string };
@@ -34,6 +34,24 @@ export function tailsIn(html: string, site?: InstantSite): string[] {
   return found;
 }
 
+/**
+ * Макет на en, ar, pl: русских слов нет нигде, что видит человек, — ни в
+ * тексте и подписях, ни в данных для скрипта страницы (application/json).
+ * Слова самого клиента (его сайт по-русски) — его, их можно. Стили, код
+ * скриптов и комментарии не смотрим: их человек не видит.
+ */
+export function foreignWords(html: string, site: InstantSite): string[] {
+  if (isBaseLocale(site.locale)) return [];
+  const pool = lower(sitePool(site));
+  const seen = html
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<script(?![^>]*application\/json)[^>]*>[\s\S]*?<\/script>/gi, " ")
+    .replace(/<!--[\s\S]*?-->/g, " ");
+  // Две заглавные — инициалы врача из его имени (данные клиента), не слово шаблона.
+  const words = (seen.match(/[А-Яа-яЁёЎўҚқҒғҲҳ]{2,}/g) ?? []).filter((w) => !/^[А-ЯЁ]{2}$/.test(w));
+  return [...new Set(words.filter((w) => !pool.includes(lower(w))))];
+}
+
 /** До отпечатка: в шаблоне стоят ловушки и метка числа. */
 export function instantProblems(raw: string, site: InstantSite): InstantProblem[] {
   const out: InstantProblem[] = [];
@@ -46,6 +64,8 @@ export function instantProblems(raw: string, site: InstantSite): InstantProblem[
   if (/<script[^>]+src=/i.test(raw)) out.push({ code: "net", text: "Скрипт со стороны." });
   if (/<iframe/i.test(raw)) out.push({ code: "net", text: "Встроенная чужая страница." });
   for (const p of pageProblems(raw, sitePool(site))) out.push(p);
+  const foreign = foreignWords(raw, site);
+  if (foreign.length) out.push({ code: "lang", text: `Русские слова на макете ${site.locale}: ${foreign.slice(0, 5).join(", ")}` });
   // Ловушки не видны в числах: в шаблоне стоят как [[t:N]] — убрать до счёта.
   // Счётчик загрузки пролёта («0%») — не утверждение о клинике.
   const text = visibleText(raw.replace(/<div class="(?:hs|fz)-load"[\s\S]*?<\/div>/, " ")).replace(/\[\[t:\d+\]\]/g, " ");

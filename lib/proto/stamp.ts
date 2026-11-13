@@ -122,10 +122,11 @@ function jsShift(value: number, next: () => number): number {
 
 /**
  * Ловушка латиницей: на узбекской странице и на страницах, где кириллица чужая
- * (английский, грузинский у Nek Dental Studio). Кириллица остаётся русским и
+ * (английский, грузинский у Nek Dental Studio, польский и арабский у макетов
+ * из бота). Кириллица остаётся русским и
  * страницам без языка, как было.
  */
-const latinTraps = (html: string) => /<html[^>]*\blang=["']?(uz|en|ka)\b/i.test(html);
+const latinTraps = (html: string) => /<html[^>]*\blang=["']?(uz|en|ka|pl|ar)\b/i.test(html);
 
 /** Сборка без зерна (локальный показ): ловушки — первыми словами, метки чисел убраны. */
 export function plainTraps(html: string): string {

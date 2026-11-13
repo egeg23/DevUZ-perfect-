@@ -24,10 +24,10 @@ import { PROTOTYPE_HOURS } from "@/lib/admin/outreach";
 import { CIRCLE_NICHES, CIRCLE_NICHE_RU, circleNicheOf, isCircleNiche, type CircleNiche } from "@/lib/admin/sales-after-reply";
 import { buildInstant, type InstantBuild } from "@/lib/proto/instant/build";
 import { limitVerdict, mayUseInstant, siteUrlOf } from "@/lib/proto/instant/limits";
-import { offerAddons } from "@/lib/proto/instant/offer";
+import { addonTitle, announceExtra, offerAddons } from "@/lib/proto/instant/offer";
 import { readClientSite, siteFromAnswers, type ReadResult } from "@/lib/proto/instant/read";
 import type { Flow } from "@/lib/proto/instant/store";
-import { instantReady, type InstantLocale, type InstantNiche, type InstantSite } from "@/lib/proto/instant/types";
+import { INSTANT_LOCALES, instantReady, mockupSpeaks, siteLocaleOf, type InstantLocale, type InstantNiche, type InstantSite } from "@/lib/proto/instant/types";
 import { STEP_WAIT, stepCaption, widgetHtml, widgetState, type BuildFail, type BuildStep, type WidgetInfo } from "@/lib/proto/instant/widget";
 
 /** Сколько виден каждый шаг сборки в виджете. */
@@ -124,9 +124,11 @@ const CASE_NICHES: Record<CircleNiche, readonly string[]> = {
 export function caseLinks(niche: CircleNiche, locale: InstantLocale): { name: string; url: string }[] {
   const keys = CASE_NICHES[niche];
   const found = cases.filter((c) => c.forNiches.some((n) => keys.includes(n))).slice(0, 3);
-  if (found.length) return found.map((c) => ({ name: c.name, url: `https://devuz.studio/${locale}/cases/${c.slug}` }));
-  return [{ name: locale === "uz" ? "Barcha keyslar" : "Все кейсы", url: `https://devuz.studio/${locale}/cases` }];
+  if (found.length) return found.map((c) => ({ name: c.name, url: `https://devuz.studio/${siteLocaleOf(locale)}/cases/${c.slug}` }));
+  return [{ name: ALL_CASES[locale], url: `https://devuz.studio/${siteLocaleOf(locale)}/cases` }];
 }
+
+const ALL_CASES: Record<InstantLocale, string> = { ru: "Все кейсы", uz: "Barcha keyslar", en: "All case studies", ar: "كل أعمالنا", pl: "Wszystkie realizacje" };
 
 /** Ручной путь клиенту: честно про дизайнера и срок, и кейсы его сферы. */
 export function manualText(locale: InstantLocale, niche: CircleNiche): string {
@@ -201,6 +203,96 @@ const T = {
     greetOther: "Boshqa savolim bor",
     manual: (h: number) => `Sohangiz uchun maketni dizaynerimiz qo‘lda yig‘adi, ${h} soat ichida shu yerga yuboramiz. Hozircha qilgan ishlarimizni ko‘ring:`,
   },
+  en: {
+    ask: "I’ll build a mockup of your website right here in a couple of minutes.\n\nSend your company’s website address, for example <code>clinic.com</code>. No website, only Instagram? Tap «No website».",
+    nosite: "No website",
+    badUrl: "That doesn’t look like a website address. Send an address like <code>clinic.com</code> or tap «No website».",
+    niche: "What does your company do? Pick one and I’ll take a ready mockup for your field.",
+    other: "Other",
+    qWhat: "Describe in two words what your company does, for example <code>apartment renovation</code> or <code>legal services</code>. I’ll take our closest mockup.",
+    qName: "What is your company called?",
+    qPhone: "Phone number for bookings, for example <code>+48 512 345 678</code>",
+    qAddress: "Your address, the way clients search for it. No address? Write «no».",
+    qServices: "List 3-6 services, one per line. Add the price after a hyphen if you have one: <code>Cleaning - 50 $</code>",
+    badPhone: "I can’t see a number. Please send the phone number in digits.",
+    has: (link: string) => `Your mockup is already built, one per account: <a href="${esc(link)}">open the mockup</a>.\n\nWant changes or a full website? Write here and a manager will reply.`,
+    busy: "Already building, one more minute.",
+    later: "I can’t check the queue right now. Please try again in a couple of minutes: /maket",
+    open: "I couldn’t open the website. Check the address and send it again, or tap «No website».",
+    failed: `I couldn’t build it myself: our designer will build the mockup by hand and send it here within ${PROTOTYPE_HOURS} hours.`,
+    ready: (name: string) => `Done! A website mockup for «${esc(name)}» based on your details.\n\nThe link is open for 24 hours, after that by password: ask for it here.`,
+    openBtn: "Open the mockup",
+    adminBtn: "🛠 Admin panel",
+    admin: "The admin panel is next to it: bookings and requests from the mockup arrive there, with demo data. Try booking on the mockup and open the admin panel.",
+    addons: "What you can add to the website:",
+    kpBtn: "📄 Commercial offer",
+    kp: "A commercial offer on our letterhead: choose the base and the extras, the total adds up by itself. The price is fixed for 48 hours.",
+    after: "Want a website like this? Write «Yes» here and a manager will get in touch and answer your questions.",
+    greet: "Hello! We’ll build a mockup of your new website right here, in 2 minutes and for free. Send your website or Instagram address.",
+    greetGo: "Build a mockup",
+    greetOther: "I have another question",
+    manual: (h: number) => `For your field our designer will build the mockup by hand and send it here within ${h} hours. Meanwhile, take a look at what we have already made:`,
+  },
+  ar: {
+    ask: "سأجهّز نموذجًا لموقعكم هنا مباشرة خلال دقيقتين.\n\nأرسلوا عنوان موقع شركتكم، مثلًا <code>clinic.com</code>. لا يوجد موقع، فقط Instagram؟ اضغطوا «لا يوجد موقع».",
+    nosite: "لا يوجد موقع",
+    badUrl: "هذا لا يشبه عنوان موقع. أرسلوا عنوانًا مثل <code>clinic.com</code> أو اضغطوا «لا يوجد موقع».",
+    niche: "ما مجال عمل شركتكم؟ اختاروا، وسآخذ نموذجًا جاهزًا لمجالكم.",
+    other: "مجال آخر",
+    qWhat: "اكتبوا بكلمتين ما الذي تقوم به الشركة، مثلًا <code>تجديد الشقق</code> أو <code>خدمات قانونية</code>. سآخذ أقرب نموذج لدينا.",
+    qName: "ما اسم شركتكم؟",
+    qPhone: "رقم الهاتف للحجز، مثلًا <code>+971 50 123 4567</code>",
+    qAddress: "العنوان كما يبحث عنه العملاء. لا يوجد عنوان؟ اكتبوا «لا».",
+    qServices: "اكتبوا من 3 إلى 6 خدمات، كل خدمة في سطر. السعر إن وُجد بعد شرطة: <code>تنظيف - 50 $</code>",
+    badPhone: "لا أرى رقمًا. أرسلوا رقم الهاتف بالأرقام.",
+    has: (link: string) => `نموذجكم جاهز بالفعل، نموذج واحد لكل حساب: <a href="${esc(link)}">افتحوا النموذج</a>.\n\nتريدون تعديله أو بناء الموقع؟ اكتبوا هنا وسيرد المدير.`,
+    busy: "أعمل عليه الآن، دقيقة واحدة.",
+    later: "لا يمكنني التحقق من الدور الآن. حاولوا بعد دقيقتين: /maket",
+    open: "لم أتمكن من فتح الموقع. تحققوا من العنوان وأرسلوه مرة أخرى أو اضغطوا «لا يوجد موقع».",
+    failed: `لم أتمكن من تجهيزه بنفسي: سيجهّز مصممنا النموذج يدويًا ويرسله هنا خلال ${PROTOTYPE_HOURS} ساعة.`,
+    ready: (name: string) => `تم! نموذج موقع «${esc(name)}» حسب بياناتكم.\n\nالرابط مفتوح 24 ساعة، بعدها بكلمة مرور: اطلبوها هنا.`,
+    openBtn: "افتحوا النموذج",
+    adminBtn: "🛠 لوحة الإدارة",
+    admin: "لوحة الإدارة بجانبه: تصل إليها الحجوزات والطلبات من النموذج، ببيانات تجريبية. جرّبوا الحجز في النموذج وافتحوا لوحة الإدارة.",
+    addons: "ما يمكن إضافته إلى الموقع:",
+    kpBtn: "📄 العرض التجاري",
+    kp: "عرض تجاري على ورقتنا الرسمية: اختاروا الأساس والإضافات، والمجموع يُحسب تلقائيًا. السعر ثابت لمدة 48 ساعة.",
+    after: "تريدون موقعًا كهذا؟ اكتبوا هنا «نعم» وسيتواصل معكم المدير ويجيب عن أسئلتكم.",
+    greet: "مرحبًا! سنجهّز نموذجًا لموقعكم الجديد هنا مباشرة، خلال دقيقتين ومجانًا. أرسلوا عنوان موقعكم أو حسابكم على Instagram.",
+    greetGo: "جهّزوا النموذج",
+    greetOther: "لديّ سؤال آخر",
+    manual: (h: number) => `لمجالكم سيجهّز مصممنا النموذج يدويًا ويرسله هنا خلال ${h} ساعة. وإلى ذلك الحين، اطّلعوا على أعمالنا:`,
+  },
+  pl: {
+    ask: "Zbuduję makietę Twojej strony tutaj, w kilka minut.\n\nWyślij adres strony swojej firmy, na przykład <code>klinika.pl</code>. Nie masz strony, tylko Instagram? Naciśnij «Nie mam strony».",
+    nosite: "Nie mam strony",
+    badUrl: "To nie wygląda na adres strony. Wyślij adres w rodzaju <code>klinika.pl</code> albo naciśnij «Nie mam strony».",
+    niche: "Czym zajmuje się Twoja firma? Wybierz, a wezmę gotową makietę dla Twojej branży.",
+    other: "Inna branża",
+    qWhat: "Napisz w dwóch słowach, czym zajmuje się firma, na przykład <code>remont mieszkań</code> albo <code>usługi prawne</code>. Wezmę naszą najbliższą makietę.",
+    qName: "Jak nazywa się Twoja firma?",
+    qPhone: "Telefon do zapisów, na przykład <code>+48 512 345 678</code>",
+    qAddress: "Adres, tak jak szukają go klienci. Nie ma adresu? Napisz «nie».",
+    qServices: "Wypisz 3-6 usług, każdą w nowej linii. Cenę, jeśli jest, po myślniku: <code>Czyszczenie - 200 zł</code>",
+    badPhone: "Nie widzę numeru. Wyślij telefon cyframi.",
+    has: (link: string) => `Twoja makieta jest już gotowa, jedna na konto: <a href="${esc(link)}">otwórz makietę</a>.\n\nChcesz ją dopracować albo zbudować stronę? Napisz tutaj, menedżer odpowie.`,
+    busy: "Już buduję, jeszcze minutka.",
+    later: "Nie mogę teraz sprawdzić kolejki. Spróbuj za kilka minut: /maket",
+    open: "Nie udało się otworzyć strony. Sprawdź adres i wyślij go jeszcze raz albo naciśnij «Nie mam strony».",
+    failed: `Nie udało mi się zbudować jej samemu: nasz projektant zbuduje makietę ręcznie i wyśle ją tutaj w ciągu ${PROTOTYPE_HOURS} godzin.`,
+    ready: (name: string) => `Gotowe! Makieta strony «${esc(name)}» na podstawie Twoich danych.\n\nLink jest otwarty przez 24 godziny, potem na hasło: poproś o nie tutaj.`,
+    openBtn: "Otwórz makietę",
+    adminBtn: "🛠 Panel administracyjny",
+    admin: "Panel administracyjny jest obok: trafiają tam zapisy i zgłoszenia z makiety, dane demo. Zapisz się na makiecie i otwórz panel.",
+    addons: "Co można dodać do strony:",
+    kpBtn: "📄 Oferta handlowa",
+    kp: "Oferta handlowa na naszym papierze firmowym: wybierz podstawę i dodatki, suma policzy się sama. Cena jest zablokowana na 48 godzin.",
+    after: "Chcesz taką stronę? Napisz tutaj «Tak», menedżer się z Tobą skontaktuje i odpowie na pytania.",
+    greet: "Dzień dobry! Zbudujemy makietę Twojej nowej strony tutaj, w 2 minuty i za darmo. Wyślij adres swojej strony albo Instagrama.",
+    greetGo: "Zbuduj makietę",
+    greetOther: "Mam inne pytanie",
+    manual: (h: number) => `Dla Twojej branży makietę zbuduje ręcznie nasz projektant, wyślemy ją tutaj w ciągu ${h} godzin. Na razie zobacz, co już zrobiliśmy:`,
+  },
 } as const;
 
 /** Узбекские названия ниш для кнопок; русские — CIRCLE_NICHE_RU. */
@@ -222,19 +314,34 @@ const NICHE_UZ: Record<CircleNiche, string> = {
   uslugi: "Biznes xizmatlari",
 };
 
+/** Названия ниш на кнопках на английском, арабском и польском. */
+const NICHE_EXTRA: Record<"en" | "ar" | "pl", Record<CircleNiche, string>> = {
+  en: { general: "Other", medcentr: "Medical center", stomatologiya: "Dentistry", mebel: "Furniture and renovation", restoran: "Restaurant", "salon-krasoty": "Beauty salon", turagentstvo: "Travel agency", "uchebnyy-centr": "Training center", nedvizhimost: "Real estate", avtoservis: "Car service", avtosalon: "Car dealership", magazin: "Online store", stroitelstvo: "Construction", logistika: "Logistics", uslugi: "Business services" },
+  ar: { general: "مجال آخر", medcentr: "مركز طبي", stomatologiya: "طب الأسنان", mebel: "أثاث وتجديد", restoran: "مطعم", "salon-krasoty": "صالون تجميل", turagentstvo: "وكالة سفر", "uchebnyy-centr": "مركز تدريب", nedvizhimost: "عقارات", avtoservis: "صيانة سيارات", avtosalon: "معرض سيارات", magazin: "متجر إلكتروني", stroitelstvo: "بناء وتشطيب", logistika: "شحن ولوجستيات", uslugi: "خدمات للأعمال" },
+  pl: { general: "Inna branża", medcentr: "Centrum medyczne", stomatologiya: "Stomatologia", mebel: "Meble i remont", restoran: "Restauracja", "salon-krasoty": "Salon urody", turagentstvo: "Biuro podróży", "uchebnyy-centr": "Centrum szkoleniowe", nedvizhimost: "Nieruchomości", avtoservis: "Warsztat samochodowy", avtosalon: "Salon samochodowy", magazin: "Sklep internetowy", stroitelstvo: "Budowa i remont", logistika: "Logistyka", uslugi: "Usługi dla firm" },
+};
+
+export function nicheLabel(n: CircleNiche, locale: InstantLocale): string {
+  if (n === "general") return T[locale].other;
+  if (locale === "uz") return NICHE_UZ[n];
+  if (locale === "ru") return CIRCLE_NICHE_RU[n];
+  return NICHE_EXTRA[locale][n];
+}
+
 /** Допы ниши — те же, что в КП (lib/proto/instant/offer): цены из планов наших макетов. */
 export function addonLines(locale: InstantLocale, niche: InstantNiche = "stomatologiya"): string[] {
-  return offerAddons(niche).map((a) => `• ${esc(a[locale])}: ${a.price} $`);
+  return offerAddons(niche).map((a) => `• ${esc(addonTitle(a, locale))}: ${a.price} $`);
 }
 
 /** Цена: те же спецусловия 48 часов, что после любого макета, и допы из плана. */
 export function priceText(locale: InstantLocale, now: Date, niche: InstantNiche = "stomatologiya"): string {
   const expires = new Date(now.getTime() + OFFER_MS).toISOString();
-  return [esc(announceText(locale, expires)), "", T[locale].addons, ...addonLines(locale, niche), "", T[locale].after].join("\n");
+  const announce = locale === "ru" || locale === "uz" ? announceText(locale, expires) : announceExtra(locale, expires);
+  return [esc(announce), "", T[locale].addons, ...addonLines(locale, niche), "", T[locale].after].join("\n");
 }
 
 export function nicheRows(locale: InstantLocale): Btn[][] {
-  const label = (n: CircleNiche) => (n === "general" ? T[locale].other : locale === "uz" ? NICHE_UZ[n] : CIRCLE_NICHE_RU[n]);
+  const label = (n: CircleNiche) => nicheLabel(n, locale);
   const order = [...CIRCLE_NICHES.filter((n) => n !== "general"), "general" as const];
   const rows: Btn[][] = [];
   for (let i = 0; i < order.length; i += 2) {
@@ -277,24 +384,44 @@ async function allowed(ctx: Ctx, deps: Deps): Promise<boolean> {
  * Язык — первым вопросом (владелец, 12.11.2026: «чтобы бот после приветствия
  * сразу предлагал сделать макет прямо внутри… Но перед этим, чтобы выбрал
  * язык бота и макета»). Один выбор на всё: на нём бот говорит дальше и на нём
- * собирается макет. Шаблоны макетов есть на русском и узбекском, поэтому
- * кнопок две. Вопрос на двух языках сразу: чей язык у человека, мы ещё не знаем.
+ * собирается макет. Вопрос на всех языках сразу: чей язык у человека, мы ещё
+ * не знаем.
+ *
+ * 13.11.2026 (владелец: «В тг боте добавляем при старте еще языки
+ * (английский, арабский, польский)»): кнопок пять. Макет на en, ar, pl
+ * собирается у сфер с переводом (MOCKUP_EXTRA), остальные сферы на этих
+ * языках — ручным путём.
  */
-export const LANG_TEXT =
-  "Здравствуйте! На каком языке вам удобнее? На нём же соберём макет.\n\nAssalomu alaykum! Qaysi tilda qulay? Maketni ham shu tilda yig‘amiz.";
+export const LANG_TEXT = [
+  "Здравствуйте! На каком языке вам удобнее? На нём же соберём макет.",
+  "Assalomu alaykum! Qaysi tilda qulay? Maketni ham shu tilda yig‘amiz.",
+  "Hello! Which language do you prefer? We’ll build the mockup in it too.",
+  "مرحبًا! ما اللغة الأنسب لكم؟ سنجهّز النموذج بها أيضًا.",
+  "Dzień dobry! W jakim języku Ci wygodniej? W nim też zbudujemy makietę.",
+].join("\n\n");
 const LANG_ROWS: Btn[][] = [
   [
     { text: "🇷🇺 Русский", callback_data: `${INSTANT_CB}:l:ru` },
     { text: "🇺🇿 O‘zbekcha", callback_data: `${INSTANT_CB}:l:uz` },
   ],
+  [
+    { text: "🇬🇧 English", callback_data: `${INSTANT_CB}:l:en` },
+    { text: "🇸🇦 العربية", callback_data: `${INSTANT_CB}:l:ar` },
+  ],
+  [{ text: "🇵🇱 Polski", callback_data: `${INSTANT_CB}:l:pl` }],
 ];
 
-/** Язык словом вместо кнопки: «русский», «o‘zbekcha», «узб». */
+export const isInstantLocale = (v: string | undefined): v is InstantLocale => (INSTANT_LOCALES as readonly string[]).includes(v ?? "");
+
+/** Язык словом вместо кнопки: «русский», «o‘zbekcha», «узб», «english», «العربية», «polski». */
 export function langOfText(text: string): InstantLocale | null {
   const v = text.trim().toLowerCase();
   if (v.length > 24) return null;
   if (/^(🇷🇺\s*)?(рус|rus|ru$)/.test(v)) return "ru";
   if (/^(🇺🇿\s*)?(o['‘’`ʻ]?zb|uzb|узб|ўзб|uz$)/.test(v)) return "uz";
+  if (/^(🇬🇧\s*|🇺🇸\s*)?(eng|англ|en$|ingliz)/.test(v)) return "en";
+  if (/^(🇸🇦\s*|🇦🇪\s*)?(عرب|العرب|arab|араб|ar$)/.test(v)) return "ar";
+  if (/^(🇵🇱\s*)?(pol|поль|pl$)/.test(v)) return "pl";
   return null;
 }
 
@@ -467,7 +594,7 @@ export async function handleInstantText(
       await deps.send(ctx.chatId, t.qAddress);
       return true;
     case "q_address": {
-      const none = /^(нет|yo['‘’`]?q|-|no)$/i.test(value);
+      const none = /^(нет|yo['‘’`]?q|-|no|none|nie|لا|لا يوجد)$/i.test(value);
       await deps.saveFlow(ctx.chatId, { ...flow, stage: "q_services", answers: { ...flow.answers, address: none ? "" : value.slice(0, 140) } });
       await deps.send(ctx.chatId, t.qServices);
       return true;
@@ -496,7 +623,7 @@ export async function handleInstantButton(ctx: Ctx, parts: readonly string[], de
   }
   const flow = (await deps.flowOf(ctx.chatId)) ?? null;
   if (parts[1] === "l") {
-    if (parts[2] === "ru" || parts[2] === "uz") await pickLang(ctx, flow, parts[2], deps);
+    if (isInstantLocale(parts[2])) await pickLang(ctx, flow, parts[2], deps);
     return;
   }
   // Язык выбран раньше в этом разговоре — он главнее языка приложения Telegram.
@@ -533,7 +660,16 @@ export async function handleInstantButton(ctx: Ctx, parts: readonly string[], de
  */
 export const FALLBACK_NICHE = "uslugi" as const;
 
+/** Слова сфер на английском, польском и арабском: кружки их не знают. */
+const EXTRA_WORDS: [RegExp, CircleNiche][] = [
+  [/dent|teeth|tooth|orthodont|stomat|zęb|zab|أسنان|اسنان/i, "stomatologiya"],
+  [/restaur|cafe|café|kawiarn|bistro|pizz|sushi|food|jedzen|مطعم|مقهى/i, "restoran"],
+  [/clinic|medic|hospital|health|doctor|klinik|przychodni|lekarz|zdrow|عيادة|طبي|مستشفى|طبيب/i, "medcentr"],
+];
+
 export function nicheFromWords(text: string): CircleNiche {
+  const extra = EXTRA_WORDS.find(([re]) => re.test(text));
+  if (extra) return extra[1];
   const hit = circleNicheOf({ label: text });
   if (hit !== "general") return hit;
   return instantReady(FALLBACK_NICHE) ? FALLBACK_NICHE : "general";
@@ -541,7 +677,9 @@ export function nicheFromWords(text: string): CircleNiche {
 
 async function chooseNiche(ctx: Ctx, flow: Flow, niche: CircleNiche, deps: Deps): Promise<void> {
   const t = T[flow.locale];
-  if (!instantReady(niche)) {
+  // Сфера без шаблона или без перевода на язык клиента (en, ar, pl есть у
+  // MOCKUP_EXTRA) — ручной путь: соберёт дизайнер, клиенту кейсы сферы.
+  if (!instantReady(niche) || !mockupSpeaks(niche, flow.locale)) {
     await deps.dropFlow(ctx.chatId);
     await deps.send(ctx.chatId, manualText(flow.locale, niche));
     if (!ctx.staffId) await deps.lead({ ctx, name: ctx.username ? `@${ctx.username}` : "", niche, site: flow.url, link: null, phone: null, why: "soon" });

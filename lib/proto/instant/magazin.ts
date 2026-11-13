@@ -28,7 +28,7 @@ import panels from "@/content/proto-instant/panel-assets.json" with { type: "jso
 import { dzIntroSolo } from "@/lib/proto/dz-video.mjs";
 import { mockupTermsUrl } from "@/lib/proto/booking";
 import { PROTO_BASE } from "@/lib/proto/pages";
-import { LIMITS, type InstantLocale, type InstantSite } from "@/lib/proto/instant/types";
+import { LIMITS, type InstantLocale, type InstantSite, type BaseSite } from "@/lib/proto/instant/types";
 import { brandColor, esc, handleOf, hexToHsl, imageUrl, telHref, waHref } from "@/lib/proto/instant/safe";
 
 const IMG = "/protos/_niche/magazin";
@@ -113,7 +113,7 @@ function palette(color: string | null): string {
 
 const json = (v: unknown) => JSON.stringify(v).replace(/</g, "\\u003c");
 
-export function magazinHtml(site: InstantSite): string {
+export function magazinHtml(site: BaseSite): string {
   const l: InstantLocale = site.locale;
   const i = l === "uz" ? 1 : 0;
   const t = (p: Pair) => p[i];

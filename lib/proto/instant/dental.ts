@@ -24,7 +24,7 @@ import media from "@/content/proto-instant/stomatologiya-media.json" with { type
 import { PROTO_BASE } from "@/lib/proto/pages";
 import { dzIntroSolo } from "@/lib/proto/dz-video.mjs";
 import { mockupTermsUrl } from "@/lib/proto/booking";
-import { LIMITS, type InstantLocale, type InstantSite } from "@/lib/proto/instant/types";
+import { LIMITS, siteLocaleOf, type InstantLocale, type InstantSite } from "@/lib/proto/instant/types";
 import { brandColor, esc, handleOf, hexToHsl, imageUrl, telHref, waHref } from "@/lib/proto/instant/safe";
 
 /** Нейтральные фото ниши: без людей и чужих брендов, сделаны один раз. */
@@ -35,8 +35,8 @@ export const DENTAL_PHOTOS = [
   "/protos/_niche/stomatologiya/n4.webp",
 ] as const;
 
-type Pair = { ru: string; uz: string };
-const P = (ru: string, uz: string): Pair => ({ ru, uz });
+import { DEMO_NAME, P, WEEKDAYS, htmlLang, rtlHead, sayIn, type Pair } from "@/lib/proto/instant/tr";
+import { DENTAL_TR } from "@/lib/proto/instant/tr/dental";
 
 /** Пролёт ниши: кадры и ключевые кадры (scripts/protos/instant/scene.py). */
 const IMG = "/protos/_niche/stomatologiya";
@@ -130,7 +130,6 @@ const C = {
     hello: P("Здравствуйте! Хочу записаться", "Assalomu alaykum! Yozilmoqchiman"),
     at: P("на", ""),
   },
-  wd: { ru: ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"], uz: ["Ya", "Du", "Se", "Ch", "Pa", "Ju", "Sh"] },
   title: P("стоматология", "stomatologiya"),
   desc: P("Услуги, врачи и запись на приём в два нажатия.", "Xizmatlar, shifokorlar va ikki bosishda qabulga yozilish."),
 } as const;
@@ -229,7 +228,7 @@ const json = (v: unknown) => JSON.stringify(v).replace(/</g, "\\u003c");
 /** Собрать страницу. Данные — уже очищенные (lib/proto/instant/build, normalizeSite). */
 export function dentalHtml(site: InstantSite): string {
   const l: InstantLocale = site.locale;
-  const t = (p: Pair) => p[l];
+  const t = sayIn(DENTAL_TR, l);
   const name = esc(site.name);
   const tel = telHref(site.phone);
   const telDigits = tel ? tel.slice(4) : "";
@@ -346,7 +345,7 @@ ${services.some((s) => !s.price) ? `<p class="note rise">${t(C.ask)}</p>` : ""}
     : "";
 
   const demoRows: [Pair, string][] = [
-    [C.demoPatient, l === "uz" ? "Madina" : "Мадина"],
+    [C.demoPatient, DEMO_NAME[l]],
     [C.demoService, services[0]?.name ?? t(C.kick)],
     [C.demoArea, "[[t:0]]"],
     [C.demoNear, t(C.demoShop)],
@@ -393,7 +392,7 @@ ${services.length ? `<div><h4>${t(C.foot.svc)}</h4>${services.slice(0, 5).map((s
 <div><h4>${t(C.foot.clinic)}</h4>${doctors.length ? `<a href="#team">${t(C.nav[2])}</a>` : ""}<a href="#faq">${t(C.nav[3])}</a><a href="#visit">${t(C.nav[4])}</a></div>
 ${follow ? `<div><h4>${t(C.foot.follow)}</h4>${follow}</div>` : ""}
 </div>
-<div class="sm"><span>${name}</span><span>${t(C.mockup)} <a href="${esc(mockupTermsUrl(l))}" target="_blank" rel="noopener">${t(C.terms)}</a></span><span>${t(C.source)} ${esc(site.source)}</span></div>
+<div class="sm"><span>${name}</span><span>${t(C.mockup)} <a href="${esc(mockupTermsUrl(siteLocaleOf(l)))}" target="_blank" rel="noopener">${t(C.terms)}</a></span><span>${t(C.source)} ${esc(site.source)}</span></div>
 </div></footer>`;
 
   const data = {
@@ -405,7 +404,7 @@ ${follow ? `<div><h4>${t(C.foot.follow)}</h4>${follow}</div>` : ""}
     off: offDaysOf(site.hours),
     panel: "#",
     svc: services.length ? services.map((s, i) => ({ id: `s${i}`, n: s.name })) : [{ id: "s0", n: t(C.bookVisit) }],
-    wd: C.wd[l],
+    wd: WEEKDAYS[l],
     faq: faqs,
     t: {
       book: t(C.sheet.book),
@@ -460,7 +459,7 @@ ${follow ? `<div><h4>${t(C.foot.follow)}</h4>${follow}</div>` : ""}
 
   const close = t(C.close);
   return `<!doctype html>
-<html lang="${l}">
+<html ${htmlLang(l)}>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -470,6 +469,7 @@ ${follow ? `<div><h4>${t(C.foot.follow)}</h4>${follow}</div>` : ""}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant:wght@400;700&family=Manrope:wght@400;700&display=swap">
+${rtlHead(l)}
 <style>${assets.css}
 :root{${palette(site.color)}}
 .logo .lg{height:32px;width:auto;max-width:120px;object-fit:contain}

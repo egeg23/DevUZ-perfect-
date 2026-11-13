@@ -159,7 +159,7 @@ export async function readClientSite(
   locale: InstantLocale,
   deps: ReadDeps = {},
 ): Promise<ReadResult> {
-  const collect = deps.collect ?? ((u: string) => collectFacts({ url: u, niche, locale }));
+  const collect = deps.collect ?? ((u: string) => collectFacts({ url: u, niche, locale: locale === "uz" ? "uz" : "ru" }));
   await deps.onStep?.("read");
   const page = await collect(url);
   if ("error" in page) return { ok: false, why: "open", detail: failDetail(page.error) };
@@ -201,7 +201,16 @@ export async function readClientSite(
 
 /** Услуга с ценой в конце: число, валюта словом или знаком, «/ подход» после. */
 const PRICED =
-  /^(.+?)\s*(?:[-–—:,]\s*|\s)((?:от\s+|dan\s+)?\d[\d\s.,]*\s*(?:сум|so['‘’`]?m|\$|usd|руб(?:лей|ля|ль)?\.?|р\.|₽|тенге|₸|eur|€)?(?:\s*\/\s*[\p{L} ]+)?)$/iu;
+  /^(.+?)\s*(?:[-–—:,]\s*|\s)((?:от\s+|dan\s+)?\d[\d\s.,]*\s*(?:сум|so['‘’`]?m|\$|usd|руб(?:лей|ля|ль)?\.?|р\.|₽|тенге|₸|eur|€|zł|pln|aed|sar)?(?:\s*\/\s*[\p{L} ]+)?)$/iu;
+
+/** Откуда данные, когда сайта нет: печатается в подвале макета. */
+const ANSWERS: Record<InstantLocale, string> = {
+  ru: "ответы в Telegram",
+  uz: "Telegramdagi javoblar",
+  en: "answers in Telegram",
+  ar: "الإجابات في Telegram",
+  pl: "odpowiedzi w Telegramie",
+};
 
 /**
  * Сайта нет (только Instagram): данные — из ответов клиента в боте.
@@ -228,7 +237,7 @@ export function siteFromAnswers(input: {
       // Без цены через запятую — несколько услуг одной строкой.
       return line.split(/,(?!\d)/).map((name) => ({ name: name.trim(), price: null })).filter((x) => x.name);
     });
-  const source = input.locale === "uz" ? "Telegramdagi javoblar" : "ответы в Telegram";
+  const source = ANSWERS[input.locale];
   return {
     ...emptySite(input.niche, input.locale, input.name, source),
     phone: input.phone,

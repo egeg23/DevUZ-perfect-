@@ -12,6 +12,7 @@ import { failDetail, readClientSite } from "@/lib/proto/instant/read";
 import { claimBuild, claimManual, dropFlow, flowOf, instantCounts, saveBotLang, saveFlow, saveInstantProto, setProtoLead } from "@/lib/proto/instant/store";
 import { MANUAL_HOURS, manualWhy, type Deps, type LeadInput } from "@/lib/proto/instant/bot";
 import { esc } from "@/lib/proto/instant/safe";
+import { siteLocaleOf } from "@/lib/proto/instant/types";
 import { protoUrl } from "@/lib/proto/store";
 import { salesRecipients } from "@/lib/qualify/brief";
 import { newRequestNo } from "@/lib/qualify/engine";
@@ -93,7 +94,7 @@ export function instantLeadInput(input: LeadInput): QualifyToolInput {
 async function lead(input: LeadInput): Promise<string | null> {
   // Один аккаунт — одна заявка «макет вручную» за MANUAL_HOLD_DAYS: повтор второй карточкой не становится.
   if (manualWhy(input.why) && !(await claimManual(input.ctx.tgId).catch(() => true))) return null;
-  const scored = scoreLead(instantLeadInput(input), input.ctx.locale);
+  const scored = scoreLead(instantLeadInput(input), siteLocaleOf(input.ctx.locale));
   const requestNo = newRequestNo();
   const origin = { tgUsername: input.ctx.username ?? undefined, entryPath: "bot:/maket", entryRef: null };
   const source = sourceOf(input.why);
@@ -173,9 +174,11 @@ export function realDeps(): Deps {
     open: MOCKUP_BOT_OPEN,
     setLang: async (chatId, locale) => {
       // Сессия первички — в памяти: её язык меняем сразу, выбор кладём в базу.
+      // У первички нет арабского словаря: её готовые фразы — по-английски,
+      // а отвечать по-арабски модели велит заметка канала (botLangOf в вебхуке).
       const session = sessionFor(chatId);
-      if (session) saveSession(chatId, { ...session, locale });
-      else startSession(chatId, locale);
+      if (session) saveSession(chatId, { ...session, locale: siteLocaleOf(locale) });
+      else startSession(chatId, siteLocaleOf(locale));
       await saveBotLang(chatId, locale);
     },
   };

@@ -25,7 +25,7 @@
 import assets from "@/content/proto-instant/vtashkente-assets.json" with { type: "json" };
 import { dzIntroSolo } from "@/lib/proto/dz-video.mjs";
 import { mockupTermsUrl } from "@/lib/proto/booking";
-import { LIMITS, type InstantLocale, type InstantSite } from "@/lib/proto/instant/types";
+import { LIMITS, type InstantLocale, type InstantSite, type BaseSite } from "@/lib/proto/instant/types";
 import { brandColor, esc, handleOf, hexToHsl, imageUrl, telHref, waHref } from "@/lib/proto/instant/safe";
 import { rgbOf } from "@/lib/proto/instant/dental";
 import mebelMedia from "@/content/proto-instant/mebel-media.json" with { type: "json" };
@@ -190,7 +190,7 @@ const json = (v: unknown) => JSON.stringify(v).replace(/</g, "\\u003c");
 const two = (n: number) => String(n).padStart(2, "0");
 
 /** Собрать страницу. Данные — уже очищенные (lib/proto/instant/build, normalizeSite). */
-export function mebelHtml(site: InstantSite): string {
+export function mebelHtml(site: BaseSite): string {
   const l: InstantLocale = site.locale;
   const t = (p: Pair) => p[l];
   const name = esc(site.name);

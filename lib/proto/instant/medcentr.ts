@@ -26,7 +26,7 @@ import media from "@/content/proto-instant/medcentr-media.json" with { type: "js
 import { PROTO_BASE } from "@/lib/proto/pages";
 import { dzIntroSolo } from "@/lib/proto/dz-video.mjs";
 import { mockupTermsUrl } from "@/lib/proto/booking";
-import { LIMITS, type InstantLocale, type InstantSite } from "@/lib/proto/instant/types";
+import { LIMITS, siteLocaleOf, type InstantLocale, type InstantSite } from "@/lib/proto/instant/types";
 import { brandColor, esc, handleOf, hexToHsl, imageUrl, telHref, waHref } from "@/lib/proto/instant/safe";
 import { offDaysOf, rgbOf, slotsOf } from "@/lib/proto/instant/dental";
 
@@ -34,8 +34,8 @@ import { offDaysOf, rgbOf, slotsOf } from "@/lib/proto/instant/dental";
 const IMG = "/protos/_niche/medcentr";
 export const MEDCENTR_PHOTOS = [`${IMG}/n1.webp`, `${IMG}/n2.webp`, `${IMG}/n3.webp`, `${IMG}/n4.webp`] as const;
 
-type Pair = { ru: string; uz: string };
-const P = (ru: string, uz: string): Pair => ({ ru, uz });
+import { P, htmlLang, rtlHead, sayIn, type Pair } from "@/lib/proto/instant/tr";
+import { MEDCENTR_JS, MEDCENTR_TR } from "@/lib/proto/instant/tr/medcentr";
 
 const C = {
   fly: P("Пролёт по клинике", "Klinika bo‘ylab parvoz"),
@@ -249,7 +249,8 @@ const json = (v: unknown) => JSON.stringify(v).replace(/</g, "\\u003c");
 /** Собрать страницу. Данные — уже очищенные (lib/proto/instant/build, normalizeSite). */
 export function medcentrHtml(site: InstantSite): string {
   const l: InstantLocale = site.locale;
-  const t = (p: Pair) => p[l];
+  const t = sayIn(MEDCENTR_TR, l);
+  const js = l === "ru" || l === "uz" ? C.js[l] : MEDCENTR_JS[l];
   const name = esc(site.name);
   const tel = telHref(site.phone);
   const telDigits = tel ? tel.slice(4) : "";
@@ -267,7 +268,7 @@ export function medcentrHtml(site: InstantSite): string {
   const dirsWithDocs = dirs.filter((d) => doctors.some((x) => x.dir === d.id));
   const mark = logo ? `<img class="lg" src="${esc(logo)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : `<span class="mk" aria-hidden="true">${ICON.shield}</span>`;
   const sendLabel = tg ? C.sendTg : wa ? C.sendWa : C.sendCall;
-  const sendHref = go ? `${go}${encodeURIComponent(C.js[l].hello)}` : tel ?? "#zapis";
+  const sendHref = go ? `${go}${encodeURIComponent(js.hello)}` : tel ?? "#zapis";
 
   const nav = [
     dirs.length ? `<a href="#napravleniya">${t(C.nav[0])}</a>` : "",
@@ -400,7 +401,7 @@ ${doctors.map((x, i) => `<article class="doc rv-in ${["a-rise", "a-pop", "a-tilt
 </div></section>`;
 
   const demoRows: [Pair, string][] = [
-    [C.demoPatient, l === "uz" ? "Dilnoza" : "Дилноза"],
+    [C.demoPatient, l === "ru" ? "Дилноза" : l === "ar" ? "دلنوزا" : "Dilnoza"],
     [C.dir, services[0]?.name ?? t(C.kind)],
     [C.demoArea, "[[t:0]]"],
     [C.demoNear, t(C.demoShop)],
@@ -469,21 +470,21 @@ ${site.hours ? `<p>${esc(site.hours)}</p>` : ""}
 ${dirs.length ? `<div><b>${t(C.footDirs)}</b><ul>${dirs.slice(0, 5).map((d) => `<li><a href="#napravleniya">${esc(d.name)}</a></li>`).join("")}</ul></div>` : ""}
 ${follow ? `<div><b>${t(C.footFollow)}</b><ul>${follow}</ul></div>` : ""}
 </div>
-<div class="rights"><span>${t(C.rights)}</span><span>${t(C.mockup)} <a href="${esc(mockupTermsUrl(l))}" target="_blank" rel="noopener">${t(C.terms)}</a></span><span>${t(C.source)} ${esc(site.source)}</span></div>
+<div class="rights"><span>${t(C.rights)}</span><span>${t(C.mockup)} <a href="${esc(mockupTermsUrl(siteLocaleOf(l)))}" target="_blank" rel="noopener">${t(C.terms)}</a></span><span>${t(C.source)} ${esc(site.source)}</span></div>
 </div></footer>`;
 
   const i18n = {
-    ...C.js[l],
+    ...js,
     dec: ",",
     go,
     tel: telDigits,
-    msgHead: C.js[l].hello,
+    msgHead: js.hello,
     dirs: Object.fromEntries(dirs.map((d) => [d.id, d.name])),
   };
   const docsJson = doctors.map((x) => ({ s: x.s, n: x.name, sp: x.role ?? "", dir: x.dir, img: "", i: x.i }));
 
   return `<!doctype html>
-<html lang="${l}">
+<html ${htmlLang(l)}>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -493,6 +494,7 @@ ${follow ? `<div><b>${t(C.footFollow)}</b><ul>${follow}</ul></div>` : ""}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap&subset=cyrillic,latin-ext">
+${rtlHead(l)}
 <script>document.documentElement.classList.add('js');document.documentElement.classList.add('dz-off')</script>
 <style>${assets.css}
 ${assets.fly}

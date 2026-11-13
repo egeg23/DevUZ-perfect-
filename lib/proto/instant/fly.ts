@@ -13,6 +13,7 @@ import shox from "@/content/proto-instant/shox-assets.json" with { type: "json" 
 import { esc } from "@/lib/proto/instant/safe";
 import { PROTO_BASE } from "@/lib/proto/pages";
 import type { InstantLocale } from "@/lib/proto/instant/types";
+import { say, type Pair } from "@/lib/proto/instant/tr";
 
 /*
  * У шаблонов свои .hs, .cp, .calm и .kick (у мебели первый экран — тоже «.hs»),
@@ -31,11 +32,11 @@ if (!SCENE_JS.includes("$('.fz')") || !SCENE_JS.includes("$$('.fzc',")) throw ne
 export type FlyMedia = { n: number; vn: number; fps: number };
 export type FlyChapter = { at: number; a: string; b: string };
 
-const T = {
-  kick: { ru: "Макет DevUz Studio", uz: "DevUz Studio maketi" },
-  see: { ru: "Смотреть сайт", uz: "Saytni ko‘rish" },
-  note: { ru: "Кадры для примера: на сайте будут ваши фото.", uz: "Kadrlar namuna uchun: saytda sizning rasmlaringiz bo‘ladi." },
-  scroll: { ru: "Листайте", uz: "Aylantiring" },
+const T: Record<string, Pair> = {
+  kick: { ru: "Макет DevUz Studio", uz: "DevUz Studio maketi", en: "DevUz Studio mockup", ar: "نموذج من DevUz Studio", pl: "Makieta DevUz Studio" },
+  see: { ru: "Смотреть сайт", uz: "Saytni ko‘rish", en: "View the site", ar: "شاهد الموقع", pl: "Zobacz stronę" },
+  note: { ru: "Кадры для примера: на сайте будут ваши фото.", uz: "Kadrlar namuna uchun: saytda sizning rasmlaringiz bo‘ladi.", en: "Sample frames: your own photos will go on the site.", ar: "لقطات للتوضيح: ستظهر صوركم على الموقع.", pl: "Kadry przykładowe: na stronie będą Twoje zdjęcia." },
+  scroll: { ru: "Листайте", uz: "Aylantiring", en: "Scroll", ar: "مرّر للأسفل", pl: "Przewiń" },
 };
 
 const ARROW = `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>`;
@@ -73,7 +74,7 @@ export const flyReady = (media: FlyMedia) => media.n > 1;
 
 export function flyParts(o: FlyOptions): { section: string; css: string; script: string } {
   if (!flyReady(o.media)) return { section: "", css: "", script: "" };
-  const t = (p: { ru: string; uz: string }) => p[o.locale];
+  const t = (p: Pair) => say(p, o.locale);
   const last = o.chapters.length - 1;
   const pic = (k: number, lazy: boolean) =>
     `<picture><source media="(max-width: 899px)" srcset="${o.img}/k${k}-9.webp"><img src="${o.img}/k${k}-16.webp" width="1600" height="893" alt=""${lazy ? ' loading="lazy"' : ""}></picture>`;

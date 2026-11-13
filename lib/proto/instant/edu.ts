@@ -24,7 +24,7 @@
 import assets from "@/content/proto-instant/medacademy-assets.json" with { type: "json" };
 import { dzIntroSolo } from "@/lib/proto/dz-video.mjs";
 import { mockupTermsUrl } from "@/lib/proto/booking";
-import { LIMITS, type InstantLocale, type InstantSite } from "@/lib/proto/instant/types";
+import { LIMITS, type InstantLocale, type InstantSite, type BaseSite } from "@/lib/proto/instant/types";
 import { brandColor, esc, handleOf, hexToHsl, imageUrl, telHref, waHref } from "@/lib/proto/instant/safe";
 
 const IMG = "/protos/_niche/uchebnyy-centr";
@@ -112,7 +112,7 @@ function symbol(name: string): string {
 }
 
 /** Собрать страницу. Данные уже очищенные (lib/proto/instant/build, normalizeSite). */
-export function eduHtml(site: InstantSite): string {
+export function eduHtml(site: BaseSite): string {
   const l: InstantLocale = site.locale;
   const t = (p: Pair) => p[l];
   const name = esc(site.name);
