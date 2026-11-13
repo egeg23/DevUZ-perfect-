@@ -24,7 +24,7 @@ import { cases } from "@/content/cases";
 import { CASE_NICHES, nicheFromWords } from "@/lib/proto/instant/bot";
 import { buildInstant, type InstantBuild } from "@/lib/proto/instant/build";
 import { siteUrlOf } from "@/lib/proto/instant/limits";
-import { offerAddons } from "@/lib/proto/instant/offer";
+import { addonTitle, offerAddons } from "@/lib/proto/instant/offer";
 import { siteFromAnswers, type ReadResult } from "@/lib/proto/instant/read";
 import type { BuildStep } from "@/lib/proto/instant/widget";
 import { OFFER_MS } from "@/lib/admin/mockup-offer";
@@ -241,7 +241,7 @@ export async function runSiteBuild(req: SiteRequest, deps: SiteDeps, emit: (e: S
     color: build.site.color,
     admin: Boolean(build.pages.admin),
     expires: new Date(at.getTime() + OFFER_MS).toISOString(),
-    addons: offerAddons(build.site.niche).map((x) => ({ name: x[req.locale], price: x.price })),
+    addons: offerAddons(build.site.niche).map((x) => ({ name: addonTitle(x, req.locale), price: x.price })),
   });
 }
 
