@@ -509,6 +509,15 @@ export function tunesNotices(viewer: Role, target: Role, self: boolean): boolean
 }
 
 /**
+ * Какие лиды присылать (lib/admin/lead-kinds.ts). Владелец, 13.11.2026:
+ * «Пусть будет возможность самим настроить это всё» — себе каждый, за
+ * человека — те же, кто ставит галочки бота.
+ */
+export function tunesLeadKinds(viewer: Role, target: Role, self: boolean): boolean {
+  return self || tunesNotices(viewer, target, self);
+}
+
+/**
  * Кто видит, сколько остаётся владельцу.
  *
  * Отдельная функция, а не `role === "admin"` по месту: строка «остаётся

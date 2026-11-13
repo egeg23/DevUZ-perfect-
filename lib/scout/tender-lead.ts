@@ -1,4 +1,5 @@
 import { routeNewLead } from "@/lib/admin/lead-queue-store";
+import { TENDER_NICHE } from "@/lib/admin/lead-kinds";
 import { salesRecipients } from "@/lib/qualify/brief";
 import { newRequestNo } from "@/lib/qualify/engine";
 import { scoreLead } from "@/lib/qualify/scoring";
@@ -98,7 +99,7 @@ export function leadFromTender(row: TenderLeadRow): QualifyToolInput {
     company: (row.customer ?? "").slice(0, 400),
     contact_handle: handle,
     contact_kind: kind,
-    niche: "госзакупки и тендеры",
+    niche: TENDER_NICHE,
     niche_tier: 1,
     expertise: "medium",
     services: servicesOfTopics(row.topics),
@@ -110,7 +111,7 @@ export function leadFromTender(row: TenderLeadRow): QualifyToolInput {
     summary: {
       client: row.customer ?? contactName,
       request: `Тендер: ${ru ?? row.title}`.slice(0, 400),
-      niche: "госзакупки и тендеры",
+      niche: TENDER_NICHE,
       expertise: unknown,
       budget: price ? `стартовая цена лота ${price}` : unknown,
       authority: "заказчик сам объявил закупку",
@@ -316,6 +317,7 @@ export async function promoteTenders(now: Date = new Date()): Promise<TenderLead
         requestNo,
         heading: tenderHeading(row),
         origin: { source: "scout" },
+        kind: "tender",
         fallback: await salesRecipients(),
       });
       report.leads += 1;

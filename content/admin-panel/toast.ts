@@ -7,6 +7,16 @@ import { defineDict } from "@/lib/admin/i18n";
  */
 export const toastDict = defineDict({
   done_ok: { ru: "Сохранили", uz: "Saqlandi", pl: "Zapisano" },
+  done_lead_kinds: {
+    ru: "Сохранили: бот и очередь присылают только отмеченные виды лидов",
+    uz: "Saqlandi: bot va navbat faqat belgilangan turdagi lidlarni yuboradi",
+    pl: "Zapisano: bot i kolejka wysyłają tylko zaznaczone rodzaje leadów",
+  },
+  done_fail_lead_kinds: {
+    ru: "Не сохранилось: база не ответила, попробуйте ещё раз",
+    uz: "Saqlanmadi: baza javob bermadi, yana urinib ko‘ring",
+    pl: "Nie zapisano: baza nie odpowiedziała, spróbuj ponownie",
+  },
   done_taken: { ru: "Лид ваш — он в работе", uz: "Lid sizniki — ishda", pl: "Lead jest twój — w toku" },
   done_trashed: { ru: "Удалён как мусор, из очереди убран", uz: "Axlat sifatida o‘chirildi, navbatdan olindi", pl: "Usunięty jako śmieć, zdjęty z kolejki" },
   done_won: { ru: "Отмечено: выиграли", uz: "Belgilandi: yutdik", pl: "Zaznaczono: wygrane" },

@@ -28,6 +28,13 @@ import {
 } from "@/lib/admin/lead-queue";
 import type { Role } from "@/lib/admin/roles";
 import { wants } from "@/lib/admin/notify-prefs";
+import {
+  LEAD_KIND_TITLE,
+  leadKindOf,
+  nobodyWantsNotice,
+  withFallback,
+  type LeadKind,
+} from "@/lib/admin/lead-kinds";
 import { dayStartUtc } from "@/lib/admin/portion";
 import { todayInTashkent } from "@/lib/admin/pulse";
 import { messageWindow } from "@/lib/admin/tasks";
@@ -54,12 +61,28 @@ type Person = {
   role: string;
   /** Галочка «Новые заявки по очереди» (lib/admin/notify-prefs.ts). Снята — из очереди выходит. */
   queue: boolean;
+  /** Все снятые галочки — для видов лидов (lib/admin/lead-kinds.ts). */
+  off: string[] | null;
 };
 
-/** Кто стоит в очереди — с тем, сколько у кого за месяц. */
-async function queueCandidates(now: Date): Promise<{ people: Person[]; candidates: Candidate[] }> {
+type Queue = {
+  people: Person[];
+  candidates: Candidate[];
+  /** Вид лида не выбрал никто в очереди — лид идёт всем, как раньше. */
+  fallback: boolean;
+};
+
+/**
+ * Кто стоит в очереди — с тем, сколько у кого за месяц.
+ *
+ * С видом лида — только те, кто его не снял («Какие лиды присылать»):
+ * предлагать тендер тому, кто тендеры не берёт, значит держать лид полчаса
+ * впустую. Без вида (равная доля ночью) — все, как раньше: доля считается
+ * по всей очереди, иначе снятая галочка поднимала бы человеку потолок.
+ */
+async function queueCandidates(now: Date, kind?: LeadKind | null): Promise<Queue> {
   const db = serviceClient();
-  if (!db) return { people: [], candidates: [] };
+  if (!db) return { people: [], candidates: [], fallback: false };
 
   const { data: staff } = await db
     .from("staff")
@@ -74,8 +97,9 @@ async function queueCandidates(now: Date): Promise<{ people: Person[]; candidate
     chat: typeof row.telegram_user_id === "number" ? String(row.telegram_user_id) : null,
     role: String(row.role),
     queue: wants(row.notify_off as string[] | null, "queue"),
+    off: (row.notify_off as string[] | null) ?? null,
   }));
-  if (!people.length) return { people, candidates: [] };
+  if (!people.length) return { people, candidates: [], fallback: false };
 
   const ids = people.map((p) => p.id);
   const since = monthStartOf(now).toISOString();
@@ -165,14 +189,16 @@ async function queueCandidates(now: Date): Promise<{ people: Person[]; candidate
   for (const r of (acts as Record<string, unknown>[] | null) ?? []) mark(r.actor_staff_id, r.created_at);
   for (const r of (seen as Record<string, unknown>[] | null) ?? []) mark(r.id, r.bot_seen_at);
 
+  // Без Telegram человеку не сообщить, что лид его, — и полчаса лид
+  // простоял бы у того, кто о нём не знает. Снятая галочка «Новые
+  // заявки по очереди» — то же самое по доброй воле: предлагать лид
+  // тому, кому о нём не напишут, значит держать его полчаса впустую.
+  const inQueue = people.filter((p) => p.chat && p.queue);
+  const picked = withFallback(inQueue, (p) => p.off, kind);
   return {
     people,
-    candidates: people
-      // Без Telegram человеку не сообщить, что лид его, — и полчаса лид
-      // простоял бы у того, кто о нём не знает. Снятая галочка «Новые
-      // заявки по очереди» — то же самое по доброй воле: предлагать лид
-      // тому, кому о нём не напишут, значит держать его полчаса впустую.
-      .filter((p) => p.chat && p.queue)
+    fallback: picked.fallback,
+    candidates: picked.people
       .map((p) => ({
         id: p.id,
         taken: takenBy.get(p.id) ?? 0,
@@ -264,12 +290,13 @@ export async function nightShareFor(staff: { id: string; role: Role }, now: Date
 async function openNight(card: Card, now: Date): Promise<void> {
   const db = serviceClient();
   if (!db) return;
+  const kind = await kindOfCard(card);
   await db
     .from("leads")
     .update({ fair_share: true, queue_opened_at: now.toISOString() })
     .eq("id", card.leadId);
   await sendLead(card.lead, card.leadId, card.requestNo, {
-    to: await salesRecipients(),
+    to: await salesRecipients(kind),
     heading: withExtra(NIGHT_HEADING, card.heading),
     origin: card.origin,
   });
@@ -356,7 +383,61 @@ type Card = {
   origin: LeadOrigin & { at?: string | number | Date };
   /** Своя шапка лида, если есть: сумма заказа с витрины и кому он адресован. */
   heading?: string;
+  /** Вид лида (lib/admin/lead-kinds.ts). Нет — узнаётся по лиду в базе. */
+  kind?: LeadKind;
 };
+
+/**
+ * Вид лида. Партнёра привязывают после записи лида (attributeAndNotify), а
+ * карточку собирают до — поэтому по базе, а не только по карточке.
+ */
+async function kindOfCard(card: Card): Promise<LeadKind> {
+  if (card.kind) return card.kind;
+  const fromCard = leadKindOf({ source: card.origin.source, niche: card.lead.niche, notes: card.lead.notes });
+  const db = serviceClient();
+  if (!db || !card.leadId || card.leadId === "unsaved") return fromCard;
+  const { data } = await db
+    .from("leads")
+    .select("source, niche, notes, partner_id, partner_pin")
+    .eq("id", card.leadId)
+    .maybeSingle();
+  if (!data) return fromCard;
+  card.kind = leadKindOf({
+    source: (data.source as string | null) ?? card.origin.source,
+    niche: data.niche as string | null,
+    notes: data.notes as string | null,
+    partnerId: data.partner_id as string | null,
+    partnerPin: data.partner_pin as boolean | null,
+  });
+  return card.kind;
+}
+
+/**
+ * Вид лида не выбрал никто — лид ушёл всем; руководителям и владельцу
+ * («Отчёты») строка, один раз на лид (team_news_sent).
+ */
+async function noteNobodyWants(card: Card, kind: LeadKind): Promise<void> {
+  const db = serviceClient();
+  if (!db) return;
+  const key = `lead-kind-nobody:${card.leadId}`;
+  const { data: readers } = await db
+    .from("staff")
+    .select("id, telegram_user_id, notify_off")
+    .eq("is_active", true)
+    .in("role", ["admin", "head"]);
+  const label = esc(String(card.lead.company || card.lead.contact_name || card.requestNo || "без имени"));
+  for (const r of readers ?? []) {
+    if (!Number(r.telegram_user_id) || !wants(r.notify_off as string[] | null, "reports")) continue;
+    const { data: claimed } = await db
+      .from("team_news_sent")
+      .upsert({ news_id: key, staff_id: r.id }, { onConflict: "news_id,staff_id", ignoreDuplicates: true })
+      .select("staff_id");
+    if (!claimed?.length) continue;
+    if (!(await sendMessage(Number(r.telegram_user_id), nobodyWantsNotice(LEAD_KIND_TITLE[kind].title.ru, label)))) {
+      await db.from("team_news_sent").delete().eq("news_id", key).eq("staff_id", r.id);
+    }
+  }
+}
 
 /**
  * Запустить очередь по новому лиду.
@@ -388,11 +469,13 @@ export async function startQueue(card: Card, now: Date = new Date()): Promise<bo
     return true;
   }
 
-  const { people, candidates } = await queueCandidates(now);
+  const kind = await kindOfCard(card);
+  const { people, candidates, fallback } = await queueCandidates(now, kind);
   const first = pickNext(candidates, new Set(), now);
   const person = first ? people.find((p) => p.id === first.id) : null;
   if (!person) return false;
 
+  if (fallback) await noteNobodyWants(card, kind);
   return offerTo(person, card, now, true);
 }
 
@@ -426,7 +509,7 @@ export async function requeueLead(leadId: string, heading: string, now: Date = n
   // Очередь вести некому — всем, как лид без очереди.
   await db.from("leads").update({ queue_opened_at: now.toISOString() }).eq("id", leadId);
   return sendLead(card.lead, card.leadId, card.requestNo, {
-    to: await salesRecipients(),
+    to: await salesRecipients(card.kind),
     heading,
     origin: card.origin,
   });
@@ -555,6 +638,13 @@ export async function leadCard(leadId: string): Promise<(Card & { label: string;
     },
     label: String(row.company || row.contact_name || row.request_no || "без имени"),
     free: !row.assigned_staff_id && row.status === "new",
+    kind: leadKindOf({
+      source: row.source as string | null,
+      niche: row.niche as string | null,
+      notes: row.notes as string | null,
+      partnerId: row.partner_id as string | null,
+      partnerPin: row.partner_pin as boolean | null,
+    }),
   };
 }
 
@@ -598,7 +688,7 @@ export async function advanceQueues(now: Date = new Date()): Promise<AdvanceRepo
       const card = await leadCard(offer.lead_id);
       if (!card) continue;
 
-      const { people, candidates } = await queueCandidates(now);
+      const { people, candidates } = await queueCandidates(now, card.kind);
       const missedBy = people.find((p) => p.id === offer.staff_id);
 
       // Лид успели взять иначе — владелец вне очереди, передача: дальше
@@ -642,7 +732,7 @@ export async function advanceQueues(now: Date = new Date()): Promise<AdvanceRepo
       // копии у тех, кто пропустил, уже с погашенными кнопками.
       await db.from("leads").update({ queue_opened_at: now.toISOString() }).eq("id", offer.lead_id);
       await sendLead(card.lead, card.leadId, card.requestNo, {
-        to: await salesRecipients(),
+        to: await salesRecipients(card.kind),
         heading: OPEN_HEADING,
         origin: card.origin,
       });
@@ -710,7 +800,7 @@ export async function routeNewLead(
 ): Promise<boolean> {
   if (await startQueue(card)) return true;
   return sendLead(card.lead, card.leadId, card.requestNo, {
-    to: [...card.fallback],
+    to: await fallbackFor(card),
     heading: card.heading,
     origin: card.origin,
   });
@@ -764,4 +854,23 @@ export async function noteBotSeen(telegramId: number, now: Date = new Date()): P
     .eq("telegram_user_id", telegramId)
     .eq("is_active", true)
     .or(`bot_seen_at.is.null,bot_seen_at.lt.${minuteAgo}`);
+}
+
+/**
+ * Запасной список «всем» без очереди — тоже по видам лидов: снявшему вид
+ * карточка не идёт. Не сотрудник (чат продаж) — остаётся. Сотрудника с этим
+ * видом нет ни одного — список как был.
+ */
+async function fallbackFor(card: Card & { fallback: readonly (string | number)[] }): Promise<string[]> {
+  const chats = card.fallback.map(String);
+  const db = serviceClient();
+  if (!db || !chats.length) return chats;
+  const kind = await kindOfCard(card);
+  const { data, error } = await db.from("staff").select("telegram_user_id, notify_off").eq("is_active", true);
+  if (error || !data) return chats;
+  const offBy = new Map<string, string[] | null>();
+  for (const r of data) if (typeof r.telegram_user_id === "number") offBy.set(String(r.telegram_user_id), r.notify_off as string[] | null);
+  const staffChats = chats.filter((c) => offBy.has(c));
+  const kept = new Set(withFallback(staffChats, (c) => offBy.get(c), kind).people);
+  return chats.filter((c) => !offBy.has(c) || kept.has(c));
 }

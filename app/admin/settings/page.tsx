@@ -6,12 +6,15 @@ import { LocaleSwitch } from "@/components/admin/locale-switch";
 import { NavToggle } from "@/components/admin/nav-menu";
 import { MarketsTourAgain } from "@/components/admin/markets-tour";
 import { TourAgain } from "@/components/admin/panel-tour";
+import { LeadKindsForm, leadKindsSummary } from "@/components/admin/lead-kinds-form";
+import { leadKindsDict } from "@/content/admin-panel/lead-kinds";
 import { settingsDict } from "@/content/admin-panel/settings";
 import { requireSection } from "@/lib/admin/guard";
 import { pick } from "@/lib/admin/i18n";
 import { notifyOffOf, offSummary } from "@/lib/admin/notify-prefs";
 import { opens, tunesNotices } from "@/lib/admin/roles";
 import { settingsFor, type SettingLink } from "@/lib/admin/settings";
+import { saveMyLeadKinds } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +31,7 @@ export default async function SettingsPage() {
   const staff = await requireSection("/admin/settings");
   const locale = staff.panel_locale;
   const t = pick(settingsDict, locale);
+  const lk = pick(leadKindsDict, locale);
   const off = await notifyOffOf(staff.id);
   const links = settingsFor(staff);
   const touch = links.filter((l) => l.group === "touch");
@@ -94,6 +98,20 @@ export default async function SettingsPage() {
                 {t.botEdit}
               </Link>
             ) : null}
+          </li>
+          {/* Владелец, 13.11.2026: «сотрудник мог выбирать, какие
+              уведомления по лидам ему шлет бот… Пусть будет возможность
+              самим настроить» — себе каждый (lib/admin/lead-kinds.ts). */}
+          <li id="leads" className={ROW}>
+            <div className="min-w-0 max-w-xl">
+              <p className="text-sm text-text">{lk.title}</p>
+              <p className="mt-0.5 text-xs leading-snug text-faint">
+                {off === undefined ? lk.unknown : `${leadKindsSummary(off, locale)}. ${lk.note}`}
+              </p>
+              {off === undefined ? null : (
+                <LeadKindsForm staffId={staff.id} off={off} locale={locale} action={saveMyLeadKinds} />
+              )}
+            </div>
           </li>
         </ul>
       </section>

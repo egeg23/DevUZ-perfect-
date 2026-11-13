@@ -56,7 +56,7 @@ const COLUMNS =
 export type TeamResult =
   | {
       ok: true;
-      note?: "reactivated" | "menu_ok" | "menu_failed" | "claimed" | "notices" | "details" | "sections" | "unlimited";
+      note?: "reactivated" | "menu_ok" | "menu_failed" | "claimed" | "notices" | "details" | "sections" | "unlimited" | "lead_kinds";
       /**
        * Дошло ли до человека приглашение.
        *

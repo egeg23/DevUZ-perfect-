@@ -1,4 +1,5 @@
 import { record } from "@/lib/admin/audit";
+import { withFallback } from "@/lib/admin/lead-kinds";
 import { isWorkingHours } from "@/lib/admin/lead-queue";
 import { leadCard } from "@/lib/admin/lead-queue-store";
 import { contactKey } from "@/lib/partners/rules";
@@ -53,8 +54,12 @@ async function teamChats(withOwner: boolean): Promise<string[]> {
   const db = serviceClient();
   if (!db) return [];
   const roles = withOwner ? ["manager", "head", "admin"] : ["manager", "head"];
-  const { data } = await db.from("staff").select("telegram_user_id").eq("is_active", true).in("role", roles);
-  return [...new Set((data ?? []).map((r) => r.telegram_user_id).filter((id): id is number => typeof id === "number").map(String))];
+  const { data } = await db.from("staff").select("telegram_user_id, notify_off").eq("is_active", true).in("role", roles);
+  // Вид «Партнёры и агентства» снят — карточка не приходит; не выбрал никто —
+  // всем, как раньше (lib/admin/lead-kinds.ts).
+  const rows = (data ?? []).filter((r) => typeof r.telegram_user_id === "number");
+  const { people } = withFallback(rows, (r) => r.notify_off as string[] | null, "partner");
+  return [...new Set(people.map((r) => String(r.telegram_user_id)))];
 }
 
 /**

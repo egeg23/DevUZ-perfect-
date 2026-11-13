@@ -1,9 +1,11 @@
-import { addStaff, assignHead, changeRole, claim, disable, refreshMenu, resend, saveDetails, saveNotices, saveSections, setGrade, setPlan, setUnlimited } from "./actions";
+import { addStaff, assignHead, changeRole, claim, disable, refreshMenu, resend, saveDetails, saveLeadKinds, saveNotices, saveSections, setGrade, setPlan, setUnlimited } from "./actions";
 import { AdminShell } from "@/components/admin/shell";
 import { AppPush } from "@/components/admin/app-push";
 import { appDict } from "@/content/admin-panel/app";
 import { pushDevicesByStaff } from "@/lib/admin/push-store";
 import { HelpHint } from "@/components/admin/help-link";
+import { LeadKindsForm, leadKindsSummary } from "@/components/admin/lead-kinds-form";
+import { leadKindsDict } from "@/content/admin-panel/lead-kinds";
 import { when } from "@/components/admin/lead-table";
 import { requireSection } from "@/lib/admin/guard";
 import { helpAnchor } from "@/lib/admin/help";
@@ -31,6 +33,7 @@ function resultOf(code: string, t: T): { text: string; tone: Tone } | null {
     menu_ok: t.r_menu_ok,
     reactivated: t.r_reactivated,
     notices: t.r_notices,
+    lead_kinds: t.r_lead_kinds,
     claimed: t.r_claimed,
     details: t.r_details,
     sections: t.r_sections,
@@ -398,6 +401,10 @@ export default async function TeamPage({
                     {tunesNotices(viewer.role, member.role, member.id === viewer.id) ? (
                       <NoticesBlock member={member} t={t} locale={locale} />
                     ) : null}
+                    {/* Себе каждый ставит в «Настройках»; здесь — за человека. */}
+                    {tunesNotices(viewer.role, member.role, member.id === viewer.id) ? (
+                      <LeadKindsBlock member={member} t={t} locale={locale} />
+                    ) : null}
                     {/* Пуш на этом устройстве — только у себя: включают на
                         своём телефоне, чужой отсюда не включишь. */}
                     {member.id === viewer.id ? <AppPush variant="row" /> : null}
@@ -562,6 +569,30 @@ function NoticesBlock({ member, t, locale }: { member: TeamMember; t: T; locale:
           {t.noticesSave}
         </button>
       </form>
+    </details>
+  );
+}
+
+/**
+ * «Какие лиды присылать» за человека (lib/admin/lead-kinds.ts). Владелец,
+ * 13.11.2026: «те кто занимаются партнеркой не работают в холодку и
+ * наоборот» — снятый вид не приходит и не предлагается очередью.
+ */
+function LeadKindsBlock({ member, t, locale }: { member: TeamMember; t: T; locale: PanelLocale }) {
+  const lk = pick(leadKindsDict, locale);
+  return (
+    <details className="group">
+      <summary className="cursor-pointer list-none text-xs text-faint transition hover:text-green">
+        {leadKindsSummary(member.notify_off, locale)}
+      </summary>
+      <div className="mt-2 w-80 rounded-lg border border-line bg-surface-2 px-3 py-3">
+        <p className="flex items-center gap-2 text-xs text-muted">
+          {lk.forWhom(member.display_name)}
+          <HelpHint topic={helpAnchor("/admin/team", "lead-kinds")} label={t.leadKindsHelp} />
+        </p>
+        <p className="mt-1 text-xs leading-snug text-faint">{lk.note}</p>
+        <LeadKindsForm staffId={member.id} off={member.notify_off} locale={locale} action={saveLeadKinds} />
+      </div>
     </details>
   );
 }
