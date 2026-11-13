@@ -105,7 +105,7 @@ test("работы и продукты ведут туда, где страни�
 });
 
 test("картинки целиком и лёгкие, шрифты главной — только на главной", () => {
-  for (const [file, kb] of [["city.webp", 260], ["city-m.webp", 110], ["box-pro.webp", 80], ["box-pro-m.webp", 40]] as const) {
+  for (const [file, kb] of [["city-sk.webp", 260], ["city-sk-m.webp", 110], ["box-pro.webp", 80], ["box-pro-m.webp", 40]] as const) {
     const path = `public/home/${file}`;
     assert.ok(existsSync(path), `нет ${path}`);
     assert.ok(statSync(path).size / 1024 < kb, `${path} тяжелее ${kb} КБ`);
@@ -146,4 +146,46 @@ test("стекло без размытия на телефоне, движени
       assert.ok(existsSync(`public/cases/${slug}/poster-${v}.webp`), `${slug} poster-${v}`);
     }
   }
+});
+
+test("палитра «Самарканд»: главная, шапка, подвал, полоса минуты и чат — бирюза и золото, функции те же", () => {
+  // Владелец, 13.11.2026: «Делаем сайт в бирюзовом варианте… просто визуально поменяем его, не функционально».
+  const css = read("components/home/glass.module.css");
+  for (const token of ["--bg: #03100f", "--bg1: #06272a", "--bg2: #0b5354", "--acc: #3fd6c8", "--gold: #e9c77f", "--ink: #effaf6"]) {
+    assert.ok(css.includes(token), `нет ${token}`);
+  }
+  assert.doesNotMatch(css, /--green|#22f0a0|#0a0d14/, "в главной остался цвет «Стекла»");
+  assert.match(css, /\.heroText::before \{[^}]*data:image\/svg\+xml[^}]*mask-image/, "нет гириха за заголовком");
+  const home = read("components/home/glass-home.tsx");
+  assert.match(home, /cn\("sk", s\.home/);
+  assert.match(home, /src="\/home\/city-sk\.webp"/);
+  assert.match(home, /srcSet="\/home\/city-sk-m\.webp"/);
+
+  const globals = read("app/globals.css");
+  const sk = globals.match(/\n\.sk \{([^}]*)\}/)?.[1] ?? "";
+  for (const v of ["--color-ink: #03100f", "--color-green: #3fd6c8", "--color-gold: #e9c77f", "--color-text: #effaf6"]) assert.ok(sk.includes(v), `.sk без ${v}`);
+  // Шапка, подвал, полоса минуты и чат — в той же палитре на всём сайте.
+  assert.match(read("components/layout/header.tsx"), /"sk fixed inset-x-0 top-0 z-50/);
+  assert.match(read("components/layout/footer.tsx"), /<footer className="sk /);
+  assert.match(read("components/chat/minute-offer.tsx"), /className="sk fixed inset-x-0 top-0 z-\[60\]/);
+  assert.match(read("components/chat/chat-widget.tsx"), /"sk fixed bottom-5 right-4/);
+});
+
+test("палитра «Самарканд»: текст не ниже AA", () => {
+  const lum = (hex: string) => {
+    const c = [0, 2, 4].map((i) => parseInt(hex.slice(1 + i, 3 + i), 16) / 255).map((x) => (x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4));
+    return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  };
+  const ratio = (a: string, b: string) => {
+    const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p);
+    return (x + 0.05) / (y + 0.05);
+  };
+  // Фоны: самый тёмный, середина градиента, плотное стекло панели.
+  for (const bg of ["#03100f", "#06272a", "#0a3d3d"]) {
+    for (const fg of ["#effaf6", "#bcd8d2", "#8db3ac", "#a3c6bf", "#86aba4", "#e9c77f", "#3fd6c8"]) {
+      assert.ok(ratio(fg, bg) >= 4.5, `${fg} на ${bg}: ${ratio(fg, bg).toFixed(2)}`);
+    }
+  }
+  // Тёмный текст на золотой кнопке.
+  assert.ok(ratio("#1d1504", "#efd08e") >= 4.5);
 });

@@ -95,7 +95,7 @@ export function MinuteBar({
   return (
     <div
       role="status"
-      className="fixed inset-x-0 top-0 z-[60] border-b border-gold/30 bg-[linear-gradient(90deg,#1d170c,#120f0a_50%,#1d170c)] text-text"
+      className="sk fixed inset-x-0 top-0 z-[60] border-b border-gold/30 bg-[linear-gradient(90deg,#1d170c,#120f0a_50%,#1d170c)] text-text"
       style={{ height: MINUTE_BAR_HEIGHT }}
     >
       <div className="mx-auto flex h-full w-full max-w-[1320px] items-center gap-3 px-4 sm:px-8 lg:px-12">

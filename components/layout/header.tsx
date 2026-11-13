@@ -64,7 +64,7 @@ export function Header({ locale, dict }: { locale: Locale; dict: Dictionary }) {
       className={cn(
         // translate-y — под полосу минуты на скидку (components/chat/minute-offer.tsx):
         // сдвиг transform, страница под шапкой не прыгает.
-        "fixed inset-x-0 top-0 z-50 translate-y-[var(--minute-bar,0px)] transition-all duration-500",
+        "sk fixed inset-x-0 top-0 z-50 translate-y-[var(--minute-bar,0px)] transition-all duration-500",
         scrolled
           ? "border-b border-line bg-ink/85 backdrop-blur-xl"
           : "border-b border-transparent",
@@ -114,7 +114,7 @@ export function Header({ locale, dict }: { locale: Locale; dict: Dictionary }) {
           </div>
           <Link
             href={localeHref(locale, "contact")}
-            className="hidden whitespace-nowrap rounded-xl bg-green px-4 py-2.5 text-[0.88rem] font-semibold text-ink transition-colors hover:bg-white md:inline-flex"
+            className="hidden whitespace-nowrap rounded-xl bg-gold px-4 py-2.5 text-[0.88rem] font-semibold text-ink transition-colors hover:bg-white md:inline-flex"
           >
             {dict.cta.discuss}
           </Link>

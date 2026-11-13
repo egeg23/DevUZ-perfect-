@@ -1,10 +1,15 @@
 /* ───────────────────────────────────────────────────────────────────────────
-   Главная «Стекло» (владелец, 06.11.2026, по утверждённому PDF).
+   Главная «Стекло» (владелец, 06.11.2026, по утверждённому PDF) в палитре
+   «Самарканд» (владелец, 13.11.2026: «Делаем сайт в бирюзовом варианте…
+   просто визуально поменяем его, не функционально»; макет и токены —
+   docs/design/home-samarkand/).
 
-   Тёмно-синяя ночь, стеклянные панели поверх фотографий, заголовки антиквой
+   Глубокая бирюза куполов и тёплое золото: бирюзовая ночь, стеклянные
+   панели поверх фотографий, бирюзовое свечение снизу первого экрана, еле
+   видный гирих за заголовком, кнопка и числа — золотом. Заголовки антиквой
    (Prata), текст — Onest. Границ между разделами нет: картинки не обрезаны,
-   их фон дорисован за краями и медленно гаснет в цвет страницы (#0a0d14 —
-   цвет фона самого кадра коробки, поэтому шва нет).
+   их фон дорисован за краями и медленно гаснет в цвет страницы. Небо города
+   переведено в бирюзу в самом файле (city-sk*.webp), огни остались тёплыми.
 
    На телефоне размытия под стеклом нет: backdrop-filter на прокрутке —
    самое дорогое, что можно дать слабому телефону, а под панелью там и так
@@ -13,18 +18,22 @@
    ───────────────────────────────────────────────────────────────────────── */
 
 .home {
-  --bg: #0a0d14;
-  --ink: #eef1f5;
-  --soft: #c3cad4;
-  --muted: #8e98a6;
-  --glass: rgb(18 24 33 / 0.5);
-  --gl: rgb(238 241 245 / 0.13);
-  --green: #22f0a0;
+  /* Палитра «Самарканд» — токены из docs/design/home-samarkand/README.md. */
+  --bg: #03100f;
+  --bg1: #06272a;
+  --bg2: #0b5354;
+  --ink: #effaf6;
+  --soft: #bcd8d2;
+  --muted: #8db3ac;
+  --glass: rgb(6 34 35 / 0.5);
+  --gl: rgb(222 250 244 / 0.13);
+  --acc: #3fd6c8;
+  --gold: #e9c77f;
   --edge: 64px;
   position: relative;
   overflow-x: clip;
   color: var(--ink);
-  background: linear-gradient(var(--bg) calc(100% - 360px), #05070b);
+  background: linear-gradient(var(--bg) 0, #041b1b 900px, var(--bg1) 1500px, #052022 55%, var(--bg) calc(100% - 360px), #020a0a);
   font-family: var(--font-onest), system-ui, -apple-system, "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
 }
@@ -54,10 +63,10 @@
   box-shadow: 0 24px 60px -28px rgb(0 0 0 / 0.7);
 }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .glass { background: rgb(18 24 33 / 0.86); }
+  .glass { background: rgb(6 34 35 / 0.86); }
 }
 @media (prefers-reduced-transparency: reduce) {
-  .glass { background: rgb(18 24 33 / 0.94); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .glass { background: rgb(6 34 35 / 0.94); -webkit-backdrop-filter: none; backdrop-filter: none; }
 }
 
 .btn {
@@ -74,11 +83,12 @@
   transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
 }
 .btn:active { transform: scale(0.98); }
-.btn:focus-visible { outline: 2px solid var(--green); outline-offset: 3px; }
-.primary { background: var(--green); color: #04140d; }
-.primary:hover { background: #4bf5b4; }
-.ghost { color: var(--ink); background: rgb(238 241 245 / 0.07); border: 1px solid var(--gl); }
-.ghost:hover { background: rgb(238 241 245 / 0.12); border-color: rgb(238 241 245 / 0.22); }
+.btn:focus-visible { outline: 2px solid var(--acc); outline-offset: 3px; }
+/* Главная кнопка — тёплое золото, как в макете «Самарканда». */
+.primary { background: linear-gradient(180deg, #fff8e6, #efd08e); color: #1d1504; box-shadow: 0 10px 36px -10px rgb(233 199 127 / 0.55); }
+.primary:hover { background: linear-gradient(180deg, #fffaf0, #f5dca6); }
+.ghost { color: var(--ink); background: rgb(222 250 244 / 0.07); border: 1px solid var(--gl); }
+.ghost:hover { background: rgb(222 250 244 / 0.12); border-color: rgb(222 250 244 / 0.22); }
 .small { height: 42px; padding: 0 18px; font-size: 15px; }
 
 .h2 { font-size: 54px; line-height: 1.06; letter-spacing: -0.01em; }
@@ -117,8 +127,34 @@
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgb(10 13 20 / 0.9) 0%, rgb(10 13 20 / 0.72) 36%, rgb(10 13 20 / 0.28) 66%, rgb(10 13 20 / 0.18) 100%),
-    linear-gradient(rgb(10 13 20 / 0.55), rgb(10 13 20 / 0) 30%);
+    linear-gradient(90deg, rgb(3 16 15 / 0.9) 0%, rgb(3 16 15 / 0.72) 36%, rgb(3 16 15 / 0.28) 66%, rgb(3 16 15 / 0.18) 100%),
+    linear-gradient(rgb(3 16 15 / 0.55), rgb(3 16 15 / 0) 30%),
+    radial-gradient(70% 42% at 50% 80%, rgb(63 214 200 / 0.18), rgb(19 128 124 / 0.08) 45%, transparent 72%);
+}
+
+/* Гирих за заголовком: еле видная звезда Регистана, гаснет к краям маской. */
+.heroText { position: relative; }
+.heroText::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -40px -120px -40px -160px;
+  pointer-events: none;
+  opacity: 0.09;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='%23bff3ea' stroke-width='1'%3E%3Cpath d='M28 8 L33 23 L48 28 L33 33 L28 48 L23 33 L8 28 L23 23 Z'/%3E%3Cpath d='M14 14 L42 42 M42 14 L14 42' stroke-opacity='.35'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 56px 56px;
+  -webkit-mask-image: radial-gradient(60% 60% at 45% 40%, #000 25%, transparent 80%);
+  mask-image: radial-gradient(60% 60% at 45% 40%, #000 25%, transparent 80%);
+}
+/* Последняя строка заголовка — бирюза в золото, как акцентное слово макета. */
+.h1 .line:last-child {
+  width: fit-content;
+  background: linear-gradient(90deg, #7ff0e2, var(--gold));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
 }
 
 .heroGrid {
@@ -144,17 +180,17 @@
   height: 40px;
   flex: none;
   border-radius: 50%;
-  background: #0c1219;
+  background: #052224;
   border: 1px solid var(--gl);
 }
 .who b { display: block; font-weight: 500; font-size: 16px; }
-.who span { font-size: 13px; color: var(--green); }
+.who span { font-size: 13px; color: var(--acc); }
 .tag { margin-left: auto; font-size: 12px; color: var(--muted); border: 1px solid var(--gl); padding: 6px 10px; border-radius: 999px; }
 .msgs { display: flex; flex-direction: column; gap: 12px; padding: 20px 22px 22px; }
 .m { max-width: 84%; padding: 11px 15px; border-radius: 18px; font-size: 14.5px; line-height: 1.45; }
 .m time { display: block; margin-top: 4px; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
-.in { align-self: flex-start; background: rgb(238 241 245 / 0.08); border: 1px solid rgb(238 241 245 / 0.08); border-bottom-left-radius: 6px; }
-.out { align-self: flex-end; background: rgb(34 240 160 / 0.13); border: 1px solid rgb(34 240 160 / 0.22); border-bottom-right-radius: 6px; }
+.in { align-self: flex-start; background: rgb(222 250 244 / 0.08); border: 1px solid rgb(222 250 244 / 0.08); border-bottom-left-radius: 6px; }
+.out { align-self: flex-end; background: rgb(63 214 200 / 0.13); border: 1px solid rgb(63 214 200 / 0.22); border-bottom-right-radius: 6px; }
 .sys { align-self: center; font-size: 12px; color: var(--muted); padding: 6px 12px; border-radius: 999px; border: 1px dashed var(--gl); }
 
 /* Переписка «идёт»: реплики появляются по очереди. Только CSS — текст в
@@ -166,12 +202,12 @@
 }
 
 .ready { display: flex; align-items: center; gap: 14px; padding: 14px; border-radius: 20px; transition: border-color 0.2s ease; }
-.ready:hover { border-color: rgb(238 241 245 / 0.24); }
+.ready:hover { border-color: rgb(222 250 244 / 0.24); }
 .ready img { width: 112px; height: 70px; flex: none; object-fit: cover; border-radius: 10px; }
 .ready b { display: block; font-weight: 500; font-size: 15px; }
 .ready span { font-size: 13px; color: var(--muted); }
 .ready .btn { margin-left: auto; height: 40px; padding: 0 16px; font-size: 14px; }
-.ok { display: inline-block; width: 8px; height: 8px; margin-right: 6px; border-radius: 50%; background: var(--green); vertical-align: 1px; }
+.ok { display: inline-block; width: 8px; height: 8px; margin-right: 6px; border-radius: 50%; background: var(--acc); vertical-align: 1px; }
 
 /* «Делали для» сразу под первым экраном: лента стоит поверх гаснущего города. */
 .clients { position: relative; z-index: 1; }
@@ -193,10 +229,10 @@
   display: block;
   border-radius: 22px;
   overflow: hidden;
-  background: #0d1117;
+  background: #041818;
   isolation: isolate;
 }
-.w:focus-visible { outline: 2px solid var(--green); outline-offset: 3px; }
+.w:focus-visible { outline: 2px solid var(--acc); outline-offset: 3px; }
 .big { grid-row: span 2; }
 .wide { grid-column: span 2; }
 .w img,
@@ -224,8 +260,8 @@
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
-  box-shadow: inset 0 0 0 1px rgb(238 241 245 / 0.07), inset 0 0 90px 10px rgb(10 13 20 / 0.55);
-  background: linear-gradient(180deg, rgb(10 13 20 / 0.25), transparent 30%, transparent 55%, rgb(10 13 20 / 0.6));
+  box-shadow: inset 0 0 0 1px rgb(222 250 244 / 0.07), inset 0 0 90px 10px rgb(3 16 15 / 0.55);
+  background: linear-gradient(180deg, rgb(3 16 15 / 0.25), transparent 30%, transparent 55%, rgb(3 16 15 / 0.6));
 }
 .cap { position: absolute; left: 16px; bottom: 16px; z-index: 1; max-width: calc(100% - 32px); border-radius: 16px; padding: 12px 16px; }
 .cap b { display: block; font-size: 20px; }
@@ -235,7 +271,18 @@
 
 /* ── 3. Продукты ─────────────────────────────────────────────────────────── */
 
-.products { padding: 80px 0 40px; }
+.products { position: relative; padding: 80px 0 40px; }
+/* Бирюзовый свет над «Продуктами» и под заявкой, как переход кадров макета. */
+.products::before,
+.proto::before {
+  content: "";
+  position: absolute;
+  inset: -120px 0 auto;
+  height: 900px;
+  pointer-events: none;
+  background: radial-gradient(60% 50% at 50% 30%, rgb(19 128 124 / 0.22), transparent 70%);
+}
+.proto::before { inset: auto 0 -80px; background: radial-gradient(60% 55% at 50% 70%, rgb(19 128 124 / 0.2), transparent 70%); }
 .prodGrid { display: grid; grid-template-columns: minmax(0, 1fr) 484px; gap: 32px; margin-top: 64px; }
 .boxCol { position: relative; min-height: 800px; }
 .boxArt {
@@ -258,7 +305,7 @@
 .boxText h3 { font-size: 40px; line-height: 1.1; }
 .boxText p { margin-top: 12px; max-width: 470px; font-size: 16px; line-height: 1.55; color: var(--soft); }
 .boxRow { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 18px; }
-.chip { display: inline-flex; align-items: center; font-size: 13px; padding: 8px 14px; border-radius: 999px; }
+.chip { display: inline-flex; align-items: center; font-size: 13px; padding: 8px 14px; border-radius: 999px; color: var(--gold); }
 
 .side { display: flex; flex-direction: column; gap: 16px; }
 .card { position: relative; display: flex; flex-direction: column; min-height: 340px; padding: 26px 28px; border-radius: 26px; overflow: hidden; }
@@ -266,26 +313,26 @@
 .cardText { max-width: 250px; }
 .cardText p { margin-top: 10px; font-size: 15px; line-height: 1.5; color: var(--soft); }
 .cardText .price { margin-top: 14px; color: var(--ink); }
-.price em { font-style: normal; color: var(--green); }
+.price em { font-style: normal; color: var(--gold); }
 .card .btn { margin-top: auto; align-self: flex-start; }
 .aside { position: absolute; right: 24px; top: 28px; width: 170px; display: flex; flex-direction: column; gap: 8px; }
 .aside .m { max-width: 100%; font-size: 12px; padding: 8px 11px; border-radius: 13px; }
-.score { font-size: 40px; line-height: 1; }
+.score { font-size: 40px; line-height: 1; color: var(--gold); }
 .score small { font-family: var(--font-onest), system-ui, sans-serif; font-size: 14px; color: var(--muted); }
 .example { font-size: 11px; color: var(--muted); letter-spacing: 0.02em; }
 .r { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--soft); padding: 8px 0; border-bottom: 1px solid var(--gl); }
 .r i { font-style: normal; white-space: nowrap; }
 .bad { color: #ffb36b; }
-.good { color: var(--green); }
+.good { color: var(--acc); }
 
 /* ── 4. Прототип и заявка ────────────────────────────────────────────────── */
 
-.proto { padding: 96px 0 120px; scroll-margin-top: 64px; }
+.proto { position: relative; padding: 96px 0 120px; scroll-margin-top: 64px; }
 .protoGrid { display: grid; grid-template-columns: 500px 460px 280px; justify-content: space-between; gap: 36px; align-items: start; }
 .protoText { display: flex; flex-direction: column; gap: 22px; }
 .steps { list-style: none; display: flex; flex-direction: column; gap: 12px; margin-top: 10px; padding: 0; }
 .steps li { display: grid; grid-template-columns: 104px 1fr; gap: 16px; padding: 18px 20px; border-radius: 20px; }
-.when { color: var(--green); font-weight: 500; font-size: 15px; padding-top: 2px; font-variant-numeric: tabular-nums; }
+.when { color: var(--gold); font-weight: 500; font-size: 15px; padding-top: 2px; font-variant-numeric: tabular-nums; }
 .what { font-size: 15px; line-height: 1.5; color: var(--soft); }
 .what b { display: block; color: var(--ink); font-weight: 500; font-size: 17px; margin-bottom: 2px; }
 
@@ -300,7 +347,7 @@
   padding: 0 18px;
   border-radius: 14px;
   border: 1px solid var(--gl);
-  background: rgb(10 13 20 / 0.45);
+  background: rgb(3 16 15 / 0.45);
   color: var(--ink);
   font: inherit;
   font-size: 16px;
@@ -308,13 +355,13 @@
   transition: border-color 0.2s ease, background-color 0.2s ease;
 }
 .field::placeholder { color: var(--muted); }
-.field:focus { border-color: rgb(34 240 160 / 0.55); background: rgb(10 13 20 / 0.6); }
+.field:focus { border-color: rgb(63 214 200 / 0.55); background: rgb(3 16 15 / 0.6); }
 .form .btn { width: 100%; height: 54px; margin-top: 18px; }
 .form .btn[disabled] { opacity: 0.7; cursor: progress; }
 .note { margin-top: 14px; font-size: 13.5px; line-height: 1.5; color: var(--muted); text-align: center; }
 .note a { color: var(--ink); text-decoration: underline; text-decoration-color: var(--gl); text-underline-offset: 4px; }
 .note a:hover { text-decoration-color: var(--ink); }
-.done { margin-top: 14px; padding: 12px 14px; border-radius: 14px; font-size: 14.5px; line-height: 1.45; background: rgb(34 240 160 / 0.1); border: 1px solid rgb(34 240 160 / 0.25); }
+.done { margin-top: 14px; padding: 12px 14px; border-radius: 14px; font-size: 14.5px; line-height: 1.45; background: rgb(63 214 200 / 0.1); border: 1px solid rgb(63 214 200 / 0.25); }
 .fail { margin-top: 14px; padding: 12px 14px; border-radius: 14px; font-size: 14.5px; line-height: 1.45; background: rgb(255 179 107 / 0.1); border: 1px solid rgb(255 179 107 / 0.3); }
 .trap { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
 
@@ -335,7 +382,7 @@
   height: 590px;
   border-radius: 40px;
   overflow: hidden;
-  border: 6px solid #10151d;
+  border: 6px solid #0a2b2c;
   box-shadow: 0 0 0 1px var(--gl), 0 40px 80px -30px rgb(0 0 0 / 0.8);
 }
 .phone img { width: 100%; height: 100%; object-fit: cover; object-position: 0 0; display: block; }
@@ -359,7 +406,7 @@
   line-height: 1.4;
 }
 .faqList summary::-webkit-details-marker { display: none; }
-.faqList summary:focus-visible { outline: 2px solid var(--green); outline-offset: 4px; border-radius: 8px; }
+.faqList summary:focus-visible { outline: 2px solid var(--acc); outline-offset: 4px; border-radius: 8px; }
 .plus {
   display: grid;
   place-items: center;
@@ -369,7 +416,7 @@
   margin-left: auto;
   border-radius: 50%;
   border: 1px solid var(--gl);
-  color: var(--green);
+  color: var(--gold);
   transition: transform 0.3s ease;
 }
 .faqList details[open] .plus { transform: rotate(45deg); }
@@ -404,7 +451,7 @@
 }
 
 @media (max-width: 899px) {
-  .glass { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgb(18 24 33 / 0.82); }
+  .glass { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgb(6 34 35 / 0.82); }
 }
 
 @media (max-width: 767px) {
@@ -414,8 +461,8 @@
   .photo img { left: -60vw; top: 0; width: 240vw; }
   .photo::after {
     background:
-      linear-gradient(rgb(10 13 20 / 0.55), rgb(10 13 20 / 0.82) 55%, rgb(10 13 20 / 0.95)),
-      linear-gradient(90deg, rgb(10 13 20 / 0.6), rgb(10 13 20 / 0.2));
+      linear-gradient(rgb(3 16 15 / 0.55), rgb(3 16 15 / 0.82) 55%, rgb(3 16 15 / 0.95)),
+      linear-gradient(90deg, rgb(3 16 15 / 0.6), rgb(3 16 15 / 0.2));
   }
   .h1 { font-size: 40px; line-height: 1.08; }
   .line { display: inline; }
