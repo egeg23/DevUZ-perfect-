@@ -1,3 +1,5 @@
+import { USD_RATE } from "@/content/company";
+import { SITE_PRICES } from "@/content/prices";
 import type { LocalizedList, LocalizedText } from "@/lib/i18n";
 
 /**
@@ -86,7 +88,8 @@ export const categories: CalcCategory[] = [
       uk: "Одна сторінка під один продукт або запуск",
       pl: "Jedna strona pod jeden produkt lub premierę",
     },
-    baseUzs: 4_200_000,
+    // Не ниже цены сайта: лендинг от SITE_PRICES.landing (владелец, 13.11.2026).
+    baseUzs: SITE_PRICES.landing * USD_RATE,
     baseWeeks: 2,
     tech: {
       ru: ["Next.js, серверный рендеринг", "Адаптив от 320 px", "Форма заявки с защитой от ботов", "Метрика и GA4"],
@@ -97,12 +100,12 @@ export const categories: CalcCategory[] = [
       pl: ["Next.js, renderowanie po stronie serwera", "Responsywność od 320 px", "Formularz zgłoszeniowy z ochroną przed botami", "Yandex Metrica i GA4"],
     },
     work: {
-      ru: ["Прототип экрана", "Дизайн под ваш бренд", "Вёрстка и анимации", "Деплой, домен, SSL"],
-      en: ["Screen prototype", "Design in your brand", "Build and animation", "Deployment, domain, SSL"],
-      uz: ["Ekran prototipi", "Brendingiz uchun dizayn", "Verstka va animatsiyalar", "Deploy, domen, SSL"],
-      zh: ["页面原型", "契合品牌的设计", "页面开发与动效", "部署、域名与 SSL"],
-      uk: ["Прототип екрана", "Дизайн під ваш бренд", "Верстка й анімації", "Деплой, домен, SSL"],
-      pl: ["Prototyp ekranu", "Projekt graficzny pod Twoją markę", "Kodowanie i animacje", "Wdrożenie, domena, SSL"],
+      ru: ["Макет экрана", "Дизайн под ваш бренд", "Вёрстка и анимации", "Деплой, домен, SSL"],
+      en: ["Screen mockup", "Design in your brand", "Build and animation", "Deployment, domain, SSL"],
+      uz: ["Ekran maketi", "Brendingiz uchun dizayn", "Verstka va animatsiyalar", "Deploy, domen, SSL"],
+      zh: ["页面样稿", "契合品牌的设计", "页面开发与动效", "部署、域名与 SSL"],
+      uk: ["Макет екрана", "Дизайн під ваш бренд", "Верстка й анімації", "Деплой, домен, SSL"],
+      pl: ["Makieta ekranu", "Projekt graficzny pod Twoją markę", "Kodowanie i animacje", "Wdrożenie, domena, SSL"],
     },
   },
   {
@@ -135,12 +138,12 @@ export const categories: CalcCategory[] = [
       pl: ["Do 8 typowych podstron", "Katalog lub blog", "Znaczniki Schema.org", "Mapa strony i robots.txt"],
     },
     work: {
-      ru: ["Структура и прототипы", "Индивидуальный дизайн", "Разработка и наполнение", "Обучение вашей команды"],
-      en: ["Structure and prototypes", "Custom design", "Development and content", "Training for your team"],
-      uz: ["Struktura va prototiplar", "Individual dizayn", "Ishlab chiqish va to‘ldirish", "Jamoangizni o‘qitish"],
-      zh: ["结构规划与原型", "定制设计", "开发与内容录入", "团队使用培训"],
-      uk: ["Структура й прототипи", "Індивідуальний дизайн", "Розробка та наповнення", "Навчання вашої команди"],
-      pl: ["Struktura i prototypy", "Indywidualny projekt graficzny", "Programowanie i wypełnienie treścią", "Szkolenie Twojego zespołu"],
+      ru: ["Структура и макеты", "Индивидуальный дизайн", "Разработка и наполнение", "Обучение вашей команды"],
+      en: ["Structure and mockups", "Custom design", "Development and content", "Training for your team"],
+      uz: ["Struktura va maketlar", "Individual dizayn", "Ishlab chiqish va to‘ldirish", "Jamoangizni o‘qitish"],
+      zh: ["结构规划与样稿", "定制设计", "开发与内容录入", "团队使用培训"],
+      uk: ["Структура й макети", "Індивідуальний дизайн", "Розробка та наповнення", "Навчання вашої команди"],
+      pl: ["Struktura i makiety", "Indywidualny projekt graficzny", "Programowanie i wypełnienie treścią", "Szkolenie Twojego zespołu"],
     },
   },
   {
@@ -249,12 +252,12 @@ export const categories: CalcCategory[] = [
       pl: ["Flutter, obie platformy naraz", "Do 10 ekranów", "Powiadomienia push", "Backend i API"],
     },
     work: {
-      ru: ["Сценарии и прототип", "Дизайн под гайдлайны платформ", "Разработка и тестирование на устройствах", "Публикация в App Store и Google Play"],
-      en: ["Flows and prototype", "Design to platform guidelines", "Development and on-device testing", "Publishing to the App Store and Google Play"],
-      uz: ["Stsenariylar va prototip", "Platforma qoidalariga mos dizayn", "Ishlab chiqish va qurilmalarda test", "App Store va Google Play’da nashr"],
-      zh: ["流程梳理与原型", "遵循双端规范的设计", "开发与真机测试", "上架 App Store 与 Google Play"],
-      uk: ["Сценарії та прототип", "Дизайн за гайдлайнами платформ", "Розробка й тестування на пристроях", "Публікація в App Store і Google Play"],
-      pl: ["Scenariusze i prototyp", "Projekt zgodny z wytycznymi platform", "Programowanie i testy na urządzeniach", "Publikacja w App Store i Google Play"],
+      ru: ["Сценарии и макет", "Дизайн под гайдлайны платформ", "Разработка и тестирование на устройствах", "Публикация в App Store и Google Play"],
+      en: ["Flows and mockup", "Design to platform guidelines", "Development and on-device testing", "Publishing to the App Store and Google Play"],
+      uz: ["Stsenariylar va maket", "Platforma qoidalariga mos dizayn", "Ishlab chiqish va qurilmalarda test", "App Store va Google Play’da nashr"],
+      zh: ["流程梳理与样稿", "遵循双端规范的设计", "开发与真机测试", "上架 App Store 与 Google Play"],
+      uk: ["Сценарії та макет", "Дизайн за гайдлайнами платформ", "Розробка й тестування на пристроях", "Публікація в App Store і Google Play"],
+      pl: ["Scenariusze i makieta", "Projekt zgodny z wytycznymi platform", "Programowanie i testy na urządzeniach", "Publikacja w App Store i Google Play"],
     },
   },
   {
@@ -325,12 +328,12 @@ export const categories: CalcCategory[] = [
       pl: ["Makiety w Figmie", "Design system i komponenty", "Stany: pusty, ładowanie, błąd", "Eksport assetów"],
     },
     work: {
-      ru: ["Исследование и структура", "Прототипы ключевых экранов", "Визуальный дизайн", "Передача разработчикам с описанием"],
-      en: ["Research and structure", "Prototypes of key screens", "Visual design", "Handover to developers with specs"],
-      uz: ["Tadqiqot va struktura", "Asosiy ekranlar prototipi", "Vizual dizayn", "Tavsif bilan dasturchilarga topshirish"],
-      zh: ["调研与信息架构", "核心页面原型", "视觉设计", "附带说明交付给开发"],
-      uk: ["Дослідження та структура", "Прототипи ключових екранів", "Візуальний дизайн", "Передача розробникам з описом"],
-      pl: ["Badania i struktura", "Prototypy kluczowych ekranów", "Projekt wizualny", "Przekazanie programistom z opisem"],
+      ru: ["Исследование и структура", "Макеты ключевых экранов", "Визуальный дизайн", "Передача разработчикам с описанием"],
+      en: ["Research and structure", "Mockups of key screens", "Visual design", "Handover to developers with specs"],
+      uz: ["Tadqiqot va struktura", "Asosiy ekranlar maketi", "Vizual dizayn", "Tavsif bilan dasturchilarga topshirish"],
+      zh: ["调研与信息架构", "核心页面样稿", "视觉设计", "附带说明交付给开发"],
+      uk: ["Дослідження та структура", "Макети ключових екранів", "Візуальний дизайн", "Передача розробникам з описом"],
+      pl: ["Badania i struktura", "Makiety kluczowych ekranów", "Projekt wizualny", "Przekazanie programistom z opisem"],
     },
   },
   {
@@ -390,7 +393,8 @@ export const categories: CalcCategory[] = [
       uk: "Аудит, план робіт і підхоплення розробки",
       pl: "Audyt, plan prac i przejęcie rozwoju",
     },
-    baseUzs: 3_800_000,
+    // Начинается с аудита: от SITE_PRICES.audit (владелец, 13.11.2026).
+    baseUzs: SITE_PRICES.audit * USD_RATE,
     baseWeeks: 1,
     tech: {
       ru: ["Разбор архитектуры", "Оценка качества кода", "Список рисков и уязвимостей", "Отчёт с приоритетами"],

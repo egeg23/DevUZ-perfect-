@@ -59,17 +59,18 @@ test("допы из брифа — только сказанное прямо", 
 test("вилка лендинга: порог вверх до десяти долларов, потолок как на сайте", () => {
   const q = quoteFor({ category: "landing", selection: {}, weeks: null });
   assert.ok(q);
-  // 4 200 000 сум / 11 850 = 354.4 → вверх до 360; потолок 5 880 000 → 496 → 500.
-  assert.equal(q.floorUsd, 360);
-  assert.equal(q.ceilingUsd, 500);
+  // База — SITE_PRICES.landing (владелец, 13.11.2026: «Лендинг у нас идет от
+  // 500$»): 5 925 000 сум = 500 $; потолок 8 295 000 → 700.
+  assert.equal(q.floorUsd, 500);
+  assert.equal(q.ceilingUsd, 700);
   assert.equal(q.weeksLow, 2);
   assert.equal(q.weeksHigh, 3);
   assert.equal(q.rush, false);
   assert.ok(q.floorUsd * USD_RATE >= q.floorUzs, "порог в долларах ниже порога в сумах");
   assert.ok(q.ceilingUsd >= q.floorUsd);
   assert.ok(q.work.length >= 3, "состав работ пуст");
-  assert.match(q.talk.join("\n"), /\$360–\$500/);
-  assert.match(q.talk.join("\n"), /Ниже \$360 не опускаемся/);
+  assert.match(q.talk.join("\n"), /\$500–\$700/);
+  assert.match(q.talk.join("\n"), /Ниже \$500 не опускаемся/);
 });
 
 test("порог никогда не оказывается ниже суммы в сумах", () => {
@@ -83,13 +84,13 @@ test("порог никогда не оказывается ниже суммы 
 test("обещанный срок короче расчётного включает ускорение и поднимает порог", () => {
   const calm = quoteFor({ category: "landing", selection: {}, weeks: 2 });
   assert.ok(calm && !calm.rush);
-  assert.equal(calm.floorUsd, 360);
+  assert.equal(calm.floorUsd, 500);
   assert.match(calm.talk[1], /2 недели/);
 
   const fast = quoteFor({ category: "landing", selection: {}, weeks: 1 });
   assert.ok(fast && fast.rush);
-  // 4 200 000 × 1.3 = 5 460 000 / 11 850 = 460.8 → 470.
-  assert.equal(fast.floorUsd, 470);
+  // 5 925 000 × 1.3 = 7 702 500 / 11 850 = 650.
+  assert.equal(fast.floorUsd, 650);
   assert.match(fast.talk[1], /1 неделя/);
   assert.match(fast.talk[1], /\+30%/);
   assert.equal(fast.promisedWeeks, 1);
@@ -98,7 +99,7 @@ test("обещанный срок короче расчётного включа
   // объявляется как новость.
   const already = quoteFor({ category: "landing", selection: { urgency: "rush" }, weeks: 1 });
   assert.ok(already && !already.rush);
-  assert.equal(already.floorUsd, 470);
+  assert.equal(already.floorUsd, 650);
 });
 
 test("склонение недель в подсказке", () => {
@@ -127,8 +128,8 @@ test("что предложить: невыбранные допы с ценой
 
 test("сумма ниже порога — только с порогом", () => {
   const q = quoteFor({ category: "landing", selection: {}, weeks: null });
-  assert.equal(belowFloor(350, q), true);
-  assert.equal(belowFloor(360, q), false);
+  assert.equal(belowFloor(490, q), true);
+  assert.equal(belowFloor(500, q), false);
   assert.equal(belowFloor(null, q), false);
   assert.equal(belowFloor(undefined, q), false);
   assert.equal(belowFloor(1, null), false);

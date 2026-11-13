@@ -434,7 +434,7 @@ const en: BoxCopy = {
   },
   roadmap: {
     kicker: "Roadmap",
-    title: "From prototype to sales",
+    title: "From pilot to sales",
     lead: "Everything below is a plan. We mark what is already under way.",
     now: "Under way now",
     stages: [
@@ -1346,7 +1346,7 @@ const pl: BoxCopy = {
   },
   roadmap: {
     kicker: "Mapa drogowa",
-    title: "Od prototypu do sprzedaży",
+    title: "Od pilotażu do sprzedaży",
     lead: "Wszystko poniżej to plan. Zaznaczamy, co już trwa.",
     now: "Trwa teraz",
     stages: [
