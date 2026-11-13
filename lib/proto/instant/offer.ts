@@ -16,7 +16,7 @@
  */
 import plans from "@/content/mockup-plans.json" with { type: "json" };
 import shox from "@/content/proto-instant/shox-assets.json" with { type: "json" };
-import { PROMO } from "@/lib/admin/mockup-offer";
+import { OFFER_HOURS, PROMO, untilText } from "@/lib/admin/mockup-offer";
 import type { InstantLocale, InstantNiche } from "@/lib/proto/instant/types";
 
 export type OfferAddon = { id: string; ru: string; uz: string; price: number };
@@ -174,7 +174,95 @@ export function offerAddons(niche: InstantNiche): OfferAddon[] {
   return OFFERS[niche]().map((a) => ({ ...a, price: offerAddonPrice(a.price) }));
 }
 
+/**
+ * Допы на en, ar, pl — у сфер, чей макет собирается на этих языках
+ * (MOCKUP_EXTRA): ключ — id допа из offerAddons.
+ */
+const ADDON_TR: Record<string, { en: string; ar: string; pl: string }> = {
+  "nek-admin": { en: "Clinic panel: bookings, messengers, schedule", ar: "لوحة العيادة: الحجوزات والمراسلات والجدول", pl: "Panel kliniki: zapisy, komunikatory, grafik" },
+  "nek-chat": { en: "Website chat: answers or an administrator", ar: "دردشة على الموقع: إجابات جاهزة أو موظف الاستقبال", pl: "Czat na stronie: odpowiedzi albo administrator" },
+  "nek-quiz": { en: "«Your smile» quiz in 4 steps", ar: "اختبار «ابتسامتك» في 4 خطوات", pl: "Quiz «Twój uśmiech» w 4 krokach" },
+  "nek-remind": { en: "Visit reminders for patients", ar: "تذكير المريض بموعد الزيارة", pl: "Przypomnienie pacjentowi o wizycie" },
+  "nek-reviews": { en: "Google reviews on the website", ar: "تقييمات Google على الموقع", pl: "Opinie Google na stronie" },
+  "nek-pages": { en: "Separate pages for each service", ar: "صفحة مستقلة لكل خدمة", pl: "Osobne strony usług" },
+  "shox-admin": { en: "Admin panel for bookings and patient work", ar: "لوحة إدارة للحجوزات والعمل مع المرضى", pl: "Panel administracyjny do zapisów i pracy z pacjentami" },
+  "shox-bot": { en: "Telegram booking bot", ar: "بوت Telegram للحجز", pl: "Bot Telegram do zapisów" },
+  "shox-sms": { en: "SMS reminders", ar: "تذكيرات عبر الرسائل القصيرة", pl: "Przypomnienia SMS" },
+  "shox-cabinet": { en: "Patient account with test results", ar: "حساب شخصي للمريض مع نتائج التحاليل", pl: "Konto pacjenta z wynikami badań" },
+  "shox-reviews": { en: "Patient reviews with moderation", ar: "تقييمات المرضى مع المراجعة", pl: "Opinie pacjentów z moderacją" },
+  "karomat-order": { en: "Online ordering: delivery and pickup", ar: "طلب عبر الإنترنت: توصيل واستلام", pl: "Zamówienia online: dostawa i odbiór osobisty" },
+  "karomat-pay": { en: "Online payment", ar: "الدفع عبر الإنترنت", pl: "Płatności online" },
+  "karomat-panel": { en: "Owner panel: bookings, orders, stop list", ar: "لوحة المالك: الحجوزات والطلبات والأطباق غير المتوفرة", pl: "Panel właściciela: rezerwacje, zamówienia, stop-lista" },
+  "karomat-tgbot": { en: "Restaurant Telegram bot", ar: "بوت Telegram للمطعم", pl: "Bot Telegram restauracji" },
+  "karomat-qr": { en: "QR menu on the table", ar: "قائمة QR على الطاولة", pl: "Menu QR na stoliku" },
+  "karomat-banket": { en: "Banquets and weddings: calculator and requests", ar: "الولائم والأعراس: حاسبة وطلبات", pl: "Bankiety i wesela: kalkulator i zgłoszenia" },
+  "karomat-reviews": { en: "Google and Yandex Maps reviews", ar: "تقييمات Google وYandex Maps", pl: "Opinie z Google i Yandex Maps" },
+};
+
+/** Подпись допа на языке клиента; нет перевода — английская, затем русская. */
+export function addonTitle(a: OfferAddon, l: InstantLocale): string {
+  if (l === "ru" || l === "uz") return a[l];
+  return ADDON_TR[a.id]?.[l] ?? a.ru;
+}
+
+/** Есть ли у допов сферы подписи на en, ar, pl. */
+export const addonsTranslated = (niche: InstantNiche) => offerAddons(niche).every((a) => Boolean(ADDON_TR[a.id]));
+
+const BASE_EXTRA = {
+  en: {
+    landing: ["Landing page based on this mockup", `with everything that works on it and ${PROMO.landing.addons} extras of your choice`],
+    corporate: ["Full corporate website", "all sections, two languages, pages for search"],
+  },
+  ar: {
+    landing: ["صفحة هبوط على أساس هذا النموذج", `مع كل ما يعمل فيه و${PROMO.landing.addons} إضافات من اختياركم`],
+    corporate: ["موقع شركة متكامل", "كل الأقسام، لغتان، صفحات لمحركات البحث"],
+  },
+  pl: {
+    landing: ["Landing na bazie tej makiety", `ze wszystkim, co na niej działa, i ${PROMO.landing.addons} dodatkami do wyboru`],
+    corporate: ["Pełna strona firmowa", "wszystkie sekcje, dwa języki, strony pod wyszukiwarkę"],
+  },
+} as const;
+
+/**
+ * Спецусловия 48 часов на en, ar, pl — те же цены PROMO и тот же срок, что
+ * announceText (lib/admin/mockup-offer) на русском и узбекском.
+ */
+export function announceExtra(l: "en" | "ar" | "pl", expiresAt: string): string {
+  const until = untilText(expiresAt);
+  const a = PROMO.landing;
+  const c = PROMO.corporate;
+  if (l === "en") {
+    return [
+      `Special terms for this mockup: ${OFFER_HOURS} hours, until ${until} Tashkent time:`,
+      `• a landing page based on this mockup, fully working, with ${a.addons} extras of your choice: ${a.price} $ instead of ${a.regular} $;`,
+      `• a full corporate website: ${c.price} $ instead of ${c.regular} $.`,
+      "If we sign the contract before then, the price stays the same. After that, regular prices apply.",
+    ].join("\n");
+  }
+  if (l === "ar") {
+    return [
+      `شروط خاصة لهذا النموذج: ${OFFER_HOURS} ساعة، حتى ${until} بتوقيت طشقند:`,
+      `• صفحة هبوط على أساس هذا النموذج بكل وظائفه و${a.addons} إضافات من اختياركم: ${a.price} $ بدلًا من ${a.regular} $؛`,
+      `• موقع شركة متكامل: ${c.price} $ بدلًا من ${c.regular} $.`,
+      "إذا وقّعنا العقد قبل هذا الموعد يبقى السعر كما هو. بعده تُطبّق الأسعار العادية.",
+    ].join("\n");
+  }
+  return [
+    `Warunki specjalne dla tej makiety: ${OFFER_HOURS} godzin, do ${until} czasu Taszkentu:`,
+    `• landing na bazie tej makiety, w pełni działający, z ${a.addons} dodatkami do wyboru: ${a.price} $ zamiast ${a.regular} $;`,
+    `• pełna strona firmowa: ${c.price} $ zamiast ${c.regular} $.`,
+    "Jeśli podpiszemy umowę do tego czasu, cena się nie zmieni. Potem obowiązują zwykłe ceny.",
+  ].join("\n");
+}
+
 export function offerBase(locale: InstantLocale) {
+  if (locale === "en" || locale === "ar" || locale === "pl") {
+    const b = BASE_EXTRA[locale];
+    return [
+      { id: "landing", title: b.landing[0] as string, note: b.landing[1] as string, price: PROMO.landing.price, regular: PROMO.landing.regular },
+      { id: "corporate", title: b.corporate[0] as string, note: b.corporate[1] as string, price: PROMO.corporate.price, regular: PROMO.corporate.regular },
+    ];
+  }
   return [
     {
       id: "landing",

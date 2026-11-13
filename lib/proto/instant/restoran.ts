@@ -22,7 +22,7 @@
 import assets from "@/content/proto-instant/agora-assets.json" with { type: "json" };
 import { dzIntroSolo } from "@/lib/proto/dz-video.mjs";
 import { mockupTermsUrl } from "@/lib/proto/booking";
-import { LIMITS, type InstantLocale, type InstantService, type InstantSite } from "@/lib/proto/instant/types";
+import { LIMITS, siteLocaleOf, type InstantLocale, type InstantService, type InstantSite } from "@/lib/proto/instant/types";
 import { brandColor, esc, handleOf, hexToHsl, imageUrl, telHref, waHref } from "@/lib/proto/instant/safe";
 import { rgbOf } from "@/lib/proto/instant/dental";
 import restoranMedia from "@/content/proto-instant/restoran-media.json" with { type: "json" };
@@ -38,8 +38,8 @@ const STOCK_CAP = [
   { ru: "Мангал", uz: "Manqal" },
 ];
 
-type Pair = { ru: string; uz: string };
-const P = (ru: string, uz: string): Pair => ({ ru, uz });
+import { P, htmlLang, rtlHead, sayIn, type Pair } from "@/lib/proto/instant/tr";
+import { RESTORAN_DAYS, RESTORAN_TR } from "@/lib/proto/instant/tr/restoran";
 
 const C = {
   kind: P("Ресторан", "Restoran"),
@@ -151,7 +151,9 @@ const TIMES = ["10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "1
 
 /** Тексты для site.js Agora: те же ключи, слова про панель и Agora переписаны под клиента. */
 function texts(l: InstantLocale, name: string) {
-  const t = (ru: string, uz: string) => (l === "ru" ? ru : uz);
+  const say = sayIn(RESTORAN_TR, l);
+  const t = (ru: string, uz: string) => say({ ru, uz }).replaceAll("{name}", name);
+  const days = l === "ru" || l === "uz" ? null : RESTORAN_DAYS[l];
   return {
     sum: t("сум", "so‘m"), g: t("г", "g"), stop: t("Сегодня нет", "Bugun yo‘q"), all: t("Показать все {n}", "Hammasini ko‘rsatish: {n}"), none: t("Ничего не нашлось. Попробуйте другое слово.", "Hech narsa topilmadi. Boshqa so‘zni sinab ko‘ring."),
     alias: "", stock: "", like: "", ask: t("Цену уточняйте", "Narxini aniqlang"),
@@ -162,17 +164,17 @@ function texts(l: InstantLocale, name: string) {
     min: t("мин", "daq"), minOrder: t("Доставка от {n}", "Yetkazish {n} dan"), needAddr: t("Напишите адрес", "Manzilni yozing"), tag_hit: t("Хит", "Xit"), tag_new: t("Новинка", "Yangi"),
     cart: t("Ваш заказ", "Buyurtmangiz"), total: t("Итого", "Jami"), how: t("Как", "Qanday"), toBook: t("К брони", "Bronga"), toGo: t("Навынос", "Olib ketish"),
     name: t("Имя", "Ism"), phone: t("Телефон", "Telefon"), order: t("Оформить заказ", "Buyurtma berish"), clear: t("Очистить", "Tozalash"),
-    ordNote: t(`Это макет: заказ никуда не уходит. На рабочем сайте он сразу придёт администратору ${name} в Telegram.`, `Bu maket: buyurtma hech qayerga ketmaydi. Ishchi saytda u darhol ${name} administratoriga Telegramda keladi.`),
+    ordNote: t("Это макет: заказ никуда не уходит. На рабочем сайте он сразу придёт администратору {name} в Telegram.", "Bu maket: buyurtma hech qayerga ketmaydi. Ishchi saytda u darhol {name} administratoriga Telegramda keladi."),
     need: t("Напишите имя и телефон", "Ism va telefonni yozing"), pickTime: t("Выберите время", "Vaqtni tanlang"),
     today: t("Сегодня", "Bugun"), tomorrow: t("Завтра", "Ertaga"),
-    wd: l === "ru" ? ["вс", "пн", "вт", "ср", "чт", "пт", "сб"] : ["yak", "dush", "sesh", "chor", "pay", "jum", "shan"],
-    mon: l === "ru" ? ["янв", "фев", "мар", "апр", "мая", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"] : ["yan", "fev", "mar", "apr", "may", "iyun", "iyul", "avg", "sen", "okt", "noy", "dek"],
+    wd: days ? [...days.wd] : l === "ru" ? ["вс", "пн", "вт", "ср", "чт", "пт", "сб"] : ["yak", "dush", "sesh", "chor", "pay", "jum", "shan"],
+    mon: days ? [...days.mon] : l === "ru" ? ["янв", "фев", "мар", "апр", "мая", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"] : ["yan", "fev", "mar", "apr", "may", "iyun", "iyul", "avg", "sen", "okt", "noy", "dek"],
     bigTable: t("Для большой компании администратор перезвонит, чтобы собрать стол", "Katta davra uchun stolni tayyorlash maqsadida administrator qo‘ng‘iroq qiladi"),
     mine: t("Моя бронь", "Mening bronim"), mineOrd: t("Мой заказ", "Mening buyurtmam"), bookNo: t("Бронь", "Bron"), ordNo: t("Заказ", "Buyurtma"), guests: t("гостей", "mehmon"),
     bst: [t("Новая: ждёт администратора", "Yangi: administratorni kutmoqda"), t("Подтверждена", "Tasdiqlandi"), t("Гости пришли", "Mehmonlar keldi"), t("Отменена", "Bekor qilindi")],
     ost: [t("Новый", "Yangi"), t("Принят", "Qabul qilindi"), t("Готовится", "Tayyorlanmoqda"), t("Готов", "Tayyor"), t("Выдан", "Berildi")],
-    mineHint: t(`Это макет: бронь никуда не уходит. На рабочем сайте её подтверждает администратор ${name}, и гость видит статус здесь.`, `Bu maket: bron hech qayerga ketmaydi. Ishchi saytda uni ${name} administratori tasdiqlaydi, mehmon esa holatini shu yerda ko‘radi.`),
-    openPanel: t(`Написать в ${name}`, `${name}ga yozish`), sms: t(`Отправить SMS в ${name}`, `${name}ga SMS yuborish`),
+    mineHint: t("Это макет: бронь никуда не уходит. На рабочем сайте её подтверждает администратор {name}, и гость видит статус здесь.", "Bu maket: bron hech qayerga ketmaydi. Ishchi saytda uni {name} administratori tasdiqlaydi, mehmon esa holatini shu yerda ko‘radi."),
+    openPanel: t("Написать в {name}", "{name}ga yozish"), sms: t("Отправить SMS в {name}", "{name}ga SMS yuborish"),
     smsText: t("Здравствуйте! Бронь стола: {d}, {t}, гостей {n}, на имя {name}.", "Assalomu alaykum! Stol bron: {d}, {t}, {n} mehmon, {name} nomiga."),
     table7: "", callWaiter: "", callBill: "", qrSent: "", rvGood: "", rvBad: "",
   };
@@ -181,7 +183,8 @@ function texts(l: InstantLocale, name: string) {
 /** Собрать страницу. Данные — уже очищенные (lib/proto/instant/build, normalizeSite). */
 export function restoranHtml(site: InstantSite): string {
   const l: InstantLocale = site.locale;
-  const t = (p: Pair) => p[l];
+  const t = sayIn(RESTORAN_TR, l);
+  const r = (ru: string, uz: string) => t({ ru, uz });
   const name = esc(site.name);
   const tel = telHref(site.phone);
   const tg = handleOf(site.telegram);
@@ -216,14 +219,14 @@ ${logoA}
   // темнота и название заведения. Кадры нейтральные, одни на всех клиентов ниши.
   const top2 = services.slice(0, 2).map((x) => x.name).join(", ");
   const fly = flyParts({
-    locale: l, img: IMG, media: restoranMedia, label: l === "ru" ? "Пролёт по ресторану" : "Restoran bo‘ylab parvoz", fin: "center",
+    locale: l, img: IMG, media: restoranMedia, label: r("Пролёт по ресторану", "Restoran bo‘ylab parvoz"), fin: "center",
     sign: `${logo ? `<img src="${esc(logo)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : ""}<b>${name}</b>`,
     btn: "btn btn-a", accent: "var(--a)", hd: "'Forum',Georgia,serif", tx: "'Manrope',sans-serif", to: "top",
     chapters: [
-      { at: 0.06, a: site.name, b: site.city ?? (l === "ru" ? "Добро пожаловать" : "Xush kelibsiz") },
-      { at: 0.3, a: l === "ru" ? "Вас встретят" : "Sizni kutib olishadi", b: l === "ru" ? "и проводят к столу" : "va stolgacha kuzatishadi" },
-      { at: 0.52, a: l === "ru" ? "Кухня открыта" : "Oshxona ochiq", b: top2 || (l === "ru" ? "Готовим при вас" : "Ko‘z oldingizda pishiramiz") },
-      { at: 0.74, a: l === "ru" ? "Огонь, вок и мясо" : "Olov, vok va go‘sht", b: l === "ru" ? "с плиты сразу на стол" : "plitadan to‘g‘ri stolga" },
+      { at: 0.06, a: site.name, b: site.city ?? r("Добро пожаловать", "Xush kelibsiz") },
+      { at: 0.3, a: r("Вас встретят", "Sizni kutib olishadi"), b: r("и проводят к столу", "va stolgacha kuzatishadi") },
+      { at: 0.52, a: r("Кухня открыта", "Oshxona ochiq"), b: top2 || r("Готовим при вас", "Ko‘z oldingizda pishiramiz") },
+      { at: 0.74, a: r("Огонь, вок и мясо", "Olov, vok va go‘sht"), b: r("с плиты сразу на стол", "plitadan to‘g‘ri stolga") },
       { at: 0.93, a: site.name, b: site.tagline ?? site.city ?? "" },
     ],
   });
@@ -320,7 +323,7 @@ ${ig ? `<div class="r">${ICON.ig}<div><b><a href="https://instagram.com/${esc(ig
 <div>${logoA}<p style="margin-top:16px">${t(C.footText)}</p></div>
 <div><h4>${t(C.sections)}</h4>${nav.map(([id, x]) => `<a href="#${id}">${t(x)}</a>`).join("")}</div>
 ${links ? `<div><h4>${t(C.contacts)}</h4>${links}</div>` : ""}
-</div><div class="sm"><span>© ${name}</span><span>${t(C.mockup)} <a href="${esc(mockupTermsUrl(l))}" target="_blank" rel="noopener">${t(C.terms)}</a></span><span>${t(C.source)} ${esc(site.source)}</span></div></div></footer>`;
+</div><div class="sm"><span>© ${name}</span><span>${t(C.mockup)} <a href="${esc(mockupTermsUrl(siteLocaleOf(l)))}" target="_blank" rel="noopener">${t(C.terms)}</a></span><span>${t(C.source)} ${esc(site.source)}</span></div></div></footer>`;
 
   const data = {
     l,
@@ -340,7 +343,7 @@ ${links ? `<div><h4>${t(C.contacts)}</h4>${links}</div>` : ""}
   const dock = `<div class="dock glass" id="dock"><a class="btn btn-a" href="#book">${ICON.cal}<span>${t(C.nav.book)}</span></a>${callBtn("btn-a", t(C.call))}${services.length ? `<a class="btn btn-g" href="#menu">${ICON.menu}<span>${t(C.nav.menu)}</span></a>` : ""}</div>`;
 
   return `<!doctype html>
-<html lang="${l}">
+<html ${htmlLang(l)}>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -351,6 +354,7 @@ ${links ? `<div><h4>${t(C.contacts)}</h4>${links}</div>` : ""}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Forum&family=Manrope:wght@400;700&display=swap">
+${rtlHead(l)}
 <style>${assets.css}
 :root{${palette(site.color)}}
 .im-logo{display:flex;align-items:center;gap:10px;max-width:46vw;min-width:0}

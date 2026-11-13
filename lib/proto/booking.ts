@@ -37,7 +37,7 @@ import { siteUrl } from "@/lib/seo";
 import { dzIntroSolo } from "@/lib/proto/dz-video.mjs";
 
 /** Условия на макеты — на языке прототипа. */
-export const mockupTermsUrl = (locale: "ru" | "uz") => `${siteUrl}/${locale}/${MOCKUP_TERMS_PATH}`;
+export const mockupTermsUrl = (locale: "ru" | "uz" | "en" | "pl") => `${siteUrl}/${locale}/${MOCKUP_TERMS_PATH}`;
 
 /** Сколько услуг выкидывает трюк. Дальше — списком, без театра. */
 const STAGE_MAX = 6;

@@ -464,8 +464,9 @@ test("первое сообщение: сначала язык, потом «с�
   const f = fake();
   assert.equal(await greetInstant(ctx, f.deps), true);
   assert.equal(f.sent[0].html, LANG_TEXT);
-  assert.match(LANG_TEXT, /На каком языке вам удобнее\?[\s\S]*Qaysi tilda qulay\?/, "вопрос на двух языках сразу");
-  assert.deepEqual(JSON.stringify(f.sent[0].rows).match(/im:l:(ru|uz)/g), ["im:l:ru", "im:l:uz"]);
+  assert.match(LANG_TEXT, /На каком языке вам удобнее\?[\s\S]*Qaysi tilda qulay\?[\s\S]*Which language[\s\S]*ما اللغة[\s\S]*W jakim języku/, "вопрос на всех пяти языках сразу");
+  assert.deepEqual(JSON.stringify(f.sent[0].rows).match(/im:l:(ru|uz|en|ar|pl)/g), ["im:l:ru", "im:l:uz", "im:l:en", "im:l:ar", "im:l:pl"]);
+  assert.match(JSON.stringify(f.sent[0].rows), /🇬🇧 English[\s\S]*🇸🇦 العربية[\s\S]*🇵🇱 Polski/);
   assert.equal(f.flow()?.stage, "lang");
   await handleInstantButton(ctx, ["im", "l", "ru"], f.deps);
   assert.match(f.sent[1].html, /за 2 минуты и бесплатно\. Пришлите адрес вашего сайта или Instagram/);
@@ -539,7 +540,8 @@ test("язык: /maket — после выбора сразу адрес сай�
   assert.equal(stale.sent[0].html, LANG_TEXT);
   const src = readFileSync(new URL("../app/api/telegram/webhook/route.ts", import.meta.url), "utf8");
   assert.doesNotMatch(src, /await startInstant\(/, "вебхук начинает с языка");
-  assert.match(src, /existing\?\.locale \?\? \(await botLangOf\(chat\.id\)/, "выбранный язык переживает выкатку");
+  assert.match(src, /const chosen = existing \? null : await botLangOf\(chat\.id\)/, "выбранный язык переживает выкатку");
+  assert.match(src, /existing\?\.locale \?\? \(chosen \? siteLocaleOf\(chosen\)/);
 });
 
 test("первое сообщение: адрес → сфера; обычный текст и «другой вопрос» — в первичку", async () => {
@@ -684,4 +686,99 @@ test("«Другое»: сфера словами — ближайший наш 
   await ask(f.deps, "стоматология");
   assert.ok(f.log.includes("save:0"), "написал словами — собрали макет его сферы");
   assert.deepEqual(f.leads, ["built"]);
+});
+
+
+// ── Пять языков (владелец, 13.11.2026: «В тг боте добавляем при старте еще языки (английский, арабский, польский)»).
+
+const CYR = /[Ѐ-ӿ]/;
+/** Всё, что бот прислал после вопроса о языке (в нём кнопка «🇷🇺 Русский»). */
+const allText = (f: ReturnType<typeof fake>) => f.sent.filter((m) => m.html !== LANG_TEXT).map((m) => `${m.html}\n${JSON.stringify(m.rows ?? [])}`).join("\n");
+
+test("пять языков: язык словом — английский, арабский, польский", () => {
+  assert.equal(langOfText("English"), "en");
+  assert.equal(langOfText("🇬🇧 English"), "en");
+  assert.equal(langOfText("английский"), "en");
+  assert.equal(langOfText("العربية"), "ar");
+  assert.equal(langOfText("Arabic"), "ar");
+  assert.equal(langOfText("Polski"), "pl");
+  assert.equal(langOfText("польский"), "pl");
+  assert.equal(langOfText("How much is a website?"), null);
+});
+
+for (const lang of ["en", "ar", "pl"] as const) {
+  test(`пять языков: ${lang} — весь поток и сам макет стоматологии на этом языке, без кириллицы`, async () => {
+    const picked: string[] = [];
+    const f = fake({
+      setLang: async (_c, l) => void picked.push(l),
+      read: async (_u, niche, locale, onStep) => {
+        for (const s of ["read", "brand", "services"] as const) await onStep(s);
+        return { ok: true, usedModel: true, site: { ...emptySite(niche, locale, "Smile Lab", "https://smile.example/"), phone: "+48 512 345 678", services: [{ name: "Cleaning", price: null }] } };
+      },
+      save: async (build) => {
+        f.log.push(`save:${build.problems.length}`);
+        built.push(build.html, build.pages.kp);
+        assert.equal(build.site.locale, lang);
+        assert.deepEqual(build.problems, [], "макет на новом языке проходит все проверки");
+        assert.equal(build.pages.admin, undefined, "админки наших макетов — на ru и uz");
+        return { id: "p1", token: "tok" };
+      },
+    });
+    const built: string[] = [];
+    await greeted(f, ctx, lang as "ru");
+    assert.deepEqual(picked, [lang]);
+    assert.equal(f.flow()?.locale, lang);
+    await handleInstantButton(ctx, ["im", "go"], f.deps);
+    await ask(f.deps, "smile.example");
+    await handleInstantButton(ctx, ["im", "n", "stomatologiya"], f.deps);
+    assert.ok(f.log.includes("save:0"));
+    const text = allText(f);
+    assert.ok(!CYR.test(text), `бот говорит на ${lang}: ${text.match(/[Ѐ-ӿ]+/)?.[0]}`);
+    assert.doesNotMatch(text, /шаблон|template|szablon|قالب/i, "слово «шаблон» клиенту не показываем");
+    assert.match(text, /500 \$/, "цена из PROMO");
+    assert.match(text, /\/kp"/, "кнопка КП");
+    const [page, kp] = built;
+    assert.match(page, new RegExp(`<html lang="${lang}"${lang === "ar" ? ' dir="rtl"' : ""}>`));
+    assert.match(kp, new RegExp(`<html lang="${lang}"${lang === "ar" ? ' dir="rtl"' : ""}>`));
+    assert.ok(!CYR.test(kp.replace(/<style[\s\S]*?<\/style>/g, "")), "КП без кириллицы");
+  });
+}
+
+test("пять языков: сфера без перевода на en, ar, pl — ручной путь на языке клиента и лид", async () => {
+  for (const lang of ["en", "ar", "pl"] as const) {
+    const f = fake();
+    await greeted(f, ctx, lang as "ru");
+    await handleInstantButton(ctx, ["im", "go"], f.deps);
+    await ask(f.deps, "mebel.example");
+    await handleInstantButton(ctx, ["im", "n", "mebel"], f.deps);
+    assert.ok(!f.log.some((x) => x.startsWith("save:")), "макет на русском клиенту не собираем");
+    assert.deepEqual(f.leads, ["soon"], "лид менеджеру: соберёт дизайнер");
+    const last = f.sent.at(-1)!.html;
+    assert.match(last, new RegExp(String(MANUAL_HOURS)));
+    assert.ok(!CYR.test(last), `ручной путь на ${lang}`);
+    assert.match(last, /devuz\.studio\/(en|pl)\/cases/, "кейсы — на сайте студии на en или pl");
+  }
+});
+
+test("пять языков: сфера словами по-английски и по-польски — ближайший макет", async () => {
+  const { nicheFromWords } = await import("@/lib/proto/instant/bot");
+  assert.equal(nicheFromWords("dental clinic"), "stomatologiya");
+  assert.equal(nicheFromWords("restauracja"), "restoran");
+  assert.equal(nicheFromWords("medical center"), "medcentr");
+  assert.equal(nicheFromWords("مطعم"), "restoran");
+});
+
+test("пять языков: тексты бота, кнопки ниш, виджет и цена — без кириллицы на en, ar, pl", () => {
+  for (const lang of ["en", "ar", "pl"] as const) {
+    for (const s of STEPS) assert.ok(!CYR.test(stepCaption(lang, s)), `подпись виджета ${lang}`);
+    const w = widgetHtml(lang, "restoran");
+    assert.ok(!CYR.test(w), `виджет ${lang}`);
+    assert.equal(w.includes('dir="rtl"'), lang === "ar", "виджет справа налево только по-арабски");
+    for (const n of ["stomatologiya", "medcentr", "restoran"] as const) {
+      const p = priceText(lang, new Date("2026-11-10T10:00:00Z"), n);
+      assert.ok(!CYR.test(p), `цена ${lang} ${n}`);
+      assert.match(p, new RegExp(`${PROMO.landing.price} \\$[\\s\\S]*${PROMO.corporate.price} \\$`));
+    }
+    assert.ok(!CYR.test(manualText(lang, "general")));
+  }
 });

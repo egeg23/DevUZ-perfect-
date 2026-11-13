@@ -61,6 +61,10 @@ import { findStaffByTelegram, issueLoginToken, staffByTelegramId, type Staff } f
 import { INSTANT_CB, INSTANT_START, beginInstant, greetInstant, handleInstantButton, handleInstantText, instantFromAddress, instantOpenFor, looksLikeAddress, type Ctx as InstantCtx } from "@/lib/proto/instant/bot";
 import { realDeps as instantDeps } from "@/lib/proto/instant/bot-deps";
 import { botLangOf } from "@/lib/proto/instant/store";
+import { siteLocaleOf } from "@/lib/proto/instant/types";
+
+/** Человек выбрал в боте арабский: язык ответов модели (владелец, 13.11.2026). */
+const ARABIC_NOTE = "Человек выбрал в боте арабский язык. Отвечай только по-арабски (литературный арабский), даже если готовые фразы бота по-английски.";
 import {
   APP_CODE_NONE,
   APP_START_NO_REQUEST,
@@ -546,8 +550,9 @@ function localeOf(from?: TelegramUser): Locale {
 }
 
 /**
- * Кто собирает «Макет в боте» (lib/proto/instant/bot): язык макета — узбекский
- * для узбекского Telegram, иначе русский; сотрудник — без лимита.
+ * Кто собирает «Макет в боте» (lib/proto/instant/bot): язык — выбранный в боте
+ * кнопкой (один из пяти), до выбора — узбекский для узбекского Telegram,
+ * иначе русский; сотрудник — без лимита.
  */
 async function instantCtx(chatId: number, from: TelegramUser | undefined, locale: Locale): Promise<InstantCtx> {
   const staff = from?.id ? await staffByTelegramId(from.id).catch(() => null) : null;
@@ -555,7 +560,7 @@ async function instantCtx(chatId: number, from: TelegramUser | undefined, locale
     chatId,
     tgId: from?.id ?? chatId,
     username: from?.username ?? null,
-    locale: locale === "uz" ? "uz" : "ru",
+    locale: (await botLangOf(chatId).catch(() => null)) ?? (locale === "uz" ? "uz" : "ru"),
     staffId: staff?.id ?? null,
     role: staff?.role ?? null,
   };
@@ -856,7 +861,8 @@ async function handleClient(message: NonNullable<Update["message"]>) {
   const existing = sessionFor(chat.id);
   // Язык, выбранный кнопкой в боте, главнее языка приложения Telegram и
   // переживает выкатку (сессия — в памяти, выбор — в базе).
-  const locale = existing?.locale ?? (await botLangOf(chat.id).catch(() => null)) ?? localeOf(message.from);
+  const chosen = existing ? null : await botLangOf(chat.id).catch(() => null);
+  const locale = existing?.locale ?? (chosen ? siteLocaleOf(chosen) : localeOf(message.from));
   const copy = botCopy(locale);
 
   if (text.startsWith("/start")) {
@@ -1341,6 +1347,9 @@ async function respond(
         channelNote(from, chatId, options.resuming === true, options.brief === true),
         options.scoutNote,
         broadcast ? BROADCAST_NOTE : null,
+        // Арабского словаря у первички нет (сессия идёт по-английски), язык
+        // человек выбрал кнопкой в начале бота — отвечаем на нём.
+        (await botLangOf(chatId).catch(() => null)) === "ar" ? ARABIC_NOTE : null,
       ]
         .filter(Boolean)
         .join("\n\n"),

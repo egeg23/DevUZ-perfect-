@@ -28,7 +28,7 @@
 import assets from "@/content/proto-instant/samist-assets.json" with { type: "json" };
 import { dzIntroSolo } from "@/lib/proto/dz-video.mjs";
 import { mockupTermsUrl } from "@/lib/proto/booking";
-import { LIMITS, type InstantLocale, type InstantService, type InstantSite } from "@/lib/proto/instant/types";
+import { LIMITS, type InstantLocale, type InstantService, type InstantSite, type BaseSite } from "@/lib/proto/instant/types";
 import { brandColor, esc, handleOf, hexToHsl, imageUrl, telHref, waHref } from "@/lib/proto/instant/safe";
 import { rgbOf } from "@/lib/proto/instant/dental";
 
@@ -218,7 +218,7 @@ function texts(l: InstantLocale, site: InstantSite) {
 }
 
 /** Машины для site.js и панели: строка услуги клиента — машина, фото — его или нейтральные. */
-export function avtosalonModels(site: InstantSite) {
+export function avtosalonModels(site: BaseSite) {
   const own = site.photos.map(imageUrl).filter((u): u is string => Boolean(u)).slice(0, LIMITS.photos);
   const pics = own.length ? own : AVTOSALON_PHOTOS.map((p) => p.replace("-1200", "-900"));
   const services: InstantService[] = site.services.slice(0, LIMITS.services);
@@ -226,7 +226,7 @@ export function avtosalonModels(site: InstantSite) {
 }
 
 /** Собрать страницу. Данные — уже очищенные (lib/proto/instant/build, normalizeSite). */
-export function avtosalonHtml(site: InstantSite): string {
+export function avtosalonHtml(site: BaseSite): string {
   const l: InstantLocale = site.locale;
   const t = (p: Pair) => p[l];
   const name = esc(site.name);

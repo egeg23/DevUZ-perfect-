@@ -67,6 +67,39 @@ const LABELS: Record<InstantLocale, Record<BuildStep, string> & { title: string;
     fail: { site: "Sayt ochilmadi", build: "Dizayner qo‘lda yig‘adi" },
     book: "Yozilish",
   },
+  en: {
+    title: "Building your website",
+    read: "Reading the website",
+    brand: "Logo and colors",
+    services: "Services and prices",
+    build: "Building the pages",
+    check: "Checking",
+    done: "Done",
+    fail: { site: "The website did not open", build: "A designer will build it by hand" },
+    book: "Book now",
+  },
+  ar: {
+    title: "نجهّز موقعكم",
+    read: "نقرأ الموقع",
+    brand: "الشعار والألوان",
+    services: "الخدمات والأسعار",
+    build: "نجمع الصفحات",
+    check: "نتحقق",
+    done: "تم",
+    fail: { site: "لم يُفتح الموقع", build: "سيجهّزه المصمم يدويًا" },
+    book: "احجزوا",
+  },
+  pl: {
+    title: "Budujemy Twoją stronę",
+    read: "Czytamy stronę",
+    brand: "Logo i kolory",
+    services: "Usługi i ceny",
+    build: "Składamy strony",
+    check: "Sprawdzamy",
+    done: "Gotowe",
+    fail: { site: "Strona się nie otworzyła", build: "Projektant zbuduje ją ręcznie" },
+    book: "Zapisz się",
+  },
 };
 
 /** Подпись под виджетом — запасной путь: её видит и клиент, у которого виджетов нет. */
@@ -128,9 +161,9 @@ export function widgetState(step: BuildStep, failed: BuildFail | false = false, 
 }
 
 /** Кнопка в мини-сайте виджета — как главная кнопка шаблона сферы: ресторан бронирует, а не «записывает». */
-const BOOK: Partial<Record<InstantNiche, Record<InstantLocale, string>>> = {
+const BOOK: Partial<Record<InstantNiche, Partial<Record<InstantLocale, string>>>> = {
   mebel: { ru: "Заказать замер", uz: "O‘lchovga buyurtma" },
-  restoran: { ru: "Забронировать", uz: "Stol band qilish" },
+  restoran: { ru: "Забронировать", uz: "Stol band qilish", en: "Book a table", ar: "احجزوا طاولة", pl: "Zarezerwuj stolik" },
   turagentstvo: { ru: "Подобрать тур", uz: "Tur tanlash" },
   "uchebnyy-centr": { ru: "Записаться на курс", uz: "Kursga yozilish" },
   nedvizhimost: { ru: "Подобрать объект", uz: "Obyekt tanlash" },
@@ -248,7 +281,7 @@ export function widgetHtml(locale: InstantLocale, niche?: InstantNiche): string 
 .bar i{display:block;height:3px;width:0;background:var(--tg-theme-button-color);transition:width .6s ease}
 @media (prefers-reduced-motion:reduce){.rd *,.d,.ty:after{animation:none}}
 </style>
-<div class="w" id="w"><div class="t">${l.title}<b id="pc"></b></div>
+<div class="w" id="w"${locale === "ar" ? ' dir="rtl"' : ""}><div class="t">${l.title}<b id="pc"></b></div>
 <div class="br"><div class="bb"><i></i><i></i><i></i><span class="ad" id="ad"></span></div>
 <div class="vp" id="vp"><div class="pg" id="pg">
 <div class="hd"><span class="lg z" id="lg"></span><span class="nm" id="nm"></span><span class="nv" id="nv"><i class="z"></i><i class="z"></i><i class="z"></i></span></div>

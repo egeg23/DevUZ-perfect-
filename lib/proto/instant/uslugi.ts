@@ -30,7 +30,7 @@ import assets from "@/content/proto-instant/fintax-assets.json" with { type: "js
 import { dzIntroSolo } from "@/lib/proto/dz-video.mjs";
 import { mockupTermsUrl } from "@/lib/proto/booking";
 import { PROTO_BASE } from "@/lib/proto/pages";
-import { LIMITS, type InstantLocale, type InstantSite } from "@/lib/proto/instant/types";
+import { LIMITS, type InstantLocale, type InstantSite, type BaseSite } from "@/lib/proto/instant/types";
 import { brandColor, esc, handleOf, hexToHsl, imageUrl, telHref, waHref } from "@/lib/proto/instant/safe";
 
 const IMG = "/protos/_niche/uslugi";
@@ -173,7 +173,7 @@ const two = (n: number) => String(n).padStart(2, "0");
 const initials = (n: string) => n.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
 
 /** Собрать страницу. Данные — уже очищенные (lib/proto/instant/build, normalizeSite). */
-export function uslugiHtml(site: InstantSite): string {
+export function uslugiHtml(site: BaseSite): string {
   const l: InstantLocale = site.locale;
   const t = (p: Pair) => p[l];
   const name = esc(site.name);

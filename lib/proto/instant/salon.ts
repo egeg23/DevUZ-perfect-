@@ -24,7 +24,7 @@ import { mockupTermsUrl } from "@/lib/proto/booking";
 import { rgbOf } from "@/lib/proto/instant/dental";
 import { flyParts, flyReady } from "@/lib/proto/instant/fly";
 import { brandColor, esc, handleOf, hexToHsl, imageUrl, telHref, waHref } from "@/lib/proto/instant/safe";
-import { LIMITS, type InstantLocale, type InstantService, type InstantSite } from "@/lib/proto/instant/types";
+import { LIMITS, type InstantLocale, type InstantService, type InstantSite, type BaseSite } from "@/lib/proto/instant/types";
 
 const IMG = "/protos/_niche/salon-krasoty";
 /** Нейтральные фото ниши — ключевые кадры пролёта: зал, стрижка, маникюр, окрашивание. */
@@ -155,7 +155,7 @@ const DROP = `<svg viewBox="0 0 40 58" aria-hidden="true"><defs><radialGradient 
 const pickService = (list: InstantService[], re: RegExp) => list.find((s) => re.test(s.name)) ?? null;
 
 /** Собрать страницу. Данные — уже очищенные (lib/proto/instant/build, normalizeSite). */
-export function salonHtml(site: InstantSite): string {
+export function salonHtml(site: BaseSite): string {
   const l: InstantLocale = site.locale;
   const t = (p: Pair) => p[l];
   const name = esc(site.name);

@@ -16,9 +16,9 @@
 import { OFFER_HOURS, OFFER_MS, untilText } from "@/lib/admin/mockup-offer";
 import { mockupTermsUrl } from "@/lib/proto/booking";
 import { PROTO_BASE } from "@/lib/proto/pages";
-import { offerAddons, offerBase } from "@/lib/proto/instant/offer";
+import { addonTitle, offerAddons, offerBase } from "@/lib/proto/instant/offer";
 import { esc } from "@/lib/proto/instant/safe";
-import type { InstantSite } from "@/lib/proto/instant/types";
+import { isRtl, siteLocaleOf, type InstantSite } from "@/lib/proto/instant/types";
 
 const BOT = "https://t.me/Devuz_studio_bot";
 
@@ -77,6 +77,87 @@ const T = {
     termsLine: "Maket DevUz Studio’ga tegishli. Undan foydalanib, siz qabul qilasiz:",
     days: "k",
   },
+  en: {
+    title: "Commercial offer",
+    for: "for",
+    date: "Date",
+    fixed: `The price is fixed for ${OFFER_HOURS} hours`,
+    until: "until",
+    tz: "Tashkent time",
+    left: "Time left",
+    over: "The special terms have expired: regular prices apply. Write to us and we will discuss.",
+    mockKick: "Your mockup",
+    mockText: "Built from your company’s details. This is how your new website could look.",
+    mockBtn: "Open the mockup",
+    baseKick: "Base",
+    baseText: "Choose the website you need.",
+    instead: "instead of",
+    addKick: "Extras",
+    addText: "Tick what you need. You can go without extras: the website works anyway.",
+    total: "Total",
+    pay: "Payment in parts: half at the start, half after launch, when everything works.",
+    go: "I want this website",
+    goHint: "Your choice will be copied: paste it into the bot chat and send it. A manager will contact you.",
+    copied: "Your choice is copied: paste it into the bot chat.",
+    msgHead: "I want a website based on the mockup",
+    terms: "mockup terms",
+    termsLine: "The mockup belongs to DevUz Studio. By using it, you accept the",
+    days: "d",
+  },
+  ar: {
+    title: "العرض التجاري",
+    for: "لـ",
+    date: "التاريخ",
+    fixed: `السعر ثابت لمدة ${OFFER_HOURS} ساعة`,
+    until: "حتى",
+    tz: "بتوقيت طشقند",
+    left: "الوقت المتبقي",
+    over: "انتهت مدة الشروط الخاصة: تُطبّق الأسعار العادية. اكتبوا لنا لنتناقش.",
+    mockKick: "نموذجكم",
+    mockText: "جُهّز حسب بيانات شركتكم. هكذا يمكن أن يبدو موقعكم الجديد.",
+    mockBtn: "افتحوا النموذج",
+    baseKick: "الأساس",
+    baseText: "اختاروا الموقع الذي تحتاجونه.",
+    instead: "بدلًا من",
+    addKick: "إضافات",
+    addText: "حدّدوا ما تحتاجونه. يمكن الاستغناء عن الإضافات: الموقع يعمل بدونها.",
+    total: "المجموع",
+    pay: "الدفع على دفعتين: النصف عند البدء، والنصف بعد الإطلاق عندما يعمل كل شيء.",
+    go: "أريد موقعًا كهذا",
+    goHint: "سيُنسخ اختياركم: الصقوه في محادثة البوت وأرسلوه. سيتواصل معكم المدير.",
+    copied: "تم نسخ اختياركم: الصقوه في محادثة البوت.",
+    msgHead: "أريد موقعًا حسب النموذج",
+    terms: "شروط النموذج",
+    termsLine: "النموذج ملك لـ DevUz Studio. باستخدامه توافقون على",
+    days: "ي",
+  },
+  pl: {
+    title: "Oferta handlowa",
+    for: "dla",
+    date: "Data",
+    fixed: `Cena zablokowana na ${OFFER_HOURS} godzin`,
+    until: "do",
+    tz: "czasu Taszkentu",
+    left: "Zostało",
+    over: "Warunki specjalne wygasły: obowiązują zwykłe ceny. Napisz do nas, porozmawiamy.",
+    mockKick: "Twoja makieta",
+    mockText: "Zbudowana na danych Twojej firmy. Tak może wyglądać Twoja nowa strona.",
+    mockBtn: "Otwórz makietę",
+    baseKick: "Podstawa",
+    baseText: "Wybierz, jakiej strony potrzebujesz.",
+    instead: "zamiast",
+    addKick: "Dodatki",
+    addText: "Zaznacz to, czego potrzebujesz. Można bez dodatków: strona i tak działa.",
+    total: "Razem",
+    pay: "Płatność w częściach: połowa na start, połowa po uruchomieniu, gdy wszystko działa.",
+    go: "Chcę taką stronę",
+    goHint: "Wybór zostanie skopiowany: wklej go na czacie z botem i wyślij. Menedżer się z Tobą skontaktuje.",
+    copied: "Wybór skopiowany: wklej go na czacie z botem.",
+    msgHead: "Chcę stronę na bazie makiety",
+    terms: "warunki makiety",
+    termsLine: "Makieta należy do DevUz Studio. Korzystając z niej, akceptujesz",
+    days: "d",
+  },
 } as const;
 
 const STAR =
@@ -87,6 +168,9 @@ const LOGO = `<svg viewBox="-112 -112 224 224" aria-hidden="true"><defs><linearG
 const HEAD = {
   ru: { tag: "Разработка сайтов, приложений и ИИ-продуктов · Ташкент", addr: "Ташкент, улица Шота Руставели, 138", legal: "ИП MAKSIMOV EGOR ANDREEVICH · Республика Узбекистан, г. Ташкент, улица Шота Руставели, 138" },
   uz: { tag: "Saytlar, ilovalar va sun’iy intellekt mahsulotlari · Toshkent", addr: "Toshkent, Shota Rustaveli ko‘chasi, 138", legal: "YaTT MAKSIMOV EGOR ANDREEVICH · O‘zbekiston Respublikasi, Toshkent sh., Shota Rustaveli ko‘chasi, 138" },
+  en: { tag: "Websites, apps and AI products · Tashkent", addr: "138 Shota Rustaveli Street, Tashkent", legal: "Sole proprietor MAKSIMOV EGOR ANDREEVICH · 138 Shota Rustaveli Street, Tashkent, Republic of Uzbekistan" },
+  ar: { tag: "مواقع وتطبيقات ومنتجات ذكاء اصطناعي · طشقند", addr: "طشقند، شارع شوتا روستافيلي، 138", legal: "رائد أعمال فردي MAKSIMOV EGOR ANDREEVICH · جمهورية أوزبكستان، طشقند، شارع شوتا روستافيلي، 138" },
+  pl: { tag: "Strony, aplikacje i produkty AI · Taszkent", addr: "Taszkent, ul. Szota Rustaweli 138", legal: "Przedsiębiorca MAKSIMOV EGOR ANDREEVICH · Republika Uzbekistanu, Taszkent, ul. Szota Rustaweli 138" },
 } as const;
 
 const money = (n: number) => `${String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ")} $`;
@@ -104,7 +188,7 @@ export function kpHtml(site: InstantSite, builtAt: Date): string {
   const data = {
     deadline,
     base: base.map((b) => ({ id: b.id, price: b.price, regular: b.regular, title: b.title })),
-    addons: addons.map((a) => ({ id: a.id, price: a.price, title: a[l] })),
+    addons: addons.map((a) => ({ id: a.id, price: a.price, title: addonTitle(a, l) })),
     head: `${t.msgHead} «${site.name}»`,
     total: t.total,
     over: t.over,
@@ -113,7 +197,7 @@ export function kpHtml(site: InstantSite, builtAt: Date): string {
   };
 
   return `<!doctype html>
-<html lang="${l}">
+<html lang="${l}"${isRtl(l) ? ' dir="rtl"' : ""}>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -121,11 +205,11 @@ export function kpHtml(site: InstantSite, builtAt: Date): string {
 <meta name="robots" content="noindex, nofollow, noarchive">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap&subset=cyrillic,latin-ext">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700${l === "ar" ? "&family=Noto+Sans+Arabic:wght@400;600;700" : ""}&display=swap&subset=cyrillic,latin-ext">
 <style>
 *{box-sizing:border-box}
 html{background:#e9ebee}
-body{margin:0;padding:16px;font:400 15px/1.55 Inter,system-ui,sans-serif;color:#000;-webkit-font-smoothing:antialiased}
+body{margin:0;padding:16px;font:400 15px/1.55 Inter,"Noto Sans Arabic",system-ui,sans-serif;color:#000;-webkit-font-smoothing:antialiased}
 .sheet{max-width:820px;margin:0 auto;background:#fff;padding:28px 22px 22px;box-shadow:0 4px 24px rgba(0,0,0,.14);border-radius:4px}
 @media(min-width:720px){.sheet{padding:40px 56px 32px}}
 .lh{display:flex;justify-content:space-between;gap:16px;padding-bottom:14px;border-bottom:2px solid #000;flex-wrap:wrap}
@@ -133,9 +217,9 @@ body{margin:0;padding:16px;font:400 15px/1.55 Inter,system-ui,sans-serif;color:#
 .lh-b svg{width:40px;height:40px;flex:none}
 .lh-n{margin:0;font-size:18px;font-weight:600;line-height:1}
 .lh-t{margin:4px 0 0;font-size:12px;color:rgba(0,0,0,.6)}
-.lh-c{font-size:12px;line-height:1.45;color:rgba(0,0,0,.7);text-align:right}
+.lh-c{font-size:12px;line-height:1.45;color:rgba(0,0,0,.7);text-align:end}
 .lh-c p{margin:0}
-@media(max-width:560px){.lh-c{text-align:left}}
+@media(max-width:560px){.lh-c{text-align:start}}
 h1{font-size:28px;line-height:1.15;margin:28px 0 6px;letter-spacing:-.01em}
 .sub{margin:0;color:rgba(0,0,0,.6)}
 .timer{margin:22px 0 0;padding:16px 18px;border:2px solid #000;border-radius:10px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
@@ -156,7 +240,7 @@ section{margin:30px 0 0}
 .opt .tx{flex:1;min-width:0}
 .opt b{display:block}
 .opt small{color:rgba(0,0,0,.6)}
-.pr{text-align:right;white-space:nowrap;font-weight:700}
+.pr{text-align:end;white-space:nowrap;font-weight:700}
 .pr s{display:block;font-weight:400;color:rgba(0,0,0,.45)}
 .sum{margin:26px 0 0;padding:18px;background:#f4f5f7;border-radius:10px}
 .sum .row{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
@@ -192,7 +276,7 @@ section{margin:30px 0 0}
 
 <section><p class="kick">${t.addKick}</p><p class="lead">${t.addText}</p>
 <div class="opts">${addons
-    .map((a) => `<label class="opt"><input type="checkbox" name="add" value="${esc(a.id)}"><span class="tx"><b>${esc(a[l])}</b></span><span class="pr">${money(a.price)}</span></label>`)
+    .map((a) => `<label class="opt"><input type="checkbox" name="add" value="${esc(a.id)}"><span class="tx"><b>${esc(addonTitle(a, l))}</b></span><span class="pr">${money(a.price)}</span></label>`)
     .join("")}</div></section>
 
 <div class="sum"><div class="row"><b>${t.total}</b><span class="big" id="total">${money(base[0].price)}</span></div><p>${t.pay}</p></div>
@@ -200,7 +284,7 @@ section{margin:30px 0 0}
 <div class="go"><a class="btn" id="go" href="${BOT}" target="_blank" rel="noopener">${t.go}</a></div>
 <p class="hint">${t.goHint}</p>
 
-<footer class="foot"><span><b>${h.legal.split(" · ")[0]}</b> · ${h.legal.split(" · ")[1]}</span><span>${t.termsLine} <a href="${esc(mockupTermsUrl(l))}" target="_blank" rel="noopener">${t.terms}</a></span></footer>
+<footer class="foot"><span><b>${h.legal.split(" · ")[0]}</b> · ${h.legal.split(" · ")[1]}</span><span>${t.termsLine} <a href="${esc(mockupTermsUrl(siteLocaleOf(l)))}" target="_blank" rel="noopener">${t.terms}</a></span></footer>
 </div>
 <p class="toast" id="toast" hidden></p>
 <script type="application/json" id="kp">${JSON.stringify(data).replace(/</g, "\\u003c")}</script>

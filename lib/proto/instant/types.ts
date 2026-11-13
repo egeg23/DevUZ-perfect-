@@ -13,7 +13,36 @@
  */
 import { PHONE_DIGITS } from "@/lib/proto/instant/safe";
 
-export type InstantLocale = "ru" | "uz";
+/**
+ * Язык бота и макета. Владелец, 13.11.2026: «В тг боте добавляем при старте
+ * еще языки (английский, арабский, польский)». Бот, виджет и КП говорят на
+ * всех пяти; макет на en, ar, pl — только у сфер из MOCKUP_LANGS, остальные
+ * сферы на этих языках собирает дизайнер вручную (ручной путь бота).
+ */
+export type InstantLocale = "ru" | "uz" | "en" | "ar" | "pl";
+export const INSTANT_LOCALES = ["ru", "uz", "en", "ar", "pl"] as const satisfies readonly InstantLocale[];
+/** Языки, на которых написаны шаблоны всех сфер. */
+export type BaseLocale = "ru" | "uz";
+/** Новые языки: у них словари переводов (lib/proto/instant/tr). */
+export type ExtraLocale = Exclude<InstantLocale, BaseLocale>;
+export const isBaseLocale = (l: InstantLocale): l is BaseLocale => l === "ru" || l === "uz";
+/** Справа налево. */
+export const isRtl = (l: InstantLocale) => l === "ar";
+/** Сайт студии и страница условий макета на этих языках есть; арабского нет — английский. */
+export const siteLocaleOf = (l: InstantLocale): "ru" | "uz" | "en" | "pl" => (l === "ar" ? "en" : l);
+
+/** Данные клиента для шаблона, который знает только ru и uz. */
+export type BaseSite = InstantSite & { locale: BaseLocale };
+
+/**
+ * На каких языках собирается макет сферы. ru и uz — у всех; en, ar, pl —
+ * у сфер с переводом шаблона (stomatologiya, medcentr, restoran). Сфера без
+ * языка клиента — ручной путь: «соберёт наш дизайнер», лид менеджеру.
+ */
+export const MOCKUP_EXTRA: readonly InstantNiche[] = ["stomatologiya", "medcentr", "restoran"];
+export function mockupSpeaks(niche: InstantNiche, l: InstantLocale): boolean {
+  return isBaseLocale(l) || MOCKUP_EXTRA.includes(niche);
+}
 
 /** Ниши, у которых есть шаблон. Остальные — «скоро» и лид менеджеру. */
 export const INSTANT_NICHES = ["stomatologiya", "medcentr", "mebel", "restoran", "turagentstvo", "uchebnyy-centr", "nedvizhimost", "salon-krasoty", "magazin", "avtoservis", "logistika", "stroitelstvo", "uslugi", "avtosalon"] as const;

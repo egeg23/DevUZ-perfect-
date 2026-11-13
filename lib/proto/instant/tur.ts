@@ -25,7 +25,7 @@
 import assets from "@/content/proto-instant/semtravel-assets.json" with { type: "json" };
 import { dzIntroSolo } from "@/lib/proto/dz-video.mjs";
 import { mockupTermsUrl } from "@/lib/proto/booking";
-import { LIMITS, type InstantLocale, type InstantService, type InstantSite } from "@/lib/proto/instant/types";
+import { LIMITS, type InstantLocale, type InstantService, type InstantSite, type BaseSite } from "@/lib/proto/instant/types";
 import { brandColor, esc, handleOf, hexToHsl, imageUrl, telHref, waHref } from "@/lib/proto/instant/safe";
 import { rgbOf } from "@/lib/proto/instant/dental";
 import turagentstvoMedia from "@/content/proto-instant/turagentstvo-media.json" with { type: "json" };
@@ -193,7 +193,7 @@ function serviceIcon(name: string): string {
 }
 
 /** Собрать страницу. Данные — уже очищенные (lib/proto/instant/build, normalizeSite). */
-export function turHtml(site: InstantSite, now = new Date()): string {
+export function turHtml(site: BaseSite, now = new Date()): string {
   const l: InstantLocale = site.locale;
   const t = (p: Pair) => p[l];
   const name = esc(site.name);
