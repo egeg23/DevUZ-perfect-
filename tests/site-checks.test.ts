@@ -48,7 +48,10 @@ test("метаданные — в <head> всем, не потоком в body",
 test("счётчики грузятся после страницы, а не вместе с первым экраном", () => {
   const analytics = read("components/layout/analytics.tsx");
   assert.doesNotMatch(analytics, /strategy="afterInteractive"/);
-  assert.equal(analytics.match(/strategy="lazyOnload"/g)?.length, 3);
+  // Метрика и Google — два отложенных скрипта: тег Google с 13.11.2026
+  // вставляет второй сам, чтобы не включаться на устройствах команды.
+  assert.equal(analytics.match(/strategy="lazyOnload"/g)?.length, 2);
+  assert.doesNotMatch(analytics, /<Script\s+src=/);
 });
 
 test("шрифты урезаны по толщинам, моноширинный без preload", () => {
