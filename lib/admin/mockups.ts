@@ -75,8 +75,8 @@ export type MockupRow = {
   /** «p:<id прототипа>» или «s:<проект витрины>» — так его зовёт кнопка пароля. */
   ref: string;
   kind: "proto" | "showcase";
-  /** «Макет в боте»: from = собран клиентом в боте; test = собрал сотрудник для проверки. */
-  bot?: "client" | "test" | null;
+  /** «Макет в боте»: client — собран клиентом в боте; test — собрал сотрудник; site — собран на главной сайта. */
+  bot?: "client" | "test" | "site" | null;
   name: string;
   /** Сайт клиента, с которого делали: «tirex.uz». */
   site: string | null;

@@ -98,7 +98,7 @@ export const MANUAL_HOURS = PROTOTYPE_HOURS;
 export const manualWhy = (why: LeadInput["why"]) => why !== "built";
 
 /** Ниши кружков → ниши кейсов (forNiches в content/cases.ts). */
-const CASE_NICHES: Record<CircleNiche, readonly string[]> = {
+export const CASE_NICHES: Record<CircleNiche, readonly string[]> = {
   general: [],
   medcentr: ["medcentr"],
   stomatologiya: ["stomatologiya"],

@@ -163,7 +163,7 @@ export async function claimManual(tgId: number, now = new Date()): Promise<boole
 /** Записать готовый макет: сразу «ушёл клиенту» — ссылка уходит в эту же минуту. */
 export async function saveInstantProto(
   build: InstantBuild,
-  who: { tgId: number; username: string | null; staffId: string | null; leadId?: string | null },
+  who: { tgId: number | null; username: string | null; staffId: string | null; leadId?: string | null; web?: { id: string; ip: string } },
 ): Promise<{ id: string; token: string } | null> {
   const db = serviceClient();
   if (!db) return null;
@@ -184,7 +184,15 @@ export async function saveInstantProto(
         source: build.site.source,
         locale: build.site.locale,
         // Сборка сотрудника — в «Макетах» с пометкой «собрал сотрудник», лида нет.
-        instant: { tg: String(who.tgId), username: who.username, staff: who.staffId, test: Boolean(who.staffId), site: build.site },
+        // С сайта (lib/proto/instant/site): Telegram-аккаунта нет, лимит — по браузеру и адресу.
+        instant: {
+          tg: who.tgId === null ? null : String(who.tgId),
+          username: who.username,
+          staff: who.staffId,
+          test: Boolean(who.staffId),
+          site: build.site,
+          ...(who.web ? { via: "site", web: who.web.id, ip: who.web.ip } : {}),
+        },
       },
       html: build.html,
       pages: build.pages,
@@ -205,7 +213,7 @@ export async function saveInstantProto(
     actorStaffId: who.staffId,
     targetType: "proto",
     targetId: String(data.id),
-    meta: { name: build.site.name, niche: build.site.niche, problems: build.problems.length, tg: who.tgId },
+    meta: { name: build.site.name, niche: build.site.niche, problems: build.problems.length, tg: who.tgId, via: who.web ? "site" : "bot" },
   });
   return { id: String(data.id), token: String(data.token) };
 }
@@ -218,4 +226,64 @@ export async function setProtoLead(protoId: string, leadId: string): Promise<voi
   const facts = (data?.facts ?? null) as { instant?: Record<string, unknown> } | null;
   if (!facts?.instant) return;
   await db.from("protos").update({ facts: { ...facts, instant: { ...facts.instant, lead: leadId } } }).eq("id", protoId);
+}
+
+/**
+ * Лимит «Собрать макет» на сайте: макет этого браузера (последний и не
+ * черновик ли), сколько собрано с этого адреса и на всех за сутки. Адрес —
+ * отпечатком (`ip` в facts), не цифрами. База не ответила — null: не собираем.
+ */
+export async function siteCounts(
+  webId: string | null,
+  ip: string,
+  now = new Date(),
+): Promise<{ has: "none" | "ready" | "draft"; token: string | null; name: string | null; admin: boolean; ipDay: number; allDay: number } | null> {
+  const db = serviceClient();
+  if (!db) return null;
+  const since = new Date(now.getTime() - 24 * 3600_000).toISOString();
+  const site = () => db.from("protos").select("id", { count: "exact", head: true }).eq("facts->instant->>via", "site").gte("created_at", since);
+  const [mine, byIp, all] = await Promise.all([
+    webId
+      ? db.from("protos").select("token, status, name, pages").eq("facts->instant->>web", webId).order("created_at", { ascending: false }).limit(1)
+      : Promise.resolve({ data: [], error: null }),
+    site().eq("facts->instant->>ip", ip),
+    site(),
+  ]);
+  if (mine.error || byIp.error || all.error) return null;
+  const last = (mine.data?.[0] ?? null) as { token?: string; status?: string; name?: string; pages?: { admin?: string } | null } | null;
+  return {
+    has: !last ? "none" : last.status === "draft" ? "draft" : "ready",
+    token: last?.token ?? null,
+    name: last?.name ?? null,
+    admin: Boolean(last?.pages?.admin),
+    ipDay: byIp.count ?? 0,
+    allDay: all.count ?? 0,
+  };
+}
+
+/** Макет этого браузера по токену: лид оставляют только к своему. */
+export async function siteProtoOf(token: string, webId: string): Promise<{ id: string; name: string; niche: string; source: string | null; lead: string | null } | null> {
+  const db = serviceClient();
+  if (!db) return null;
+  const { data } = await db
+    .from("protos")
+    .select("id, name, niche, source, web:facts->instant->>web, lead:facts->instant->>lead")
+    .eq("token", token)
+    .maybeSingle();
+  const row = data as { id?: string; name?: string; niche?: string; source?: string | null; web?: string | null; lead?: string | null } | null;
+  if (!row?.id || row.web !== webId) return null;
+  return { id: String(row.id), name: String(row.name ?? ""), niche: String(row.niche ?? ""), source: row.source ?? null, lead: row.lead ?? null };
+}
+
+/** Одна заявка из окна на браузер за MANUAL_HOLD_DAYS: повторное «Связаться» второй карточкой не становится. */
+export async function claimWebLead(webId: string, now = new Date()): Promise<boolean> {
+  const db = serviceClient();
+  if (!db) return true;
+  const key = `instant-web-lead:${webId}`;
+  const { data, error } = await db.from("stats_snapshots").select("computed_at").eq("key", key).maybeSingle();
+  if (error) return true;
+  const last = data?.computed_at ? new Date(String(data.computed_at)).getTime() : 0;
+  if (last && now.getTime() - last < MANUAL_HOLD_DAYS * 86_400_000) return false;
+  await db.from("stats_snapshots").upsert({ key, payload: { web: webId }, computed_at: now.toISOString() });
+  return true;
 }

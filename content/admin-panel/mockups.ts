@@ -33,6 +33,7 @@ export const mockupsDict = defineDict({
   made: { ru: "Сделан", uz: "Yaratilgan", pl: "Zrobiona" },
   tagShowcase: { ru: "витрина", uz: "vitrina", pl: "witryna" },
   tagBot: { ru: "макет в боте", uz: "botdagi maket", pl: "makieta w bocie" },
+  tagSite: { ru: "собран на сайте", uz: "saytda yig‘ilgan", pl: "zebrana na stronie" },
   tagBotTest: { ru: "из бота, собрал сотрудник", uz: "botdan, xodim yig‘gan", pl: "z bota, zebrał pracownik" },
   accessOpen: { ru: "открыт по ссылке", uz: "havola orqali ochiq", pl: "otwarta przez link" },
   accessClosed: { ru: "по паролю", uz: "parol bilan", pl: "na hasło" },

@@ -41,6 +41,12 @@ export const GOALS = {
   playable_start: "Начал игру в кейсе",
   /** Нажал в игре кнопку рекламы («Скачать», «Забрать скидку»). */
   playable_cta: "Нажал кнопку в игре",
+  /** Открыл окно «Собрать макет» на главной (components/home/instant-maker.tsx). */
+  maket_open: "Открыл «Собрать макет»",
+  /** Начал сборку макета на сайте. */
+  maket_build: "Начал сборку макета",
+  /** Получил готовый макет в окне. */
+  maket_done: "Получил макет на сайте",
 } as const;
 
 export type Goal = keyof typeof GOALS;

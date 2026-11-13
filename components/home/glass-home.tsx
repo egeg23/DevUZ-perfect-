@@ -10,11 +10,14 @@ import { cases } from "@/content/cases";
 import { company, proof } from "@/content/company";
 import type { Dictionary } from "@/content/dictionaries";
 import { homeCopy } from "@/content/home-copy";
+import { siteInstantCopy } from "@/content/site-instant-copy";
+import { PROTOTYPE_HOURS } from "@/lib/admin/outreach";
 import { PROMO } from "@/lib/admin/mockup-offer";
 import { cn } from "@/lib/cn";
 import { localeHref, t, type Locale } from "@/lib/i18n";
 
 import { CardVideo } from "./card-video";
+import { InstantMaker } from "./instant-maker";
 import { ProtoForm } from "./proto-form";
 import s from "./glass.module.css";
 
@@ -179,6 +182,17 @@ export function GlassHome({ locale, dict }: { locale: Locale; dict: Dictionary }
       <div className={s.clients}>
         <ClientsSection dict={dict} bare />
       </div>
+
+      {/* «Собрать макет» — перед работами (владелец, 13.11.2026: «чтобы перед
+          кейсами человек мог интерактивно… собрать себе макет»). */}
+      <InstantMaker
+        locale={locale}
+        copy={siteInstantCopy[locale]}
+        termsHref={localeHref(locale, "mockup-terms")}
+        botUrl={company.telegramUrl}
+        manualHours={PROTOTYPE_HOURS}
+        prices={{ landing: PROMO.landing.price, landingOld: PROMO.landing.regular, corp: PROMO.corporate.price, corpOld: PROMO.corporate.regular }}
+      />
 
       {/* ── 2. Работы ── */}
       <section id="works" className={s.works} aria-labelledby="works-title">
