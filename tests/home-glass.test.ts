@@ -105,7 +105,7 @@ test("работы и продукты ведут туда, где страни�
 });
 
 test("картинки целиком и лёгкие, шрифты главной — только на главной", () => {
-  for (const [file, kb] of [["city-sk.webp", 260], ["city-sk-m.webp", 110], ["box-pro.webp", 80], ["box-pro-m.webp", 40]] as const) {
+  for (const [file, kb] of [["office.mp4", 1600], ["office.webp", 60], ["box-pro.webp", 80], ["box-pro-m.webp", 40]] as const) {
     const path = `public/home/${file}`;
     assert.ok(existsSync(path), `нет ${path}`);
     assert.ok(statSync(path).size / 1024 < kb, `${path} тяжелее ${kb} КБ`);
@@ -129,7 +129,7 @@ test("стекло без размытия на телефоне, движени
   assert.match(css, /@media \(prefers-reduced-motion: reduce\) \{\s*\.appear \{ animation: none; \}/);
   assert.match(css, /@media \(prefers-reduced-transparency: reduce\)/);
   // Картинки не обрезаны: гаснут маской, а не рамкой с overflow.
-  assert.match(css, /\.photo img \{[^}]*mask-image/);
+  assert.match(css, /\.photo img,\s*\.photo video \{[^}]*mask-image/);
   assert.match(css, /\.boxArt img \{[^}]*mask-image/);
   const video = read("components/home/card-video.tsx");
   assert.match(video, /preload="none"/);
@@ -158,8 +158,7 @@ test("палитра «Самарканд»: главная, шапка, под�
   assert.match(css, /\.heroText::before \{[^}]*data:image\/svg\+xml[^}]*mask-image/, "нет гириха за заголовком");
   const home = read("components/home/glass-home.tsx");
   assert.match(home, /cn\("sk", s\.home/);
-  assert.match(home, /src="\/home\/city-sk\.webp"/);
-  assert.match(home, /srcSet="\/home\/city-sk-m\.webp"/);
+  assert.match(home, /<HeroVideo \/>/);
 
   const globals = read("app/globals.css");
   const sk = globals.match(/\n\.sk \{([^}]*)\}/)?.[1] ?? "";
@@ -188,4 +187,22 @@ test("палитра «Самарканд»: текст не ниже AA", () =>
   }
   // Тёмный текст на золотой кнопке.
   assert.ok(ratio("#1d1504", "#efd08e") >= 4.5);
+});
+
+test("фон первого экрана — пролёт по офису петлёй, без здания; «Кейсы» с подсветкой, «Разборы» обычным текстом", () => {
+  // Владелец, 13.11.2026: «Убери здание с фона… видео с пролетом через офис… гиф анимацией… затемни сам фон».
+  const video = read("components/home/hero-video.tsx");
+  assert.match(video, /muted loop playsInline preload="none"/);
+  assert.match(video, /prefers-reduced-motion: reduce/);
+  assert.match(video, /saveData/);
+  assert.match(video, /IntersectionObserver/);
+  assert.doesNotMatch(read("components/home/glass-home.tsx"), /city(-sk)?(-m)?\.webp/);
+  const css = read("components/home/glass.module.css");
+  assert.match(css, /\.photo::after \{[^}]*rgb\(3 16 15 \/ 0\.82\)/, "фон не затемнён");
+
+  const header = read("components/layout/header.tsx");
+  assert.match(header, /label: dict\.nav\.cases, live: true/);
+  assert.doesNotMatch(header, /label: dict\.nav\.razbor, live: true/);
+  const globals = read("app/globals.css");
+  assert.match(globals, /@keyframes nav-live-wave \{[^}]*transform/);
 });

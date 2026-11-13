@@ -1,7 +1,7 @@
 // Проверка главной после смены вида: node scripts/home-check.mjs [адрес]
 // На каждом языке и ширине: нет прокрутки вбок, заявка уходит в /api/lead
 // (ответ API подменён — заявка в базу не пишется), чат открывается, ролики
-// работ играют, полоса минуты стоит и закрывается крестиком; при «меньше
+// работ и фон первого экрана играют, полоса минуты стоит и закрывается крестиком; при «меньше
 // движения» переписка не анимируется и ролики не запускаются сами.
 import { chromium } from "playwright-core";
 
@@ -62,6 +62,10 @@ async function run(locale, width, reduced) {
   ok((await launcher.getAttribute("aria-expanded")) === "true", `${tag}: чат не открылся`);
   ok(await page.locator("div.sk.bottom-5 textarea").isVisible().catch(() => false), `${tag}: в чате нет поля ввода`);
   await launcher.click();
+
+  // Фон первого экрана — пролёт по офису: играет сам, при «меньше движения» стоит постер.
+  const hero = await page.evaluate(() => { const v = document.querySelector("#home-title").closest("section").querySelector("video"); return v ? !v.paused : null; });
+  ok(reduced ? hero === false : hero === true, `${tag}: фон первого экрана ${hero ? "играет" : "стоит"}`);
 
   // Ролики работ.
   await page.locator("#works").scrollIntoViewIfNeeded();
