@@ -1,4 +1,5 @@
 import { wants } from "@/lib/admin/notify-prefs";
+import { withFallback, type LeadKind } from "@/lib/admin/lead-kinds";
 import { serviceClient } from "@/lib/supabase";
 import { esc } from "@/lib/qualify/telegram";
 
@@ -122,7 +123,7 @@ export async function briefRecipients(totalUsd: number): Promise<{
  * Кто боту ни разу не писал, тот и не получит: Bot API не даёт написать
  * первым, и обойти это нечем. Остальным доставка от этого не ломается.
  */
-export async function salesRecipients(): Promise<string[]> {
+export async function salesRecipients(kind?: LeadKind | null): Promise<string[]> {
   const sales = (process.env.TELEGRAM_SALES_CHAT_ID ?? "").trim();
   const out = new Set<string>(sales ? [sales] : []);
 
@@ -141,13 +142,14 @@ export async function salesRecipients(): Promise<string[]> {
     return [...out];
   }
 
-  for (const row of (data as { telegram_user_id: number | null; notify_off: string[] | null }[] | null) ?? []) {
+  const open = ((data as { telegram_user_id: number | null; notify_off: string[] | null }[] | null) ?? []).filter(
     // Галочка «Заявки для всех» снята — человек видит такие лиды в панели,
     // а в личку они ему не идут (lib/admin/notify-prefs.ts).
-    if (typeof row.telegram_user_id === "number" && wants(row.notify_off, "open")) {
-      out.add(String(row.telegram_user_id));
-    }
-  }
+    (row) => typeof row.telegram_user_id === "number" && wants(row.notify_off, "open"),
+  );
+  // Вид лида снят («Какие лиды присылать», lib/admin/lead-kinds.ts) — тоже
+  // не идёт. Не выбрал никто — всем, кто открыт: лид не теряется.
+  for (const row of withFallback(open, (r) => r.notify_off, kind).people) out.add(String(row.telegram_user_id));
   return [...out];
 }
 

@@ -49,6 +49,11 @@ export const teamDict = defineDict({
     uz: "Saqlandi: bot faqat belgilangan narsalarni yuboradi.",
     pl: "Zapisano: bot będzie wysyłał tylko to, co zaznaczone.",
   },
+  r_lead_kinds: {
+    ru: "Сохранено: бот и очередь будут присылать человеку только отмеченные виды лидов.",
+    uz: "Saqlandi: bot va navbat xodimga faqat belgilangan turdagi lidlarni yuboradi.",
+    pl: "Zapisano: bot i kolejka będą wysyłać tej osobie tylko zaznaczone rodzaje leadów.",
+  },
   r_claimed: {
     ru: "Менеджер закреплён за вами: его статистика и план/факт теперь в вашей команде, план касаний ставите вы.",
     uz: "Menejer sizga biriktirildi: uning statistikasi va reja/fakti endi jamoangizda, aloqalar rejasini siz qo‘yasiz.",
@@ -300,6 +305,7 @@ export const teamDict = defineDict({
     pl: "Zaproszenie, zmiana roli i kierownika oraz prośba o potwierdzenie przekazania przychodzą zawsze — bez nich akcja się nie odbędzie.",
   },
   noticesSave: { ru: "Сохранить", uz: "Saqlash", pl: "Zapisz" },
+  leadKindsHelp: { ru: "Как работают виды лидов", uz: "Lid turlari qanday ishlaydi", pl: "Jak działają rodzaje leadów" },
 
   // Разделы: галочки владельца поверх роли (roles.ts, opens).
   sections: {

@@ -5,8 +5,9 @@ import { redirect } from "next/navigation";
 
 import { requestIp, requireAdmin, requireRole } from "@/lib/admin/guard";
 import { isGrade, parsePercent } from "@/lib/admin/finance";
-import { accessFromForm, editsStaff, hiredRoles, isAssignable, tunesNotices } from "@/lib/admin/roles";
-import { offFromForm, setNotices } from "@/lib/admin/notify-prefs";
+import { accessFromForm, editsStaff, hiredRoles, isAssignable, tunesLeadKinds, tunesNotices } from "@/lib/admin/roles";
+import { offFromForm, setLeadKinds, setNotices } from "@/lib/admin/notify-prefs";
+import { leadOffFromForm } from "@/lib/admin/lead-kinds";
 import { syncBotMenu } from "@/lib/qualify/menu";
 import {
   claimManager,
@@ -215,6 +216,24 @@ export async function saveNotices(formData: FormData) {
   const result = await setNotices(id, offFromForm(checked, target.role), actor, await requestIp());
   revalidatePath("/admin/team");
   back(result.ok ? { ok: true, note: "notices" } : { ok: false, reason: result.reason });
+}
+
+/**
+ * «Какие лиды присылать» за человека (lib/admin/lead-kinds.ts) — те же, кто
+ * ставит галочки бота (tunesLeadKinds); себе — в «Настройках».
+ */
+export async function saveLeadKinds(formData: FormData) {
+  const actor = await requireRole("admin", "head");
+  const id = String(formData.get("staff") ?? "");
+
+  const target = (await listTeam()).find((m) => m.id === id && m.is_active);
+  if (!target) back({ ok: false, reason: "gone" });
+  if (!tunesLeadKinds(actor.role, target.role, target.id === actor.id)) back({ ok: false, reason: "forbidden" });
+
+  const checked = formData.getAll("on").map(String);
+  const result = await setLeadKinds(id, leadOffFromForm(checked), actor, await requestIp());
+  revalidatePath("/admin/team");
+  back(result.ok ? { ok: true, note: "lead_kinds" } : { ok: false, reason: result.reason });
 }
 
 /**

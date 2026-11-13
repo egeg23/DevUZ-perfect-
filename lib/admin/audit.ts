@@ -73,6 +73,7 @@ export const AUDIT_ACTIONS = [
   "staff.grade_changed",
   "staff.touch_plan_set",
   "staff.notices",
+  "staff.lead_kinds",
   "staff.sections",
   // «Без лимита лидов» — владелец снял или вернул ночной потолок равной доли.
   "staff.lead_unlimited",
