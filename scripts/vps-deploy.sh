@@ -140,6 +140,34 @@ if [ ! -f .env ]; then
   exit 1
 fi
 
+# Свои правила nginx сайта — файлами в /etc/nginx/snippets/devuz-extra (эту
+# папку подключает блок devuz.studio, туда же кладёт свой файл панель SIA).
+# Ставятся только при изменении; nginx -t не прошёл — файл снимается, прежний
+# возвращается, выкатка идёт дальше: сайт работает и без этих правил.
+# 13.11.2026: картинки, шрифты и ролики главной — без ограничения частоты
+# (deploy/nginx-extra/devuz-static.conf), Lighthouse ловил 429 на логотипах.
+if [ -d "$APP_DIR/deploy/nginx-extra" ] && [ "$(id -u)" = "0" ] && [ -d /etc/nginx/snippets ] \
+   && grep -Rqs 'snippets/devuz-extra' /etc/nginx/sites-enabled/; then
+  SN=/etc/nginx/snippets/devuz-extra
+  mkdir -p "$SN"
+  for src in "$APP_DIR"/deploy/nginx-extra/*.conf; do
+    [ -f "$src" ] || continue
+    dst="$SN/$(basename "$src")"
+    cmp -s "$src" "$dst" && continue
+    prev=""
+    if [ -f "$dst" ]; then prev="$dst.prev"; cp "$dst" "$prev"; fi
+    cp "$src" "$dst"
+    if nginx -t >/dev/null 2>&1 && systemctl reload nginx; then
+      echo "▸ nginx: $(basename "$src") обновлён"
+      [ -n "$prev" ] && rm -f "$prev"
+    else
+      echo "  ✗ nginx не принял $(basename "$src") — возвращаю как было" >&2
+      if [ -n "$prev" ]; then mv "$prev" "$dst"; else rm -f "$dst"; fi
+      nginx -t >/dev/null 2>&1 && systemctl reload nginx || true
+    fi
+  done
+fi
+
 # Хеш коммита уезжает в образ, чтобы /api/health показывал, что именно
 # сейчас крутится на сервере. Без этого «я же выкатил» невозможно проверить.
 GIT_COMMIT="$(git rev-parse --short HEAD)"

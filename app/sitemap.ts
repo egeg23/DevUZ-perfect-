@@ -92,7 +92,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })),
   ];
 
-  const lastModified = new Date();
+  // Дата раздела разборов — день последнего разбора. Обычным страницам дату
+  // не ставим: «сейчас» на каждом запросе карты — неправда, и поисковики
+  // перестают верить датам вообще, а у разборов и статей они настоящие
+  // (разбор трафика, 13.11.2026).
+  const newest = razbors.reduce((max, item) => Math.max(max, Date.parse(item.publishedAt) || 0), 0);
+  const lastModified = newest ? new Date(newest) : undefined;
 
   /**
    * Разборы идут отдельным списком, а не через общий цикл по языкам.
@@ -167,7 +172,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
       return {
         url: absoluteUrl(entry.path ? `${locale}/${entry.path}` : locale),
-        lastModified,
         changeFrequency: entry.changeFrequency,
         priority: entry.priority,
         alternates: { languages },

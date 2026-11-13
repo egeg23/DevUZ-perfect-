@@ -120,3 +120,20 @@ test("переменная Метрики объявлена во всех че�
   assert.match(read("scripts/vps-deploy.sh"), /--build-arg "NEXT_PUBLIC_YANDEX_METRIKA_ID=/);
   assert.match(read("Dockerfile"), /ARG NEXT_PUBLIC_YANDEX_METRIKA_ID/);
 });
+
+test("устройства команды не считаются: метка из панели гасит оба счётчика", () => {
+  const source = read("components/layout/analytics.tsx");
+  // Оба тега — внутри проверки метки, иначе визиты студии снова станут «клиентами».
+  assert.match(source, /if\(!\$\{TEAM_CHECK\}\)\{\(function\(m,e,t,r,i,k,a\)/);
+  assert.match(source, /trackLinks:true\}\);\}`/);
+  assert.match(source, /if\(!\$\{TEAM_CHECK\}\)\{var g=document\.createElement\("script"\)/);
+  const mw = read("middleware.ts");
+  assert.match(mw, /response\.cookies\.set\(TEAM_COOKIE, "1"/);
+  assert.match(read("lib/admin/return-to.ts"), /export const TEAM_COOKIE = "dz_team";/);
+});
+
+test("цель ждёт счётчик, а не теряется до его загрузки", () => {
+  const source = read("lib/visit/goal.ts");
+  assert.match(source, /const WAIT_MS = 15_000;/);
+  assert.match(source, /setInterval/);
+});
