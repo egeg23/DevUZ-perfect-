@@ -116,7 +116,7 @@ export function ChatWidget({ locale, dict }: { locale: Locale; dict: Dictionary 
       ) : null}
     <div
       className={cn(
-        "sk fixed bottom-5 right-4 z-50 flex flex-col items-end gap-3 transition-all duration-500 sm:right-6",
+        "sk fixed bottom-5 right-4 chat-launch z-50 flex flex-col items-end gap-3 transition-all duration-500 sm:right-6",
         ready || running ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-6 opacity-0",
       )}
     >
