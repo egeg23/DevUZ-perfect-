@@ -1,3 +1,4 @@
+import { SITE_PRICES } from "@/content/prices";
 import { TASHKENT_OFFSET_MS } from "@/lib/admin/pulse";
 
 /**
@@ -39,7 +40,7 @@ export const OFFER_MS = OFFER_HOURS * 3600_000;
  * корпоративного — цена с сайта студии («корпоративный сайт от $2500»).
  */
 export const PROMO = {
-  landing: { price: 500, regular: 1700, addons: 3 },
+  landing: { price: SITE_PRICES.landing, regular: 1700, addons: 3 },
   corporate: { price: 1000, regular: 2500 },
 } as const;
 

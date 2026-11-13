@@ -30,21 +30,21 @@ const title = {
 } satisfies LocalizedText;
 
 const lead = {
-  ru: "Прототип главной для самаркандского завода: покрывало, разлёт деталей, фара, выезд в пустыню и четыре вида техники в живых сценах. Откройте и прокрутите сами.",
-  en: "A home page prototype for the Samarkand plant: the cover, the parts flying apart, the headlight, the drive into the desert and four kinds of vehicles in live scenes. Open it and scroll yourself.",
-  uz: "Samarqand zavodi uchun bosh sahifa prototipi: parda, detallarning ajralishi, fara, cho‘lga chiqish va jonli sahnalarda to‘rt xil texnika. Oching va o‘zingiz aylantiring.",
-  zh: "为撒马尔罕整车厂做的首页原型：揭开罩布、零件飞散、大灯亮起、驶向沙漠，以及四类车型的动态场景。打开它，亲自滚动看看。",
-  uk: "Прототип головної для самаркандського заводу: покривало, розліт деталей, фара, виїзд у пустелю та чотири види техніки в живих сценах. Відкрийте й прокрутіть самі.",
-  pl: "Prototyp strony głównej dla zakładu w Samarkandzie: pokrowiec, rozkładanie na części, reflektor, wyjazd na pustynię i cztery rodzaje pojazdów w żywych scenach. Otwórz i przewiń sam.",
+  ru: "Макет главной для самаркандского завода: покрывало, разлёт деталей, фара, выезд в пустыню и четыре вида техники в живых сценах. Откройте и прокрутите сами.",
+  en: "A home page mockup for the Samarkand plant: the cover, the parts flying apart, the headlight, the drive into the desert and four kinds of vehicles in live scenes. Open it and scroll yourself.",
+  uz: "Samarqand zavodi uchun bosh sahifa maketi: parda, detallarning ajralishi, fara, cho‘lga chiqish va jonli sahnalarda to‘rt xil texnika. Oching va o‘zingiz aylantiring.",
+  zh: "为撒马尔罕整车厂做的首页样稿：揭开罩布、零件飞散、大灯亮起、驶向沙漠，以及四类车型的动态场景。打开它，亲自滚动看看。",
+  uk: "Макет головної для самаркандського заводу: покривало, розліт деталей, фара, виїзд у пустелю та чотири види техніки в живих сценах. Відкрийте й прокрутіть самі.",
+  pl: "Makieta strony głównej dla zakładu w Samarkandzie: pokrowiec, rozkładanie na części, reflektor, wyjazd na pustynię i cztery rodzaje pojazdów w żywych scenach. Otwórz i przewiń sam.",
 } satisfies LocalizedText;
 
 const open = {
-  ru: "Открыть прототип",
-  en: "Open the prototype",
-  uz: "Prototipni ochish",
-  zh: "打开原型",
-  uk: "Відкрити прототип",
-  pl: "Otwórz prototyp",
+  ru: "Открыть макет",
+  en: "Open the mockup",
+  uz: "Maketni ochish",
+  zh: "打开样稿",
+  uk: "Відкрити макет",
+  pl: "Otwórz makietę",
 } satisfies LocalizedText;
 
 const about = {
@@ -57,12 +57,12 @@ const about = {
 } satisfies LocalizedText;
 
 const label = {
-  ru: "Ролик прототипа SamAuto: оранжевый ISUZU D-MAX в тёмном шоуруме разлетается на детали, собирается и уезжает в пустыню",
-  en: "SamAuto prototype reel: an orange ISUZU D-MAX in a dark showroom flies apart into parts, reassembles and drives off into the desert",
-  uz: "SamAuto prototipi roligi: qorong‘i shourumdagi to‘q sariq ISUZU D-MAX detallarga ajraladi, yig‘iladi va cho‘lga yo‘l oladi",
-  zh: "SamAuto 原型短片：暗色展厅里的橙色 ISUZU D-MAX 拆解成零件、重新组装并驶向沙漠",
-  uk: "Ролик прототипу SamAuto: помаранчевий ISUZU D-MAX у темному шоурумі розлітається на деталі, збирається й їде в пустелю",
-  pl: "Film prototypu SamAuto: pomarańczowy ISUZU D-MAX w ciemnym salonie rozpada się na części, składa się i odjeżdża na pustynię",
+  ru: "Ролик макета SamAuto: оранжевый ISUZU D-MAX в тёмном шоуруме разлетается на детали, собирается и уезжает в пустыню",
+  en: "SamAuto mockup reel: an orange ISUZU D-MAX in a dark showroom flies apart into parts, reassembles and drives off into the desert",
+  uz: "SamAuto maketi roligi: qorong‘i shourumdagi to‘q sariq ISUZU D-MAX detallarga ajraladi, yig‘iladi va cho‘lga yo‘l oladi",
+  zh: "SamAuto 样稿短片：暗色展厅里的橙色 ISUZU D-MAX 拆解成零件、重新组装并驶向沙漠",
+  uk: "Ролик макету SamAuto: помаранчевий ISUZU D-MAX у темному шоурумі розлітається на деталі, збирається й їде в пустелю",
+  pl: "Film makiety SamAuto: pomarańczowy ISUZU D-MAX w ciemnym salonie rozpada się na części, składa się i odjeżdża na pustynię",
 } satisfies LocalizedText;
 
 /**

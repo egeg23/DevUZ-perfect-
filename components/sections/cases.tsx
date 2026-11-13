@@ -180,12 +180,6 @@ export function CaseCard({
           </span>
         ) : null}
 
-        {proto ? (
-          <span className={cn("proto-badge absolute left-4 top-4 rounded-md border bg-ink/60 px-2 py-0.5 font-mono text-[0.6rem] uppercase tracking-[0.14em] backdrop-blur-sm", accent.ring, accent.text)}>
-            ▶ {dict.cases.protoTag}
-          </span>
-        ) : null}
-
         {/* В кейс с игрой заходят, чтобы сыграть, — это и сказать. */}
         {item.playable ? (
           <span className={cn("absolute left-4 top-4 rounded-md border bg-ink/50 px-2 py-0.5 font-mono text-[0.6rem] uppercase tracking-[0.14em] backdrop-blur-sm", accent.ring, accent.text)}>
