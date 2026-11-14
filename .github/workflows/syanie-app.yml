@@ -8,10 +8,12 @@
 # только скачивает и запускает (scripts/protos/syanie/app/deploy/remote.sh).
 #
 # Выкатка идёт, только когда заведена переменная репозитория SYANIE_DOMAIN и
-# секреты SYANIE_HOST, SYANIE_USER, SYANIE_SSH_KEY (порт — SYANIE_PORT, код
-# первого входа — SYANIE_SETUP_CODE). Как их получить у клиники —
+# секреты SYANIE_HOST, SYANIE_USER, SYANIE_SSH_KEY или SYANIE_PASSWORD
+# (пароль сервера, если ключа нет; порт SSH — SYANIE_PORT, код первого
+# входа — SYANIE_SETUP_CODE; порт сайта на сервере — переменная
+# SYANIE_APP_PORT, если 3000 занят). Как их получить у клиники —
 # scripts/protos/syanie/app/README.md. Репозиторий открытый: журнал задачи
-# видят все, поэтому ключи и код установки в него не печатаются.
+# видят все, поэтому ключи, пароль и код установки в него не печатаются.
 name: "Сайт Сияние Севера: сервер клиники"
 
 on:
@@ -137,6 +139,7 @@ jobs:
           SY_APP: ${{ env.APP }}:${{ github.sha }}
           SY_CADDY: ${{ env.CADDY }}:${{ needs.build.outputs.caddy }}
           SY_DOMAIN: ${{ vars.SYANIE_DOMAIN }}
+          SY_PORT: ${{ vars.SYANIE_APP_PORT || '3000' }}
           SY_COMMIT: ${{ github.sha }}
           SY_SETUP: ${{ secrets.SYANIE_SETUP_CODE }}
           SY_FRONT: ${{ inputs.front || 'auto' }}
@@ -146,8 +149,9 @@ jobs:
           host: ${{ secrets.SYANIE_HOST }}
           username: ${{ secrets.SYANIE_USER }}
           key: ${{ secrets.SYANIE_SSH_KEY }}
+          password: ${{ secrets.SYANIE_PASSWORD }}
           port: ${{ secrets.SYANIE_PORT || 22 }}
-          envs: SY_SCRIPT,SY_APP,SY_CADDY,SY_DOMAIN,SY_COMMIT,SY_SETUP,SY_FRONT,GH_TOKEN,GH_ACTOR
+          envs: SY_SCRIPT,SY_APP,SY_CADDY,SY_DOMAIN,SY_PORT,SY_COMMIT,SY_SETUP,SY_FRONT,GH_TOKEN,GH_ACTOR
           command_timeout: 25m
           script: |
             set -euo pipefail

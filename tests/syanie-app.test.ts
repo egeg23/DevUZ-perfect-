@@ -326,7 +326,13 @@ test("сияние на сервере клиники: образ из GitHub, �
   assert.match(wf, /SY_PROD=1 node scripts\/protos\/syanie\/gen\.mjs/);
   assert.match(wf, /vars\.SYANIE_DOMAIN != ''/, "выкатка без домена");
   assert.doesNotMatch(remote, /docker build|npm (ci|install)|node gen/, "сборка на сервере клиники");
-  assert.match(remote, /-p 127\.0\.0\.1:3000:3000/, "сайт слушает не только локальный адрес");
+  assert.match(remote, /-p "127\.0\.0\.1:\$PORT:3000"/, "сайт слушает не только локальный адрес");
+  assert.match(remote, /PORT="\$\{SY_PORT:-3000\}"/, "порт сайта по умолчанию не 3000");
+  /* Как у CZECHFARM: вход по ключу или паролю, порт сайта переменной, www — на основной адрес. */
+  assert.match(wf, /password: \$\{\{ secrets\.SYANIE_PASSWORD \}\}/, "нет входа по паролю");
+  assert.match(wf, /SY_PORT: \$\{\{ vars\.SYANIE_APP_PORT \|\| '3000' \}\}/, "нет порта сайта");
+  assert.match(read("deploy/Caddyfile"), /www\.\{\$DOMAIN\} \{\s*redir https:\/\/\{\$DOMAIN\}\{uri\} permanent/, "www не ведёт на основной адрес");
+  assert.match(remote, /ufw allow 80\/tcp/, "файрвол сервера не открывает 80");
   assert.match(remote, /--memory 512m/);
   assert.match(remote, /вернул прошлый образ/, "нет отката");
   assert.doesNotMatch(remote, /cat "\$D\/\.env"|echo "\$CODE"|say .*\$CODE|say .*SY_SETUP\}/, "код установки попадает в журнал");

@@ -5,6 +5,11 @@
 	admin off
 }
 
+# www.<домен> — сразу на основной адрес (нужна своя запись A или CNAME).
+www.{$DOMAIN} {
+	redir https://{$DOMAIN}{uri} permanent
+}
+
 {$DOMAIN} {
 	encode zstd gzip
 	header -Server
