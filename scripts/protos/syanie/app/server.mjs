@@ -9,6 +9,7 @@ import { extname, join, normalize, resolve, sep } from "node:path";
 import { openDb } from "./lib/db.mjs";
 import { makeCore, ROLES } from "./lib/core.mjs";
 import { sameSecret } from "./lib/crypt.mjs";
+import { oldPage } from "./lib/old-urls.mjs";
 
 const MIME = {
   ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8",
@@ -237,6 +238,9 @@ export function createApp({ core, siteDir, adminDir, uploadsDir = "", setupCode 
       if (p === "/privacy" || p === "/privacy/") return sendPage(req, res, "privacy.html");
       if (p.startsWith("/protos/")) return staticFile(req, res, siteDir, p, "public, max-age=604800") || send(res, 404, "Нет файла");
       if (p.startsWith("/uploads/") && uploadsDir) return staticFile(req, res, uploadsDir, p.slice(9), "public, max-age=31536000, immutable") || send(res, 404, "Нет файла");
+      /* Страницы прежнего сайта клиники — на блок этой страницы (lib/old-urls.mjs). */
+      const old = oldPage(p);
+      if (old) return send(res, 301, "", { Location: old, "Cache-Control": "public, max-age=86400" });
       return sendPage(req, res, "404.html", 404);
     } catch (e) {
       /* Наши ошибки написаны по-русски — их показываем; чужие (сеть, код) — нет. */
