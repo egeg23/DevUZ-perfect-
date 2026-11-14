@@ -123,6 +123,41 @@ export function serviceSchema(service: Service, locale: Locale): Json {
 }
 
 /**
+ * Услуга на странице под запрос (content/service-landings): цена «от» в
+ * сумах — та же, что на странице и в калькуляторе, город — Ташкент.
+ */
+export function landingSchema(input: {
+  locale: Locale;
+  slug: string;
+  name: string;
+  serviceType: string;
+  description: string;
+  priceUzs: number;
+}): Json {
+  return {
+    "@type": "Service",
+    name: input.name,
+    description: input.description,
+    serviceType: input.serviceType,
+    provider: { "@id": ORG_ID },
+    areaServed: [
+      { "@type": "City", name: "Tashkent" },
+      { "@type": "Country", name: "Uzbekistan" },
+    ],
+    url: absoluteUrl(`${input.locale}/services/${input.slug}`),
+    offers: {
+      "@type": "Offer",
+      priceCurrency: "UZS",
+      priceSpecification: {
+        "@type": "PriceSpecification",
+        minPrice: input.priceUzs,
+        priceCurrency: "UZS",
+      },
+    },
+  };
+}
+
+/**
  * Готовый продукт с ценой.
  *
  * В отличие от услуги, здесь цена точная, а не «от»: покупатель видит её на

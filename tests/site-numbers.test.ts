@@ -16,6 +16,7 @@ import { proof, USD_RATE } from "@/content/company";
 import { getDictionary } from "@/content/dictionaries";
 import { homeCopy } from "@/content/home-copy";
 import { SITE_PRICES } from "@/content/prices";
+import { LANDING_TEXT } from "@/content/service-landings";
 import { siteInstantCopy } from "@/content/site-instant-copy";
 import { categories } from "@/content/calculator";
 import { PROMO } from "@/lib/admin/mockup-offer";
@@ -40,6 +41,7 @@ function siteTexts(): string[] {
   strings(cases, out);
   strings(boxCopy, out);
   strings(siteInstantCopy, out);
+  strings(LANDING_TEXT, out);
   strings(categories, out);
   return out;
 }

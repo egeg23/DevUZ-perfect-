@@ -3,19 +3,27 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { ContactSection } from "@/components/sections/contact";
+import { ServiceLanding } from "@/components/services/landing";
 import { Container } from "@/components/ui/container";
 import { Icon } from "@/components/ui/icon";
 import { Reveal } from "@/components/ui/reveal";
 import { getDictionary } from "@/content/dictionaries";
+import { LANDING_SLUGS, LANDING_TEXT, landingBySlug } from "@/content/service-landings";
+import { calcPrice, landingText } from "@/content/service-landings/fill";
 import { serviceBySlug, services } from "@/content/services";
 import { isLocale, locales, localeHref, t, tList, type Locale } from "@/lib/i18n";
-import { breadcrumbSchema, jsonLdGraph, serviceSchema } from "@/lib/schema";
+import { breadcrumbSchema, faqSchema, jsonLdGraph, landingSchema, serviceSchema } from "@/lib/schema";
 import { buildMetadata } from "@/lib/seo";
 
+/**
+ * Страницы услуг и страницы под запросы (content/service-landings). Где
+ * адрес общий (web-development, mobile-apps), отвечает страница под запрос:
+ * она глубже, а ссылки из разборов и меню остаются живыми.
+ */
+const SLUGS = [...new Set([...services.map((s) => s.slug), ...LANDING_SLUGS])];
+
 export function generateStaticParams() {
-  return locales.flatMap((locale) =>
-    services.map((service) => ({ locale, slug: service.slug })),
-  );
+  return locales.flatMap((locale) => SLUGS.map((slug) => ({ locale, slug })));
 }
 
 export async function generateMetadata({
@@ -24,8 +32,19 @@ export async function generateMetadata({
   params: Promise<{ locale: string; slug: string }>;
 }): Promise<Metadata> {
   const { locale, slug } = await params;
+  if (!isLocale(locale)) return {};
+  const landing = landingBySlug(slug);
+  if (landing) {
+    const text = landingText(landing, locale);
+    return buildMetadata({
+      locale,
+      path: `services/${slug}`,
+      title: text.seoTitle,
+      description: text.seoDescription,
+    });
+  }
   const service = serviceBySlug(slug);
-  if (!isLocale(locale) || !service) return {};
+  if (!service) return {};
 
   return buildMetadata({
     locale,
@@ -44,6 +63,38 @@ export default async function ServicePage({
   const service = serviceBySlug(slug);
   // Локаль неизвестна — это действительно «страницы нет».
   if (!isLocale(raw)) notFound();
+  const landing = landingBySlug(slug);
+  if (landing) {
+    const lang = raw as Locale;
+    const ldict = getDictionary(lang);
+    const text = landingText(landing, lang);
+    const price = calcPrice(landing.calc);
+    return (
+      <>
+        <ServiceLanding meta={landing} locale={lang} dict={ldict} />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: jsonLdGraph(
+              landingSchema({
+                locale: lang,
+                slug,
+                name: text.h1,
+                serviceType: text.title,
+                description: text.seoDescription,
+                priceUzs: price.uzs,
+              }),
+              faqSchema(text.faq),
+              breadcrumbSchema([
+                { name: LANDING_TEXT[lang].ui.breadcrumb, path: `${lang}/services` },
+                { name: text.title, path: `${lang}/services/${slug}` },
+              ]),
+            ),
+          }}
+        />
+      </>
+    );
+  }
   if (!service) {
     // А вот несуществующий slug при живой локали — почти всегда
     // устаревшая ссылка на переименованный или снятый материал.
