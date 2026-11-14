@@ -11,6 +11,7 @@ import type { RazborItem } from "@/content/razbor/items";
 import { listRazbors } from "@/lib/razbor/store";
 import { RAZBOR_LOCALES } from "@/lib/razbor/routing";
 import { products } from "@/content/products";
+import { LANDING_SLUGS } from "@/content/service-landings";
 import { services } from "@/content/services";
 import { hreflang, locales } from "@/lib/i18n";
 import { absoluteUrl } from "@/lib/seo";
@@ -77,7 +78,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: MOCKUP_TERMS_PATH, priority: 0.3, changeFrequency: "yearly" as const },
     ...services.map((s) => ({
       path: `services/${s.slug}`,
-      priority: 0.8,
+      priority: (LANDING_SLUGS as readonly string[]).includes(s.slug) ? 0.95 : 0.8,
+      changeFrequency: "monthly" as const,
+    })),
+    // Страницы под запросы (content/service-landings), которых нет среди
+    // услуг, — вход из поиска по «интернет-магазин», «лендинг» и соседним.
+    ...LANDING_SLUGS.filter((slug) => !services.some((s) => s.slug === slug)).map((slug) => ({
+      path: `services/${slug}`,
+      priority: 0.95,
       changeFrequency: "monthly" as const,
     })),
     ...products.map((p) => ({

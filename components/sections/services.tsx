@@ -6,6 +6,7 @@ import { Icon } from "@/components/ui/icon";
 import { Reveal } from "@/components/ui/reveal";
 import { SectionHeading } from "@/components/ui/section-heading";
 import type { Dictionary } from "@/content/dictionaries";
+import { LANDING_SLUGS, LANDING_TEXT } from "@/content/service-landings";
 import { services } from "@/content/services";
 import { localeHref, t, tList, type Locale } from "@/lib/i18n";
 
@@ -76,6 +77,20 @@ export function ServicesSection({ locale, dict }: { locale: Locale; dict: Dictio
             </Reveal>
           ))}
         </div>
+        {/* Страницы под запросы, которых нет среди карточек: ссылка с раздела
+            услуг — путь поисковика к ним (content/service-landings). */}
+        <ul className="mt-8 flex flex-wrap gap-2">
+          {LANDING_SLUGS.filter((slug) => !services.some((s) => s.slug === slug)).map((slug) => (
+            <li key={slug}>
+              <Link
+                href={localeHref(locale, `services/${slug}`)}
+                className="inline-block rounded-xl border border-line px-4 py-2.5 text-[0.88rem] text-muted transition-colors hover:border-green/40 hover:text-text"
+              >
+                {LANDING_TEXT[locale].pages[slug].title}
+              </Link>
+            </li>
+          ))}
+        </ul>
       </Container>
       </CodeBoot>
     </section>
