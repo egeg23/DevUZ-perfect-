@@ -118,7 +118,10 @@ fi
 case "$FRONT" in
   caddy)
     [ -n "${SY_CADDY:-}" ] || { say "✗ нет образа Caddy"; exit 1; }
-    if [ -n "$CADDY_UP" ] && [ "$($DK inspect -f '{{.Config.Image}}' syanie-caddy 2>/dev/null || true)" = "$SY_CADDY" ]; then
+    # Тот же образ и тот же домен — не трогаем; сменили SYANIE_DOMAIN —
+    # Caddy пересоздаётся, иначе он так и держал бы сертификат старого имени.
+    CADDY_DOMAIN="$($DK inspect -f '{{range .Config.Env}}{{println .}}{{end}}' syanie-caddy 2>/dev/null | sed -n 's/^DOMAIN=//p' | head -1 || true)"
+    if [ -n "$CADDY_UP" ] && [ "$($DK inspect -f '{{.Config.Image}}' syanie-caddy 2>/dev/null || true)" = "$SY_CADDY" ] && [ "$CADDY_DOMAIN" = "$SY_DOMAIN" ]; then
       say "✓ Caddy тот же, не трогаю"
     else
       $DK rm -f syanie-caddy >/dev/null 2>&1 || true
@@ -126,6 +129,7 @@ case "$FRONT" in
         --memory 128m --cpus 0.5 -p 80:80 -p 443:443 -p 443:443/udp \
         -e DOMAIN="$SY_DOMAIN" -v "$D/caddy:/data" \
         --log-opt max-size=10m --log-opt max-file=3 "$SY_CADDY" >/dev/null
+      if [ -n "$CADDY_DOMAIN" ] && [ "$CADDY_DOMAIN" != "$SY_DOMAIN" ]; then say "↻ домен сменился: $CADDY_DOMAIN → $SY_DOMAIN"; fi
       say "✓ Caddy на 80/443, сертификат для $SY_DOMAIN получит сам"
     fi
     ;;
