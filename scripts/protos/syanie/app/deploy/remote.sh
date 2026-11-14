@@ -5,10 +5,11 @@
 #   syanie-app   — сайт, админка, вебхуки (node, база SQLite в /opt/syanie/data);
 #   syanie-caddy — HTTPS: сертификат Let's Encrypt для домена сам.
 # Если 80/443 уже держит nginx клиники, Caddy не ставится: nginx получает
-# свой файл для домена и ведёт на 127.0.0.1:3000.
+# свой файл для домена и ведёт на сайт (127.0.0.1:$SY_PORT, обычно 3000).
 #
 # Окружение (передаёт задача): SY_APP, SY_CADDY — образы с хешем коммита;
-# SY_DOMAIN; SY_COMMIT; SY_SETUP — код установки (может быть пустым);
+# SY_DOMAIN; SY_PORT — порт сайта на 127.0.0.1 (3000, если не занят);
+# SY_COMMIT; SY_SETUP — код установки (может быть пустым);
 # GH_TOKEN, GH_ACTOR — вход в ghcr.io на время задачи; SY_FRONT — auto|caddy|nginx|none.
 #
 # Репозиторий открытый, журнал задачи видят все: ключи и код установки сюда
@@ -18,6 +19,8 @@ unset HTTPS_PROXY HTTP_PROXY ALL_PROXY https_proxy http_proxy all_proxy
 
 D=/opt/syanie
 FRONT="${SY_FRONT:-auto}"
+PORT="${SY_PORT:-3000}"
+case "$PORT" in ""|*[!0-9]*) PORT=3000 ;; esac
 : "${SY_APP:?нет образа сайта}" "${SY_DOMAIN:?нет домена}"
 if [ "$(id -u)" -eq 0 ]; then SUDO=""; elif sudo -n true 2>/dev/null; then SUDO="sudo -n"; else
   echo "✗ нужен root или sudo без пароля: ставим Docker и пишем в /opt"; exit 1; fi
@@ -75,12 +78,12 @@ run_app() {
   $DK rm -f syanie-app >/dev/null 2>&1 || true
   $DK run -d --name syanie-app --restart unless-stopped --network syanie \
     --memory 512m --memory-swap 512m --cpus 1 \
-    -p 127.0.0.1:3000:3000 --env-file "$D/.env" \
+    -p "127.0.0.1:$PORT:3000" --env-file "$D/.env" \
     -e DOMAIN="$SY_DOMAIN" -e TRUST_PROXY=1 -e COMMIT="${SY_COMMIT:-}" \
     -v "$D/data:/data" --log-opt max-size=20m --log-opt max-file=3 \
     "$1" >/dev/null
 }
-health() { curl -s --max-time 3 http://127.0.0.1:3000/api/health 2>/dev/null || true; }
+health() { curl -s --max-time 3 "http://127.0.0.1:$PORT/api/health" 2>/dev/null || true; }
 run_app "$SY_APP"
 OK=0
 for _ in $(seq 1 30); do
@@ -103,6 +106,15 @@ if [ "$FRONT" = auto ]; then
   elif command -v nginx >/dev/null 2>&1; then FRONT=nginx
   else FRONT=none; fi
 fi
+# Файрвол сервера: без открытых 80 и 443 сертификат не выдастся, а сайт не
+# откроется. Открываем только их, остальные правила клиники не трогаем.
+if [ "$FRONT" = caddy ] || [ "$FRONT" = nginx ]; then
+  if command -v ufw >/dev/null 2>&1 && $SUDO ufw status 2>/dev/null | grep -q "Status: active"; then
+    $SUDO ufw allow 80/tcp >/dev/null && $SUDO ufw allow 443/tcp >/dev/null && say "✓ ufw: 80 и 443 открыты"
+  elif command -v firewall-cmd >/dev/null 2>&1 && $SUDO firewall-cmd --state >/dev/null 2>&1; then
+    $SUDO firewall-cmd --permanent --add-service=http --add-service=https >/dev/null && $SUDO firewall-cmd --reload >/dev/null && say "✓ firewalld: 80 и 443 открыты"
+  fi
+fi
 case "$FRONT" in
   caddy)
     [ -n "${SY_CADDY:-}" ] || { say "✗ нет образа Caddy"; exit 1; }
@@ -121,14 +133,14 @@ case "$FRONT" in
     F=/etc/nginx/conf.d/syanie.conf
     if ! $SUDO test -f "$F" || ! $SUDO grep -q "server_name $SY_DOMAIN;" "$F"; then
       $SUDO tee "$F" >/dev/null <<NGX
-# Сайт «Сияние Севера»: контейнер syanie-app на 127.0.0.1:3000 (syanie-app.yml).
+# Сайт «Сияние Севера»: контейнер syanie-app на 127.0.0.1:$PORT (syanie-app.yml).
 server {
     listen 80;
     server_name $SY_DOMAIN;
     client_max_body_size 4m;
     gzip on; gzip_types text/css application/javascript text/javascript application/json image/svg+xml;
     location / {
-        proxy_pass http://127.0.0.1:3000;
+        proxy_pass http://127.0.0.1:$PORT;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Forwarded-For \$remote_addr;
@@ -145,7 +157,7 @@ NGX
       else say "· certbot нет: HTTPS поставьте в nginx сами (Telegram и Wazzup работают только по HTTPS)"; fi
     else say "✓ nginx уже ведёт $SY_DOMAIN на сайт"; fi
     ;;
-  none) say "· 80/443 заняты не nginx: сайт на 127.0.0.1:3000, подключите его к своему веб-серверу" ;;
+  none) say "· 80/443 заняты не nginx: сайт на 127.0.0.1:$PORT, подключите его к своему веб-серверу" ;;
 esac
 
 say "════ Проверка снаружи ════"
@@ -154,7 +166,7 @@ IP="$(curl -s --max-time 5 https://api.ipify.org 2>/dev/null || true)"
 DNS="$(getent hosts "$SY_DOMAIN" | awk '{print $1}' | head -1 || true)"
 say "IP сервера: ${IP:-?} · $SY_DOMAIN смотрит на: ${DNS:-нет записи}"
 say "https://$SY_DOMAIN/api/health → $(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "https://$SY_DOMAIN/api/health" || true)"
-FIRST="$(curl -s --max-time 3 http://127.0.0.1:3000/api/admin/state | grep -c '"setup":true' || true)"
+FIRST="$(curl -s --max-time 3 "http://127.0.0.1:$PORT/api/admin/state" | grep -c '"setup":true' || true)"
 [ "$FIRST" = 1 ] && say "· владелец ещё не заведён: https://$SY_DOMAIN/admin → «Первый вход» с кодом установки"
 
 say "════ Уборка ════"
