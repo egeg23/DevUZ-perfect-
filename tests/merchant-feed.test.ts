@@ -13,9 +13,13 @@ import { locales } from "@/lib/i18n";
 
 test("в фиде — продукты с одной ценой, без услуг и вилок цены", () => {
   const items = merchantItems();
-  assert.ok(items.length >= 4);
+  // Владелец, 14.11.2026: «Готовый Корпоративный сайт: 3000$, Лендинг : 500$…
+  // у нас уже готовый код в макетах, по сути они покупают его».
+  assert.ok(items.length >= 6);
   for (const p of items) assert.ok(!p.priceToUsd, `${p.slug}: вилка цены`);
-  assert.ok(products.some((p) => p.priceToUsd && !items.includes(p)));
+  for (const p of products) if (!p.priceToUsd) assert.ok(items.includes(p), `${p.slug}: нет в фиде`);
+  assert.equal(items.find((p) => p.slug === "landing")?.priceUsd, 500);
+  assert.equal(items.find((p) => p.slug === "corporate-site")?.priceUsd, 3000);
 });
 
 test("каждый товар фида — со всеми обязательными полями и картинкой на диске", () => {
