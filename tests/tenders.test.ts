@@ -64,7 +64,7 @@ test("услуга «Тендеры и госконтракты»: четыре 
   assert.equal(getDictionary("ru").services.title, "Шесть направлений");
   // Страница услуги и sitemap собираются из того же списка.
   assert.match(read("app/sitemap.ts"), /\.\.\.services\.map\(\(s\) => \(\{\s*path: `services\/\$\{s\.slug\}`/);
-  assert.match(read("app/[locale]/services/[slug]/page.tsx"), /services\.map\(\(service\) => \(\{ locale, slug: service\.slug \}\)\)/);
+  assert.match(read("app/[locale]/services/[slug]/page.tsx"), /\.\.\.services\.map\(\(s\) => s\.slug\)/);
   // AI-менеджер умеет отметить интерес к тендерам.
   assert.match(read("lib/qualify/tool.ts"), /it-tenders/);
 });

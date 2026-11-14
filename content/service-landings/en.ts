@@ -1,4 +1,4 @@
-import type { LandingLocale } from "./index";
+import type { LandingLocale } from "@/content/service-landings";
 
 /**
  * English texts for foreign clients looking for a developer in Tashkent.

@@ -1,4 +1,4 @@
-import type { LandingLocale } from "./index";
+import type { LandingLocale } from "@/content/service-landings";
 
 /**
  * Українські тексти сторінок під запити. Форма та сама, що в ru.ts:
@@ -10,7 +10,7 @@ export const uk: LandingLocale = {
     breadcrumb: "Послуги",
     from: "Ціна від",
     weeks: "Термін",
-    weeksUnit: "тижнів",
+    weeksUnit: "тиж.",
     mockupTitle: "Подивіться свій майбутній сайт за 2 хвилини",
     mockupText:
       "Надішліть адресу сайту або Instagram і виберіть сферу: зберемо макет з вашою назвою, послугами й контактами просто на екрані. Безкоштовно і без дзвінка менеджера.",

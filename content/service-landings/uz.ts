@@ -1,4 +1,4 @@
-import type { LandingLocale } from "./index";
+import type { LandingLocale } from "@/content/service-landings";
 
 /**
  * O‘zbekcha (lotin) matnlar: ru.ts bilan bir xil shaklda. Raqamlar faqat

@@ -76,20 +76,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Условия на макеты — тоже: клиент, получивший прототип, должен находить
     // их по названию студии.
     { path: MOCKUP_TERMS_PATH, priority: 0.3, changeFrequency: "yearly" as const },
-    // Страницы под запросы (content/service-landings) — выше прочих услуг:
-    // это вход из поиска по «разработка сайтов в Ташкенте» и соседним.
-    ...LANDING_SLUGS.map((slug) => ({
+    ...services.map((s) => ({
+      path: `services/${s.slug}`,
+      priority: (LANDING_SLUGS as readonly string[]).includes(s.slug) ? 0.95 : 0.8,
+      changeFrequency: "monthly" as const,
+    })),
+    // Страницы под запросы (content/service-landings), которых нет среди
+    // услуг, — вход из поиска по «интернет-магазин», «лендинг» и соседним.
+    ...LANDING_SLUGS.filter((slug) => !services.some((s) => s.slug === slug)).map((slug) => ({
       path: `services/${slug}`,
       priority: 0.95,
       changeFrequency: "monthly" as const,
     })),
-    ...services
-      .filter((s) => !(LANDING_SLUGS as readonly string[]).includes(s.slug))
-      .map((s) => ({
-        path: `services/${s.slug}`,
-        priority: 0.8,
-        changeFrequency: "monthly" as const,
-      })),
     ...products.map((p) => ({
       path: `products/${p.slug}`,
       priority: 0.8,

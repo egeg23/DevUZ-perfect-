@@ -100,6 +100,6 @@ test("страницы под запросы: в маршруте, карте с
   const page = readFileSync("app/[locale]/services/[slug]/page.tsx", "utf8");
   assert.match(page, /LANDING_SLUGS/);
   assert.match(page, /faqSchema\(text\.faq\)/);
-  assert.match(readFileSync("app/sitemap.ts", "utf8"), /LANDING_SLUGS\.map/);
+  assert.match(readFileSync("app/sitemap.ts", "utf8"), /LANDING_SLUGS\.filter/);
   assert.match(readFileSync("components/sections/services.tsx", "utf8"), /LANDING_SLUGS/);
 });

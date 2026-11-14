@@ -47,8 +47,8 @@ export function ServiceLanding({ meta, locale, dict }: { meta: LandingMeta; loca
 
         <p className="mt-7 max-w-3xl text-[1.04rem] leading-relaxed text-muted">{text.lead}</p>
 
-        <div className="mt-9 grid gap-4 rounded-2xl border border-line bg-surface px-6 py-6 sm:grid-cols-2 lg:grid-cols-5">
-          <div className="lg:col-span-2">
+        <div className="mt-9 grid grid-cols-2 gap-4 rounded-2xl border border-line bg-surface px-6 py-6 lg:grid-cols-5">
+          <div className="col-span-2">
             <p className="font-mono text-[0.65rem] uppercase tracking-[0.16em] text-faint">{ui.from}</p>
             <p className="mt-1.5 font-display text-2xl font-bold text-green">{formatUzs(price.uzs, locale)}</p>
             <p className="text-[0.85rem] text-faint">≈ {formatUsd(price.uzs)}</p>
@@ -91,7 +91,7 @@ export function ServiceLanding({ meta, locale, dict }: { meta: LandingMeta; loca
       <Container>
         <section className="mt-16">
           <h2 className="text-[clamp(1.5rem,3vw,2.1rem)] font-bold">{ui.kindsTitle}</h2>
-          <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className={`mt-7 grid gap-4 sm:grid-cols-2 ${text.kinds.length === 4 ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}>
             {text.kinds.map((kind, i) => {
               const p = calcPrice(meta.kinds[i]?.calc ?? meta.calc);
               return (

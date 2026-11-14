@@ -3,7 +3,7 @@ import { PROTOTYPE_HOURS } from "@/lib/admin/outreach";
 import { defaultSelection, estimate, formatUsd, formatUzs } from "@/lib/calculator";
 import type { Locale } from "@/lib/i18n";
 
-import { LANDING_TEXT, type LandingMeta, type LandingSlug, type LandingText } from "./index";
+import { LANDING_TEXT, type LandingMeta, type LandingSlug, type LandingText } from "@/content/service-landings";
 
 /**
  * Числа страницы — из калькулятора и `proof`, а не из текста: цена на

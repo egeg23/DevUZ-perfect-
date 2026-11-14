@@ -1,4 +1,4 @@
-import type { LandingLocale } from "./index";
+import type { LandingLocale } from "@/content/service-landings";
 
 /**
  * Русские тексты страниц под запросы. Числа — только значками:
@@ -12,7 +12,7 @@ export const ru: LandingLocale = {
     breadcrumb: "Услуги",
     from: "Цена от",
     weeks: "Срок",
-    weeksUnit: "недель",
+    weeksUnit: "нед.",
     mockupTitle: "Посмотрите свой будущий сайт за 2 минуты",
     mockupText:
       "Пришлите адрес сайта или Instagram и выберите сферу: соберём макет с вашим названием, услугами и контактами прямо на экране. Бесплатно и без звонка менеджера.",

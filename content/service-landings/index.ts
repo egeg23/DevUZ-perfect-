@@ -1,11 +1,11 @@
 import type { Locale } from "@/lib/i18n";
 
-import { en } from "./en";
-import { pl } from "./pl";
-import { ru } from "./ru";
-import { uk } from "./uk";
-import { uz } from "./uz";
-import { zh } from "./zh";
+import { en } from "@/content/service-landings/en";
+import { pl } from "@/content/service-landings/pl";
+import { ru } from "@/content/service-landings/ru";
+import { uk } from "@/content/service-landings/uk";
+import { uz } from "@/content/service-landings/uz";
+import { zh } from "@/content/service-landings/zh";
 
 /**
  * Страницы под поисковые запросы: «разработка сайтов в Ташкенте»,

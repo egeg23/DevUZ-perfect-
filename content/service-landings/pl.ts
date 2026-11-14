@@ -1,4 +1,4 @@
-import type { LandingLocale } from "./index";
+import type { LandingLocale } from "@/content/service-landings";
 
 /**
  * Polskie teksty stron pod zapytania. Ta sama forma co ru.ts:
@@ -10,7 +10,7 @@ export const pl: LandingLocale = {
     breadcrumb: "Usługi",
     from: "Cena od",
     weeks: "Termin",
-    weeksUnit: "tygodni",
+    weeksUnit: "tyg.",
     mockupTitle: "Zobacz swoją przyszłą stronę w 2 minuty",
     mockupText:
       "Wyślij adres strony lub Instagrama i wybierz branżę: złożymy makietę z Twoją nazwą, usługami i kontaktami od razu na ekranie. Za darmo i bez telefonu od handlowca.",
