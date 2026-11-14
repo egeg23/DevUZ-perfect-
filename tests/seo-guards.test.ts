@@ -4,7 +4,7 @@ import { test } from "node:test";
 
 import robots from "@/app/robots";
 import { products } from "@/content/products";
-import { organizationSchema, productSchema } from "@/lib/schema";
+import { organizationSchema, productCovers, productSchema } from "@/lib/schema";
 
 const ROOT = new URL("../", import.meta.url);
 const read = (file: string) => readFileSync(new URL(file, ROOT), "utf8");
@@ -103,22 +103,29 @@ test("у оффера товара остаётся цена, валюта и н
   assert.ok(offers.price !== undefined || offers.lowPrice !== undefined);
 });
 
-test("картинка товара объявляется, только когда она есть", () => {
-  // Google считает image обязательным для карточки товара — но картинка
-  // обязана показывать товар. У продукта без живого экземпляра снимать
-  // нечего, и общая обложка студии на его месте была бы разметкой,
-  // разошедшейся со страницей.
+test("у каждого товара есть картинка: снимки, а без живого экземпляра — обложка состава", () => {
+  // Google считает image обязательным для карточки товара (Search Console,
+  // 13.11.2026: «Отсутствует поле "image"» у /zh/products/legal-ai). У
+  // продукта со снимками — снимки; без живого экземпляра — его обложка из
+  // scripts/product-covers.mjs в трёх пропорциях, и она же стоит на странице.
+  const page = readFileSync(new URL("app/[locale]/products/[slug]/page.tsx", ROOT), "utf8");
+  assert.match(page, /productCovers\(product\.slug\)\[0\]\.src/);
   for (const product of products) {
     const schema = productSchema(product, "ru") as Record<string, unknown>;
-    if (!product.shots?.length) {
-      assert.ok(!("image" in schema), `${product.slug}: обещает картинку, которой нет`);
-      continue;
-    }
-
     const images = schema.image as string[];
-    assert.equal(images.length, product.shots.length);
+    assert.ok(Array.isArray(images) && images.length, `${product.slug}: нет картинки`);
     for (const url of images) {
       assert.match(url, /^https:\/\/devuz\.studio\/products\//, `странный адрес картинки: ${url}`);
+    }
+    if (product.shots?.length) {
+      assert.equal(images.length, product.shots.length);
+      continue;
+    }
+    assert.equal(images.length, 3, `${product.slug}: обложка в трёх пропорциях`);
+    for (const cover of productCovers(product.slug)) {
+      const file = new URL(`public${cover.src}`, ROOT);
+      assert.ok(statSync(file).isFile(), `${cover.src}: файла нет — node scripts/product-covers.mjs`);
+      assert.ok(statSync(file).size < 200_000, `${cover.src}: тяжёлая обложка`);
     }
   }
 });

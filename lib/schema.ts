@@ -165,6 +165,19 @@ export function landingSchema(input: {
  * попыткой обмануть выдачу. Поэтому у продуктов с вилкой отдаётся диапазон,
  * а не нижняя граница, выданная за окончательную цену.
  */
+/**
+ * Обложки продукта без снимков — `public/products/<slug>/cover-<пропорция>.webp`,
+ * их пишет `scripts/product-covers.mjs` (перезапуск — при смене названия,
+ * состава, стека или цены продукта). 16:9, 4:3, 1:1 — как просит Google.
+ */
+export function productCovers(slug: string): { src: string; width: number; height: number }[] {
+  return [
+    { src: `/products/${slug}/cover-16x9.webp`, width: 1200, height: 675 },
+    { src: `/products/${slug}/cover-4x3.webp`, width: 1200, height: 900 },
+    { src: `/products/${slug}/cover-1x1.webp`, width: 1200, height: 1200 },
+  ];
+}
+
 export function productSchema(product: Product, locale: Locale): Json {
   const offer: Json = product.priceToUsd
     ? {
@@ -186,7 +199,15 @@ export function productSchema(product: Product, locale: Locale): Json {
   // картинка должна показывать товар, поэтому у продукта без живого
   // экземпляра поля просто нет. Общая обложка студии на его месте была бы
   // разметкой, разошедшейся со страницей.
-  const images = (product.shots ?? []).map((shot) => absoluteUrl(shot.src.replace(/^\//, "")));
+  //
+  // Продукту без живого экземпляра — его обложка-«коробка» в трёх пропорциях
+  // (`productCovers`): название, состав, стек и цена, без нарисованных
+  // экранов. Search Console, 13.11.2026: «Отсутствует поле "image"» у
+  // /zh/products/legal-ai — без картинки карточка товара в выдачу не идёт.
+  // Обложка показана и на странице продукта.
+  const images = product.shots?.length
+    ? product.shots.map((shot) => absoluteUrl(shot.src.replace(/^\//, "")))
+    : productCovers(product.slug).map((c) => absoluteUrl(c.src.replace(/^\//, "")));
 
   return {
     "@type": "Product",

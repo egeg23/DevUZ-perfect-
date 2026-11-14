@@ -11,8 +11,8 @@ import { Reveal } from "@/components/ui/reveal";
 import { getDictionary } from "@/content/dictionaries";
 import { productBySlug, products } from "@/content/products";
 import { isLocale, locales, localeHref, t, tList, type Locale } from "@/lib/i18n";
-import { breadcrumbSchema, jsonLdGraph, productSchema } from "@/lib/schema";
-import { buildMetadata } from "@/lib/seo";
+import { breadcrumbSchema, jsonLdGraph, productCovers, productSchema } from "@/lib/schema";
+import { absoluteUrl, buildMetadata } from "@/lib/seo";
 
 export function generateStaticParams() {
   return locales.flatMap((locale) =>
@@ -34,6 +34,8 @@ export async function generateMetadata({
     path: `products/${slug}`,
     title: t(product.seoTitle, locale),
     description: t(product.seoDescription, locale),
+    // Превью ссылки — снимок продукта или его обложка, а не общая картинка студии.
+    ogImage: absoluteUrl((product.shots?.[0]?.src ?? productCovers(product.slug)[0].src).replace(/^\//, "")),
   });
 }
 
@@ -134,7 +136,21 @@ export default async function ProductPage({
               ))}
             </div>
           </Section>
-        ) : null}
+        ) : (
+          // Живого экземпляра нет — обложка состава, та же, что в разметке
+          // товара (`productCovers`): картинка, объявленная поисковику, стоит
+          // и перед человеком.
+          <Reveal>
+            <Image
+              src={productCovers(product.slug)[0].src}
+              alt={t(product.title, locale)}
+              width={1200}
+              height={675}
+              className="mt-12 w-full max-w-4xl rounded-2xl border border-white/10"
+              sizes="(min-width: 1024px) 56rem, 100vw"
+            />
+          </Reveal>
+        )}
 
         <Section title={p.included}>
           <div className="grid gap-6 md:grid-cols-2">
