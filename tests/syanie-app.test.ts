@@ -333,6 +333,8 @@ test("сияние на сервере клиники: образ из GitHub, �
   assert.match(wf, /SY_PORT: \$\{\{ vars\.SYANIE_APP_PORT \|\| '3000' \}\}/, "нет порта сайта");
   assert.match(read("deploy/Caddyfile"), /www\.\{\$DOMAIN\} \{\s*redir https:\/\/\{\$DOMAIN\}\{uri\} permanent/, "www не ведёт на основной адрес");
   assert.match(remote, /ufw allow 80\/tcp/, "файрвол сервера не открывает 80");
+  /* Сменили SYANIE_DOMAIN — Caddy пересоздаётся, а не держит старое имя. */
+  assert.match(remote, /\[ "\$CADDY_DOMAIN" = "\$SY_DOMAIN" \]/, "Caddy не замечает смену домена");
   assert.match(remote, /--memory 512m/);
   assert.match(remote, /вернул прошлый образ/, "нет отката");
   assert.doesNotMatch(remote, /cat "\$D\/\.env"|echo "\$CODE"|say .*\$CODE|say .*SY_SETUP\}/, "код установки попадает в журнал");
