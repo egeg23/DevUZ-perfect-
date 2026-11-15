@@ -17,7 +17,7 @@ function plural(n,a,b,c){var m=n%10,mm=n%100;return n+' '+(m===1&&mm!==11?a:m>=2
 var ST={new:'Новая',confirmed:'Подтверждена',came:'Пришёл',canceled:'Отменена'};
 var SRC={booking:'Запись с сайта',quiz:'Квиз',chat:'Чат сайта',tg:'Telegram-бот',wz:'Мессенджер'};
 var KIND={site:'Сайт',tg:'Telegram-бот',whatsapp:'WhatsApp',whatsgroup:'WhatsApp',instagram:'Instagram',telegram:'Telegram',telegroup:'Telegram',vk:'ВКонтакте',avito:'Авито',max:'MAX',maxgroup:'MAX',viber:'Viber'};
-var NAV=[['svodka','Сводка','home'],['zayavki','Заявки','list'],['soobshcheniya','Сообщения','chat'],['sayt','Сайт','globe'],['podklyucheniya','Подключения','plug'],['komanda','Команда','users'],['istoriya','История','clock']];
+var NAV=[['svodka','Сводка','home'],['zayavki','Заявки','list'],['soobshcheniya','Сообщения','chat','Чаты'],['sayt','Сайт','globe'],['podklyucheniya','Подключения','plug','Сервисы'],['komanda','Команда','users'],['istoriya','История','clock']];
 var P='fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"';
 var ICONS={globe:'<circle cx="12" cy="12" r="8.5" '+P+'/><path d="M3.5 12h17M12 3.5c2.3 2.4 3.5 5.2 3.5 8.5s-1.2 6.1-3.5 8.5c-2.3-2.4-3.5-5.2-3.5-8.5s1.2-6.1 3.5-8.5z" '+P+'/>',home:'<path d="M4 11 12 4l8 7v9H4z" '+P+'/>',list:'<path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01" '+P+'/>',chat:'<path d="M4 5h16v11H9l-5 4z" '+P+'/>',plug:'<path d="M9 3v5M15 3v5M6 8h12v3a6 6 0 0 1-12 0zM12 17v4" '+P+'/>',users:'<circle cx="9" cy="8" r="3.5" '+P+'/><path d="M2.5 20c.9-3.4 3.4-5 6.5-5s5.6 1.6 6.5 5M16 4.5a3.5 3.5 0 0 1 0 7M18 15c1.8.6 3 2.2 3.5 5" '+P+'/>',clock:'<circle cx="12" cy="12" r="8.5" '+P+'/><path d="M12 7.5V12l3 2" '+P+'/>',phone:'<path d="M5 4.5h3.5l1.5 4-2 1.3a10 10 0 0 0 6.2 6.2l1.3-2 4 1.5V19a1.5 1.5 0 0 1-1.6 1.5A15.5 15.5 0 0 1 3.5 6.1 1.5 1.5 0 0 1 5 4.5z" '+P+'/>',back:'<path d="M15 5l-7 7 7 7" '+P+'/>'};
 function ic(k){return'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">'+(ICONS[k]||'')+'</svg>'}
@@ -56,7 +56,7 @@ var R={tab:'svodka',id:0},CNT={leads:0,msgs:0},poll=0;
 function route(){var x=(location.hash||'#svodka').slice(1).split('/');R.tab=NAV.some(function(n){return n[0]===x[0]})?x[0]:'svodka';R.id=Number(x[1])||0}
 function start(){
   app.innerHTML='<div class="shell"><aside class="side"><div class="brand"><i>С</i>Сияние Севера</div><nav class="nav" aria-label="Разделы">'+
-    NAV.map(function(n){return'<a href="#'+n[0]+'" data-t="'+n[0]+'">'+ic(n[2])+'<span>'+n[1]+'</span></a>'}).join('')+
+    NAV.map(function(n){return'<a href="#'+n[0]+'" data-t="'+n[0]+'">'+ic(n[2])+'<span'+(n[3]?' class="nv-l"':'')+'>'+n[1]+'</span>'+(n[3]?'<span class="nv-s">'+n[3]+'</span>':'')+'</a>'}).join('')+
     '</nav><div class="me"><span><b>'+h(ME.name)+'</b><br>'+(ME.role==='owner'?'Главный врач':'Администратор')+'</span><button type="button" id="out">Выйти</button></div></aside><main class="main" id="view"></main></div>';
   $('#out').onclick=logout;route();show();startPoll()}
 function logout(){api('/logout',{}).then(function(){ME=null;location.hash='';boot()})}
