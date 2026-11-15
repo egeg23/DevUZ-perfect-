@@ -21,6 +21,7 @@ on:
       # Проверка ключа Вордстата: ручная, только спрашивает Яндекс.
       - ".github/workflows/wordstat-check.yml"
       - "scripts/seo/wordstat-check.mjs"
+      - "scripts/seo/wordstat-landings.mjs"
       - "scripts/voice-transcribe.py"
       # Ролик студии: сцена Blender и её рендер живут в Actions (scripts/blender).
       - ".github/workflows/blender-render.yml"
