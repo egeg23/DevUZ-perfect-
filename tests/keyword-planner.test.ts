@@ -103,3 +103,19 @@ test("ключи приложения Google: только владелец, н�
   assert.doesNotMatch(view, /defaultValue=\{id\}|value=\{secret\}/);
   assert.match(read("app/admin/ads/page.tsx"), /<AdsGoogle staff=\{staff\} locale=\{staff\.panel_locale\} result=\{g\} \/>/);
 });
+
+test("ключи Google: шаги подключения — «Шаг N —» на трёх языках, без стрелок", async () => {
+  const { adsGoogleDict } = await import("@/content/admin-panel/ads-google");
+  const d = adsGoogleDict as unknown as Record<string, Record<string, unknown>>;
+  for (const lang of ["ru", "uz", "pl"] as const) {
+    for (const k of ["g1", "g2", "g3", "g4", "g5", "g6", "g7", "g8"]) {
+      const text = String(d[k][lang]);
+      assert.ok(text.length > 40, `${lang}/${k}: пусто`);
+      assert.ok(!/[→>]/.test(text), `${lang}/${k}: стрелки вместо слов`);
+    }
+    const stepNo = d.stepNo[lang] as (n: number) => string;
+    assert.match(stepNo(3), /3/);
+  }
+  assert.match(String(d.g6.ru), /Basic/, "уровень Basic назван");
+  assert.match(String(d.g4.ru), /redirect/, "адрес возврата назван");
+});
