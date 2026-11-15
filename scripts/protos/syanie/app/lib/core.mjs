@@ -5,7 +5,7 @@ import { sealer, hashPass, checkPass, token, sha } from "./crypt.mjs";
 import { amoClient, amoBase } from "./amo.mjs";
 import { tgClient, tgMessage } from "./tg.mjs";
 import { wzClient, wzMessages, WZ_KINDS } from "./wazzup.mjs";
-import { GROUPS, TEXT_KEYS, defaultsOf, normalize, siteOverrides } from "./site-content.mjs";
+import { BLOCKS, GROUPS, TEXT_KEYS, defaultsOf, mergeBlocks, normalize, siteOverrides } from "./site-content.mjs";
 
 export const STATUS = { new: "Новая", confirmed: "Подтверждена", came: "Пришёл", canceled: "Отменена" };
 export const ROLES = { owner: "Главный врач", admin: "Администратор" };
@@ -322,7 +322,9 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
       changed() { cache = null; version++; },
       view() {
         if (!renderer) throw new Error("Правка сайта работает на сервере клиники");
-        return { groups: GROUPS, texts: TEXT_KEYS, defaults: def(), edits: edits(), seo: seo() };
+        const e = edits();
+        if (e.blocks) e.blocks = mergeBlocks(e.blocks);
+        return { groups: GROUPS, texts: TEXT_KEYS, blocks: Object.fromEntries(BLOCKS.map((b) => [b.id, b.title])), defaults: def(), edits: e, seo: seo() };
       },
       save(key, value, by) {
         if (!renderer) throw new Error("Правка сайта работает на сервере клиники");

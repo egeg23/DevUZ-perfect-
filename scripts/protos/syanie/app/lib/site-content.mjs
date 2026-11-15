@@ -8,8 +8,19 @@ const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replac
 const cut = (s, n) => String(s == null ? "" : s).replace(/[\u0000-\u0008\u000b-\u001f]/g, " ").replace(/[ \t]+/g, " ").trim().slice(0, n);
 
 /* Поля: text — строка, area — абзац, int — целое, bool — галочка,
-   lines — список строками, image — фото. max — длина. */
-const F = (k, label, type = "text", max = 120, hint = "") => ({ k, label, type, max, hint });
+   lines — список строками, image — фото, select — выбор из opts. max — длина. */
+const F = (k, label, type = "text", max = 120, hint = "", opts) => ({ k, label, type, max, hint, ...(opts ? { opts } : {}) });
+
+/* Блоки страницы по порядку (первый экран с пролётом всегда первым и сюда
+   не входит). id — как в gen.mjs (BLOCK_FN), title — как в админке. */
+export const BLOCKS = [
+  { id: "vs", title: "All-on-6 или All-on-4" }, { id: "price", title: "Цены и подарки" }, { id: "quiz", title: "Расчёт за минуту" },
+  { id: "docs", title: "Врачи" }, { id: "trust", title: "Гарантии и как проходит операция" }, { id: "perks", title: "Сервис" },
+  { id: "reviews", title: "Отзывы" }, { id: "rooms", title: "Клиника: фото" }, { id: "faq", title: "Вопросы и ответы" }, { id: "contacts", title: "Как доехать" },
+];
+const BUILTIN = new Set(BLOCKS.map((b) => b.id));
+const CUSTOM_ID = /^c[a-z0-9]{4,12}$/;
+const UPLOAD = /^\/uploads\/[a-f0-9]{16,64}\.(jpg|png|webp)$/;
 
 export const TEXT_KEYS = {
   hero: "Первый экран", "ch-c1": "Сцена 1: All-on-6", "ch-c2": "Сцена 2: КТ", "ch-c3": "Сцена 3: импланты", "ch-c4": "Сцена 4: имплант", "ch-c5": "Сцена 5: протез",
@@ -18,6 +29,11 @@ export const TEXT_KEYS = {
 };
 
 export const GROUPS = [
+  { key: "blocks", title: "Блоки страницы", hint: "Порядок разделов на странице. «Выше» и «Ниже» двигают блок, галочка «Показывать» прячет его с сайта и из меню (сам блок и его тексты остаются, вернуть можно галочкой). «Добавить свой блок»: новый раздел с заголовком, текстом и фото, его можно поставить в любое место.", kind: "blocks", max: 12, photoMax: 8,
+    fields: [F("kick", "Подзаголовок", "text", 60, "Например: Новое в клинике"), F("h", "Заголовок", "text", 120), F("text", "Текст", "area", 3000, "Каждая строка станет абзацем. Строки, которые начинаются с «- », станут списком."),
+      F("layout", "Как показать фото", "select", 0, "", [["side", "Фото рядом с текстом"], ["grid", "Фото сеткой под текстом"], ["text", "Без фото"]]),
+      F("menu", "Пункт в меню сайта", "text", 24, "Пусто: в меню не показывать"), F("book", "Кнопка «Записаться»", "bool"), F("dark", "Тёмный фон", "bool")],
+    photo: [F("img", "Фото", "image"), F("alt", "Что на фото", "text", 140, "Подпись для поисковиков и незрячих")] },
   { key: "contacts", title: "Контакты", hint: "Телефон, часы и адрес стоят на всём сайте: в шапке, кнопках звонка, контактах и подвале. WhatsApp и Telegram: пусто, и кнопки нет.", kind: "object",
     fields: [F("phone", "Телефон", "text", 30, "+7 (382) 227-00-77"), F("hours", "Часы работы", "text", 60), F("hoursShort", "Часы коротко (в записи и чате)", "text", 60), F("addr", "Адрес", "text", 120, "Томск, ул. Белинского, 63"), F("near", "Как далеко от центра", "text", 80), F("parking", "Парковка", "text", 100), F("license", "Лицензия", "text", 120), F("whatsapp", "WhatsApp: номер", "text", 20, "79001234567"), F("telegram", "Telegram: ник без @", "text", 40, "Пусто: ссылка на бота клиники, если он подключён")] },
   { key: "prices", title: "Цены All-on-6", hint: "Карточки цен в разделе «Цены». Отмеченная «Чаще выбирают» выделена.", kind: "list", max: 4,
@@ -29,6 +45,8 @@ export const GROUPS = [
     fields: [F("t", "Подарок или акция", "text", 60), F("was", "Обычная цена, ₽", "int"), F("sale", "Скидка, а не 0 ₽", "bool")] },
   { key: "doctors", title: "Врачи", hint: "Фото лучше квадратное, JPG или PNG до 3 МБ.", kind: "list", max: 8,
     fields: [F("name", "ФИО", "text", 80), F("role", "Специальность", "text", 120), F("facts", "Факты, по одному в строке", "lines", 400), F("quote", "Цитата", "area", 240), F("img", "Фото", "image")] },
+  { key: "rooms", title: "Фото клиники", hint: "Раздел «Клиника»: фото интерьера. JPG или PNG до 3 МБ, лучше горизонтальные. Спрятать раздел целиком: «Блоки страницы».", kind: "list", max: 9,
+    fields: [F("img", "Фото", "image"), F("alt", "Что на фото", "text", 140, "Подпись для поисковиков и незрячих")] },
   { key: "faq", title: "Вопросы и ответы", hint: "Раздел «Вопросы».", kind: "list", max: 20,
     fields: [F("q", "Вопрос", "text", 160), F("a", "Ответ", "area", 900)] },
   { key: "reviews", title: "Отзывы", hint: "Только настоящие отзывы пациентов, с их согласия.", kind: "list", max: 20,
@@ -56,6 +74,8 @@ export function defaultsOf(DATA, texts = {}) {
     trust: DATA.TRUST.map((x) => ({ n: x.n, t: x.t })),
     guarantee: DATA.GUARANTEE.map((x) => ({ t: x.t, d: x.d })),
     perks: DATA.PERKS.map((x) => ({ t: x.t, d: x.d })),
+    rooms: DATA.ROOMS.map((r) => ({ img: r.img, alt: r.alt })),
+    blocks: BLOCKS.map((b) => ({ id: b.id, on: true })),
     texts: Object.fromEntries(Object.keys(TEXT_KEYS).map((k) => [k, { ...(texts[k] || {}) }])),
   };
 }
@@ -68,6 +88,7 @@ function field(f, v, where) {
     if (!Number.isInteger(n) || n < 0 || n > 100000000) throw new Error(`${name}: целое число рублей`);
     return n;
   }
+  if (f.type === "select") { const s = String(v ?? ""); return f.opts.some(([k]) => k === s) ? s : f.opts[0][0]; }
   if (f.type === "image") {
     const s = String(v || "");
     if (s && !/^\/uploads\/[a-f0-9]{16,64}\.(jpg|png|webp)$/.test(s) && !/^[a-z0-9-]{2,40}$/.test(s)) throw new Error(`${name}: загрузите фото заново`);
@@ -79,9 +100,46 @@ function field(f, v, where) {
 }
 
 /* Проверка правки одной группы. Вернёт чистое значение для базы. */
+/* Встроенные блоки, которых нет в сохранённом списке (появились в коде
+   позже правки), встают на своё место по умолчанию — за тем, что шёл
+   перед ними. Так новый блок сайта не теряется у клиники. */
+export function mergeBlocks(list) {
+  const out = (Array.isArray(list) ? list : []).filter((b) => b && (BUILTIN.has(b.id) || CUSTOM_ID.test(b.id)));
+  BLOCKS.forEach((b, i) => {
+    if (out.some((x) => x.id === b.id)) return;
+    let at = 0;
+    for (let j = i - 1; j >= 0; j--) { const k = out.findIndex((x) => x.id === BLOCKS[j].id); if (k >= 0) { at = k + 1; break; } }
+    out.splice(at, 0, { id: b.id, on: true });
+  });
+  return out;
+}
+
+function normBlocks(g, value) {
+  const items = Array.isArray(value) ? value : [], seen = new Set();
+  let n = 0;
+  const out = items.map((it) => {
+    const id = String(it?.id || "");
+    if (seen.has(id)) throw new Error("Блок в списке дважды: обновите страницу");
+    seen.add(id);
+    if (BUILTIN.has(id)) return { id, on: it.on !== false };
+    if (!CUSTOM_ID.test(id)) throw new Error("Неизвестный блок: обновите страницу");
+    if (++n > g.max) throw new Error(`Своих блоков не больше ${g.max}`);
+    const where = `Свой блок ${n}, `, o = { id, on: it.on !== false };
+    for (const f of g.fields) o[f.k] = field(f, it[f.k], where);
+    if (!o.h) throw new Error(`${where}заполните «Заголовок»`);
+    const photos = Array.isArray(it.photos) ? it.photos : [];
+    if (photos.length > g.photoMax) throw new Error(`${where}фото не больше ${g.photoMax}`);
+    o.photos = photos.map((p, j) => ({ img: field(g.photo[0], p?.img, `${where}фото ${j + 1}, `), alt: field(g.photo[1], p?.alt, `${where}фото ${j + 1}, `) })).filter((p) => p.img);
+    if (o.photos.some((p) => !UPLOAD.test(p.img))) throw new Error(`${where}загрузите фото заново`);
+    return o;
+  });
+  return mergeBlocks(out);
+}
+
 export function normalize(key, value) {
   const g = BY[key];
   if (!g) throw new Error("Нет такого раздела сайта");
+  if (g.kind === "blocks") return normBlocks(g, value);
   if (g.kind === "texts") {
     const out = {};
     for (const k of Object.keys(TEXT_KEYS)) {
@@ -113,6 +171,7 @@ export function normalize(key, value) {
     return o;
   });
   if (key === "prices" && !list.length) throw new Error("Нужна хотя бы одна цена");
+  if (key === "rooms" && !list.length) throw new Error("Нужно хотя бы одно фото. Спрятать раздел целиком: «Блоки страницы»");
   if (!g.head) return list;
   const out = { items: list };
   for (const f of g.head) out[f.k] = field(f, value?.[f.k], "");
@@ -146,7 +205,12 @@ export function siteOverrides(edits = {}, defaults, extra = {}) {
   if (edits.trust) data.TRUST = v("trust").map((x) => ({ n: e(x.n), t: e(x.t) }));
   if (edits.guarantee) data.GUARANTEE = v("guarantee").map((x) => ({ t: e(x.t), d: e(x.d) }));
   if (edits.perks) data.PERKS = v("perks").map((x) => ({ t: e(x.t), d: e(x.d) }));
+  if (edits.rooms) data.ROOMS = v("rooms").map((r) => ({ img: r.img, alt: e(r.alt) }));
+  /* Раскладка блоков: null — прежний порядок. Свои блоки — экранированные строки. */
+  const blocks = edits.blocks ? mergeBlocks(edits.blocks).map((b) => (BUILTIN.has(b.id) ? { id: b.id, on: b.on !== false }
+    : { id: b.id, on: b.on !== false, custom: true, kick: e(b.kick), h: e(b.h), text: e(b.text), layout: b.layout, menu: e(b.menu), book: !!b.book, dark: !!b.dark,
+      photos: (b.photos || []).filter((p) => UPLOAD.test(p.img)).map((p) => ({ img: p.img, alt: e(p.alt) })) })) : null;
   const texts = {};
   for (const [k, t] of Object.entries(edits.texts || {})) texts[k] = Object.fromEntries(Object.entries(t).map(([p, s]) => [p, e(s)]));
-  return { brand, data, texts };
+  return { brand, data, texts, blocks };
 }
