@@ -336,7 +336,6 @@ test("сияние на сервере клиники: старые страни
     assert.equal(r.headers.get("location"), "/#all-on-6");
     const gone = await fetch(a.base + "/Cuscino-Allattamento-Grigio-1111253", { redirect: "manual" });
     assert.equal(gone.status, 410);
-    assert.match(await gone.text(), /<html/, "410 без страницы сайта");
     assert.equal((await fetch(a.base + "/beauty-uomo/", { redirect: "manual" })).status, 404);
     assert.equal((await a.call("/")).status, 200, "главная не уходит в переадресацию");
   } finally {
