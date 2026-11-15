@@ -274,6 +274,9 @@ export function createApp({ core, siteDir, adminDir, uploadsDir = "", setupCode 
       if (p === "/robots.txt") return send(res, 200, ROBOTS, { "Content-Type": MIME[".txt"], "Cache-Control": "max-age=3600" });
       if (p === "/sitemap.xml") return send(res, 200, sitemap(), { "Content-Type": MIME[".xml"], "Cache-Control": "max-age=3600" });
       if (p === "/sitemap-gone.xml") return send(res, 200, goneMap(), { "Content-Type": MIME[".xml"], "Cache-Control": "max-age=86400", "X-Robots-Tag": "noindex" });
+      /* Ключ IndexNow: поисковик сверяет его, когда сайт сообщает о правке. */
+      const ik = /^\/([a-f0-9]{32})\.txt$/.exec(p);
+      if (ik && core.seoPing && ik[1] === core.seoPing.key()) return send(res, 200, ik[1], { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-cache" });
       /* Подтверждение прав в Вебмастере и Search Console (lib/verify.mjs). */
       const proof = verifyFile(p);
       if (proof !== null) return send(res, 200, proof, { "Content-Type": MIME[".html"], "Cache-Control": "no-cache" });
