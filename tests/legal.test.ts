@@ -115,6 +115,8 @@ test("страницы приложения для Google: без скрипто
     assert.match(html, /auth\/adwords/, `${name}: нет права Google Ads`);
     assert.match(html, /auth\/analytics\.readonly/, `${name}: нет права Analytics`);
     assert.match(html, /Limited Use/, `${name}: нет Limited Use`);
+    // Владелец, 15.11.2026: «модель Антропик мы не прописываем вообще».
+    assert.doesNotMatch(html, /Anthropic|Claude/i, `${name}: назван поставщик ИИ`);
   }
   // Имя — ровно как на экране согласия.
   assert.match(home, new RegExp(`<title>${company.name}</title>`));
