@@ -300,11 +300,11 @@ test("сияние на сервере клиники: клиника сама �
   } finally { await a.close(); }
 });
 
-test("сияние на сервере клиники: старые страницы их сайта ведут на блоки новой, адреса взломанного магазина — 404", async () => {
+test("сияние на сервере клиники: старые страницы их сайта ведут на блоки новой, товары взломанного магазина — 410", async () => {
   /* Владелец, 14.11.2026: клиника дала добро на перенос на siyaniye-severa.com.
      Там был их WordPress: многостраничный и взломанный (роботам и не из России
      отдавал итальянский магазин). Страницы клиники — 301 на блок страницы. */
-  const { oldPage } = await load("lib/old-urls.mjs");
+  const { oldPage, hackedPage } = await load("lib/old-urls.mjs");
   const cases: Array<[string, string | null]> = [
     ["/implantatsiya-all-on-4/", "/#all-on-6"],
     ["/implantatsiya-zubov/", "/#all-on-6"],
@@ -326,12 +326,18 @@ test("сияние на сервере клиники: старые страни
     ["/", null],
   ];
   for (const [path, to] of cases) assert.equal(oldPage(path), to, path);
+  /* Товары магазина (номер в конце) — 410, страницы клиники и прочее — нет. */
+  for (const path of ["/Cuscino-Allattamento-Grigio-1111253", "/15-ay032nl-15-ay033nl-15-ay034nl-15-ay035nl-416588", "/Reloj-Fossil-FS5304-Hombre-1333334/"]) assert.ok(hackedPage(path), path);
+  for (const path of ["/beauty-uomo/", "/implantatsiya-all-on-4/", "/akcii/skidka-2025", "/akcii/1234567", "/privacy", "/", "/a/b-1234567", "/x-12345678"]) assert.ok(!hackedPage(path), path);
   const a = await boot();
   try {
     const r = await fetch(a.base + "/implantatsiya-all-on-6/", { redirect: "manual" });
     assert.equal(r.status, 301);
     assert.equal(r.headers.get("location"), "/#all-on-6");
-    assert.equal((await fetch(a.base + "/Cuscino-Allattamento-Grigio-1111253", { redirect: "manual" })).status, 404);
+    const gone = await fetch(a.base + "/Cuscino-Allattamento-Grigio-1111253", { redirect: "manual" });
+    assert.equal(gone.status, 410);
+    assert.match(await gone.text(), /<html/, "410 без страницы сайта");
+    assert.equal((await fetch(a.base + "/beauty-uomo/", { redirect: "manual" })).status, 404);
     assert.equal((await a.call("/")).status, 200, "главная не уходит в переадресацию");
   } finally {
     await a.close();

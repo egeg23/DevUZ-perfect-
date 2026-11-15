@@ -9,7 +9,7 @@ import { extname, join, normalize, resolve, sep } from "node:path";
 import { openDb } from "./lib/db.mjs";
 import { makeCore, ROLES } from "./lib/core.mjs";
 import { sameSecret } from "./lib/crypt.mjs";
-import { oldPage } from "./lib/old-urls.mjs";
+import { hackedPage, oldPage } from "./lib/old-urls.mjs";
 
 const MIME = {
   ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8",
@@ -107,7 +107,7 @@ export function createApp({ core, siteDir, adminDir, uploadsDir = "", setupCode 
   }
   function sendPage(req, res, name, code = 200) {
     const pg = page(name);
-    if (!pg) return send(res, code, code === 404 ? "Страница не найдена" : "Сайт ещё собирается");
+    if (!pg) return send(res, code, code >= 400 ? "Страница не найдена" : "Сайт ещё собирается");
     const h = { "Content-Type": MIME[".html"], "Cache-Control": "no-cache", Vary: "Accept-Encoding" };
     if (/\bgzip\b/.test(String(req.headers["accept-encoding"] || ""))) { res.writeHead(code, { ...h, "Content-Encoding": "gzip", "Content-Length": pg.gz.length }); return res.end(req.method === "HEAD" ? undefined : pg.gz); }
     res.writeHead(code, { ...h, "Content-Length": Buffer.byteLength(pg.html) }); res.end(req.method === "HEAD" ? undefined : pg.html);
@@ -241,6 +241,7 @@ export function createApp({ core, siteDir, adminDir, uploadsDir = "", setupCode 
       /* Страницы прежнего сайта клиники — на блок этой страницы (lib/old-urls.mjs). */
       const old = oldPage(p);
       if (old) return send(res, 301, "", { Location: old, "Cache-Control": "public, max-age=86400" });
+      if (hackedPage(p)) return sendPage(req, res, "404.html", 410);
       return sendPage(req, res, "404.html", 404);
     } catch (e) {
       /* Наши ошибки написаны по-русски — их показываем; чужие (сеть, код) — нет. */

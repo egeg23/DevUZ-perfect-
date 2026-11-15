@@ -6,7 +6,8 @@
    Тот сайт был взломан: роботам и посетителям не из России он отдавал
    итальянский магазин, и в выдаче остались адреса вида
    /Cuscino-Allattamento-Grigio-1111253 или /beauty-uomo/. Они сюда не
-   подходят и отвечают 404, чтобы поисковики их выбросили. */
+   подходят: товары отвечают 410 (hackedPage), остальное — 404, чтобы
+   поисковики их выбросили. */
 
 const RULES = [
   [/^(implantatsiya|odnomomentnaya-implantatsiya|odnoetapnaya-implantatsiya|uslugi\/implantatsiya|protezirovanie-na-implantakh|protezirovanie-pri-polnom-otsutstvii|kostnaya-plastika|sinus-lifting|naraschivanie-desny)/, "/#all-on-6"],
@@ -22,4 +23,12 @@ export function oldPage(pathname) {
   if (!p || !/^[a-z0-9-]+(\/[a-z0-9-]+)*$/.test(p)) return null;
   for (const [re, to] of RULES) if (re.test(p)) return to;
   return null;
+}
+
+/** Товар взломанного магазина: один сегмент и номер товара в конце. В их
+    картах сайта 15.11.2026 — 1 891 такой адрес, номера из 6–7 цифр. Ответ
+    410 «удалено навсегда»: поисковик выбрасывает его быстрее, чем после 404. */
+export function hackedPage(pathname) {
+  const p = String(pathname || "").replace(/^\/+|\/+$/g, "");
+  return /^[A-Za-z0-9-]+-\d{6,7}$/.test(p) && !oldPage(pathname);
 }
