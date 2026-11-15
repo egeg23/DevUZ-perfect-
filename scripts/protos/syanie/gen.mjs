@@ -32,7 +32,7 @@ let PROD = process.env.SY_PROD === "1";
 const IS_MAIN = !!process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
 const RENDER_ONLY = process.env.SY_RENDER === "1";
 const { dzIntroSolo } = PROD || RENDER_ONLY ? { dzIntroSolo: () => "" } : await import("../../../lib/proto/dz-video.mjs");
-let D = DATA, B = DATA.BRAND, TX = {}, LIVE = {};
+let D = DATA, B = DATA.BRAND, TX = {}, LIVE = {}, LAYOUT = null;
 const strip = (s) => s.replace(/\/\*[\s\S]*?\*\//g, "");
 const min = (s) => strip(s).replace(/\n\s*/g, "");
 const IMG = "/protos/syanie";
@@ -327,10 +327,14 @@ function reviewsBlock() {
 
 /* ── Интерьер: их фото ────────────────────────────────────────────── */
 function roomsBlock() {
-  const ph = [["p-rec", "Ресепшен клиники «Сияние Севера» с названием на стене", 520, 712], ["p-cor", "Коридор клиники со световыми линиями", 520, 712], ["p-cab", "Кабинет имплантолога", 520, 712], ["p-cab2", "Кабинет с монитором для снимков", 520, 712], ["p-xray", "Врач показывает пациенту снимок на экране", 1000, 1000]];
+  /* Клиника поменяла фото в админке: своя сетка без мозаики под пять кадров. */
+  const free = D.ROOMS !== DATA.ROOMS, src = (r) => (r.img.charAt(0) === "/" ? r.img : `${IMG}/${r.img}.webp`);
+  const figs = free
+    ? D.ROOMS.map((r, i) => `<figure class="rm rv" style="--d:${(i % 6) * 70}ms"><img src="${src(r)}" alt="${r.alt}" loading="lazy" decoding="async"></figure>`)
+    : D.ROOMS.map((r, i) => `<figure class="rm rm-${i} rv" style="--d:${i * 70}ms">${pic(r.img, r.alt, r.w, r.h)}</figure>`);
   return `<section class="rooms" id="klinika" data-tone="ink"><div class="wrap">
 ${tx("rooms", "Клиника", `Белинского, 63`, `${B.near}. ${B.parking}.`)}
-<div class="rm-grid">${ph.map(([n, alt, w, h], i) => `<figure class="rm rm-${i} rv" style="--d:${i * 70}ms">${pic(n, alt, w, h)}</figure>`).join("")}</div>
+<div class="rm-grid${free ? " rm-free" : ""}">${figs.join("")}</div>
 ${PROD ? "" : `<p class="src">Фото с сайта клиники.</p>`}
 </div></section>`;
 }
@@ -459,11 +463,12 @@ function liveLd() {
         openingHoursSpecification: [{ "@type": "OpeningHoursSpecification", dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"], opens: hh(B.open), closes: hh(B.close) }],
         medicalSpecialty: "Dentistry", isAcceptingNewPatients: true, currenciesAccepted: "RUB",
         priceRange: `${rub(D.PRICES[0].price)}-${rub(D.PRICES[D.PRICES.length - 1].price)}`,
-        makesOffer: D.PRICES.map((p) => ({ "@type": "Offer", name: plain(p.t), description: plain(p.d), price: p.price, priceCurrency: "RUB", itemOffered: { "@type": "Service", name: plain(p.t), description: plain(p.d) } })),
-        employee: D.DOCTORS.map((d) => ({ "@type": "Person", name: plain(d.name), jobTitle: plain(d.role) })),
+        /* Скрытый в админке блок — и из разметки: поисковики сверяют её со страницей. */
+        ...(shown("price") ? { makesOffer: D.PRICES.map((p) => ({ "@type": "Offer", name: plain(p.t), description: plain(p.d), price: p.price, priceCurrency: "RUB", itemOffered: { "@type": "Service", name: plain(p.t), description: plain(p.d) } })) } : {}),
+        ...(shown("docs") ? { employee: D.DOCTORS.map((d) => ({ "@type": "Person", name: plain(d.name), jobTitle: plain(d.role) })) } : {}),
       },
       { "@type": "WebSite", "@id": `${U}/#site`, url: `${U}/`, name: plain(B.name), inLanguage: "ru-RU", publisher: { "@id": `${U}/#clinic` } },
-      { "@type": "FAQPage", "@id": `${U}/#voprosy`, mainEntity: D.FAQ.map((f) => ({ "@type": "Question", name: plain(f.q), acceptedAnswer: { "@type": "Answer", text: plain(f.a) } })) },
+      ...(shown("faq") ? [{ "@type": "FAQPage", "@id": `${U}/#voprosy`, mainEntity: D.FAQ.map((f) => ({ "@type": "Question", name: plain(f.q), acceptedAnswer: { "@type": "Answer", text: plain(f.a) } })) }] : []),
     ],
   };
 }
@@ -479,8 +484,50 @@ function siteData() {
   };
 }
 
+/* ── Блоки страницы из админки клиники (раздел «Сайт» → «Блоки страницы»):
+   порядок, скрытые и свои блоки. LAYOUT — список из site-content.mjs, все
+   строки в нём уже экранированы. Без LAYOUT (макет, сайт без правок) —
+   прежний порядок. Первый экран с пролётом всегда первым. ─────────────── */
+const BLOCK_FN = { vs: vsBlock, price: priceBlock, quiz: quizBlock, docs: doctorsBlock, trust: trustBlock, perks: perksBlock, reviews: reviewsBlock, rooms: roomsBlock, faq: faqBlock, contacts: contactsBlock };
+const BLOCK_AT = { vs: "all-on-6", price: "ceny", quiz: "kviz", docs: "vrachi", trust: "garantii", perks: "privilegii", reviews: "otzyvy", rooms: "klinika", faq: "voprosy", contacts: "kontakty" };
+const BLOCK_NAV = { vs: "All-on-6", price: "Цены", docs: "Врачи", faq: "Вопросы", contacts: "Контакты" };
+const shown = (id) => !LAYOUT || LAYOUT.some((b) => b.id === id && b.on);
+/* Текст своего блока: строка — абзац, строки с «- » подряд — список. */
+function richText(t) {
+  let out = "", list = [];
+  const flush = () => { if (list.length) out += `<ul>${list.map((l) => `<li>${l}</li>`).join("")}</ul>`; list = []; };
+  for (const line of String(t || "").split("\n")) {
+    const m = /^\s*[-•*]\s+(.+)$/.exec(line);
+    if (m) list.push(m[1]);
+    else if (line.trim()) { flush(); out += `<p>${line}</p>`; }
+  }
+  flush();
+  return out;
+}
+function customBlock(b) {
+  const ph = b.photos || [], lay = ph.length ? b.layout : "text";
+  const fig = (p, cls = "") => `<figure class="cb-ph rv${cls}"><img src="${p.img}" alt="${p.alt}" loading="lazy" decoding="async"></figure>`;
+  const top = `<div class="sh">${b.kick ? `<span class="kick">${b.kick}</span>` : ""}<h2>${b.h}</h2></div>`;
+  const text = `<div class="cb-t rv">${richText(b.text)}${b.book ? `<a class="btn btn-onyx" href="#zapis" data-book>${ic("msg")}<span>Записаться</span></a>` : ""}</div>`;
+  const inner = lay === "side"
+    ? `<div class="cb-row"><div class="cb-c">${top}${text}</div>${fig(ph[0], " cb-main")}</div>${ph.length > 1 ? `<div class="cb-pics">${ph.slice(1).map((p) => fig(p)).join("")}</div>` : ""}`
+    : lay === "grid" ? `${top}${text}<div class="cb-pics">${ph.map((p) => fig(p)).join("")}</div>` : `${top}${text}`;
+  return `<section class="cb cb-l-${lay}" id="b-${b.id}"${b.dark ? ' data-tone="ink"' : ""}><div class="wrap">${inner}</div></section>`;
+}
+function mainBlocks() {
+  if (!PROD) return [storyBlock(), vsBlock(), priceBlock(), quizBlock(), doctorsBlock(), trustBlock(), perksBlock(), reviewsBlock(), roomsBlock(), nowBlock(), bestBlock(), faqBlock(), contactsBlock(), offerBlock()];
+  if (!LAYOUT) return [storyBlock(), vsBlock(), priceBlock(), quizBlock(), doctorsBlock(), trustBlock(), perksBlock(), reviewsBlock(), roomsBlock(), faqBlock(), contactsBlock()];
+  return [storyBlock(), ...LAYOUT.filter((b) => b.on).map((b) => (b.custom ? customBlock(b) : BLOCK_FN[b.id]()))];
+}
+/* Меню шапки идёт за блоками: скрытый блок пропадает из меню, свой блок
+   с «пунктом в меню» встаёт туда в порядке страницы. */
+function navItems() {
+  if (!LAYOUT) return [["#all-on-6", "All-on-6"], ["#ceny", "Цены"], ["#vrachi", "Врачи"], ["#voprosy", "Вопросы"], ["#kontakty", "Контакты"]];
+  return LAYOUT.filter((b) => b.on && (b.custom ? b.menu : BLOCK_NAV[b.id])).map((b) => (b.custom ? [`#b-${b.id}`, b.menu] : [`#${BLOCK_AT[b.id]}`, BLOCK_NAV[b.id]])).slice(0, 7);
+}
+
 function sitePage() {
-  const nav = [["#all-on-6", "All-on-6"], ["#ceny", "Цены"], ["#vrachi", "Врачи"], ["#voprosy", "Вопросы"], ["#kontakty", "Контакты"]];
+  const nav = navItems();
   return `<!doctype html>
 <html lang="ru">
 <head>
@@ -501,7 +548,7 @@ ${sprite()}
 <div class="top-r"><a class="top-ph" href="${tel}">${ic("phone")}<span>${B.phone}</span></a><a class="btn btn-sm btn-onyx" href="#zapis" data-book>Записаться</a></div>
 </div></header>
 <main id="main">
-${(PROD ? [storyBlock(), vsBlock(), priceBlock(), quizBlock(), doctorsBlock(), trustBlock(), perksBlock(), reviewsBlock(), roomsBlock(), faqBlock(), contactsBlock()] : [storyBlock(), vsBlock(), priceBlock(), quizBlock(), doctorsBlock(), trustBlock(), perksBlock(), reviewsBlock(), roomsBlock(), nowBlock(), bestBlock(), faqBlock(), contactsBlock(), offerBlock()]).join("\n")}
+${mainBlocks().join("\n")}
 </main>
 <div class="warn-band" role="note"><div class="wrap"><p class="warn">${B.warn.toUpperCase()}</p><p class="lic">${B.legal} · ${B.license}</p></div></div>
 <footer class="foot"><div class="wrap">
@@ -581,10 +628,10 @@ function livePages() {
  * texts; все строки там уже экранированы. live.seo — Метрика и коды.
  */
 export function renderLive(over = {}, live = {}) {
-  const keep = [PROD, D, B, TX, LIVE, tel];
-  PROD = true; LIVE = live; TX = over.texts || {};
+  const keep = [PROD, D, B, TX, LIVE, tel, LAYOUT];
+  PROD = true; LIVE = live; TX = over.texts || {}; LAYOUT = over.blocks || null;
   D = { ...DATA, ...(over.data || {}) }; B = { ...DATA.BRAND, ...(over.brand || {}) }; tel = `tel:${B.phoneRaw}`;
-  try { return livePages(); } finally { [PROD, D, B, TX, LIVE, tel] = keep; }
+  try { return livePages(); } finally { [PROD, D, B, TX, LIVE, tel, LAYOUT] = keep; }
 }
 export const DEFAULTS = DATA;
 /** Тексты разделов по умолчанию: { ключ: { kick, h, p } }. */

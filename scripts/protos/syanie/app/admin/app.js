@@ -213,18 +213,19 @@ VIEWS.istoriya=function(v){v.innerHTML=pg('История','Кто, что и к
   api('/log').then(function(r){$('#hz').innerHTML=r.log.length?'<table class="tbl"><tbody>'+r.log.map(function(x){return'<tr><td class="td-t">'+when(x.at)+'</td><td>'+h(x.who)+'</td><td>'+h(x.t)+'</td></tr>'}).join('')+'</tbody></table>':'<p class="empty">Пока пусто</p>'})};
 
 /* ── Сайт: правка содержимого без программиста ───────────────────── */
-var SITE=null,SG='contacts',SV=null,SOPEN=false;
-VIEWS.sayt=function(v){v.innerHTML=pg('Сайт','Цены, услуги, акции, врачи, вопросы, отзывы и тексты. Сохранили: сайт обновился сразу.','<a class="btn ghost sm" href="/" target="_blank" rel="noopener">Открыть сайт</a>')+'<div class="split" id="sz"><p class="hint">Загружаем…</p></div>';
+var SITE=null,SG='blocks',SV=null,SOPEN=false,BOPEN={};
+VIEWS.sayt=function(v){v.innerHTML=pg('Сайт','Блоки страницы, цены, услуги, акции, врачи, фото, вопросы, отзывы и тексты. Сохранили: сайт обновился сразу.','<a class="btn ghost sm" href="/" target="_blank" rel="noopener">Открыть сайт</a>')+'<div class="split" id="sz"><p class="hint">Загружаем…</p></div>';
   api('/site').then(function(r){SITE=r;drawSite()}).catch(function(e){$('#sz').innerHTML='<div class="cd"><p class="empty">'+h(e.message)+'</p></div>'})};
 function cur(key){return SITE.edits[key]!==undefined?SITE.edits[key]:SITE.defaults[key]}
 function clone(x){return JSON.parse(JSON.stringify(x))}
 function drawSite(){var box=$('#sz');if(!box||!SITE)return;box.classList.toggle('open',SOPEN);
   box.innerHTML='<div class="list"><div class="items">'+SITE.groups.map(function(g){return'<a class="it" href="#sayt" data-g="'+g.key+'"'+(g.key===SG?' aria-current="true"':'')+'><span class="t"><span>'+h(g.title)+'</span>'+(SITE.edits[g.key]!==undefined?'<small>изменено</small>':'')+'</span></a>'}).join('')+'</div></div><div class="det-w" id="se"></div>';
   $$('[data-g]',box).forEach(function(a){a.onclick=function(e){e.preventDefault();SG=a.getAttribute('data-g');SV=null;SOPEN=true;drawSite();scrollTo(0,0)}});
-  var g=SITE.groups.filter(function(x){return x.key===SG})[0];if(!SV)SV=clone(SG==='texts'?(SITE.edits.texts||{}):cur(SG));drawGroup(g)}
+  var g=SITE.groups.filter(function(x){return x.key===SG})[0];if(!g){g=SITE.groups[0];SG=g.key}if(!SV)SV=clone(SG==='texts'?(SITE.edits.texts||{}):cur(SG));drawGroup(g)}
 function inp(f,val,path){var id='s-'+path.replace(/\W/g,'-'),ph=f.hint?' placeholder="'+h(f.hint)+'"':'';
   if(f.type==='bool')return'<label class="f fb"><input type="checkbox" data-p="'+path+'"'+(val?' checked':'')+'> '+h(f.label)+'</label>';
   if(f.type==='image')return'<div class="f"><span>'+h(f.label)+'</span><div class="row">'+(val?'<img class="s-img" src="'+(val.charAt(0)==='/'?h(val):'/protos/syanie/'+h(val)+'.webp')+'" alt="">':'<span class="hint">нет фото</span>')+'<label class="btn ghost sm">Загрузить<input type="file" accept="image/jpeg,image/png,image/webp" data-up="'+path+'" hidden></label>'+(val?'<button type="button" class="btn ghost sm" data-clr="'+path+'">Убрать</button>':'')+'</div></div>';
+  if(f.type==='select')return'<label class="f">'+h(f.label)+'<select data-p="'+path+'">'+f.opts.map(function(o){return'<option value="'+h(o[0])+'"'+(o[0]===val?' selected':'')+'>'+h(o[1])+'</option>'}).join('')+'</select></label>';
   if(f.type==='area'||f.type==='lines')return'<label class="f">'+h(f.label)+'<textarea data-p="'+path+'" maxlength="'+f.max+'"'+ph+'>'+h(val)+'</textarea></label>';
   return'<label class="f">'+h(f.label)+'<input data-p="'+path+'"'+(f.type==='int'?' inputmode="numeric"':'')+' value="'+h(val)+'"'+(f.max?' maxlength="'+f.max+'"':'')+ph+'></label>'}
 function getP(path){return path.split('.').reduce(function(o,k){return o==null?o:o[k]},SV)}
@@ -234,6 +235,7 @@ function drawGroup(g){var box=$('#se');if(!box)return;var html='<div class="cd d
   else if(g.kind==='texts')html+=Object.keys(SITE.texts).map(function(k){var d=SITE.defaults.texts[k]||{},t=SV[k]||(SV[k]={});
     return'<details class="s-tx"'+(k==='hero'?' open':'')+'><summary>'+h(SITE.texts[k])+'</summary><div class="fgrid fgrid-w">'+['kick','h'].concat(k==='hero'?['em']:[]).concat(['p']).map(function(p){
       return'<label class="f">'+({kick:'Подзаголовок',h:'Заголовок',em:'Выделенная часть заголовка',p:'Абзац'})[p]+(p==='p'?'<textarea data-p="'+k+'.'+p+'" placeholder="'+h(d[p]||'')+'">'+h(t[p]||'')+'</textarea>':'<input data-p="'+k+'.'+p+'" placeholder="'+h(d[p]||'')+'" value="'+h(t[p]||'')+'">')+'</label>'}).join('')+'</div></details>'}).join('');
+  else if(g.kind==='blocks')html+=blocksHtml(g);
   else{var list=g.head?SV.items:SV,pre=g.head?'items.':'';
     if(g.head)html+='<div class="fgrid">'+g.head.map(function(f){return inp(f,SV[f.k],f.k)}).join('')+'</div>';
     html+=list.map(function(it,i){return'<div class="s-row"><div class="s-rh"><b>'+(i+1)+'</b><span class="row"><button type="button" class="btn ghost sm" data-up-i="'+i+'"'+(i?'':' disabled')+'>Выше</button><button type="button" class="btn ghost sm" data-del="'+i+'">Удалить</button></span></div><div class="fgrid fgrid-w">'+g.fields.map(function(f){return inp(f,it[f.k],pre+i+'.'+f.k)}).join('')+'</div></div>'}).join('')||'<p class="hint">Пока пусто.</p>';
@@ -242,7 +244,9 @@ function drawGroup(g){var box=$('#se');if(!box)return;var html='<div class="cd d
   box.innerHTML=html;
   $$('[data-p]',box).forEach(function(el){el.addEventListener(el.type==='checkbox'?'change':'input',function(){var p=el.getAttribute('data-p');
     if(g.kind==='texts'){var ks=p.split('.');SV[ks[0]]=SV[ks[0]]||{};SV[ks[0]][ks[1]]=el.value;return}
-    setP(p,el.type==='checkbox'?el.checked:el.value)})});
+    setP(p,el.type==='checkbox'?el.checked:el.value);
+    if(g.kind==='blocks'&&/\.on$/.test(p)){var r=el.closest('.bl');if(r)r.classList.toggle('bl-off',!el.checked)}})});
+  if(g.kind==='blocks')blocksWire(g,box);
   var list2=g.kind==='list'?(g.head?SV.items:SV):null;
   $$('[data-del]',box).forEach(function(b){b.onclick=function(){list2.splice(+b.getAttribute('data-del'),1);drawGroup(g)}});
   $$('[data-up-i]',box).forEach(function(b){b.onclick=function(){var i=+b.getAttribute('data-up-i'),x=list2[i];list2[i]=list2[i-1];list2[i-1]=x;drawGroup(g)}});
@@ -253,6 +257,29 @@ function drawGroup(g){var box=$('#se');if(!box)return;var html='<div class="cd d
   $('#s-back').onclick=function(e){e.preventDefault();SOPEN=false;$('#sz').classList.remove('open')};
   $('#s-save').onclick=function(){var b=this;$('#s-err').textContent='';busy(b,api('/site/'+g.key,{value:SV})).then(function(r){SITE=r;SV=null;drawSite();toast('Сохранено, сайт обновлён')},function(e){$('#s-err').textContent=e.message})};
   var rs=$('#s-reset');if(rs)rs.onclick=function(){if(!confirm('Вернуть раздел «'+g.title+'» как было при запуске сайта?'))return;busy(rs,api('/site/'+g.key+'/reset',{})).then(function(r){SITE=r;SV=null;drawSite();toast('Вернули как было')})}}
+
+/* Блоки страницы: порядок, «Показывать», свои блоки с текстом и фото. SV — список блоков. */
+function blocksHtml(g){var own=0;
+  var rows=SV.map(function(b,i){var mine=!SITE.blocks[b.id];if(mine)own++;var open=mine&&BOPEN[b.id];
+    var t=mine?(b.h||'Новый блок'):SITE.blocks[b.id];
+    var r='<div class="s-row bl'+(b.on?'':' bl-off')+(mine?' bl-own':'')+'" id="bl-'+h(b.id)+'"><div class="s-rh"><span class="bl-n"><b>'+(i+1)+'</b><span>'+h(t)+(mine?'<small>свой блок</small>':'')+'</span></span><span class="row">'+
+      '<label class="f fb"><input type="checkbox" data-p="'+i+'.on"'+(b.on?' checked':'')+'> Показывать</label>'+
+      '<button type="button" class="btn ghost sm" data-mv="'+i+'" data-d="-1"'+(i?'':' disabled')+' aria-label="Выше">↑</button><button type="button" class="btn ghost sm" data-mv="'+i+'" data-d="1"'+(i<SV.length-1?'':' disabled')+' aria-label="Ниже">↓</button>'+
+      (mine?'<button type="button" class="btn ghost sm" data-bo="'+h(b.id)+'">'+(open?'Свернуть':'Изменить')+'</button><button type="button" class="btn danger sm" data-bdel="'+i+'">Удалить</button>':'')+'</span></div>';
+    if(open){r+='<div class="fgrid fgrid-w">'+g.fields.map(function(f){return inp(f,b[f.k],i+'.'+f.k)}).join('')+'</div><p class="hint">Текст: каждая строка станет абзацем, строки с «- » в начале станут списком. Фото: JPG или PNG до 3 МБ, под каждым напишите, что на нём.</p><div class="bl-ph"><b>Фото</b>'+
+      (b.photos||[]).map(function(ph,j){return'<div class="bl-pi"><span><img class="s-img" src="'+h(ph.img)+'" alt=""><label class="btn ghost sm">Заменить<input type="file" accept="image/jpeg,image/png,image/webp" data-up="'+i+'.photos.'+j+'.img" hidden></label></span>'+inp(g.photo[1],ph.alt,i+'.photos.'+j+'.alt')+'<button type="button" class="btn ghost sm" data-pdel="'+i+'.'+j+'">Убрать</button></div>'}).join('')+
+      ((b.photos||[]).length<g.photoMax?'<label class="btn ghost sm bl-add">Добавить фото<input type="file" accept="image/jpeg,image/png,image/webp" data-padd="'+i+'" hidden></label>':'')+'</div>'}
+    return r+'</div>'}).join('');
+  return'<div class="bl-fix"><b>Первый экран</b><span>Пролёт по клинике всегда стоит первым</span></div>'+rows+(own<g.max?'<button type="button" class="btn ghost" id="bl-new">Добавить свой блок</button>':'')}
+function blocksWire(g,box){
+  $$('[data-mv]',box).forEach(function(b){b.onclick=function(){var i=+b.getAttribute('data-mv'),j=i+(+b.getAttribute('data-d')),x=SV[i];if(j<0||j>=SV.length)return;SV[i]=SV[j];SV[j]=x;drawGroup(g)}});
+  $$('[data-bo]',box).forEach(function(b){b.onclick=function(){var id=b.getAttribute('data-bo');BOPEN[id]=!BOPEN[id];drawGroup(g)}});
+  $$('[data-bdel]',box).forEach(function(b){b.onclick=function(){var i=+b.getAttribute('data-bdel');if(!confirm('Удалить блок «'+(SV[i].h||'Новый блок')+'»? После «Сохранить» он пропадёт с сайта.'))return;SV.splice(i,1);drawGroup(g)}});
+  $$('[data-pdel]',box).forEach(function(b){b.onclick=function(){var k=b.getAttribute('data-pdel').split('.');SV[+k[0]].photos.splice(+k[1],1);drawGroup(g)}});
+  $$('[data-padd]',box).forEach(function(el){el.onchange=function(){var file=el.files[0],i=+el.getAttribute('data-padd');if(!file)return;if(file.size>3*1024*1024){toast('Фото больше 3 МБ: уменьшите его');return}
+    var rd=new FileReader();rd.onload=function(){api('/upload',{data:rd.result}).then(function(r){var b=SV[i];b.photos=b.photos||[];b.photos.push({img:r.url,alt:''});drawGroup(g);toast('Фото добавлено. Подпишите его и сохраните')},function(e){toast(e.message)})};rd.readAsDataURL(file)}});
+  var nb=$('#bl-new');if(nb)nb.onclick=function(){var id='c'+(Date.now().toString(36)+Math.random().toString(36).slice(2)).replace(/[^a-z0-9]/g,'').slice(-8);
+    SV.push({id:id,on:true,kick:'',h:'',text:'',layout:'side',menu:'',book:false,dark:false,photos:[]});BOPEN[id]=true;drawGroup(g);var r=$('#bl-'+id);if(r)r.scrollIntoView({block:'start',behavior:'smooth'})}}
 
 d.addEventListener('visibilitychange',function(){if(!d.hidden&&ME)tick()});
 boot();

@@ -300,6 +300,63 @@ test("сияние на сервере клиники: клиника сама �
   } finally { await a.close(); }
 });
 
+test("сияние на сервере клиники: блоки страницы — спрятать, переставить, свой блок с текстом и фото, фото клиники", async () => {
+  const a = await boot("https://syanie.test", { live: true });
+  try {
+    await a.adminPost("/setup", { code: "setup-42", login: "glavvrach", name: "Евгений", pass: "длинный-пароль" });
+    const page = async () => (await a.call("/")).text;
+    const view = (await a.call("/api/admin/site")).json;
+    assert.deepEqual(view.defaults.blocks.map((b: any) => b.id), ["vs", "price", "quiz", "docs", "trust", "perks", "reviews", "rooms", "faq", "contacts"]);
+    assert.equal(view.blocks.quiz, "Расчёт за минуту");
+    assert.equal(view.groups[0].key, "blocks", "«Блоки страницы» не первыми в разделе «Сайт»");
+    const png = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+    const up = (await a.adminPost("/upload", { data: png })).json.url as string;
+
+    /* Квиз и вопросы спрятаны, свой блок — третьим; «Клиники» в списке нет — встаёт на своё место сама. */
+    const mine = { id: "cnew1234", on: true, kick: "Новое", h: "Детская <b>стоматология</b>", text: "Первый абзац\n- пункт один\n- пункт два\nВторой абзац", layout: "side", menu: "Дети", book: true, dark: false, photos: [{ img: up, alt: "Кабинет для детей" }] };
+    const blocks = view.defaults.blocks.filter((b: any) => b.id !== "rooms").map((b: any) => (b.id === "quiz" || b.id === "faq" ? { ...b, on: false } : b));
+    blocks.splice(2, 0, mine);
+    const saved = await a.adminPost("/site/blocks", { value: blocks });
+    assert.equal(saved.status, 200, saved.json?.error);
+    const html = await page();
+    assert.ok(!html.includes('id="kviz"') && !html.includes('id="voprosy"'), "спрятанный блок на странице");
+    const at = ["all-on-6", "ceny", "b-cnew1234", "vrachi", "garantii", "privilegii", "otzyvy", "klinika", "kontakty"].map((id) => html.indexOf(`id="${id}"`));
+    assert.ok(at.every((x, i) => x > 0 && (i === 0 || x > at[i - 1])), "порядок блоков: " + at.join(","));
+    assert.match(html, /<h2>Детская &lt;b&gt;стоматология&lt;\/b&gt;<\/h2>/, "свой блок не экранирован");
+    assert.match(html, /<p>Первый абзац<\/p><ul><li>пункт один<\/li><li>пункт два<\/li><\/ul><p>Второй абзац<\/p>/);
+    assert.ok(html.includes(`src="${up}" alt="Кабинет для детей"`), "фото своего блока");
+    assert.match(html, /id="b-cnew1234"[^]*?data-book[^]*?<\/section>/, "кнопки записи в своём блоке нет");
+    /* Меню и разметка идут за блоками. */
+    assert.match(html, /<a href="#b-cnew1234">Дети<\/a>/);
+    assert.doesNotMatch(html, /<a href="#voprosy">/, "спрятанный блок в меню");
+    assert.doesNotMatch(html, /"FAQPage"/, "разметка вопросов при спрятанном блоке");
+    assert.match((await a.call("/sitemap.xml")).text, new RegExp(up.replace(/[.]/g, "\\.")), "фото своего блока не в карте сайта");
+    const again = (await a.call("/api/admin/site")).json.edits.blocks;
+    assert.equal(again.length, 11, "сохранённый список без «Клиники»");
+    assert.equal(again.find((b: any) => b.id === "cnew1234").photos[0].alt, "Кабинет для детей");
+
+    /* Ошибки — словами, ничего не ломается. */
+    const err = async (value: unknown) => (await a.adminPost("/site/blocks", { value })).json.error as string;
+    assert.match(await err([{ id: "hack", on: true }]), /Неизвестный блок/);
+    assert.match(await err([{ id: "vs" }, { id: "vs" }]), /дважды/);
+    assert.match(await err([{ ...mine, h: "" }]), /Заголовок/);
+    assert.match(await err([{ ...mine, photos: [{ img: "https://evil.example/x.png", alt: "" }] }]), /загрузите фото заново/);
+    assert.match(await err([{ ...mine, photos: [{ img: "p-rec", alt: "" }] }]), /загрузите фото заново/);
+    assert.match(await err(Array.from({ length: 13 }, (_, i) => ({ ...mine, id: "cbulk" + String(i).padStart(3, "0") }))), /не больше 12/);
+    assert.match(await page(), /id="b-cnew1234"/, "неудачная правка сломала прежнюю");
+
+    /* Фото клиники: свои вместо мозаики, пустой список — нельзя. */
+    assert.equal((await a.adminPost("/site/rooms", { value: [{ img: up, alt: "Ресепшен" }] })).status, 200);
+    assert.match(await page(), new RegExp(`class="rm-grid rm-free"><figure class="rm rv"[^>]*><img src="${up.replace(/[.]/g, "\\.")}" alt="Ресепшен"`));
+    assert.match((await a.adminPost("/site/rooms", { value: [] })).json.error, /хотя бы одно фото/);
+
+    /* «Вернуть как было» — прежний порядок, вопросы и их разметка на месте. */
+    await a.adminPost("/site/blocks/reset", {});
+    const back = await page();
+    assert.ok(back.includes('id="kviz"') && back.includes('"FAQPage"') && !back.includes("b-cnew1234"));
+  } finally { await a.close(); }
+});
+
 test("сияние на сервере клиники: старые страницы их сайта ведут на блоки новой, товары взломанного магазина — 410", async () => {
   /* Владелец, 14.11.2026: клиника дала добро на перенос на siyaniye-severa.com.
      Там был их WordPress: многостраничный и взломанный (роботам и не из России

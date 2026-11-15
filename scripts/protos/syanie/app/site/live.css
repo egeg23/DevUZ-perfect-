@@ -24,3 +24,20 @@ button.bk-go[disabled],#qz-sms[disabled]{opacity:.6;cursor:wait}
 /* Выбор услуги в записи. */
 .bk-l{margin:0;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute-d)}
 .bk-h2{font-size:24px}
+/* Свои блоки клиники (админка → «Сайт» → «Блоки страницы»): текст, фото рядом или сеткой. */
+.cb .sh{margin-bottom:24px}
+.cb-t{max-width:760px;display:grid;gap:14px;font-size:17px;line-height:1.6}
+.cb-t p,.cb-t ul{margin:0}
+.cb-t ul{padding-left:1.2em;display:grid;gap:6px}
+.cb-t .btn{justify-self:start;margin-top:8px}
+.cb-row{display:grid;gap:32px;align-items:center}
+.cb-ph{margin:0;border-radius:var(--r);overflow:hidden;background:var(--paper2)}
+[data-tone="ink"] .cb-ph{background:var(--ink2)}
+.cb-ph img{display:block;width:100%;height:100%;object-fit:cover;aspect-ratio:4/3}
+.cb-pics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:24px}
+@media (min-width:768px){.cb-pics{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}}
+@media (min-width:1024px){.cb-row{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:64px}.cb-row .cb-main img{aspect-ratio:5/4}}
+/* Фото клиники, поменянные в админке: ровная сетка вместо мозаики под пять кадров. */
+.rm-free{grid-template-columns:repeat(2,minmax(0,1fr))}
+.rm-free .rm img{aspect-ratio:4/3}
+@media (min-width:1024px){.rm-free{grid-template-columns:repeat(3,minmax(0,1fr))}}
