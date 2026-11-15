@@ -319,6 +319,11 @@ test("сияние на сервере клиники: старые страни
     ["/koronki-e-max/", "/"],
     ["/keramicheskie-nakladki/", "/"],
     ["/kompyuternaya-tomografiya-kt/", "/"],
+    /* Прежний сайт на Tilda (syanie-sewera.ru), его карта сайта 15.11.2026. */
+    ["/all-on-4", "/#all-on-6"],
+    ["/all-on-4/spasibo", "/#all-on-6"],
+    ["/conf", "/privacy"],
+    ["/spasibo", "/"],
     ["/Cuscino-Allattamento-Grigio-1111253", null],
     ["/beauty-uomo/", null],
     ["/premium-uomo-home/", null],
@@ -412,6 +417,12 @@ test("сияние на сервере клиники: поисковикам �
   assert.match(remote, /caddy\/certificates/);
   assert.match(remote, /redir https:\/\/\{\$DOMAIN\}\{uri\} permanent/);
   assert.match(remote, /\[ "\$CADDY_ALIASES" = "\$ALIASES" \]/, "Caddy не замечает новый прежний адрес");
+  /* Прежний сайт на Tilda и третий домен — 301 на основной, когда их A смотрит на сервер
+     (владелец, 15.11.2026: «редирект с .ru на .com… чтобы не терять позиции выдачи»). */
+  const wf = readFileSync(new URL("../../../../.github/workflows/syanie-app.yml", APP), "utf8");
+  assert.match(wf, /SY_ALIASES: \$\{\{ vars\.SYANIE_ALIASES \|\| '[^']*\bsyanie-sewera\.ru\b[^']*' \}\}/);
+  assert.match(wf, /envs: [^\n]*\bSY_ALIASES\b/, "SY_ALIASES не уходит на сервер");
+  assert.match(remote, /printf '%s\\n' \$\{SY_ALIASES:-\}/, "remote.sh не читает SY_ALIASES");
 });
 
 test("сияние на сервере клиники: рабочий сайт без частей макета, запись и квиз с телефоном", () => {

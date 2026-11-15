@@ -123,14 +123,17 @@ case "$FRONT" in
     CADDY_ENV="$($DK inspect -f '{{range .Config.Env}}{{println .}}{{end}}' syanie-caddy 2>/dev/null || true)"
     CADDY_DOMAIN="$(printf '%s\n' "$CADDY_ENV" | sed -n 's/^DOMAIN=//p' | head -1)"
     # Прежние адреса сайта: на них Caddy уже получал сертификат (new.<домен>
-    # на время проверки). Пока их запись A смотрит сюда — 301 на основной,
-    # чтобы ссылки и то, что успели найти поисковики, вели на новый адрес.
-    MYIP="$(curl -s --max-time 5 https://api.ipify.org 2>/dev/null || true)" ALIASES=""
+    # на время проверки), и другие домены клиники из SY_ALIASES (прежний
+    # сайт на Tilda). Пока их запись A смотрит сюда — 301 на основной,
+    # чтобы ссылки и позиции в поиске перешли на новый адрес. Не смотрит —
+    # не трогаем: сертификат на чужой адрес не выдадут.
+    MYIP="$(curl -s --max-time 5 https://api.ipify.org 2>/dev/null || true)" ALIASES="" WAITING=""
     if [ -n "$MYIP" ]; then
-      for h in $($SUDO find "$D/caddy/caddy/certificates" -mindepth 2 -maxdepth 2 -type d -printf '%f\n' 2>/dev/null | sort -u); do
+      for h in $( { $SUDO find "$D/caddy/caddy/certificates" -mindepth 2 -maxdepth 2 -type d -printf '%f\n' 2>/dev/null || true; printf '%s\n' ${SY_ALIASES:-}; } | tr 'A-Z' 'a-z' | sort -u); do
         case "$h" in "$SY_DOMAIN"|"www.$SY_DOMAIN") continue ;; esac
         printf '%s' "$h" | grep -Eq '^[a-z0-9][a-z0-9.-]*$' || continue
-        [ "$(getent ahostsv4 "$h" 2>/dev/null | awk 'NR==1{print $1}')" = "$MYIP" ] && ALIASES="${ALIASES:+$ALIASES }$h"
+        if [ "$(getent ahostsv4 "$h" 2>/dev/null | awk 'NR==1{print $1}')" = "$MYIP" ]; then ALIASES="${ALIASES:+$ALIASES }$h"
+        else case " ${SY_ALIASES:-} " in *" $h "*) WAITING="${WAITING:+$WAITING }$h" ;; esac; fi
       done
     fi
     if [ -n "$ALIASES" ]; then
@@ -149,6 +152,7 @@ case "$FRONT" in
       say "✓ Caddy на 80/443, сертификат для $SY_DOMAIN получит сам"
     fi
     [ -n "$ALIASES" ] && say "↪ прежние адреса ведут на основной: $ALIASES"
+    [ -n "$WAITING" ] && say "· ещё не смотрят на сервер (A-запись): $WAITING"
     ;;
   nginx)
     F=/etc/nginx/conf.d/syanie.conf
