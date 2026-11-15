@@ -214,11 +214,17 @@ VIEWS.istoriya=function(v){v.innerHTML=pg('История','Кто, что и к
 
 /* ── Сайт: правка содержимого без программиста ───────────────────── */
 var SITE=null,SG='blocks',SV=null,SOPEN=false,BOPEN={};
-VIEWS.sayt=function(v){v.innerHTML=pg('Сайт','Блоки страницы, цены, услуги, акции, врачи, фото, вопросы, отзывы и тексты. Сохранили: сайт обновился сразу.','<a class="btn ghost sm" href="/" target="_blank" rel="noopener">Открыть сайт</a>')+'<div class="split" id="sz"><p class="hint">Загружаем…</p></div>';
+VIEWS.sayt=function(v){v.innerHTML=pg('Сайт','Блоки страницы, цены, услуги, акции, врачи, фото, вопросы, отзывы и тексты. Сохранили: сайт обновился сразу.','<a class="btn ghost sm" href="/" target="_blank" rel="noopener">Открыть сайт</a>')+'<p class="hint s-seo" id="s-seo" hidden></p><div class="split" id="sz"><p class="hint">Загружаем…</p></div>';
   api('/site').then(function(r){SITE=r;drawSite()}).catch(function(e){$('#sz').innerHTML='<div class="cd"><p class="empty">'+h(e.message)+'</p></div>'})};
 function cur(key){return SITE.edits[key]!==undefined?SITE.edits[key]:SITE.defaults[key]}
 function clone(x){return JSON.parse(JSON.stringify(x))}
-function drawSite(){var box=$('#sz');if(!box||!SITE)return;box.classList.toggle('open',SOPEN);
+/* Что видят поисковики: дата правки в карте сайта и ответ Яндекса и IndexNow (core.mjs, pinger). */
+function seoLine(){var el=$('#s-seo');if(!el||!SITE||!SITE.index)return;var x=SITE.index,t=[];
+  if(x.mod)t.push('Карта сайта обновлена '+when(x.mod)+'.');
+  if(x.pending)t.push('Поисковикам сообщим через пару минут после последней правки.');
+  else if(x.ping&&x.ping.res)t.push('Поисковикам сообщили '+when(x.ping.at)+': '+x.ping.res.map(function(r){return h(r.name)+': '+h(r.text)}).join('; ')+'.');
+  el.textContent='';el.innerHTML=t.join(' ');el.hidden=!t.length}
+function drawSite(){var box=$('#sz');if(!box||!SITE)return;seoLine();box.classList.toggle('open',SOPEN);
   box.innerHTML='<div class="list"><div class="items">'+SITE.groups.map(function(g){return'<a class="it" href="#sayt" data-g="'+g.key+'"'+(g.key===SG?' aria-current="true"':'')+'><span class="t"><span>'+h(g.title)+'</span>'+(SITE.edits[g.key]!==undefined?'<small>изменено</small>':'')+'</span></a>'}).join('')+'</div></div><div class="det-w" id="se"></div>';
   $$('[data-g]',box).forEach(function(a){a.onclick=function(e){e.preventDefault();SG=a.getAttribute('data-g');SV=null;SOPEN=true;drawSite();scrollTo(0,0)}});
   var g=SITE.groups.filter(function(x){return x.key===SG})[0];if(!g){g=SITE.groups[0];SG=g.key}if(!SV)SV=clone(SG==='texts'?(SITE.edits.texts||{}):cur(SG));drawGroup(g)}

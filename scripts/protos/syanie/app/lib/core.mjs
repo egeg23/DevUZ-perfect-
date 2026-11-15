@@ -1,6 +1,7 @@
 /* Ядро сайта клиники: заявки, переписка из всех каналов в одном окне,
    сотрудники, подключения. Сеть (amoCRM, Telegram, Wazzup) — через
    клиентов из amo.mjs, tg.mjs, wazzup.mjs; fetch подменяется в тестах. */
+import { randomBytes } from "node:crypto";
 import { sealer, hashPass, checkPass, token, sha } from "./crypt.mjs";
 import { amoClient, amoBase } from "./amo.mjs";
 import { tgClient, tgMessage } from "./tg.mjs";
@@ -21,7 +22,9 @@ export const cleanPhone = (s) => {
 };
 const cut = (s, n) => String(s == null ? "" : s).replace(/[\u0000-\u0008\u000b-\u001f]/g, "").trim().slice(0, n);
 
-export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = () => Date.now(), renderer = null }) {
+export const PING_DELAY_MS = 90_000;
+
+export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = () => Date.now(), renderer = null, pingDelayMs = PING_DELAY_MS }) {
   const box = sealer(secret);
 
   /* ── Настройки и журнал ─────────────────────────────────────────── */
@@ -307,6 +310,56 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
     }
   }
 
+  /* ── Поисковикам — сразу после правки (владелец, 15.11.2026: «как только
+     вносят изменения на сайте через админку, обязательно добавляется
+     информация в сайт мап»). Правка в админке ставит в карте сайта дату
+     этой правки (stamp, тот же отпечаток страницы, что у server.mjs), а
+     через PING_DELAY после последней правки адрес страницы уходит Яндексу и
+     в общую сеть IndexNow (Bing и другие). Подряд десять сохранений — один
+     сигнал. Google пингов не принимает: он сам перечитывает карту сайта и
+     видит новую дату. Ключ IndexNow заводится сам и отдаётся сайтом файлом
+     /<ключ>.txt. ───────────────────────────────────────────────────── */
+  const INDEXNOW = [["Яндекс", "https://yandex.com/indexnow"], ["Bing и другие (IndexNow)", "https://api.indexnow.org/indexnow"]];
+  const said = (s) => (s === 200 || s === 202 ? "принял" : s === 403 ? "не нашёл ключ на сайте" : s === 422 ? "адрес не этого сайта" : s === 429 ? "просит реже" : s ? `ответ ${s}` : "не ответил");
+  const pinger = (() => {
+    let timer = null, urls = new Set();
+    const key = () => {
+      let k = getS("seo.indexnow");
+      if (!/^[a-f0-9]{32}$/.test(k)) { k = randomBytes(16).toString("hex"); setS("seo.indexnow", k); }
+      return k;
+    };
+    async function flush() {
+      if (timer) { clearTimeout(timer); timer = null; }
+      const list = [...urls];
+      urls = new Set();
+      if (!list.length || !/^https:\/\/[^/]+$/.test(publicUrl)) return null;
+      const k = key();
+      const body = JSON.stringify({ host: new URL(publicUrl).host, key: k, keyLocation: `${publicUrl}/${k}.txt`, urlList: list.map((p) => publicUrl + p) });
+      const res = [];
+      for (const [name, url] of INDEXNOW) {
+        let status = 0;
+        try { status = (await fetchImpl(url, { method: "POST", headers: { "Content-Type": "application/json; charset=utf-8" }, body, signal: AbortSignal.timeout(15000) })).status; } catch { /* не ответил */ }
+        res.push({ name, status, ok: status === 200 || status === 202, text: said(status) });
+      }
+      const out = { at: now(), urls: list, res };
+      setS("seo.ping", JSON.stringify(out));
+      note("сайт", `Сообщили поисковикам об изменениях на сайте: ${res.map((r) => `${r.name} — ${r.text}`).join(", ")}`);
+      return out;
+    }
+    return {
+      key,
+      flush,
+      pending: () => !!timer,
+      soon(paths) {
+        for (const p of paths) urls.add(p);
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(() => { flush().catch((e) => console.error("сигнал поисковикам не ушёл:", e.message)); }, pingDelayMs);
+        timer.unref?.();
+      },
+      last() { try { return JSON.parse(getS("seo.ping") || "null"); } catch { return null; } },
+    };
+  })();
+
   /* ── Содержимое сайта: правка из админки (п. 5 техзадания) ──────── */
   /* renderer — gen.mjs макета (renderLive, DEFAULTS, textDefaults): страницу
      собирает тот же код, что в GitHub, с правками клиники из базы. */
@@ -316,6 +369,13 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
     const edits = () => { try { return JSON.parse(getS("site.edits") || "{}"); } catch { return {}; } };
     const seo = () => ({ metrika: getS("seo.metrika"), yandex: getS("seo.yandex"), google: getS("seo.google") });
     const title = (key) => GROUPS.find((g) => g.key === key)?.title || key;
+    /* Дата правки — в карту сайта сейчас, а не когда поисковик придёт за ней. */
+    const stamp = (names) => {
+      const pg = site.pages();
+      if (!pg) return;
+      for (const [file, part] of names) if (pg[part]) site.modified(file, sha(pg[part].split("__SITE_URL__").join(publicUrl)).slice(0, 16));
+    };
+    const told = (names) => { try { stamp(names); } catch (e) { console.error("дата правки в карте сайта:", e.message); } pinger.soon(names.map(([file]) => (file === "index.html" ? "/" : "/" + file.replace(/\.html$/, "")))); };
     return {
       on: () => !!renderer,
       version: () => version,
@@ -324,7 +384,9 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
         if (!renderer) throw new Error("Правка сайта работает на сервере клиники");
         const e = edits();
         if (e.blocks) e.blocks = mergeBlocks(e.blocks);
-        return { groups: GROUPS, texts: TEXT_KEYS, blocks: Object.fromEntries(BLOCKS.map((b) => [b.id, b.title])), defaults: def(), edits: e, seo: seo() };
+        const [, at] = String(getS("site.mod.index.html") || "").split("|");
+        return { groups: GROUPS, texts: TEXT_KEYS, blocks: Object.fromEntries(BLOCKS.map((b) => [b.id, b.title])), defaults: def(), edits: e, seo: seo(),
+          index: { mod: Number(at) || 0, ping: pinger.last(), pending: pinger.pending(), https: /^https:\/\//.test(publicUrl) } };
       },
       save(key, value, by) {
         if (!renderer) throw new Error("Правка сайта работает на сервере клиники");
@@ -335,12 +397,14 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
         setS("site.edits", JSON.stringify(all));
         site.changed();
         note(by, `Изменил на сайте: «${title(key)}»`);
+        told([["index.html", "index"]]);
         return clean;
       },
       reset(key, by) {
         const all = edits(); delete all[key];
         setS("site.edits", JSON.stringify(all)); site.changed();
         note(by, `Вернул как было на сайте: «${title(key)}»`);
+        told([["index.html", "index"]]);
       },
       setSeo({ metrika = "", yandex = "", google = "" }, by) {
         metrika = String(metrika).trim(); yandex = String(yandex).trim(); google = String(google).trim();
@@ -349,6 +413,7 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
         setS("seo.metrika", metrika); setS("seo.yandex", yandex); setS("seo.google", google);
         site.changed();
         note(by, "Поменял Метрику и коды поисковиков");
+        told([["index.html", "index"], ["privacy.html", "privacy"]]);
         return seo();
       },
       /* Когда страница менялась на деле — lastmod в карте сайта: отпечаток
@@ -388,7 +453,7 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
   }
 
   return {
-    users, auth, leads, inbox, siteChat, connect, settingsView, summary, site,
+    users, auth, leads, inbox, siteChat, connect, settingsView, summary, site, seoPing: pinger,
     tgUpdate, wzHook, getS, setS, note,
     log: (limit = 200) => db.all("select at, who, t from log order by id desc limit ?", limit),
     tgSecret: () => getS("tg.secret"), wzSecret: () => getS("wz.secret"),

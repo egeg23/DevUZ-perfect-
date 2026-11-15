@@ -43,6 +43,8 @@ function fakeNet() {
       if (url.endsWith("/v3/channels")) return ok([{ channelId: "ch-ig", transport: "instagram", plainId: "syanie.tomsk", state: "active" }]);
       return ok({ ok: true });
     }
+    /* Яндекс и сеть IndexNow принимают адрес ответом 202. */
+    if (url.endsWith("/indexnow")) return new Response("", { status: 202 });
     throw new Error("неожиданный адрес " + url);
   };
   return { calls, fetchImpl };
@@ -354,6 +356,47 @@ test("сияние на сервере клиники: блоки страниц
     await a.adminPost("/site/blocks/reset", {});
     const back = await page();
     assert.ok(back.includes('id="kviz"') && back.includes('"FAQPage"') && !back.includes("b-cnew1234"));
+  } finally { await a.close(); }
+});
+
+test("сияние на сервере клиники: правка в админке — дата в карте сайта сразу, Яндексу и IndexNow один сигнал", async () => {
+  const a = await boot("https://syanie.test", { live: true });
+  try {
+    await a.adminPost("/setup", { code: "setup-42", login: "glavvrach", name: "Евгений", pass: "длинный-пароль" });
+    const before = Date.now();
+    const saved = await a.adminPost("/site/texts", { value: { price: { h: "Цены на лечение" } } });
+    assert.equal(saved.status, 200);
+    /* Дата правки в карте сайта — сразу, а не когда поисковик за ней придёт. */
+    const at = Number(String(a.core.getS("site.mod.index.html")).split("|")[1]);
+    assert.ok(at >= before, "дата правки не встала в карту сайта сразу");
+    assert.equal(saved.json.index.mod, at);
+    assert.equal(saved.json.index.pending, true, "сигнал поисковикам не поставлен в очередь");
+    assert.match((await a.call("/sitemap.xml")).text, new RegExp(`<loc>https://syanie\\.test/</loc><lastmod>${new Date(at).toISOString().slice(0, 10)}</lastmod>`));
+    assert.equal(a.net.calls.filter((c) => c.url.endsWith("/indexnow")).length, 0, "сигнал ушёл до паузы");
+
+    /* Ещё правка подряд — сигнал всё равно один, на адрес главной. */
+    await a.adminPost("/site/texts", { value: { price: { h: "Цены" } } });
+    const out = await a.core.seoPing.flush();
+    const pings = a.net.calls.filter((c) => c.url.endsWith("/indexnow"));
+    assert.deepEqual(pings.map((c) => c.url), ["https://yandex.com/indexnow", "https://api.indexnow.org/indexnow"]);
+    const key = a.core.seoPing.key();
+    assert.match(key, /^[a-f0-9]{32}$/);
+    assert.deepEqual(pings[0].body, { host: "syanie.test", key, keyLocation: `https://syanie.test/${key}.txt`, urlList: ["https://syanie.test/"] });
+    assert.ok(out.res.every((r: any) => r.ok && r.text === "принял"));
+    assert.equal(await a.core.seoPing.flush(), null, "второй сигнал без новой правки");
+
+    /* Ключ поисковик находит на сайте; чужой ключ — нет. */
+    const kf = await a.call(`/${key}.txt`);
+    assert.equal(kf.status, 200);
+    assert.equal(kf.text, key);
+    assert.notEqual((await a.call(`/${"0".repeat(32)}.txt`)).status, 200);
+
+    /* Админка и журнал показывают, что ответили поисковики. */
+    const view = (await a.call("/api/admin/site")).json;
+    assert.equal(view.index.pending, false);
+    assert.equal(view.index.ping.res[0].name, "Яндекс");
+    assert.ok(a.db.all("select t from log").some((r: any) => /Сообщили поисковикам об изменениях на сайте: Яндекс — принял/.test(r.t)));
+    assert.match(read("admin/app.js"), /function seoLine\(\)/);
   } finally { await a.close(); }
 });
 
