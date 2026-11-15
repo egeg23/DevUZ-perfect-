@@ -13,6 +13,8 @@ import { appSecret } from "@/lib/secrets";
 const RESULTS = ["keys_saved", "keys_bad", "forbidden", "planner_set", "planner_bad", "failed", "checked"] as const;
 type Result = (typeof RESULTS)[number];
 const OK: readonly Result[] = ["keys_saved", "planner_set", "checked"];
+/** Шаги подключения — по порядку, «Шаг 1 — …» (как у Instagram в «Блогерах»). */
+const STEPS = ["g1", "g2", "g3", "g4", "g5", "g6", "g7", "g8"] as const;
 
 function when(iso: string): string {
   return new Intl.DateTimeFormat("ru-RU", { timeZone: "Asia/Tashkent", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
@@ -56,6 +58,26 @@ export async function AdsGoogle({ staff, locale, result }: { staff: { role: stri
             <HelpHint topic={helpAnchor("/admin/ads", "google")} />
           </div>
           <p className="mt-1 text-xs text-muted">{t.keysHint}</p>
+          {id && secret && check?.ok ? null : (
+            <details open={!id || !secret} className="mt-3 rounded-lg border border-line-soft p-3 text-xs text-muted">
+              <summary className="cursor-pointer font-semibold text-text">{t.stepsTitle}</summary>
+              <ol className="mt-2 space-y-2">
+                {STEPS.map((key, i) => (
+                  <li key={key}>
+                    <b className="font-semibold text-text">{t.stepNo(i + 1)}</b> {t[key]}
+                  </li>
+                ))}
+              </ol>
+              <a
+                href="https://console.cloud.google.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 inline-block text-green underline-offset-2 hover:underline"
+              >
+                {t.consoleLink}
+              </a>
+            </details>
+          )}
           <form action={saveGoogleKeysAction} className="mt-3 space-y-2">
             <label className="block text-xs text-muted">
               <span className="flex items-center gap-2">
