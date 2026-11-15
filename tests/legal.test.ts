@@ -68,3 +68,27 @@ test("сроки хранения не остались от прежней ре
     }
   }
 });
+
+/**
+ * Страница о приложении для Google (`/{язык}/google-app`, владелец,
+ * 15.11.2026): её адрес — Home page экрана согласия OAuth. Google сверяет
+ * имя приложения с этой страницей, ищет на ней права и Limited Use.
+ */
+test("страница приложения для Google: имя, права и Limited Use на всех языках", async () => {
+  const { googleApp } = await import("@/content/google-app");
+  const { company } = await import("@/content/company");
+  const shape = (locale: (typeof locales)[number]) =>
+    googleApp[locale].sections.map((section) => section.body.length);
+  for (const locale of locales) {
+    const doc = googleApp[locale];
+    const text = JSON.stringify(doc);
+    assert.ok(doc.title.startsWith(company.name), `${locale}: заголовок не с имени приложения`);
+    assert.match(text, /auth\/adwords/, `${locale}: нет права Google Ads`);
+    assert.match(text, /auth\/analytics\.readonly/, `${locale}: нет права Analytics`);
+    assert.match(text, /Limited Use/, `${locale}: нет Limited Use`);
+    assert.deepEqual(shape(locale), shape("en"), `${locale}: структура разошлась с английской`);
+    for (const section of doc.sections) {
+      for (const line of section.body) assert.equal(line, line.trim());
+    }
+  }
+});

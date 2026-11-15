@@ -73,6 +73,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // покупки, и находить он должен наш документ, а не чужой пересказ.
     { path: "offer", priority: 0.3, changeFrequency: "yearly" as const },
     { path: "licence", priority: 0.3, changeFrequency: "yearly" as const },
+    // О приложении DevUz Studio для Google (Home page экрана согласия OAuth).
+    { path: "google-app", priority: 0.2, changeFrequency: "yearly" as const },
     // Условия на макеты — тоже: клиент, получивший прототип, должен находить
     // их по названию студии.
     { path: MOCKUP_TERMS_PATH, priority: 0.3, changeFrequency: "yearly" as const },
