@@ -444,6 +444,24 @@ test("сияние на сервере клиники: рабочий сайт �
   assert.match(bundle.pages[""], /mockup-terms/);
 });
 
+test("сияние на сервере клиники: админка — светлое стекло на размытом фото клиники, фото только у неё", () => {
+  const index = read("admin/index.html"), css = read("admin/app.css"), photo = read("admin/photo.css");
+  /* Фото — своим файлом после app.css: инлайн-стиль закрыл бы CSP админки. */
+  assert.ok(index.indexOf('href="/admin/app.css"') < index.indexOf('href="/admin/photo.css"'), "photo.css не после app.css");
+  assert.match(photo, /--bg-photo:url\(\/admin\/bg\.webp\)/);
+  assert.ok(existsSync(new URL("admin/bg.webp", APP)) && readFileSync(new URL("admin/bg.webp", APP)).length < 40_000, "фон админки тяжелее 40 КБ");
+  /* app.css берёт и админка салона в макетах из бота: фото клиники туда не попадает. */
+  assert.match(css, /--bg-photo:none/);
+  assert.match(css, /background:var\(--bg-photo\) center\/cover/);
+  assert.match(css, /backdrop-filter:blur/);
+  assert.ok(!/bg\.webp|\/protos\/syanie/.test(css), "фото клиники в app.css");
+  const salon = JSON.parse(readFileSync(new URL("../../../../content/proto-instant/panel-assets.json", APP), "utf8")).syanie.css;
+  assert.ok(!/bg\.webp/.test(salon), "фото клиники в админке салона");
+  /* Нижнее меню телефона — короткие подписи, на компьютере — полные. */
+  assert.match(read("admin/app.js"), /'Подключения','plug','Сервисы'/);
+  assert.match(css, /\.nav \.nv-l\{display:none\}/);
+});
+
 test("сияние на сервере клиники: образ из GitHub, сервер только скачивает, ключи не в журнале", () => {
   const wf = readFileSync(new URL("../../../../.github/workflows/syanie-app.yml", APP), "utf8");
   const remote = read("deploy/remote.sh");
