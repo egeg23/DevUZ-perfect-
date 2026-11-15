@@ -120,18 +120,35 @@ case "$FRONT" in
     [ -n "${SY_CADDY:-}" ] || { say "✗ нет образа Caddy"; exit 1; }
     # Тот же образ и тот же домен — не трогаем; сменили SYANIE_DOMAIN —
     # Caddy пересоздаётся, иначе он так и держал бы сертификат старого имени.
-    CADDY_DOMAIN="$($DK inspect -f '{{range .Config.Env}}{{println .}}{{end}}' syanie-caddy 2>/dev/null | sed -n 's/^DOMAIN=//p' | head -1 || true)"
-    if [ -n "$CADDY_UP" ] && [ "$($DK inspect -f '{{.Config.Image}}' syanie-caddy 2>/dev/null || true)" = "$SY_CADDY" ] && [ "$CADDY_DOMAIN" = "$SY_DOMAIN" ]; then
+    CADDY_ENV="$($DK inspect -f '{{range .Config.Env}}{{println .}}{{end}}' syanie-caddy 2>/dev/null || true)"
+    CADDY_DOMAIN="$(printf '%s\n' "$CADDY_ENV" | sed -n 's/^DOMAIN=//p' | head -1)"
+    # Прежние адреса сайта: на них Caddy уже получал сертификат (new.<домен>
+    # на время проверки). Пока их запись A смотрит сюда — 301 на основной,
+    # чтобы ссылки и то, что успели найти поисковики, вели на новый адрес.
+    MYIP="$(curl -s --max-time 5 https://api.ipify.org 2>/dev/null || true)" ALIASES=""
+    if [ -n "$MYIP" ]; then
+      for h in $($SUDO find "$D/caddy/caddy/certificates" -mindepth 2 -maxdepth 2 -type d -printf '%f\n' 2>/dev/null | sort -u); do
+        case "$h" in "$SY_DOMAIN"|"www.$SY_DOMAIN") continue ;; esac
+        printf '%s' "$h" | grep -Eq '^[a-z0-9][a-z0-9.-]*$' || continue
+        [ "$(getent ahostsv4 "$h" 2>/dev/null | awk 'NR==1{print $1}')" = "$MYIP" ] && ALIASES="${ALIASES:+$ALIASES }$h"
+      done
+    fi
+    if [ -n "$ALIASES" ]; then
+      printf '%s {\n\tredir https://{$DOMAIN}{uri} permanent\n}\n' "$(printf '%s' "$ALIASES" | sed 's/ /, /g')" | $SUDO tee "$D/caddy/redirect.caddy" >/dev/null
+    else $SUDO rm -f "$D/caddy/redirect.caddy"; fi
+    CADDY_ALIASES="$(printf '%s\n' "$CADDY_ENV" | sed -n 's/^ALIASES=//p' | head -1)"
+    if [ -n "$CADDY_UP" ] && [ "$($DK inspect -f '{{.Config.Image}}' syanie-caddy 2>/dev/null || true)" = "$SY_CADDY" ] && [ "$CADDY_DOMAIN" = "$SY_DOMAIN" ] && [ "$CADDY_ALIASES" = "$ALIASES" ]; then
       say "✓ Caddy тот же, не трогаю"
     else
       $DK rm -f syanie-caddy >/dev/null 2>&1 || true
       $DK run -d --name syanie-caddy --restart unless-stopped --network syanie \
         --memory 128m --cpus 0.5 -p 80:80 -p 443:443 -p 443:443/udp \
-        -e DOMAIN="$SY_DOMAIN" -v "$D/caddy:/data" \
+        -e DOMAIN="$SY_DOMAIN" -e ALIASES="$ALIASES" -v "$D/caddy:/data" \
         --log-opt max-size=10m --log-opt max-file=3 "$SY_CADDY" >/dev/null
       if [ -n "$CADDY_DOMAIN" ] && [ "$CADDY_DOMAIN" != "$SY_DOMAIN" ]; then say "↻ домен сменился: $CADDY_DOMAIN → $SY_DOMAIN"; fi
       say "✓ Caddy на 80/443, сертификат для $SY_DOMAIN получит сам"
     fi
+    [ -n "$ALIASES" ] && say "↪ прежние адреса ведут на основной: $ALIASES"
     ;;
   nginx)
     F=/etc/nginx/conf.d/syanie.conf

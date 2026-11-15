@@ -5,6 +5,10 @@
 	admin off
 }
 
+# Прежние адреса сайта (new.<домен> на время проверки) — 301 на основной:
+# список пишет remote.sh в /data/redirect.caddy, нет файла — нет и блока.
+import /data/redirect*.caddy
+
 # www.<домен> — сразу на основной адрес (нужна своя запись A или CNAME).
 www.{$DOMAIN} {
 	redir https://{$DOMAIN}{uri} permanent

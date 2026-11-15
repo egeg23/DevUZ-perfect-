@@ -9,7 +9,7 @@ import { extname, join, normalize, resolve, sep } from "node:path";
 import { openDb } from "./lib/db.mjs";
 import { makeCore, ROLES } from "./lib/core.mjs";
 import { sameSecret } from "./lib/crypt.mjs";
-import { hackedPage, oldPage } from "./lib/old-urls.mjs";
+import { GONE_SINCE, hackedPage, oldPage } from "./lib/old-urls.mjs";
 
 const MIME = {
   ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8",
@@ -86,7 +86,8 @@ export function createApp({ core, siteDir, adminDir, uploadsDir = "", setupCode 
       const live = v ? core.site.pages() : null, f = join(siteDir, name);
       const raw = live ? live[LIVE[name]] || "" : existsSync(f) ? readFileSync(f, "utf8") : "";
       const html = raw.split("__SITE_URL__").join(publicUrl);
-      pages.set(name, html && { html, gz: gzipSync(html) });
+      const mod = html && core.site?.modified ? core.site.modified(name, createHash("sha256").update(html).digest("hex").slice(0, 16)) : Date.now();
+      pages.set(name, html && { html, gz: gzipSync(html), mod });
     }
     return pages.get(name);
   }
@@ -105,6 +106,44 @@ export function createApp({ core, siteDir, adminDir, uploadsDir = "", setupCode 
     if (!existsSync(join(uploadsDir, name))) writeFileSync(join(uploadsDir, name), buf);
     return "/uploads/" + name;
   }
+  /* Карта сайта: главная и страница о данных с датой последней правки и
+     фото главной с подписями (Google Картинки). */
+  const xml = (v) => String(v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  const day = (t) => new Date(t).toISOString().slice(0, 10);
+  function photosOf(html) {
+    const out = new Set();
+    for (const [tag] of html.matchAll(/<img\b[^>]*>/g)) {
+      const src = (/\ssrc="(\/(?:protos|uploads)\/[^"]+)"/.exec(tag) || [])[1], alt = (/\salt="([^"]*)"/.exec(tag) || [])[1];
+      if (src && alt && alt.trim()) out.add(src);
+    }
+    return [...out].slice(0, 100);
+  }
+  function sitemap() {
+    const urls = [["/", "index.html"], ["/privacy", "privacy.html"]].map(([loc, name]) => {
+      const pg = page(name);
+      if (!pg) return "";
+      const pics = loc === "/" ? photosOf(pg.html).map((src) => `<image:image><image:loc>${xml(publicUrl + src)}</image:loc></image:image>`).join("") : "";
+      return `<url><loc>${xml(publicUrl + loc)}</loc><lastmod>${day(pg.mod)}</lastmod>${pics}</url>`;
+    });
+    return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">${urls.join("")}</urlset>\n`;
+  }
+  /* Адреса взломанного магазина (gone-urls.txt) — отдельной картой. Её не
+     видно в robots.txt: её вручную отправляют в Search Console и Вебмастер,
+     чтобы роботы скорее перепроверили эти адреса и увидели 410. Через пару
+     месяцев, когда они выпадут из поиска, карту можно убрать. */
+  let gone = null;
+  function goneMap() {
+    if (gone === null) {
+      const f = new URL("./lib/gone-urls.txt", import.meta.url);
+      const list = existsSync(f) ? readFileSync(f, "utf8").split("\n").map((l) => l.trim()).filter((l) => l && hackedPage(l)) : [];
+      gone = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${list.map((l) => `<url><loc>${xml(publicUrl + l)}</loc><lastmod>${GONE_SINCE}</lastmod></url>`).join("")}</urlset>\n`;
+    }
+    return gone;
+  }
+  /* Метки рекламы и переходов в адресе — та же страница: Яндексу о них
+     говорит Clean-param, Google хватает canonical. */
+  const ROBOTS = `User-agent: *\nDisallow: /admin\nDisallow: /api/\nClean-param: utm_source&utm_medium&utm_campaign&utm_content&utm_term&yclid&ysclid&gclid&fbclid&_openstat /\n${publicUrl ? `\nSitemap: ${publicUrl}/sitemap.xml\n` : ""}`;
+
   function sendPage(req, res, name, code = 200) {
     const pg = page(name);
     if (!pg) return send(res, code, code >= 400 ? "Страница не найдена" : "Сайт ещё собирается");
@@ -231,8 +270,9 @@ export function createApp({ core, siteDir, adminDir, uploadsDir = "", setupCode 
         return staticFile(req, res, adminDir, "index.html", "no-cache") || send(res, 404, "Нет админки");
       }
       if (p.startsWith("/admin/")) return staticFile(req, res, adminDir, p.slice(7), "no-cache") || send(res, 404, "Нет файла");
-      if (p === "/robots.txt") return send(res, 200, `User-agent: *\nDisallow: /admin\nDisallow: /api/\n${publicUrl ? `Sitemap: ${publicUrl}/sitemap.xml\n` : ""}`, { "Content-Type": MIME[".txt"], "Cache-Control": "max-age=3600" });
-      if (p === "/sitemap.xml") return send(res, 200, `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${publicUrl || ""}/</loc></url><url><loc>${publicUrl || ""}/privacy</loc></url></urlset>\n`, { "Content-Type": MIME[".xml"], "Cache-Control": "max-age=3600" });
+      if (p === "/robots.txt") return send(res, 200, ROBOTS, { "Content-Type": MIME[".txt"], "Cache-Control": "max-age=3600" });
+      if (p === "/sitemap.xml") return send(res, 200, sitemap(), { "Content-Type": MIME[".xml"], "Cache-Control": "max-age=3600" });
+      if (p === "/sitemap-gone.xml") return send(res, 200, goneMap(), { "Content-Type": MIME[".xml"], "Cache-Control": "max-age=86400", "X-Robots-Tag": "noindex" });
       res.setHeader("X-Frame-Options", "SAMEORIGIN");
       if (p === "/" || p === "/index.html") return sendPage(req, res, "index.html");
       if (p === "/privacy" || p === "/privacy/") return sendPage(req, res, "privacy.html");

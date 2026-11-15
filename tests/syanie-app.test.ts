@@ -343,6 +343,70 @@ test("сияние на сервере клиники: старые страни
   }
 });
 
+test("сияние на сервере клиники: поисковикам — карта сайта с датами и фото, Clean-param, разметка клиники, следы взлома — 410, прежние адреса — 301", async () => {
+  /* Владелец, 15.11.2026, после переезда на siyaniye-severa.com: «Сделай
+     сайтмап тоже нормальный, вычищай все и сделай прям чтобы поисковики нас
+     полюбили». */
+  const { hackedPage } = await load("lib/old-urls.mjs");
+  /* Служебные адреса WordPress (в его картах сайта лежали товары) — 410. */
+  for (const path of ["/wp-sitemap.xml", "/wp-sitemap-posts-post-1.xml", "/sitemap_index.xml", "/product-sitemap2.xml", "/wp-content/uploads/2024/01/x.jpg", "/wp-json/wp/v2/posts", "/feed/", "/xmlrpc.php"]) assert.ok(hackedPage(path), path);
+  for (const path of ["/sitemap.xml", "/sitemap-gone.xml", "/robots.txt", "/protos/syanie/og.jpg", "/feedback", "/wp"]) assert.ok(!hackedPage(path), path);
+  const gone = read("lib/gone-urls.txt").trim().split("\n");
+  assert.equal(gone.length, 1891, "список товаров из их карт сайта");
+  assert.ok(gone.every((l) => hackedPage(l)), "в списке удалённых адрес, который не отвечает 410");
+
+  execFileSync(process.execPath, [new URL("../gen.mjs", APP).pathname], { env: { ...process.env, SY_PROD: "1" }, stdio: "pipe" });
+  const a = await boot("https://syanie.test");
+  try {
+    const robots = (await a.call("/robots.txt")).text;
+    assert.match(robots, /Disallow: \/admin\n/);
+    assert.match(robots, /Clean-param: utm_source&[\w&]*yclid[\w&]* \//, "Яндекс склеит адреса с метками рекламы");
+    assert.match(robots, /Sitemap: https:\/\/syanie\.test\/sitemap\.xml/);
+    assert.doesNotMatch(robots, /sitemap-gone|Disallow: \/$/, "карту удалённых и весь сайт robots не трогает");
+
+    const map = (await a.call("/sitemap.xml")).text;
+    assert.match(map, /<url><loc>https:\/\/syanie\.test\/<\/loc><lastmod>\d{4}-\d{2}-\d{2}<\/lastmod><image:image>/);
+    assert.match(map, /<image:loc>https:\/\/syanie\.test\/protos\/syanie\/p-rec\.webp<\/image:loc>/, "фото клиники в карте сайта");
+    assert.match(map, /<loc>https:\/\/syanie\.test\/privacy<\/loc><lastmod>/);
+    assert.doesNotMatch(map, /bg-street|film-9/, "фон без подписи — не фото для поиска");
+
+    const gm = await a.call("/sitemap-gone.xml");
+    assert.equal((gm.text.match(/<url>/g) || []).length, 1891);
+    assert.match(gm.text, /<loc>https:\/\/syanie\.test\/Cuscino-[\w-]+-\d+<\/loc><lastmod>2026-11-15<\/lastmod>/);
+    assert.equal(gm.headers.get("x-robots-tag"), "noindex");
+    for (const path of ["/wp-sitemap.xml", "/wp-content/uploads/a.jpg"]) assert.equal((await fetch(a.base + path, { redirect: "manual" })).status, 410, path);
+
+    /* Разметка: адрес нового сайта, а не их прежнего на Tilda; цены и врачи —
+       со страницы; рейтинга с Яндекс Карт нет (Google такое не принимает). */
+    const html = (await a.call("/")).text;
+    const ld = JSON.parse(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/.exec(html)![1]);
+    const clinic = ld["@graph"].find((x: any) => String(x["@id"]).endsWith("#clinic"));
+    assert.equal(clinic.url, "https://syanie.test/");
+    assert.deepEqual(clinic.makesOffer.map((o: any) => o.price), [179900, 259900]);
+    assert.equal(clinic.employee.length, 2);
+    assert.ok(!("aggregateRating" in clinic), "оценки с чужих площадок не размечаем");
+    const faq = ld["@graph"].find((x: any) => x["@type"] === "FAQPage");
+    assert.ok(faq.mainEntity.length >= 10 && faq.mainEntity.every((q: any) => q.name && q.acceptedAnswer.text && !/[<>]|&quot;/.test(q.name + q.acceptedAnswer.text)));
+    assert.doesNotMatch(html, /syanie-sewera\.ru/);
+    assert.match(html, /<meta property="og:image" content="https:\/\/syanie\.test\/protos\/syanie\/og\.jpg">/);
+    assert.ok(existsSync(new URL("../../../../public/protos/syanie/og.jpg", APP)), "нет картинки превью");
+
+    /* lastmod двигает только правка текста, а не перезапуск. */
+    const t = a.core.site.modified("test.html", "aaa");
+    assert.equal(a.core.site.modified("test.html", "aaa"), t);
+    assert.ok(a.core.site.modified("test.html", "bbb") >= t);
+  } finally {
+    await a.close();
+  }
+
+  /* new.<домен> на время проверки — 301 на основной, пока его A смотрит сюда. */
+  assert.match(read("deploy/Caddyfile"), /import \/data\/redirect\*\.caddy/);
+  const remote = read("deploy/remote.sh");
+  assert.match(remote, /caddy\/certificates/);
+  assert.match(remote, /redir https:\/\/\{\$DOMAIN\}\{uri\} permanent/);
+  assert.match(remote, /\[ "\$CADDY_ALIASES" = "\$ALIASES" \]/, "Caddy не замечает новый прежний адрес");
+});
+
 test("сияние на сервере клиники: рабочий сайт без частей макета, запись и квиз с телефоном", () => {
   execFileSync(process.execPath, [new URL("../gen.mjs", APP).pathname], { env: { ...process.env, SY_PROD: "1" }, stdio: "pipe" });
   const html = read("site/index.html");

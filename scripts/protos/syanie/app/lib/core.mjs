@@ -349,6 +349,14 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
         note(by, "Поменял Метрику и коды поисковиков");
         return seo();
       },
+      /* Когда страница менялась на деле — lastmod в карте сайта: отпечаток
+         собранной страницы и время, когда он сменился. Перезапуск и выкатка
+         без правок текста дату не двигают — поисковики ей верят. */
+      modified(name, hash) {
+        const k = "site.mod." + name, [h, at] = String(getS(k) || "").split("|");
+        if (h === hash && Number(at)) return Number(at);
+        const t = now(); setS(k, `${hash}|${t}`); return t;
+      },
       /* Страницы сайта с правками; null — renderer нет (страницы из файлов). */
       pages() {
         if (!renderer) return null;
