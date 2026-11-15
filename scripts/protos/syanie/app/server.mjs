@@ -10,6 +10,7 @@ import { openDb } from "./lib/db.mjs";
 import { makeCore, ROLES } from "./lib/core.mjs";
 import { sameSecret } from "./lib/crypt.mjs";
 import { GONE_SINCE, hackedPage, oldPage } from "./lib/old-urls.mjs";
+import { verifyFile } from "./lib/verify.mjs";
 
 const MIME = {
   ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8",
@@ -273,6 +274,9 @@ export function createApp({ core, siteDir, adminDir, uploadsDir = "", setupCode 
       if (p === "/robots.txt") return send(res, 200, ROBOTS, { "Content-Type": MIME[".txt"], "Cache-Control": "max-age=3600" });
       if (p === "/sitemap.xml") return send(res, 200, sitemap(), { "Content-Type": MIME[".xml"], "Cache-Control": "max-age=3600" });
       if (p === "/sitemap-gone.xml") return send(res, 200, goneMap(), { "Content-Type": MIME[".xml"], "Cache-Control": "max-age=86400", "X-Robots-Tag": "noindex" });
+      /* Подтверждение прав в Вебмастере и Search Console (lib/verify.mjs). */
+      const proof = verifyFile(p);
+      if (proof !== null) return send(res, 200, proof, { "Content-Type": MIME[".html"], "Cache-Control": "no-cache" });
       res.setHeader("X-Frame-Options", "SAMEORIGIN");
       if (p === "/" || p === "/index.html") return sendPage(req, res, "index.html");
       if (p === "/privacy" || p === "/privacy/") return sendPage(req, res, "privacy.html");
