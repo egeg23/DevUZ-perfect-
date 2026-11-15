@@ -92,3 +92,37 @@ test("страница приложения для Google: имя, права и
     }
   }
 });
+
+/**
+ * Простые страницы приложения для проверки бренда Google OAuth (владелец,
+ * 15.11.2026: «Разберись ты»). Робот Google трижды получил наши страницы
+ * целиком (200, без лимитов — «Осмотр связи с сервером») и трижды ответил
+ * «главная за входом». Проходит, по отчётам разработчиков, только простая
+ * страница без скриптов: поэтому это файлы в public/, мимо оболочки сайта.
+ */
+test("страницы приложения для Google: без скриптов, с именем, правами и ссылкой на политику", async () => {
+  const { readFileSync } = await import("node:fs");
+  const { company } = await import("@/content/company");
+  const read = (name: string) => readFileSync(new URL(`../public/${name}`, import.meta.url), "utf8");
+  const home = read("devuz-studio-app.html");
+  const policy = read("devuz-studio-privacy.html");
+
+  for (const [name, html] of [["главная", home], ["политика", policy]] as const) {
+    assert.doesNotMatch(html, /<script/i, `${name}: на странице скрипт`);
+    assert.doesNotMatch(html, /<(form|input|iframe)\b/i, `${name}: форма или рамка`);
+    // Слова, по которым автомат решает «страница за входом».
+    assert.doesNotMatch(html, /\b(log ?in|sign ?in|password|admin panel|internal)\b/i, `${name}: слово про вход`);
+    assert.match(html, /auth\/adwords/, `${name}: нет права Google Ads`);
+    assert.match(html, /auth\/analytics\.readonly/, `${name}: нет права Analytics`);
+    assert.match(html, /Limited Use/, `${name}: нет Limited Use`);
+    // Владелец, 15.11.2026: «модель Антропик мы не прописываем вообще».
+    assert.doesNotMatch(html, /Anthropic|Claude/i, `${name}: назван поставщик ИИ`);
+  }
+  // Имя — ровно как на экране согласия.
+  assert.match(home, new RegExp(`<title>${company.name}</title>`));
+  assert.match(home, new RegExp(`<h1>${company.name}</h1>`));
+  // Политика на главной — тем же адресом, что стоит в Google Cloud.
+  assert.match(home, /href="https:\/\/devuz\.studio\/devuz-studio-privacy\.html"/);
+  assert.match(policy, /<h1>DevUz Studio Privacy Policy<\/h1>/);
+  assert.match(policy, /deleted within 30 days/);
+});
