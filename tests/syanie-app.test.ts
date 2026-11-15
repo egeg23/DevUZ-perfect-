@@ -75,7 +75,7 @@ async function boot(publicUrl = "https://syanie.test", opts: { live?: boolean } 
     return { status: r.status, json, text, headers: r.headers };
   }
   const adminPost = (path: string, body: unknown) => call("/api/admin" + path, body, { "X-SY": "1" });
-  return { core, db, net, call, adminPost, close: () => new Promise((r) => server.close(r)), setCookie: (c: string) => (cookie = c), getCookie: () => cookie };
+  return { core, db, net, call, adminPost, base: `http://127.0.0.1:${port}`, close: () => new Promise((r) => server.close(r)), setCookie: (c: string) => (cookie = c), getCookie: () => cookie };
 }
 
 test("сияние на сервере клиники: ключи интеграций в базе зашифрованы, пароли — scrypt", async () => {
@@ -298,6 +298,49 @@ test("сияние на сервере клиники: клиника сама �
     await a.adminPost("/connect/tg", { token: "123456:" + "A".repeat(35) });
     assert.match(await page(), /https:\/\/t\.me\/syanie_bot/, "кнопка Telegram не ведёт на бота клиники");
   } finally { await a.close(); }
+});
+
+test("сияние на сервере клиники: старые страницы их сайта ведут на блоки новой, товары взломанного магазина — 410", async () => {
+  /* Владелец, 14.11.2026: клиника дала добро на перенос на siyaniye-severa.com.
+     Там был их WordPress: многостраничный и взломанный (роботам и не из России
+     отдавал итальянский магазин). Страницы клиники — 301 на блок страницы. */
+  const { oldPage, hackedPage } = await load("lib/old-urls.mjs");
+  const cases: Array<[string, string | null]> = [
+    ["/implantatsiya-all-on-4/", "/#all-on-6"],
+    ["/implantatsiya-zubov/", "/#all-on-6"],
+    ["/uslugi/implantatsiya-zubov/pri-polnom-otsutstvii", "/#all-on-6"],
+    ["/sinus-lifting/", "/#all-on-6"],
+    ["/akcii", "/#ceny"],
+    ["/akcii/tsirkoniyevaya-koronka-pod-klyuch", "/#ceny"],
+    ["/otzyvy", "/#otzyvy"],
+    ["/o-klinike", "/#klinika"],
+    ["/uslugi", "/"],
+    ["/lechenie-zubov", "/"],
+    ["/koronki-e-max/", "/"],
+    ["/keramicheskie-nakladki/", "/"],
+    ["/kompyuternaya-tomografiya-kt/", "/"],
+    ["/Cuscino-Allattamento-Grigio-1111253", null],
+    ["/beauty-uomo/", null],
+    ["/premium-uomo-home/", null],
+    ["/wp-login.php", null],
+    ["/", null],
+  ];
+  for (const [path, to] of cases) assert.equal(oldPage(path), to, path);
+  /* Товары магазина (номер в конце) — 410, страницы клиники и прочее — нет. */
+  for (const path of ["/Cuscino-Allattamento-Grigio-1111253", "/15-ay032nl-15-ay033nl-15-ay034nl-15-ay035nl-416588", "/Reloj-Fossil-FS5304-Hombre-1333334/"]) assert.ok(hackedPage(path), path);
+  for (const path of ["/beauty-uomo/", "/implantatsiya-all-on-4/", "/akcii/skidka-2025", "/akcii/1234567", "/privacy", "/", "/a/b-1234567", "/x-12345678"]) assert.ok(!hackedPage(path), path);
+  const a = await boot();
+  try {
+    const r = await fetch(a.base + "/implantatsiya-all-on-6/", { redirect: "manual" });
+    assert.equal(r.status, 301);
+    assert.equal(r.headers.get("location"), "/#all-on-6");
+    const gone = await fetch(a.base + "/Cuscino-Allattamento-Grigio-1111253", { redirect: "manual" });
+    assert.equal(gone.status, 410);
+    assert.equal((await fetch(a.base + "/beauty-uomo/", { redirect: "manual" })).status, 404);
+    assert.equal((await a.call("/")).status, 200, "главная не уходит в переадресацию");
+  } finally {
+    await a.close();
+  }
 });
 
 test("сияние на сервере клиники: рабочий сайт без частей макета, запись и квиз с телефоном", () => {
