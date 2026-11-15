@@ -16,6 +16,11 @@ const RULES = [
   [/^akcii(\/|$)/, "/#ceny"],
   [/^otzyvy$/, "/#otzyvy"],
   [/^o-klinike$/, "/#klinika"],
+  /* Прежний сайт клиники на Tilda (syanie-sewera.ru): Caddy ведёт его домен
+     сюда тем же адресом (SY_ALIASES в выкатке), а здесь — на нужный блок. */
+  [/^all-on-[46](\/|$)/, "/#all-on-6"],
+  [/^conf$/, "/privacy"],
+  [/^spasibo$/, "/"],
   [/^(uslugi|protez|koronki-|bezmetallovye-koronki|keramicheskie-|tsirkonievye-koronki|kultevye-vkladki|syemnoe-|nesyemnoe-|byugelnye-|mostovidnye-|neylonovye-|cad-cam-|khirurgiya|udalenie-|lechenie-|giperplaziya-|esteticheskaya-|ustanovka-|kompozitnye-viniry|viniry-|restavratsiya-|ultraniry|plomba-|ekstrennoe-|ultrazvukovaya-|chistka-|diagnostika-|ortopantomografiya|kompyuternaya-tomografiya)/, "/"],
 ];
 

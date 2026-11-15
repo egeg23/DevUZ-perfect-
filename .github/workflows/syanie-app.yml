@@ -143,6 +143,10 @@ jobs:
           SY_COMMIT: ${{ github.sha }}
           SY_SETUP: ${{ secrets.SYANIE_SETUP_CODE }}
           SY_FRONT: ${{ inputs.front || 'auto' }}
+          # Другие домены клиники — 301 на основной, как только их A смотрит
+          # на сервер: прежний сайт на Tilda (владелец, 15.11.2026: «редирект
+          # с .ru на .com… чтобы не терять позиции выдачи») и третий домен.
+          SY_ALIASES: ${{ vars.SYANIE_ALIASES || 'syanie-sewera.ru www.syanie-sewera.ru implantatsiya-zubov-all-on-4-tomsk.ru www.implantatsiya-zubov-all-on-4-tomsk.ru' }}
           GH_TOKEN: ${{ github.token }}
           GH_ACTOR: ${{ github.actor }}
         with:
@@ -151,7 +155,7 @@ jobs:
           key: ${{ secrets.SYANIE_SSH_KEY }}
           password: ${{ secrets.SYANIE_PASSWORD }}
           port: ${{ secrets.SYANIE_PORT || 22 }}
-          envs: SY_SCRIPT,SY_APP,SY_CADDY,SY_DOMAIN,SY_PORT,SY_COMMIT,SY_SETUP,SY_FRONT,GH_TOKEN,GH_ACTOR
+          envs: SY_SCRIPT,SY_APP,SY_CADDY,SY_DOMAIN,SY_PORT,SY_COMMIT,SY_SETUP,SY_FRONT,SY_ALIASES,GH_TOKEN,GH_ACTOR
           command_timeout: 25m
           script: |
             set -euo pipefail

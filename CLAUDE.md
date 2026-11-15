@@ -78,8 +78,11 @@ https://devuz.studio/sia-cms/admin.
   `SYANIE_SSH_KEY` или `SYANIE_PASSWORD` (как у CZECHFARM; порт сайта —
   `SYANIE_APP_PORT`, `www` Caddy ведёт на основной адрес, файрвол сервера —
   только 80 и 443). Домен сайта — siyaniye-severa.com (DNS и почта на
-  Beget; syanie-sewera.ru — их прежний сайт на Tilda, DNS на Reg.ru, его не
-  трогаем). Клиника дала добро на основной адрес 14.11.2026 (до этого —
+  Beget; syanie-sewera.ru — их прежний сайт на Tilda, DNS на Reg.ru:
+  владелец, 15.11.2026: «редирект с .ru на .com… чтобы не терять позиции
+  выдачи» — его домен и третий implantatsiya-zubov-all-on-4-tomsk.ru стоят в
+  `SY_ALIASES` выкатки, Caddy ведёт их 301 на основной, как только их A
+  смотрит на сервер клиники, страницы Tilda — на блоки (`lib/old-urls.mjs`)). Клиника дала добро на основной адрес 14.11.2026 (до этого —
   проверочный new.siyaniye-severa.com). Там был их многостраничный
   WordPress, взломанный: посетителям из России — клиника, роботам и
   остальным — итальянский магазин, в Google страницы клиники под чужими
