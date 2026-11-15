@@ -34,6 +34,7 @@ export const LOCALE_SECTIONS = [
   "cases",
   "contact",
   "contract",
+  "google-app",
   "licence",
   "marketing",
   "mockup-terms",

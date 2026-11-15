@@ -9,6 +9,15 @@ import { MOCKUP_TERMS_PATH } from "@/content/mockup-terms";
 import { services } from "@/content/services";
 import { localeHref, t, type Locale } from "@/lib/i18n";
 
+const GOOGLE_APP_LABEL: Record<Locale, string> = {
+  ru: "Приложение и Google",
+  en: "App and Google data",
+  uz: "Ilova va Google",
+  zh: "应用与 Google 数据",
+  uk: "Застосунок і Google",
+  pl: "Aplikacja i Google",
+};
+
 export function Footer({ locale, dict }: { locale: Locale; dict: Dictionary }) {
   const year = new Date().getFullYear();
 
@@ -95,6 +104,14 @@ export function Footer({ locale, dict }: { locale: Locale; dict: Dictionary }) {
               <li>
                 <Link href={localeHref(locale, MOCKUP_TERMS_PATH)} className="text-[0.9rem] text-muted transition-colors hover:text-text">
                   {dict.footer.mockups}
+                </Link>
+              </li>
+              {/* Страница о приложении DevUz Studio для Google: её адрес стоит
+                  в Google Cloud как Home page экрана согласия, и Google
+                  ищет её с главной (владелец, 15.11.2026). */}
+              <li>
+                <Link href={localeHref(locale, "google-app")} className="text-[0.9rem] text-muted transition-colors hover:text-text">
+                  {GOOGLE_APP_LABEL[locale]}
                 </Link>
               </li>
             </ul>
