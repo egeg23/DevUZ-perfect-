@@ -35,7 +35,7 @@ export type LegalDoc = { title: string; updated: string; intro: string; sections
  */
 const ru: LegalDoc = {
   title: "Политика конфиденциальности",
-  updated: "Действует с 9 сентября 2026 года",
+  updated: "Действует с 15 ноября 2026 года",
   intro:
     "Здесь описано, какие данные собирает сайт DevUz Studio, зачем они нужны, кому передаются и как их удалить. Документ написан обычным языком: если что-то осталось непонятным, напишите нам, и мы объясним.",
   sections: [
@@ -92,6 +92,16 @@ const ru: LegalDoc = {
       ],
     },
     {
+      heading: "Данные из аккаунтов Google",
+      body: [
+        "Сотрудники студии могут подключить свой аккаунт Google во внутренней панели. Тогда панель с их разрешения читает статистику сайта в Google Analytics (только просмотр) и данные рекламных кабинетов студии в Google Ads, включая планировщик ключевых слов: сколько раз в месяц ищут фразу.",
+        "Эти данные нужны только для работы самой панели: показать сотрудникам статистику сайта, подобрать запросы для статей на сайте и вести рекламу студии. Изменения в рекламе вносятся только после того, как сотрудник нажмёт кнопку.",
+        "Доступ к Google хранится в зашифрованном хранилище и никому не показывается. Данные из Google мы не продаём, не передаём третьим лицам, не используем для рекламы и для обучения моделей ИИ. Обобщённые цифры поисковых запросов, без личных данных, могут уходить нашему поставщику ИИ только для того, чтобы написать статью для сайта.",
+        "Использование и передача сведений, полученных через API Google, соответствуют Политике в отношении пользовательских данных сервисов Google API (Google API Services User Data Policy), включая требования об ограниченном использовании (Limited Use).",
+        "Отозвать доступ можно в любой момент на странице myaccount.google.com/permissions или кнопкой в панели. После отзыва полученные данные удаляются в течение 30 дней, по запросу — раньше.",
+      ],
+    },
+    {
       heading: "Ваши права",
       body: [
         "Вы можете запросить копию своих данных, попросить их исправить или удалить, а также отозвать согласие на обработку.",
@@ -117,7 +127,7 @@ const ru: LegalDoc = {
 
 const en: LegalDoc = {
   title: "Privacy policy",
-  updated: "In effect from 9 September 2026",
+  updated: "In effect from 15 November 2026",
   intro:
     "This page explains what data the DevUz Studio site collects, why it is needed, who it is shared with and how to have it deleted. It is written in plain language — if anything remains unclear, write to us and we will explain.",
   sections: [
@@ -174,6 +184,16 @@ const en: LegalDoc = {
       ],
     },
     {
+      heading: "Data from Google accounts",
+      body: [
+        "Studio staff can connect their Google account in the internal panel. With their permission the panel then reads the site's statistics in Google Analytics (read-only) and the data of the studio's own Google Ads accounts, including Keyword Planner: how many times a month a phrase is searched for.",
+        "This data is used only for the panel itself: to show staff the site's statistics, to choose search queries for articles on the site and to manage the studio's own advertising. Changes to ads are made only after a staff member presses the button.",
+        "Access to Google is kept in an encrypted vault and is shown to no one. We do not sell Google data, do not transfer it to third parties and do not use it for advertising or to train AI models. Aggregated search-volume figures, with no personal data, may be passed to our AI provider solely to write an article for the site.",
+        "DevUz Studio's use and transfer of information received from Google APIs adheres to the Google API Services User Data Policy, including the Limited Use requirements.",
+        "Access can be revoked at any time at myaccount.google.com/permissions or with the button in the panel. After revocation the data received is deleted within 30 days, or sooner on request.",
+      ],
+    },
+    {
       heading: "Your rights",
       body: [
         "You may request a copy of your data, ask for it to be corrected or deleted, and withdraw your consent to processing.",
@@ -199,7 +219,7 @@ const en: LegalDoc = {
 
 const uz: LegalDoc = {
   title: "Maxfiylik siyosati",
-  updated: "2026-yil 9-sentabrdan kuchga kiradi",
+  updated: "2026-yil 15-noyabrdan kuchga kiradi",
   intro:
     "Bu sahifada DevUz Studio sayti qanday ma’lumotlarni to‘plashi, ular nima uchun kerakligi, kimga uzatilishi va qanday o‘chirilishi tushuntirilgan. Hujjat oddiy tilda yozilgan: agar biror narsa tushunarsiz qolsa, bizga yozing.",
   sections: [
@@ -256,6 +276,16 @@ const uz: LegalDoc = {
       ],
     },
     {
+      heading: "Google akkauntlaridan olingan ma’lumotlar",
+      body: [
+        "Studiya xodimlari ichki panelda o‘z Google akkauntini ulashi mumkin. Shunda panel ularning ruxsati bilan saytning Google Analytics’dagi statistikasini (faqat ko‘rish) va studiyaning Google Ads reklama kabinetlari ma’lumotlarini, jumladan kalit so‘zlar rejalashtiruvchisini o‘qiydi: ibora oyiga necha marta qidirilishini.",
+        "Bu ma’lumotlar faqat panelning o‘zi uchun kerak: xodimlarga sayt statistikasini ko‘rsatish, saytdagi maqolalar uchun so‘rovlarni tanlash va studiya reklamasini yuritish. Reklamaga o‘zgartirishlar faqat xodim tugmani bosgandan keyin kiritiladi.",
+        "Google’ga kirish shifrlangan omborda saqlanadi va hech kimga ko‘rsatilmaydi. Google ma’lumotlarini sotmaymiz, uchinchi shaxslarga bermaymiz, reklama va sun’iy intellekt modellarini o‘qitish uchun ishlatmaymiz. Shaxsiy ma’lumotlarsiz umumlashtirilgan qidiruv raqamlari faqat sayt uchun maqola yozish maqsadida sun’iy intellekt yetkazib beruvchimizga yuborilishi mumkin.",
+        "Google API orqali olingan ma’lumotlardan foydalanish va ularni uzatish Google API Services User Data Policy talablariga, jumladan cheklangan foydalanish (Limited Use) talablariga mos keladi.",
+        "Ruxsatni istalgan vaqtda myaccount.google.com/permissions sahifasida yoki paneldagi tugma bilan bekor qilish mumkin. Bekor qilingandan keyin olingan ma’lumotlar 30 kun ichida, so‘rov bo‘yicha esa ertaroq o‘chiriladi.",
+      ],
+    },
+    {
       heading: "Sizning huquqlaringiz",
       body: [
         "Ma’lumotlaringiz nusxasini so‘rashingiz, ularni tuzatish yoki o‘chirishni talab qilishingiz, roziligingizni qaytarib olishingiz mumkin.",
@@ -281,7 +311,7 @@ const uz: LegalDoc = {
 
 const zh: LegalDoc = {
   title: "隐私政策",
-  updated: "自 2026 年 9 月 9 日起生效",
+  updated: "自 2026 年 11 月 15 日起生效",
   intro:
     "本页说明 DevUz Studio 网站会收集哪些数据、为何需要这些数据、会与谁共享，以及如何要求删除。内容以平实语言写成；若仍有不清楚之处，欢迎来信询问。",
   sections: [
@@ -338,6 +368,16 @@ const zh: LegalDoc = {
       ],
     },
     {
+      heading: "来自 Google 账户的数据",
+      body: [
+        "工作室员工可以在内部面板中连接自己的 Google 账户。经其授权后，面板会读取网站在 Google Analytics 中的统计数据（仅查看）以及工作室自有 Google Ads 账户的数据，包括关键字规划师：某个词组每月的搜索次数。",
+        "这些数据仅用于面板本身：向员工展示网站统计、为网站文章挑选搜索词，以及管理工作室自己的广告。只有在员工按下按钮后，才会对广告做出更改。",
+        "Google 访问凭据保存在加密存储中，不向任何人展示。我们不出售 Google 数据，不转交第三方，也不将其用于广告或训练 AI 模型。不含个人信息的汇总搜索量数据，仅为撰写网站文章之目的，可能会传给我们的 AI 服务提供商。",
+        "DevUz Studio 对通过 Google API 获取的信息的使用和传输，遵守 Google API Services User Data Policy，包括其中的“有限使用”（Limited Use）要求。",
+        "您可以随时在 myaccount.google.com/permissions 页面或通过面板中的按钮撤销访问权限。撤销后，已获取的数据将在 30 天内删除，如有要求可更早删除。",
+      ],
+    },
+    {
       heading: "您的权利",
       body: [
         "您可以索取自己数据的副本，要求更正或删除，并撤回处理授权。",
@@ -363,7 +403,7 @@ const zh: LegalDoc = {
 
 const uk: LegalDoc = {
   title: "Політика конфіденційності",
-  updated: "Діє з 9 вересня 2026 року",
+  updated: "Діє з 15 листопада 2026 року",
   intro:
     "Тут описано, які дані збирає сайт DevUz Studio, навіщо вони потрібні, кому передаються і як їх видалити. Документ написано звичайною мовою: якщо щось залишилося незрозумілим, напишіть нам, і ми пояснимо. Це переклад, підготовлений для зручності. Юридичну силу має російська редакція, опублікована на devuz.studio/ru/privacy; у разі розбіжностей між редакціями застосовується російська.",
   sections: [
@@ -420,6 +460,16 @@ const uk: LegalDoc = {
       ],
     },
     {
+      heading: "Дані з акаунтів Google",
+      body: [
+        "Співробітники студії можуть підключити свій акаунт Google у внутрішній панелі. Тоді панель з їхнього дозволу читає статистику сайту в Google Analytics (лише перегляд) і дані рекламних кабінетів студії в Google Ads, зокрема планувальник ключових слів: скільки разів на місяць шукають фразу.",
+        "Ці дані потрібні лише для роботи самої панелі: показати співробітникам статистику сайту, дібрати запити для статей на сайті й вести рекламу студії. Зміни в рекламі вносяться лише після того, як співробітник натисне кнопку.",
+        "Доступ до Google зберігається в зашифрованому сховищі й нікому не показується. Дані з Google ми не продаємо, не передаємо третім особам, не використовуємо для реклами й для навчання моделей ШІ. Узагальнені цифри пошукових запитів, без особистих даних, можуть надходити нашому постачальнику ШІ лише для того, щоб написати статтю для сайту.",
+        "Використання й передавання відомостей, отриманих через API Google, відповідають Політиці щодо даних користувачів сервісів Google API (Google API Services User Data Policy), зокрема вимогам щодо обмеженого використання (Limited Use).",
+        "Відкликати доступ можна будь-коли на сторінці myaccount.google.com/permissions або кнопкою в панелі. Після відкликання отримані дані видаляються протягом 30 днів, на запит — раніше.",
+      ],
+    },
+    {
       heading: "Ваші права",
       body: [
         "Ви можете запросити копію своїх даних, попросити їх виправити чи видалити, а також відкликати згоду на обробку.",
@@ -445,7 +495,7 @@ const uk: LegalDoc = {
 
 const pl: LegalDoc = {
   title: "Polityka prywatności",
-  updated: "Obowiązuje od 9 września 2026 r.",
+  updated: "Obowiązuje od 15 listopada 2026 r.",
   intro:
     "Tutaj opisujemy, jakie dane zbiera strona DevUz Studio, do czego są potrzebne, komu są przekazywane i jak je usunąć. Dokument jest napisany prostym językiem: jeśli coś pozostanie niejasne, napisz do nas, a wyjaśnimy. To tłumaczenie przygotowane dla wygody. Moc prawną ma rosyjska wersja opublikowana pod adresem devuz.studio/ru/privacy; w razie rozbieżności między wersjami rozstrzyga wersja rosyjska.",
   sections: [
@@ -499,6 +549,16 @@ const pl: LegalDoc = {
         "Rejestr dostępu pracowników — do pięciu lat. Widać w nim, kto ze studia pracował z Twoim zapytaniem.",
         "Logi techniczne — do 90 dni.",
         "Na Twoją prośbę usuniemy je wcześniej.",
+      ],
+    },
+    {
+      heading: "Dane z kont Google",
+      body: [
+        "Pracownicy studia mogą podłączyć swoje konto Google w panelu wewnętrznym. Wtedy panel za ich zgodą odczytuje statystyki strony w Google Analytics (tylko podgląd) oraz dane kont reklamowych studia w Google Ads, w tym planer słów kluczowych: ile razy w miesiącu wyszukiwana jest fraza.",
+        "Te dane służą wyłącznie działaniu samego panelu: pokazaniu pracownikom statystyk strony, doborowi zapytań do artykułów na stronie i prowadzeniu reklamy studia. Zmiany w reklamach wprowadzane są dopiero po naciśnięciu przycisku przez pracownika.",
+        "Dostęp do Google jest przechowywany w zaszyfrowanym sejfie i nikomu nie jest pokazywany. Danych z Google nie sprzedajemy, nie przekazujemy osobom trzecim, nie wykorzystujemy do reklamy ani do trenowania modeli AI. Zbiorcze liczby wyszukiwań, bez danych osobowych, mogą trafiać do naszego dostawcy AI wyłącznie w celu napisania artykułu na stronę.",
+        "Korzystanie z informacji uzyskanych przez API Google i ich przekazywanie jest zgodne z Zasadami dotyczącymi danych użytkownika usług Google API (Google API Services User Data Policy), w tym z wymogami ograniczonego wykorzystania (Limited Use).",
+        "Dostęp można cofnąć w dowolnym momencie na stronie myaccount.google.com/permissions lub przyciskiem w panelu. Po cofnięciu uzyskane dane są usuwane w ciągu 30 dni, na żądanie — wcześniej.",
       ],
     },
     {
