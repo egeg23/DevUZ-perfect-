@@ -376,6 +376,13 @@ test("сияние на сервере клиники: поисковикам �
     assert.equal(gm.headers.get("x-robots-tag"), "noindex");
     for (const path of ["/wp-sitemap.xml", "/wp-content/uploads/a.jpg"]) assert.equal((await fetch(a.base + path, { redirect: "manual" })).status, 410, path);
 
+    /* Файл подтверждения прав в Яндекс Вебмастере — из корня, как просит Яндекс. */
+    const proof = await a.call("/yandex_55ab75abb81d3b55.html");
+    assert.equal(proof.status, 200);
+    assert.match(proof.headers.get("content-type") || "", /text\/html/);
+    assert.match(proof.text, /<body>Verification: 55ab75abb81d3b55<\/body>/);
+    assert.equal((await a.call("/yandex_0000000000000000.html")).status, 404, "чужой код подтверждения");
+
     /* Разметка: адрес нового сайта, а не их прежнего на Tilda; цены и врачи —
        со страницы; рейтинга с Яндекс Карт нет (Google такое не принимает). */
     const html = (await a.call("/")).text;
