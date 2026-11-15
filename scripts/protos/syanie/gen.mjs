@@ -43,6 +43,9 @@ const TERMS = "https://devuz.studio/ru/mockup-terms";
 const FONTS = "https://fonts.googleapis.com/css2?family=Noto+Serif+Display:ital,wght@0,400;1,400&family=Geologica:wght@400;700&display=swap";
 const read = (f) => readFileSync(DIR + f, "utf8");
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+/* Текст без разметки и сущностей: правки из админки приходят экранированными,
+   а в разметке для поисковиков (JSON-LD) нужен простой текст. */
+const plain = (s) => String(s ?? "").replace(/<[^>]*>/g, "").replace(/&quot;/g, '"').replace(/&#0?39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&").replace(/\s+/g, " ").trim();
 const grp = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
 const rub = (n) => grp(n) + " ₽";
 const usd = (n) => grp(n) + " " + CUR;
@@ -115,13 +118,26 @@ ${PROD && path ? `<meta name="robots" content="index, follow">
 <meta property="og:url" content="__SITE_URL__${path}">
 <meta property="og:title" content="${esc(title)}">
 <meta property="og:description" content="${esc(desc)}">
-<meta property="og:image" content="__SITE_URL__${IMG}/film-16.webp">` : `<meta name="robots" content="noindex, nofollow, noarchive">`}
+<meta property="og:image" content="__SITE_URL__${IMG}/og.jpg">${seoShare()}` : `<meta name="robots" content="noindex, nofollow, noarchive">`}
 <meta name="theme-color" content="#1e2b33">
 <link rel="icon" type="image/png" sizes="192x192" href="${IMG}/icon-192.png">
 <link rel="apple-touch-icon" href="${IMG}/apple-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="${FONTS}">${PROD ? seoTags() : ""}`;
+}
+/* Превью ссылки в мессенджерах и соцсетях: JPG 1200×630 (WebP видят не все),
+   имя сайта и язык. Только рабочий сайт: в макете превью не нужно. */
+function seoShare() {
+  return `
+<meta property="og:image:secure_url" content="__SITE_URL__${IMG}/og.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Центр имплантации «${esc(plain(B.name))}», Томск">
+<meta property="og:site_name" content="${esc(plain(B.name))}">
+<meta property="og:locale" content="ru_RU">
+<meta name="twitter:card" content="summary_large_image">`;
 }
 /* Яндекс.Метрика и коды подтверждения Вебмастера и Search Console
    (п. 7 техзадания): номер счётчика и коды вписывают в админке. */
@@ -415,12 +431,40 @@ ${PROD ? `<div class="bk-f"><label class="qz-in"><span>Имя</span><input type=
 }
 
 function ld() {
+  if (PROD) return liveLd();
   return {
     "@context": "https://schema.org", "@type": ["Dentist", "MedicalClinic"], name: B.name, legalName: B.legal, url: B.site, telephone: B.phoneRaw,
     address: { "@type": "PostalAddress", streetAddress: B.street, addressLocality: B.city, addressCountry: "RU" },
     openingHoursSpecification: [{ "@type": "OpeningHoursSpecification", dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"], opens: "09:00", closes: "21:00" }],
     medicalSpecialty: "Dentistry", availableService: { "@type": "MedicalProcedure", name: "All-on-6: все зубы на 6 имплантатах" },
     priceRange: `${rub(D.PRICES[0].price)}-${rub(D.PRICES[1].price)}`,
+  };
+}
+
+/* Разметка рабочего сайта для Яндекса и Google: клиника с адресом сайта,
+   часами, врачами и ценами из прайса, сам сайт и вопросы с ответами. Все
+   числа и слова — те же, что на странице; рейтинг с Яндекс Карт сюда не
+   идёт: Google не принимает в разметке оценки с чужих площадок. */
+function liveLd() {
+  const U = "__SITE_URL__", hh = (h) => String(h).padStart(2, "0") + ":00";
+  const photos = ["film-16.webp", "p-rec.webp", "p-cab.webp", "p-cor.webp", "p-xray.webp"].map((f) => `${U}${IMG}/${f}`);
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": ["Dentist", "MedicalClinic"], "@id": `${U}/#clinic`, name: plain(B.name), legalName: plain(B.legal), description: plain(B.what) + ": все зубы на 6 имплантатах за один день, All-on-6.",
+        url: `${U}/`, telephone: B.phoneRaw, image: photos, logo: `${U}${IMG}/icon-192.png`,
+        address: { "@type": "PostalAddress", streetAddress: plain(B.street), addressLocality: plain(B.city), addressRegion: "Томская область", addressCountry: "RU" },
+        hasMap: B.map, areaServed: { "@type": "City", name: plain(B.city) },
+        openingHoursSpecification: [{ "@type": "OpeningHoursSpecification", dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"], opens: hh(B.open), closes: hh(B.close) }],
+        medicalSpecialty: "Dentistry", isAcceptingNewPatients: true, currenciesAccepted: "RUB",
+        priceRange: `${rub(D.PRICES[0].price)}-${rub(D.PRICES[D.PRICES.length - 1].price)}`,
+        makesOffer: D.PRICES.map((p) => ({ "@type": "Offer", name: plain(p.t), description: plain(p.d), price: p.price, priceCurrency: "RUB", itemOffered: { "@type": "Service", name: plain(p.t), description: plain(p.d) } })),
+        employee: D.DOCTORS.map((d) => ({ "@type": "Person", name: plain(d.name), jobTitle: plain(d.role) })),
+      },
+      { "@type": "WebSite", "@id": `${U}/#site`, url: `${U}/`, name: plain(B.name), inLanguage: "ru-RU", publisher: { "@id": `${U}/#clinic` } },
+      { "@type": "FAQPage", "@id": `${U}/#voprosy`, mainEntity: D.FAQ.map((f) => ({ "@type": "Question", name: plain(f.q), acceptedAnswer: { "@type": "Answer", text: plain(f.a) } })) },
+    ],
   };
 }
 
