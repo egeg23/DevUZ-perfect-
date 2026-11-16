@@ -137,15 +137,37 @@ function catalog(){if(!cat)return;var ps=(panel().prod||[]).filter(function(p){r
   var list=ps.filter(function(p){return (!q||(p.name+' '+(p.inn||'')+' '+(p.dir||'')).toLowerCase().indexOf(q)>=0)&&(!dv||p.dir===dv)&&(!rv||p.rx===rv)});
   $('#cat-n').textContent=ps.length?fill(K.catN,{n:list.length}):K.catEmpty;
   cat.innerHTML=ps.length?(list.length?list.map(prodHtml).join(''):'<p class="note">'+h(K.notFound)+'</p>'):(K.prod?'':skel())}
-var qi=$('#q');qi&&qi.addEventListener('input',catalog);fDir&&fDir.addEventListener('change',catalog);fRx&&fRx.addEventListener('change',catalog);catalog();
+/* Боевой «Продукты»: упаковка на подиуме своего направления, фильтр кнопками. */
+var AREA='';
+function pimg(u,w){u=safeUrl(u);if(!u)return '';var m=u.match(/^(\/protos\/chechfarm\/products\/[\w-]+)-960\.webp$/);return m?'<img src="'+m[1]+'-480.webp" srcset="'+m[1]+'-480.webp 480w, '+m[1]+'-960.webp 960w" sizes="'+w+'" alt="" loading="lazy" decoding="async">':'<img src="'+h(u)+'" alt="" loading="lazy" decoding="async">'}
+function areaOf(p){return K.areas&&K.areas[p.area]?p.area:'neuro'}
+function cardHtml(p){var a=areaOf(p),im=pimg(p.img,'(max-width: 699px) 46vw, (max-width: 1079px) 31vw, 280px'),lab=K.areas[p.area]||p.dir||'';
+  return '<button type="button" class="pc pc-'+a+' a-'+a+'" data-pid="'+h(p.id)+'" aria-label="'+h(p.name)+'"><span class="pc-st">'+(p.rx==='rx'?'<span class="pc-rx">'+h(K.pl.rx)+'</span>':'')+(im||'<span class="pc-box" aria-hidden="true"><b>'+h(p.name)+'</b><span>CZECHFARM</span></span>')+'</span>'+
+  '<span class="pc-tx">'+(lab?'<span class="pc-k">'+h(lab)+'</span>':'')+'<h3>'+h(p.name)+'</h3>'+(p.inn?'<span class="pc-inn">'+h(p.inn)+'</span>':'')+((p.form||p.pack)?'<span class="pc-f">'+h([p.form,p.pack].filter(Boolean).join(' · '))+'</span>':'')+'</span></button>'}
+/* Тёмная шапка «Продуктов»: верх страницы и панель Telegram — её цветом. */
+var pfh=$('#pf-hero');if(pfh){var tcm=$('meta[name="theme-color"]'),dk=null,pft=function(){var on=pfh.getBoundingClientRect().bottom>72;if(on===dk)return;dk=on;root.classList.toggle('on-dark',on);if(tcm)tcm.setAttribute('content',on?'#071a18':'#f5f3ee')};pft();addEventListener('scroll',pft,{passive:true});addEventListener('resize',pft)}
+var chips=$('#pf-areas');
+chips&&chips.addEventListener('click',function(e){var b=e.target.closest('[data-area]');if(!b)return;AREA=b.getAttribute('data-area');$$('[data-area]',chips).forEach(function(x){var on=x===b;x.classList.toggle('on',on);x.setAttribute('aria-pressed',on?'true':'false')});catalog()});
+if(K.areas&&cat){catalog=function(){var ps=(panel().prod||[]).filter(function(p){return p.pub}),q=(($('#q')||{}).value||'').trim().toLowerCase();
+  if(chips)$$('[data-area]',chips).forEach(function(x){var k=x.getAttribute('data-area'),n=k?ps.filter(function(p){return p.area===k}).length:ps.length,i=$('i',x);if(i)i.textContent=n;x.hidden=!!k&&!n});
+  var list=ps.filter(function(p){return (!AREA||p.area===AREA)&&(!q||[p.name,p.inn,p.comp,p.group,p.doctors,p.dir].join(' ').toLowerCase().indexOf(q)>=0)});
+  $('#cat-n').textContent=ps.length?fill(K.catN,{n:list.length}):K.catEmpty;
+  list=list.filter(function(p){return safeUrl(p.img)}).concat(list.filter(function(p){return !safeUrl(p.img)}));cat.innerHTML=list.length?list.map(cardHtml).join(''):(ps.length?'<p class="note">'+h(K.notFound)+'</p>':'')}}
+var qi=$('#q');qi&&qi.addEventListener('input',function(){catalog()});fDir&&fDir.addEventListener('change',function(){catalog()});fRx&&fRx.addEventListener('change',function(){catalog()});catalog();
 
 /* ── Окно: продукт, новость ────────────────────────────────────────── */
 var dlg=$('#dlg'),lastFocus=null;
 function openDlg(html){lastFocus=d.activeElement;$('.dlg-b',dlg).innerHTML=html;dlg.hidden=false;d.body.style.overflow='hidden';$('.dlg-x',dlg).focus()}
 function closeDlg(){if(!dlg||dlg.hidden)return;dlg.hidden=true;d.body.style.overflow='';lastFocus&&lastFocus.focus()}
 dlg&&dlg.addEventListener('click',function(e){if(e.target===dlg||e.target.closest('.dlg-x'))closeDlg()});
-function safeUrl(u){u=String(u||'');return /^(https:\/\/|\/uploads\/)/.test(u)?u:''}
-function prodPage(p){if(K.prod&&p){var doc=safeUrl(p.doc);return (p.dir?'<p class="kicker">'+h(p.dir)+'</p>':'')+'<h2>'+h(p.name)+'</h2>'+(safeUrl(p.img)?'<img class="pp-img" src="'+h(safeUrl(p.img))+'" alt="'+h(p.name)+'">':'')+
+function safeUrl(u){u=String(u||'');return /^(https:\/\/|\/uploads\/|\/protos\/chechfarm\/products\/[\w-]+\.webp$)/.test(u)?u:''}
+function prodPage(p){if(K.prod&&p&&K.areas){var a=areaOf(p),doc=safeUrl(p.doc),im=pimg(p.img,'(max-width: 759px) 90vw, 420px'),lab=K.areas[p.area]||p.dir||'';
+    var rows=['inn','comp','form','pack','group','doctors','maker'].filter(function(k){return p[k]&&!(k==='comp'&&p.comp===p.inn)});
+    return '<div class="pp"><div class="pp-st pc-'+a+' a-'+a+'">'+(im||'<span class="pc-box" aria-hidden="true"><b>'+h(p.name)+'</b><span>CZECHFARM</span></span>')+'</div><div class="pp-tx">'+(lab?'<p class="kicker">'+h(lab)+'</p>':'')+'<h2>'+h(p.name)+'</h2>'+(p.rx==='rx'?'<span class="chip">'+h(K.pl.rx)+'</span>':'')+
+    '<dl class="pp-dl">'+rows.map(function(k){return '<div><dt>'+h(K.pl[k])+'</dt><dd>'+h(p[k])+'</dd></div>'}).join('')+'</dl>'+(p.about?'<p>'+h(p.about).replace(/\n/g,'<br>')+'</p>':'')+
+    '<div class="hero-act">'+(doc?'<a class="btn btn-line" href="'+h(doc)+'" target="_blank" rel="noopener">'+K.icInfo+'<span>'+h(K.leaflet)+'</span></a>':'')+'<a class="btn btn-gold" href="'+h(K.contactsHref)+'">'+h(K.pl.ask)+'</a></div>'+
+    '<p class="warn">'+K.icInfo+'<span>'+h(K.medNote)+'</span></p></div></div>'}
+  if(K.prod&&p){var doc=safeUrl(p.doc);return (p.dir?'<p class="kicker">'+h(p.dir)+'</p>':'')+'<h2>'+h(p.name)+'</h2>'+(safeUrl(p.img)?'<img class="pp-img" src="'+h(safeUrl(p.img))+'" alt="'+h(p.name)+'">':'')+
   '<div class="sect-list">'+K.fields.filter(function(f){return f.id!=='name'&&f.id!=='doc'&&p[f.id]}).map(function(f,i){return '<div><b>'+pad(i+1)+'</b><span><strong>'+h(f.t)+'</strong><br>'+h(val(p,f.id))+'</span></div>'}).join('')+'</div>'+
   (p.about?'<p>'+h(p.about).replace(/\n/g,'<br>')+'</p>':'')+(doc?'<a class="btn btn-line" href="'+h(doc)+'" target="_blank" rel="noopener">'+K.icInfo+'<span>'+h(K.leaflet)+'</span></a>':'')+
   '<p class="warn">'+K.icInfo+'<span>'+h(K.medNote)+'</span></p>'}

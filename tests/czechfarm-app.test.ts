@@ -264,6 +264,34 @@ test("czechfarm: продукты, новости, контакты и заго�
   } finally { await a.close(); }
 });
 
+/* Владелец, 16.11.2026: «Делаем раздел на новой странице у них — наши
+   продукты». Портфель из таблицы компании ложится в базу сам, один раз. */
+test("czechfarm: портфель из таблицы — на сайте сразу, схема приёма только в панели, удалённое не возвращается", async () => {
+  const { CATALOG, AREAS } = await load("lib/catalog.mjs");
+  assert.equal(new Set(CATALOG.map((c: { key: string }) => c.key)).size, CATALOG.length, "ключи повторяются");
+  for (const c of CATALOG) {
+    assert.ok(AREAS.includes(c.area), `${c.key}: направление`);
+    for (const side of [480, 960]) assert.equal(existsSync(`public/protos/chechfarm/products/${c.key}-${side}.webp`), !!c.img, `${c.key}: фото ${side}`);
+    assert.doesNotMatch(JSON.stringify(c), /—|–| - /, `${c.key}: тире`);
+  }
+  for (const a of AREAS) for (const f of [`bg-${a}-700`, `bg-${a}-1100`]) assert.ok(existsSync(`public/protos/chechfarm/products/${f}.webp`), f);
+  const a = await boot();
+  try {
+    await owner(a);
+    const list = (await a.call("/products")).text;
+    assert.equal(a.db.get("select count(*) n from products where pub = 1").n, CATALOG.length, "не весь портфель на сайте");
+    assert.ok(list.includes("Эльстар") && list.includes("/protos/chechfarm/products/elstar-960.webp"), "портфеля нет в странице");
+    assert.ok(!list.includes('"dose"') && !list.includes('"key":"'), "схема приёма или ключ на сайте");
+    assert.ok(!list.includes("1 таблетка 1 раз в месяц"), "схема приёма на сайте");
+    assert.ok(list.includes('id="pf-hero"') && list.includes('id="pf-areas"'), "нет витрины");
+    const first = a.db.get("select id from products order by sort limit 1").id;
+    await a.adminPost(`/products/${first}/del`, {});
+    const { makeCore } = await load("lib/core.mjs");
+    makeCore({ db: a.db, secret: "test-secret-0123456789" });
+    assert.equal(a.db.get("select count(*) n from products").n, CATALOG.length - 1, "удалённый продукт вернулся");
+  } finally { await a.close(); }
+});
+
 test("czechfarm: комната инвестора — только по живой ссылке, открытия в журнале", async () => {
   const a = await boot();
   try {

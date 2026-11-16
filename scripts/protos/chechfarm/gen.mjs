@@ -6,6 +6,7 @@ import { tr, withAr, arMissing } from "./ar.mjs";
 import { PANEL_UI } from "./panel-ui.mjs";
 import { makeBlocks, SCENE } from "./blocks.mjs";
 import { makeLaunch } from "./launch.mjs";
+import { CATALOG, AREAS as AREA_KEYS } from "./app/lib/catalog.mjs";
 
 /*
  * Макет корпоративного сайта CZECHFARM (фармацевтическая компания) по ТЗ
@@ -306,7 +307,50 @@ function about(l) {
   PROD ? "" : PB.needsBlock(l)].join("\n");
 }
 
+/* Направления портфеля (ключи — app/lib/catalog.mjs). */
+const AREA_NAMES = {
+  neuro: ["Неврология и боль", "Nevrologiya va og‘riq", "Neurology and pain"],
+  cardio: ["Сердце, сосуды и обмен веществ", "Yurak, qon tomirlari va modda almashinuvi", "Heart, vessels and metabolism"],
+  uro: ["Урология и мужское здоровье", "Urologiya va erkaklar salomatligi", "Urology and men’s health"],
+  women: ["Женское здоровье и репродукция", "Ayollar salomatligi va reproduksiya", "Women’s health and reproduction"],
+  endo: ["Эндокринология и кости", "Endokrinologiya va suyaklar", "Endocrinology and bones"],
+  care: ["Печень, сон и дети", "Jigar, uyqu va bolalar", "Liver, sleep and children"],
+};
+const areaName = (l, k) => T(l)(...AREA_NAMES[k]);
+/* Шапка «Продуктов»: настоящие упаковки на стеклянных подиумах сцены
+   Higgsfield (products/hero*). Места — доли кадра: d — компьютер 16:9,
+   m — телефон 9:16; без d на компьютере не стоит. */
+const HERO_PACKS = [
+  { key: "elstar", d: 1, m: 3 },
+  { key: "dilargo-caps", d: 2, m: 1 },
+  { key: "mozeks", d: 3, m: 4 },
+  { key: "kardon-o2", d: 0, m: 2 },
+];
+
+function productsLive(l) {
+  const t = T(l);
+  const P = `${IMG}/products`;
+  const n = CATALOG.length;
+  const packs = HERO_PACKS.map((x, i) => { const c = CATALOG.find((y) => y.key === x.key); return `<span class="pk pk-d${x.d} pk-m${x.m}" aria-hidden="true"><img src="${P}/${x.key}-480.webp" srcset="${P}/${x.key}-480.webp 480w, ${P}/${x.key}-960.webp 960w" sizes="(max-width: 760px) 30vw, 14vw" alt="" decoding="async"${i < 2 ? ' fetchpriority="high"' : ""}></span>`; }).join("");
+  return [`<section class="pf-hero" id="pf-hero"><div class="pf-scene" aria-hidden="true"><picture><source media="(max-width: 760px)" srcset="${P}/hero-m-1080.webp 603w, ${P}/hero-m-1600.webp 893w" sizes="100vw"><img src="${P}/hero-2400.webp" srcset="${P}/hero-1400.webp 1400w, ${P}/hero-2400.webp 2400w" sizes="100vw" alt="" fetchpriority="high"></picture>${packs}</div>
+<div class="wrap pf-in"><p class="crumbs"><a href="${href(l)}">CZECHFARM</a> / ${navName("products", l)}</p>
+<h1 class="rise">${t("Наши <b>продукты</b>", "Bizning <b>mahsulotlarimiz</b>", "Our <b>products</b>")}</h1>
+<p class="lead rise d1">${t("Препараты и средства, которые CZECHFARM выводит на рынок Узбекистана вместе с производителями.", "CZECHFARM ishlab chiqaruvchilar bilan birga O‘zbekiston bozoriga olib chiqadigan dori vositalari.", "Medicines and products that CZECHFARM brings to the Uzbek market together with their manufacturers.")}</p>
+<ul class="pf-stat rise d2"><li><b>${n}</b><span>${t("позиций в портфеле", "portfeldagi mahsulot", "products in the portfolio")}</span></li><li><b>${AREA_KEYS.length}</b><span>${t("направлений", "yo‘nalish", "therapeutic areas")}</span></li></ul>
+<div class="hero-act rise d2"><a class="btn btn-gold" href="#catalog-sec">${t("Смотреть каталог", "Katalogni ko‘rish", "Browse the catalogue")}${ICON.arrow}</a></div></div></section>`,
+  `<section class="sec pf-cat" id="catalog-sec"><div class="wrap">
+<div class="sec-h mv mv-left"><p class="kicker">${t("Каталог", "Katalog", "Catalogue")}</p><h2 class="h2">${t("Найдите препарат <b>по названию или веществу</b>", "Dorini <b>nomi yoki moddasi bo‘yicha</b> toping", "Find a product <b>by name or substance</b>")}</h2></div>
+<div class="pf-bar"><label class="search">${ICON.search}<input id="q" type="search" placeholder="${t("Название или действующее вещество", "Nomi yoki ta’sir etuvchi modda", "Name or active substance")}" aria-label="${t("Поиск по каталогу", "Katalog bo‘yicha qidiruv", "Search the catalogue")}"></label>
+<div class="pf-chips" id="pf-areas" role="group" aria-label="${t("Направления", "Yo‘nalishlar", "Areas")}"><button type="button" class="pf-chip on" data-area="" aria-pressed="true">${t("Все", "Barchasi", "All")}<i>${n}</i></button>${AREA_KEYS.map((k) => `<button type="button" class="pf-chip a-${k}" data-area="${k}" aria-pressed="false">${areaName(l, k)}<i>${CATALOG.filter((c) => c.area === k).length}</i></button>`).join("")}</div></div>
+<p class="note" id="cat-n"></p>
+<div class="pf-grid" id="catalog" aria-live="polite"></div>
+<div class="empty mv mv-up pf-more"><p>${t("Ищете препарат для аптеки или клиники? Напишите нам: расскажем о поставках и условиях.", "Dorixona yoki klinika uchun dori qidiryapsizmi? Bizga yozing: yetkazib berish va shartlar haqida aytib beramiz.", "Looking for a product for a pharmacy or clinic? Write to us and we will tell you about supply and terms.")}</p><div class="hero-act"><a class="btn btn-gold" href="${href(l, "contacts")}#form">${t("Написать в компанию", "Kompaniyaga yozish", "Write to the company")}${ICON.arrow}</a></div></div>
+<p class="warn pf-warn">${ICON.info}<span>${t("Информация о продуктах не заменяет консультацию врача. Перед применением прочитайте инструкцию. Схему приёма назначает врач.", "Mahsulotlar haqidagi ma’lumot shifokor maslahatining o‘rnini bosmaydi. Qo‘llashdan oldin yo‘riqnomani o‘qing. Qabul qilish tartibini shifokor belgilaydi.", "Product information does not replace a doctor’s consultation. Read the leaflet before use. The dosing regimen is set by a doctor.")}</span></p>
+</div></section>`].join("\n");
+}
+
 function products(l) {
+  if (PROD) return productsLive(l);
   const t = T(l);
   return [pageHead(l, "products", t("Портфель <b>продуктов</b>", "Mahsulotlar <b>portfeli</b>", "Product <b>portfolio</b>"), t("Поиск по названию и действующему веществу, карточка с главным и страница продукта с инструкцией. Публикуем только то, что утвердила компания.", "Nomi va ta’sir etuvchi modda bo‘yicha qidiruv, asosiy ma’lumotli kartochka va yo‘riqnomali mahsulot sahifasi. Faqat kompaniya tasdiqlaganini e’lon qilamiz.", "Search by name and active substance, a card with the essentials and a product page with the leaflet. We publish only what the company has approved.")),
   `<section class="sec" style="padding-top:24px" id="catalog-sec"><div class="wrap">
@@ -466,6 +510,7 @@ function K(l, p) {
       needAgree: t("Нужно согласие на обработку данных", "Ma’lumotlarni qayta ishlashga rozilik kerak", "Please agree to data processing"),
       shortPass: t("Пароль не короче 8 знаков", "Parol kamida 8 belgi", "The password needs at least 8 characters"),
     } } : {}),
+    ...(PROD && p === "products" ? { areas: Object.fromEntries(AREA_KEYS.map((k) => [k, areaName(l, k)])), pimg: `${IMG}/products`, pl: { comp: t("Состав", "Tarkibi", "Composition"), form: t("Форма выпуска", "Chiqarilish shakli", "Dosage form"), pack: t("В упаковке", "Qadoqda", "Pack"), group: t("Группа", "Guruh", "Group"), doctors: t("Назначают", "Tayinlaydi", "Prescribed by"), maker: t("Производитель", "Ishlab chiqaruvchi", "Manufacturer"), inn: t("Действующее вещество", "Ta’sir etuvchi modda", "Active substance"), ask: t("Спросить о препарате", "Dori haqida so‘rash", "Ask about this product"), rx: t("По рецепту", "Retsept bilan", "Prescription only"), open: t("Подробнее", "Batafsil", "Details") }, contactsHref: href(l, "contacts") + "#form" } : {}),
     ...(PROD ? { prod: true, live: null, rxName: { rx: t("По рецепту", "Retsept bilan", "Prescription only"), otc: t("Без рецепта", "Retseptsiz", "Over the counter") },
     leaflet: t("Открыть инструкцию (PDF)", "Yo‘riqnomani ochish (PDF)", "Open the leaflet (PDF)"),
     sendFail: t("Не получилось отправить. Проверьте интернет и попробуйте ещё раз.", "Yuborib bo‘lmadi. Internetni tekshirib, qayta urinib ko‘ring.", "Could not send. Check your connection and try again.") } : {}),
