@@ -7,6 +7,8 @@
    (cf-panel-1). Комментарии вырезает сборка. */
 var d=document,W=window,root=d.documentElement,K=JSON.parse(d.getElementById('cf-data').textContent);
 var $=function(s,r){return (r||d).querySelector(s)},$$=function(s,r){return Array.prototype.slice.call((r||d).querySelectorAll(s))};
+/* Боевой сайт: язык, на котором человек смотрит сайт, сервер помнит (cf-lang) и больше не выбирает за него по браузеру. */
+if(K.prod){try{d.cookie='cf-lang='+K.lang+';path=/;max-age=31536000;samesite=lax'}catch(e){}}
 var REDUCED=root.classList.contains('rm');
 var LK='cf-leads-1',PK='cf-panel-1';
 function lsGet(k,def){try{var v=JSON.parse(localStorage.getItem(k)||'null');return v==null?def:v}catch(e){return def}}

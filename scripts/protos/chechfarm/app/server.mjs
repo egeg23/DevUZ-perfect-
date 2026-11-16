@@ -54,6 +54,26 @@ export function routeOf(p) {
   return SITE_PAGES.includes(page) ? [lang, page] : null;
 }
 
+/* Язык посетителя (владелец DevUz, 16.11.2026: «В зависимости от
+   определённого языка у посетителя сайт, упаковки и весь текст становятся на
+   этом языке»): первый заход на русскую страницу без выбранного языка (кука
+   cf-lang, её ставит site.js) — по Accept-Language браузера. Русский или
+   нет заголовка (роботы) — остаёмся; язык, которого у сайта нет, — английский. */
+export const LANG_COOKIE = "cf-lang";
+const BOT = /bot|crawl|spider|slurp|preview|facebookexternalhit|lighthouse|yandex|google/i;
+export function visitorLang(accept, ua = "") {
+  if (!accept || BOT.test(ua)) return "";
+  const want = String(accept).split(",").map((x, i) => {
+    const [tag, ...ps] = x.trim().toLowerCase().split(";");
+    const q = ps.map((y) => y.trim()).find((y) => y.startsWith("q="));
+    return { l: tag.split("-")[0], q: q ? Number(q.slice(2)) || 0 : 1, i };
+  }).filter((x) => x.l && x.l !== "*" && x.q > 0).sort((a, b) => b.q - a.q || a.i - b.i);
+  if (!want.length) return "";
+  const hit = want.find((x) => ["ru", "uz", "en", "ar"].includes(x.l))?.l;
+  const l = hit || "en";
+  return l === "ru" ? "" : l;
+}
+
 export function createApp({ core, siteDir, adminDir, dataDir = "", setupCode = "", publicUrl = "", trustProxy = false, commit = "", sceneKey = "" }) {
   const allow = limiter();
   const uploadsDir = dataDir ? join(dataDir, "uploads") : "", irDir = dataDir ? join(dataDir, "ir") : "";
@@ -370,6 +390,14 @@ export function createApp({ core, siteDir, adminDir, dataDir = "", setupCode = "
       if (p.startsWith("/uploads/") && uploadsDir) return staticFile(req, res, uploadsDir, p.slice(9), "public, max-age=31536000, immutable") || send(res, 404, "Нет файла");
       const r = routeOf(p);
       if (r && p !== "/" && p.endsWith("/") && r[1]) { res.writeHead(301, { Location: p.replace(/\/+$/, "") }); return res.end(); }
+      if (r && r[0] === "ru" && req.method === "GET" && !(LANG_COOKIE in cookies(req))) {
+        const to = visitorLang(req.headers["accept-language"], req.headers["user-agent"]);
+        if (to && page(to, r[1])) {
+          const q = new URL(req.url, "http://x").search;
+          res.writeHead(302, { Location: `/${to}${r[1] ? "/" + r[1] : ""}${q}`, Vary: "Accept-Language, Cookie", "Cache-Control": "no-cache" });
+          return res.end();
+        }
+      }
       if (r) return sendHtml(req, res, page(r[0], r[1]));
       res.writeHead(404, { "Content-Type": MIME[".html"], "Cache-Control": "no-cache" });
       return res.end(`<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>Страница не найдена · CZECHFARM</title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;font:16px/1.5 system-ui,sans-serif;background:#f5f3ee;color:#071a18;text-align:center}a{color:#0b5a53}</style></head><body><main><h1>404</h1><p>Такой страницы нет · Page not found</p><p><a href="/">CZECHFARM alliance</a></p></main></body></html>`);

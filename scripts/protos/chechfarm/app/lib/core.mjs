@@ -9,6 +9,7 @@ import { crmClient, amoBase, b24Base, KIND_NAME, leadText } from "./crm.mjs";
 import { makeAudience, SEGMENTS, ACC_STATUS } from "./audience.mjs";
 import { UPLOADED } from "./site-text.mjs";
 import { CATALOG, AREAS } from "./catalog.mjs";
+import { CATALOG_TR, packImg } from "./catalog-tr.mjs";
 
 export const STATUS = { new: "Новое", work: "В работе", meet: "Назначена встреча", done: "Ответ отправлен", spam: "Спам" };
 export const ROLES = { owner: "Владелец", head: "Руководитель", manager: "Менеджер" };
@@ -606,10 +607,23 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
     },
   };
 
+  /* Препарат из портфеля — на языке посетителя: поле, которое в панели не
+     трогали (оно как в catalog.mjs), берёт перевод из catalog-tr.mjs,
+     исходный снимок упаковки — отрисованную на этом языке. */
+  const CAT = new Map(CATALOG.map((c) => [c.key, c]));
+  function localProduct(p, key, lang) {
+    const c = key && CAT.get(key), tr = c && CATALOG_TR[key]?.[lang];
+    if (!tr) return p;
+    const o = { ...p };
+    for (const [k, v] of Object.entries(tr)) if (v && o[k] === c[k]) o[k] = v;
+    const base = c.img ? `/protos/chechfarm/products/${key}-960.webp` : "";
+    if (base && o.img === base) o.img = packImg(key, lang, base);
+    return o;
+  }
   /* То, что сервер кладёт в страницу (K.live): только опубликованное. */
   function live(lang) {
     return {
-      prod: products.list().filter((p) => p.pub).map(({ sort, dose, key, ...p }) => p),
+      prod: products.list().filter((p) => p.pub).map(({ sort, dose, key, ...p }) => localProduct(p, key, lang)),
       news: news.list().filter((n) => n.pub).map((n) => ({ id: n.id, pub: true, ts: n.ts, img: n.img, title: n[lang]?.title || n.ru.title, body: n[lang]?.title ? n[lang].body : n.ru.body })),
       contacts: contacts.get(),
     };

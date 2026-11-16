@@ -292,6 +292,57 @@ test("czechfarm: портфель из таблицы — на сайте сра
   } finally { await a.close(); }
 });
 
+test("czechfarm: портфель на языке посетителя — тексты, упаковки и первый заход по браузеру", async () => {
+  const { CATALOG } = await load("lib/catalog.mjs");
+  const { CATALOG_TR, PACK_LANGS, TR_LANGS } = await load("lib/catalog-tr.mjs");
+  const { visitorLang } = await load("server.mjs");
+  const CYR = /[А-Яа-яЁё]/;
+  for (const c of CATALOG) for (const l of TR_LANGS) {
+    const tr = CATALOG_TR[c.key]?.[l];
+    assert.ok(tr, `${c.key}: нет перевода ${l}`);
+    for (const f of ["name", "inn", "form", "pack", "group", "doctors", ...(c.comp ? ["comp"] : [])]) {
+      assert.ok(tr[f], `${c.key}.${f}: пусто на ${l}`);
+      assert.doesNotMatch(tr[f], CYR, `${c.key}.${f}: кириллица на ${l}`);
+      assert.doesNotMatch(tr[f], /—|–| - /, `${c.key}.${f}: тире на ${l}`);
+    }
+    if (l === "ar") assert.match(tr.name, /[\u0600-\u06FF]/, `${c.key}: имя не по-арабски`);
+  }
+  for (const [k, ls] of Object.entries(PACK_LANGS) as [string, string[]][]) {
+    assert.ok(CATALOG.find((c: { key: string; img: number }) => c.key === k)?.img, `${k}: упаковка на языке без исходного фото`);
+    for (const l of ls) for (const side of [480, 960]) assert.ok(existsSync(`public/protos/chechfarm/products/${k}-${l}-${side}.webp`), `${k}-${l}-${side}`);
+  }
+  assert.equal(visitorLang("en-US,en;q=0.9"), "en");
+  assert.equal(visitorLang("ar-SA,ar;q=0.9,en;q=0.8"), "ar");
+  assert.equal(visitorLang("uz-UZ,uz;q=0.9,ru;q=0.8"), "uz");
+  assert.equal(visitorLang("ru-RU,ru;q=0.9,en;q=0.8"), "");
+  assert.equal(visitorLang("de-DE,de;q=0.9"), "en", "язык, которого нет, — английский");
+  assert.equal(visitorLang("*"), "");
+  assert.equal(visitorLang("en-US", "Mozilla/5.0 (compatible; Googlebot/2.1)"), "", "робота не уводим");
+  const a = await boot();
+  try {
+    const en = (await a.call("/en/products")).text, ar = (await a.call("/ar/products")).text, ru = (await a.call("/products")).text;
+    assert.ok(en.includes("Levocarnitine") && en.includes("/protos/chechfarm/products/elstar-en-960.webp"), "английский портфель");
+    assert.ok(ar.includes("إلستار") && ar.includes("/protos/chechfarm/products/elstar-ar-960.webp"), "арабский портфель");
+    assert.ok(en.includes("cholesterol-960.webp"), "английская упаковка Холестерол Контрол — исходная");
+    assert.ok(ru.includes("Левокарнитин") && ru.includes("elstar-960.webp") && !ru.includes("elstar-en-960"), "русский портфель");
+    assert.ok(ar.includes("products/elstar-ar-480.webp"), "шапка витрины — упаковки на языке");
+    /* Правка в панели главнее перевода. */
+    await owner(a);
+    const row = a.db.get("select id, data from products where json_extract(data, '$.key') = 'elstar'");
+    await a.adminPost(`/products/${row.id}`, { ...JSON.parse(row.data), inn: "Левокарнитин 1 г" });
+    assert.ok((await a.call("/en/products")).text.includes("Левокарнитин 1 г"), "правка панели пропала на английском");
+    /* Первый заход — по браузеру, выбранный язык — по куке. */
+    a.setCookie("");
+    const go = await a.call("/products?utm=x", undefined, { "Accept-Language": "en-US,en;q=0.9" });
+    assert.equal(go.status, 302);
+    assert.equal(go.headers.get("location"), "/en/products?utm=x");
+    a.setCookie("cf-lang=en");
+    assert.equal((await a.call("/", undefined, { "Accept-Language": "en-US,en;q=0.9" })).status, 200, "выбор посетителя не держится");
+    a.setCookie("");
+    assert.equal((await a.call("/", undefined, { "Accept-Language": "ru-RU,ru;q=0.9" })).status, 200);
+  } finally { await a.close(); }
+});
+
 test("czechfarm: комната инвестора — только по живой ссылке, открытия в журнале", async () => {
   const a = await boot();
   try {
