@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createServer, type Server } from "node:http";
@@ -728,7 +728,9 @@ test("сияние на сервере клиники: «Наши врачи» �
       assert.match(html, /Нажмите на врача, чтобы посмотреть/);
       assert.match(html, /<img class="tm-f" src="\/protos\/syanie\/tm-kadiev\.webp" width="341" height="1200" alt="Кадиев Рамазан Курбанович, стоматолог-хирург, ортопед"/);
       assert.match(html, /<img class="tm-k" src="\/protos\/syanie\/tm-kadiev-b\.webp"[^>]*alt="" aria-hidden="true"/);
-      assert.match(html, /<span class="tm-w tm-wf" data-src="\/protos\/syanie\/tm-kadiev-wf\.webp" data-n="20" style="width:[\d.]+%;left:-[\d.]+%"><img alt="" aria-hidden="true" style="--n:20" decoding="async"><\/span>/);
+      assert.match(html, /<span class="tm-w tm-wf" data-src="\/protos\/syanie\/tm-kadiev-wf\.webp" data-n="46" data-c="8" data-ms="\d+" data-go="0\.\d+,0\.\d+" style="--c:8;--r:6;width:[\d.]+%;left:-[\d.]+%"><img alt="" aria-hidden="true" decoding="async"><\/span>/);
+      /* Разворот — своя лента кадров (лицо, профиль, спина), без отрезка пути. */
+      assert.match(html, /<span class="tm-w tm-t" data-src="\/protos\/syanie\/tm-kadiev-t\.webp" data-n="18" data-c="6" data-ms="\d+" style="--c:6;--r:3;width:[\d.]+%;left:-[\d.]+%"><img alt="" aria-hidden="true" decoding="async"><\/span>/);
     }
     assert.match(home, /<h2>Наши врачи<\/h2>/);
     assert.match(vr, /<h1>Наши врачи<\/h1>/);
@@ -769,25 +771,44 @@ test("сияние на сервере клиники: «Наши врачи» �
   assert.equal(dropOldDoctors(own), own);
   /* Движение — transform и opacity; врач для записи — в пожелание к заявке; «меньше движения» и версия для слабовидящих — без шагов. */
   const css = read("site/team.css"), js = read("site/team.js");
-  for (const m of css.matchAll(/transition:([^;}]+)/g)) for (const part of m[1].split(",")) assert.match(part.trim(), /^(transform|opacity|border-color|color|transition-duration|none)\b|^\.01s/, "анимация не transform/opacity: " + part);
-  /* Походка (владелец, 16.11.2026: «можешь сделать прям походку, чтобы он шел?»): у каждого
-     врача лента шага к нам и от нас, кадров столько, сколько в FIGS; «к нам» грузится, когда
-     блок на экране, «от нас» — когда врач вышел; кадры листает transform. */
+  /* visibility — не движение: лента кадров, которая не играет, снята с отрисовки (память телефона). */
+  for (const m of css.matchAll(/transition:([^;}]+)/g)) for (const part of m[1].split(",")) assert.match(part.trim(), /^(transform|opacity|border-color|color|transition-duration|none)\b|^visibility 0s|^\.01s/, "анимация не transform/opacity: " + part);
+  /* Кадры движения (владелец, 16.11.2026: «можешь сделать прям походку, чтобы он шел?», потом
+     «шаги сделай будто бы это шаги настоящие. Когда разворачивается — они становятся тонкими,
+     будто бы толщиной врач 1 мм»): у каждого врача три ленты — к нам, от нас и разворот; лента —
+     сетка кадров по FIGS, обе стороны не больше 4096 (предел картинки на телефонах). */
   const { imageSize } = await import("node:module").then(() => ({ imageSize: (f: string) => { const b = readFileSync(f); const i = b.indexOf("VP8X"); return i > 0 ? { w: 1 + b.readUIntLE(i + 12, 3), h: 1 + b.readUIntLE(i + 15, 3) } : null; } }));
-  for (const [id, f] of Object.entries(CAT.FIGS) as Array<[string, any]>) for (const k of ["wf", "wb"]) {
+  for (const [id, f] of Object.entries(CAT.FIGS) as Array<[string, any]>) for (const k of ["wf", "wb", "t"]) {
     const file = new URL(`tm-${id}-${k}.webp`, PUB).pathname;
-    assert.ok(existsSync(file), "нет ленты шага " + file);
-    const size = imageSize(file)!;
-    assert.equal(size.h, 640, file);
-    assert.equal(size.w, f[k].n * f[k].tw, "ширина ленты не n × tw: " + file);
+    assert.ok(existsSync(file), "нет ленты кадров " + file);
+    const size = imageSize(file)!, t = f[k];
+    assert.equal(size.w, t.c * t.tw, "ширина ленты не c × tw: " + file);
+    assert.equal(size.h, Math.ceil(t.n / t.c) * CAT.FIG_H, "высота ленты не рядов × FIG_H: " + file);
+    assert.ok(size.w <= 4096 && size.h <= 4096, "лента больше 4096: " + file);
+    assert.ok(statSync(file).size < 480_000, "лента тяжелее 480 КБ: " + file);
+    /* Шаги не скользят: ходьба знает, на каком отрезке идут ноги; у разворота пути нет. */
+    if (k === "t") assert.equal(t.go, undefined); else assert.ok(t.go[0] >= 0 && t.go[0] < 0.3 && t.go[1] > 0.7 && t.go[1] <= 1, "отрезок шага: " + id + " " + k);
+    assert.ok(t.ms >= 600 && t.ms <= 2800, "время ленты: " + id + " " + k);
   }
+  /* «К нам» грузится, когда блок на экране, «от нас» и разворот — когда врач вышел. */
   assert.match(js, /load\(b\.parentNode,'wf'\)/);
-  assert.match(js, /walk\(s,'f'\);load\(s,'wb'\)/);
-  assert.match(css, /\.tm-z \.tm-w img\{[^}]*transform:translateX\(calc\(-100% \* var\(--f,0\) \/ var\(--n,1\)\)\)/);
+  assert.match(js, /load\(s,'wb t'\)/);
+  /* Кадр ленты выбирает сдвиг сетки; по экрану врача ведёт скрипт по тем же кадрам. */
+  assert.match(css, /\.tm-z \.tm-w img\{[^}]*transform:translate\(calc\(-100% \* var\(--fx,0\) \/ var\(--c,1\)\),calc\(-100% \* var\(--fy,0\) \/ var\(--r,1\)\)\)/);
+  assert.match(js, /path\(i,HOME,to,goOf\(w\)\)/);
+  assert.match(js, /path\(i,from,HOME,goOf\(w\)\)/);
+  /* Разворот — кадрами, туда и обратно; сжатия по ширине («толщиной 1 мм») нет нигде. */
+  assert.match(js, /run\(s,'t',w,!back,null,/);
+  assert.doesNotMatch(css + js, /tm-turn|rotateY/);
+  assert.doesNotMatch(css, /\.tm-(z|g|d|s)[^{}]*\{[^}]*scaleX/);
   assert.match(css, /@media \(prefers-reduced-motion:reduce\)/);
   assert.match(css, /html\.vi \.tm-i,html\.vi \.tm-i\[hidden\]\{display:block/);
   assert.match(js, /tm-back/);
-  assert.match(js, /tm-walk/);
+  /* Нажатие, пока врач идёт, не теряется; другой врач при открытом — первый уходит, второй уже идёт. */
+  assert.match(js, /if\(busy\)\{want=i;return\}/);
+  assert.match(js, /function swap\(i\)/);
+  /* Выбранный врач крупный и закрывает соседей: нажатие проходит сквозь него. */
+  assert.match(css, /\.tm-sel \.tm-d\{pointer-events:none\}/);
   assert.match(js, /window\.SY_DOC=a\.getAttribute\('data-doc'\)/);
   assert.match(read("site/store-live.js"), /'врач: '\+window\.SY_DOC/);
   /* Макет не меняется: там прежние врачи и нет сцены. */

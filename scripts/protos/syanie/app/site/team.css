@@ -1,9 +1,9 @@
 /* «Наши врачи» — ряд врачей в полный рост, как выбор героя (gen.mjs,
    teamBlock; движение — team.js). Владелец, 16.11.2026. Только рабочий сайт.
    Движется только transform и opacity: врач выходит из строя (--tx, --ty,
-   --sc у .tm-g), разворачивается (.tm-turn сжимает .tm-z по ширине, на
-   середине кадр лицом меняется на кадр спиной), шагает (.tm-walk качает
-   кадры). При «меньше движения» и в версии для слабовидящих — без шагов. */
+   --sc у .tm-g), шагает и разворачивается кадрами из видео (ленты .tm-w,
+   их листает team.js). При «меньше движения» и в версии для слабовидящих —
+   без шагов. */
 .tm{position:relative;overflow:hidden;padding:56px 0 0;background:radial-gradient(90% 60% at 50% 96%,rgb(var(--onyx-rgb) / .12),transparent 62%),radial-gradient(60% 50% at 50% 30%,rgb(var(--frost-rgb) / .06),transparent 70%),var(--ink)}
 .tm-h{position:relative;z-index:3;text-align:center;transition:opacity .5s var(--ease)}
 @media (min-width:760px){.tm-on .tm-h{opacity:.22}}
@@ -23,7 +23,7 @@
 .tm-g{position:relative;display:block;height:calc(var(--fh) * var(--k));aspect-ratio:var(--ar);transform-origin:50% 100%;transform:translate(var(--tx,0px),var(--ty,0px)) scale(var(--sc,1));transition:transform .9s var(--ease2),opacity .5s var(--ease)}
 .tm-g::before{content:"";position:absolute;left:4%;right:4%;bottom:-3%;height:7%;border-radius:50%;background:radial-gradient(closest-side,rgb(0 0 0 / .55),transparent);pointer-events:none}
 .tm-z{position:absolute;inset:0;display:block}
-.tm-z img{position:absolute;inset:0;width:100%;height:100%;max-width:none;object-fit:contain;object-position:50% 100%;transition:opacity .12s linear}
+.tm-z img{position:absolute;inset:0;width:100%;height:100%;max-width:none;object-fit:contain;object-position:50% 100%}
 .tm-k{opacity:0}
 .tm-back .tm-f{opacity:0}.tm-back .tm-k{opacity:1}
 .tm-ph{position:absolute;inset:0;display:block;border-radius:999px 999px 18px 18px;overflow:hidden;background:var(--ink2)}
@@ -37,10 +37,8 @@
 .tm-on .tm-s:not(.tm-sel){z-index:0}
 .tm-sel{z-index:4}
 .tm-sel .tm-c{opacity:0}
-.tm-walk .tm-z img{animation:tm-step .42s ease-in-out infinite alternate}
-@keyframes tm-step{from{transform:translateY(0) rotate(-.7deg)}to{transform:translateY(-1.4%) rotate(.7deg)}}
-.tm-turn .tm-z{animation:tm-turn .44s var(--ease2)}
-@keyframes tm-turn{50%{transform:scaleX(.05)}}
+/* Выбранный врач крупный и закрывает соседей: нажатие проходит сквозь него — на врача за ним или «куда угодно». */
+.tm-sel .tm-d{pointer-events:none}
 /* Карточка врача: справа, остальные в тени. */
 .tm-i{position:absolute;z-index:5;right:max(var(--gut),3%);top:50%;width:min(520px,46%);max-height:92%;overflow:auto;padding:22px 24px;border-radius:22px;background:rgb(var(--ink-rgb) / .62);box-shadow:0 0 0 1px var(--line-d);transform:translate(28px,-50%);opacity:0;transition:opacity .45s var(--ease),transform .6s var(--ease);scrollbar-width:thin}
 .tm-i.on{opacity:1;transform:translate(0,-50%)}
@@ -83,10 +81,10 @@
 }
 @media (prefers-reduced-motion:reduce){
   .tm-g,.tm-i,.tm-s,.tm-gh{transition-duration:.01s!important;transition-delay:0s!important}
-  .tm-walk .tm-z img,.tm-turn .tm-z,.tm-i.on .tm-bar i.on,.tm-tip .ic{animation:none!important}
+  .tm-i.on .tm-bar i.on,.tm-tip .ic{animation:none!important}
 }
 html.vi .tm-g,html.vi .tm-i,html.vi .tm-s,html.vi .tm-gh{transition-duration:.01s!important;transition-delay:0s!important}
-html.vi .tm-walk .tm-z img,html.vi .tm-turn .tm-z,html.vi .tm-tip .ic{animation:none!important}
+html.vi .tm-tip .ic{animation:none!important}
 html.vi .tm-gh{display:none}
 /* Версия для слабовидящих: без сцены — врачи рядом, под ними все карточки открыты. */
 html.vi .tm-sg{height:auto;padding:24px 0 40px}
@@ -98,14 +96,19 @@ html.vi .tm-c{position:static;transform:none;margin:10px auto 0;max-width:none}
 html.vi .tm-d{cursor:default}
 html.vi .tm-i,html.vi .tm-i[hidden]{display:block;position:static;width:auto;max-height:none;margin:24px var(--gut) 0;opacity:1;transform:none}
 html.vi .tm-esc,html.vi .tm-tip{display:none}
-/* Походка: лента кадров шага поверх кадра врача (team.js). Кадр ленты шире кадра врача:
-   при шаге ноги выходят за силуэт стоящего; ширину и сдвиг ставит gen.mjs. Кадр спиной —
-   так же по высоте, а не «вписать». */
-.tm-g{transition-duration:var(--wd,.9s),.5s}
-.tm-w{position:absolute;top:0;bottom:0;left:0;width:100%;overflow:hidden;opacity:0;pointer-events:none}
+/* Кадры движения: ленты поверх кадра врача (team.js) — идёт к нам (.tm-wf), уходит (.tm-wb),
+   разворот лицом → спиной (.tm-t). Лента — сетка кадров (--c в ряд, --r рядов), кадр
+   выбирает сдвиг (--fx, --fy). Кадр ленты шире кадра врача: при шаге и развороте руки и
+   ноги выходят за силуэт стоящего; ширину и сдвиг ставит gen.mjs. Кадр спиной — так же
+   по высоте, а не «вписать». Разворот — настоящий, с профилем: сжатия по ширине нет
+   (владелец, 16.11.2026: «будто бы толщиной врач 1 мм»). Лента в конце гаснет поверх
+   кадра врача: её кадр мельче, резкость приходит плавно. */
+.tm-w{position:absolute;top:0;bottom:0;left:0;width:100%;overflow:hidden;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .16s linear,visibility 0s .16s}
 .tm-z .tm-k[style]{right:auto}
-.tm-z .tm-w img{inset:auto;left:0;top:0;width:auto;height:100%;object-fit:fill;transition:none;transform:translateX(calc(-100% * var(--f,0) / var(--n,1)))}
-.tm-wf-on .tm-wf,.tm-wb-on .tm-wb{opacity:1}
+.tm-z .tm-w img{inset:auto;left:0;top:0;width:calc(100% * var(--c,1));height:calc(100% * var(--r,1));object-fit:fill;transform-origin:0 0;transform:translate(calc(-100% * var(--fx,0) / var(--c,1)),calc(-100% * var(--fy,0) / var(--r,1)))}
+.tm-wf-on .tm-wf,.tm-wb-on .tm-wb,.tm-t-on .tm-t{opacity:1;visibility:visible;transition:none}
 .tm-ws .tm-z>img{opacity:0}
-/* Пока идёт по кадрам — почти ровным ходом, иначе ноги «скользят» на разгоне. */
-.tm-ws .tm-g{transition-timing-function:cubic-bezier(.32,.1,.42,.95),var(--ease)}
+/* Пока врач идёт по кадрам, по экрану его ведёт team.js (шаг в шаг с ногами), не переход. */
+.tm-mv .tm-g{transition:opacity .5s var(--ease);will-change:transform}
+/* Лента разворота не загрузилась: кадр лицом перетекает в кадр спиной. */
+.tm-xf .tm-z>img{transition:opacity .3s linear}
