@@ -7,6 +7,7 @@ import { PANEL_UI } from "./panel-ui.mjs";
 import { makeBlocks, SCENE } from "./blocks.mjs";
 import { makeLaunch } from "./launch.mjs";
 import { CATALOG, AREAS as AREA_KEYS } from "./app/lib/catalog.mjs";
+import { PACK_LANGS } from "./app/lib/catalog-tr.mjs";
 
 /*
  * Макет корпоративного сайта CZECHFARM (фармацевтическая компания) по ТЗ
@@ -331,7 +332,7 @@ function productsLive(l) {
   const t = T(l);
   const P = `${IMG}/products`;
   const n = CATALOG.length;
-  const packs = HERO_PACKS.map((x, i) => { const c = CATALOG.find((y) => y.key === x.key); return `<span class="pk pk-d${x.d} pk-m${x.m}" aria-hidden="true"><img src="${P}/${x.key}-480.webp" srcset="${P}/${x.key}-480.webp 480w, ${P}/${x.key}-960.webp 960w" sizes="(max-width: 760px) 30vw, 14vw" alt="" decoding="async"${i < 2 ? ' fetchpriority="high"' : ""}></span>`; }).join("");
+  const packs = HERO_PACKS.map((x, i) => { const f = PACK_LANGS[x.key]?.includes(l) ? `${x.key}-${l}` : x.key; return `<span class="pk pk-d${x.d} pk-m${x.m}" aria-hidden="true"><img src="${P}/${f}-480.webp" srcset="${P}/${f}-480.webp 480w, ${P}/${f}-960.webp 960w" sizes="(max-width: 760px) 30vw, 14vw" alt="" decoding="async"${i < 2 ? ' fetchpriority="high"' : ""}></span>`; }).join("");
   return [`<section class="pf-hero" id="pf-hero"><div class="pf-scene" aria-hidden="true"><picture><source media="(max-width: 760px)" srcset="${P}/hero-m-1080.webp 603w, ${P}/hero-m-1600.webp 893w" sizes="100vw"><img src="${P}/hero-2400.webp" srcset="${P}/hero-1400.webp 1400w, ${P}/hero-2400.webp 2400w" sizes="100vw" alt="" fetchpriority="high"></picture>${packs}</div>
 <div class="wrap pf-in"><p class="crumbs"><a href="${href(l)}">CZECHFARM</a> / ${navName("products", l)}</p>
 <h1 class="rise">${t("Наши <b>продукты</b>", "Bizning <b>mahsulotlarimiz</b>", "Our <b>products</b>")}</h1>
