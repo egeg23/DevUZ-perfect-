@@ -6,7 +6,7 @@ import { sealer, hashPass, checkPass, token, sha } from "./crypt.mjs";
 import { amoClient, amoBase } from "./amo.mjs";
 import { tgClient, tgMessage } from "./tg.mjs";
 import { wzClient, wzMessages, WZ_KINDS } from "./wazzup.mjs";
-import { BLOCKS, GROUPS, TEXT_KEYS, defaultsOf, dropOldDoctors, mergeBlocks, normalize, siteOverrides } from "./site-content.mjs";
+import { BLOCKS, GROUPS, TEXT_KEYS, defaultsOf, dropOldChief, dropOldDoctors, mergeBlocks, normalize, siteOverrides } from "./site-content.mjs";
 
 export const STATUS = { new: "Новая", confirmed: "Подтверждена", came: "Пришёл", canceled: "Отменена" };
 export const ROLES = { owner: "Главный врач", admin: "Администратор" };
@@ -369,7 +369,7 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
   const site = (() => {
     let defaults = null, cache = null, version = 1;
     const def = () => defaults || (defaults = renderer ? defaultsOf(renderer.DEFAULTS, renderer.textDefaults()) : null);
-    const edits = () => { try { return dropOldDoctors(JSON.parse(getS("site.edits") || "{}")); } catch { return {}; } };
+    const edits = () => { try { return dropOldChief(dropOldDoctors(JSON.parse(getS("site.edits") || "{}")), renderer?.DEFAULTS?.ORG?.chief); } catch { return {}; } };
     const seo = () => ({ metrika: getS("seo.metrika"), yandex: getS("seo.yandex"), google: getS("seo.google") });
     const title = (key) => GROUPS.find((g) => g.key === key)?.title || key;
     /* Дата правки — в карту сайта сейчас, а не когда поисковик придёт за ней.
