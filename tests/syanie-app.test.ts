@@ -458,7 +458,8 @@ test("сияние на сервере клиники: старые страни
   /* Товары магазина (номер в конце) — 410, страницы клиники и прочее — нет. */
   for (const path of ["/Cuscino-Allattamento-Grigio-1111253", "/15-ay032nl-15-ay033nl-15-ay034nl-15-ay035nl-416588", "/Reloj-Fossil-FS5304-Hombre-1333334/"]) assert.ok(hackedPage(path), path);
   for (const path of ["/beauty-uomo/", "/implantatsiya-all-on-4/", "/akcii/skidka-2025", "/akcii/1234567", "/privacy", "/", "/a/b-1234567", "/x-12345678"]) assert.ok(!hackedPage(path), path);
-  const a = await boot();
+  /* Страницы собирает gen.mjs, как на сервере: собранных файлов сайта в репозитории нет. */
+  const a = await boot("https://syanie.test", { live: true });
   try {
     const r = await fetch(a.base + "/implantatsiya-all-on-6/", { redirect: "manual" });
     assert.equal(r.status, 301);
