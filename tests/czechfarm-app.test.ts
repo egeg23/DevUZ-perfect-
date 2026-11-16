@@ -284,6 +284,11 @@ test("czechfarm: портфель из таблицы — на сайте сра
     assert.ok(!list.includes('"dose"') && !list.includes('"key":"'), "схема приёма или ключ на сайте");
     assert.ok(!list.includes("1 таблетка 1 раз в месяц"), "схема приёма на сайте");
     assert.ok(list.includes('id="pf-hero"') && list.includes('id="pf-areas"'), "нет витрины");
+    /* Исправление по упаковке меняет прежнее значение из таблицы, правку панели — нет. */
+    const tz = a.db.get("select id, data from products where json_extract(data, '$.key') = 'tiozolin'");
+    a.db.run("update products set data = ? where id = ?", JSON.stringify({ ...JSON.parse(tz.data), pack: "10 ампул по 5 мл" }), tz.id);
+    { const { makeCore } = await load("lib/core.mjs"); makeCore({ db: a.db, secret: "test-secret-0123456789" }); }
+    assert.equal(JSON.parse(a.db.get("select data from products where id = ?", tz.id).data).pack, "10 ампул по 4 мл", "исправление по упаковке не применилось");
     const first = a.db.get("select id from products order by sort limit 1").id;
     await a.adminPost(`/products/${first}/del`, {});
     const { makeCore } = await load("lib/core.mjs");
