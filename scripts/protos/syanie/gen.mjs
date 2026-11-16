@@ -329,6 +329,8 @@ function yearsOf(d) {
   const m = /(более\s+|свыше\s+|больше\s+)?(\d+(?:[.,]\d+)?)\s*(год(?:а)?|лет)/i.exec(d.facts.map(plain).join(" "));
   return m ? { n: parseFloat(m[2].replace(",", ".")), t: `${m[1] ? "более " : ""}${m[2]} ${m[3]}` } : null;
 }
+/* Кадр шире или уже кадра врача лицом — по высоте тот же, по центру (ширина и сдвиг в % от него). */
+const wide = (ar, fig) => { const k = ar / (fig.w / 1200); return Math.abs(k - 1) < 0.005 ? "" : ` style="width:${(k * 100).toFixed(2)}%;left:${((1 - k) * 50).toFixed(2)}%"`; };
 const figOf = (d) => { const m = /^dr-([a-z-]+)$/.exec(d.img || ""); return m && CAT.FIGS[m[1]] ? { id: m[1], ...CAT.FIGS[m[1]] } : null; };
 export function teamBlock({ page = false, crumbs = "" } = {}) {
   const t = page ? TX["pg-vrachi"] || {} : TX.docs || {};
@@ -339,7 +341,7 @@ export function teamBlock({ page = false, crumbs = "" } = {}) {
     const fig = figOf(d), y = yearsOf(d), dirs = dirsOf(d), surname = plain(d.name).split(/\s+/)[0];
     const alt = esc(`${plain(d.name)}, ${plain(d.role).toLowerCase()}`);
     const body = fig
-      ? `<img class="tm-f" src="${IMG}/tm-${fig.id}.webp" width="${fig.w}" height="1200" alt="${alt}" loading="lazy" decoding="async"><img class="tm-k" src="${IMG}/tm-${fig.id}-b.webp" width="${fig.bw}" height="1200" alt="" aria-hidden="true" loading="lazy" decoding="async">`
+      ? `<img class="tm-f" src="${IMG}/tm-${fig.id}.webp" width="${fig.w}" height="1200" alt="${alt}" loading="lazy" decoding="async"><img class="tm-k" src="${IMG}/tm-${fig.id}-b.webp" width="${fig.bw}" height="1200" alt="" aria-hidden="true" loading="lazy" decoding="async"${wide(fig.bw / 1200, fig)}>${["wf", "wb"].map((k) => fig[k] ? `<span class="tm-w tm-${k}" data-src="${IMG}/tm-${fig.id}-${k}.webp" data-n="${fig[k].n}"${wide(fig[k].tw / 640, fig)}><img alt="" aria-hidden="true" style="--n:${fig[k].n}" decoding="async"></span>` : "").join("")}`
       : `<span class="tm-ph">${docPic(d)}</span>`;
     const other = d.facts.filter((f) => !y || !plain(f).includes(y.t.replace(/^более /, "")));
     const seg = y ? Math.max(1, Math.min(10, Math.round(y.n))) : 0;

@@ -728,6 +728,7 @@ test("сияние на сервере клиники: «Наши врачи» �
       assert.match(html, /Нажмите на врача, чтобы посмотреть/);
       assert.match(html, /<img class="tm-f" src="\/protos\/syanie\/tm-kadiev\.webp" width="341" height="1200" alt="Кадиев Рамазан Курбанович, стоматолог-хирург, ортопед"/);
       assert.match(html, /<img class="tm-k" src="\/protos\/syanie\/tm-kadiev-b\.webp"[^>]*alt="" aria-hidden="true"/);
+      assert.match(html, /<span class="tm-w tm-wf" data-src="\/protos\/syanie\/tm-kadiev-wf\.webp" data-n="20" style="width:[\d.]+%;left:-[\d.]+%"><img alt="" aria-hidden="true" style="--n:20" decoding="async"><\/span>/);
     }
     assert.match(home, /<h2>Наши врачи<\/h2>/);
     assert.match(vr, /<h1>Наши врачи<\/h1>/);
@@ -746,7 +747,7 @@ test("сияние на сервере клиники: «Наши врачи» �
     assert.equal(dos.match(/<i class="on"/g)?.length, 2);
     assert.match(card("Кузнецова Полина Олеговна"), /<a href="\/lechenie-zubov">Лечение зубов<\/a>/);
     /* Своих чисел нет: в карточках только стаж из слов клиники. */
-    assert.doesNotMatch(vr.slice(vr.indexOf('class="tm"'), vr.indexOf("</section>", vr.indexOf('class="tm"'))), /\d+\s*%|операц|рейтинг/i);
+    assert.doesNotMatch(vr.slice(vr.indexOf('class="tm"'), vr.indexOf("</section>", vr.indexOf('class="tm"'))).replace(/<[^>]*>/g, " "), /\d+\s*%|операц|рейтинг/i);
     /* Врачи раздела — по специальности. */
     const docsOn = async (path: string) => [...(await a.call(path)).text.matchAll(/<div class="vd-t"><span class="kick">[^<]*<\/span><h3>([^<]+)<\/h3>/g)].map((m) => m[1]);
     assert.deepEqual(await docsOn("/khirurgiya"), ["Намазов Намиг Исмайылович", "Кадиев Рамазан Курбанович"]);
@@ -768,7 +769,21 @@ test("сияние на сервере клиники: «Наши врачи» �
   assert.equal(dropOldDoctors(own), own);
   /* Движение — transform и opacity; врач для записи — в пожелание к заявке; «меньше движения» и версия для слабовидящих — без шагов. */
   const css = read("site/team.css"), js = read("site/team.js");
-  for (const m of css.matchAll(/transition:([^;}]+)/g)) for (const part of m[1].split(",")) assert.match(part.trim(), /^(transform|opacity|border-color|color|transition-duration)\b|^\.01s/, "анимация не transform/opacity: " + part);
+  for (const m of css.matchAll(/transition:([^;}]+)/g)) for (const part of m[1].split(",")) assert.match(part.trim(), /^(transform|opacity|border-color|color|transition-duration|none)\b|^\.01s/, "анимация не transform/opacity: " + part);
+  /* Походка (владелец, 16.11.2026: «можешь сделать прям походку, чтобы он шел?»): у каждого
+     врача лента шага к нам и от нас, кадров столько, сколько в FIGS; «к нам» грузится, когда
+     блок на экране, «от нас» — когда врач вышел; кадры листает transform. */
+  const { imageSize } = await import("node:module").then(() => ({ imageSize: (f: string) => { const b = readFileSync(f); const i = b.indexOf("VP8X"); return i > 0 ? { w: 1 + b.readUIntLE(i + 12, 3), h: 1 + b.readUIntLE(i + 15, 3) } : null; } }));
+  for (const [id, f] of Object.entries(CAT.FIGS) as Array<[string, any]>) for (const k of ["wf", "wb"]) {
+    const file = new URL(`tm-${id}-${k}.webp`, PUB).pathname;
+    assert.ok(existsSync(file), "нет ленты шага " + file);
+    const size = imageSize(file)!;
+    assert.equal(size.h, 640, file);
+    assert.equal(size.w, f[k].n * f[k].tw, "ширина ленты не n × tw: " + file);
+  }
+  assert.match(js, /load\(b\.parentNode,'wf'\)/);
+  assert.match(js, /walk\(s,'f'\);load\(s,'wb'\)/);
+  assert.match(css, /\.tm-z \.tm-w img\{[^}]*transform:translateX\(calc\(-100% \* var\(--f,0\) \/ var\(--n,1\)\)\)/);
   assert.match(css, /@media \(prefers-reduced-motion:reduce\)/);
   assert.match(css, /html\.vi \.tm-i,html\.vi \.tm-i\[hidden\]\{display:block/);
   assert.match(js, /tm-back/);
