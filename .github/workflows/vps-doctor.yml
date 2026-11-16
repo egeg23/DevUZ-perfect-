@@ -280,7 +280,7 @@ jobs:
             # прогоне, а какие взял из прошлого раза.
             echo "  только Google (подпись или его адреса), страницы приложения и главная, оба файла журнала:"
             cat "$ACCLOG.1" "$ACCLOG" 2>/dev/null \
-              | grep -E '"(GET|HEAD) /(devuz-studio-(app|privacy)\.html|(en|ru)(/(google-app|privacy|offer))?)?[ ?]' \
+              | grep -E '"(GET|HEAD) (/(devuz-studio-(app|privacy)\.html|(en|ru)(/(google-app|privacy|offer))?)?[ ?]|[^ ]*devuz-studio)' \
               | awk -F'"' '{split($1,a," "); if ($6 == "Google" || $6 ~ /Google-Site-Verification|GoogleOther|Google-InspectionTool|APIs-Google/ || ($2 ~ /devuz-studio-/ && a[1] ~ /^(66\.249|66\.102|74\.125|192\.178|108\.177)\./)) {split($3,s," "); split($2,r," "); t=substr($1, index($1,"[")+1, 20); n=split(a[1],o,"."); who=(n==4)?o[1]"."o[2]".x.x":substr(a[1],1,9)"…"; sub(/\?.*$/,"",r[2]); printf "    %s · %s · %s · %s · %s · %s\n", t, s[1], s[2], r[2], who, substr($6,1,60)}}' | tail -90
             grep -E '"(GET|HEAD) /en/(google-app|privacy)[ ?]' "$GA.all" \
               | awk -F'"' '{split($1,a," "); if ($6 ~ /[Gg]oogle/ || a[1] ~ /^(66\.249|66\.102|74\.125|192\.178|108\.177)\./) print a[1]}' | sort -u | head -60 > "$GA.ips"
