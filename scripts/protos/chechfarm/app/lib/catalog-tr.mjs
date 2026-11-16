@@ -87,7 +87,7 @@ const RAW = {
   "kardon-o2": R({ name: T("Kardon O2", "Kardon O2", "كاردون O2"), inn: T("Meldoniy", "Meldonium", "ميلدونيوم"), form: T("In’eksiya uchun eritma, 500 mg/5 ml", "Solution for injection, 500 mg/5 ml", "محلول للحقن، 500 ملغ/5 مل"), pack: F.amp10x5, group: F.antiox, doctors: DOC.cardio }),
   neirodeks: R({ name: T("Neyrodeks", "Neurodex", "نيوروديكس"), inn: F.ethyl, form: T("In’eksiya uchun eritma, 50 mg/ml", "Solution for injection, 50 mg/ml", "محلول للحقن، 50 ملغ/مل"), pack: F.amp5x5, group: F.antiox, doctors: DOC.cardio }),
   mozeks: R({ name: T("Mozeks", "Mozeks", "موزيكس"), inn: F.ethyl, form: T("In’eksiya uchun eritma, 5%", "Solution for injection, 5%", "محلول للحقن، 5%"), pack: F.amp5x5, group: F.antiox, doctors: DOC.cardio }),
-  neobrain: R({ name: T("Neobrain", "Neobrain", "نيوبرين"), inn: T("Sitikolin", "Citicoline", "سيتيكولين"), form: T("In’eksiya uchun eritma, 1000 mg", "Solution for injection, 1000 mg", "محلول للحقن، 1000 ملغ"), pack: F.amp5x5, group: T("Nootrop vosita", "Nootropic agent", "منشط ذهني"), doctors: DOC.neuroRea }),
+  neobrain: R({ name: T("Neobrain", "Neobrain", "نيوبرين"), inn: T("Sitikolin", "Citicoline", "سيتيكولين"), form: T("In’eksiya uchun eritma, 1000 mg/4 ml", "Solution for injection, 1000 mg/4 ml", "محلول للحقن، 1000 ملغ/4 مل"), pack: T("5 ampula, 4 ml dan", "5 ampoules of 4 ml", "5 أمبولات × 4 مل"), group: T("Nootrop vosita", "Nootropic agent", "منشط ذهني"), doctors: DOC.neuroRea }),
   babyplast: R({ name: T("Babiplast", "Babyplast", "بيبي بلاست"), inn: T("Mentol", "Menthol", "منثول"), form: T("Isitmani tushiruvchi gidrogel plastir", "Fever-reducing hydrogel patch", "لصقة هيدروجيل خافضة للحرارة"), pack: F.sach2, group: T("Bolalar uchun isitma tushiruvchi vosita", "Fever reducer for children", "خافض للحرارة للأطفال"), doctors: T("Pediatrlar", "Pediatricians", "أطباء الأطفال") }),
   doubleplast: R({ name: T("Dablplast", "Doubleplast", "دبل بلاست"), inn: T("Mentol, qalampir yalpiz efir moyi", "Menthol, peppermint essential oil", "منثول، زيت النعناع العطري"), form: T("Sovutuvchi va isituvchi gidrogel plastir", "Cooling and warming hydrogel patch", "لصقة هيدروجيل مبردة ومدفئة"), pack: T("3 paket", "3 sachets", "3 أكياس"), group: T("Og‘riq qoldiruvchi vosita", "Pain reliever", "مسكن للألم"), doctors: T("Nevrologlar, travmatologlar, terapevtlar", "Neurologists, traumatologists, therapists", "أطباء الأعصاب والرضوح والباطنة") }),
   venoplast: R({ name: T("Venoplast", "Venoplast", "فينوبلاست"), inn: T("Evkalipt, apelsin va lavanda efir moylari", "Eucalyptus, orange and lavender essential oils", "زيوت عطرية من الأوكالبتوس والبرتقال والخزامى"), form: F.hydro, pack: F.sach2, group: T("Venotonik", "Venotonic", "مقوٍّ للأوردة"), doctors: T("Ginekologlar, vertebrologlar, terapevtlar", "Gynecologists, vertebrologists, therapists", "أطباء أمراض النساء والعمود الفقري والباطنة") }),
@@ -113,6 +113,7 @@ export const PACK_LANGS = {
   lanikzol: ALL, melatonin: ALL, miotir: ALL, nemotan: ALL, geparigen: ALL,
   contryfort: ALL, kantalin: ALL, duinum: ALL, ticoten: ALL, regapen: ALL,
   tiozolin: ALL, fertuna: ALL, kabrineks: ALL, kamalafil: ALL, gution: ALL,
+  deksabut: ALL, tenozum: ALL, femaris: ALL, neirodeks: ALL, neobrain: ALL,
   "dilargo-sol": ["en", "ar"], "naprocin-gel": ["en", "ar"],
   cholesterol: ["ar"], glucoflex: ["ar"],
 };
