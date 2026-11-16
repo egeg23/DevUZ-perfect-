@@ -34,7 +34,8 @@ let PROD = process.env.SY_PROD === "1";
 const IS_MAIN = !!process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
 const RENDER_ONLY = process.env.SY_RENDER === "1";
 const { dzIntroSolo } = PROD || RENDER_ONLY ? { dzIntroSolo: () => "" } : await import("../../../lib/proto/dz-video.mjs");
-let D = DATA, B = DATA.BRAND, TX = {}, LIVE = {}, LAYOUT = null;
+/* Рабочий сайт — свои врачи (catalog.mjs), макет — прежние (data.mjs). */
+let D = PROD ? { ...DATA, DOCTORS: CAT.DOCTORS } : DATA, B = DATA.BRAND, TX = {}, LIVE = {}, LAYOUT = null;
 const strip = (s) => s.replace(/\/\*[\s\S]*?\*\//g, "");
 const min = (s) => strip(s).replace(/\n\s*/g, "");
 const IMG = "/protos/syanie";
@@ -310,6 +311,56 @@ ${D.DOCTORS.map((d, i) => `<article class="dr rv" style="--d:${i * 120}ms"><div 
 </div></section>`;
 }
 
+/* ── Наши врачи: ряд врачей в полный рост, как выбор героя ─────────── */
+/* Владелец, 16.11.2026: «Хиро секцию, где врачи стоят и на них можно нажать,
+   откроются характеристики их как в мортал комбат… Когда нажимаешь на врача,
+   он выходит из общей линии врачей, встает с одной стороны экрана, и
+   открывается информация о враче, остальные при этом затемняются. При
+   нажатии куда угодно врач разворачивается спиной и идет на свое место».
+   Только рабочий сайт. Разметка работает и без скрипта (ряд с подписями);
+   движение — app/site/team.js, вид — app/site/team.css. Характеристики —
+   только то, что о враче написано: стаж (полоса по годам, 10 делений),
+   направления — разделы услуг по специальности, образование и квалификация
+   из админки. Своих чисел нет. */
+const DIRS = [[/хирург/i, "khirurgiya"], [/хирург|имплант/i, "implantatsiya-zubov"], [/ортопед/i, "protezirovanie-zubov"], [/терапевт/i, "lechenie-zubov"], [/гигиен/i, "professionalnaya-gigiena"]];
+const dirsOf = (d) => CAT.CATEGORIES.filter((k) => DIRS.some(([re, slug]) => slug === k.slug && re.test(plain(d.role))));
+/* Стаж словами врача: «Стаж 6 лет», «более 1,5 лет» → 6, «более 1,5 лет». */
+function yearsOf(d) {
+  const m = /(более\s+|свыше\s+|больше\s+)?(\d+(?:[.,]\d+)?)\s*(год(?:а)?|лет)/i.exec(d.facts.map(plain).join(" "));
+  return m ? { n: parseFloat(m[2].replace(",", ".")), t: `${m[1] ? "более " : ""}${m[2]} ${m[3]}` } : null;
+}
+const figOf = (d) => { const m = /^dr-([a-z-]+)$/.exec(d.img || ""); return m && CAT.FIGS[m[1]] ? { id: m[1], ...CAT.FIGS[m[1]] } : null; };
+export function teamBlock({ page = false, crumbs = "" } = {}) {
+  const t = page ? TX["pg-vrachi"] || {} : TX.docs || {};
+  const def = { kick: "Врачи", h: "Наши врачи", p: "Нажмите на врача, чтобы посмотреть" };
+  SEEN[page ? "pg-vrachi" : "docs"] = def;
+  const kick = t.kick ?? def.kick, h = t.h ?? def.h, p = t.p ?? def.p, H = page ? "h1" : "h2";
+  const list = D.DOCTORS.map((d, i) => {
+    const fig = figOf(d), y = yearsOf(d), dirs = dirsOf(d), surname = plain(d.name).split(/\s+/)[0];
+    const alt = esc(`${plain(d.name)}, ${plain(d.role).toLowerCase()}`);
+    const body = fig
+      ? `<img class="tm-f" src="${IMG}/tm-${fig.id}.webp" width="${fig.w}" height="1200" alt="${alt}" loading="lazy" decoding="async"><img class="tm-k" src="${IMG}/tm-${fig.id}-b.webp" width="${fig.bw}" height="1200" alt="" aria-hidden="true" loading="lazy" decoding="async">`
+      : `<span class="tm-ph">${docPic(d)}</span>`;
+    const other = d.facts.filter((f) => !y || !plain(f).includes(y.t.replace(/^более /, "")));
+    const seg = y ? Math.max(1, Math.min(10, Math.round(y.n))) : 0;
+    return {
+      slot: `<li class="tm-s${fig ? "" : " tm-nofig"}" style="--k:${fig ? fig.k : 0.9};--ar:${fig ? fig.w : 600}/1200;--d:${i * 90}ms"><button type="button" class="tm-d" data-i="${i}" data-sn="${esc(surname)}" aria-expanded="false" aria-controls="tm-i${i}"><span class="tm-g"><span class="tm-z">${body}</span></span><span class="tm-c"><b>${d.short || d.name}</b><small>${d.role}</small></span></button></li>`,
+      info: `<div class="tm-i" id="tm-i${i}" role="region" aria-label="${esc(plain(d.name))}" hidden><span class="kick">${d.role}</span><h3 tabindex="-1">${d.name}</h3>
+${y ? `<div class="tm-st"><span class="tm-l">Стаж</span><b>${y.t}</b><span class="tm-bar" role="img" aria-label="Стаж ${y.t}">${Array.from({ length: 10 }, (_, j) => `<i${j < seg ? ' class="on"' : ""} style="--j:${j}"></i>`).join("")}</span></div>` : ""}
+${other.length ? `<ul class="tm-x">${other.map((f) => `<li>${f}</li>`).join("")}</ul>` : ""}
+${dirs.length ? `<div class="tm-dr"><span class="tm-l">Направления</span><p>${dirs.map((k) => `<a href="/${k.slug}">${k.t}</a>`).join("")}</p></div>` : ""}
+${d.edu ? `<p class="tm-e"><span class="tm-l">Образование</span>${String(d.edu).split("\n").join("<br>")}</p>` : ""}${d.cert ? `<p class="tm-e"><span class="tm-l">Квалификация</span>${String(d.cert).split("\n").join("<br>")}</p>` : ""}
+<div class="tm-b"><a class="btn btn-onyx" href="#zapis" data-book${dirs[0] ? ` data-svc="${dirs[0].nav}"` : ""} data-doc="${esc(plain(d.name))}">${ic("msg")}<span>Записаться к врачу</span></a>${page ? "" : `<a class="btn btn-ghost" href="/vrachi">Все о врачах</a>`}</div>
+<p class="tm-esc">Нажмите в любом месте, чтобы врач вернулся в строй</p></div>`,
+    };
+  });
+  return `<section class="tm" id="vrachi" data-tone="ink" data-tm><div class="wrap tm-h">${crumbs}<span class="kick">${kick}</span><${H}>${h}</${H}>${p ? `<p class="tm-tip">${ic("arrow")}<span>${p}</span></p>` : ""}</div>
+<div class="tm-sg" style="--n:${D.DOCTORS.length}"><span class="tm-gh" aria-hidden="true"></span><span class="tm-fl" aria-hidden="true"></span>
+<ul class="tm-r">${list.map((x) => x.slot).join("")}</ul>
+${list.map((x) => x.info).join("\n")}
+</div></section>`;
+}
+
 /* ── Гарантии и технологии ────────────────────────────────────────── */
 function trustBlock() {
   const tic = ["wave", "drop", "moon", "lab"];
@@ -508,7 +559,7 @@ function siteData() {
    порядок, скрытые и свои блоки. LAYOUT — список из site-content.mjs, все
    строки в нём уже экранированы. Без LAYOUT (макет, сайт без правок) —
    прежний порядок. Первый экран с пролётом всегда первым. ─────────────── */
-const BLOCK_FN = { vs: vsBlock, price: priceBlock, uslugi: servicesBlock, quiz: quizBlock, docs: doctorsBlock, trust: trustBlock, perks: perksBlock, reviews: reviewsBlock, rooms: roomsBlock, faq: faqBlock, contacts: contactsBlock };
+const BLOCK_FN = { vs: vsBlock, price: priceBlock, uslugi: servicesBlock, quiz: quizBlock, docs: () => teamBlock(), trust: trustBlock, perks: perksBlock, reviews: reviewsBlock, rooms: roomsBlock, faq: faqBlock, contacts: contactsBlock };
 const BLOCK_AT = { vs: "all-on-6", price: "ceny", uslugi: "uslugi-kliniki", quiz: "kviz", docs: "vrachi", trust: "garantii", perks: "privilegii", reviews: "otzyvy", rooms: "klinika", faq: "voprosy", contacts: "kontakty" };
 const BLOCK_NAV = { vs: "All-on-6", price: "Цены", docs: "Врачи", faq: "Вопросы", contacts: "Контакты" };
 const shown = (id) => !LAYOUT || LAYOUT.some((b) => b.id === id && b.on);
@@ -536,7 +587,7 @@ function customBlock(b) {
 }
 function mainBlocks() {
   if (!PROD) return [storyBlock(), vsBlock(), priceBlock(), quizBlock(), doctorsBlock(), trustBlock(), perksBlock(), reviewsBlock(), roomsBlock(), nowBlock(), bestBlock(), faqBlock(), contactsBlock(), offerBlock()];
-  if (!LAYOUT) return [storyBlock(), vsBlock(), priceBlock(), servicesBlock(), quizBlock(), doctorsBlock(), trustBlock(), perksBlock(), reviewsBlock(), roomsBlock(), faqBlock(), contactsBlock()];
+  if (!LAYOUT) return [storyBlock(), vsBlock(), priceBlock(), servicesBlock(), quizBlock(), teamBlock(), trustBlock(), perksBlock(), reviewsBlock(), roomsBlock(), faqBlock(), contactsBlock()];
   return [storyBlock(), ...LAYOUT.filter((b) => b.on).map((b) => (b.custom ? customBlock(b) : BLOCK_FN[b.id]()))];
 }
 /* Меню шапки идёт за блоками: скрытый блок пропадает из меню, свой блок
@@ -547,7 +598,9 @@ function navItems() {
 }
 
 function sitePage() {
-  if (PROD) return pageShell({ key: "index", title: "Все зубы на 6 имплантатах за 1 день · «Сияние Севера», Томск", desc: "Все зубы на 6 имплантатах за один день в Томске: All-on-6 в центре имплантации «Сияние Севера», ул. Белинского, 63. Цены, рассрочка 0%, врачи, гарантии, расчёт за минуту.", path: "/", main: mainBlocks().join("\n"), ld: ld(), home: true });
+  /* Запрос главной — по Вордстату, Томск (CAT.SEO.index): «all on 4» ищут чаще, чем «all on 6». */
+  const seoT = (t) => t.replace(/\{name\}/g, plain(B.name)).replace(/\{street\}/g, plain(B.street));
+  if (PROD) return pageShell({ key: "index", title: seoT(CAT.SEO.index.title), desc: seoT(CAT.SEO.index.desc), path: "/", main: mainBlocks().join("\n"), ld: ld(), home: true });
   const nav = navItems();
   return `<!doctype html>
 <html lang="ru">
@@ -618,7 +671,7 @@ const VI_BAR = `<div class="vi-bar" id="vi-bar" role="region" aria-label="Нас
 function pageCtx() {
   return {
     B, D, ORG: { ...CAT.ORG, ...(D.ORG || {}) }, AUTH: D.AUTHORITIES || CAT.AUTHORITIES, DOCS: D.DOCS || [], CATS: CAT.CATEGORIES, LIST: D.CATALOG || CAT.SERVICES,
-    PD_VERSION: CAT.PD_VERSION, IMG, tel, ic, esc, plain, rub, msgLinks, docPic, metrika: LIVE.seo?.metrika || "", site: "__SITE_URL__",
+    PD_VERSION: CAT.PD_VERSION, IMG, tel, ic, esc, plain, rub, msgLinks, docPic, team: teamBlock, dirsOf, SEO: CAT.SEO, metrika: LIVE.seo?.metrika || "", site: "__SITE_URL__",
     /* Тексты первого экрана страниц правятся в админке («Тексты разделов»), как разделы главной. */
     txt: (key, kick, h, p = "") => { SEEN[key] = { kick, h, p }; const t = TX[key] || {}; return { kick: t.kick ?? kick, h: t.h ?? h, p: t.p ?? p }; },
     blocks: { price: priceBlock, trust: trustBlock, perks: perksBlock, rooms: roomsBlock },
@@ -683,8 +736,8 @@ const readLive = (f) => readFileSync(LIVE_DIR + f, "utf8");
    каждой одинаковые стили и скрипт (запись, чат, меню, версия для
    слабовидящих, окно о cookie). Ключ страницы — её адрес без «/». */
 function livePages() {
-  const S = `<style>${min(read("site.css") + read("chat.css") + readLive("live.css") + readLive("pages.css"))}</style>`;
-  const J = `<script>\n${strip(readLive("store-live.js") + read("site.js") + readLive("live-chat.js") + readLive("live-pages.js"))}</script>`;
+  const S = `<style>${min(read("site.css") + read("chat.css") + readLive("live.css") + readLive("pages.css") + readLive("team.css"))}</style>`;
+  const J = `<script>\n${strip(readLive("store-live.js") + read("site.js") + readLive("live-chat.js") + readLive("live-pages.js") + readLive("team.js"))}</script>`;
   const fill = (h) => h.split("@@S@@").join(S).split("@@J@@").join(J);
   const out = { index: fill(sitePage()) };
   for (const [key, pg] of Object.entries(makePages(pageCtx()))) out[key] = fill(pageShell({ key, ...pg }));
@@ -701,11 +754,11 @@ function livePages() {
 export function renderLive(over = {}, live = {}) {
   const keep = [PROD, D, B, TX, LIVE, tel, LAYOUT];
   PROD = true; LIVE = live; TX = over.texts || {}; LAYOUT = over.blocks || null;
-  D = { ...DATA, ...(over.data || {}) }; B = { ...DATA.BRAND, ...(over.brand || {}) }; tel = `tel:${B.phoneRaw}`;
+  D = { ...DATA, DOCTORS: CAT.DOCTORS, ...(over.data || {}) }; B = { ...DATA.BRAND, ...(over.brand || {}) }; tel = `tel:${B.phoneRaw}`;
   try { return livePages(); } finally { [PROD, D, B, TX, LIVE, tel, LAYOUT] = keep; }
 }
 /* Значения по умолчанию для админки: data.mjs макета и catalog.mjs рабочего сайта. */
-export const DEFAULTS = { ...DATA, CATALOG: CAT.SERVICES, ORG: CAT.ORG, AUTHORITIES: CAT.AUTHORITIES, DOCS: [] };
+export const DEFAULTS = { ...DATA, CATALOG: CAT.SERVICES, ORG: CAT.ORG, AUTHORITIES: CAT.AUTHORITIES, DOCS: [], DOCTORS: CAT.DOCTORS };
 /** Тексты разделов по умолчанию: { ключ: { kick, h, p } }. */
 export function textDefaults() { renderLive({}); return JSON.parse(JSON.stringify(SEEN)); }
 

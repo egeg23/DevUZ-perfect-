@@ -224,6 +224,17 @@ export function normalize(key, value) {
 
 /* Правки из базы → данные для renderLive. Все строки экранируются здесь:
    gen.mjs вставляет их в разметку как есть. */
+/* Врачи макета (data.mjs) до 16.11.2026. Сохранённый список только из них —
+   не правка клиники, а прежние врачи по умолчанию (владелец, 16.11.2026:
+   «врачи на сайте не актуальны»): на сайте и в админке — врачи catalog.mjs. */
+const OLD_DOCTORS = new Set(["Реутов Евгений Александрович", "Савин Тимур Николаевич"]);
+export function dropOldDoctors(edits = {}) {
+  const list = edits.doctors;
+  if (!Array.isArray(list) || !list.length || !list.every((d) => OLD_DOCTORS.has(String(d?.name ?? "").trim()))) return edits;
+  const { doctors, ...rest } = edits;
+  return rest;
+}
+
 export function siteOverrides(edits = {}, defaults, extra = {}) {
   const v = (k) => edits[k] ?? defaults[k];
   const e = (s) => esc(s ?? "");

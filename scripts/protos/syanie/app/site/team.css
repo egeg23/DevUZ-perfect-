@@ -1,0 +1,99 @@
+/* «Наши врачи» — ряд врачей в полный рост, как выбор героя (gen.mjs,
+   teamBlock; движение — team.js). Владелец, 16.11.2026. Только рабочий сайт.
+   Движется только transform и opacity: врач выходит из строя (--tx, --ty,
+   --sc у .tm-g), разворачивается (.tm-turn сжимает .tm-z по ширине, на
+   середине кадр лицом меняется на кадр спиной), шагает (.tm-walk качает
+   кадры). При «меньше движения» и в версии для слабовидящих — без шагов. */
+.tm{position:relative;overflow:hidden;padding:56px 0 0;background:radial-gradient(90% 60% at 50% 96%,rgb(var(--onyx-rgb) / .12),transparent 62%),radial-gradient(60% 50% at 50% 30%,rgb(var(--frost-rgb) / .06),transparent 70%),var(--ink)}
+.tm-h{position:relative;z-index:3;text-align:center}
+.tm-h .pg-cr{justify-content:center;display:flex}
+.tm-h h1,.tm-h h2{font:400 clamp(36px,6vw,68px)/1.02 var(--f-d);margin:.18em 0 .22em;letter-spacing:-.01em}
+.tm-tip{display:inline-flex;gap:8px;align-items:center;margin:0;color:var(--mute-d);font-size:15px}
+.tm-tip .ic{color:var(--onyx);transform:rotate(90deg);animation:tm-nod 1.8s var(--ease2) infinite}
+@keyframes tm-nod{50%{transform:rotate(90deg) translateX(5px)}}
+.tm-sg{--sh:clamp(480px,66vh,680px);--fh:calc(var(--sh) * .7);position:relative;height:var(--sh);max-width:1280px;margin:0 auto}
+.tm-fl{position:absolute;left:50%;bottom:4%;width:min(1100px,100%);height:38%;transform:translateX(-50%);background:radial-gradient(50% 32% at 50% 78%,rgb(var(--frost-rgb) / .16),transparent 72%);pointer-events:none}
+.tm-gh{position:absolute;left:0;width:50%;top:14%;text-align:center;white-space:nowrap;font:400 var(--gs,160px)/1 var(--f-d);color:transparent;-webkit-text-stroke:1px rgb(var(--paper-rgb) / .14);opacity:0;transform:translateY(24px);transition:opacity .5s var(--ease),transform .7s var(--ease);pointer-events:none}
+.tm-on .tm-gh{opacity:1;transform:none}
+.tm-r{list-style:none;margin:0;padding:0;position:absolute;left:0;right:0;bottom:15%;display:flex;justify-content:center;align-items:flex-end;gap:clamp(6px,2.4vw,40px)}
+.tm-s{position:relative;flex:none;z-index:1;opacity:0;transform:translateY(18px);transition:opacity .6s var(--ease) var(--d),transform .8s var(--ease) var(--d)}
+.tm-in .tm-s,.tm:not(.tm-js) .tm-s{opacity:1;transform:none}
+.tm-d{position:relative;display:block;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:12px}
+.tm-g{position:relative;display:block;height:calc(var(--fh) * var(--k));aspect-ratio:var(--ar);transform-origin:50% 100%;transform:translate(var(--tx,0px),var(--ty,0px)) scale(var(--sc,1));transition:transform .9s var(--ease2),opacity .5s var(--ease)}
+.tm-g::before{content:"";position:absolute;left:4%;right:4%;bottom:-3%;height:7%;border-radius:50%;background:radial-gradient(closest-side,rgb(0 0 0 / .55),transparent);pointer-events:none}
+.tm-z{position:absolute;inset:0;display:block}
+.tm-z img{position:absolute;inset:0;width:100%;height:100%;max-width:none;object-fit:contain;object-position:50% 100%;transition:opacity .12s linear}
+.tm-k{opacity:0}
+.tm-back .tm-f{opacity:0}.tm-back .tm-k{opacity:1}
+.tm-ph{position:absolute;inset:0;display:block;border-radius:999px 999px 18px 18px;overflow:hidden;background:var(--ink2)}
+.tm-ph img,.tm-ph .dr-noph{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.tm-c{position:absolute;left:50%;top:100%;margin-top:14px;width:max-content;max-width:150px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px;transition:opacity .4s var(--ease)}
+.tm-c b{font:700 15px/1.2 var(--f-t)}
+.tm-c small{color:var(--mute-d);font-size:12px;line-height:1.3}
+@media (hover:hover){.tm:not(.tm-on) .tm-d:hover .tm-g{--sc:1.035}}
+.tm-d:focus-visible{outline-offset:6px}
+.tm-on .tm-s:not(.tm-sel) .tm-g,.tm-on .tm-s:not(.tm-sel) .tm-c{opacity:.18}
+.tm-on .tm-s:not(.tm-sel){z-index:0}
+.tm-sel{z-index:4}
+.tm-sel .tm-c{opacity:0}
+.tm-walk .tm-z img{animation:tm-step .42s ease-in-out infinite alternate}
+@keyframes tm-step{from{transform:translateY(0) rotate(-.7deg)}to{transform:translateY(-1.4%) rotate(.7deg)}}
+.tm-turn .tm-z{animation:tm-turn .44s var(--ease2)}
+@keyframes tm-turn{50%{transform:scaleX(.05)}}
+/* Карточка врача: справа, остальные в тени. */
+.tm-i{position:absolute;z-index:5;right:max(var(--gut),3%);top:50%;width:min(520px,46%);max-height:92%;overflow:auto;padding:22px 24px;border-radius:22px;background:rgb(var(--ink-rgb) / .62);box-shadow:0 0 0 1px var(--line-d);transform:translate(28px,-50%);opacity:0;transition:opacity .45s var(--ease),transform .6s var(--ease);scrollbar-width:thin}
+.tm-i.on{opacity:1;transform:translate(0,-50%)}
+.tm-i h3{font:400 clamp(26px,3.3vw,46px)/1.04 var(--f-d);margin:.22em 0 .55em;outline:none}
+.tm-l{display:block;font:700 11px/1.3 var(--f-t);letter-spacing:.16em;text-transform:uppercase;color:var(--mute-d)}
+.tm-st{display:grid;grid-template-columns:1fr auto;gap:8px 14px;align-items:end}
+.tm-st b{font:700 20px/1 var(--f-t);color:var(--onyx)}
+.tm-bar{grid-column:1 / -1;display:grid;grid-template-columns:repeat(10,1fr);gap:4px;height:10px}
+.tm-bar i{border-radius:2px;background:rgb(var(--paper-rgb) / .1);transform-origin:0 50%}
+.tm-bar i.on{background:linear-gradient(90deg,var(--onyx),var(--onyx2))}
+.tm-i.on .tm-bar i.on{animation:tm-fill .38s var(--ease) both;animation-delay:calc(.2s + var(--j) * 60ms)}
+@keyframes tm-fill{from{transform:scaleX(0)}}
+.tm-x{list-style:none;margin:14px 0 0;padding:0;color:var(--mute-d)}
+.tm-x li+li{margin-top:4px}
+.tm-dr{margin-top:20px}
+.tm-dr p{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 0}
+.tm-dr a{padding:7px 13px;border:1px solid var(--line-d);border-radius:999px;text-decoration:none;font-size:14px;transition:border-color .2s,color .2s}
+.tm-dr a:hover{border-color:var(--onyx);color:var(--onyx)}
+.tm-e{margin:14px 0 0;color:var(--mute-d);font-size:14px}
+.tm-b{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+.tm-esc{margin:14px 0 0;color:var(--mute-d);font-size:13px}
+@media (max-width:759px){
+  .tm{padding-top:40px}
+  .tm-sg{--sh:480px;--fh:300px}
+  .tm-r{bottom:19%;gap:4px}
+  .tm-c{max-width:92px;margin-top:10px}
+  .tm-c b{font-size:12px}
+  .tm-c small{font-size:10.5px}
+  .tm-i{left:43%;right:10px;width:auto;top:2%;max-height:96%;padding:12px 12px 14px;border-radius:16px;transform:translate(18px,0)}
+  .tm-i.on{transform:none}
+  .tm-i h3{font-size:21px;margin:.2em 0 .5em}
+  .tm-st b{font-size:16px}
+  .tm-dr{margin-top:14px}
+  .tm-dr a{padding:6px 10px;font-size:12.5px}
+  .tm-e{font-size:12.5px}
+  .tm-b{margin-top:16px}
+  .tm-b .btn{width:100%;justify-content:center;padding-left:12px;padding-right:12px;font-size:14px}
+  .tm-esc{font-size:11.5px}
+  .tm-gh{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  .tm-g,.tm-i,.tm-s,.tm-gh{transition-duration:.01s!important;transition-delay:0s!important}
+  .tm-walk .tm-z img,.tm-turn .tm-z,.tm-i.on .tm-bar i.on,.tm-tip .ic{animation:none!important}
+}
+html.vi .tm-g,html.vi .tm-i,html.vi .tm-s,html.vi .tm-gh{transition-duration:.01s!important;transition-delay:0s!important}
+html.vi .tm-walk .tm-z img,html.vi .tm-turn .tm-z,html.vi .tm-tip .ic{animation:none!important}
+html.vi .tm-gh{display:none}
+/* Версия для слабовидящих: без сцены — врачи рядом, под ними все карточки открыты. */
+html.vi .tm-sg{height:auto;padding:24px 0 40px}
+html.vi .tm-fl{display:none}
+html.vi .tm-r{position:static;flex-wrap:wrap;gap:28px 16px;padding:0 var(--gut)}
+html.vi .tm-s{opacity:1;transform:none}
+html.vi .tm-g{height:calc(220px * var(--k))}
+html.vi .tm-c{position:static;transform:none;margin:10px auto 0;max-width:none}
+html.vi .tm-d{cursor:default}
+html.vi .tm-i,html.vi .tm-i[hidden]{display:block;position:static;width:auto;max-height:none;margin:24px var(--gut) 0;opacity:1;transform:none}
+html.vi .tm-esc,html.vi .tm-tip{display:none}
