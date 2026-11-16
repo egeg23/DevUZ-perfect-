@@ -5,15 +5,16 @@
 # и печатает только статус, код и текст ошибки Яндекса и первые фразы.
 # Сам ключ в публичный журнал не попадает. Сайт и сервер не меняет.
 # «landings» — сверка запросов шести страниц услуг (scripts/seo/wordstat-landings.mjs).
+# «tomsk» — запросы страниц сайта клиники «Сияние Севера» по Томску (регион 67), тот же скрипт.
 name: Вордстат — проверить ключ
 
 on:
   workflow_dispatch:
     inputs:
       what:
-        description: "Что проверить: key — ключ, landings — запросы страниц услуг"
+        description: "Что проверить: key — ключ, landings — запросы страниц услуг, tomsk — запросы сайта клиники по Томску"
         type: choice
-        options: [key, landings]
+        options: [key, landings, tomsk]
         default: key
 
 permissions:
@@ -36,11 +37,13 @@ jobs:
             set -uo pipefail
             cd "${{ secrets.VPS_APP_DIR || '/opt/devuz' }}"
             # Скрипт — из свежего main во временный файл, рабочую копию не трогаем.
+            arg=""
             case "${{ inputs.what || 'key' }}" in
               landings) file=wordstat-landings.mjs ;;
+              tomsk) file=wordstat-landings.mjs; arg=tomsk ;;
               *) file=wordstat-check.mjs ;;
             esac
             git fetch -q --depth 1 origin main && git show "origin/main:scripts/seo/$file" > "/tmp/$file" || exit 1
             set -a; . ./.env; set +a
             export NODE_OPTIONS=--use-env-proxy
-            node --import ./tests/alias-hook.mjs "/tmp/$file"
+            node --import ./tests/alias-hook.mjs "/tmp/$file" $arg

@@ -11,6 +11,12 @@
 // страницы и соседние формулировки на русском, узбекском (латиница и
 // кириллица) и английском: сколько раз их набирали за 30 дней и какие фразы
 // с ними ищут чаще всего. Ключ не печатается: журнал задачи публичный.
+//
+// Второй набор — «tomsk» (аргумент скрипта): страницы сайта клиники «Сияние
+// Севера», регион Вордстата 67 — Томск. Владелец, 16.11.2026: «проработай СЕО
+// запросы, собери по Томску через вордстат наш, топовые запросы и адаптируй
+// вау СЕО КАЖДОЙ СТРАНИЦЫ». Слова города во фразе нет: регион уже Томск, а
+// «томск» в фразе оставил бы только запросы, где город набран словом.
 import { appSecret } from "@/lib/secrets";
 import { WORDSTAT_UZ, wordstatPhrases, wordstatRequest } from "@/lib/seo/keywords";
 
@@ -45,6 +51,57 @@ const PAGES = {
   ],
 };
 
+/* Страницы сайта клиники (scripts/protos/syanie/pages.mjs) — регион 67, Томск. */
+const TOMSK = 67;
+const TOMSK_PAGES = {
+  "главная (All-on-6, All-on-4)": [
+    "all on 6", "all on 4", "имплантация all on 6", "имплантация all on 4", "зубы за один день",
+    "несъемный протез на имплантах", "протез на имплантах", "имплантация при полном отсутствии зубов",
+  ],
+  "implantatsiya-zubov": [
+    "имплантация зубов", "имплант зуба", "установка импланта", "одномоментная имплантация",
+    "стоимость имплантации", "имплантация под ключ", "костная пластика", "синус лифтинг",
+  ],
+  "protezirovanie-zubov": [
+    "протезирование зубов", "коронка на зуб", "коронка из циркония", "металлокерамика",
+    "коронка на имплант", "съемный протез", "бюгельный протез", "мост на зубы",
+  ],
+  "khirurgiya": [
+    "удаление зуба", "удаление зуба мудрости", "киста зуба", "резекция верхушки корня", "хирург стоматолог",
+  ],
+  "esteticheskaya-stomatologiya": [
+    "виниры", "отбеливание зубов", "художественная реставрация зубов", "эстетическая стоматология", "люминиры",
+  ],
+  "lechenie-zubov": [
+    "лечение зубов", "лечение кариеса", "лечение каналов", "пульпит", "пломба на зуб", "лечение зубов под микроскопом",
+  ],
+  "professionalnaya-gigiena": [
+    "чистка зубов", "профессиональная чистка зубов", "air flow", "удаление зубного камня", "гигиена полости рта",
+  ],
+  "diagnostika-zubov": [
+    "кт зубов", "кт челюсти", "ортопантомограмма", "снимок зуба", "панорамный снимок зубов",
+  ],
+  "ceny, akcii": [
+    "стоматология цены", "прайс стоматология", "стоматология акции", "бесплатная консультация стоматолога",
+  ],
+  "vrachi": [
+    "стоматолог", "стоматолог ортопед", "имплантолог", "хороший стоматолог",
+  ],
+  "o-klinike, otzyvy, kontakty": [
+    "стоматология", "стоматологическая клиника", "стоматология отзывы", "сияние севера",
+  ],
+};
+const SETS = {
+  landings: { pages: PAGES, region: WORDSTAT_UZ, top: 8 },
+  tomsk: { pages: TOMSK_PAGES, region: TOMSK, top: 12 },
+};
+const set = SETS[process.argv[2] || "landings"];
+if (!set) {
+  console.log(`Набор «${process.argv[2]}» не знаю: ${Object.keys(SETS).join(", ")}.`);
+  process.exit(1);
+}
+console.log(`Набор «${process.argv[2] || "landings"}», регион Вордстата ${set.region}.`);
+
 const token = await appSecret("WORDSTAT_TOKEN");
 if (!token) {
   console.log("Ключа нет: WORDSTAT_TOKEN пуст и в .env, и в хранилище.");
@@ -54,10 +111,10 @@ if (!token) {
 const pause = (ms) => new Promise((r) => setTimeout(r, ms));
 let asked = 0;
 let failed = 0;
-for (const [page, phrases] of Object.entries(PAGES)) {
+for (const [page, phrases] of Object.entries(set.pages)) {
   console.log(`\n=== ${page}`);
   for (const phrase of phrases) {
-    const { url, init } = wordstatRequest(token, phrase, WORDSTAT_UZ);
+    const { url, init } = wordstatRequest(token, phrase, set.region);
     asked++;
     try {
       const response = await fetch(url, { ...init, signal: AbortSignal.timeout(20_000) });
@@ -73,7 +130,7 @@ for (const [page, phrases] of Object.entries(PAGES)) {
         const list = wordstatPhrases(body);
         const total = Number(body?.totalCount ?? list[0]?.value ?? 0) || 0;
         console.log(`«${phrase}»: ${total} в месяц`);
-        for (const p of list.slice(1, 9)) console.log(`     ${p.phrase} — ${p.value}`);
+        for (const p of list.slice(1, set.top + 1)) console.log(`     ${p.phrase} — ${p.value}`);
       }
     } catch (error) {
       failed++;
