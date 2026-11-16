@@ -2,6 +2,8 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import * as DATA from "./data.mjs";
 import { BASE, ADDONS, ALL, OFFER_HOURS, CUR } from "./plan.mjs";
 import { pathToFileURL } from "node:url";
+import * as CAT from "./catalog.mjs";
+import { makePages } from "./pages.mjs";
 
 /*
  * Макет сайта стоматологии «Сияние Севера» (Томск, ул. Белинского, 63), одна
@@ -85,9 +87,13 @@ const I = {
   wa: `<path d="M4.5 19.5 5.6 16A8 8 0 1 1 8.4 18.6z" ${S}/><path d="M9.2 8.6c.3 2.9 2.4 5.2 5.4 5.9l1.2-1.3-1.8-1-1 .8c-1-.4-1.9-1.3-2.4-2.4l.8-1-1-1.8z" ${S}/>`,
   spark: `<path d="M12 3.5c.8 4.2 2.3 5.7 6.5 6.5-4.2.8-5.7 2.3-6.5 6.5-.8-4.2-2.3-5.7-6.5-6.5 4.2-.8 5.7-2.3 6.5-6.5z" ${S}/>`,
   copy: `<rect x="8" y="8" width="12" height="12" rx="2" ${S}/><path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8" ${S}/>`,
+  eye: `<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" ${S}/><circle cx="12" cy="12" r="3" ${S}/>`,
+  menu: `<path d="M4 7h16M4 12h16M4 17h16" ${S}/>`,
 };
+/* Значки только рабочего сайта: в спрайт макета не идут, он тот же байт в байт. */
+const LIVE_ICONS = new Set(["wa", "eye", "menu"]);
 const sprite = () => `<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>${Object.entries(I)
-  .filter(([k]) => PROD || k !== "wa")
+  .filter(([k]) => PROD || !LIVE_ICONS.has(k))
   .map(([k, v]) => `<symbol id="i-${k}" viewBox="0 0 24 24" stroke="currentColor">${v}</symbol>`)
   .join("")}</defs></svg>`;
 const ic = (k, c = "") => `<svg class="ic${c ? " " + c : ""}" aria-hidden="true"><use href="#i-${k}"/></svg>`;
@@ -105,7 +111,10 @@ const msgLinks = () => [
 ].filter(Boolean);
 const sms = (body) => `sms:${B.phoneRaw}?&body=${encodeURIComponent(body)}`;
 const SMS_HI = "Здравствуйте! Хочу записаться на бесплатную консультацию по All-on-6.";
-const CONSENT = `Отправляя, вы соглашаетесь на обработку имени и телефона для записи: <a href="/privacy">как мы храним данные</a>.`;
+/* 152-ФЗ: согласие на обработку — отдельной галочкой, не отмеченной заранее,
+   со ссылкой на текст согласия (отдельный документ /soglasie). Без неё заявка
+   не уходит: проверяют store-live.js и сервер (/api/lead). */
+const consentBox = (id) => `<label class="pd-ok"><input type="checkbox" id="${id}"><span>Даю <a href="/soglasie" target="_blank" rel="noopener">согласие на обработку персональных данных</a>. <a href="/privacy" target="_blank" rel="noopener">Как мы обрабатываем данные</a></span></label>`;
 
 function headTags(title, desc, path = "/") {
   return `<meta charset="utf-8">
@@ -145,7 +154,9 @@ function seoTags() {
   const s = LIVE.seo || {}, out = [];
   if (s.yandex) out.push(`<meta name="yandex-verification" content="${s.yandex}">`);
   if (s.google) out.push(`<meta name="google-site-verification" content="${s.google}">`);
-  if (s.metrika) out.push(`<script>(function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};m[i].l=1*new Date();k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})(window,document,"script","https://mc.yandex.ru/metrika/tag.js","ym");ym(${s.metrika},"init",{clickmap:true,trackLinks:true,accurateTrackBounce:true,webvisor:false});</script><noscript><div><img src="https://mc.yandex.ru/watch/${s.metrika}" style="position:absolute;left:-9999px" alt=""></div></noscript>`);
+  /* Метрика ставит cookie, поэтому включается только после «Разрешить» в
+     окне о cookie (152-ФЗ): номер счётчика идёт в данные страницы, сам
+     счётчик грузит live-pages.js. */
   return out.length ? "\n" + out.join("\n") : "";
 }
 
@@ -237,7 +248,7 @@ ${D.VS.map((r) => `<div class="vs-row"><span>${r.k}</span><b>${r.six}</b><em>${r
 }
 
 /* ── Цены ─────────────────────────────────────────────────────────── */
-function priceBlock() {
+function priceBlock(o = {}) {
   const gift = (g) => `<li><span>${ic(g.sale ? "card" : "gift")}${g.t}</span><span class="gf-p"><s>${rub(g.was)}</s><b>${g.sale ? "в подарок" : "0 ₽"}</b></span></li>`;
   return `<section class="price" id="ceny">
 <picture class="price-bg" aria-hidden="true"><source media="(max-aspect-ratio: 4/5)" srcset="${IMG}/bg-onyx-9.webp"><img src="${IMG}/bg-onyx-16.webp" alt="" width="1600" height="900" loading="lazy" decoding="async"></picture>
@@ -247,7 +258,15 @@ ${tx("price", "Цены", "Сколько стоит All-on-6", "Цена на �
 ${D.PRICES.map((p, i) => `<article class="pr rv${p.star ? " pr-star" : ""}" style="--d:${i * 90}ms"><span class="kick">${p.star ? "Чаще выбирают" : "Методика"}</span><h3>${p.t}</h3><p>${p.d}</p><b class="pr-n" data-n="${p.price}">${rub(p.price)}</b><a class="btn ${p.star ? "btn-onyx" : "btn-line"}" href="#kviz">${ic("arrow")}<span>Рассчитать свой случай</span></a></article>`).join("")}
 <article class="pr pr-gift rv" style="--d:180ms"><span class="kick">Подарки к лечению</span><h3>Выгода ${rub(D.BENEFIT)}</h3><ul class="gf">${D.GIFTS.map(gift).join("")}</ul><p class="pr-inst">${ic("card")}<span><b>Рассрочка 0%</b> от клиники, без первого взноса</span></p></article>
 </div>
-${(D.SERVICES || []).length ? `<div class="sv-list rv"><h3>Услуги и цены</h3><ul>${D.SERVICES.map((x) => `<li><span>${x.t}</span><b>${x.p}</b></li>`).join("")}</ul></div>\n` : ""}<p class="warn warn-in" role="note">${B.warn.toUpperCase()}</p>
+${PROD ? (o.all === false ? "" : `<p class="pr-all"><a class="btn btn-line" href="/ceny">${ic("arrow")}<span>Все цены клиники</span></a></p>\n`) : (D.SERVICES || []).length ? `<div class="sv-list rv"><h3>Услуги и цены</h3><ul>${D.SERVICES.map((x) => `<li><span>${x.t}</span><b>${x.p}</b></li>`).join("")}</ul></div>\n` : ""}<p class="warn warn-in" role="note">${B.warn.toUpperCase()}</p>
+</div></section>`;
+}
+
+/* ── Услуги клиники (рабочий сайт): разделы со ссылками на свои страницы ── */
+function servicesBlock() {
+  return `<section class="uk" id="uslugi-kliniki"><div class="wrap">
+${tx("uslugi", "Услуги", "Не только All-on-6", "Клиника лечит, протезирует и удаляет зубы, ставит виниры и делает чистку. У каждого направления своя страница с ценами.")}
+<div class="uk-grid">${CAT.CATEGORIES.map((k, i) => `<a class="uk-c rv" style="--d:${(i % 4) * 70}ms" href="/${k.slug}"><b>${k.t}</b><span>${k.lead}</span>${ic("arrow")}</a>`).join("")}<a class="uk-c uk-all rv" style="--d:210ms" href="/ceny"><b>Цены на все услуги</b><span>Прейскурант по разделам, рассрочка и налоговый вычет.</span>${ic("arrow")}</a></div>
 </div></section>`;
 }
 
@@ -267,9 +286,9 @@ ${steps}
 <p class="qz-p">Ориентир по цене клиники: от <b>${rub(D.PRICES[0].price)}</b>, «под ключ» с протезом <b>${rub(D.PRICES[1].price)}</b>. Подарки: КТ и удаление зубов бесплатно, персональная скидка ${rub(80000)}.</p>
 <label class="qz-in"><span>Как к вам обращаться</span><input type="text" id="qz-name" autocomplete="given-name" placeholder="Имя"></label>
 ${PROD ? `<label class="qz-in"><span>Телефон</span><input type="tel" id="qz-phone" autocomplete="tel" inputmode="tel" placeholder="+7 900 000-00-00" required></label>
+${consentBox("qz-ok")}
 <p class="lv-err" id="qz-err" role="alert"></p>
-<div class="qz-go"><button type="button" class="btn btn-onyx" id="qz-sms">${ic("msg")}<span>Отправить расчёт в клинику</span></button><a class="btn btn-line" href="${tel}">${ic("phone")}<span>Позвонить</span></a></div>
-<p class="qz-note">${CONSENT}</p>` : `<div class="qz-go"><a class="btn btn-onyx" id="qz-sms" href="${sms(SMS_HI)}">${ic("msg")}<span>Отправить расчёт в клинику</span></a><a class="btn btn-line" href="${tel}">${ic("phone")}<span>Позвонить</span></a></div>
+<div class="qz-go"><button type="button" class="btn btn-onyx" id="qz-sms">${ic("msg")}<span>Отправить расчёт в клинику</span></button><a class="btn btn-line" href="${tel}">${ic("phone")}<span>Позвонить</span></a></div>` : `<div class="qz-go"><a class="btn btn-onyx" id="qz-sms" href="${sms(SMS_HI)}">${ic("msg")}<span>Отправить расчёт в клинику</span></a><a class="btn btn-line" href="${tel}">${ic("phone")}<span>Позвонить</span></a></div>
 <p class="qz-note">Сообщение откроется у вас в телефоне с готовым текстом, отправляете вы сами. На рабочем сайте расчёт придёт администратору в CRM и мессенджер.</p>`}
 </div>
 <div class="qz-nav"><button type="button" class="btn btn-ghost" id="qz-back" disabled>Назад</button><span class="qz-hint" id="qz-hint">Выберите ответ</span></div>
@@ -412,7 +431,7 @@ ${ADDONS.map(row).join("")}
 
 /* ── Запись в два нажатия: шторка ─────────────────────────────────── */
 /* Услуги для записи: консультация, варианты All-on-6 и перечень клиники из админки. */
-const services = () => [...new Set(["Консультация и КТ", ...D.PRICES.map((p) => `All-on-6: ${p.t.replace(/^Методика All-on-6$/, "методика").toLowerCase()}`), ...(D.SERVICES || []).map((x) => x.t)])].slice(0, 12);
+const services = () => [...new Set(["Консультация и КТ", ...D.PRICES.map((p) => `All-on-6: ${p.t.replace(/^Методика All-on-6$/, "методика").toLowerCase()}`), ...CAT.CATEGORIES.map((k) => k.nav)])].slice(0, 12);
 function bookSheet() {
   const days = ["Сегодня", "Завтра", "На этой неделе"], parts = ["Утром", "Днём", "Вечером"];
   return `<div class="sheet" id="zapis" role="dialog" aria-modal="true" aria-labelledby="bk-h" hidden>
@@ -425,10 +444,11 @@ ${PROD ? `<p class="bk-l">Услуга</p>
 <div class="bk-g" role="radiogroup" aria-label="День">${days.map((d, i) => `<button type="button" class="chip" data-day="${d}" aria-pressed="${i === 1}">${d}</button>`).join("")}</div>
 <div class="bk-g" role="radiogroup" aria-label="Время">${parts.map((d, i) => `<button type="button" class="chip" data-part="${d}" aria-pressed="${i === 2}">${d}</button>`).join("")}</div>
 ${PROD ? `<div class="bk-f"><label class="qz-in"><span>Имя</span><input type="text" id="bk-name" autocomplete="given-name" placeholder="Как к вам обращаться"></label><label class="qz-in"><span>Телефон</span><input type="tel" id="bk-phone" autocomplete="tel" inputmode="tel" placeholder="+7 900 000-00-00" required></label></div>
+${consentBox("bk-ok")}
 <p class="lv-err" id="bk-err" role="alert"></p>
 <button type="button" class="btn btn-onyx bk-go" id="bk-go">${ic("msg")}<span>Записаться: завтра вечером</span></button>
 <a class="btn btn-line" href="${tel}">${ic("phone")}<span>Или позвоните: ${B.phone}</span></a>
-<p class="qz-note">Администратор перезвонит и подтвердит время. Клиника работает ${B.hoursShort}. ${CONSENT}</p>` : `<a class="btn btn-onyx bk-go" id="bk-go" href="${sms(SMS_HI)}">${ic("msg")}<span>Записаться: завтра вечером</span></a>
+<p class="qz-note">Администратор перезвонит и подтвердит время. Клиника работает ${B.hoursShort}.</p>` : `<a class="btn btn-onyx bk-go" id="bk-go" href="${sms(SMS_HI)}">${ic("msg")}<span>Записаться: завтра вечером</span></a>
 <a class="btn btn-line" href="${tel}">${ic("phone")}<span>Или позвоните: ${B.phone}</span></a>
 <p class="qz-note">Сообщение откроется с готовым текстом, отправляете вы. Клиника работает ${B.hoursShort}.</p>`}
 </div></div>`;
@@ -479,7 +499,7 @@ function siteData() {
     quiz: D.QUIZ.map((q) => q.q),
     /* Чат на сайте (chat.js): отвечает только фактами клиники, без модели. */
     chat: { faq: D.FAQ, prices: D.PRICES.map((p) => ({ t: p.t, d: p.d, p: p.price })), gifts: D.GIFTS, benefit: D.BENEFIT, guar: D.GUARANTEE.map((g) => g.t + ": " + g.d.toLowerCase()), docs: D.DOCTORS.map((x) => ({ n: x.name, r: x.role, f: x.facts[0] })), phone: B.phone, addr: B.addr, near: B.near, hours: B.hoursShort, parking: B.parking, open: B.open, close: B.close, warn: B.warn, perks: D.PERKS.map((x) => x.t + ": " + x.d.toLowerCase()) },
-    ...(PROD ? { live: true } : {}),
+    ...(PROD ? { live: true, pdv: CAT.PD_VERSION, metrika: LIVE.seo?.metrika || "", cats: Object.fromEntries(CAT.CATEGORIES.map((k) => [k.slug, k.nav])) } : {}),
     offer: PROD ? undefined : { cur: CUR, items: ADDONS.map((a) => ({ id: a.id, t: a.ru.t, p: a.price })), base: BASE.promo, baseName: BASE.ru.t, hours: OFFER_HOURS, head: "Сайт клиники «Сияние Севера», состав:", totalW: "Итого", copied: "Скопировано", ended: "Акция закончилась, цена обычная" },
   };
 }
@@ -488,8 +508,8 @@ function siteData() {
    порядок, скрытые и свои блоки. LAYOUT — список из site-content.mjs, все
    строки в нём уже экранированы. Без LAYOUT (макет, сайт без правок) —
    прежний порядок. Первый экран с пролётом всегда первым. ─────────────── */
-const BLOCK_FN = { vs: vsBlock, price: priceBlock, quiz: quizBlock, docs: doctorsBlock, trust: trustBlock, perks: perksBlock, reviews: reviewsBlock, rooms: roomsBlock, faq: faqBlock, contacts: contactsBlock };
-const BLOCK_AT = { vs: "all-on-6", price: "ceny", quiz: "kviz", docs: "vrachi", trust: "garantii", perks: "privilegii", reviews: "otzyvy", rooms: "klinika", faq: "voprosy", contacts: "kontakty" };
+const BLOCK_FN = { vs: vsBlock, price: priceBlock, uslugi: servicesBlock, quiz: quizBlock, docs: doctorsBlock, trust: trustBlock, perks: perksBlock, reviews: reviewsBlock, rooms: roomsBlock, faq: faqBlock, contacts: contactsBlock };
+const BLOCK_AT = { vs: "all-on-6", price: "ceny", uslugi: "uslugi-kliniki", quiz: "kviz", docs: "vrachi", trust: "garantii", perks: "privilegii", reviews: "otzyvy", rooms: "klinika", faq: "voprosy", contacts: "kontakty" };
 const BLOCK_NAV = { vs: "All-on-6", price: "Цены", docs: "Врачи", faq: "Вопросы", contacts: "Контакты" };
 const shown = (id) => !LAYOUT || LAYOUT.some((b) => b.id === id && b.on);
 /* Текст своего блока: строка — абзац, строки с «- » подряд — список. */
@@ -516,7 +536,7 @@ function customBlock(b) {
 }
 function mainBlocks() {
   if (!PROD) return [storyBlock(), vsBlock(), priceBlock(), quizBlock(), doctorsBlock(), trustBlock(), perksBlock(), reviewsBlock(), roomsBlock(), nowBlock(), bestBlock(), faqBlock(), contactsBlock(), offerBlock()];
-  if (!LAYOUT) return [storyBlock(), vsBlock(), priceBlock(), quizBlock(), doctorsBlock(), trustBlock(), perksBlock(), reviewsBlock(), roomsBlock(), faqBlock(), contactsBlock()];
+  if (!LAYOUT) return [storyBlock(), vsBlock(), priceBlock(), servicesBlock(), quizBlock(), doctorsBlock(), trustBlock(), perksBlock(), reviewsBlock(), roomsBlock(), faqBlock(), contactsBlock()];
   return [storyBlock(), ...LAYOUT.filter((b) => b.on).map((b) => (b.custom ? customBlock(b) : BLOCK_FN[b.id]()))];
 }
 /* Меню шапки идёт за блоками: скрытый блок пропадает из меню, свой блок
@@ -527,6 +547,7 @@ function navItems() {
 }
 
 function sitePage() {
+  if (PROD) return pageShell({ key: "index", title: "Все зубы на 6 имплантатах за 1 день · «Сияние Севера», Томск", desc: "Все зубы на 6 имплантатах за один день в Томске: All-on-6 в центре имплантации «Сияние Севера», ул. Белинского, 63. Цены, рассрочка 0%, врачи, гарантии, расчёт за минуту.", path: "/", main: mainBlocks().join("\n"), ld: ld(), home: true });
   const nav = navItems();
   return `<!doctype html>
 <html lang="ru">
@@ -569,57 +590,107 @@ ${bookSheet()}${PROD ? `\n<input type="text" name="website" tabindex="-1" autoco
 </html>`;
 }
 
-/* ── Рабочий сайт: страница о персональных данных и 404 ────────────── */
-function plainPage(title, desc, path, body) {
-  const root = /:root\{[^}]*\}/.exec(read("site.css"))[0];
+/* ── Рабочий сайт: каркас страницы ─────────────────────────────────── */
+/* Меню рабочего сайта — страницы (владелец, 16.11.2026: «Разведи на несколько
+   страниц»). Свой блок клиники с «пунктом в меню» встаёт туда ссылкой на блок
+   главной. Разделы услуг подсвечивают «Услуги». */
+const PAGE_NAV = [["/", "All-on-6", "index"], ["/uslugi", "Услуги", "uslugi"], ["/ceny", "Цены", "ceny"], ["/vrachi", "Врачи", "vrachi"], ["/akcii", "Акции", "akcii"], ["/o-klinike", "О клинике", "o-klinike"], ["/kontakty", "Контакты", "kontakty"]];
+function pageNav(key) {
+  const act = CAT.CATEGORIES.some((k) => k.slug === key) ? "uslugi" : key;
+  const own = (LAYOUT || []).filter((b) => b.on && b.custom && b.menu).map((b) => [`/#b-${b.id}`, b.menu, ""]);
+  return [...PAGE_NAV, ...own].slice(0, 9).map(([u, n, k]) => `<a href="${u}"${k && k === act ? ' aria-current="page"' : ""}>${n}</a>`).join("");
+}
+/* До отрисовки: js, «меньше движения» и версия для слабовидящих из памяти
+   браузера. Версия для слабовидящих — та же «спокойная» страница: без
+   пролёта, видео и сцен. */
+const HEAD_JS = `<script>(function(){var r=document.documentElement;r.classList.add('js');var calm=false;try{if(matchMedia('(prefers-reduced-motion: reduce)').matches)calm=true}catch(e){}try{var c=navigator.connection;if(c&&c.saveData)calm=true}catch(e){}try{var v=JSON.parse(localStorage.getItem('sy-vi')||'null');if(v&&v.on){r.classList.add('vi','vi-f'+(v.f||2),'vi-c'+(v.c||1));if(v.i===0)r.classList.add('vi-noimg');if(v.s)r.classList.add('vi-sp');calm=true}}catch(e){}if(calm)r.classList.add('calm');})()</script>`;
+/* Версия для слабовидящих (ГОСТ Р 52872-2019): размер шрифта, три цветовые
+   схемы, картинки, интервал. Панель видна, только когда версия включена. */
+const VI_BAR = `<div class="vi-bar" id="vi-bar" role="region" aria-label="Настройки версии для слабовидящих"><div class="wrap">
+<div class="vi-g" role="group" aria-label="Размер шрифта"><span>Шрифт</span><button type="button" data-vi="f1" aria-label="Обычный шрифт">А</button><button type="button" data-vi="f2" aria-label="Крупный шрифт">А+</button><button type="button" data-vi="f3" aria-label="Очень крупный шрифт">А++</button></div>
+<div class="vi-g" role="group" aria-label="Цвета"><span>Цвета</span><button type="button" data-vi="c1" class="vi-sw vi-sw1" aria-label="Чёрным по белому">Ц</button><button type="button" data-vi="c2" class="vi-sw vi-sw2" aria-label="Белым по чёрному">Ц</button><button type="button" data-vi="c3" class="vi-sw vi-sw3" aria-label="Тёмно-синим по голубому">Ц</button></div>
+<div class="vi-g" role="group" aria-label="Изображения"><span>Картинки</span><button type="button" data-vi="i1">Показать</button><button type="button" data-vi="i0">Скрыть</button></div>
+<div class="vi-g" role="group" aria-label="Интервал между буквами"><span>Интервал</span><button type="button" data-vi="s0">Обычный</button><button type="button" data-vi="s1">Большой</button></div>
+<button type="button" class="vi-off" data-vi="off">Обычная версия сайта</button>
+</div></div>`;
+
+/** Данные для pages.mjs: текущая сборка (правки клиники уже в D и B). */
+function pageCtx() {
+  return {
+    B, D, ORG: { ...CAT.ORG, ...(D.ORG || {}) }, AUTH: D.AUTHORITIES || CAT.AUTHORITIES, DOCS: D.DOCS || [], CATS: CAT.CATEGORIES, LIST: D.CATALOG || CAT.SERVICES,
+    PD_VERSION: CAT.PD_VERSION, IMG, tel, ic, esc, plain, rub, msgLinks, docPic, metrika: LIVE.seo?.metrika || "", site: "__SITE_URL__",
+    /* Тексты первого экрана страниц правятся в админке («Тексты разделов»), как разделы главной. */
+    txt: (key, kick, h, p = "") => { SEEN[key] = { kick, h, p }; const t = TX[key] || {}; return { kick: t.kick ?? kick, h: t.h ?? h, p: t.p ?? p }; },
+    blocks: { price: priceBlock, trust: trustBlock, perks: perksBlock, rooms: roomsBlock },
+  };
+}
+
+/** Страница рабочего сайта: шапка с меню, содержимое, подвал с документами, запись и чат. */
+function pageShell({ key, title, desc, path, main, ld: graph, home = false }) {
+  const O = { ...CAT.ORG, ...(D.ORG || {}) };
+  const cats = CAT.CATEGORIES.map((k) => `<li><a href="/${k.slug}">${k.t}</a></li>`).join("");
+  const ids = [O.inn && `ИНН ${O.inn}`, O.ogrn && `ОГРН ${O.ogrn}`].filter(Boolean).join(", ");
   return `<!doctype html>
 <html lang="ru">
 <head>
 ${headTags(title, desc, path)}
-<style>${root}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--text);font:17px/1.6 Geologica,system-ui,sans-serif}main{max-width:760px;margin:0 auto;padding:40px 16px 64px}h1{font:400 clamp(30px,6vw,44px)/1.1 "Noto Serif Display",Georgia,serif;margin:24px 0 8px}h2{font-size:19px;margin:32px 0 6px}p,li{color:var(--text)}small,.mu{color:var(--mute)}a{color:var(--acc-d)}.lg{display:inline-flex;align-items:center;gap:10px;color:var(--ink);text-decoration:none}.lg .mk{width:36px;height:36px}.lg-t b{display:block;font-size:17px}.lg-t small{font-size:12px}</style>
+${home ? `<link rel="preload" as="image" href="${IMG}/film-9.webp" media="(max-aspect-ratio: 4/5)">
+<link rel="preload" as="image" href="${IMG}/film-16.webp" media="(min-aspect-ratio: 4/5)">
+` : ""}${HEAD_JS}
+${graph ? `<script type="application/ld+json">${json(graph)}</script>\n` : ""}@@S@@
 </head>
-<body>
-<main>
-<a class="lg" href="/">${MARK}<span class="lg-t"><b>${B.name}</b><small>центр имплантации</small></span></a>
-${body}
+<body class="site${home ? "" : " sub"}" data-page="${key}">
+${VI_BAR}
+${sprite()}
+<a class="skip" href="#main">К содержанию</a>
+<header class="top" id="top"><div class="wrap">
+<a class="logo" href="/" aria-label="${B.name}, на главную">${logo()}</a>
+<nav class="nav" aria-label="Разделы сайта">${pageNav(key)}</nav>
+<div class="top-r"><button type="button" class="vi-btn" data-vi="on" aria-label="Версия для слабовидящих">${ic("eye")}</button><a class="top-ph" href="${tel}">${ic("phone")}<span>${B.phone}</span></a><a class="btn btn-sm btn-onyx" href="#zapis" data-book>Записаться</a><button type="button" class="burger" id="burger" aria-expanded="false" aria-controls="mnav" aria-label="Меню">${ic("menu")}</button></div>
+</div></header>
+<div class="mnav" id="mnav" hidden><div class="mnav-in">
+<button type="button" class="sh-x" data-mclose aria-label="Закрыть меню">${ic("x")}</button>
+<nav aria-label="Меню"><ul class="mnav-l">${PAGE_NAV.map(([u, n]) => `<li><a href="${u}">${n === "All-on-6" ? "All-on-6: все зубы за 1 день" : n}</a></li>`).join("")}<li><a href="/otzyvy">Отзывы</a></li></ul><p class="mnav-k">Услуги</p><ul class="mnav-s">${cats}</ul></nav>
+<div class="mnav-b"><a class="btn btn-onyx" href="#zapis" data-book>${ic("msg")}<span>Записаться</span></a><a class="btn btn-line" href="${tel}">${ic("phone")}<span>${B.phone}</span></a><button type="button" class="btn btn-line" data-vi="on">${ic("eye")}<span>Версия для слабовидящих</span></button></div>
+</div></div>
+<main id="main">
+${main}
 </main>
+<div class="warn-band" role="note"><div class="wrap"><p class="warn">${B.warn.toUpperCase()}</p><p class="lic">${B.legal} · ${B.license}</p></div></div>
+<footer class="foot"><div class="wrap">
+<div class="cols cols-4">
+<div>${logo("f-logo")}<p class="f-d">${B.what}. ${B.addr}. ${B.hours}.</p><ul class="f-c"><li>${ic("phone")}<a href="${tel}">${B.phone}</a></li><li>${ic("pin")}<a href="${B.route}">Маршрут в Яндекс Картах</a></li>${msgLinks().map(([u, n, k]) => `<li>${ic(k)}<a href="${u}" rel="noopener">${n}</a></li>`).join("")}</ul></div>
+<div><b>Услуги</b><ul><li><a href="/">All-on-6: все зубы за 1 день</a></li>${cats}</ul></div>
+<div><b>Пациентам</b><ul><li><a href="/ceny">Цены</a></li><li><a href="/akcii">Акции</a></li><li><a href="/vrachi">Врачи</a></li><li><a href="/otzyvy">Отзывы</a></li><li><a href="/o-klinike">О клинике</a></li><li><a href="/kontakty">Контакты</a></li>${shown("faq") ? `<li><a href="/#voprosy">Вопросы и ответы</a></li>` : ""}</ul></div>
+<div><b>Документы</b><ul><li><a href="/svedeniya">Сведения о медицинской организации</a></li><li><a href="/privacy">Политика обработки персональных данных</a></li><li><a href="/soglasie">Согласие на обработку персональных данных</a></li>${LIVE.seo?.metrika ? `<li><button type="button" class="f-btn" data-cookies>Настройки cookie</button></li>` : ""}<li><button type="button" class="f-btn" data-vi="on">Версия для слабовидящих</button></li></ul></div>
+</div>
+<div class="rights"><span>© ${new Date().getFullYear()} ${B.legal}${ids ? `. ${ids}` : ""}. Сайт носит информационный характер и не является публичной офертой.</span><a href="/privacy">Обработка персональных данных</a></div>
+</div></footer>
+<div class="dock" id="dock"><a class="btn btn-onyx" href="#zapis" data-book>${ic("msg")}<span>Записаться</span></a><a class="btn btn-call" href="${tel}" aria-label="Позвонить в клинику">${ic("phone")}</a></div>
+${bookSheet()}
+<input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" class="lv-hp">
+<script type="application/json" id="sy-site">${json(siteData())}</script>
+${home ? `<script src="${IMG}/gsap.min.js"></script>\n<script src="${IMG}/ScrollTrigger.min.js"></script>\n` : ""}@@J@@
 </body>
 </html>`;
-}
-
-function privacyPage() {
-  return plainPage(`Обработка персональных данных · «${B.name}», Томск`, `Как ${B.legal} хранит имя и телефон из записи на сайте.`, "/privacy", `<h1>Обработка персональных данных</h1>
-<p class="mu">Действует с ${new Date().toISOString().slice(0, 10).split("-").reverse().join(".")}</p>
-<h2>Кто обрабатывает</h2>
-<p>${B.legal}, ${B.addr}. Телефон: <a href="${tel}">${B.phone}</a>. ${B.license}.</p>
-<h2>Какие данные</h2>
-<p>Имя и телефон, которые вы пишете в записи на консультацию или в расчёте, ответы расчёта, сообщения в чате сайта. Если вы пишете клинике в Telegram, WhatsApp, Instagram или другой мессенджер, клиника видит ваше имя в нём, номер или ник и переписку.</p>
-<h2>Зачем</h2>
-<p>Перезвонить, записать на консультацию, ответить на вопрос, вести запись на лечение. Рекламных рассылок по этим данным клиника не делает.</p>
-<h2>Где хранятся и кому передаются</h2>
-<p>На сервере клиники. Заявка попадает в CRM клиники (amoCRM), а уведомление о ней сотрудникам клиники в рабочий Telegram. Доступ есть только у сотрудников клиники с личным входом. Третьим лицам данные не продаются и не передаются.</p>
-<h2>Сколько хранятся</h2>
-<p>Пока это нужно для записи и лечения, или до того, как вы отзовёте согласие.</p>
-<h2>Как отозвать согласие и удалить данные</h2>
-<p>Позвоните по номеру <a href="${tel}">${B.phone}</a> или напишите в чат на сайте. Данные удалим в течение 30 дней и сообщим об этом.</p>
-<h2>Что сайт хранит у вас в браузере</h2>
-<p>Номер вашей заявки, чтобы показать её статус, и ключ чата, чтобы показать ответ администратора.${LIVE.seo?.metrika ? " На сайте работает Яндекс Метрика (ООО «ЯНДЕКС»): она обезличенно считает посещения и действия на страницах и хранит свои cookie в браузере. Отключить её можно в настройках браузера, запретив cookie." : " Счётчиков посещаемости и рекламных меток на сайте нет."}</p>
-<p><a href="/">На главную</a></p>`);
 }
 
 const opt = (f) => (existsSync(DIR + f) ? read(f) : "");
 const readLive = (f) => readFileSync(LIVE_DIR + f, "utf8");
 
 /* Рабочий сайт: свои store и чат вместо демо; панель макета не нужна,
-   админка клиники лежит в app/admin. */
+   админка клиники лежит в app/admin. Страницы — главная и pages.mjs, у
+   каждой одинаковые стили и скрипт (запись, чат, меню, версия для
+   слабовидящих, окно о cookie). Ключ страницы — её адрес без «/». */
 function livePages() {
-  const S = `<style>${min(read("site.css") + read("chat.css") + readLive("live.css"))}</style>`;
-  const J = `<script>\n${strip(readLive("store-live.js") + read("site.js") + readLive("live-chat.js"))}</script>`;
-  return {
-    index: sitePage().split("@@S@@").join(S).split("@@J@@").join(J),
-    privacy: privacyPage(),
-    notFound: plainPage(`Страница не найдена · «${B.name}»`, "Такой страницы нет.", null, `<h1>Такой страницы нет</h1><p>Возможно, ссылка устарела. Всё о клинике и запись на консультацию: <a href="/">на главной</a>, или позвоните: <a href="${tel}">${B.phone}</a>.</p>`),
-  };
+  const S = `<style>${min(read("site.css") + read("chat.css") + readLive("live.css") + readLive("pages.css"))}</style>`;
+  const J = `<script>\n${strip(readLive("store-live.js") + read("site.js") + readLive("live-chat.js") + readLive("live-pages.js"))}</script>`;
+  const fill = (h) => h.split("@@S@@").join(S).split("@@J@@").join(J);
+  const out = { index: fill(sitePage()) };
+  for (const [key, pg] of Object.entries(makePages(pageCtx()))) out[key] = fill(pageShell({ key, ...pg }));
+  out.notFound = fill(pageShell({ key: "notFound", title: `Страница не найдена · «${B.name}»`, desc: "Такой страницы нет.", path: null, ld: null,
+    main: `<section class="pg-hero" data-tone="ink"><div class="wrap pg-hw pg-hw-t"><div class="pg-ht"><span class="kick">Ошибка 404</span><h1>Такой страницы нет</h1><p class="lead">Возможно, ссылка устарела. Посмотрите <a href="/uslugi">услуги</a> и <a href="/ceny">цены</a> или позвоните: <a href="${tel}">${B.phone}</a>.</p><div class="pg-b"><a class="btn btn-onyx" href="/">${ic("arrow")}<span>На главную</span></a></div></div></div></section>` }));
+  return out;
 }
 
 /**
@@ -633,18 +704,17 @@ export function renderLive(over = {}, live = {}) {
   D = { ...DATA, ...(over.data || {}) }; B = { ...DATA.BRAND, ...(over.brand || {}) }; tel = `tel:${B.phoneRaw}`;
   try { return livePages(); } finally { [PROD, D, B, TX, LIVE, tel, LAYOUT] = keep; }
 }
-export const DEFAULTS = DATA;
+/* Значения по умолчанию для админки: data.mjs макета и catalog.mjs рабочего сайта. */
+export const DEFAULTS = { ...DATA, CATALOG: CAT.SERVICES, ORG: CAT.ORG, AUTHORITIES: CAT.AUTHORITIES, DOCS: [] };
 /** Тексты разделов по умолчанию: { ключ: { kick, h, p } }. */
 export function textDefaults() { renderLive({}); return JSON.parse(JSON.stringify(SEEN)); }
 
 if (IS_MAIN && PROD) {
   const APP = DIR + "app/", pg = livePages();
-  for (const bad of ["__PROTO_BASE__", "mockup-terms", "devuz", "DevUz", "макет", "dz-intro", "noindex"]) if (pg.index.includes(bad)) throw new Error(`на рабочем сайте осталось «${bad}»`);
+  for (const [key, html] of Object.entries(pg)) for (const bad of ["__PROTO_BASE__", "mockup-terms", "devuz", "DevUz", "макет", "dz-intro", ...(key === "notFound" ? [] : ["noindex"])]) if (html.includes(bad)) throw new Error(`на рабочем сайте (${key}) осталось «${bad}»`);
   mkdirSync(APP + "site", { recursive: true });
-  writeFileSync(APP + "site/index.html", pg.index);
-  writeFileSync(APP + "site/privacy.html", pg.privacy);
-  writeFileSync(APP + "site/404.html", pg.notFound);
-  console.log("рабочий сайт:", pg.index.length, "знаков →", APP + "site/");
+  for (const [key, html] of Object.entries(pg)) writeFileSync(APP + "site/" + (key === "notFound" ? "404" : key) + ".html", html);
+  console.log("рабочий сайт:", Object.keys(pg).length, "страниц, главная", pg.index.length, "знаков →", APP + "site/");
 }
 
 if (IS_MAIN && !PROD) {

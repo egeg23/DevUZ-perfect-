@@ -41,6 +41,12 @@ export function openDb(file) {
   const db = new DatabaseSync(file);
   db.exec("pragma journal_mode = wal; pragma foreign_keys = on; pragma busy_timeout = 5000;");
   db.exec(SCHEMA);
+  /* Колонки, которых нет в базе, заведённой раньше. 152-ФЗ: когда и какую
+     редакцию согласия на обработку данных дал пациент (заявка, чат сайта). */
+  const has = (t, c) => db.prepare(`pragma table_info(${t})`).all().some((x) => x.name === c);
+  if (!has("leads", "consent_at")) db.exec("alter table leads add column consent_at integer");
+  if (!has("leads", "consent_v")) db.exec("alter table leads add column consent_v text not null default ''");
+  if (!has("convs", "consent_at")) db.exec("alter table convs add column consent_at integer");
   const st = new Map();
   /* Подготовленные запросы кэшируются по тексту. */
   const q = (sql) => { let s = st.get(sql); if (!s) { s = db.prepare(sql); st.set(sql, s); } return s; };

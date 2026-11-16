@@ -36,11 +36,19 @@ box.innerHTML='<div class="cx-win">'+
   '<div class="cx-hd"><span class="cx-av">'+MARK+'</span><div class="cx-ht"><b id="cx-h">Сияние Севера</b><small id="cx-st"></small></div><button type="button" class="cx-x" aria-label="Закрыть чат">'+ic('x')+'</button></div>'+
   '<div class="cx-log" id="cx-log" role="log" aria-live="polite" aria-relevant="additions" tabindex="0" aria-label="Переписка"></div>'+
   '<div class="cx-chips" id="cx-chips"></div>'+
+  '<label class="cx-ok" id="cx-okl"><input type="checkbox" id="cx-ok"><span>Даю <a href="/soglasie" target="_blank" rel="noopener">согласие на обработку персональных данных</a></span></label>'+
   '<form class="cx-f" id="cx-f" autocomplete="on"><label class="cx-sr" for="cx-in">Сообщение</label><input id="cx-in" name="msg" type="text" enterkeyhint="send" maxlength="1000" placeholder="Напишите сообщение"><button type="submit" class="cx-go" aria-label="Отправить">'+ic('arrow')+'</button></form>'+
   '<p class="cx-foot" id="cx-foot">Отвечает администратор клиники. Срочно: <a href="'+TEL+'">'+(K.phone||'позвоните')+'</a></p>'+
 '</div>';
 d.body.appendChild(fab);d.body.appendChild(box);
 var log=$('#cx-log'),chips=$('#cx-chips'),form=$('#cx-f'),inp=$('#cx-in'),stEl=$('#cx-st'),dot=$('.cx-dot',fab);
+/* 152-ФЗ: первое сообщение — только с отмеченным согласием; оно помнится в
+   браузере до новой редакции текста согласия. Сервер без него не примет. */
+var PDV='';try{PDV=JSON.parse($('#sy-site').textContent).pdv||''}catch(e){}
+var okL=$('#cx-okl'),okBox=$('#cx-ok');
+function okGiven(){return lsGet('sy-chat-ok')===PDV}
+if(okGiven())okL.hidden=true;
+okBox.addEventListener('change',function(){okL.classList.remove('err')});
 
 var dock=$('#dock'),stage=$('#stage');
 function fabVis(){var away=(dock&&dock.classList.contains('away'))||(stage&&stage.classList.contains('playing'));fab.classList.toggle('away',!!away&&box.hidden)}
@@ -60,10 +68,12 @@ function draw(){log.innerHTML='';log.appendChild(intro());msgs.concat(pend).forE
 function status(){var on=isOpen();stEl.textContent=on?'На связи, отвечаем с 9:00 до 21:00':'Клиника закрыта, ответим утром';box.classList.toggle('cx-night',!on)}
 function setChips(list){chips.innerHTML='';(list||[]).forEach(function(t){var b;if(t==='Позвонить'){b=el('a','cx-chip');b.href=TEL;b.innerHTML=ic('phone')+'<span>Позвонить</span>'}else{b=el('button','cx-chip',t);b.type='button';b.onclick=function(){send(t)}}chips.appendChild(b)})}
 
-function send(text){text=String(text||'').trim();if(!text)return;inp.value='';setChips([]);
+function send(text){text=String(text||'').trim();if(!text)return;
+  if(!okGiven()&&!okBox.checked){okL.classList.add('err');inp.value=text;try{okBox.focus()}catch(e){}return}
+  inp.value='';setChips([]);
   var m={dir:'in',text:text,at:Date.now(),wait:true};pend.push(m);draw();
-  fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sid:SID,text:text})})
-    .then(function(r){if(!r.ok)throw 0;pend=pend.filter(function(x){return x!==m});started=true;lsSet('sy-chat-on','1');return pull()})
+  fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sid:SID,text:text,consent:true,pdv:PDV})})
+    .then(function(r){if(!r.ok)throw 0;pend=pend.filter(function(x){return x!==m});started=true;lsSet('sy-chat-on','1');lsSet('sy-chat-ok',PDV);okL.hidden=true;return pull()})
     .catch(function(){m.fail=true;draw()})}
 form.addEventListener('submit',function(e){e.preventDefault();send(inp.value)});
 

@@ -1,8 +1,9 @@
 /* Старые адреса сайта клиники на siyaniye-severa.com (WordPress до переезда
-   на этот сервер, 14.11.2026): «Услуги», имплантация, протезирование, акции,
-   отзывы, «О клинике». Их знают Яндекс и закладки пациентов, поэтому они
-   ведут 301 на нужный блок новой страницы, а не в 404. Список — меню и
-   «Услуги» их сайта и выдача Google.
+   на этот сервер, 14.11.2026). С 16.11.2026 сайт снова многостраничный
+   (владелец: «Разведи на несколько страниц: отдельно услуги, отдельно
+   цены»): разделы прежнего сайта — те же адреса без «/» в конце (их отдаёт
+   сервер сам), а страница отдельной услуги ведёт 301 на свой раздел. Список
+   — меню и «Услуги» их сайта и выдача Google.
    Тот сайт был взломан: роботам и посетителям не из России он отдавал
    итальянский магазин, и в выдаче остались адреса вида
    /Cuscino-Allattamento-Grigio-1111253 или /beauty-uomo/. Они сюда не
@@ -11,17 +12,25 @@
    выбросили. Список товаров из их карт сайта — gone-urls.txt: его отдаёт
    /sitemap-gone.xml, чтобы Google быстрее перепроверил их и увидел 410. */
 
+/* Порядок важен: первое совпадение. «udalenie-zubnogo-kamnya» — гигиена,
+   а не хирургия; «lechenie-kisty» — хирургия, а не лечение. */
 const RULES = [
-  [/^(implantatsiya|odnomomentnaya-implantatsiya|odnoetapnaya-implantatsiya|uslugi\/implantatsiya|protezirovanie-na-implantakh|protezirovanie-pri-polnom-otsutstvii|kostnaya-plastika|sinus-lifting|naraschivanie-desny)/, "/#all-on-6"],
-  [/^akcii(\/|$)/, "/#ceny"],
-  [/^otzyvy$/, "/#otzyvy"],
-  [/^o-klinike$/, "/#klinika"],
+  [/^(implantatsiya-all-on-[46]|all-on-[46])(\/|$)/, "/"],
+  [/^(implantatsiya|odnomomentnaya-implantatsiya|odnoetapnaya-implantatsiya|uslugi\/implantatsiya)/, "/implantatsiya-zubov"],
+  [/^(udalenie-zubnogo-kamnya|ultrazvukovaya-|chistka-|gigiena|professionalnaya-gigiena)/, "/professionalnaya-gigiena"],
+  [/^(khirurgiya|udalenie-|lechenie-kisty|kostnaya-plastika|sinus-lifting|naraschivanie-desny|giperplaziya-)/, "/khirurgiya"],
+  [/^(protez|koronki-|bezmetallovye-koronki|keramicheskie-|tsirkonievye-koronki|kultevye-vkladki|syemnoe-|nesyemnoe-|byugelnye-|mostovidnye-|neylonovye-|cad-cam-)/, "/protezirovanie-zubov"],
+  [/^(esteticheskaya-|ustanovka-|kompozitnye-viniry|viniry-|restavratsiya-zubov-kompozitom|ultraniry)/, "/esteticheskaya-stomatologiya"],
+  [/^(lechenie-|plomba-|ekstrennoe-|restavratsiya-)/, "/lechenie-zubov"],
+  [/^(diagnostika-|ortopantomografiya|kompyuternaya-tomografiya)/, "/diagnostika-zubov"],
+  [/^akcii(\/|$)/, "/akcii"],
+  [/^otzyvy(\/|$)/, "/otzyvy"],
+  [/^o-klinike(\/|$)/, "/o-klinike"],
+  [/^uslugi(\/|$)/, "/uslugi"],
   /* Прежний сайт клиники на Tilda (syanie-sewera.ru): Caddy ведёт его домен
-     сюда тем же адресом (SY_ALIASES в выкатке), а здесь — на нужный блок. */
-  [/^all-on-[46](\/|$)/, "/#all-on-6"],
+     сюда тем же адресом (SY_ALIASES в выкатке), а здесь — на нужную страницу. */
   [/^conf$/, "/privacy"],
   [/^spasibo$/, "/"],
-  [/^(uslugi|protez|koronki-|bezmetallovye-koronki|keramicheskie-|tsirkonievye-koronki|kultevye-vkladki|syemnoe-|nesyemnoe-|byugelnye-|mostovidnye-|neylonovye-|cad-cam-|khirurgiya|udalenie-|lechenie-|giperplaziya-|esteticheskaya-|ustanovka-|kompozitnye-viniry|viniry-|restavratsiya-|ultraniry|plomba-|ekstrennoe-|ultrazvukovaya-|chistka-|diagnostika-|ortopantomografiya|kompyuternaya-tomografiya)/, "/"],
 ];
 
 /** Куда ведёт старый адрес их сайта; null — такого у клиники не было. */
