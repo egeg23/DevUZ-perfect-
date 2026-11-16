@@ -18,6 +18,8 @@ window.SY={
   /* 152-ФЗ: без отмеченного согласия заявка не уходит, сервер её тоже не примет. */
   send:function(lead){var box=document.getElementById(lead.src==='quiz'?'qz-ok':'bk-ok');
     if(box&&!box.checked){var l=box.closest('.pd-ok');if(l)l.classList.add('err');try{box.focus()}catch(e){}return Promise.reject(new Error('Отметьте согласие на обработку персональных данных: без него мы не можем принять заявку'))}
+    /* Запись из карточки врача («Наши врачи», team.js): врач — в пожелание к записи. */
+    if(lead.src==='booking'&&window.SY_DOC)lead.wish=(lead.wish?lead.wish+'; ':'')+'врач: '+window.SY_DOC;
     lead.consent=true;try{lead.pdv=JSON.parse(document.getElementById('sy-site').textContent).pdv||''}catch(e){}
     return fetch('/api/lead',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(lead)})
     .then(function(r){return r.json().catch(function(){return{}}).then(function(j){if(!r.ok)throw new Error(j.error||'Не получилось отправить. Позвоните нам, пожалуйста');return j})})

@@ -45,6 +45,8 @@ ${img ? `<figure class="pg-ph"><img src="${imgOf(img)}" alt="${alt}" decoding="a
   const card = (x) => `<article class="sv-c"><h3>${x.t}</h3>${x.d ? `<p>${x.d}</p>` : ""}<b>${priceOf(x)}</b></article>`;
   const docCard = (d) => `<article class="vd"><div class="vd-ph">${c.docPic(d)}</div><div class="vd-t"><span class="kick">${d.role}</span><h3>${d.name}</h3>${d.facts.length ? `<ul>${d.facts.map((f) => `<li>${f}</li>`).join("")}</ul>` : ""}${d.edu ? `<p class="vd-x"><b>Образование</b>${String(d.edu).split("\n").join("<br>")}</p>` : ""}${d.cert ? `<p class="vd-x"><b>Квалификация</b>${String(d.cert).split("\n").join("<br>")}</p>` : ""}${d.sched ? `<p class="vd-x"><b>Приём</b>${d.sched}</p>` : ""}${d.quote ? `<p class="dr-q">«${d.quote}»</p>` : ""}</div></article>`;
   const HOME = ["Главная", "/"], SVC = ["Услуги", "/uslugi"];
+  /* Врачи раздела — по специальности (хирург — хирургия и имплантация, ортопед — протезирование…); нет таких — все. */
+  const docsFor = (slug) => { const own = D.DOCTORS.filter((d) => c.dirsOf(d).some((k) => k.slug === slug)); return own.length ? own : D.DOCTORS; };
   /* Рассрочка и вычет — из «Сервиса» клиники по словам, а не по месту в списке. */
   const PERK0 = { "рассроч": { t: "Рассрочка 0%", d: "От клиники, без первого взноса" }, "вычет": { t: "Вычет 13%", d: "Поможем оформить налоговый вычет со стоимости лечения" } };
   const perk = (re) => D.PERKS.find((p) => re.test(p.t)) || PERK0[re.source];
@@ -83,7 +85,7 @@ ${deep.has(k.slug) ? `<section class="pg-sec" data-tone="ink"><div class="wrap">
 </div></section>
 <section class="pg-sec"><div class="wrap">
 <div class="sh"><span class="kick">Врачи</span><h2>Кто будет вас лечить</h2></div>
-<div class="vd-grid">${D.DOCTORS.map(docCard).join("")}</div>
+<div class="vd-grid">${docsFor(k.slug).map(docCard).join("")}</div>
 <p class="pg-note"><a href="/vrachi">Все врачи клиники</a></p>
 </div></section>` : ""}
 <section class="pg-sec pg-alt"><div class="wrap pg-pay">
@@ -115,8 +117,8 @@ ${ctaBand("")}`,
   out.vrachi = {
     title: `Врачи клиники «${nameOf}», Томск`, desc: `Врачи «${nameOf}»: ${D.DOCTORS.map((d) => c.plain(d.name)).join(", ")}. Стаж, образование и квалификация, запись на консультацию.`, path: "/vrachi",
     ld: ldOf([HOME, ["Врачи", "/vrachi"]], D.DOCTORS.map((d, i) => ({ "@type": "Person", "@id": `${U}/vrachi#d${i + 1}`, name: c.plain(d.name), jobTitle: c.plain(d.role), worksFor: { "@id": `${U}/#clinic` } }))),
-    main: `${hero({ key: "pg-vrachi", kick: "Врачи", h: "Врачи клиники", p: "Имплантологи и ортопеды с опытом более 10 000 операций. Стаж, обучение и квалификация каждого врача.", img: "p-cab", alt: "Кабинет имплантолога", path: "/vrachi", list: [HOME, ["Врачи", "/vrachi"]] })}
-<section class="pg-sec"><div class="wrap"><div class="vd-grid vd-full">${D.DOCTORS.map(docCard).join("")}</div>
+    main: `${c.team({ page: true, crumbs: crumbs([HOME, ["Врачи", "/vrachi"]]) })}
+<section class="pg-sec"><div class="wrap"><div class="sh"><span class="kick">Стаж и квалификация</span><h2>Врачи клиники</h2></div><div class="vd-grid vd-full">${D.DOCTORS.map(docCard).join("")}</div>
 <p class="pg-note">График приёма врачей уточняйте у администратора: <a href="${tel}">${B.phone}</a>.</p></div></section>
 ${ctaBand("")}`,
   };

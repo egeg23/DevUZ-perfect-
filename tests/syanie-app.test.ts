@@ -530,7 +530,7 @@ test("сияние на сервере клиники: поисковикам �
     const clinic = ld["@graph"].find((x: any) => String(x["@id"]).endsWith("#clinic"));
     assert.equal(clinic.url, "https://syanie.test/");
     assert.deepEqual(clinic.makesOffer.map((o: any) => o.price), [179900, 259900]);
-    assert.equal(clinic.employee.length, 2);
+    assert.equal(clinic.employee.length, 4, "врачи рабочего сайта — из catalog.mjs");
     assert.ok(!("aggregateRating" in clinic), "оценки с чужих площадок не размечаем");
     const faq = ld["@graph"].find((x: any) => x["@type"] === "FAQPage");
     assert.ok(faq.mainEntity.length >= 10 && faq.mainEntity.every((q: any) => q.name && q.acceptedAnswer.text && !/[<>]|&quot;/.test(q.name + q.acceptedAnswer.text)));
@@ -570,8 +570,8 @@ test("сияние на сервере клиники: многостранич�
   assert.deepEqual(CATS, CAT.CATEGORIES.map((k: any) => [k.slug, k.t]), "разделы в админке и на сайте разошлись");
   for (const k of CAT.CATEGORIES) assert.ok(TEXT_KEYS["pg-" + k.slug], "текст первого экрана раздела не правится: " + k.slug);
   assert.ok(CAT.SERVICES.every((x: any) => CAT.CATEGORIES.some((k: any) => k.slug === x.cat)), "услуга вне разделов");
-  /* Цены только те, что клиника называла сама. */
-  assert.deepEqual(CAT.SERVICES.filter((x: any) => x.p).map((x: any) => x.p), ["Бесплатно", "5 000 ₽"]);
+  /* Цены только те, что клиника называла сама (16.11.2026 — All-on-4, одномоментная и «под ключ»). */
+  assert.deepEqual(CAT.SERVICES.filter((x: any) => x.p).map((x: any) => x.p), ["Бесплатно", "от 250 000 ₽", "от 50 000 ₽", "от 80 000 ₽", "5 000 ₽"]);
 
   const a = await boot("https://syanie.test", { live: true });
   try {
@@ -659,6 +659,81 @@ test("сияние на сервере клиники: многостранич�
   /* Образ: новые модули сборщика едут в render/. */
   const wf = readFileSync(new URL("../../../../.github/workflows/syanie-app.yml", APP), "utf8");
   assert.match(wf, /cp gen\.mjs data\.mjs plan\.mjs catalog\.mjs pages\.mjs /);
+});
+
+test("сияние на сервере клиники: «Наши врачи» — четыре врача в полный рост, карточка как выбор героя, врачи раздела по специальности", async () => {
+  /* Владелец, 16.11.2026: «врачи на сайте не актуальны… Отрисуй их с точностью
+     и улучши качество фото… Хиро секцию, где врачи стоят и на них можно нажать,
+     откроются характеристики их как в мортал комбат… остальные при этом
+     затемняются. При нажатии куда угодно врач разворачивается спиной и идет на
+     свое место». */
+  const CAT = await import(new URL("../catalog.mjs", APP).href);
+  assert.deepEqual(CAT.DOCTORS.map((d: any) => d.name), ["Досжанов Руслан Максутович", "Кузнецова Полина Олеговна", "Намазов Намиг Исмайылович", "Кадиев Рамазан Курбанович"]);
+  const PUB = new URL("../../../../public/protos/syanie/", APP);
+  for (const d of CAT.DOCTORS) {
+    const id = d.img.slice(3);
+    assert.ok(CAT.FIGS[id], "нет вырезки в полный рост: " + d.name);
+    for (const f of [`tm-${id}.webp`, `tm-${id}-b.webp`, `dr-${id}.webp`]) assert.ok(existsSync(new URL(f, PUB)), "нет файла " + f);
+  }
+  const a = await boot("https://syanie.test", { live: true });
+  try {
+    const home = (await a.call("/")).text, vr = (await a.call("/vrachi")).text;
+    for (const html of [home, vr]) {
+      assert.match(html, /<section class="tm" id="vrachi" data-tone="ink" data-tm>/);
+      assert.equal(html.match(/<button type="button" class="tm-d"/g)?.length, 4);
+      assert.match(html, /Нажмите на врача, чтобы посмотреть/);
+      assert.match(html, /<img class="tm-f" src="\/protos\/syanie\/tm-kadiev\.webp" width="341" height="1200" alt="Кадиев Рамазан Курбанович, стоматолог-хирург, ортопед"/);
+      assert.match(html, /<img class="tm-k" src="\/protos\/syanie\/tm-kadiev-b\.webp"[^>]*alt="" aria-hidden="true"/);
+    }
+    assert.match(home, /<h2>Наши врачи<\/h2>/);
+    assert.match(vr, /<h1>Наши врачи<\/h1>/);
+    /* Прежних врачей среди врачей сайта нет. «Руководство» в сведениях о клинике — данные организации, их правит клиника. */
+    for (const path of ["/", "/vrachi", "/implantatsiya-zubov"]) assert.doesNotMatch((await a.call(path)).text, /Реутов|Савин/, path);
+    assert.doesNotMatch(/<ul class="sd-l">[\s\S]*?<\/ul>/.exec((await a.call("/svedeniya")).text)![0], /Реутов|Савин/);
+    /* Карточка: стаж полосой по годам (10 делений), направления по специальности, запись к этому врачу. */
+    const card = (name: string) => new RegExp(`<div class="tm-i" id="tm-i\\d" role="region" aria-label="${name}" hidden>[\\s\\S]*?</div>\\n?<p class="tm-esc">`).exec(vr)![0];
+    const kad = card("Кадиев Рамазан Курбанович");
+    assert.match(kad, /<b>6 лет<\/b>/);
+    assert.equal(kad.match(/<i class="on"/g)?.length, 6);
+    assert.deepEqual([...kad.matchAll(/<a href="\/([a-z-]+)">/g)].map((m) => m[1]), ["implantatsiya-zubov", "protezirovanie-zubov", "khirurgiya"]);
+    assert.match(kad, /data-book data-svc="Имплантация" data-doc="Кадиев Рамазан Курбанович"/);
+    const dos = card("Досжанов Руслан Максутович");
+    assert.match(dos, /<b>более 1,5 лет<\/b>/);
+    assert.equal(dos.match(/<i class="on"/g)?.length, 2);
+    assert.match(card("Кузнецова Полина Олеговна"), /<a href="\/lechenie-zubov">Лечение зубов<\/a>/);
+    /* Своих чисел нет: в карточках только стаж из слов клиники. */
+    assert.doesNotMatch(vr.slice(vr.indexOf('class="tm"'), vr.indexOf("</section>", vr.indexOf('class="tm"'))), /\d+\s*%|операц|рейтинг/i);
+    /* Врачи раздела — по специальности. */
+    const docsOn = async (path: string) => [...(await a.call(path)).text.matchAll(/<div class="vd-t"><span class="kick">[^<]*<\/span><h3>([^<]+)<\/h3>/g)].map((m) => m[1]);
+    assert.deepEqual(await docsOn("/khirurgiya"), ["Намазов Намиг Исмайылович", "Кадиев Рамазан Курбанович"]);
+    assert.deepEqual(await docsOn("/protezirovanie-zubov"), ["Досжанов Руслан Максутович", "Кадиев Рамазан Курбанович"]);
+    /* Врач, которого клиника добавит в админке без вырезки, стоит в ряду фотографией. */
+    await a.adminPost("/setup", { code: "setup-42", login: "glavvrach", name: "Евгений", pass: "длинный-пароль" });
+    const view = (await a.call("/api/admin/site")).json;
+    assert.deepEqual(view.defaults.doctors.map((d: any) => d.img), ["dr-doszhanov", "dr-kuznetsova", "dr-namazov", "dr-kadiev"]);
+    const more = [...view.defaults.doctors, { name: "Иванов Иван Иванович", role: "Стоматолог-ортопед", facts: "Стаж 3 года", quote: "", img: "", edu: "", cert: "", sched: "" }];
+    assert.equal((await a.adminPost("/site/doctors", { value: more })).status, 200);
+    const vr2 = (await a.call("/vrachi")).text;
+    assert.equal(vr2.match(/<button type="button" class="tm-d"/g)?.length, 5);
+    assert.match(vr2, /<li class="tm-s tm-nofig"[^>]*><button type="button" class="tm-d" data-i="4" data-sn="Иванов"/);
+  } finally { await a.close(); }
+  /* Сохранённые в админке прежние врачи макета — не правка клиники: на сайте новые. */
+  const { dropOldDoctors } = await load("lib/site-content.mjs");
+  assert.deepEqual(dropOldDoctors({ doctors: [{ name: "Реутов Евгений Александрович" }, { name: "Савин Тимур Николаевич" }], faq: [] }), { faq: [] });
+  const own = { doctors: [{ name: "Реутов Евгений Александрович" }, { name: "Иванов Иван Иванович" }] };
+  assert.equal(dropOldDoctors(own), own);
+  /* Движение — transform и opacity; врач для записи — в пожелание к заявке; «меньше движения» и версия для слабовидящих — без шагов. */
+  const css = read("site/team.css"), js = read("site/team.js");
+  for (const m of css.matchAll(/transition:([^;}]+)/g)) for (const part of m[1].split(",")) assert.match(part.trim(), /^(transform|opacity|border-color|color|transition-duration)\b|^\.01s/, "анимация не transform/opacity: " + part);
+  assert.match(css, /@media \(prefers-reduced-motion:reduce\)/);
+  assert.match(css, /html\.vi \.tm-i,html\.vi \.tm-i\[hidden\]\{display:block/);
+  assert.match(js, /tm-back/);
+  assert.match(js, /tm-walk/);
+  assert.match(js, /window\.SY_DOC=a\.getAttribute\('data-doc'\)/);
+  assert.match(read("site/store-live.js"), /'врач: '\+window\.SY_DOC/);
+  /* Макет не меняется: там прежние врачи и нет сцены. */
+  const bundle = readFileSync(new URL("../../../../content/proto-bundles/syanie.json", APP), "utf8");
+  assert.ok(bundle.includes("Реутов") && !bundle.includes("tm-d"));
 });
 
 test("сияние на сервере клиники: рабочий сайт без частей макета, запись и квиз с телефоном", () => {
