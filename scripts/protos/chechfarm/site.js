@@ -141,7 +141,7 @@ function catalog(){if(!cat)return;var ps=(panel().prod||[]).filter(function(p){r
   cat.innerHTML=ps.length?(list.length?list.map(prodHtml).join(''):'<p class="note">'+h(K.notFound)+'</p>'):(K.prod?'':skel())}
 /* Боевой «Продукты»: упаковка на подиуме своего направления, фильтр кнопками. */
 var AREA='';
-function pimg(u,w){u=safeUrl(u);if(!u)return '';var m=u.match(/^(\/protos\/chechfarm\/products\/[\w-]+)-960\.webp$/);return m?'<img src="'+m[1]+'-480.webp" srcset="'+m[1]+'-480.webp 480w, '+m[1]+'-960.webp 960w" sizes="'+w+'" alt="" loading="lazy" decoding="async">':'<img src="'+h(u)+'" alt="" loading="lazy" decoding="async">'}
+function pimg(u,w){u=safeUrl(u);if(!u)return '';var m=u.match(/^(\/protos\/chechfarm\/products\/[\w-]+)-960\.webp$/);var v='?v='+(K.pv||'');return m?'<img src="'+m[1]+'-480.webp'+v+'" srcset="'+m[1]+'-480.webp'+v+' 480w, '+m[1]+'-960.webp'+v+' 960w" sizes="'+w+'" alt="" loading="lazy" decoding="async">':'<img src="'+h(u)+'" alt="" loading="lazy" decoding="async">'}
 function areaOf(p){return K.areas&&K.areas[p.area]?p.area:'neuro'}
 function cardHtml(p){var a=areaOf(p),im=pimg(p.img,'(max-width: 699px) 46vw, (max-width: 1079px) 31vw, 280px'),lab=K.areas[p.area]||p.dir||'';
   return '<button type="button" class="pc pc-'+a+' a-'+a+'" data-pid="'+h(p.id)+'" aria-label="'+h(p.name)+'"><span class="pc-st">'+(p.rx==='rx'?'<span class="pc-rx">'+h(K.pl.rx)+'</span>':'')+(im||'<span class="pc-box" aria-hidden="true"><b>'+h(p.name)+'</b><span>CZECHFARM</span></span>')+'</span>'+

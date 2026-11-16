@@ -1,4 +1,6 @@
-import { readFileSync, writeFileSync, mkdirSync, existsSync, unlinkSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, existsSync, unlinkSync, readdirSync } from "node:fs";
+import { join } from "node:path";
+import { createHash } from "node:crypto";
 import { dzIntroSolo } from "../../../lib/proto/dz-video.mjs";
 import { LANGS, PILLARS, CHAIN, PARTNER_STEPS, PRODUCT_FIELDS, IR_DOCS } from "./data.mjs";
 import * as DATA from "./data.mjs";
@@ -61,6 +63,16 @@ const AR_CSS = strip(existsSync(DIR + "rtl.css") ? readFileSync(DIR + "rtl.css",
 const ACC_JS = existsSync(DIR + "account.js") ? strip(readFileSync(DIR + "account.js", "utf8")) : "";
 const FONTS = "https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,700&family=Onest:wght@400;700&display=swap";
 const KEY = { ru: "", uz: "uz", en: "en", ar: "ar" };
+// Версия упаковок в адресе картинок: файлы лежат под теми же именами с кэшем на неделю,
+// без неё телефон покажет прежнюю вырезку.
+const PACK_V = (() => {
+  const dir = join(DIR, "../../../public/protos/chechfarm/products");
+  if (!existsSync(dir)) return "0";
+  const h = createHash("sha1");
+  for (const f of readdirSync(dir).filter((x) => x.endsWith(".webp")).sort()) h.update(f).update(readFileSync(join(dir, f)));
+  return h.digest("hex").slice(0, 8);
+})();
+
 /* Боевой сайт — ещё и на арабском (подарок, ar.mjs): данные получают «ar». */
 if (PROD) { LANGS.push("ar"); for (const v of Object.values(DATA)) withAr(v); }
 const PAGES = ["", "about", "products", "partners", "investors", "news", "contacts"];
@@ -332,7 +344,7 @@ function productsLive(l) {
   const t = T(l);
   const P = `${IMG}/products`;
   const n = CATALOG.length;
-  const packs = HERO_PACKS.map((x, i) => { const f = PACK_LANGS[x.key]?.includes(l) ? `${x.key}-${l}` : x.key; return `<span class="pk pk-d${x.d} pk-m${x.m}" aria-hidden="true"><img src="${P}/${f}-480.webp" srcset="${P}/${f}-480.webp 480w, ${P}/${f}-960.webp 960w" sizes="(max-width: 760px) 30vw, 14vw" alt="" decoding="async"${i < 2 ? ' fetchpriority="high"' : ""}></span>`; }).join("");
+  const packs = HERO_PACKS.map((x, i) => { const f = PACK_LANGS[x.key]?.includes(l) ? `${x.key}-${l}` : x.key; return `<span class="pk pk-d${x.d} pk-m${x.m}" aria-hidden="true"><img src="${P}/${f}-480.webp?v=${PACK_V}" srcset="${P}/${f}-480.webp?v=${PACK_V} 480w, ${P}/${f}-960.webp?v=${PACK_V} 960w" sizes="(max-width: 760px) 30vw, 14vw" alt="" decoding="async"${i < 2 ? ' fetchpriority="high"' : ""}></span>`; }).join("");
   return [`<section class="pf-hero" id="pf-hero"><div class="pf-scene" aria-hidden="true"><picture><source media="(max-width: 760px)" srcset="${P}/hero-m-1080.webp 603w, ${P}/hero-m-1600.webp 893w" sizes="100vw"><img src="${P}/hero-2400.webp" srcset="${P}/hero-1400.webp 1400w, ${P}/hero-2400.webp 2400w" sizes="100vw" alt="" fetchpriority="high"></picture>${packs}</div>
 <div class="wrap pf-in"><p class="crumbs"><a href="${href(l)}">CZECHFARM</a> / ${navName("products", l)}</p>
 <h1 class="rise">${t("Наши <b>продукты</b>", "Bizning <b>mahsulotlarimiz</b>", "Our <b>products</b>")}</h1>
@@ -511,7 +523,7 @@ function K(l, p) {
       needAgree: t("Нужно согласие на обработку данных", "Ma’lumotlarni qayta ishlashga rozilik kerak", "Please agree to data processing"),
       shortPass: t("Пароль не короче 8 знаков", "Parol kamida 8 belgi", "The password needs at least 8 characters"),
     } } : {}),
-    ...(PROD && p === "products" ? { areas: Object.fromEntries(AREA_KEYS.map((k) => [k, areaName(l, k)])), pimg: `${IMG}/products`, pl: { comp: t("Состав", "Tarkibi", "Composition"), form: t("Форма выпуска", "Chiqarilish shakli", "Dosage form"), pack: t("В упаковке", "Qadoqda", "Pack"), group: t("Группа", "Guruh", "Group"), doctors: t("Назначают", "Tayinlaydi", "Prescribed by"), maker: t("Производитель", "Ishlab chiqaruvchi", "Manufacturer"), inn: t("Действующее вещество", "Ta’sir etuvchi modda", "Active substance"), ask: t("Спросить о препарате", "Dori haqida so‘rash", "Ask about this product"), rx: t("По рецепту", "Retsept bilan", "Prescription only"), open: t("Подробнее", "Batafsil", "Details") }, contactsHref: href(l, "contacts") + "#form" } : {}),
+    ...(PROD && p === "products" ? { areas: Object.fromEntries(AREA_KEYS.map((k) => [k, areaName(l, k)])), pimg: `${IMG}/products`, pl: { comp: t("Состав", "Tarkibi", "Composition"), form: t("Форма выпуска", "Chiqarilish shakli", "Dosage form"), pack: t("В упаковке", "Qadoqda", "Pack"), group: t("Группа", "Guruh", "Group"), doctors: t("Назначают", "Tayinlaydi", "Prescribed by"), maker: t("Производитель", "Ishlab chiqaruvchi", "Manufacturer"), inn: t("Действующее вещество", "Ta’sir etuvchi modda", "Active substance"), ask: t("Спросить о препарате", "Dori haqida so‘rash", "Ask about this product"), rx: t("По рецепту", "Retsept bilan", "Prescription only"), open: t("Подробнее", "Batafsil", "Details") }, contactsHref: href(l, "contacts") + "#form", pv: PACK_V } : {}),
     ...(PROD ? { prod: true, live: null, rxName: { rx: t("По рецепту", "Retsept bilan", "Prescription only"), otc: t("Без рецепта", "Retseptsiz", "Over the counter") },
     leaflet: t("Открыть инструкцию (PDF)", "Yo‘riqnomani ochish (PDF)", "Open the leaflet (PDF)"),
     sendFail: t("Не получилось отправить. Проверьте интернет и попробуйте ещё раз.", "Yuborib bo‘lmadi. Internetni tekshirib, qayta urinib ko‘ring.", "Could not send. Check your connection and try again.") } : {}),
