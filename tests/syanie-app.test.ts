@@ -726,11 +726,16 @@ test("сияние на сервере клиники: «Наши врачи» �
       assert.match(html, /<section class="tm" id="vrachi" data-tone="ink" data-tm>/);
       assert.equal(html.match(/<button type="button" class="tm-d"/g)?.length, 4);
       assert.match(html, /Нажмите на врача, чтобы посмотреть/);
-      assert.match(html, /<img class="tm-f" src="\/protos\/syanie\/tm-kadiev\.webp" width="341" height="1200" alt="Кадиев Рамазан Курбанович, стоматолог-хирург, ортопед"/);
-      assert.match(html, /<img class="tm-k" src="\/protos\/syanie\/tm-kadiev-b\.webp"[^>]*alt="" aria-hidden="true"/);
-      assert.match(html, /<span class="tm-w tm-wf" data-src="\/protos\/syanie\/tm-kadiev-wf\.webp" data-n="46" data-c="8" data-ms="\d+" data-go="0\.\d+,0\.\d+" style="--c:8;--r:6;width:[\d.]+%;left:-[\d.]+%"><img alt="" aria-hidden="true" decoding="async"><\/span>/);
+      assert.match(html, /<img class="tm-f" src="\/protos\/syanie\/tm-kadiev\.webp\?v=[0-9a-f]{8}" width="341" height="1200" alt="Кадиев Рамазан Курбанович, стоматолог-хирург, ортопед"/);
+      assert.match(html, /<img class="tm-k" src="\/protos\/syanie\/tm-kadiev-b\.webp\?v=[0-9a-f]{8}"[^>]*alt="" aria-hidden="true"/);
+      /* Подход — лента с путём по каждому кадру (data-p: от 0 до 1000, кадров столько же, сколько в ленте). */
+      const wf = /<span class="tm-w tm-wf" data-src="\/protos\/syanie\/tm-kadiev-wf\.webp\?v=[0-9a-f]{8}" data-n="(\d+)" data-c="8" data-ms="\d+" data-p="([\d,]+)" style="--c:8;--r:\d;width:[\d.]+%;left:-[\d.]+%"><img alt="" aria-hidden="true" decoding="async"><\/span>/.exec(html);
+      assert.ok(wf, "нет ленты подхода Кадиева");
+      const path = wf[2].split(",").map(Number);
+      assert.equal(path.length, Number(wf[1]));
+      assert.ok(path[0] === 0 && path[path.length - 1] === 1000 && path.every((v, i) => !i || v >= path[i - 1]), "путь ленты не растёт от 0 до 1000");
       /* Разворот — своя лента кадров (лицо, профиль, спина), без отрезка пути. */
-      assert.match(html, /<span class="tm-w tm-t" data-src="\/protos\/syanie\/tm-kadiev-t\.webp" data-n="18" data-c="6" data-ms="\d+" style="--c:6;--r:3;width:[\d.]+%;left:-[\d.]+%"><img alt="" aria-hidden="true" decoding="async"><\/span>/);
+      assert.match(html, /<span class="tm-w tm-t" data-src="\/protos\/syanie\/tm-kadiev-t\.webp\?v=[0-9a-f]{8}" data-n="18" data-c="6" data-ms="\d+" style="--c:6;--r:3;width:[\d.]+%;left:-[\d.]+%"><img alt="" aria-hidden="true" decoding="async"><\/span>/);
     }
     assert.match(home, /<h2>Наши врачи<\/h2>/);
     assert.match(vr, /<h1>Наши врачи<\/h1>/);
@@ -786,8 +791,12 @@ test("сияние на сервере клиники: «Наши врачи» �
     assert.equal(size.h, Math.ceil(t.n / t.c) * CAT.FIG_H, "высота ленты не рядов × FIG_H: " + file);
     assert.ok(size.w <= 4096 && size.h <= 4096, "лента больше 4096: " + file);
     assert.ok(statSync(file).size < 480_000, "лента тяжелее 480 КБ: " + file);
-    /* Шаги не скользят: ходьба знает, на каком отрезке идут ноги; у разворота пути нет. */
-    if (k === "t") assert.equal(t.go, undefined); else assert.ok(t.go[0] >= 0 && t.go[0] < 0.3 && t.go[1] > 0.7 && t.go[1] <= 1, "отрезок шага: " + id + " " + k);
+    /* Шаги не скользят: у ходьбы записан путь (по каждому кадру — p, или отрезок, где идут ноги, — go); у разворота пути нет. */
+    if (k === "t") assert.ok(t.go === undefined && t.p === undefined);
+    else if (t.p) assert.ok(t.p.length === t.n && t.p[0] === 0 && t.p[t.n - 1] === 1000 && t.p.every((v: number, i: number) => !i || v >= t.p[i - 1]), "путь по кадрам: " + id + " " + k);
+    else assert.ok(t.go[0] >= 0 && t.go[0] < 0.3 && t.go[1] > 0.7 && t.go[1] <= 1, "отрезок шага: " + id + " " + k);
+    /* Подход каждого врача снят стоящей камерой (владелец про Намазова: «У этого врача нет проходки»): путь по кадрам обязателен. */
+    if (k === "wf") assert.ok(Array.isArray(t.p), "подход без пути по кадрам: " + id);
     assert.ok(t.ms >= 600 && t.ms <= 2800, "время ленты: " + id + " " + k);
   }
   /* «К нам» грузится, когда блок на экране, «от нас» и разворот — когда врач вышел. */
@@ -795,8 +804,12 @@ test("сияние на сервере клиники: «Наши врачи» �
   assert.match(js, /load\(s,'wb t'\)/);
   /* Кадр ленты выбирает сдвиг сетки; по экрану врача ведёт скрипт по тем же кадрам. */
   assert.match(css, /\.tm-z \.tm-w img\{[^}]*transform:translate\(calc\(-100% \* var\(--fx,0\) \/ var\(--c,1\)\),calc\(-100% \* var\(--fy,0\) \/ var\(--r,1\)\)\)/);
-  assert.match(js, /path\(i,HOME,to,goOf\(w\)\)/);
-  assert.match(js, /path\(i,from,HOME,goOf\(w\)\)/);
+  assert.match(js, /path\(i,HOME,to,w\)/);
+  assert.match(js, /path\(i,from,HOME,w\)/);
+  assert.match(js, /getAttribute\('data-p'\)/);
+  /* Кадры лежат под теми же именами с кэшем на неделю: версия в адресе — отпечаток файлов. */
+  const { figVersion } = await import(new URL("../figures/version.mjs", APP).href);
+  assert.equal(CAT.FIG_V, figVersion(), "поменялись tm-*.webp: node scripts/protos/syanie/figures/version.mjs write");
   /* Разворот — кадрами, туда и обратно; сжатия по ширине («толщиной 1 мм») нет нигде. */
   assert.match(js, /run\(s,'t',w,!back,null,/);
   assert.doesNotMatch(css + js, /tm-turn|rotateY/);
