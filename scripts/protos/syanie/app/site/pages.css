@@ -1,0 +1,290 @@
+/* Многостраничный рабочий сайт (pages.mjs): шапка с меню страниц, первый
+   экран страницы, карточки услуг, прейскурант, врачи, документы; согласие
+   на обработку данных в формах, окно о cookie и версия для слабовидящих.
+   Цвета — токены site.css, движение — transform и opacity. */
+
+/* ── Шапка: меню страниц, кнопка версии для слабовидящих, бургер ─────── */
+.vi-btn,.burger{display:grid;place-items:center;width:44px;height:44px;border-radius:50%;border:1px solid rgb(var(--paper-rgb) / .24)}
+.vi-btn .ic,.burger .ic{width:22px;height:22px}
+.top-r .btn-sm{display:none}
+.mnav{position:fixed;inset:0;z-index:70;background:rgb(var(--ink-rgb) / .6);opacity:0;transition:opacity .3s}
+.mnav.on{opacity:1}
+.mnav[hidden]{display:none}
+.mnav-in{position:absolute;inset:0 0 0 auto;width:min(100%,420px);overflow:auto;background:var(--ink2);color:var(--paper);padding:72px var(--gut) calc(32px + env(safe-area-inset-bottom));transform:translateX(24px);transition:transform .35s var(--ease)}
+.mnav.on .mnav-in{transform:none}
+.mnav .sh-x{right:12px;top:12px}
+.mnav ul{list-style:none;margin:0;padding:0}
+.mnav-l a{display:block;padding:12px 0;font:400 26px/1.2 var(--f-d);text-decoration:none;border-top:1px solid var(--line-d)}
+.mnav-k{margin:28px 0 8px;font:700 12px/1.3 var(--f-t);letter-spacing:.16em;text-transform:uppercase;color:var(--onyx)}
+.mnav-s{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px}
+.mnav-s a{display:block;padding:8px 0;color:var(--mute-d);text-decoration:none}
+.mnav-b{display:grid;gap:8px;margin-top:32px}
+@media (min-width:480px){.top-r .btn-sm{display:inline-flex}}
+@media (min-width:1024px){
+  .burger{display:none}
+  .nav{gap:20px}
+  .nav a[aria-current="page"]{opacity:1;text-decoration:underline;text-underline-offset:6px;text-decoration-color:var(--onyx)}
+  .top-ph{display:none}
+}
+@media (min-width:1320px){.top-ph{display:inline-flex}.nav{gap:26px}}
+
+/* ── Первый экран страницы ─────────────────────────────────────────── */
+section.pg-hero{padding:96px 0 40px}
+.pg-hw{display:grid;gap:28px}
+.pg-cr ol{list-style:none;display:flex;flex-wrap:wrap;gap:6px;margin:0 0 20px;padding:0;font-size:13px;color:var(--mute-d)}
+.pg-cr li+li::before{content:"/";margin-right:6px;opacity:.6}
+.pg-cr a{text-decoration:none}
+.pg-cr a:hover{text-decoration:underline}
+.pg-ht h1{margin:12px 0 0;font:400 38px/1.06 var(--f-d);letter-spacing:-.01em}
+.pg-ht .lead{margin:16px 0 0;max-width:620px;color:rgb(var(--paper-rgb) / .84);font-size:17px}
+.pg-ht .lead a{color:var(--onyx2)}
+.pg-b{display:flex;flex-wrap:wrap;gap:8px;margin-top:28px}
+.pg-ph{margin:0;border-radius:var(--r2);overflow:hidden;background:var(--ink2);aspect-ratio:16/10}
+.pg-ph img{width:100%;height:100%;object-fit:cover}
+
+/* ── Разделы страницы ─────────────────────────────────────────────── */
+section.pg-sec{padding:64px 0}
+.pg-alt{background:var(--paper2)}
+.pg-note{margin:24px 0 0;font-size:15px;color:var(--mute)}
+.pg-note a,.pg-legal a{color:var(--acc-d)}
+[data-tone="ink"] .pg-note{color:var(--mute-d)}
+[data-tone="ink"] .pg-note a{color:var(--onyx2)}
+.pg-legal{margin:32px 0 0;font-size:14px;color:var(--mute);max-width:820px}
+.pg-legal p{margin:0 0 10px}
+.pg-warn{margin:32px 0 0;padding:20px;border:1px solid var(--line);border-radius:var(--r);font-size:15px;text-align:center}
+section.pg-cta{padding:48px 0}
+.pg-cta .wrap{display:grid;gap:20px;align-items:center}
+.pg-cta-h{margin:10px 0 0;font:400 28px/1.15 var(--f-d);max-width:640px}
+.pg-cta .pg-b{margin-top:0}
+
+/* Карточки услуг и цены раздела */
+.sv-grid{display:grid;gap:12px}
+.sv-c{display:flex;flex-direction:column;gap:8px;padding:20px;border-radius:var(--r);background:var(--card);box-shadow:var(--sh1)}
+.sv-c h3{font:400 22px/1.2 var(--f-d)}
+.sv-c h3 a{text-decoration:none}
+.sv-c p{margin:0;color:var(--mute);font-size:15px}
+.sv-c>b{margin-top:auto;padding-top:8px;font-size:17px;color:var(--acc-d)}
+.sv-c-star{background:var(--ink);color:var(--paper)}
+.sv-c-star p{color:var(--mute-d)}
+.sv-c-star>b{color:var(--onyx2)}
+.sv-more{display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--onyx2);text-decoration:none}
+.sv-more .ic{width:16px;height:16px}
+.pl-ask{color:var(--mute);font-weight:400;font-size:14px}
+
+/* Список разделов на странице «Услуги» */
+.ct-cards{display:grid;gap:16px}
+.cc{display:flex;flex-direction:column;border-radius:var(--r2);overflow:hidden;background:var(--card);box-shadow:var(--sh1);text-decoration:none;transition:transform .35s var(--ease)}
+.cc-ph{display:block;aspect-ratio:16/9;overflow:hidden;min-height:0;background:var(--ink2)}
+.cc-ph img{width:100%;height:100%;object-fit:cover}
+.cc-t{display:flex;flex-direction:column;gap:8px;padding:20px}
+.cc-t b{font:400 24px/1.15 var(--f-d)}
+.cc-t>span:not(.kick){color:var(--mute);font-size:15px}
+.cc-t small{color:var(--acc-d);font-size:13px;line-height:1.5}
+.cc-star{background:var(--ink);color:var(--paper)}
+.cc-star .cc-t>span:not(.kick){color:var(--mute-d)}
+@media (hover:hover){.cc:hover{transform:translateY(-4px)}}
+
+/* Врачи */
+.vd-grid{display:grid;gap:16px}
+.vd{display:grid;gap:20px;padding:16px;border-radius:var(--r2);background:var(--card);box-shadow:var(--sh1)}
+.vd-ph{border-radius:20px;overflow:hidden;background:var(--ink0);aspect-ratio:1;max-width:320px}
+.vd-ph img{width:100%;height:100%;object-fit:cover}
+.vd-t h3{font:400 28px/1.1 var(--f-d);margin:8px 0 12px}
+.vd-t ul{margin:0;padding:0;list-style:none}
+.vd-t li{padding:8px 0;border-top:1px solid var(--line);font-size:15px}
+.vd-x{margin:12px 0 0;font-size:15px}
+.vd-x b{display:block;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--acc-d);margin-bottom:4px}
+.pg-gu{max-width:900px}
+
+/* Оплата и другие разделы */
+.pg-pay{display:grid;gap:12px}
+.pg-oth{padding:20px;border-radius:var(--r);background:var(--card);box-shadow:var(--sh1)}
+.pg-oth ul{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.pg-oth a{display:inline-flex;min-height:40px;align-items:center;padding:0 14px;border-radius:999px;border:1px solid var(--line);text-decoration:none;font-size:14px}
+
+/* Прейскурант */
+.pl-nav ul{list-style:none;margin:0 0 32px;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.pl-nav a{display:inline-flex;min-height:40px;align-items:center;padding:0 14px;border-radius:999px;border:1px solid var(--line);text-decoration:none;font-size:14px}
+.pl{margin-bottom:40px;scroll-margin-top:96px}
+.pl h3{font:400 26px/1.2 var(--f-d);margin-bottom:12px}
+.pl h3 a{text-decoration:none}
+.pl-t{width:100%;border-collapse:collapse;background:var(--card);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh1)}
+.pl-t thead th{padding:12px 16px;text-align:left;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);background:var(--paper2)}
+.pl-t tbody th,.pl-t td{padding:14px 16px;border-top:1px solid var(--line);vertical-align:top;text-align:left}
+.pl-t tbody th{font-weight:400}
+.pl-t tbody th small{display:block;margin-top:4px;color:var(--mute);font-size:13px}
+.pl-t td{white-space:nowrap;font-weight:700;color:var(--acc-d);text-align:right}
+.pl-t td .pl-ask{white-space:normal;display:inline-block;max-width:140px;text-align:right}
+.pl-t thead th:last-child{text-align:right}
+
+/* Отзывы сеткой */
+.rv-grid{display:grid;gap:16px}
+.rv-grid .rq{flex:none}
+
+/* Акции */
+.ak-grid{display:grid;gap:16px}
+.ak{display:flex;flex-direction:column;gap:10px;padding:24px;border-radius:var(--r2);background:var(--card);box-shadow:var(--sh1)}
+.ak p{margin:0;color:var(--mute)}
+.ak .ic{width:28px;height:28px;color:var(--acc-d)}
+.ak-big{background:var(--ink);color:var(--paper)}
+.ak-big h2{margin:4px 0 8px}
+.ak-big .btn{margin-top:16px;align-self:flex-start}
+
+/* Контакты */
+.kt-grid{display:grid;gap:24px}
+.kt{list-style:none;margin:0;padding:0}
+.kt li{display:flex;gap:16px;padding:18px 0;border-top:1px solid var(--line)}
+.kt li:first-child{border-top:0;padding-top:0}
+.kt li .ic{color:var(--acc-d);margin-top:2px}
+.kt li span{display:flex;flex-direction:column;gap:4px;color:var(--mute)}
+.kt li b{color:var(--text);font-size:17px}
+.kt li a{color:var(--acc-d)}
+.kt-side{display:grid;gap:16px;align-content:start}
+.kt-card{padding:20px;border-radius:var(--r);background:var(--card);box-shadow:var(--sh1);font-size:15px}
+.kt-card p{margin:8px 0 0}
+.kt-card a{color:var(--acc-d)}
+.au{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:14px}
+.au li{display:flex;flex-direction:column;gap:2px;font-size:15px}
+.au span{color:var(--mute)}
+.au a{color:var(--acc-d)}
+
+/* Документы: сведения, политика, согласие */
+.pg-doc .wrap{max-width:880px}
+.pg-doc h2{font:400 28px/1.15 var(--f-d);margin:40px 0 12px;scroll-margin-top:96px}
+.pg-doc h2:first-child{margin-top:0}
+.pg-doc p,.pg-doc li{font-size:16px;line-height:1.65}
+.pg-doc p{margin:0 0 12px}
+.pg-doc ul{margin:0 0 12px;padding-left:1.2em}
+.pg-doc a{color:var(--acc-d)}
+.sd{margin:0;border-top:1px solid var(--line)}
+.sd-r{display:grid;gap:4px;padding:14px 0;border-bottom:1px solid var(--line)}
+.sd dt{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
+.sd dd{margin:0}
+.sd-l{padding-left:1.2em}
+.sd-d{list-style:none;padding:0!important;display:grid;gap:8px}
+.sd-d li{display:flex;gap:10px;align-items:center}
+.sd-d .ic{color:var(--acc-d)}
+.pd-t{overflow-x:auto;margin:0 0 16px;border-radius:var(--r);box-shadow:var(--sh1)}
+.pd-t table{min-width:640px;width:100%;border-collapse:collapse;background:var(--card);font-size:14px;line-height:1.5}
+.pd-t th,.pd-t td{padding:12px 14px;border-top:1px solid var(--line);text-align:left;vertical-align:top}
+.pd-t thead th{border-top:0;background:var(--paper2);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}
+.pg-docs-l{display:grid;gap:20px;align-items:center}
+.pg-docs-l p{color:var(--mute);margin:12px 0 0}
+
+/* Услуги клиники на главной */
+.uk-grid{display:grid;gap:12px}
+.uk-c{position:relative;display:flex;flex-direction:column;gap:8px;padding:20px 52px 20px 20px;border-radius:var(--r);background:var(--card);box-shadow:var(--sh1);text-decoration:none}
+.uk-c b{font:400 22px/1.2 var(--f-d)}
+.uk-c span{color:var(--mute);font-size:14px}
+.uk-c .ic{position:absolute;right:18px;top:22px;color:var(--acc-d)}
+.uk-all{background:var(--ink);color:var(--paper)}
+.uk-all span{color:var(--mute-d)}
+.uk-all .ic{color:var(--onyx2)}
+.pr-all{margin:28px 0 0;display:flex;justify-content:center}
+
+/* Подвал: четыре колонки, кнопки как ссылки */
+.f-btn{font-size:14px;color:inherit;text-align:left;text-decoration:underline;text-underline-offset:3px}
+.foot .cols b{color:var(--paper)}
+.foot ul a{text-decoration:none}
+.foot ul a:hover{text-decoration:underline}
+
+/* ── Согласие на обработку данных в формах (152-ФЗ) ─────────────────── */
+.pd-ok{display:flex;gap:12px;align-items:flex-start;margin:4px 0 12px;font-size:14px;line-height:1.45;color:var(--mute-d);cursor:pointer}
+.pd-ok input{flex:none;width:22px;height:22px;margin:1px 0 0;accent-color:var(--onyx)}
+.pd-ok a{color:var(--paper);text-decoration:underline}
+.pd-ok.err span{color:var(--onyx2)}
+.cx-ok{display:flex;gap:10px;align-items:flex-start;padding:8px 12px 0;font-size:12px;line-height:1.4;color:var(--mute-d)}
+.cx-ok input{flex:none;width:18px;height:18px;margin:0;accent-color:var(--onyx)}
+.cx-ok a{color:inherit;text-decoration:underline}
+.cx-ok.err{color:var(--onyx2)}
+
+/* ── Окно о cookie: Метрика только после «Разрешить» ──────────────── */
+.ck{position:fixed;left:var(--gut);right:var(--gut);top:calc(72px + env(safe-area-inset-top));z-index:55;max-width:560px;padding:18px;border-radius:var(--r);background:var(--ink2);color:var(--paper);box-shadow:var(--sh2);display:grid;gap:12px;font-size:14px;line-height:1.45;transform:translateY(16px);opacity:0;transition:transform .35s var(--ease),opacity .35s}
+.ck.on{transform:none;opacity:1}
+.ck[hidden]{display:none}
+.ck p{margin:0}
+.ck a{color:var(--onyx2)}
+.ck-b{display:flex;flex-wrap:wrap;gap:8px}
+.ck .btn{min-height:44px}
+/* На телефоне — под шапкой, чтобы не закрывать кнопки записи и чата; на ПК — слева внизу. */
+@media (min-width:1024px){.ck{left:24px;right:auto;top:auto;bottom:24px}}
+
+/* ── Планшет и ПК ─────────────────────────────────────────────────── */
+@media (min-width:768px){
+  .sv-grid,.ct-cards,.vd-grid,.rv-grid,.ak-grid,.uk-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .pg-pay{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .pg-oth{grid-column:1/-1}
+  .sd-r{grid-template-columns:240px minmax(0,1fr);gap:24px}
+  .vd{grid-template-columns:minmax(0,220px) minmax(0,1fr);align-items:start}
+  .pg-cta .wrap{grid-template-columns:minmax(0,1fr) auto}
+  .pg-docs-l{grid-template-columns:minmax(0,1fr) auto}
+  .ak-big{grid-column:1/-1}
+}
+@media (min-width:1024px){
+  section.pg-hero{padding:132px 0 64px}
+  .pg-hw{grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:56px;align-items:center}
+  .pg-hw-t{grid-template-columns:minmax(0,1fr)}
+  .pg-ht h1{font-size:56px}
+  section.pg-sec{padding:88px 0}
+  .sv-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .uk-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .ct-cards,.rv-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .ak-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .kt-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:56px}
+  .vd-full{grid-template-columns:minmax(0,1fr)}
+  .vd-full .vd{grid-template-columns:320px minmax(0,1fr);gap:40px;padding:24px}
+  .foot .cols-4{grid-template-columns:1.3fr 1fr 1fr 1.2fr}
+  .pg-pay{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .pg-oth{grid-column:auto}
+}
+@media (prefers-reduced-motion:reduce){.mnav,.mnav-in,.ck,.cc{transition:none}}
+
+/* ── Версия для слабовидящих (ГОСТ Р 52872-2019) ───────────────────────
+   Включается кнопкой с глазом; размер шрифта, цвета, картинки и интервал
+   меняет панель сверху. Страница при этом «спокойная»: без пролёта, видео
+   и сцен (класс calm ставится до отрисовки). */
+.vi-bar{display:none}
+html.vi .vi-bar{display:block;position:relative;z-index:80;padding:10px 0;border-bottom:2px solid currentColor}
+.vi-bar .wrap{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center}
+.vi-g{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.vi-g>span{font-weight:700;margin-right:4px}
+.vi-bar button{min-width:44px;min-height:44px;padding:0 12px;border:2px solid currentColor;border-radius:8px;font-weight:700}
+.vi-bar button[aria-pressed="true"]{outline:3px solid currentColor;outline-offset:2px}
+.vi-off{margin-left:auto}
+html.vi body,html.vi body *{font-family:Arial,Helvetica,sans-serif!important;text-shadow:none!important;box-shadow:none!important;animation:none!important;transition:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+html.vi-f2 body{zoom:1.25}
+html.vi-f3 body{zoom:1.5}
+html.vi a{text-decoration:underline!important}
+html.vi .btn,html.vi .chip,html.vi .vi-btn,html.vi .burger{border:2px solid currentColor!important}
+html.vi :focus-visible{outline:3px solid currentColor!important;outline-offset:3px}
+html.vi .top{position:relative;transform:none!important;opacity:1!important}
+html.vi .top::before{display:none}
+html.vi .story{height:auto}
+html.vi .stage{height:auto;min-height:0;background:none!important}
+html.vi .hero{position:relative;padding:32px var(--gut)}
+html.vi .calm-list,html.vi .veil,html.vi .shade,html.vi .glow,html.vi .cue,html.vi canvas,html.vi video,html.vi .price-bg,html.vi .cont-bg,html.vi .gu-ph,html.vi .lab picture,html.vi .rq-st{display:none!important}
+html.vi .js .rv,html.vi .rv{opacity:1!important;transform:none!important}
+html.vi .nav a{opacity:1}
+html.vi section.pg-hero{padding-top:32px}
+html.vi .dock,html.vi .cx-fab{position:static}
+html.vi .dock{margin:0 var(--gut) 16px}
+/* Крупный шрифт — одна колонка: так ничего не уезжает за край экрана. */
+html.vi main [class*="-grid"],html.vi .qz-a,html.vi .tr-nums,html.vi .vs-row,html.vi .cols,html.vi .pg-hw,html.vi .ct-cards,html.vi .pg-pay,html.vi .dr,html.vi .vd,html.vi .cb-row,html.vi .pg-cta .wrap,html.vi .pg-docs-l,html.vi .sd-r{grid-template-columns:minmax(0,1fr)!important}
+html.vi .btn{white-space:normal;height:auto;padding-top:10px;padding-bottom:10px;text-align:center}
+html.vi body{overflow-wrap:anywhere}
+html.vi .vd-ph,html.vi .dr-ph{max-width:280px}
+html.vi-sp body *{letter-spacing:.08em!important;word-spacing:.16em!important;line-height:1.8!important}
+html.vi-noimg img,html.vi-noimg picture,html.vi-noimg .pg-ph,html.vi-noimg .cc-ph,html.vi-noimg .vd-ph,html.vi-noimg .dr-ph,html.vi-noimg .rm-grid,html.vi-noimg .cb-ph,html.vi-noimg .calm-f{display:none!important}
+/* Цвета: чёрным по белому, белым по чёрному, тёмно-синим по голубому. */
+html.vi-c1{--vi-fg:#000;--vi-bg:#fff}
+html.vi-c2{--vi-fg:#fff;--vi-bg:#000}
+html.vi-c3{--vi-fg:#063462;--vi-bg:#9dd1ff}
+html.vi body,html.vi body *:not(svg):not(path):not(circle):not(rect):not(use):not(g):not(symbol){color:var(--vi-fg)!important;background-color:var(--vi-bg)!important;background-image:none!important;border-color:var(--vi-fg)!important}
+html.vi .ic,html.vi svg{color:var(--vi-fg)!important;stroke:var(--vi-fg)}
+html.vi .mk path[fill="currentColor"]{fill:var(--vi-fg)}
+html.vi input,html.vi textarea,html.vi select{border:2px solid var(--vi-fg)!important}
+/* Образцы цветов на кнопках: всегда свои цвета, поверх схемы. */
+html body .vi-bar button.vi-sw1{background-color:#fff!important;color:#000!important;border-color:#000!important}
+html body .vi-bar button.vi-sw2{background-color:#000!important;color:#fff!important;border-color:#fff!important}
+html body .vi-bar button.vi-sw3{background-color:#9dd1ff!important;color:#063462!important;border-color:#063462!important}
+.cx-ok[hidden]{display:none}

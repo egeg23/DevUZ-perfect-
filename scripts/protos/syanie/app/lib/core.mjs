@@ -175,7 +175,9 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
       const src = ["booking", "quiz", "chat", "tg", "wz"].includes(input.src) ? input.src : "booking";
       const l = { key: token(12), at: now(), src, name: cut(input.name, 80), phone: cleanPhone(input.phone), what: cut(input.what, 300) || "Консультация All-on-6", wish: cut(input.wish, 80), conv_id: input.conv || null };
       if (!l.phone && !l.conv_id) throw new Error("Укажите телефон, чтобы администратор мог перезвонить");
-      const r = db.run("insert into leads(key, at, src, name, phone, what, wish, conv_id) values(?, ?, ?, ?, ?, ?, ?, ?)", l.key, l.at, l.src, l.name, l.phone, l.what, l.wish, l.conv_id);
+      /* Согласие на обработку данных: когда дано и в какой редакции текста (152-ФЗ, ч. 3 ст. 9 — подтверждать его должен оператор). */
+      const consentAt = input.consent ? l.at : input.consentAt || null, consentV = /^\d{4}-\d{2}-\d{2}$/.test(String(input.pdv || "")) ? String(input.pdv) : "";
+      const r = db.run("insert into leads(key, at, src, name, phone, what, wish, conv_id, consent_at, consent_v) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", l.key, l.at, l.src, l.name, l.phone, l.what, l.wish, l.conv_id, consentAt, consentV);
       const id = Number(r.lastInsertRowid);
       note("сайт", `Новая заявка №${id}: ${l.what}`);
       notifyStaff(`🦷 Новая заявка №${id}\n${l.name || "Без имени"} · ${l.phone || "без телефона"}\n${l.what}${l.wish ? "\nУдобно: " + l.wish : ""}\n\nОткрыть: ${publicUrl}/admin#zayavki/${id}`, { lead: id }).catch(() => {});
@@ -261,10 +263,11 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
 
   /* Чат на сайте: посетитель с ключом sid в браузере. */
   const siteChat = {
-    async send(sid, text, name) {
+    async send(sid, text, name, consent = false) {
       sid = cut(sid, 64); text = cut(text, 1000);
       if (!/^[\w-]{16,64}$/.test(sid) || !text) throw new Error("Пустое сообщение");
       const c = convFor("site", "site", "s:" + sha(sid).slice(0, 24), { name, sid: sha(sid) });
+      if (consent && !c.consent_at) db.run("update convs set consent_at = ? where id = ?", now(), c.id);
       await inbound(c, text, cut(name, 80) || "Посетитель сайта");
       return c.id;
     },
@@ -369,13 +372,21 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
     const edits = () => { try { return JSON.parse(getS("site.edits") || "{}"); } catch { return {}; } };
     const seo = () => ({ metrika: getS("seo.metrika"), yandex: getS("seo.yandex"), google: getS("seo.google") });
     const title = (key) => GROUPS.find((g) => g.key === key)?.title || key;
-    /* Дата правки — в карту сайта сейчас, а не когда поисковик придёт за ней. */
-    const stamp = (names) => {
-      const pg = site.pages();
-      if (!pg) return;
-      for (const [file, part] of names) if (pg[part]) site.modified(file, sha(pg[part].split("__SITE_URL__").join(publicUrl)).slice(0, 16));
+    /* Дата правки — в карту сайта сейчас, а не когда поисковик придёт за ней.
+       Страниц много, а правка (телефон, цены) задевает часть из них: дата
+       двигается и адрес уходит поисковикам только там, где страница поменялась. */
+    const stamp = () => {
+      const pg = site.pages(), moved = [];
+      if (!pg) return moved;
+      for (const key of Object.keys(pg)) {
+        if (key === "notFound" || typeof pg[key] !== "string") continue;
+        const file = key + ".html", was = getS("site.mod." + file);
+        site.modified(file, sha(pg[key].split("__SITE_URL__").join(publicUrl)).slice(0, 16));
+        if (getS("site.mod." + file) !== was) moved.push(key === "index" ? "/" : "/" + key);
+      }
+      return moved;
     };
-    const told = (names) => { try { stamp(names); } catch (e) { console.error("дата правки в карте сайта:", e.message); } pinger.soon(names.map(([file]) => (file === "index.html" ? "/" : "/" + file.replace(/\.html$/, "")))); };
+    const told = () => { let moved = []; try { moved = stamp(); } catch (e) { console.error("дата правки в карте сайта:", e.message); } if (moved.length) pinger.soon(moved); };
     return {
       on: () => !!renderer,
       version: () => version,
@@ -397,14 +408,14 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
         setS("site.edits", JSON.stringify(all));
         site.changed();
         note(by, `Изменил на сайте: «${title(key)}»`);
-        told([["index.html", "index"]]);
+        told();
         return clean;
       },
       reset(key, by) {
         const all = edits(); delete all[key];
         setS("site.edits", JSON.stringify(all)); site.changed();
         note(by, `Вернул как было на сайте: «${title(key)}»`);
-        told([["index.html", "index"]]);
+        told();
       },
       setSeo({ metrika = "", yandex = "", google = "" }, by) {
         metrika = String(metrika).trim(); yandex = String(yandex).trim(); google = String(google).trim();
@@ -413,7 +424,7 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
         setS("seo.metrika", metrika); setS("seo.yandex", yandex); setS("seo.google", google);
         site.changed();
         note(by, "Поменял Метрику и коды поисковиков");
-        told([["index.html", "index"], ["privacy.html", "privacy"]]);
+        told();
         return seo();
       },
       /* Когда страница менялась на деле — lastmod в карте сайта: отпечаток

@@ -3,7 +3,7 @@
    (.github/workflows/syanie-app.yml), сервер клиники его только запускает. */
 import { createServer } from "node:http";
 import { gzipSync } from "node:zlib";
-import { createReadStream, existsSync, statSync, readFileSync, mkdirSync, writeFileSync } from "node:fs";
+import { createReadStream, existsSync, statSync, readFileSync, mkdirSync, writeFileSync, readdirSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { extname, join, normalize, resolve, sep } from "node:path";
 import { openDb } from "./lib/db.mjs";
@@ -15,7 +15,7 @@ import { verifyFile } from "./lib/verify.mjs";
 const MIME = {
   ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8",
   ".json": "application/json; charset=utf-8", ".webp": "image/webp", ".png": "image/png", ".jpg": "image/jpeg",
-  ".svg": "image/svg+xml", ".mp4": "video/mp4", ".ico": "image/x-icon", ".txt": "text/plain; charset=utf-8", ".xml": "application/xml",
+  ".svg": "image/svg+xml", ".mp4": "video/mp4", ".ico": "image/x-icon", ".txt": "text/plain; charset=utf-8", ".xml": "application/xml", ".pdf": "application/pdf",
 };
 const COOKIE = "sy_s";
 
@@ -76,39 +76,55 @@ export function createApp({ core, siteDir, adminDir, uploadsDir = "", setupCode 
   }
 
   /* Страницы сайта: собранные с правками клиники (core.site.pages) или, без
-     сборщика, файлы из образа. Адрес сайта (__SITE_URL__ в canonical и og)
-     ставим из PUBLIC_URL, сжатую копию держим рядом до следующей правки. */
-  const LIVE = { "index.html": "index", "privacy.html": "privacy", "404.html": "notFound" };
-  let pages = new Map(), seen = 0;
-  function page(name) {
+     сборщика, файлы из образа. Ключ страницы — её адрес без «/» (index —
+     главная, notFound — 404), файл — <ключ>.html. Адрес сайта (__SITE_URL__ в
+     canonical и og) ставим из PUBLIC_URL, сжатую копию держим рядом до
+     следующей правки. */
+  const fileOf = (key) => (key === "notFound" ? "404.html" : key + ".html");
+  let pages = new Map(), seen = 0, keys = null;
+  /* Какие страницы есть: из сборки или из файлов образа. */
+  function pageKeys() {
     const v = core.site?.on() ? core.site.version() : 0;
-    if (v !== seen) { pages = new Map(); seen = v; }
-    if (!pages.has(name)) {
-      const live = v ? core.site.pages() : null, f = join(siteDir, name);
-      const raw = live ? live[LIVE[name]] || "" : existsSync(f) ? readFileSync(f, "utf8") : "";
+    if (v !== seen) { pages = new Map(); keys = null; seen = v; }
+    if (!keys) {
+      const live = v ? core.site.pages() : null;
+      keys = live ? Object.keys(live).filter((k) => typeof live[k] === "string")
+        : existsSync(siteDir) ? readdirSync(siteDir).filter((f) => /^[a-z0-9-]+\.html$/.test(f)).map((f) => (f === "404.html" ? "notFound" : f.slice(0, -5))) : [];
+    }
+    return keys;
+  }
+  function page(key) {
+    pageKeys();
+    const name = fileOf(key);
+    if (!pages.has(key)) {
+      const live = seen ? core.site.pages() : null, f = join(siteDir, name);
+      const raw = live ? live[key] || "" : existsSync(f) ? readFileSync(f, "utf8") : "";
       const html = raw.split("__SITE_URL__").join(publicUrl);
       const mod = html && core.site?.modified ? core.site.modified(name, createHash("sha256").update(html).digest("hex").slice(0, 16)) : Date.now();
-      pages.set(name, html && { html, gz: gzipSync(html), mod });
+      pages.set(key, html && { html, gz: gzipSync(html), mod });
     }
-    return pages.get(name);
+    return pages.get(key);
   }
+  /* Адрес → страница: «/» — главная, «/ceny» — ceny. */
+  const keyOf = (p) => (p === "/" || p === "/index.html" ? "index" : /^\/[a-z0-9-]+$/.test(p) && p !== "/notFound" && p !== "/index" && pageKeys().includes(p.slice(1)) ? p.slice(1) : null);
 
-  /* Фото врачей из админки: JPG, PNG или WebP до 3 МБ, имя — хеш содержимого. */
+  /* Фото из админки: JPG, PNG или WebP до 3 МБ; документы клиники (лицензия,
+     правила, договор) — ещё и PDF до 10 МБ. Имя — хеш содержимого. */
   function saveUpload(dataUrl) {
     if (!uploadsDir) throw new HttpError(400, "Загрузка фото работает на сервере клиники");
-    const m = /^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/=]+)$/.exec(String(dataUrl || ""));
-    if (!m) throw new HttpError(400, "Нужно фото JPG, PNG или WebP");
-    const buf = Buffer.from(m[2], "base64");
-    if (buf.length > 3 * 1024 * 1024) throw new HttpError(400, "Фото больше 3 МБ: уменьшите его");
-    const ext = buf[0] === 0xff && buf[1] === 0xd8 ? "jpg" : buf.subarray(0, 4).toString("hex") === "89504e47" ? "png" : buf.subarray(0, 4).toString() === "RIFF" && buf.subarray(8, 12).toString() === "WEBP" ? "webp" : "";
-    if (!ext) throw new HttpError(400, "Это не фото JPG, PNG или WebP");
+    const m = /^data:(image\/(?:jpeg|png|webp)|application\/pdf);base64,([A-Za-z0-9+/=]+)$/.exec(String(dataUrl || ""));
+    if (!m) throw new HttpError(400, "Нужно фото JPG, PNG или WebP, документ — PDF");
+    const buf = Buffer.from(m[2], "base64"), pdf = m[1] === "application/pdf";
+    if (buf.length > (pdf ? 10 : 3) * 1024 * 1024) throw new HttpError(400, pdf ? "Документ больше 10 МБ: сожмите его" : "Фото больше 3 МБ: уменьшите его");
+    const ext = pdf ? (buf.subarray(0, 5).toString() === "%PDF-" ? "pdf" : "") : buf[0] === 0xff && buf[1] === 0xd8 ? "jpg" : buf.subarray(0, 4).toString("hex") === "89504e47" ? "png" : buf.subarray(0, 4).toString() === "RIFF" && buf.subarray(8, 12).toString() === "WEBP" ? "webp" : "";
+    if (!ext) throw new HttpError(400, pdf ? "Это не PDF" : "Это не фото JPG, PNG или WebP");
     const name = createHash("sha256").update(buf).digest("hex").slice(0, 32) + "." + ext;
     mkdirSync(uploadsDir, { recursive: true });
     if (!existsSync(join(uploadsDir, name))) writeFileSync(join(uploadsDir, name), buf);
     return "/uploads/" + name;
   }
-  /* Карта сайта: главная и страница о данных с датой последней правки и
-     фото главной с подписями (Google Картинки). */
+  /* Карта сайта: все страницы с датой последней правки и фото с подписями
+     (Google Картинки). */
   const xml = (v) => String(v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   const day = (t) => new Date(t).toISOString().slice(0, 10);
   function photosOf(html) {
@@ -120,10 +136,11 @@ export function createApp({ core, siteDir, adminDir, uploadsDir = "", setupCode 
     return [...out].slice(0, 100);
   }
   function sitemap() {
-    const urls = [["/", "index.html"], ["/privacy", "privacy.html"]].map(([loc, name]) => {
-      const pg = page(name);
+    const order = (k) => (k === "index" ? 0 : 1);
+    const urls = pageKeys().filter((k) => k !== "notFound").sort((a, b) => order(a) - order(b)).map((key) => {
+      const pg = page(key), loc = key === "index" ? "/" : "/" + key;
       if (!pg) return "";
-      const pics = loc === "/" ? photosOf(pg.html).map((src) => `<image:image><image:loc>${xml(publicUrl + src)}</image:loc></image:image>`).join("") : "";
+      const pics = photosOf(pg.html).map((src) => `<image:image><image:loc>${xml(publicUrl + src)}</image:loc></image:image>`).join("");
       return `<url><loc>${xml(publicUrl + loc)}</loc><lastmod>${day(pg.mod)}</lastmod>${pics}</url>`;
     });
     return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">${urls.join("")}</urlset>\n`;
@@ -179,7 +196,7 @@ export function createApp({ core, siteDir, adminDir, uploadsDir = "", setupCode 
     if (M === "GET" && path === "/log") return { log: core.log() };
     /* Сайт: правку содержимого ведёт любой сотрудник (п. 5 техзадания), Метрику — главный врач. */
     if (M === "GET" && path === "/site") return core.site.view();
-    if (M === "POST" && path === "/upload") { const b = await body(req, 5 * 1024 * 1024); return { url: saveUpload(b.data) }; }
+    if (M === "POST" && path === "/upload") { const b = await body(req, 14 * 1024 * 1024); return { url: saveUpload(b.data) }; }
     if (M === "POST" && path === "/seo") { owner(); return { seo: core.site.setSeo(await body(req), who) }; }
     const sk = /^\/site\/([a-z]+)(\/reset)?$/.exec(path);
     if (M === "POST" && sk) { if (sk[2]) core.site.reset(sk[1], who); else core.site.save(sk[1], (await body(req, 256 * 1024)).value, who); return core.site.view(); }
@@ -195,14 +212,17 @@ export function createApp({ core, siteDir, adminDir, uploadsDir = "", setupCode 
       if (!allow("lead:" + ip, 6, 10 * 6e4)) throw new HttpError(429, "Слишком много заявок подряд. Позвоните нам, пожалуйста");
       const b = await body(req, 8 * 1024);
       if (b.website) return send(res, 200, { id: 0, key: "" });
-      return send(res, 200, await core.leads.add({ src: b.src, name: b.name, phone: b.phone, what: b.what, wish: b.wish }));
+      /* 152-ФЗ: без согласия на обработку данных заявку не принимаем. */
+      if (b.consent !== true) throw new HttpError(400, "Отметьте согласие на обработку персональных данных: без него мы не можем принять заявку");
+      return send(res, 200, await core.leads.add({ src: b.src, name: b.name, phone: b.phone, what: b.what, wish: b.wish, consent: true, pdv: b.pdv }));
     }
     const ls = /^\/api\/lead\/(\d+)$/.exec(p);
     if (ls && M === "GET") { const st = core.leads.statusFor(Number(ls[1]), url.searchParams.get("k") || ""); return send(res, st ? 200 : 404, st ? { status: st } : { error: "нет" }); }
     if (p === "/api/chat" && M === "POST") {
       if (!allow("chat:" + ip, 30, 10 * 6e4)) throw new HttpError(429, "Слишком много сообщений подряд");
       const b = await body(req, 8 * 1024);
-      await core.siteChat.send(b.sid, b.text, b.name);
+      if (b.consent !== true) throw new HttpError(400, "Отметьте согласие на обработку персональных данных, чтобы написать в чат");
+      await core.siteChat.send(b.sid, b.text, b.name, true);
       return send(res, 200, { ok: true });
     }
     if (p === "/api/chat" && M === "GET") {
@@ -281,15 +301,17 @@ export function createApp({ core, siteDir, adminDir, uploadsDir = "", setupCode 
       const proof = verifyFile(p);
       if (proof !== null) return send(res, 200, proof, { "Content-Type": MIME[".html"], "Cache-Control": "no-cache" });
       res.setHeader("X-Frame-Options", "SAMEORIGIN");
-      if (p === "/" || p === "/index.html") return sendPage(req, res, "index.html");
-      if (p === "/privacy" || p === "/privacy/") return sendPage(req, res, "privacy.html");
+      const key = keyOf(p);
+      if (key) return sendPage(req, res, key);
+      /* Тот же адрес с «/» в конце (так их знали по прежнему сайту) — 301 без неё. */
+      if (p.length > 1 && p.endsWith("/") && keyOf(p.replace(/\/+$/, ""))) return send(res, 301, "", { Location: p.replace(/\/+$/, "") + url.search, "Cache-Control": "public, max-age=86400" });
       if (p.startsWith("/protos/")) return staticFile(req, res, siteDir, p, "public, max-age=604800") || send(res, 404, "Нет файла");
       if (p.startsWith("/uploads/") && uploadsDir) return staticFile(req, res, uploadsDir, p.slice(9), "public, max-age=31536000, immutable") || send(res, 404, "Нет файла");
       /* Страницы прежнего сайта клиники — на блок этой страницы (lib/old-urls.mjs). */
       const old = oldPage(p);
       if (old) return send(res, 301, "", { Location: old, "Cache-Control": "public, max-age=86400" });
-      if (hackedPage(p)) return sendPage(req, res, "404.html", 410);
-      return sendPage(req, res, "404.html", 404);
+      if (hackedPage(p)) return sendPage(req, res, "notFound", 410);
+      return sendPage(req, res, "notFound", 404);
     } catch (e) {
       /* Наши ошибки написаны по-русски — их показываем; чужие (сеть, код) — нет. */
       const net = e?.name === "TimeoutError" || e?.name === "AbortError" || /fetch failed|ECONN|ENOTFOUND/.test(e?.message || "");

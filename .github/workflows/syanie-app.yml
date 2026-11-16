@@ -71,7 +71,7 @@ jobs:
           cp -r public/protos/syanie scripts/protos/syanie/app/site/protos/
           # Сборщик сайта для правок из админки: тот же gen.mjs с данными макета.
           mkdir -p scripts/protos/syanie/app/render
-          (cd scripts/protos/syanie && cp gen.mjs data.mjs plan.mjs site.css site.js chat.css media.json app/render/)
+          (cd scripts/protos/syanie && cp gen.mjs data.mjs plan.mjs catalog.mjs pages.mjs site.css site.js chat.css media.json app/render/)
           du -sh scripts/protos/syanie/app/site
       - name: Сервер отдаёт сайт и админку
         working-directory: scripts/protos/syanie/app

@@ -176,12 +176,17 @@ test("сияние на сервере клиники: заявка с сайт�
     assert.equal((await a.call("/api/lead", { src: "booking", name: "Анна" })).status, 400);
     const bot = await a.call("/api/lead", { src: "booking", name: "Бот", phone: "+79990000000", website: "http://spam" });
     assert.equal(bot.json.id, 0, "ловушка для ботов не сработала");
-    const r = await a.call("/api/lead", { src: "booking", name: "Анна", phone: "8 900 123-45-67", what: "Бесплатная консультация All-on-6", wish: "завтра вечером" });
+    /* 152-ФЗ: без отмеченного согласия на обработку данных заявку не принимаем. */
+    const noOk = await a.call("/api/lead", { src: "booking", name: "Анна", phone: "8 900 123-45-67" });
+    assert.equal(noOk.status, 400);
+    assert.match(noOk.json.error, /согласие на обработку персональных данных/);
+    const r = await a.call("/api/lead", { src: "booking", name: "Анна", phone: "8 900 123-45-67", what: "Бесплатная консультация All-on-6", wish: "завтра вечером", consent: true, pdv: "2026-11-16" });
     assert.equal(r.status, 200);
     await new Promise((res) => setTimeout(res, 50));
     const leads = (await a.call("/api/admin/leads")).json.leads;
     assert.equal(leads.length, 1);
     assert.equal(leads[0].phone, "+79001234567");
+    assert.ok(leads[0].consent_at > 0 && leads[0].consent_v === "2026-11-16", "не записано, когда и на какую редакцию дано согласие");
     assert.equal(leads[0].amo_id, 5551, "заявка не ушла в amoCRM сама");
     const deal = a.net.calls.find((c) => c.url.endsWith("/leads/complex"))!;
     assert.equal(deal.body[0].status_id, 2);
@@ -210,7 +215,9 @@ test("сияние на сервере клиники: Instagram, Telegram и ч
     await a.call(path, { messages: [{ messageId: "ig-1", channelId: "ch-ig", chatType: "instagram", chatId: "anna.t", text: "повтор" }] });
     await a.call("/api/tg/hook", { message: { message_id: 3, date: Math.floor(Date.now() / 1000), chat: { id: 555, type: "private" }, from: { first_name: "Олег" }, text: "Можно на субботу?" } }, { "X-Telegram-Bot-Api-Secret-Token": secret });
     const sid = "visitor-key-0123456789";
-    assert.equal((await a.call("/api/chat", { sid, text: "Есть рассрочка?" })).status, 200);
+    assert.equal((await a.call("/api/chat", { sid, text: "Есть рассрочка?" })).status, 400, "чат без согласия на обработку данных");
+    assert.equal((await a.call("/api/chat", { sid, text: "Есть рассрочка?", consent: true })).status, 200);
+    assert.ok(a.db.get("select consent_at from convs where channel = 'site'").consent_at > 0, "не записано, когда дано согласие в чате");
 
     const convs = (await a.call("/api/admin/inbox")).json.convs;
     assert.deepEqual(convs.map((c: any) => c.kind).sort(), ["instagram", "site", "tg"]);
@@ -253,9 +260,12 @@ test("сияние на сервере клиники: клиника сама �
     const prices = view.defaults.prices.map((p: any, i: number) => (i ? p : { ...p, price: 199900 }));
     assert.equal((await a.adminPost("/site/prices", { value: prices })).status, 200);
     assert.match(await page(), /199 900/);
-    await a.adminPost("/site/services", { value: [{ t: "Чистка зубов", p: "от 4 500 ₽" }] });
-    assert.match(await page(), /Чистка зубов<\/span><b>от 4 500 ₽/);
-    assert.match(await page(), /data-svc="Чистка зубов"/, "услуги нет в записи");
+    assert.equal(view.defaults.services.length > 30, true, "прейскурант по умолчанию пуст");
+    assert.equal((await a.adminPost("/site/services", { value: [{ cat: "professionalnaya-gigiena", t: "Чистка зубов", d: "Ультразвук и Air Flow", p: "от 4 500 ₽" }] })).status, 200);
+    assert.match((await a.call("/ceny")).text, /<th scope="row">Чистка зубов<small>Ультразвук и Air Flow<\/small><\/th><td>от 4 500 ₽<\/td>/);
+    assert.match((await a.call("/professionalnaya-gigiena")).text, /<h3>Чистка зубов<\/h3><p>Ультразвук и Air Flow<\/p><b>от 4 500 ₽<\/b>/);
+    assert.match(await page(), /data-svc="Гигиена"/, "раздела нет в записи");
+    assert.match((await a.adminPost("/site/services", { value: [{ cat: "khirurgiya", t: "", p: "1 ₽" }] })).json.error, /Услуга/);
     await a.adminPost("/site/texts", { value: { price: { h: "Цены на лечение" } } });
     assert.match(await page(), /Цены на лечение/);
     const faq = [{ q: "<script>alert(1)</script>", a: "Ответ & ещё" }];
@@ -292,8 +302,9 @@ test("сияние на сервере клиники: клиника сама �
     assert.equal((await a.adminPost("/seo", { metrika: "abc" })).status, 400);
     await a.adminPost("/seo", { metrika: "98765432", yandex: "a1b2c3d4e5", google: "G-code_123" });
     const seo = await page();
-    assert.match(seo, /mc\.yandex\.ru\/metrika\/tag\.js/);
-    assert.match(seo, /ym\(98765432,"init"/);
+    assert.match(seo, /"metrika":"98765432"/, "номер счётчика не дошёл до окна о cookie");
+    assert.doesNotMatch(seo, /ym\(98765432,"init"|mc\.yandex\.ru\/watch/, "Метрика включается до согласия на cookie");
+    assert.match(seo, /data-cookies>Настройки cookie/);
     assert.match(seo, /<meta name="yandex-verification" content="a1b2c3d4e5">/);
     assert.match(seo, /<meta name="google-site-verification" content="G-code_123">/);
     assert.match((await a.call("/privacy")).text, /Яндекс Метрика/, "политика молчит о Метрике");
@@ -308,7 +319,7 @@ test("сияние на сервере клиники: блоки страниц
     await a.adminPost("/setup", { code: "setup-42", login: "glavvrach", name: "Евгений", pass: "длинный-пароль" });
     const page = async () => (await a.call("/")).text;
     const view = (await a.call("/api/admin/site")).json;
-    assert.deepEqual(view.defaults.blocks.map((b: any) => b.id), ["vs", "price", "quiz", "docs", "trust", "perks", "reviews", "rooms", "faq", "contacts"]);
+    assert.deepEqual(view.defaults.blocks.map((b: any) => b.id), ["vs", "price", "uslugi", "quiz", "docs", "trust", "perks", "reviews", "rooms", "faq", "contacts"]);
     assert.equal(view.blocks.quiz, "Расчёт за минуту");
     assert.equal(view.groups[0].key, "blocks", "«Блоки страницы» не первыми в разделе «Сайт»");
     const png = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
@@ -322,19 +333,19 @@ test("сияние на сервере клиники: блоки страниц
     assert.equal(saved.status, 200, saved.json?.error);
     const html = await page();
     assert.ok(!html.includes('id="kviz"') && !html.includes('id="voprosy"'), "спрятанный блок на странице");
-    const at = ["all-on-6", "ceny", "b-cnew1234", "vrachi", "garantii", "privilegii", "otzyvy", "klinika", "kontakty"].map((id) => html.indexOf(`id="${id}"`));
+    const at = ["all-on-6", "ceny", "b-cnew1234", "uslugi-kliniki", "vrachi", "garantii", "privilegii", "otzyvy", "klinika", "kontakty"].map((id) => html.indexOf(`id="${id}"`));
     assert.ok(at.every((x, i) => x > 0 && (i === 0 || x > at[i - 1])), "порядок блоков: " + at.join(","));
     assert.match(html, /<h2>Детская &lt;b&gt;стоматология&lt;\/b&gt;<\/h2>/, "свой блок не экранирован");
     assert.match(html, /<p>Первый абзац<\/p><ul><li>пункт один<\/li><li>пункт два<\/li><\/ul><p>Второй абзац<\/p>/);
     assert.ok(html.includes(`src="${up}" alt="Кабинет для детей"`), "фото своего блока");
     assert.match(html, /id="b-cnew1234"[^]*?data-book[^]*?<\/section>/, "кнопки записи в своём блоке нет");
     /* Меню и разметка идут за блоками. */
-    assert.match(html, /<a href="#b-cnew1234">Дети<\/a>/);
-    assert.doesNotMatch(html, /<a href="#voprosy">/, "спрятанный блок в меню");
+    assert.match(html, /<a href="\/#b-cnew1234">Дети<\/a>/);
+    assert.doesNotMatch(html, /href="\/?#voprosy"/, "спрятанный блок в меню и подвале");
     assert.doesNotMatch(html, /"FAQPage"/, "разметка вопросов при спрятанном блоке");
     assert.match((await a.call("/sitemap.xml")).text, new RegExp(up.replace(/[.]/g, "\\.")), "фото своего блока не в карте сайта");
     const again = (await a.call("/api/admin/site")).json.edits.blocks;
-    assert.equal(again.length, 11, "сохранённый список без «Клиники»");
+    assert.equal(again.length, 12, "сохранённый список без «Клиники»");
     assert.equal(again.find((b: any) => b.id === "cnew1234").photos[0].alt, "Кабинет для детей");
 
     /* Ошибки — словами, ничего не ломается. */
@@ -363,6 +374,7 @@ test("сияние на сервере клиники: правка в адми�
   const a = await boot("https://syanie.test", { live: true });
   try {
     await a.adminPost("/setup", { code: "setup-42", login: "glavvrach", name: "Евгений", pass: "длинный-пароль" });
+    await a.call("/sitemap.xml");
     const before = Date.now();
     const saved = await a.adminPost("/site/texts", { value: { price: { h: "Цены на лечение" } } });
     assert.equal(saved.status, 200);
@@ -374,14 +386,15 @@ test("сияние на сервере клиники: правка в адми�
     assert.match((await a.call("/sitemap.xml")).text, new RegExp(`<loc>https://syanie\\.test/</loc><lastmod>${new Date(at).toISOString().slice(0, 10)}</lastmod>`));
     assert.equal(a.net.calls.filter((c) => c.url.endsWith("/indexnow")).length, 0, "сигнал ушёл до паузы");
 
-    /* Ещё правка подряд — сигнал всё равно один, на адрес главной. */
+    /* Ещё правка подряд — сигнал всё равно один: главная и «Цены», где этот раздел есть; врачей правка не задела. */
+    assert.ok(!String(a.core.getS("site.mod.vrachi.html")).endsWith(`|${at}`), "дата сдвинулась у страницы без правки");
     await a.adminPost("/site/texts", { value: { price: { h: "Цены" } } });
     const out = await a.core.seoPing.flush();
     const pings = a.net.calls.filter((c) => c.url.endsWith("/indexnow"));
     assert.deepEqual(pings.map((c) => c.url), ["https://yandex.com/indexnow", "https://api.indexnow.org/indexnow"]);
     const key = a.core.seoPing.key();
     assert.match(key, /^[a-f0-9]{32}$/);
-    assert.deepEqual(pings[0].body, { host: "syanie.test", key, keyLocation: `https://syanie.test/${key}.txt`, urlList: ["https://syanie.test/"] });
+    assert.deepEqual(pings[0].body, { host: "syanie.test", key, keyLocation: `https://syanie.test/${key}.txt`, urlList: ["https://syanie.test/", "https://syanie.test/ceny"] });
     assert.ok(out.res.every((r: any) => r.ok && r.text === "принял"));
     assert.equal(await a.core.seoPing.flush(), null, "второй сигнал без новой правки");
 
@@ -406,22 +419,33 @@ test("сияние на сервере клиники: старые страни
      отдавал итальянский магазин). Страницы клиники — 301 на блок страницы. */
   const { oldPage, hackedPage } = await load("lib/old-urls.mjs");
   const cases: Array<[string, string | null]> = [
-    ["/implantatsiya-all-on-4/", "/#all-on-6"],
-    ["/implantatsiya-zubov/", "/#all-on-6"],
-    ["/uslugi/implantatsiya-zubov/pri-polnom-otsutstvii", "/#all-on-6"],
-    ["/sinus-lifting/", "/#all-on-6"],
-    ["/akcii", "/#ceny"],
-    ["/akcii/tsirkoniyevaya-koronka-pod-klyuch", "/#ceny"],
-    ["/otzyvy", "/#otzyvy"],
-    ["/o-klinike", "/#klinika"],
-    ["/uslugi", "/"],
-    ["/lechenie-zubov", "/"],
-    ["/koronki-e-max/", "/"],
-    ["/keramicheskie-nakladki/", "/"],
-    ["/kompyuternaya-tomografiya-kt/", "/"],
+    ["/implantatsiya-all-on-4/", "/"],
+    ["/implantatsiya-all-on-6/", "/"],
+    ["/implantatsiya-zubov/", "/implantatsiya-zubov"],
+    ["/implantatsiya-nobel-biocare/", "/implantatsiya-zubov"],
+    ["/uslugi/implantatsiya-zubov/pri-polnom-otsutstvii", "/implantatsiya-zubov"],
+    ["/sinus-lifting/", "/khirurgiya"],
+    ["/udalenie-zuba-mudrosti/", "/khirurgiya"],
+    ["/lechenie-kisty-zuba/", "/khirurgiya"],
+    ["/udalenie-zubnogo-kamnya/", "/professionalnaya-gigiena"],
+    ["/chistka-zubov-air-flow/", "/professionalnaya-gigiena"],
+    ["/akcii", "/akcii"],
+    ["/akcii/tsirkoniyevaya-koronka-pod-klyuch", "/akcii"],
+    ["/otzyvy", "/otzyvy"],
+    ["/o-klinike", "/o-klinike"],
+    ["/uslugi", "/uslugi"],
+    ["/lechenie-zubov", "/lechenie-zubov"],
+    ["/lechenie-kariesa/", "/lechenie-zubov"],
+    ["/restavratsiya-zubov/", "/lechenie-zubov"],
+    ["/restavratsiya-zubov-kompozitom/", "/esteticheskaya-stomatologiya"],
+    ["/ustanovka-vinirov/", "/esteticheskaya-stomatologiya"],
+    ["/koronki-e-max/", "/protezirovanie-zubov"],
+    ["/keramicheskie-nakladki/", "/protezirovanie-zubov"],
+    ["/protezirovanie-na-implantakh/", "/protezirovanie-zubov"],
+    ["/kompyuternaya-tomografiya-kt/", "/diagnostika-zubov"],
     /* Прежний сайт на Tilda (syanie-sewera.ru), его карта сайта 15.11.2026. */
-    ["/all-on-4", "/#all-on-6"],
-    ["/all-on-4/spasibo", "/#all-on-6"],
+    ["/all-on-4", "/"],
+    ["/all-on-4/spasibo", "/"],
     ["/conf", "/privacy"],
     ["/spasibo", "/"],
     ["/Cuscino-Allattamento-Grigio-1111253", null],
@@ -434,11 +458,19 @@ test("сияние на сервере клиники: старые страни
   /* Товары магазина (номер в конце) — 410, страницы клиники и прочее — нет. */
   for (const path of ["/Cuscino-Allattamento-Grigio-1111253", "/15-ay032nl-15-ay033nl-15-ay034nl-15-ay035nl-416588", "/Reloj-Fossil-FS5304-Hombre-1333334/"]) assert.ok(hackedPage(path), path);
   for (const path of ["/beauty-uomo/", "/implantatsiya-all-on-4/", "/akcii/skidka-2025", "/akcii/1234567", "/privacy", "/", "/a/b-1234567", "/x-12345678"]) assert.ok(!hackedPage(path), path);
-  const a = await boot();
+  /* Страницы собирает gen.mjs, как на сервере: собранных файлов сайта в репозитории нет. */
+  const a = await boot("https://syanie.test", { live: true });
   try {
     const r = await fetch(a.base + "/implantatsiya-all-on-6/", { redirect: "manual" });
     assert.equal(r.status, 301);
-    assert.equal(r.headers.get("location"), "/#all-on-6");
+    assert.equal(r.headers.get("location"), "/");
+    /* Разделы прежнего сайта — те же адреса, с «/» в конце — 301 без неё. */
+    const sl = await fetch(a.base + "/implantatsiya-zubov/?utm_source=x", { redirect: "manual" });
+    assert.equal(sl.status, 301);
+    assert.equal(sl.headers.get("location"), "/implantatsiya-zubov?utm_source=x");
+    assert.equal((await fetch(a.base + "/implantatsiya-zubov", { redirect: "manual" })).status, 200);
+    const svc = await fetch(a.base + "/koronki-e-max/", { redirect: "manual" });
+    assert.equal(svc.headers.get("location"), "/protezirovanie-zubov");
     const gone = await fetch(a.base + "/Cuscino-Allattamento-Grigio-1111253", { redirect: "manual" });
     assert.equal(gone.status, 410);
     assert.equal((await fetch(a.base + "/beauty-uomo/", { redirect: "manual" })).status, 404);
@@ -473,6 +505,9 @@ test("сияние на сервере клиники: поисковикам �
     assert.match(map, /<url><loc>https:\/\/syanie\.test\/<\/loc><lastmod>\d{4}-\d{2}-\d{2}<\/lastmod><image:image>/);
     assert.match(map, /<image:loc>https:\/\/syanie\.test\/protos\/syanie\/p-rec\.webp<\/image:loc>/, "фото клиники в карте сайта");
     assert.match(map, /<loc>https:\/\/syanie\.test\/privacy<\/loc><lastmod>/);
+    for (const path of ["uslugi", "ceny", "vrachi", "o-klinike", "otzyvy", "akcii", "kontakty", "svedeniya", "soglasie", "implantatsiya-zubov", "protezirovanie-zubov", "khirurgiya", "esteticheskaya-stomatologiya", "lechenie-zubov", "professionalnaya-gigiena", "diagnostika-zubov"])
+      assert.match(map, new RegExp(`<loc>https://syanie\\.test/${path}</loc><lastmod>\\d{4}-\\d{2}-\\d{2}</lastmod>`), path);
+    assert.doesNotMatch(map, /notFound|404|\/index</, "служебная страница в карте сайта");
     assert.doesNotMatch(map, /bg-street|film-9/, "фон без подписи — не фото для поиска");
 
     const gm = await a.call("/sitemap-gone.xml");
@@ -523,6 +558,107 @@ test("сияние на сервере клиники: поисковикам �
   assert.match(wf, /SY_ALIASES: \$\{\{ vars\.SYANIE_ALIASES \|\| '[^']*\bsyanie-sewera\.ru\b[^']*' \}\}/);
   assert.match(wf, /envs: [^\n]*\bSY_ALIASES\b/, "SY_ALIASES не уходит на сервер");
   assert.match(remote, /printf '%s\\n' \$\{SY_ALIASES:-\}/, "remote.sh не читает SY_ALIASES");
+});
+
+test("сияние на сервере клиники: многостраничный сайт — услуги по разделам, цены, врачи, сведения о клинике, 152-ФЗ и версия для слабовидящих", async () => {
+  /* Владелец, 16.11.2026: «Под сияние севера делаем многостраничное, как у
+     оригинального сайта который у них был. Разведи на несколько страниц:
+     отдельно услуги, отдельно цены и адаптируй под 152 ФЗ: согласия,
+     обработка данных, версия для слабовидящих и всей необходимой документации». */
+  const CAT = await import(new URL("../catalog.mjs", APP).href);
+  const { CATS, TEXT_KEYS } = await load("lib/site-content.mjs");
+  assert.deepEqual(CATS, CAT.CATEGORIES.map((k: any) => [k.slug, k.t]), "разделы в админке и на сайте разошлись");
+  for (const k of CAT.CATEGORIES) assert.ok(TEXT_KEYS["pg-" + k.slug], "текст первого экрана раздела не правится: " + k.slug);
+  assert.ok(CAT.SERVICES.every((x: any) => CAT.CATEGORIES.some((k: any) => k.slug === x.cat)), "услуга вне разделов");
+  /* Цены только те, что клиника называла сама. */
+  assert.deepEqual(CAT.SERVICES.filter((x: any) => x.p).map((x: any) => x.p), ["Бесплатно", "5 000 ₽"]);
+
+  const a = await boot("https://syanie.test", { live: true });
+  try {
+    const pages = ["/", "/uslugi", "/ceny", "/vrachi", "/o-klinike", "/otzyvy", "/akcii", "/kontakty", "/svedeniya", "/privacy", "/soglasie", ...CAT.CATEGORIES.map((k: any) => "/" + k.slug)];
+    for (const path of pages) {
+      const r = await a.call(path);
+      assert.equal(r.status, 200, path);
+      assert.match(r.text, new RegExp(`<link rel="canonical" href="https://syanie\\.test${path === "/" ? "/" : path}">`), path);
+      assert.ok(!/[—–]| - |&mdash;/.test(r.text.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/g, "")), "длинное тире: " + path);
+      assert.ok(!/__SITE_URL__|undefined|\[object Object\]|NaN/.test(r.text), "дыра в сборке: " + path);
+      /* На каждой странице: меню страниц, согласие в записи, версия для слабовидящих, предупреждение. */
+      assert.match(r.text, /<nav class="nav" aria-label="Разделы сайта"><a href="\/"/, path);
+      assert.match(r.text, /id="bk-ok"[^>]*>|<input type="checkbox" id="bk-ok">/, path);
+      assert.match(r.text, /<a href="\/soglasie" target="_blank" rel="noopener">согласие на обработку персональных данных<\/a>/, path);
+      assert.match(r.text, /id="vi-bar"/, path);
+      assert.match(r.text, /data-vi="on"/, path);
+      assert.match(r.text, /ИМЕЮТСЯ ПРОТИВОПОКАЗАНИЯ/, path);
+      assert.match(r.text, /href="\/svedeniya">Сведения о медицинской организации/, path);
+      const ld = JSON.parse(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/.exec(r.text)![1]);
+      assert.ok(ld["@graph"].some((x: any) => String(x["@id"]).endsWith("/#clinic")), "разметка клиники: " + path);
+    }
+    /* Раздел услуг: его услуги, другие разделы, подсвечено «Услуги». */
+    const impl = (await a.call("/implantatsiya-zubov")).text;
+    assert.match(impl, /<h1>Имплантация зубов<\/h1>/);
+    assert.match(impl, /All-on-6: все зубы на 6 имплантатах[\s\S]*?от 179 900 ₽/);
+    assert.match(impl, /<h3>Одномоментная имплантация<\/h3>/);
+    assert.match(impl, /<a href="\/uslugi" aria-current="page">Услуги<\/a>/);
+    assert.match(impl, /"@type":"BreadcrumbList"/);
+    /* Цены: All-on-6 и прейскурант по всем разделам. */
+    const ceny = (await a.call("/ceny")).text;
+    for (const k of CAT.CATEGORIES) assert.match(ceny, new RegExp(`id="pl-${k.slug}"`), k.slug);
+    assert.match(ceny, /<th scope="row">Компьютерная томография \(КТ\) челюсти<small>[^<]*<\/small><\/th><td>5 000 ₽<\/td>/);
+    assert.match(ceny, /постановление Правительства РФ от 11\.05\.2023 № 736/);
+    /* Сведения о медицинской организации (ПП № 736, п. 11). */
+    const sv = (await a.call("/svedeniya")).text;
+    for (const t of ["ИНН", "7000026555", "ОГРН", "1257000003743", "Л041-01043-70/03947806", "634029, г. Томск, ул. Белинского, 19", "Управление Роспотребнадзора по Томской области", "программе государственных гарантий"]) assert.ok(sv.includes(t), t);
+    assert.match(sv, /<a href="\/soglasie">Согласие на обработку персональных данных<\/a>/);
+    /* 152-ФЗ: отдельный документ согласия, политика с целями, сроками, правами и трансграничной передачей. */
+    const sog = (await a.call("/soglasie")).text, pol = (await a.call("/privacy")).text;
+    assert.match(sog, /Редакция от 16\.11\.2026/);
+    for (const t of ["Какие данные", "Для чего", "Как отозвать", "за пределами Российской Федерации", "ИНН 7000026555"]) assert.ok(sog.includes(t), "согласие: " + t);
+    for (const t of ["152-ФЗ", "п. 4 ч. 2 ст. 10", "ч. 5 ст. 18", "10 рабочих дней", "трансграничная передача", 'id="cookies"', "Счётчиков посещаемости"]) assert.ok(pol.includes(t), "политика: " + t);
+    /* Метрика — только по согласию: на странице нет её кода, окно о cookie знает номер. */
+    for (const path of ["/", "/ceny"]) assert.doesNotMatch((await a.call(path)).text, /ym\(\d+,"init"/);
+
+    /* Админка: сведения, контролирующие органы, документы, образование врачей. */
+    await a.adminPost("/setup", { code: "setup-42", login: "glavvrach", name: "Евгений", pass: "длинный-пароль" });
+    const view = (await a.call("/api/admin/site")).json;
+    assert.ok(["services", "org", "authorities", "docs"].every((k) => view.groups.some((g: any) => g.key === k)));
+    assert.equal(view.defaults.org.inn, "7000026555");
+    assert.equal(view.defaults.authorities.length, 3);
+    assert.match((await a.adminPost("/site/org", { value: { ...view.defaults.org, inn: "123" } })).json.error, /ИНН/);
+    assert.equal((await a.adminPost("/site/org", { value: { ...view.defaults.org, licBy: "Департамент здравоохранения Томской области", pdEmail: "pd@clinic.ru" } })).status, 200);
+    const sv2 = (await a.call("/svedeniya")).text;
+    assert.match(sv2, /<dt>Кем выдана<\/dt><dd>Департамент здравоохранения Томской области<\/dd>/);
+    assert.match((await a.call("/privacy")).text, /mailto:pd@clinic\.ru/);
+    /* Документ клиники — PDF: имя по хешу, отдаётся сайтом как PDF, ссылка в «Документах». */
+    const pdf = "data:application/pdf;base64," + Buffer.from("%PDF-1.4\n% test\n").toString("base64");
+    const doc = (await a.adminPost("/upload", { data: pdf })).json.url as string;
+    assert.match(doc, /^\/uploads\/[a-f0-9]{32}\.pdf$/);
+    assert.equal((await a.call(doc)).headers.get("content-type"), "application/pdf");
+    assert.equal((await a.adminPost("/upload", { data: "data:application/pdf;base64," + Buffer.from("<html>").toString("base64") })).status, 400, "не PDF под видом PDF");
+    assert.equal((await a.adminPost("/site/docs", { value: [{ t: "Выписка из реестра лицензий", file: doc }] })).status, 200);
+    assert.ok((await a.call("/svedeniya")).text.includes(`<a href="${doc}" rel="noopener" target="_blank">Выписка из реестра лицензий</a>`));
+    assert.match((await a.adminPost("/site/docs", { value: [{ t: "Чужой", file: "https://evil.example/x.pdf" }] })).json.error, /загрузите файл заново/);
+    const doctors = view.defaults.doctors.map((d: any, i: number) => (i ? d : { ...d, edu: "СибГМУ, 2006, стоматология", cert: "Аккредитация специалиста, стоматология ортопедическая" }));
+    assert.equal((await a.adminPost("/site/doctors", { value: doctors })).status, 200);
+    assert.match((await a.call("/vrachi")).text, /<b>Образование<\/b>СибГМУ, 2006, стоматология/);
+    assert.match((await a.call("/svedeniya")).text, /Аккредитация специалиста, стоматология ортопедическая/);
+    /* Текст первого экрана страницы правится, как раздел главной. */
+    await a.adminPost("/site/texts", { value: { "pg-ceny": { h: "Прайс клиники" } } });
+    assert.match((await a.call("/ceny")).text, /<h1>Прайс клиники<\/h1>/);
+  } finally { await a.close(); }
+
+  /* Версия для слабовидящих и окно о cookie — в скрипте и стилях каждой страницы. */
+  const css = read("site/pages.css"), js = read("site/live-pages.js");
+  assert.match(css, /html\.vi-c1\{--vi-fg:#000;--vi-bg:#fff\}/);
+  assert.match(css, /html\.vi-c3\{--vi-fg:#063462;--vi-bg:#9dd1ff\}/);
+  assert.match(css, /html\.vi-noimg img/);
+  assert.match(js, /localStorage|lsSet\(VI_KEY/);
+  assert.match(js, /mc\.yandex\.ru\/metrika\/tag\.js/);
+  assert.match(js, /if\(K\.metrika\)\{if\(ck==='all'\)metrika\(\)/, "Метрика без согласия");
+  assert.match(read("site/store-live.js"), /lead\.consent=true/);
+  assert.match(read("site/live-chat.js"), /consent:true/);
+  /* Образ: новые модули сборщика едут в render/. */
+  const wf = readFileSync(new URL("../../../../.github/workflows/syanie-app.yml", APP), "utf8");
+  assert.match(wf, /cp gen\.mjs data\.mjs plan\.mjs catalog\.mjs pages\.mjs /);
 });
 
 test("сияние на сервере клиники: рабочий сайт без частей макета, запись и квиз с телефоном", () => {
