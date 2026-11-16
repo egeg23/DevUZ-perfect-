@@ -10,6 +10,7 @@ import { addManualLead } from "@/lib/admin/lead-add";
 import { assignAndNotify } from "@/lib/partners/attribute";
 import { PANEL_LANG_COOKIE, isPanelLocale } from "@/lib/admin/i18n";
 import { SESSION_COOKIE, destroySession, setStaffLocale, setStaffNavClassic } from "@/lib/admin/session";
+import { SITE_STAFF_COOKIE, SITE_STAFF_PATH } from "@/lib/admin/return-to";
 
 /**
  * Выход. Сессия удаляется из базы, а не только кука из браузера: иначе
@@ -23,6 +24,7 @@ export async function signOut() {
 
   if (token) await destroySession(token);
   jar.delete({ name: SESSION_COOKIE, path: "/admin" });
+  jar.delete({ name: SITE_STAFF_COOKIE, path: SITE_STAFF_PATH });
 
   await record("logout", { actorStaffId: staff?.id ?? null, ip: await requestIp() });
   redirect("/admin/login");

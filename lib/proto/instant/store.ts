@@ -241,7 +241,9 @@ export async function siteCounts(
   const db = serviceClient();
   if (!db) return null;
   const since = new Date(now.getTime() - 24 * 3600_000).toISOString();
-  const site = () => db.from("protos").select("id", { count: "exact", head: true }).eq("facts->instant->>via", "site").gte("created_at", since);
+  // Сборки сотрудников (facts.instant.test) в потолок адреса и дня не идут: у них лимита нет.
+  const site = () =>
+    db.from("protos").select("id", { count: "exact", head: true }).eq("facts->instant->>via", "site").eq("facts->instant->>test", "false").gte("created_at", since);
   const [mine, byIp, all] = await Promise.all([
     webId
       ? db.from("protos").select("token, status, name, pages").eq("facts->instant->>web", webId).order("created_at", { ascending: false }).limit(1)

@@ -3,6 +3,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { inSlot, siteOpens } from "@/lib/proto/instant/bot-deps";
 import { readClientSite } from "@/lib/proto/instant/read";
 import { parseSiteRequest, runSiteBuild, siteCaseLinks, siteLimit, WEB_COOKIE, type SiteEvent } from "@/lib/proto/instant/site";
+import { siteStaff } from "@/lib/proto/instant/site-staff";
 import { saveInstantProto, siteCounts } from "@/lib/proto/instant/store";
 import { clientIp, rateLimit } from "@/lib/qualify/limiter";
 
@@ -20,8 +21,10 @@ const webOf = (cookie: string | null) => /(?:^|;\s*)dz_mk=([a-f0-9]{24})(?:;|$)/
 
 export async function POST(request: Request) {
   const ip = clientIp(request);
+  const staff = await siteStaff(request);
   // Страховка от скрипта: несколько сборок подряд с одного адреса — отказ до базы.
-  const burst = rateLimit(`instant:${ip}`, { limit: 5, windowMs: 10 * 60 * 1000 });
+  // Сотрудник собирает своим клиентам подряд — ему всплеск не помеха.
+  const burst = staff ? { ok: true as const, retryAfter: 0 } : rateLimit(`instant:${ip}`, { limit: 5, windowMs: 10 * 60 * 1000 });
   if (!burst.ok) return Response.json({ error: "rate_limited" }, { status: 429, headers: { "Retry-After": String(burst.retryAfter) } });
 
   let body: Record<string, unknown>;
@@ -52,7 +55,7 @@ export async function POST(request: Request) {
           push({ t: "error" });
           return;
         }
-        const verdict = siteLimit(counts);
+        const verdict = siteLimit(counts, Boolean(staff));
         if (verdict === "has" && counts.token) {
           push({ t: "has", token: counts.token, name: counts.name ?? "", admin: counts.admin });
           return;
@@ -67,10 +70,10 @@ export async function POST(request: Request) {
           {
             reachable: siteOpens,
             read: (url, niche, locale, onStep) => inSlot(() => readClientSite(url, niche, locale, { onStep })),
-            save: (build) => saveInstantProto(build, { tgId: null, username: null, staffId: null, web: { id: webId, ip: mark } }),
+            save: (build) => saveInstantProto(build, { tgId: null, username: null, staffId: staff?.id ?? null, web: { id: webId, ip: mark } }),
             now: () => new Date(),
           },
-          push,
+          (event) => push(staff && event.t === "done" ? { ...event, staff: true } : event),
         );
       } catch (error) {
         console.error("макет на сайте: сборка упала", error instanceof Error ? error.message : error);
@@ -95,8 +98,10 @@ export async function POST(request: Request) {
 /** Окно открылось: есть ли у этого браузера готовый макет — тогда сразу он. */
 export async function GET(request: Request) {
   const known = webOf(request.headers.get("cookie"));
-  if (!known) return Response.json({}, { headers: { "Cache-Control": "no-store" } });
+  const staff = Boolean(await siteStaff(request));
+  const flag = staff ? { staff: true } : {};
+  if (!known) return Response.json(flag, { headers: { "Cache-Control": "no-store" } });
   const counts = await siteCounts(known, ipMark(clientIp(request))).catch(() => null);
   const has = counts?.has === "ready" && counts.token ? { token: counts.token, name: counts.name ?? "", admin: counts.admin } : undefined;
-  return Response.json(has ? { has } : {}, { headers: { "Cache-Control": "no-store" } });
+  return Response.json(has ? { has, ...flag } : flag, { headers: { "Cache-Control": "no-store" } });
 }

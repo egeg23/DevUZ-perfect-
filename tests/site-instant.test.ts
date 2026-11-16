@@ -22,6 +22,8 @@ import {
   type SiteEvent,
   type SiteRequest,
 } from "@/lib/proto/instant/site";
+import { SITE_STAFF_COOKIE, SITE_STAFF_PATH } from "@/lib/admin/return-to";
+import { siteStaffToken } from "@/lib/proto/instant/site-staff";
 import { emptySite, type InstantNiche, type InstantSite } from "@/lib/proto/instant/types";
 import { STEPS, stepCaption } from "@/lib/proto/instant/widget";
 import { locales } from "@/lib/i18n";
@@ -100,6 +102,34 @@ test("лимит: один макет на браузер, потолок адр
   assert.equal(siteLimit({ has: "draft", ipDay: 0, allDay: 0 }), "draft");
   assert.equal(siteLimit({ has: "none", ipDay: SITE_IP_DAY, allDay: 0 }), "ip");
   assert.equal(siteLimit({ has: "none", ipDay: 0, allDay: SITE_DAY_CAP }), "day");
+});
+
+test("сотрудник на сайте: без лимита, по сессии в базе, «Собрать заново» только ему", () => {
+  // Лимит снимается целиком: макет уже есть, черновик, потолок адреса и дня.
+  for (const has of ["none", "ready", "draft"] as const) {
+    assert.equal(siteLimit({ has, ipDay: SITE_IP_DAY + 5, allDay: SITE_DAY_CAP + 5 }, true), "ok");
+  }
+  // Кука — копия сессии панели, только сервер и только путь окна; dz_team не годится.
+  assert.equal(siteStaffToken(`a=1; ${SITE_STAFF_COOKIE}=abc%2Fdef; dz_team=1`), "abc/def");
+  assert.equal(siteStaffToken("dz_team=1; dz_mk=0123456789abcdef01234567"), null);
+  const mw = readFileSync("middleware.ts", "utf8");
+  assert.match(mw, /cookies\.set\(SITE_STAFF_COOKIE, session, \{\s*httpOnly: true[\s\S]*?path: SITE_STAFF_PATH/);
+  assert.equal(SITE_STAFF_PATH, "/api/instant");
+  assert.match(readFileSync("app/admin/actions.ts", "utf8"), /jar\.delete\(\{ name: SITE_STAFF_COOKIE, path: SITE_STAFF_PATH \}\)/, "«Выйти» гасит копию");
+  const who = readFileSync("lib/proto/instant/site-staff.ts", "utf8");
+  assert.match(who, /staffForSession\(token\)/, "сотрудник — по живой сессии в базе");
+  assert.doesNotMatch(who, /TEAM_COOKIE|dz_team/);
+  const route = readFileSync("app/api/instant/route.ts", "utf8");
+  assert.match(route, /siteLimit\(counts, Boolean\(staff\)\)/);
+  assert.match(route, /staffId: staff\?\.id \?\? null/, "сборка помечена «собрал сотрудник»");
+  assert.match(readFileSync("app/api/instant/contact/route.ts", "utf8"), /if \(await siteStaff\(request\)\) return Response\.json\(\{ ok: true \}\)/, "лида от сотрудника нет");
+  // Сборки сотрудников в потолок адреса и дня не идут.
+  assert.match(readFileSync("lib/proto/instant/store.ts", "utf8"), /"facts->instant->>test", "false"/);
+  // Кнопка — только сотруднику.
+  const ui = readFileSync("components/home/instant-maker.tsx", "utf8");
+  assert.match(ui, /onRebuild=\{staff \? rebuild : undefined\}/);
+  assert.match(ui, /\{onRebuild \? \(/);
+  for (const locale of locales) assert.ok(siteInstantCopy[locale].done.rebuild.length > 3, locale);
 });
 
 test("сборка с сайтом: шаги по порядку, после настоящих, в конце готовый макет", async () => {
