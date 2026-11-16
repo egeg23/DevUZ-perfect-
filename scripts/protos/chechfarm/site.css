@@ -469,7 +469,7 @@ h1,h2,h3,h4,p{margin:0}
 .pc-women .pc-st{background-image:url(/protos/chechfarm/products/bg-women-700.webp)}
 .pc-endo .pc-st{background-image:url(/protos/chechfarm/products/bg-endo-700.webp)}
 .pc-care .pc-st{background-image:url(/protos/chechfarm/products/bg-care-700.webp)}
-.pc-st img{position:absolute;left:50%;bottom:29%;width:auto;height:auto;max-width:72%;max-height:52%;transform:translateX(-50%);filter:drop-shadow(0 14px 14px rgb(0 0 0 / .28)) drop-shadow(0 2px 2px rgb(0 0 0 / .18));transition:transform .55s cubic-bezier(.2,.8,.2,1)}
+.pc-st img{position:absolute;left:8%;bottom:25%;width:84%;height:56%;object-fit:contain;object-position:50% 100%;filter:drop-shadow(0 14px 14px rgb(0 0 0 / .28)) drop-shadow(0 2px 2px rgb(0 0 0 / .18));transition:transform .55s cubic-bezier(.2,.8,.2,1)}
 .pc-box{position:absolute;left:50%;bottom:29%;width:58%;aspect-ratio:1.35;transform:translateX(-50%);display:grid;align-content:center;gap:6px;padding:10px 12px;border-radius:8px;background:linear-gradient(135deg,#fff,#eef2f0);box-shadow:0 14px 22px -8px rgb(0 0 0 / .35),inset 0 0 0 1px rgb(14 29 27 / .06);text-align:center;transition:transform .55s cubic-bezier(.2,.8,.2,1)}
 .pc-box::before{content:"";position:absolute;left:0;top:0;bottom:0;width:12%;border-radius:8px 0 0 8px;background:var(--ac)}
 .pc-box b{font:700 clamp(13px,1.5vw,18px)/1.1 var(--disp);color:var(--deep);padding-left:8%;overflow-wrap:anywhere}
@@ -481,7 +481,7 @@ h1,h2,h3,h4,p{margin:0}
 .pc-inn{font-size:14px;color:var(--teal);line-height:1.35}
 .pc-f{font-size:13px;color:var(--ink3);line-height:1.4}
 .pc-rx{position:absolute;top:12px;inset-inline-start:12px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:4px 9px;border-radius:999px;background:rgb(255 255 255 / .82);color:var(--ink2)}
-@media (hover:hover){.pc:hover{transform:translateY(-6px);box-shadow:var(--sh2)}.pc:hover .pc-st img,.pc:hover .pc-box{transform:translateX(-50%) translateY(-6%) scale(1.04)}}
+@media (hover:hover){.pc:hover{transform:translateY(-6px);box-shadow:var(--sh2)}.pc:hover .pc-st img{transform:translateY(-4%) scale(1.03)}.pc:hover .pc-box{transform:translateX(-50%) translateY(-6%) scale(1.04)}}
 .pc:active{transform:scale(.98)}
 @media (max-width:699px){.pc-tx{padding:10px 12px 14px}.pc h3{font-size:16px}.pc-inn{font-size:13px}.pc-f{display:none}.pc-k{font-size:11px}}
 .pf-more{margin-top:28px}
@@ -489,7 +489,7 @@ h1,h2,h3,h4,p{margin:0}
 .pp{display:grid;gap:22px}
 @media (min-width:760px){.pp{grid-template-columns:.9fr 1.1fr;align-items:start}}
 .pp-st{position:relative;aspect-ratio:4/5;border-radius:var(--r);overflow:hidden;background:var(--paper2) center/cover no-repeat}
-.pp-st img{position:absolute;left:7%;bottom:27%;width:86%;height:62%;object-fit:contain;object-position:50% 100%;filter:drop-shadow(0 18px 18px rgb(0 0 0 / .3))}
+.pp-st img{position:absolute;left:7%;bottom:25%;width:86%;height:62%;object-fit:contain;object-position:50% 100%;filter:drop-shadow(0 18px 18px rgb(0 0 0 / .3))}
 .pp-st.pc-neuro{background-image:url(/protos/chechfarm/products/bg-neuro-1100.webp)}
 .pp-st.pc-cardio{background-image:url(/protos/chechfarm/products/bg-cardio-1100.webp)}
 .pp-st.pc-uro{background-image:url(/protos/chechfarm/products/bg-uro-1100.webp)}
