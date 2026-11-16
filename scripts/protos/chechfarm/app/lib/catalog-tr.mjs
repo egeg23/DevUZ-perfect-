@@ -50,7 +50,7 @@ const F = {
 };
 /* Поле → значение на uz, en, ar. */
 const R = (o) => o;
-const pick = (l, o) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, v[l]]));
+const pick = (l, o) => Object.fromEntries(Object.entries(o).filter(([, v]) => v[l]).map(([k, v]) => [k, v[l]]));
 
 const RAW = {
   atoksa: R({ name: T("Atoksa", "Atoxa", "أتوكسا"), inn: F.tenox, form: F.lyo20, pack: F.vialSolv, group: F.nsaid, doctors: DOC.neuroAll }),
@@ -92,6 +92,13 @@ const RAW = {
   doubleplast: R({ name: T("Dablplast", "Doubleplast", "دبل بلاست"), inn: T("Mentol, qalampir yalpiz efir moyi", "Menthol, peppermint essential oil", "منثول، زيت النعناع العطري"), form: T("Sovutuvchi va isituvchi gidrogel plastir", "Cooling and warming hydrogel patch", "لصقة هيدروجيل مبردة ومدفئة"), pack: T("3 paket", "3 sachets", "3 أكياس"), group: T("Og‘riq qoldiruvchi vosita", "Pain reliever", "مسكن للألم"), doctors: T("Nevrologlar, travmatologlar, terapevtlar", "Neurologists, traumatologists, therapists", "أطباء الأعصاب والرضوح والباطنة") }),
   venoplast: R({ name: T("Venoplast", "Venoplast", "فينوبلاست"), inn: T("Evkalipt, apelsin va lavanda efir moylari", "Eucalyptus, orange and lavender essential oils", "زيوت عطرية من الأوكالبتوس والبرتقال والخزامى"), form: F.hydro, pack: F.sach2, group: T("Venotonik", "Venotonic", "مقوٍّ للأوردة"), doctors: T("Ginekologlar, vertebrologlar, terapevtlar", "Gynecologists, vertebrologists, therapists", "أطباء أمراض النساء والعمود الفقري والباطنة") }),
   diaplast: R({ name: T("Diaplast", "Diaplast", "ديابلاست"), inn: T("Gidrogel", "Hydrogel", "هيدروجيل"), form: T("Oyoq panjalarini himoya qiluvchi gidrogel plastir", "Hydrogel foot protection patch", "لصقة هيدروجيل لحماية القدمين"), pack: T("4 paket", "4 sachets", "4 أكياس"), group: T("Diabet bilan og‘rigan bemorlarda oyoq terisini himoya qilish", "Foot skin protection for patients with diabetes", "حماية جلد القدمين لدى مرضى السكري"), doctors: T("Endokrinologlar, terapevtlar", "Endocrinologists, therapists", "أطباء الغدد الصماء والباطنة") }),
+  nemotan: R({ name: T("Nemotan", "Nemotan", "نيموتان"), inn: T("Nimodipin", "Nimodipine", "نيموديبين"), form: T("Plyonka qobiq bilan qoplangan tabletkalar, 30 mg", "Film-coated tablets, 30 mg", "أقراص مغلفة بغشاء رقيق، 30 ملغ"), pack: F.tab30, group: T("Kalsiy kanallari blokatori", "Calcium channel blocker", "حاصر قنوات الكالسيوم"), doctors: T("", "", "") }),
+  geparigen: R({ name: T("Geparigen", "Heparigen", "هيباريجين"), inn: T("L-ornitin-L-aspartat", "L-ornithine-L-aspartate", "إل-أورنيثين-إل-أسبارتات"), form: T("Infuziya eritmasi tayyorlash uchun konsentrat, 500 mg/5 ml", "Concentrate for solution for infusion, 500 mg/5 ml", "مركز لتحضير محلول للتسريب، 500 ملغ/5 مل"), pack: F.amp10x5, group: T("Gepatoprotektor", "Hepatoprotector", "واقٍ للكبد"), doctors: T("", "", "") }),
+  contryfort: R({ name: T("Contryfort", "Contryfort", "كونتريفورت"), inn: T("Aprotinin", "Aprotinin", "أبروتينين"), form: T("Vena ichiga yuborish uchun eritma tayyorlash liofilizati, 10 000 ATrB", "Lyophilisate for solution for intravenous use, 10,000 ATrU", "مسحوق مجفف بالتجميد لتحضير محلول للحقن الوريدي، 10000 وحدة"), pack: T("10 flakon va 10 ampula erituvchi", "10 vials and 10 ampoules of solvent", "10 قوارير و10 أمبولات مذيب"), group: T("Proteoliz ingibitori", "Proteolysis inhibitor", "مثبط لتحلل البروتين"), doctors: T("", "", "") }),
+  kantalin: R({ name: T("Kantalin mikro", "Kantalin micro", "كانتالين ميكرو"), inn: T("Diosmin, gesperidin", "Diosmin, hesperidin", "ديوسمين، هيسبيريدين"), form: T("Tabletkalar", "Tablets", "أقراص"), pack: T("64 tabletka", "64 tablets", "64 قرصًا"), group: T("Biologik faol oziq-ovqat qo‘shimchasi", "Dietary supplement", "مكمل غذائي"), doctors: T("", "", "") }),
+  duinum: R({ name: T("Duinum", "Duinum", "دوينوم"), inn: T("Klomifen sitrat", "Clomifene citrate", "سترات الكلوميفين"), form: T("Tabletkalar, 50 mg", "Tablets, 50 mg", "أقراص، 50 ملغ"), pack: F.tab30, group: T("Ovulyatsiya stimulyatori", "Ovulation stimulant", "منشط للإباضة"), doctors: T("", "", "") }),
+  ticoten: R({ name: T("Tikoten", "Ticoten", "تيكوتين"), inn: F.tenox, form: T("Vena va mushak ichiga yuborish uchun liofilizatsiyalangan kukun, 20 mg", "Lyophilised powder for intravenous and intramuscular use, 20 mg", "مسحوق مجفف بالتجميد للحقن الوريدي والعضلي، 20 ملغ"), pack: T("1 flakon va 1 ampula erituvchi, 2 ml", "1 vial and 1 ampoule of solvent, 2 ml", "قارورة واحدة وأمبولة مذيب 2 مل"), group: F.nsaid, doctors: T("", "", "") }),
+  regapen: R({ name: T("Regapen", "Regapen", "ريغابين"), inn: T("Pregabalin", "Pregabalin", "بريغابالين"), form: T("Kapsulalar, 75 mg", "Capsules, 75 mg", "كبسولات، 75 ملغ"), pack: T("28 kapsula", "28 capsules", "28 كبسولة"), group: T("Epilepsiyaga qarshi vosita", "Antiepileptic agent", "مضاد للصرع"), doctors: T("", "", "") }),
 };
 
 export const TR_LANGS = ["uz", "en", "ar"];
@@ -102,6 +109,9 @@ export const PACK_LANGS = {
   ellezium: ALL, elstar: ALL, "dilargo-caps": ALL, deksiren: ALL, follitop: ALL, somatop: ALL,
   "fdp-max": ALL, "kardon-o2": ALL, mozeks: ALL, babyplast: ALL, doubleplast: ALL, venoplast: ALL,
   diaplast: ALL, renalof: ALL,
+  atoksa: ALL, makstio: ALL, tiofleks: ALL, bevlasin: ALL, zidena: ALL, artkyur: ALL,
+  lanikzol: ALL, melatonin: ALL, miotir: ALL, nemotan: ALL, geparigen: ALL,
+  contryfort: ALL, kantalin: ALL, duinum: ALL, ticoten: ALL, regapen: ALL,
   "dilargo-sol": ["en", "ar"], "naprocin-gel": ["en", "ar"],
   cholesterol: ["ar"], glucoflex: ["ar"], gution: ["ar"],
 };

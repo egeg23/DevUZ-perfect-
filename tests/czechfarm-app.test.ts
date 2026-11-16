@@ -300,7 +300,7 @@ test("czechfarm: портфель на языке посетителя — те�
   for (const c of CATALOG) for (const l of TR_LANGS) {
     const tr = CATALOG_TR[c.key]?.[l];
     assert.ok(tr, `${c.key}: нет перевода ${l}`);
-    for (const f of ["name", "inn", "form", "pack", "group", "doctors", ...(c.comp ? ["comp"] : [])]) {
+    for (const f of ["name", "inn", "form", "pack", "group", "doctors", "comp"].filter((k) => c[k])) {
       assert.ok(tr[f], `${c.key}.${f}: пусто на ${l}`);
       assert.doesNotMatch(tr[f], CYR, `${c.key}.${f}: кириллица на ${l}`);
       assert.doesNotMatch(tr[f], /—|–| - /, `${c.key}.${f}: тире на ${l}`);
