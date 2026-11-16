@@ -570,8 +570,9 @@ test("сияние на сервере клиники: многостранич�
   assert.deepEqual(CATS, CAT.CATEGORIES.map((k: any) => [k.slug, k.t]), "разделы в админке и на сайте разошлись");
   for (const k of CAT.CATEGORIES) assert.ok(TEXT_KEYS["pg-" + k.slug], "текст первого экрана раздела не правится: " + k.slug);
   assert.ok(CAT.SERVICES.every((x: any) => CAT.CATEGORIES.some((k: any) => k.slug === x.cat)), "услуга вне разделов");
-  /* Цены только те, что клиника называла сама (16.11.2026 — All-on-4, одномоментная и «под ключ»). */
-  assert.deepEqual(CAT.SERVICES.filter((x: any) => x.p).map((x: any) => x.p), ["Бесплатно", "от 250 000 ₽", "от 50 000 ₽", "от 80 000 ₽", "5 000 ₽"]);
+  /* Цены только те, что клиника называла сама (16.11.2026 — All-on-4, одномоментная и «под ключ»;
+     в переписке того же дня — коронки и виниры от 32 000 ₽, чистка от 4 500 ₽). */
+  assert.deepEqual(CAT.SERVICES.filter((x: any) => x.p).map((x: any) => x.p), ["Бесплатно", "от 250 000 ₽", "от 50 000 ₽", "от 80 000 ₽", ...Array(6).fill("от 32 000 ₽"), ...Array(3).fill("от 4 500 ₽"), "5 000 ₽"]);
 
   const a = await boot("https://syanie.test", { live: true });
   try {
@@ -604,11 +605,17 @@ test("сияние на сервере клиники: многостранич�
     const ceny = (await a.call("/ceny")).text;
     for (const k of CAT.CATEGORIES) assert.match(ceny, new RegExp(`id="pl-${k.slug}"`), k.slug);
     assert.match(ceny, /<th scope="row">Компьютерная томография \(КТ\) челюсти<small>[^<]*<\/small><\/th><td>5 000 ₽<\/td>/);
+    /* Ответ клиники, 16.11.2026: «Цены на коронка и виниры от 32.000 р», «Чистка от 4.500». */
+    for (const t of ["Коронка из диоксида циркония", "Керамическая коронка", "Керамические виниры", "Композитные виниры"]) assert.match(ceny, new RegExp(`<th scope="row">${t}<small>[^<]*</small></th><td>от 32 000 ₽</td>`), t);
+    assert.match(ceny, /<th scope="row">Профессиональная гигиена полости рта<small>[^<]*<\/small><\/th><td>от 4 500 ₽<\/td>/);
     assert.match(ceny, /постановление Правительства РФ от 11\.05\.2023 № 736/);
     /* Сведения о медицинской организации (ПП № 736, п. 11). */
     const sv = (await a.call("/svedeniya")).text;
     for (const t of ["ИНН", "7000026555", "ОГРН", "1257000003743", "Л041-01043-70/03947806", "634029, г. Томск, ул. Белинского, 19", "Управление Роспотребнадзора по Томской области", "программе государственных гарантий"]) assert.ok(sv.includes(t), t);
     assert.match(sv, /<a href="\/soglasie">Согласие на обработку персональных данных<\/a>/);
+    /* Ответ клиники, 16.11.2026: «Реутов не работает», главный врач — «кадиев рамазан Курбанович». */
+    assert.match(sv, /<dt>Руководство<\/dt><dd>Кадиев Рамазан Курбанович, главный врач<\/dd>/);
+    assert.doesNotMatch(sv, /Реутов/);
     /* 152-ФЗ: отдельный документ согласия, политика с целями, сроками, правами и трансграничной передачей. */
     const sog = (await a.call("/soglasie")).text, pol = (await a.call("/privacy")).text;
     assert.match(sog, /Редакция от 16\.11\.2026/);
@@ -628,6 +635,12 @@ test("сияние на сервере клиники: многостранич�
     const sv2 = (await a.call("/svedeniya")).text;
     assert.match(sv2, /<dt>Кем выдана<\/dt><dd>Департамент здравоохранения Томской области<\/dd>/);
     assert.match((await a.call("/privacy")).text, /mailto:pd@clinic\.ru/);
+    /* Сохранённые сведения с прежним главным врачом по умолчанию — на сайте нынешний; своё значение клиники — как есть. */
+    await a.adminPost("/site/org", { value: { ...view.defaults.org, chief: "Реутов Евгений Александрович, главный врач" } });
+    assert.match((await a.call("/svedeniya")).text, /<dt>Руководство<\/dt><dd>Кадиев Рамазан Курбанович, главный врач<\/dd>/);
+    await a.adminPost("/site/org", { value: { ...view.defaults.org, chief: "Иванов Иван Иванович, главный врач" } });
+    assert.match((await a.call("/svedeniya")).text, /<dt>Руководство<\/dt><dd>Иванов Иван Иванович, главный врач<\/dd>/);
+    await a.adminPost("/site/org", { value: { ...view.defaults.org, licBy: "Департамент здравоохранения Томской области", pdEmail: "pd@clinic.ru" } });
     /* Документ клиники — PDF: имя по хешу, отдаётся сайтом как PDF, ссылка в «Документах». */
     const pdf = "data:application/pdf;base64," + Buffer.from("%PDF-1.4\n% test\n").toString("base64");
     const doc = (await a.adminPost("/upload", { data: pdf })).json.url as string;
@@ -697,8 +710,10 @@ test("сияние на сервере клиники: запросы по Во�
       assert.ok(asked.length >= 2, `${k.slug}: меньше двух вопросов`);
     }
     /* Цены в текстах — только из прейскуранта клиники. */
-    const said = JSON.stringify(CAT.SEO).match(/\d[\d ]*\d ₽|\d+ ₽/g) || [];
-    const known = new Set(["80 000 ₽", "50 000 ₽", "250 000 ₽", "179 900 ₽", "5 000 ₽"]);
+    const said: string[] = JSON.stringify(CAT.SEO).match(/\d[\d ]*\d ₽|\d+ ₽/g) || [];
+    /* Цены прейскуранта по умолчанию и All-on-6 первого экрана. */
+    const known = new Set([...CAT.SERVICES.map((x: any) => x.p.replace(/^от /, "")).filter((p: string) => p.endsWith("₽")), "179 900 ₽"]);
+    for (const p of ["32 000 ₽", "4 500 ₽"]) assert.ok(said.includes(p), "цена клиники не названа на страницах: " + p);
     for (const p of said) assert.ok(known.has(p), "цена не из прейскуранта: " + p);
     /* Чего клиника не делает — не обещаем. */
     assert.doesNotMatch(JSON.stringify(CAT.SEO), /отбелив|детск/i);
@@ -746,6 +761,7 @@ test("сияние на сервере клиники: «Наши врачи» �
     const card = (name: string) => new RegExp(`<div class="tm-i" id="tm-i\\d" role="region" aria-label="${name}" hidden>[\\s\\S]*?</div>\\n?<p class="tm-esc">`).exec(vr)![0];
     const kad = card("Кадиев Рамазан Курбанович");
     assert.match(kad, /<b>6 лет<\/b>/);
+    assert.match(kad, /<ul class="tm-x"><li>Главный врач клиники<\/li><\/ul>/);
     assert.equal(kad.match(/<i class="on"/g)?.length, 6);
     assert.deepEqual([...kad.matchAll(/<a href="\/([a-z-]+)">/g)].map((m) => m[1]), ["implantatsiya-zubov", "protezirovanie-zubov", "khirurgiya"]);
     assert.match(kad, /data-book data-svc="Имплантация" data-doc="Кадиев Рамазан Курбанович"/);

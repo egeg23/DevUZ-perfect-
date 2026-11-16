@@ -235,6 +235,15 @@ export function dropOldDoctors(edits = {}) {
   return rest;
 }
 
+/* Реутов в клинике больше не работает, главный врач — Кадиев (ответ клиники,
+   16.11.2026). Сохранённые сведения, где «Руководство» ещё прежнее значение по
+   умолчанию, получают нынешнее; своё значение клиники не трогаем. */
+const OLD_CHIEF = "Реутов Евгений Александрович, главный врач";
+export function dropOldChief(edits = {}, chief = "") {
+  if (!chief || String(edits.org?.chief ?? "").trim() !== OLD_CHIEF) return edits;
+  return { ...edits, org: { ...edits.org, chief } };
+}
+
 export function siteOverrides(edits = {}, defaults, extra = {}) {
   const v = (k) => edits[k] ?? defaults[k];
   const e = (s) => esc(s ?? "");
