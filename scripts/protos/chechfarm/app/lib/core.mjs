@@ -8,7 +8,7 @@ import { tgClient, tgUpdate, faqMatch } from "./tg.mjs";
 import { crmClient, amoBase, b24Base, KIND_NAME, leadText } from "./crm.mjs";
 import { makeAudience, SEGMENTS, ACC_STATUS } from "./audience.mjs";
 import { UPLOADED } from "./site-text.mjs";
-import { CATALOG, AREAS } from "./catalog.mjs";
+import { CATALOG, AREAS, CATALOG_FIXES } from "./catalog.mjs";
 import { CATALOG_TR, packImg } from "./catalog-tr.mjs";
 
 export const STATUS = { new: "Новое", work: "В работе", meet: "Назначена встреча", done: "Ответ отправлен", spam: "Спам" };
@@ -556,6 +556,10 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
           const r = rows.find((x) => x.key === c.key);
           if (r && !r.img) { const { id, pub, sort: _s, ...data } = r; db.run("update products set data = ? where id = ?", JSON.stringify({ ...data, img }), id); n++; }
         }
+      }
+      for (const [key, f, was, now_] of CATALOG_FIXES) {
+        const r = products.list().find((x) => x.key === key);
+        if (r && r[f] === was) { const { id, pub, sort: _s, ...data } = r; db.run("update products set data = ? where id = ?", JSON.stringify({ ...data, [f]: now_ }), id); n++; }
       }
       setS("catalog.keys", JSON.stringify([...done]));
     });
