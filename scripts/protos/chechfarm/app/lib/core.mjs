@@ -8,6 +8,7 @@ import { tgClient, tgUpdate, faqMatch } from "./tg.mjs";
 import { crmClient, amoBase, b24Base, KIND_NAME, leadText } from "./crm.mjs";
 import { makeAudience, SEGMENTS, ACC_STATUS } from "./audience.mjs";
 import { UPLOADED } from "./site-text.mjs";
+import { CATALOG, AREAS } from "./catalog.mjs";
 
 export const STATUS = { new: "Новое", work: "В работе", meet: "Назначена встреча", done: "Ответ отправлен", spam: "Спам" };
 export const ROLES = { owner: "Владелец", head: "Руководитель", manager: "Менеджер" };
@@ -16,7 +17,10 @@ export const LANGS = ["ru", "uz", "en", "ar"];
 /* Страницы сайта, у которых заголовок и описание правятся в панели. */
 export const PAGES = ["home", "about", "products", "partners", "investors", "news", "contacts", "privacy", "account"];
 export { SEGMENTS, ACC_STATUS };
-export const PRODUCT_KEYS = ["name", "inn", "form", "maker", "dir", "rx", "doc", "img", "about"];
+/* key — строка портфеля из catalog.mjs (её не правят, по ней сверяется засев),
+   area — направление (AREAS), dose — схема приёма: только в панели. */
+export const PRODUCT_KEYS = ["name", "inn", "comp", "form", "pack", "group", "doctors", "area", "maker", "dir", "rx", "dose", "doc", "img", "about", "key"];
+export { AREAS };
 export const CONTACT_KEYS = ["phone", "email", "address", "social", "map"];
 const SECRET_KEYS = new Set(["tg.token", "amo.token", "b24.hook"]);
 const SESSION_DAYS = 90;
@@ -513,16 +517,18 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
   /* ── Сайт: продукты, новости, заголовки, контакты ───────────────── */
   const cleanProduct = (d) => {
     const o = {};
-    for (const k of PRODUCT_KEYS) o[k] = cut(d?.[k], k === "about" ? 4000 : 300);
+    for (const k of PRODUCT_KEYS) o[k] = cut(d?.[k], k === "about" || k === "comp" ? 4000 : 300);
+    if (o.area && !AREAS.includes(o.area)) o.area = "";
     if (!o.name) throw new Error("Укажите название продукта");
     if (o.rx && o.rx !== "rx" && o.rx !== "otc") o.rx = "";
-    for (const k of ["doc", "img"]) if (o[k] && !/^(https:\/\/|\/uploads\/)/.test(o[k])) throw new Error("Файл — загрузкой или ссылкой https://");
+    for (const k of ["doc", "img"]) if (o[k] && !/^(https:\/\/|\/uploads\/|\/protos\/chechfarm\/products\/[\w-]+\.webp$)/.test(o[k])) throw new Error("Файл — загрузкой или ссылкой https://");
     return o;
   };
   const products = {
     list: () => db.all("select id, data, pub, sort, at from products order by sort, id").map((r) => ({ id: r.id, pub: !!r.pub, sort: r.sort, ...json(r.data, {}) })),
     save(id, d, by) {
       const o = cleanProduct(d);
+      if (id) o.key = json(db.get("select data from products where id = ?", id)?.data, {}).key || "";
       if (id) db.run("update products set data = ?, at = ? where id = ?", JSON.stringify(o), now(), id);
       else id = Number(db.run("insert into products(data, pub, sort, at) values(?, 0, ?, ?)", JSON.stringify(o), (db.get("select max(sort) m from products").m || 0) + 1, now()).lastInsertRowid);
       changed(); note(by, `Сохранил продукт «${o.name}»`);
@@ -531,6 +537,31 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
     publish(id, on, by) { db.run("update products set pub = ? where id = ?", on ? 1 : 0, id); changed(); note(by, `${on ? "Опубликовал" : "Снял"} продукт № ${id}`); },
     remove(id, by) { db.run("delete from products where id = ?", id); changed(); note(by, `Удалил продукт № ${id}`); },
   };
+  /* Портфель из таблицы компании (catalog.mjs): каждая строка ложится в
+     базу один раз, опубликованной. Удалённую в панели не возвращаем
+     (ключ в catalog.keys), фото дописываем, если в карточке его нет. */
+  function seedCatalog() {
+    const done = new Set(json(getS("catalog.keys"), []));
+    const rows = products.list();
+    let sort = rows.reduce((m, r) => Math.max(m, r.sort || 0), 0), n = 0;
+    db.tx(() => {
+      for (const c of CATALOG) {
+        const img = c.img ? `/protos/chechfarm/products/${c.key}-960.webp` : "";
+        if (!done.has(c.key)) {
+          const o = cleanProduct({ ...c, img });
+          db.run("insert into products(data, pub, sort, at) values(?, 1, ?, ?)", JSON.stringify(o), ++sort, now());
+          done.add(c.key); n++;
+        } else if (img) {
+          const r = rows.find((x) => x.key === c.key);
+          if (r && !r.img) { const { id, pub, sort: _s, ...data } = r; db.run("update products set data = ? where id = ?", JSON.stringify({ ...data, img }), id); n++; }
+        }
+      }
+      setS("catalog.keys", JSON.stringify([...done]));
+    });
+    if (n) { changed(); note("система", `Портфель продуктов: добавлено и обновлено ${n}`); }
+  }
+  seedCatalog();
+
   /* Новость — на каждом языке сайта своим текстом; нет перевода — русский. */
   const cleanNews = (d) => {
     const o = { img: cut(d?.img, 300) };
@@ -578,7 +609,7 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
   /* То, что сервер кладёт в страницу (K.live): только опубликованное. */
   function live(lang) {
     return {
-      prod: products.list().filter((p) => p.pub).map(({ sort, ...p }) => p),
+      prod: products.list().filter((p) => p.pub).map(({ sort, dose, key, ...p }) => p),
       news: news.list().filter((n) => n.pub).map((n) => ({ id: n.id, pub: true, ts: n.ts, img: n.img, title: n[lang]?.title || n.ru.title, body: n[lang]?.title ? n[lang].body : n.ru.body })),
       contacts: contacts.get(),
     };

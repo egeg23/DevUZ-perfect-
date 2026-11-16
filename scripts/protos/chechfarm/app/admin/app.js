@@ -7,7 +7,8 @@
   var LANG_NAME = { ru: "Русский", uz: "O‘zbekcha", en: "English", ar: "العربية" };
   var PAGE_NAME = { home: "Главная", about: "О компании", products: "Продукты", partners: "Партнёрам", investors: "Инвесторам", news: "Новости", contacts: "Контакты", privacy: "Политика данных" };
   var CT_NAME = { phone: "Телефон", email: "Почта", address: "Адрес офиса", social: "Соцсеть (ссылка https://)", map: "Карта: адрес для встраивания (Google «Встроить карту» или Яндекс «Конструктор карт»)" };
-  var PROD_F = [["name", "Название *"], ["inn", "Действующее вещество"], ["form", "Форма выпуска"], ["maker", "Производитель и страна"], ["dir", "Направление"]];
+  var PROD_F = [["name", "Название *"], ["inn", "Действующее вещество"], ["form", "Форма выпуска и дозировка"], ["pack", "В упаковке"], ["group", "Фармакологическая группа"], ["doctors", "Кому из врачей"], ["maker", "Производитель и страна"], ["dir", "Направление своими словами (если нет в списке)"], ["dose", "Схема приёма (только в панели, на сайт не выходит)"]];
+  var AREA_NAME = { neuro: "Неврология и боль", cardio: "Сердце, сосуды и обмен веществ", uro: "Урология и мужское здоровье", women: "Женское здоровье и репродукция", endo: "Эндокринология и кости", care: "Печень, сон и дети" };
 
   function h(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
   function $(s, r) { return (r || document).querySelector(s); }
@@ -157,8 +158,8 @@
   function products(main) {
     return api("/products").then(function (j) {
       var b = head(main, "Продукты", '<button class="btn pri" id="padd">Добавить продукт</button>');
-      b.innerHTML = '<p class="note">Карточка появляется в каталоге на сайте после «Опубликовать». Названия и вещества — как в инструкции, на всех языках сайта одинаково.</p><div id="pe"></div>' + (j.products.length ? '<table class="resp"><thead><tr><th></th><th>Название</th><th>Вещество</th><th>Направление</th><th>На сайте</th><th></th></tr></thead><tbody>' + j.products.map(function (p) {
-        return "<tr><td>" + (p.img ? '<img class="thumb" src="' + h(p.img) + '" alt="">' : "") + "</td><td><b>" + h(p.name) + "</b></td><td>" + h(p.inn) + "</td><td>" + h(p.dir) + '</td><td><span class="pill ' + (p.pub ? "done" : "off") + '">' + (p.pub ? "опубликован" : "черновик") + '</span></td><td class="row"><button class="btn" data-e="' + p.id + '">Изменить</button><button class="btn" data-p="' + p.id + '">' + (p.pub ? "Снять" : "Опубликовать") + '</button><button class="btn warn" data-d="' + p.id + '">Удалить</button></td></tr>';
+      b.innerHTML = '<p class="note">Карточка появляется в каталоге на сайте после «Опубликовать». Названия и вещества — как в инструкции, на всех языках сайта одинаково. Портфель из таблицы компании уже здесь и на сайте: карточку можно править, снять или удалить, удалённая сама не вернётся.</p><div id="pe"></div>' + (j.products.length ? '<table class="resp"><thead><tr><th></th><th>Название</th><th>Вещество</th><th>Направление</th><th>На сайте</th><th></th></tr></thead><tbody>' + j.products.map(function (p) {
+        return "<tr><td>" + (p.img ? '<img class="thumb" src="' + h(p.img) + '" alt="">' : "") + "</td><td><b>" + h(p.name) + "</b></td><td>" + h(p.inn) + "</td><td>" + h(AREA_NAME[p.area] || p.dir) + '</td><td><span class="pill ' + (p.pub ? "done" : "off") + '">' + (p.pub ? "опубликован" : "черновик") + '</span></td><td class="row"><button class="btn" data-e="' + p.id + '">Изменить</button><button class="btn" data-p="' + p.id + '">' + (p.pub ? "Снять" : "Опубликовать") + '</button><button class="btn warn" data-d="' + p.id + '">Удалить</button></td></tr>';
       }).join("") + "</tbody></table>" : '<div class="card note">Продуктов пока нет.</div>');
       $("#padd").addEventListener("click", function () { editProduct(main, null); });
       $$("[data-e]", b).forEach(function (x) { x.addEventListener("click", function () { editProduct(main, j.products.filter(function (p) { return p.id === +x.getAttribute("data-e"); })[0]); }); });
@@ -169,7 +170,9 @@
   function editProduct(main, p) {
     p = p || {}; var box = $("#pe");
     box.innerHTML = '<div class="card grid"><h2>' + (p.id ? "Изменить продукт" : "Новый продукт") + '</h2><div class="grid g2">' + PROD_F.map(function (f) { return '<label class="f">' + f[1] + '<input data-k="' + f[0] + '" value="' + h(p[f[0]]) + '"></label>'; }).join("") +
+      '<label class="f">Направление на сайте<select data-k="area"><option value="">не выбрано</option>' + Object.keys(AREA_NAME).map(function (k) { return '<option value="' + k + '"' + (p.area === k ? " selected" : "") + ">" + AREA_NAME[k] + "</option>"; }).join("") + "</select></label>" +
       '<label class="f">Отпуск<select data-k="rx"><option value="">не указано</option><option value="rx"' + (p.rx === "rx" ? " selected" : "") + '>по рецепту</option><option value="otc"' + (p.rx === "otc" ? " selected" : "") + ">без рецепта</option></select></label></div>" +
+      '<label class="f">Состав (если отличается от вещества)<textarea data-k="comp">' + h(p.comp) + "</textarea></label>" +
       '<label class="f">Описание (необязательно)<textarea data-k="about">' + h(p.about) + "</textarea></label>" +
       '<div class="grid g2"><label class="f">Инструкция PDF ' + (p.doc ? '(<a href="' + h(p.doc) + '" target="_blank">загружена</a>)' : "") + '<input type="file" accept="application/pdf" id="pdoc"></label><label class="f">Фото упаковки ' + (p.img ? "(загружено)" : "") + '<input type="file" accept="image/jpeg,image/png,image/webp" id="pimg"></label></div>' +
       '<div class="row"><button class="btn pri" id="psave">Сохранить</button><button class="btn" id="pcan">Отмена</button><span class="note">Медицинские тексты публикуйте только после согласования с ответственным.</span></div></div>';

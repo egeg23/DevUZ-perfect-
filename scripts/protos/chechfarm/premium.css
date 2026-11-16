@@ -176,4 +176,4 @@ html:has(.hs) body{background:var(--paper)}
    Свёрнутая панель Telegram красится цветом фона страницы, а не theme-color:
    пока над шапкой тёмная сцена, фон страницы тоже тёмный. */
 html.on-dark,html.on-dark body{background:#071a18}
-:where(html.on-dark #main>.hs~section,html.on-dark .foot){background-color:var(--paper)}
+:where(html.on-dark #main>.hs~section,html.on-dark #main>.pf-hero~section,html.on-dark .foot){background-color:var(--paper)}
