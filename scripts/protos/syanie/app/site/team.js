@@ -13,8 +13,8 @@
    назад — те же кадры с конца). Лента — сетка кадров, её листает transform.
    Первый и последний кадр ленты — та же поза, что кадр врача, поэтому подмена
    не видна. Разворот — настоящий, с профилем: сжатия по ширине нет.
-   Шаги не скользят: по экрану врач смещается сам скрипт (--tx, --ty, --sc по
-   кадрам), и только на том отрезке ленты, где идут ноги (data-go).
+   Шаги не скользят: по экрану врача ведёт сам скрипт (--tx, --ty, --sc по
+   кадрам) по пути, записанному у ленты (data-p или data-go).
    Ленты «к нам» грузятся, когда блок на экране (медленная сеть и экономия
    трафика — по первому касанию врача), «от нас» и разворот — когда врач
    вышел. Нет ленты — врач переезжает плавно, без шагов, кадр лицом перетекает
@@ -60,8 +60,16 @@ function set(g,p){
   if(!p){g.style.removeProperty('--tx');g.style.removeProperty('--ty');g.style.removeProperty('--sc');return}
   g.style.setProperty('--tx',p.tx.toFixed(1)+'px');g.style.setProperty('--ty',p.ty.toFixed(1)+'px');g.style.setProperty('--sc',p.sc.toFixed(4));
 }
-/* Путь по кадрам: врач смещается, только пока идут ноги (отрезок go ленты), почти ровным ходом. */
-function path(i,a,b,go){var g=fig(i);return function(u){var v=(u-go[0])/(go[1]-go[0]);v=v<0?0:v>1?1:v;v=v*.6+v*v*(3-2*v)*.4;
+/* Путь по кадрам. У ленты, снятой стоящей камерой (data-p), путь записан по каждому кадру:
+   насколько врач подошёл в ролике, настолько он сместился и вырос на экране. У прежних лент
+   (data-go) врач смещается, только пока идут ноги, почти ровным ходом. */
+function prog(w){
+  var p=w.getAttribute('data-p');
+  if(p){p=p.split(',').map(Number);var m=p.length-1;return function(u){var x=u*(m+1),j=Math.min(m,Math.floor(x)),k=Math.min(m,j+1);return (p[j]+(p[k]-p[j])*(x-j))/1000}}
+  var go=(w.getAttribute('data-go')||'0,1').split(',').map(Number);
+  return function(u){var v=(u-go[0])/(go[1]-go[0]);v=v<0?0:v>1?1:v;return v*.6+v*v*(3-2*v)*.4};
+}
+function path(i,a,b,w){var g=fig(i),f=prog(w);return function(u){var v=f(u);v=v<0?0:v>1?1:v;
   set(g,{tx:a.tx+(b.tx-a.tx)*v,ty:a.ty+(b.ty-a.ty)*v,sc:a.sc+(b.sc-a.sc)*v})}}
 /* Листает ленту w за её время (data-ms): кадр — сдвигом сетки, tick — доля пути на каждом кадре экрана. */
 function run(s,k,w,rev,tick,done){
@@ -75,7 +83,6 @@ function run(s,k,w,rev,tick,done){
     s.classList.remove('tm-ws','tm-'+k+'-on');if(done)done();
   });
 }
-function goOf(w){return (w.getAttribute('data-go')||'0,1').split(',').map(Number)}
 /* Разворот: кадры настоящего поворота (лицо, профиль, спина); обратно — с конца. */
 function turn(s,back,done){
   ready(s,'t',function(w){
@@ -95,7 +102,7 @@ function enter(i,done){
   ready(s,'wf',function(w){
     if(!w){set(g,to);later(card,500);later(done,900);return}
     s.classList.add('tm-mv');later(card,+w.getAttribute('data-ms')*.62);
-    run(s,'wf',w,false,path(i,HOME,to,goOf(w)),function(){s.classList.remove('tm-mv');done()});
+    run(s,'wf',w,false,path(i,HOME,to,w),function(){s.classList.remove('tm-mv');done()});
   });
 }
 function leave(i,keep,done){
@@ -109,7 +116,7 @@ function leave(i,keep,done){
     ready(s,'wb',function(w){
       if(!w){set(g,null);later(home,900);return}
       s.classList.add('tm-mv');
-      run(s,'wb',w,false,path(i,from,HOME,goOf(w)),function(){set(g,null);s.classList.remove('tm-mv');home()});
+      run(s,'wb',w,false,path(i,from,HOME,w),function(){set(g,null);s.classList.remove('tm-mv');home()});
     });
   });
 }
