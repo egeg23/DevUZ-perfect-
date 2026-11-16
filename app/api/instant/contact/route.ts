@@ -2,6 +2,7 @@ import { routeNewLead } from "@/lib/admin/lead-queue-store";
 import { isCircleNiche, type CircleNiche } from "@/lib/admin/sales-after-reply";
 import { INSTANT_SOURCE, MANUAL_SOURCE, manualHeading } from "@/lib/proto/instant/bot-deps";
 import { contactOk, webLeadInput } from "@/lib/proto/instant/site";
+import { siteStaff } from "@/lib/proto/instant/site-staff";
 import { claimWebLead, setProtoLead, siteProtoOf } from "@/lib/proto/instant/store";
 import { protoUrl } from "@/lib/proto/store";
 import { salesRecipients } from "@/lib/qualify/brief";
@@ -35,6 +36,8 @@ export async function POST(request: Request) {
   if (text(body.hp, 200)) return Response.json({ ok: true });
   const contact = text(body.contact, 120);
   if (!contactOk(contact)) return Response.json({ error: "contact" }, { status: 400 });
+  // Сотрудник проверяет окно сам — лида в очередь нет, как у его сборки в боте.
+  if (await siteStaff(request)) return Response.json({ ok: true });
   const webId = webOf(request.headers.get("cookie"));
   if (!webId) return Response.json({ error: "no_browser" }, { status: 400 });
   const siteLocale: Locale = isLocale(text(body.locale, 5)) ? (text(body.locale, 5) as Locale) : "ru";

@@ -112,6 +112,8 @@ export function InstantMaker({ locale, copy, termsHref, botUrl, manualHours, pri
   const [done, setDone] = useState<Done | null>(null);
   const [manual, setManual] = useState<Manual | null>(null);
   const [has, setHas] = useState(false);
+  // Сотрудник (сессия панели, сервер сверяет с базой): без лимита и с «Собрать заново».
+  const [staff, setStaff] = useState(false);
   const hp = useRef<HTMLInputElement>(null);
   const box = useRef<HTMLDivElement>(null);
 
@@ -139,7 +141,8 @@ export function InstantMaker({ locale, copy, termsHref, botUrl, manualHours, pri
     requestAnimationFrame(() => box.current?.scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "start" }));
     try {
       const r = await fetch("/api/instant", { method: "GET", cache: "no-store" });
-      const j = (await r.json()) as { has?: { token: string; name: string; admin: boolean } };
+      const j = (await r.json()) as { has?: { token: string; name: string; admin: boolean }; staff?: boolean };
+      if (j.staff) setStaff(true);
       if (j.has) {
         setHas(true);
         setDone({ token: j.has.token, name: j.has.name, admin: j.has.admin, color: null, expires: null, addons: [] });
@@ -218,6 +221,7 @@ export function InstantMaker({ locale, copy, termsHref, botUrl, manualHours, pri
       }
       if (!last) throw new Error("empty");
       if (last.t === "done") {
+        if (last.staff) setStaff(true);
         setDone({ token: last.token, name: last.name, admin: last.admin, color: last.color, expires: last.expires, addons: last.addons });
         setPhase("done");
         goal("maket_done");
@@ -237,6 +241,24 @@ export function InstantMaker({ locale, copy, termsHref, botUrl, manualHours, pri
     } catch {
       setPhase("error");
     }
+  }
+
+  // «Собрать заново» — только сотруднику: окно с начала, прошлый макет остаётся в «Макетах».
+  function rebuild() {
+    setHas(false);
+    setDone(null);
+    setManual(null);
+    setNiche(null);
+    setWhat("");
+    setAddress("");
+    setAnswers({ name: "", phone: "", address: "", services: "" });
+    setNosite(false);
+    setInsta(false);
+    setAddrError(null);
+    setStep(null);
+    setInfo({});
+    setTyped("");
+    setPhase("address");
   }
 
   return (
@@ -385,6 +407,7 @@ export function InstantMaker({ locale, copy, termsHref, botUrl, manualHours, pri
                   botUrl={botUrl}
                   niche={niche}
                   site={nosite ? "" : address}
+                  onRebuild={staff ? rebuild : undefined}
                 />
               ) : null}
 
@@ -485,7 +508,7 @@ function Building({ copy, step, info, typed }: { copy: SiteInstantCopy; step: Bu
  * телефон. Видео DevUz в рамке не играет (сессионная отметка «видел»), а на
  * весь экран — играет: новая вкладка открывается без общей памяти сессии.
  */
-function Result({ locale, copy, done, has, prices, botUrl, niche, site }: {
+function Result({ locale, copy, done, has, prices, botUrl, niche, site, onRebuild }: {
   locale: Locale;
   copy: SiteInstantCopy;
   done: Done;
@@ -494,6 +517,8 @@ function Result({ locale, copy, done, has, prices, botUrl, niche, site }: {
   botUrl: string;
   niche: CircleNiche | null;
   site: string;
+  /** Только сотруднику: у клиента кнопки «Собрать заново» нет. */
+  onRebuild?: () => void;
 }) {
   const src = `/proto/${done.token}`;
   const wrap = useRef<HTMLDivElement>(null);
@@ -632,6 +657,11 @@ function Result({ locale, copy, done, has, prices, botUrl, niche, site }: {
             }}
           >
             {copy.done.again}
+          </button>
+        ) : null}
+        {onRebuild ? (
+          <button type="button" className={cn(g.btn, g.ghost, g.small)} onClick={onRebuild} data-staff-rebuild="">
+            {copy.done.rebuild} <span aria-hidden="true">↻</span>
           </button>
         ) : null}
       </div>

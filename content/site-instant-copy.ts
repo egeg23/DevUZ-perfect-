@@ -23,7 +23,7 @@ export type SiteInstantCopy = {
   niche: { title: string; other: string; what: string; whatHint: string; build: string; back: string };
   steps: Record<BuildStep, string> & { title: string; found: string };
   open_fail: string;
-  done: { title: string; note: string; full: string; kp: string; admin: string; desktop: string; phone: string; again: string };
+  done: { title: string; note: string; full: string; kp: string; admin: string; desktop: string; phone: string; again: string; rebuild: string };
   offer: { text: string; left: string; addons: string };
   contact: { title: string; text: string; placeholder: string; send: string; sending: string; sent: string; failed: string; bad: string };
   manual: { failed: string; limit: string; cases: string; all: string };
@@ -70,6 +70,7 @@ export const siteInstantCopy: Record<Locale, SiteInstantCopy> = {
       desktop: "Компьютер",
       phone: "Телефон",
       again: "Показать сборку ещё раз",
+      rebuild: "Собрать заново",
     },
     offer: { text: "Спецусловия по этому макету: лендинг {landing} вместо {landingOld}, корпоративный сайт {corp} вместо {corpOld}.", left: "Осталось {time}", addons: "Что можно добавить" },
     contact: {
@@ -145,6 +146,7 @@ export const siteInstantCopy: Record<Locale, SiteInstantCopy> = {
       desktop: "Kompyuter",
       phone: "Telefon",
       again: "Yig‘ishni yana ko‘rsatish",
+      rebuild: "Qaytadan yig‘ish",
     },
     offer: { text: "Shu maket bo‘yicha maxsus shartlar: lending {landing} ({landingOld} o‘rniga), korporativ sayt {corp} ({corpOld} o‘rniga).", left: "Qoldi: {time}", addons: "Nimalar qo‘shish mumkin" },
     contact: {
@@ -220,6 +222,7 @@ export const siteInstantCopy: Record<Locale, SiteInstantCopy> = {
       desktop: "Desktop",
       phone: "Phone",
       again: "Replay the build",
+      rebuild: "Build again",
     },
     offer: { text: "Special terms for this mock-up: a landing page for {landing} instead of {landingOld}, a corporate site for {corp} instead of {corpOld}.", left: "{time} left", addons: "What can be added" },
     contact: {
@@ -295,6 +298,7 @@ export const siteInstantCopy: Record<Locale, SiteInstantCopy> = {
       desktop: "电脑",
       phone: "手机",
       again: "再看一次组装",
+      rebuild: "重新组装",
     },
     offer: { text: "此样稿的特别条件：落地页 {landing}（原价 {landingOld}），企业网站 {corp}（原价 {corpOld}）。", left: "剩余 {time}", addons: "可以添加的功能" },
     contact: {
@@ -370,6 +374,7 @@ export const siteInstantCopy: Record<Locale, SiteInstantCopy> = {
       desktop: "Комп'ютер",
       phone: "Телефон",
       again: "Показати збирання ще раз",
+      rebuild: "Зібрати заново",
     },
     offer: { text: "Спецумови за цим макетом: лендинг {landing} замість {landingOld}, корпоративний сайт {corp} замість {corpOld}.", left: "Залишилось {time}", addons: "Що можна додати" },
     contact: {
@@ -445,6 +450,7 @@ export const siteInstantCopy: Record<Locale, SiteInstantCopy> = {
       desktop: "Komputer",
       phone: "Telefon",
       again: "Pokaż budowanie jeszcze raz",
+      rebuild: "Zbuduj od nowa",
     },
     offer: { text: "Warunki specjalne dla tej makiety: landing {landing} zamiast {landingOld}, strona firmowa {corp} zamiast {corpOld}.", left: "Zostało {time}", addons: "Co można dodać" },
     contact: {

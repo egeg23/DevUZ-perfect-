@@ -108,8 +108,14 @@ export function parseSiteRequest(body: Record<string, unknown>): SiteRequest | "
 export type LimitInput = { has: "none" | "ready" | "draft"; ipDay: number; allDay: number };
 export type SiteLimit = "ok" | "has" | "draft" | "ip" | "day";
 
-/** Один макет на браузер, потолок на адрес и на всех за сутки. */
-export function siteLimit(input: LimitInput): SiteLimit {
+/**
+ * Один макет на браузер, потолок на адрес и на всех за сутки. Сотруднику —
+ * без лимита, как в боте (владелец, 16.11.2026: «На сайте сотрудники тоже
+ * могут собирать макет без ограничений»): сотрудник — по сессии панели в
+ * базе (`SITE_STAFF_COOKIE`), не по куке без секрета.
+ */
+export function siteLimit(input: LimitInput, staff = false): SiteLimit {
+  if (staff) return "ok";
   if (input.has === "ready") return "has";
   if (input.has === "draft") return "draft";
   if (input.ipDay >= SITE_IP_DAY) return "ip";
@@ -129,6 +135,8 @@ export type SiteInfo = { name?: string; color?: string | null; services?: string
 
 export type SiteDone = {
   t: "done";
+  /** Собрал сотрудник: окно покажет «Собрать заново» (у клиента кнопки нет). */
+  staff?: boolean;
   token: string;
   name: string;
   niche: InstantNiche;
@@ -143,7 +151,7 @@ export type SiteEvent =
   | { t: "step"; step: BuildStep; info?: SiteInfo }
   | { t: "open" }
   | { t: "manual"; why: "failed" | "limit"; niche: CircleNiche; cases: { name: string; href: string }[] }
-  | { t: "has"; token: string; name: string; admin: boolean }
+  | { t: "has"; token: string; name: string; admin: boolean; staff?: boolean }
   | SiteDone
   | { t: "error" };
 

@@ -5,6 +5,8 @@ import {
   NEXT_TTL_SECONDS,
   SESSION_COOKIE,
   SESSION_MAX_AGE_SECONDS,
+  SITE_STAFF_COOKIE,
+  SITE_STAFF_PATH,
   TEAM_COOKIE,
   TEAM_MAX_AGE_SECONDS,
   wantedPath,
@@ -77,6 +79,14 @@ function admin(request: NextRequest, pathname: string) {
       sameSite: "lax",
       path: "/",
       maxAge: TEAM_MAX_AGE_SECONDS,
+    });
+    // Окно «Собрать макет» узнаёт сотрудника по этой копии (lib/admin/return-to.ts).
+    response.cookies.set(SITE_STAFF_COOKIE, session, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: SITE_STAFF_PATH,
+      maxAge: SESSION_MAX_AGE_SECONDS,
     });
     return response;
   }
