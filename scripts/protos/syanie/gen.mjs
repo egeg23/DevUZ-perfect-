@@ -598,7 +598,9 @@ function navItems() {
 }
 
 function sitePage() {
-  if (PROD) return pageShell({ key: "index", title: "Все зубы на 6 имплантатах за 1 день · «Сияние Севера», Томск", desc: "Все зубы на 6 имплантатах за один день в Томске: All-on-6 в центре имплантации «Сияние Севера», ул. Белинского, 63. Цены, рассрочка 0%, врачи, гарантии, расчёт за минуту.", path: "/", main: mainBlocks().join("\n"), ld: ld(), home: true });
+  /* Запрос главной — по Вордстату, Томск (CAT.SEO.index): «all on 4» ищут чаще, чем «all on 6». */
+  const seoT = (t) => t.replace(/\{name\}/g, plain(B.name)).replace(/\{street\}/g, plain(B.street));
+  if (PROD) return pageShell({ key: "index", title: seoT(CAT.SEO.index.title), desc: seoT(CAT.SEO.index.desc), path: "/", main: mainBlocks().join("\n"), ld: ld(), home: true });
   const nav = navItems();
   return `<!doctype html>
 <html lang="ru">
@@ -669,7 +671,7 @@ const VI_BAR = `<div class="vi-bar" id="vi-bar" role="region" aria-label="Нас
 function pageCtx() {
   return {
     B, D, ORG: { ...CAT.ORG, ...(D.ORG || {}) }, AUTH: D.AUTHORITIES || CAT.AUTHORITIES, DOCS: D.DOCS || [], CATS: CAT.CATEGORIES, LIST: D.CATALOG || CAT.SERVICES,
-    PD_VERSION: CAT.PD_VERSION, IMG, tel, ic, esc, plain, rub, msgLinks, docPic, team: teamBlock, dirsOf, metrika: LIVE.seo?.metrika || "", site: "__SITE_URL__",
+    PD_VERSION: CAT.PD_VERSION, IMG, tel, ic, esc, plain, rub, msgLinks, docPic, team: teamBlock, dirsOf, SEO: CAT.SEO, metrika: LIVE.seo?.metrika || "", site: "__SITE_URL__",
     /* Тексты первого экрана страниц правятся в админке («Тексты разделов»), как разделы главной. */
     txt: (key, kick, h, p = "") => { SEEN[key] = { kick, h, p }; const t = TX[key] || {}; return { kick: t.kick ?? kick, h: t.h ?? h, p: t.p ?? p }; },
     blocks: { price: priceBlock, trust: trustBlock, perks: perksBlock, rooms: roomsBlock },

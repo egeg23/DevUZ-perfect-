@@ -288,3 +288,13 @@ html body .vi-bar button.vi-sw1{background-color:#fff!important;color:#000!impor
 html body .vi-bar button.vi-sw2{background-color:#000!important;color:#fff!important;border-color:#fff!important}
 html body .vi-bar button.vi-sw3{background-color:#9dd1ff!important;color:#063462!important;border-color:#063462!important}
 .cx-ok[hidden]{display:none}
+
+/* «Подробно» на странице раздела: короткие ответы на то, что ищут (catalog.mjs, SEO). */
+.pg-cols{display:grid;gap:22px}
+.pg-cols article{padding:22px 22px 20px;border-radius:var(--r);background:var(--card);box-shadow:var(--sh1)}
+.pg-cols h3{font:400 22px/1.2 var(--f-d);margin:0 0 10px}
+.pg-cols p{margin:0;color:var(--mute)}
+@media (min-width:900px){.pg-cols{grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:26px}}
+/* Вопросы раздела — в одну колонку под заголовком. */
+.pg-fq{max-width:860px}
+html.vi .pg-cols{grid-template-columns:1fr}

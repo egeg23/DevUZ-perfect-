@@ -45,6 +45,20 @@ ${img ? `<figure class="pg-ph"><img src="${imgOf(img)}" alt="${alt}" decoding="a
   const card = (x) => `<article class="sv-c"><h3>${x.t}</h3>${x.d ? `<p>${x.d}</p>` : ""}<b>${priceOf(x)}</b></article>`;
   const docCard = (d) => `<article class="vd"><div class="vd-ph">${c.docPic(d)}</div><div class="vd-t"><span class="kick">${d.role}</span><h3>${d.name}</h3>${d.facts.length ? `<ul>${d.facts.map((f) => `<li>${f}</li>`).join("")}</ul>` : ""}${d.edu ? `<p class="vd-x"><b>Образование</b>${String(d.edu).split("\n").join("<br>")}</p>` : ""}${d.cert ? `<p class="vd-x"><b>Квалификация</b>${String(d.cert).split("\n").join("<br>")}</p>` : ""}${d.sched ? `<p class="vd-x"><b>Приём</b>${d.sched}</p>` : ""}${d.quote ? `<p class="dr-q">«${d.quote}»</p>` : ""}</div></article>`;
   const HOME = ["Главная", "/"], SVC = ["Услуги", "/uslugi"];
+  /* Запросы страниц по Вордстату, Томск (catalog.mjs, SEO): в title и description — текстом, в H1 и первом абзаце — разметкой. */
+  const SEO = (key) => (c.SEO || {})[key] || {};
+  const fillT = (t) => String(t || "").replace(/\{name\}/g, nameOf).replace(/\{street\}/g, c.plain(B.street));
+  /* «50 000 ₽» и «5 000 ₽» не рвутся переносом строки. */
+  const nb = (t) => String(t || "").replace(/(\d) (?=\d{3}(?!\d))/g, "$1\u00a0").replace(/(\d) ₽/g, "$1\u00a0₽");
+  const fillH = (t) => nb(String(t || "").replace(/\{name\}/g, B.name).replace(/\{street\}/g, B.street));
+  /* Вопросы раздела — той же разметкой, что вопросы главной (раскрывает site.js), и в FAQPage. */
+  const faqBox = (slug, list) => `<section class="pg-sec pg-alt" id="voprosy"><div class="wrap"><div class="sh"><span class="kick">Вопросы</span><h2>Что спрашивают пациенты</h2></div>
+<div class="fq pg-fq">${list.map((f, i) => `<div class="fq-i"><h3><button type="button" class="fq-q" aria-expanded="false" aria-controls="fq-${slug}-${i}" id="fq-b-${slug}-${i}"><span>${nb(f.q)}</span><i class="fq-x" aria-hidden="true"></i></button></h3><div class="fq-a" id="fq-${slug}-${i}" role="region" aria-labelledby="fq-b-${slug}-${i}"><div><p>${nb(f.a)}</p></div></div></div>`).join("")}</div>
+</div></section>`;
+  const faqLd = (path, list) => ({ "@type": "FAQPage", "@id": `${U}${path}#voprosy`, mainEntity: list.map((f) => ({ "@type": "Question", name: c.plain(nb(f.q)), acceptedAnswer: { "@type": "Answer", text: c.plain(nb(f.a)) } })) });
+  const textBox = (seo) => seo.text?.length ? `<section class="pg-sec"><div class="wrap"><div class="sh"><span class="kick">Подробно</span><h2>${seo.th}</h2></div>
+<div class="pg-cols">${seo.text.map(([h, t]) => `<article><h3>${h}</h3><p>${nb(t)}</p></article>`).join("")}</div>
+</div></section>` : "";
   /* Врачи раздела — по специальности (хирург — хирургия и имплантация, ортопед — протезирование…); нет таких — все. */
   const docsFor = (slug) => { const own = D.DOCTORS.filter((d) => c.dirsOf(d).some((k) => k.slug === slug)); return own.length ? own : D.DOCTORS; };
   /* Рассрочка и вычет — из «Сервиса» клиники по словам, а не по месту в списке. */
@@ -55,7 +69,7 @@ ${img ? `<figure class="pg-ph"><img src="${imgOf(img)}" alt="${alt}" decoding="a
   out.uslugi = {
     title: `Услуги стоматологии в Томске · «${nameOf}»`, desc: `Имплантация, протезирование, лечение зубов, хирургия, виниры, гигиена и КТ в клинике «${nameOf}», Томск, ${c.plain(B.street)}. Первая консультация бесплатно.`, path: "/uslugi",
     ld: ldOf([HOME, SVC]),
-    main: `${hero({ key: "pg-uslugi", kick: "Услуги", h: "Услуги клиники", p: `Имплантация, протезирование, лечение, хирургия, эстетика, гигиена и диагностика в одной клинике. Первая консультация бесплатно.`, img: "film-16", alt: "Вход в клинику «Сияние Севера»", path: "/uslugi", list: [HOME, ["Услуги", "/uslugi"]] })}
+    main: `${hero({ key: "pg-uslugi", kick: "Услуги", h: fillH(SEO("uslugi").h) || "Услуги клиники", p: fillH(SEO("uslugi").p) || `Имплантация, протезирование, лечение, хирургия, эстетика, гигиена и диагностика в одной клинике. Первая консультация бесплатно.`, img: "film-16", alt: "Вход в клинику «Сияние Севера»", path: "/uslugi", list: [HOME, ["Услуги", "/uslugi"]] })}
 <section class="pg-sec"><div class="wrap">
 <div class="ct-cards">
 <a class="cc cc-star" href="/"><span class="cc-ph"><img src="${IMG}/calm-4-16.webp" alt="Несъёмный протез на шести имплантах, 3D-визуализация" loading="lazy" decoding="async"></span><span class="cc-t"><span class="kick">Главная услуга</span><b>All-on-6: все зубы на 6 имплантатах</b><span>За один день, без искусственной десны. От ${rub(Math.min(...D.PRICES.map((x) => x.price)))}.</span></span></a>
@@ -69,16 +83,17 @@ ${ctaBand("")}`,
   /* ── Разделы услуг ───────────────────────────────────────────────── */
   const deep = new Set(["implantatsiya-zubov", "protezirovanie-zubov", "khirurgiya"]);
   for (const k of CATS) {
-    const items = LIST.filter((x) => x.cat === k.slug), path = "/" + k.slug;
+    const items = LIST.filter((x) => x.cat === k.slug), path = "/" + k.slug, seo = SEO(k.slug);
     out[k.slug] = {
       title: `${k.t} в Томске · «${nameOf}»`, desc: `${k.t} в клинике «${nameOf}», Томск, ${c.plain(B.street)}: ${items.slice(0, 4).map((x) => c.plain(x.t).toLowerCase()).join(", ")}. Цены, врачи, запись на бесплатную консультацию.`, path, svc: k.nav,
-      ld: ldOf([HOME, SVC, [k.t, path]], [{ "@type": "MedicalWebPage", "@id": `${U}${path}#page`, url: `${U}${path}`, name: c.plain(k.t), about: { "@id": `${U}/#clinic` }, inLanguage: "ru-RU" }]),
-      main: `${hero({ key: "pg-" + k.slug, kick: "Услуги", h: k.t, p: k.lead, img: k.img, alt: k.alt, path, list: [HOME, SVC, [k.t, path]], svc: k.nav })}
+      ld: ldOf([HOME, SVC, [k.t, path]], [{ "@type": "MedicalWebPage", "@id": `${U}${path}#page`, url: `${U}${path}`, name: c.plain(seo.h || k.t), about: { "@id": `${U}/#clinic` }, inLanguage: "ru-RU" }, ...(seo.faq?.length ? [faqLd(path, seo.faq)] : [])]),
+      main: `${hero({ key: "pg-" + k.slug, kick: "Услуги", h: fillH(seo.h) || k.t, p: fillH(seo.p) || k.lead, img: k.img, alt: k.alt, path, list: [HOME, SVC, [k.t, path]], svc: k.nav })}
 <section class="pg-sec" id="ceny-uslug"><div class="wrap">
 <div class="sh"><span class="kick">Услуги и цены</span><h2>Что делаем</h2><p>Цены в рублях. Точную стоимость врач назовёт после осмотра: она зависит от вашего случая.</p></div>
 <div class="sv-grid">${k.slug === "implantatsiya-zubov" ? allOn6() : ""}${items.map(card).join("")}</div>
 <p class="pg-note"><a href="/ceny#pl-${k.slug}">Все цены раздела</a> · <a href="/ceny">Все цены клиники</a></p>
 </div></section>
+${textBox(seo)}
 ${deep.has(k.slug) ? `<section class="pg-sec" data-tone="ink"><div class="wrap">
 <div class="sh"><span class="kick">Гарантии</span><h2>Что записано в договоре</h2></div>
 <ol class="gu pg-gu">${D.GUARANTEE.map((g) => `<li>${ic("shield")}<b>${g.t}</b><span>${g.d}</span></li>`).join("")}</ol>
@@ -93,6 +108,7 @@ ${deep.has(k.slug) ? `<section class="pg-sec" data-tone="ink"><div class="wrap">
 <div class="pk"><span class="pk-i">${ic("doc")}</span><b>${perk(/вычет/i).t}</b><span>${perk(/вычет/i).d}</span></div>
 ${others(k.slug)}
 </div></section>
+${seo.faq?.length ? faqBox(k.slug, seo.faq) : ""}
 ${ctaBand(k.nav)}`,
     };
   }
@@ -102,7 +118,7 @@ ${ctaBand(k.nav)}`,
   out.ceny = {
     title: `Цены на стоматологию в Томске · «${nameOf}»`, desc: `Цены клиники «${nameOf}»: All-on-6 от ${rub(Math.min(...D.PRICES.map((x) => x.price)))}, имплантация, протезирование, лечение, хирургия, гигиена и КТ. Рассрочка 0%, налоговый вычет.`, path: "/ceny",
     ld: ldOf([HOME, ["Цены", "/ceny"]], offers.length ? [{ "@type": "OfferCatalog", "@id": `${U}/ceny#prices`, name: "Цены клиники", itemListElement: offers.map(({ x, n }) => ({ "@type": "Offer", name: c.plain(x.t), price: n, priceCurrency: "RUB", ...(/^от\s/i.test(c.plain(x.p)) ? { priceSpecification: { "@type": "PriceSpecification", minPrice: n, priceCurrency: "RUB" } } : {}) })) }] : []),
-    main: `${hero({ key: "pg-ceny", kick: "Цены", h: "Цены на услуги клиники", p: "Цены в рублях. Точную стоимость лечения врач назовёт после осмотра и снимка, до начала лечения. Первая консультация бесплатно.", img: "calm-4-16", alt: "Несъёмный протез на шести имплантах, 3D-визуализация", path: "/ceny", list: [HOME, ["Цены", "/ceny"]] })}
+    main: `${hero({ key: "pg-ceny", kick: "Цены", h: fillH(SEO("ceny").h) || "Цены на услуги клиники", p: "Цены в рублях. Точную стоимость лечения врач назовёт после осмотра и снимка, до начала лечения. Первая консультация бесплатно.", img: "calm-4-16", alt: "Несъёмный протез на шести имплантах, 3D-визуализация", path: "/ceny", list: [HOME, ["Цены", "/ceny"]] })}
 ${c.blocks.price({ all: false })}
 <section class="pg-sec" id="preyskurant"><div class="wrap">
 <div class="sh"><span class="kick">Прейскурант</span><h2>Цены по разделам</h2></div>
@@ -127,7 +143,7 @@ ${ctaBand("")}`,
   out["o-klinike"] = {
     title: `О клинике «${nameOf}»: центр имплантации в Томске`, desc: `«${nameOf}»: ${c.plain(B.what).toLowerCase()} в Томске, ${c.plain(B.street)}. Гарантии в договоре, своя лаборатория, фото клиники, сведения и документы.`, path: "/o-klinike",
     ld: ldOf([HOME, ["О клинике", "/o-klinike"]]),
-    main: `${hero({ key: "pg-o-klinike", kick: "О клинике", h: `Центр имплантации «${B.name}»`, p: `${B.what} в Томске. ${B.near}. ${B.parking}.`, img: "p-rec", alt: "Ресепшен клиники «Сияние Севера» с названием на стене", path: "/o-klinike", list: [HOME, ["О клинике", "/o-klinike"]] })}
+    main: `${hero({ key: "pg-o-klinike", kick: "О клинике", h: fillH(SEO("o-klinike").h) || `Центр имплантации «${B.name}»`, p: `${B.what} в Томске. ${B.near}. ${B.parking}.`, img: "p-rec", alt: "Ресепшен клиники «Сияние Севера» с названием на стене", path: "/o-klinike", list: [HOME, ["О клинике", "/o-klinike"]] })}
 ${c.blocks.trust()}
 ${c.blocks.perks()}
 ${c.blocks.rooms()}
@@ -138,7 +154,7 @@ ${c.blocks.rooms()}
   out.otzyvy = {
     title: `Отзывы пациентов о клинике «${nameOf}», Томск`, desc: `Отзывы пациентов «${nameOf}»: оценка ${c.plain(D.RATING.value)} на ${c.plain(D.RATING.where)}. Имплантация, протезирование, лечение зубов в Томске.`, path: "/otzyvy",
     ld: ldOf([HOME, ["Отзывы", "/otzyvy"]]),
-    main: `${hero({ key: "pg-otzyvy", kick: "Отзывы", h: "Отзывы пациентов", p: `Оценка ${D.RATING.value} на ${D.RATING.where}, ${D.RATING.rec}% пациентов рекомендуют клинику родным. Отзывы с сайта клиники и с карт.`, img: "p-cor", alt: "Коридор клиники со световыми линиями", path: "/otzyvy", list: [HOME, ["Отзывы", "/otzyvy"]] })}
+    main: `${hero({ key: "pg-otzyvy", kick: "Отзывы", h: fillH(SEO("otzyvy").h) || "Отзывы пациентов", p: `Оценка ${D.RATING.value} на ${D.RATING.where}, ${D.RATING.rec}% пациентов рекомендуют клинику родным. Отзывы с сайта клиники и с карт.`, img: "p-cor", alt: "Коридор клиники со световыми линиями", path: "/otzyvy", list: [HOME, ["Отзывы", "/otzyvy"]] })}
 <section class="pg-sec"><div class="wrap">
 <div class="rv-grid">${D.REVIEWS.map((r) => `<blockquote class="rq"><span class="rq-st" aria-label="5 из 5">${"★".repeat(5)}</span><p>${r.t}</p><footer><b>${r.who}</b><span>${r.when} · ${r.src}</span></footer></blockquote>`).join("")}</div>
 <p class="pg-note"><a href="${B.map}" rel="noopener">Все отзывы на Яндекс Картах</a></p>
@@ -150,7 +166,7 @@ ${ctaBand("")}`,
   out.akcii = {
     title: `Акции стоматологии «${nameOf}», Томск`, desc: `Акции «${nameOf}»: подарки к лечению All-on-6 на ${rub(D.BENEFIT)}, рассрочка 0% без первого взноса, налоговый вычет 13%.`, path: "/akcii",
     ld: ldOf([HOME, ["Акции", "/akcii"]]),
-    main: `${hero({ key: "pg-akcii", kick: "Акции", h: "Акции и подарки", p: "Подарки к лечению All-on-6, рассрочка без переплаты и помощь с налоговым вычетом. Сроки и условия акций уточняйте у администратора.", img: "bg-onyx-16", alt: "", path: "/akcii", list: [HOME, ["Акции", "/akcii"]] })}
+    main: `${hero({ key: "pg-akcii", kick: "Акции", h: fillH(SEO("akcii").h) || "Акции и подарки", p: "Подарки к лечению All-on-6, рассрочка без переплаты и помощь с налоговым вычетом. Сроки и условия акций уточняйте у администратора.", img: "bg-onyx-16", alt: "", path: "/akcii", list: [HOME, ["Акции", "/akcii"]] })}
 <section class="pg-sec"><div class="wrap ak-grid">
 <article class="ak ak-big"><span class="kick">Подарки к лечению All-on-6</span><h2>Выгода ${rub(D.BENEFIT)}</h2><ul class="gf">${D.GIFTS.map((g) => `<li><span>${ic(g.sale ? "card" : "gift")}${g.t}</span><span class="gf-p"><s>${rub(g.was)}</s><b>${g.sale ? "в подарок" : "0 ₽"}</b></span></li>`).join("")}</ul>${book("All-on-6: методика", "Записаться по акции")}</article>
 ${D.PERKS.map((p, i) => `<article class="ak"><span class="pk-i">${ic(["car", "user", "doc", "card"][i % 4])}</span><h3>${p.t}</h3><p>${p.d}</p></article>`).join("")}
@@ -164,7 +180,7 @@ ${ctaBand("")}`,
   out.kontakty = {
     title: `Контакты клиники «${nameOf}», Томск, ${c.plain(B.street)}`, desc: `«${nameOf}»: ${c.plain(B.addr)}, ${c.plain(B.hours)}, телефон ${c.plain(B.phone)}. Как доехать, парковка, реквизиты.`, path: "/kontakty",
     ld: ldOf([HOME, ["Контакты", "/kontakty"]]),
-    main: `${hero({ key: "pg-kontakty", kick: "Контакты", h: "Как к нам добраться", p: `${B.addr}. ${B.hours}. ${B.near}.`, img: "bg-street-16", alt: "", path: "/kontakty", list: [HOME, ["Контакты", "/kontakty"]] })}
+    main: `${hero({ key: "pg-kontakty", kick: "Контакты", h: fillH(SEO("kontakty").h) || "Как к нам добраться", p: `${B.addr}. ${B.hours}. ${B.near}.`, img: "bg-street-16", alt: "", path: "/kontakty", list: [HOME, ["Контакты", "/kontakty"]] })}
 <section class="pg-sec"><div class="wrap kt-grid">
 <ul class="kt">
 <li>${ic("pin")}<span><b>${B.addr}</b><a href="${B.route}" rel="noopener">Построить маршрут в Яндекс Картах</a></span></li>
@@ -277,5 +293,6 @@ ${c.metrika ? `<tr><td>Статистика посещений Сайта, чт�
 <p>Согласие можно отозвать в любой момент заявлением ${ask}. После отзыва Клиника прекращает обработку и уничтожает данные в течение 30 дней, если закон не требует хранить их дольше.</p>
 <p>С <a href="/privacy">Политикой обработки персональных данных</a> я ознакомлен(а).</p>`),
   };
+  for (const [key, pg] of Object.entries(out)) { const seo = SEO(key); if (seo.title) pg.title = fillT(seo.title); if (seo.desc) pg.desc = fillT(seo.desc); }
   return out;
 }

@@ -595,7 +595,7 @@ test("сияние на сервере клиники: многостранич�
     }
     /* Раздел услуг: его услуги, другие разделы, подсвечено «Услуги». */
     const impl = (await a.call("/implantatsiya-zubov")).text;
-    assert.match(impl, /<h1>Имплантация зубов<\/h1>/);
+    assert.match(impl, /<h1>Имплантация зубов в Томске<\/h1>/);
     assert.match(impl, /All-on-6: все зубы на 6 имплантатах[\s\S]*?от 179 900 ₽/);
     assert.match(impl, /<h3>Одномоментная имплантация<\/h3>/);
     assert.match(impl, /<a href="\/uslugi" aria-current="page">Услуги<\/a>/);
@@ -659,6 +659,50 @@ test("сияние на сервере клиники: многостранич�
   /* Образ: новые модули сборщика едут в render/. */
   const wf = readFileSync(new URL("../../../../.github/workflows/syanie-app.yml", APP), "utf8");
   assert.match(wf, /cp gen\.mjs data\.mjs plan\.mjs catalog\.mjs pages\.mjs /);
+});
+
+test("сияние на сервере клиники: запросы по Вордстату (Томск) — в title, description, H1 и первом абзаце каждой страницы, вопросы раздела в FAQPage", async () => {
+  /* Владелец, 16.11.2026: «проработай СЕО запросы, собери по Томску через
+     вордстат наш, топовые запросы и адаптируй вау СЕО КАЖДОЙ СТРАНИЦЫ». */
+  const CAT = await import(new URL("../catalog.mjs", APP).href);
+  /* Запрос страницы: первые слова её title — так он и стоит в выдаче. */
+  const QUERY: Record<string, string> = {
+    "/": "All-on-6 и All-on-4 в Томске", "/uslugi": "Стоматология в Томске", "/ceny": "Стоматология в Томске",
+    "/implantatsiya-zubov": "Имплантация зубов в Томске", "/protezirovanie-zubov": "Протезирование зубов в Томске",
+    "/khirurgiya": "Удаление зуба в Томске", "/esteticheskaya-stomatologiya": "Виниры в Томске", "/lechenie-zubov": "Лечение зубов в Томске",
+    "/professionalnaya-gigiena": "Чистка зубов в Томске", "/diagnostika-zubov": "КТ зубов в Томске", "/vrachi": "Стоматологи в Томске",
+  };
+  const a = await boot("https://syanie.test", { live: true });
+  try {
+    for (const [path, q] of Object.entries(QUERY)) {
+      const html = (await a.call(path)).text;
+      const title = /<title>([^<]+)<\/title>/.exec(html)![1], desc = /<meta name="description" content="([^"]+)"/.exec(html)![1];
+      assert.ok(title.startsWith(q), `${path}: title «${title}»`);
+      assert.ok(title.length <= 85, `${path}: title длиннее 85 знаков`);
+      assert.ok(desc.length <= 160, `${path}: description ${desc.length} знаков`);
+      assert.ok(/Томск/.test(desc), `${path}: description без города`);
+    }
+    for (const k of CAT.CATEGORIES) {
+      const seo = CAT.SEO[k.slug], html = (await a.call("/" + k.slug)).text;
+      const h1 = /<h1>([^<]+)<\/h1>/.exec(html)![1], lead = /<p class="lead">([^<]+)<\/p>/.exec(html)![1];
+      const word = seo.h.split(/\s+/)[0].toLowerCase().slice(0, 6);
+      assert.ok(/в Томске/.test(h1), `${k.slug}: H1 «${h1}» без Томска`);
+      assert.ok(lead.toLowerCase().includes(word) && /в Томске/.test(lead), `${k.slug}: первый абзац без запроса`);
+      /* «Подробно» и вопросы: видимые вопросы совпадают с FAQPage. */
+      assert.match(html, /<span class="kick">Подробно<\/span>/);
+      const asked = [...html.matchAll(/<button type="button" class="fq-q"[^>]*><span>([^<]+)<\/span>/g)].map((m) => m[1]);
+      const ld = JSON.parse(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/.exec(html)![1]);
+      const faq = ld["@graph"].find((x: any) => x["@type"] === "FAQPage");
+      assert.deepEqual(faq.mainEntity.map((x: any) => x.name), asked.map((x) => x.replace(/&quot;/g, '"')), k.slug);
+      assert.ok(asked.length >= 2, `${k.slug}: меньше двух вопросов`);
+    }
+    /* Цены в текстах — только из прейскуранта клиники. */
+    const said = JSON.stringify(CAT.SEO).match(/\d[\d ]*\d ₽|\d+ ₽/g) || [];
+    const known = new Set(["80 000 ₽", "50 000 ₽", "250 000 ₽", "179 900 ₽", "5 000 ₽"]);
+    for (const p of said) assert.ok(known.has(p), "цена не из прейскуранта: " + p);
+    /* Чего клиника не делает — не обещаем. */
+    assert.doesNotMatch(JSON.stringify(CAT.SEO), /отбелив|детск/i);
+  } finally { await a.close(); }
 });
 
 test("сияние на сервере клиники: «Наши врачи» — четыре врача в полный рост, карточка как выбор героя, врачи раздела по специальности", async () => {
