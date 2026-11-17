@@ -1,186 +1,162 @@
 /**
- * Сценарий бота Claudery — то, что владелец собирает в конструкторе
- * («ИИ-сотрудники» → «Claudery»).
+ * Настройки бота Claudery — то, что владелец правит в «ИИ-сотрудники» →
+ * «Claudery».
  *
  * Владелец, 17.11.2026: «Сделай в ИИ сотрудниках, чтобы я мог собирать бота
- * там как конструктор, ну типа сценарии прописывать ответов, кнопки делать»;
- * «Гарантии результата и тд — в конструкторе пропишу сам».
+ * там как конструктор, ну типа сценарии прописывать ответов, кнопки
+ * делать»; «Гарантии результата и тд — в конструкторе пропишу сам». Следом:
+ * «Убери узбекский язык от туда, бот только на рф аудиторию будет работать, и
+ * сделай проще шаги и тд, не разобраться в логике».
  *
- * Сценарий — список шагов. Шаг показывает текст на русском и узбекском и
- * кнопки: кнопка ведёт на другой шаг или открывает ссылку. Вид шага решает,
- * что бот делает сам:
- *  - «message» — просто текст и кнопки;
- *  - «ask» — ждёт от клиента сообщение (что случилось, можно со скриншотом),
- *    потом идёт на `next`;
- *  - «pay» — выставляет счёт Platega на `amount` ₽, оплату подтверждает
- *    Platega, а не слова клиента; после оплаты — шаг `next`;
- *  - «lead» — заводит заявку без оплаты (например, «позвать менеджера»).
+ * Поэтому путь клиента один и неизменный, а править можно только слова:
+ *   1. Приветствие с кнопкой «Нужна помощь» (и до 4 своих кнопок: ответ
+ *      текстом или ссылка);
+ *   2. «Что случилось?» — бот ждёт сообщение, можно со скриншотом;
+ *   3. Счёт Platega на сумму из настроек (оплату подтверждает Platega);
+ *   4. Сообщение после оплаты;
+ *   5. Условия и гарантия — в оферте.
  *
- * Хранится в stats_snapshots «claudery-scenario». Без модели: бот только
- * ходит по шагам. Тексты уходят в Telegram простым текстом, без разметки.
+ * Хранится в stats_snapshots «claudery-setup». Бот только по-русски. Тексты
+ * уходят в Telegram простым текстом, без разметки. Модели нет.
  */
 
-export const LANGS = ["ru", "uz"] as const;
-export type Lang = (typeof LANGS)[number];
-export type Text = Record<Lang, string>;
+export type Extra = { label: string; answer?: string; url?: string };
 
-export const KINDS = ["message", "ask", "pay", "lead"] as const;
-export type NodeKind = (typeof KINDS)[number];
+export type Setup = {
+  greet: string;
+  helpLabel: string;
+  ask: string;
+  pay: string;
+  amount: number;
+  paid: string;
+  terms: string;
+  extras: Extra[];
+};
 
-export type Button = { label: Text; to?: string; url?: string };
-export type Step = { id: string; kind: NodeKind; text: Text; buttons: Button[]; next?: string; amount?: number };
+/** Шаг бота — внутреннее устройство, собирается из Setup (`scenarioOf`). */
+export type NodeKind = "message" | "ask" | "pay";
+export type Button = { label: string; to?: string; url?: string };
+export type Step = { id: string; kind: NodeKind; text: string; buttons: Button[]; next?: string; amount?: number };
 export type Scenario = { start: string; terms: string; steps: Step[] };
 
-export const LIMITS = { steps: 30, buttons: 6, text: 3500, label: 60, terms: 6000, id: 24 } as const;
+export const LIMITS = { text: 3500, label: 60, terms: 6000, extras: 4 } as const;
 export const AMOUNT = { min: 100, max: 1_000_000, default: 5000 } as const;
-export const ID_RE = /^[a-z0-9][a-z0-9-]*$/;
-export const SCENARIO_KEY = "claudery-scenario";
+export const SETUP_KEY = "claudery-setup";
 /** Назначение платежа в Platega (владелец, 17.11.2026). */
 export const PAY_PURPOSE = "Claudery: удалённая помощь";
+export const BACK_LABEL = "← Назад";
 
-/**
- * Сценарий по умолчанию: одна кнопка «Нужна помощь» → что случилось → счёт →
- * «оплачено». Гарантию и условия владелец дописывает сам: здесь их нет.
- */
-export const DEFAULT_SCENARIO: Scenario = {
-  start: "start",
+export const DEFAULT_SETUP: Setup = {
+  greet:
+    "Здравствуйте! Это Claudery: удалённая помощь с нейросетями и ИИ-сервисами. Нажмите кнопку, расскажите, что не получается, и специалист поможет.",
+  helpLabel: "🆘 Нужна помощь",
+  ask: "Что случилось? Опишите одним сообщением. Можно приложить скриншот.",
+  pay: "Спасибо, заявку записали. Стоимость помощи — 5 000 ₽. Оплатите по кнопке ниже: как только оплата пройдёт, специалист напишет вам здесь в Telegram.",
+  amount: AMOUNT.default,
+  paid: "Оплата прошла, спасибо! Специалист напишет вам в Telegram с 06:00 до 19:00 по Москве.",
   terms: "",
-  steps: [
-    {
-      id: "start",
-      kind: "message",
-      text: {
-        ru: "Здравствуйте! Это Claudery: удалённая помощь с нейросетями и ИИ-сервисами. Нажмите кнопку, расскажите, что не получается, и специалист поможет.",
-        uz: "Assalomu alaykum! Bu Claudery: neyrotarmoqlar va SI xizmatlari bo‘yicha masofaviy yordam. Tugmani bosing, nima ishlamayotganini yozing, mutaxassis yordam beradi.",
-      },
-      buttons: [{ label: { ru: "🆘 Нужна помощь", uz: "🆘 Yordam kerak" }, to: "ask" }],
-    },
-    {
-      id: "ask",
-      kind: "ask",
-      text: {
-        ru: "Что случилось? Опишите одним сообщением. Можно приложить скриншот.",
-        uz: "Nima bo‘ldi? Bitta xabarda yozing. Skrinshot ham yuborishingiz mumkin.",
-      },
-      buttons: [],
-      next: "pay",
-    },
-    {
-      id: "pay",
-      kind: "pay",
-      amount: AMOUNT.default,
-      text: {
-        ru: "Спасибо, заявку записали. Стоимость помощи — 5 000 ₽. Оплатите по кнопке ниже: как только оплата пройдёт, специалист напишет вам здесь в Telegram.",
-        uz: "Rahmat, arizangiz qabul qilindi. Yordam narxi — 5 000 ₽. Quyidagi tugma orqali to‘lang: to‘lov o‘tishi bilan mutaxassis sizga Telegramda yozadi.",
-      },
-      buttons: [],
-      next: "paid",
-    },
-    {
-      id: "paid",
-      kind: "message",
-      text: {
-        ru: "Оплата прошла, спасибо! Специалист напишет вам в Telegram с 08:00 до 21:00 по Ташкенту.",
-        uz: "To‘lov o‘tdi, rahmat! Mutaxassis sizga Toshkent vaqti bilan 08:00 dan 21:00 gacha Telegramda yozadi.",
-      },
-      buttons: [],
-    },
-  ],
+  extras: [],
 };
+
+/** Путь клиента из настроек: приветствие → вопрос → счёт → после оплаты. */
+export function scenarioOf(s: Setup): Scenario {
+  const extras: Step[] = s.extras
+    .map((e, i) => ({ e, id: `x${i}` }))
+    .filter(({ e }) => e.answer && !e.url)
+    .map(({ e, id }) => ({ id, kind: "message", text: e.answer!, buttons: [{ label: BACK_LABEL, to: "start" }] }));
+  return {
+    start: "start",
+    terms: s.terms,
+    steps: [
+      {
+        id: "start",
+        kind: "message",
+        text: s.greet,
+        buttons: [
+          { label: s.helpLabel, to: "ask" },
+          ...s.extras.map((e, i) => (e.url ? { label: e.label, url: e.url } : { label: e.label, to: `x${i}` })),
+        ],
+      },
+      { id: "ask", kind: "ask", text: s.ask, buttons: [], next: "pay" },
+      { id: "pay", kind: "pay", text: s.pay, buttons: [], next: "paid", amount: s.amount },
+      { id: "paid", kind: "message", text: s.paid, buttons: [] },
+      ...extras,
+    ],
+  };
+}
 
 export function stepOf(s: Scenario, id: string | undefined | null): Step | undefined {
   return id ? s.steps.find((step) => step.id === id) : undefined;
 }
 
-/** Что не так со сценарием — словами для панели. Пусто — можно сохранять. */
-export function scenarioProblems(s: Scenario): string[] {
+/** Что не так с настройками — словами для панели. Пусто — можно сохранять. */
+export function setupProblems(s: Setup): string[] {
   const out: string[] = [];
-  const ids = new Set<string>();
-  if (!s.steps.length) out.push("Нет ни одного шага.");
-  if (s.steps.length > LIMITS.steps) out.push(`Шагов больше ${LIMITS.steps}.`);
+  const texts: [string, string][] = [
+    ["Приветствие", s.greet],
+    ["Вопрос «что случилось»", s.ask],
+    ["Текст со счётом", s.pay],
+    ["Текст после оплаты", s.paid],
+  ];
+  for (const [name, value] of texts) {
+    if (!value.trim()) out.push(`${name}: пустой текст.`);
+    if (value.length > LIMITS.text) out.push(`${name}: длиннее ${LIMITS.text} знаков.`);
+  }
+  if (!s.helpLabel.trim() || s.helpLabel.length > LIMITS.label) out.push(`Главная кнопка: от 1 до ${LIMITS.label} знаков.`);
+  if (!Number.isInteger(s.amount) || s.amount < AMOUNT.min || s.amount > AMOUNT.max) out.push(`Сумма: от ${AMOUNT.min} до ${AMOUNT.max} ₽.`);
   if (s.terms.length > LIMITS.terms) out.push(`Условия длиннее ${LIMITS.terms} знаков.`);
-  for (const step of s.steps) {
-    const at = `Шаг «${step.id}»`;
-    if (!ID_RE.test(step.id) || step.id.length > LIMITS.id) out.push(`${at}: имя — латиница, цифры и дефис, до ${LIMITS.id} знаков.`);
-    if (ids.has(step.id)) out.push(`${at}: такое имя уже есть.`);
-    ids.add(step.id);
-    if (!KINDS.includes(step.kind)) out.push(`${at}: неизвестный вид.`);
-    for (const lang of LANGS) {
-      if (!step.text[lang].trim()) out.push(`${at}: пустой текст (${lang}).`);
-      if (step.text[lang].length > LIMITS.text) out.push(`${at}: текст длиннее ${LIMITS.text} знаков (${lang}).`);
-    }
-    if (step.buttons.length > LIMITS.buttons) out.push(`${at}: кнопок больше ${LIMITS.buttons}.`);
-    if (step.kind === "pay") {
-      const a = step.amount ?? 0;
-      if (!Number.isInteger(a) || a < AMOUNT.min || a > AMOUNT.max) out.push(`${at}: сумма от ${AMOUNT.min} до ${AMOUNT.max} ₽.`);
-    }
-    if ((step.kind === "ask" || step.kind === "pay") && !step.next) out.push(`${at}: укажите, куда идти дальше.`);
-  }
-  for (const step of s.steps) {
-    const at = `Шаг «${step.id}»`;
-    if (step.next && !ids.has(step.next)) out.push(`${at}: «дальше» ведёт на несуществующий шаг «${step.next}».`);
-    for (const b of step.buttons) {
-      for (const lang of LANGS) {
-        if (!b.label[lang].trim() || b.label[lang].length > LIMITS.label) out.push(`${at}: подпись кнопки — от 1 до ${LIMITS.label} знаков (${lang}).`);
-      }
-      if (Boolean(b.to) === Boolean(b.url)) out.push(`${at}: кнопка ведёт либо на шаг, либо на ссылку.`);
-      if (b.to && !ids.has(b.to)) out.push(`${at}: кнопка ведёт на несуществующий шаг «${b.to}».`);
-      if (b.url && !/^https:\/\/[^\s]+$/.test(b.url)) out.push(`${at}: ссылка кнопки — только https.`);
-    }
-  }
-  if (!ids.has(s.start)) out.push("Первый шаг не найден.");
-  return [...new Set(out)];
+  if (s.extras.length > LIMITS.extras) out.push(`Своих кнопок больше ${LIMITS.extras}.`);
+  s.extras.forEach((e, i) => {
+    const at = `Кнопка ${i + 1}`;
+    if (!e.label.trim() || e.label.length > LIMITS.label) out.push(`${at}: подпись от 1 до ${LIMITS.label} знаков.`);
+    if (!e.answer && !e.url) out.push(`${at}: впишите ответ или ссылку.`);
+    if (e.answer && e.url) out.push(`${at}: либо ответ, либо ссылка, не оба сразу.`);
+    if (e.url && !/^https:\/\/\S+$/.test(e.url)) out.push(`${at}: ссылка только https://…`);
+    if (e.answer && e.answer.length > LIMITS.text) out.push(`${at}: ответ длиннее ${LIMITS.text} знаков.`);
+  });
+  return out;
 }
 
-/** Прочитать сохранённое; битое — сценарий по умолчанию. */
-export function parseScenario(raw: unknown): Scenario {
-  if (!raw || typeof raw !== "object") return DEFAULT_SCENARIO;
-  const r = raw as Partial<Scenario>;
-  if (typeof r.start !== "string" || !Array.isArray(r.steps)) return DEFAULT_SCENARIO;
-  const s: Scenario = { start: r.start, terms: typeof r.terms === "string" ? r.terms : "", steps: r.steps as Step[] };
-  try {
-    return scenarioProblems(s).length ? DEFAULT_SCENARIO : s;
-  } catch {
-    return DEFAULT_SCENARIO;
-  }
+/** Прочитать сохранённое; битое — настройки по умолчанию. */
+export function parseSetup(raw: unknown): Setup {
+  if (!raw || typeof raw !== "object") return DEFAULT_SETUP;
+  const r = raw as Partial<Setup>;
+  const s: Setup = {
+    greet: typeof r.greet === "string" ? r.greet : DEFAULT_SETUP.greet,
+    helpLabel: typeof r.helpLabel === "string" ? r.helpLabel : DEFAULT_SETUP.helpLabel,
+    ask: typeof r.ask === "string" ? r.ask : DEFAULT_SETUP.ask,
+    pay: typeof r.pay === "string" ? r.pay : DEFAULT_SETUP.pay,
+    amount: typeof r.amount === "number" ? r.amount : DEFAULT_SETUP.amount,
+    paid: typeof r.paid === "string" ? r.paid : DEFAULT_SETUP.paid,
+    terms: typeof r.terms === "string" ? r.terms : "",
+    extras: Array.isArray(r.extras) ? (r.extras as Extra[]) : [],
+  };
+  return setupProblems(s).length ? DEFAULT_SETUP : s;
 }
 
 const str = (v: FormDataEntryValue | null) => (typeof v === "string" ? v.replace(/\r/g, "").trim() : "");
 
-/**
- * Сценарий из формы конструктора. Поля: `start`, `terms`, `n.<i>.id|kind|
- * ru|uz|next|amount|del`, `n.<i>.b.<j>.ru|uz|to|url`. Пустое имя шага —
- * шага нет (так работает пустая карточка «Новый шаг»), «удалить» — тоже.
- */
-export function scenarioFromForm(form: FormData): Scenario {
-  const steps: Step[] = [];
-  for (let i = 0; i <= LIMITS.steps; i++) {
-    const p = `n.${i}.`;
-    const id = str(form.get(p + "id")).toLowerCase();
-    if (!id || form.get(p + "del")) continue;
-    const kind = (KINDS as readonly string[]).includes(str(form.get(p + "kind"))) ? (str(form.get(p + "kind")) as NodeKind) : "message";
-    const buttons: Button[] = [];
-    for (let j = 0; j < LIMITS.buttons; j++) {
-      const b = `${p}b.${j}.`;
-      const ru = str(form.get(b + "ru"));
-      const uz = str(form.get(b + "uz"));
-      const to = str(form.get(b + "to"));
-      const url = str(form.get(b + "url"));
-      if (!ru && !uz && !url) continue;
-      buttons.push({ label: { ru, uz: uz || ru }, ...(url ? { url } : { to }) });
-    }
-    const next = str(form.get(p + "next"));
-    const amount = Number(str(form.get(p + "amount")).replace(/\s/g, ""));
-    steps.push({
-      id,
-      kind,
-      text: { ru: str(form.get(p + "ru")), uz: str(form.get(p + "uz")) },
-      buttons,
-      ...(next ? { next } : {}),
-      ...(kind === "pay" ? { amount: Number.isFinite(amount) && amount > 0 ? Math.round(amount) : AMOUNT.default } : {}),
-    });
+/** Настройки из формы. Пустая строка «Своя кнопка» — кнопки нет. */
+export function setupFromForm(form: FormData): Setup {
+  const extras: Extra[] = [];
+  for (let i = 0; i < LIMITS.extras; i++) {
+    const label = str(form.get(`x${i}.label`));
+    const answer = str(form.get(`x${i}.answer`));
+    const url = str(form.get(`x${i}.url`));
+    if (!label && !answer && !url) continue;
+    extras.push({ label, ...(answer ? { answer } : {}), ...(url ? { url } : {}) });
   }
-  return { start: str(form.get("start")) || steps[0]?.id || "", terms: str(form.get("terms")), steps };
+  const amount = Number(str(form.get("amount")).replace(/\s/g, ""));
+  return {
+    greet: str(form.get("greet")),
+    helpLabel: str(form.get("helpLabel")),
+    ask: str(form.get("ask")),
+    pay: str(form.get("pay")),
+    amount: Number.isFinite(amount) ? Math.round(amount) : 0,
+    paid: str(form.get("paid")),
+    terms: str(form.get("terms")),
+    extras,
+  };
 }
 
 /** Сумма в тексте: «5 000 ₽». */

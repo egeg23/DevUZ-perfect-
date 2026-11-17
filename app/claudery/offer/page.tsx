@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
-import { AMOUNT, rub, stepOf } from "@/lib/claudery/scenario";
-import { loadScenario } from "@/lib/claudery/store";
+import { rub } from "@/lib/claudery/scenario";
+import { loadSetup } from "@/lib/claudery/store";
 import { appSecret } from "@/lib/secrets";
 
 export const dynamic = "force-dynamic";
@@ -11,12 +11,11 @@ export const metadata: Metadata = { title: "Claudery — оферта на уд�
  * Публичная оферта Claudery. Владелец, 17.11.2026: «Клиенты в рублях —
  * оферта от ИП в РФ, реквизиты из хранилища, в репозиторий их не клади».
  * Исполнитель и ИНН — из `app.INVOICE_RU_*` при каждом показе; цена — из
- * шага «Оплата» сценария; условия и гарантию владелец пишет в конструкторе.
+ * настроек бота; условия и гарантию владелец пишет в конструкторе.
  */
 export default async function ClauderyOffer() {
-  const [payee, taxId, scenario] = await Promise.all([appSecret("INVOICE_RU_PAYEE"), appSecret("INVOICE_RU_TAX_ID"), loadScenario()]);
-  const pay = scenario.steps.find((s) => s.kind === "pay") ?? stepOf(scenario, scenario.start);
-  const price = rub(pay?.amount ?? AMOUNT.default);
+  const [payee, taxId, scenario] = await Promise.all([appSecret("INVOICE_RU_PAYEE"), appSecret("INVOICE_RU_TAX_ID"), loadSetup()]);
+  const price = rub(scenario.amount);
   return (
     <main style={{ maxWidth: 760, margin: "0 auto", padding: "32px 16px" }}>
       <h1 style={{ fontSize: 26 }}>Публичная оферта на услугу «Claudery: удалённая помощь»</h1>
@@ -35,7 +34,7 @@ export default async function ClauderyOffer() {
         Заявка берётся в работу после того, как платёжный сервис подтвердит оплату.
       </p>
       <h2 style={{ fontSize: 20 }}>3. Порядок оказания</h2>
-      <p>Специалист связывается с Заказчиком в Telegram с 08:00 до 21:00 по ташкентскому времени (UTC+5).</p>
+      <p>Специалист связывается с Заказчиком в Telegram с 06:00 до 19:00 по московскому времени.</p>
       {scenario.terms ? (
         <>
           <h2 style={{ fontSize: 20 }}>4. Условия и гарантия</h2>
