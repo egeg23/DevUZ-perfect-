@@ -13,8 +13,9 @@ export const metadata: Metadata = { title: "Claudery — ваша заявка" 
  * оплаты — здесь. Токен в адресе связывает страницу, платёж Platega и чат
  * клиента; после подтверждения Platega бот сам пишет клиенту «спасибо».
  */
-export default async function ClauderyOrder({ params }: { params: Promise<{ token: string }> }) {
+export default async function ClauderyOrder({ params, searchParams }: { params: Promise<{ token: string }>; searchParams: Promise<{ pay?: string }> }) {
   const { token } = await params;
+  const failed = (await searchParams).pay === "failed";
   const order = await orderView(token);
   if (!order) notFound();
   const box = { border: "1px solid #e5e5e5", borderRadius: 14, padding: 16, margin: "16px 0" } as const;
@@ -46,6 +47,11 @@ export default async function ClauderyOrder({ params }: { params: Promise<{ toke
           {order.status === "pending" ? (
             <p style={{ margin: "8px 0 0", color: "#666" }}>
               Оплата пока не подтверждена. Если вы уже оплатили, обновите страницу через минуту: подтверждение приходит от платёжной системы.
+            </p>
+          ) : null}
+          {failed && order.status === "open" ? (
+            <p role="alert" style={{ margin: "8px 0 0", color: "#b42318" }}>
+              Не получилось открыть страницу оплаты. Попробуйте ещё раз через минуту. Если не выйдет, напишите нам в боте: заявка уже записана.
             </p>
           ) : null}
           <form method="post" action={`/claudery/z/${token}/pay`} style={{ marginTop: 14 }}>
