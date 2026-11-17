@@ -12,7 +12,7 @@
  * Здесь только решения; Telegram, база и Platega — в зависимостях
  * (lib/claudery/store.ts), чтобы ход бота проверялся тестом без сети.
  */
-import { PAY_PURPOSE, rub, scenarioOf, stepOf, type Scenario, type Setup, type Step } from "@/lib/claudery/scenario";
+import { PAY_PURPOSE, payText, repeatAmount, rub, scenarioOf, stepOf, type Scenario, type Setup, type Step } from "@/lib/claudery/scenario";
 
 export type Row = { text: string; data?: string; url?: string }[];
 
@@ -38,6 +38,8 @@ export type Deps = {
   invoice: (flow: Flow, amount: number, purpose: string) => Promise<{ txn: string; url: string } | null>;
   /** Статус у Platega; «paid» — оплачено (и лид отмечен). */
   paid: (who: Who, flow: Flow) => Promise<"paid" | "pending" | "failed">;
+  /** Клиент уже хоть раз оплатил (Platega подтвердила) — ему скидка. */
+  paidBefore: (who: Who) => Promise<boolean>;
 };
 
 export const T = {
@@ -62,7 +64,9 @@ export async function show(who: Who, flow: Flow, s: Scenario, deps: Deps, offerU
   flow.step = step.id;
 
   if (step.kind === "pay") {
-    const amount = step.amount ?? 5000;
+    const full = step.amount ?? 5000;
+    const discount = step.discount ?? 0;
+    const amount = discount > 0 && (await deps.paidBefore(who)) ? repeatAmount(full, discount) : full;
     if (flow.pay?.status === "paid" && step.next && depth < 3) {
       // Уже оплачено — сразу дальше, второго счёта нет.
       flow.step = step.next;
@@ -80,7 +84,7 @@ export async function show(who: Who, flow: Flow, s: Scenario, deps: Deps, offerU
       await deps.send(who.chatId, T.noPay);
       return;
     }
-    await deps.send(who.chatId, step.text, [
+    await deps.send(who.chatId, payText(step.text, amount, full, discount), [
       [{ text: T.payBtn(rub(amount)), url: flow.pay.url }],
       [{ text: T.check, data: CB.check }],
       [{ text: T.offer, url: offerUrl }],

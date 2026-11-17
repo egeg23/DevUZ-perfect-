@@ -10,7 +10,7 @@ import { DEFAULT_SETUP, PAY_PURPOSE, scenarioOf, setupFromForm, setupProblems, t
 const read = (p: string) => readFileSync(p, "utf8");
 const who: Who = { chatId: 7, username: "client", name: "Иван" };
 
-function fake(state: { pay?: "paid" | "pending" | "failed"; invoice?: boolean; setup?: Setup } = {}) {
+function fake(state: { pay?: "paid" | "pending" | "failed"; invoice?: boolean; setup?: Setup; before?: boolean } = {}) {
   const flows = new Map<number, Flow>();
   const sent: { text: string; rows?: Row[] }[] = [];
   const leads: number[] = [];
@@ -30,6 +30,7 @@ function fake(state: { pay?: "paid" | "pending" | "failed"; invoice?: boolean; s
       return state.invoice === false ? null : { txn: "T1", url: "https://pay.example/T1" };
     },
     paid: async () => state.pay ?? "pending",
+    paidBefore: async () => state.before ?? false,
   };
   return { deps, flows, sent, leads, invoices };
 }
@@ -126,4 +127,24 @@ test("ключи — только из хранилища, поллер став
   assert.match(read("app/api/reminders/sweep/route.ts"), /checkClauderyPayments/);
   // Реквизиты ИП — из хранилища, в коде оферты их нет.
   assert.match(read("app/claudery/offer/page.tsx"), /appSecret\("INVOICE_RU_PAYEE"\)/);
+});
+
+test("повторное обращение: кто уже оплачивал — скидка 30%, 3 500 ₽ вместо 5 000 ₽", async () => {
+  assert.equal(DEFAULT_SETUP.repeatDiscount, 30);
+  const f = fake({ before: true });
+  await handle(who, btn(CB.step + "ask"), f.deps, "o");
+  await handle(who, { type: "text", text: "опять не работает" }, f.deps, "o");
+  assert.deepEqual(f.leads, [3500]);
+  assert.deepEqual(f.invoices, [{ amount: 3500, purpose: PAY_PURPOSE }]);
+  const last = f.sent.at(-1)!;
+  assert.match(last.text, /скидка 30%: 3 500 ₽ вместо 5 000 ₽/);
+  assert.match(last.text, /Стоимость помощи — 3 500 ₽/);
+  assert.ok(last.rows?.flat().some((b) => b.text.includes("3 500 ₽")));
+
+  const g = fake();
+  await handle(who, btn(CB.step + "ask"), g.deps, "o");
+  await handle(who, { type: "text", text: "помогите" }, g.deps, "o");
+  assert.deepEqual(g.invoices, [{ amount: 5000, purpose: PAY_PURPOSE }]);
+  assert.doesNotMatch(g.sent.at(-1)!.text, /скидка/);
+  assert.match(read("lib/claudery/store.ts"), /payload->>status", "paid"/);
 });

@@ -301,7 +301,22 @@ export function realDeps(chatId: number): Deps {
     lead,
     invoice: (flow, amount, purpose) => invoice(flow, amount, purpose, chatId),
     paid,
+    paidBefore,
   };
+}
+
+/** Был ли у этого чата хоть один платёж, который Platega подтвердила. */
+async function paidBefore(who: Who): Promise<boolean> {
+  const db = serviceClient();
+  if (!db) return false;
+  const { data } = await db
+    .from("stats_snapshots")
+    .select("key")
+    .like("key", `${PAY_PREFIX}%`)
+    .eq("payload->>chatId", String(who.chatId))
+    .eq("payload->>status", "paid")
+    .limit(1);
+  return (data?.length ?? 0) > 0;
 }
 
 // ---------- Вход из вебхука ----------
