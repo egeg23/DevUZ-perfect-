@@ -14,8 +14,13 @@
  * Оплата. У магазина Platega один адрес уведомлений, и он смотрит на
  * AI-юриста; в самом платеже адреса уведомлений нет (POST
  * /transaction/process). Поэтому оплату мы не ждём уведомлением, а спрашиваем
- * у Platega сами: GET /transaction/{id} — по кнопке «Я оплатил» и свипом
- * (`checkClauderyPayments`). AI-юрист чужой номер платежа пропускает
+ * у Platega сами: GET /transaction/{id} — при открытии страницы заявки и
+ * свипом (`checkClauderyPayments`).
+ *
+ * Оплаты в боте нет (Telegram блокирует ботов, принимающих оплату мимо
+ * Stars): бот даёт ссылку на страницу заявки `/claudery/z/<токен>`, счёт
+ * выставляется по кнопке на ней (`orderPayUrl`), платёж связан с заявкой
+ * токеном; подтвердила Platega — бот сам пишет клиенту «спасибо». AI-юрист чужой номер платежа пропускает
  * («unknown_payment», ответ 200), так что наши оплаты ему не мешают.
  */
 import { randomBytes } from "node:crypto";
@@ -26,7 +31,7 @@ import { wants } from "@/lib/admin/notify-prefs";
 import { messageWindow } from "@/lib/admin/tasks";
 import { FALLBACK_RUB_PER_USD, projectNote, usdOf, usdRateFromCbr } from "@/lib/claudery/money";
 import { handle, show, type Deps, type Flow, type Incoming, type Who } from "@/lib/claudery/flow";
-import { SETUP_KEY, parseSetup, rub, scenarioOf, stepOf, type Setup } from "@/lib/claudery/scenario";
+import { PAY_PURPOSE, SETUP_KEY, parseSetup, rub, scenarioOf, stepOf, type Setup } from "@/lib/claudery/scenario";
 import { roadFetch } from "@/lib/egress.mjs";
 import { salesRecipients } from "@/lib/qualify/brief";
 import { newRequestNo } from "@/lib/qualify/engine";
@@ -50,6 +55,8 @@ const METHOD_SBP = 2;
 export const PAY_WATCH_MS = 48 * 3600_000;
 const PAY_PREFIX = "claudery-pay:";
 const FLOW_PREFIX = "claudery-flow:";
+const ORDER_PREFIX = "claudery-order:";
+export const ORDER_PATH = "/claudery/z";
 const BOT_KEY = "claudery-bot";
 const RATE_KEY = "claudery-usd-rate";
 const CBR_DAILY = "https://www.cbr.ru/scripts/XML_daily.asp";
@@ -124,7 +131,10 @@ export async function saveSetup(s: Setup, staffId: string, ip: string | null): P
   await record("claudery.scenario_saved", { actorStaffId: staffId, meta: { amount: s.amount, extras: s.extras.length }, ip });
 }
 
-type Pay = { chatId: number; leadId: string | null; requestNo: string; amount: number; status: "pending" | "paid" | "failed"; at: string; paidAt?: string; told?: boolean };
+type Pay = { chatId: number; leadId: string | null; requestNo: string; amount: number; status: "pending" | "paid" | "failed"; at: string; paidAt?: string; told?: boolean; order?: string };
+
+/** Заявка на сайте: токен в адресе связывает страницу, платёж и чат клиента. */
+type Order = { chatId: number; leadId: string | null; requestNo: string; amount: number; full: number; discount: number; problem: string; txn?: string; url?: string; at: string };
 
 // ---------- Platega ----------
 
@@ -155,27 +165,93 @@ async function plategaCall(path: string, init: RequestInit = {}): Promise<Record
 }
 
 /** Платёжная ссылка на сумму (СБП), назначение — «Claudery: удалённая помощь». */
-async function invoice(flow: Flow, amount: number, purpose: string, chatId: number): Promise<{ txn: string; url: string } | null> {
+async function invoice(token: string, order: Order): Promise<{ txn: string; url: string } | null> {
   const txn = crypto.randomUUID();
-  const bot = await snapshot<{ username?: string }>(BOT_KEY);
-  const back = bot?.username ? `https://t.me/${bot.username}` : offerUrl();
+  const back = `${siteUrl}${ORDER_PATH}/${token}`;
   const data = await plategaCall("/transaction/process", {
     method: "POST",
     body: JSON.stringify({
       paymentMethod: METHOD_SBP,
       id: txn,
-      paymentDetails: { amount, currency: "RUB" },
-      description: flow.requestNo ? `${purpose}, заявка ${flow.requestNo}` : purpose,
+      paymentDetails: { amount: order.amount, currency: "RUB" },
+      description: order.requestNo ? `${PAY_PURPOSE}, заявка ${order.requestNo}` : PAY_PURPOSE,
       return: back,
       failedUrl: back,
-      payload: JSON.stringify({ claudery: flow.requestNo ?? "" }),
+      payload: JSON.stringify({ claudery: order.requestNo }),
     }),
   });
   const url = typeof data?.redirect === "string" ? data.redirect : null;
   if (!url) return null;
-  const pay: Pay = { chatId, leadId: flow.leadId ?? null, requestNo: flow.requestNo ?? "", amount, status: "pending", at: new Date().toISOString() };
+  const pay: Pay = { chatId: order.chatId, leadId: order.leadId, requestNo: order.requestNo, amount: order.amount, status: "pending", at: new Date().toISOString(), order: token };
   await putSnapshot(PAY_PREFIX + txn, pay);
   return { txn, url };
+}
+
+// ---------- Заявка на сайте ----------
+
+const tokenOk = (token: string) => /^[a-f0-9]{32}$/.test(token);
+
+/** Страница заявки: бот отдаёт клиенту только ссылку на неё. */
+async function order(who: Who, flow: Flow, price: { amount: number; full: number; discount: number }): Promise<{ token: string; url: string } | null> {
+  if (!serviceClient()) return null;
+  const token = randomBytes(16).toString("hex");
+  const row: Order = { chatId: who.chatId, leadId: flow.leadId ?? null, requestNo: flow.requestNo ?? "", ...price, problem: (flow.problem ?? "").slice(0, 2000), at: new Date().toISOString() };
+  await putSnapshot(ORDER_PREFIX + token, row);
+  return { token, url: `${siteUrl}${ORDER_PATH}/${token}` };
+}
+
+export type OrderView = { requestNo: string; problem: string; amount: number; full: number; discount: number; status: "open" | "pending" | "paid" };
+
+/**
+ * Что показать на странице заявки. Заодно спрашивает Platega о платеже:
+ * клиент возвращается сюда после оплаты, и «оплачено» ставится сразу.
+ */
+export async function orderView(token: string): Promise<OrderView | null> {
+  if (!tokenOk(token)) return null;
+  const row = await snapshot<Order>(ORDER_PREFIX + token);
+  if (!row) return null;
+  let status: OrderView["status"] = "open";
+  if (row.txn) {
+    const pay = await snapshot<Pay>(PAY_PREFIX + row.txn);
+    if (pay?.status === "paid") status = "paid";
+    else if (pay?.status === "pending") {
+      const state = await remoteStatus(row.txn);
+      if (state === "paid") {
+        await settle(row.txn, pay);
+        status = "paid";
+      } else if (state === "failed") await putSnapshot(PAY_PREFIX + row.txn, { ...pay, status: "failed" });
+      else status = "pending";
+    }
+  }
+  return { requestNo: row.requestNo, problem: row.problem, amount: row.amount, full: row.full, discount: row.discount, status };
+}
+
+/** Кнопка на странице заявки: ссылка Platega (прежняя, пока счёт жив) или null. */
+export async function orderPayUrl(token: string): Promise<string | null> {
+  if (!tokenOk(token)) return null;
+  const row = await snapshot<Order>(ORDER_PREFIX + token);
+  if (!row) return null;
+  if (row.txn && row.url) {
+    const pay = await snapshot<Pay>(PAY_PREFIX + row.txn);
+    if (pay?.status === "paid") return null;
+    if (pay?.status === "pending" && Date.now() - Date.parse(pay.at) < 30 * 60_000) return row.url;
+  }
+  const made = await invoice(token, row);
+  if (!made) return null;
+  await putSnapshot(ORDER_PREFIX + token, { ...row, ...made });
+  return made.url;
+}
+
+/** Platega подтвердила: лид и проект, строка команде и «спасибо» клиенту в боте. */
+async function settle(txn: string, pay: Pay): Promise<void> {
+  await markPaid(txn, pay);
+  const flow = await snapshot<Flow>(FLOW_PREFIX + pay.chatId);
+  if (!flow || flow.pay?.status === "paid" || (pay.order && flow.order?.token !== pay.order)) return;
+  const s = scenarioOf(await loadSetup());
+  const step = stepOf(s, flow.step);
+  flow.pay = { status: "paid" };
+  if (step?.kind === "pay" && step.next) flow.step = step.next;
+  await show({ chatId: pay.chatId, name: "" }, flow, s, realDeps(), offerUrl());
 }
 
 /** Статус у Platega — единственный источник «оплачено». */
@@ -196,7 +272,7 @@ export function clauderyLeadInput(who: Who, flow: Flow, amount: number): Qualify
     "Клиент Claudery (удалённая помощь с ИИ).",
     flow.problem ? `Что случилось: ${flow.problem}` : "Что случилось — не написал.",
     flow.photo ? "Приложил скриншот." : "",
-    `Счёт Platega на ${rub(amount)} выставлен, оплаты пока нет.`,
+    `Цена ${rub(amount)} названа на странице заявки, оплаты пока нет.`,
   ]
     .filter(Boolean)
     .join(" ");
@@ -237,7 +313,7 @@ async function lead(who: Who, flow: Flow, amount: number) {
   const db = serviceClient();
   // «Цена названа» — ступень продажи: счёт выставлен (lib/admin/sales-stages.ts).
   if (db && leadId) await db.from("sales_marks").insert({ kind: "priced", lead_id: leadId });
-  const heading = `🆘 <b>Claudery · помощь с ИИ</b> · счёт ${esc(rub(amount))} выставлен, оплаты пока нет. Оплатит — придёт строка «✅ оплачено».`;
+  const heading = `🆘 <b>Claudery · помощь с ИИ</b> · цена ${esc(rub(amount))} названа, оплаты пока нет. Оплатит — придёт строка «✅ оплачено».`;
   await routeNewLead({ leadId: leadId ?? "unsaved", lead: scored, requestNo, origin: { ...origin, source: CLAUDERY_SOURCE }, heading, fallback: await salesRecipients("claudery") }).catch((error) =>
     console.error("claudery: лид не разослан", error),
   );
@@ -348,17 +424,7 @@ async function tellPaid(txn: string, pay: Pay, now: Date): Promise<void> {
   await putSnapshot(PAY_PREFIX + txn, { ...pay, told: true });
 }
 
-async function paid(who: Who, flow: Flow): Promise<"paid" | "pending" | "failed"> {
-  if (!flow.pay) return "pending";
-  const pay = await snapshot<Pay>(PAY_PREFIX + flow.pay.txn);
-  if (pay?.status === "paid") return "paid";
-  const state = await remoteStatus(flow.pay.txn);
-  if (state === "paid" && pay) await markPaid(flow.pay.txn, pay);
-  if (state === "failed" && pay) await putSnapshot(PAY_PREFIX + flow.pay.txn, { ...pay, status: "failed" });
-  return state ?? "pending";
-}
-
-export function realDeps(chatId: number): Deps {
+export function realDeps(): Deps {
   return {
     setup: loadSetup,
     flowOf: (chatId) => snapshot<Flow>(FLOW_PREFIX + chatId),
@@ -366,8 +432,7 @@ export function realDeps(chatId: number): Deps {
     send: sendToClient,
     answer: async (id, text) => void (await tg("answerCallbackQuery", { callback_query_id: id, ...(text ? { text } : {}) })),
     lead,
-    invoice: (flow, amount, purpose) => invoice(flow, amount, purpose, chatId),
-    paid,
+    order,
     paidBefore,
   };
 }
@@ -412,7 +477,7 @@ export async function handleClauderyUpdate(update: ClauderyUpdate): Promise<void
   else if (m?.document?.mime_type?.startsWith("image/")) input = { type: "photo", fileId: m.document.file_id, caption: m.caption ?? "" };
   else if (m?.text) input = { type: "text", text: m.text.slice(0, 4000) };
   if (!input) return;
-  await handle(who, input, realDeps(who.chatId), offerUrl());
+  await handle(who, input, realDeps(), offerUrl());
 }
 
 // ---------- Свип: неоплаченные счета ----------
@@ -440,16 +505,7 @@ export async function checkClauderyPayments(now: Date = new Date()): Promise<voi
     const state = await remoteStatus(txn);
     if (state === "failed") await putSnapshot(PAY_PREFIX + txn, { ...pay, status: "failed" });
     if (state !== "paid") continue;
-    await markPaid(txn, pay);
-    // Клиенту — шаг после оплаты, как если бы он нажал «Я оплатил».
-    const flow = await snapshot<Flow>(FLOW_PREFIX + pay.chatId);
-    if (flow?.pay?.txn === txn) {
-      const s = scenarioOf(await loadSetup());
-      const step = stepOf(s, flow.step);
-      flow.pay.status = "paid";
-      if (step?.kind === "pay" && step.next) flow.step = step.next;
-      await show({ chatId: pay.chatId, name: "" }, flow, s, realDeps(pay.chatId), offerUrl());
-    }
+    await settle(txn, pay);
   }
 }
 

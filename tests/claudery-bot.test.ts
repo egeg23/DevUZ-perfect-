@@ -14,7 +14,7 @@ function fake(state: { pay?: "paid" | "pending" | "failed"; invoice?: boolean; s
   const flows = new Map<number, Flow>();
   const sent: { text: string; rows?: Row[] }[] = [];
   const leads: number[] = [];
-  const invoices: { amount: number; purpose: string }[] = [];
+  const invoices: { amount: number; full: number; discount: number }[] = [];
   const deps: Deps = {
     setup: async () => state.setup ?? DEFAULT_SETUP,
     flowOf: async (id) => (flows.has(id) ? structuredClone(flows.get(id)!) : null),
@@ -25,11 +25,10 @@ function fake(state: { pay?: "paid" | "pending" | "failed"; invoice?: boolean; s
       if (!f.requestNo) leads.push(amount);
       return { leadId: "L1", requestNo: f.requestNo ?? "DZ-1" };
     },
-    invoice: async (_f, amount, purpose) => {
-      invoices.push({ amount, purpose });
-      return state.invoice === false ? null : { txn: "T1", url: "https://pay.example/T1" };
+    order: async (_w, _f, price) => {
+      invoices.push(price);
+      return state.invoice === false ? null : { token: "t1", url: "https://devuz.studio/claudery/z/t1" };
     },
-    paid: async () => state.pay ?? "pending",
     paidBefore: async () => state.before ?? false,
   };
   return { deps, flows, sent, leads, invoices };
@@ -46,40 +45,47 @@ test("настройки по умолчанию проходят проверк
   assert.doesNotMatch(JSON.stringify(DEFAULT_SETUP) + read("lib/claudery/flow.ts"), /uz|O‘zbek|Assalomu/);
 });
 
-test("кнопка → что случилось → счёт: лид заводится до оплаты, оплату решает Platega", async () => {
+test("кнопка → что случилось → ссылка на заявку: в боте ни оплаты, ни цены", async () => {
   const f = fake();
   await handle(who, { type: "text", text: "/start" }, f.deps, "https://x/offer");
   await handle(who, btn(CB.step + "ask"), f.deps, "https://x/offer");
   await handle(who, { type: "text", text: "ChatGPT не открывается" }, f.deps, "https://x/offer");
   assert.deepEqual(f.leads, [5000]);
-  assert.deepEqual(f.invoices, [{ amount: 5000, purpose: PAY_PURPOSE }]);
+  assert.deepEqual(f.invoices, [{ amount: 5000, full: 5000, discount: 30 }]);
   const last = f.sent.at(-1)!;
-  assert.ok(last.rows?.flat().some((b) => b.url === "https://pay.example/T1"));
+  const buttons = last.rows!.flat();
+  assert.ok(buttons.some((b) => b.url === "https://devuz.studio/claudery/z/t1"));
+  // Telegram блокирует ботов с оплатой мимо Stars: ни слова об оплате и цене.
+  const shown = [last.text, ...buttons.map((b) => b.text)].join(" ");
+  assert.doesNotMatch(shown, /оплат|плат[её]ж|₽|руб|счёт|счет/i);
+  assert.ok(!buttons.some((b) => /platega/i.test(b.url ?? "")));
   assert.equal(f.flows.get(7)?.problem, "ChatGPT не открывается");
 
-  // Слова клиента «оплатил» ничего не меняют: Platega ещё не подтвердила.
+  // Слова клиента и прежняя кнопка «Я оплатил» ничего не меняют.
   await handle(who, { type: "text", text: "я оплатил" }, f.deps, "https://x/offer");
   await handle(who, btn(CB.check), f.deps, "https://x/offer");
-  assert.equal(f.flows.get(7)?.pay?.status, "pending");
-  assert.equal(f.invoices.length, 1, "второй счёт не выставляется");
+  assert.equal(f.flows.get(7)?.step, "pay");
+  assert.equal(f.invoices.length, 1, "вторая заявка не заводится");
 });
 
-test("Platega подтвердила — шаг после оплаты", async () => {
-  const f = fake({ pay: "paid" });
-  await handle(who, btn(CB.step + "ask"), f.deps, "o");
-  await handle(who, { type: "photo", fileId: "F", caption: "ошибка" }, f.deps, "o");
-  await handle(who, btn(CB.check), f.deps, "o");
-  assert.equal(f.flows.get(7)?.step, "paid");
-  assert.equal(f.flows.get(7)?.photo, "F");
-  assert.match(f.sent.at(-1)!.text, /Оплата прошла/);
+test("оплата на сайте по токену заявки: Platega подтвердила — бот сам пишет «спасибо»", () => {
+  assert.match(DEFAULT_SETUP.paid, /Спасибо/);
+  assert.doesNotMatch(DEFAULT_SETUP.pay + DEFAULT_SETUP.greet + DEFAULT_SETUP.ask, /оплат|₽/i);
+  const store = read("lib/claudery/store.ts");
+  assert.match(store, /ORDER_PATH = "\/claudery\/z"/);
+  assert.match(store, /randomBytes\(16\)/);
+  assert.match(store, /async function settle/);
+  assert.match(read("app/claudery/z/[token]/page.tsx"), /orderView\(token\)/);
+  assert.match(read("app/claudery/z/[token]/pay/route.ts"), /orderPayUrl\(token\)/);
 });
 
-test("счёт не выставился — заявка всё равно лид, клиенту честно", async () => {
+test("страница заявки не завелась — заявка всё равно лид, клиенту честно", async () => {
   const f = fake({ invoice: false });
   await handle(who, btn(CB.step + "ask"), f.deps, "o");
-  await handle(who, { type: "text", text: "помогите" }, f.deps, "o");
+  await handle(who, { type: "photo", fileId: "F", caption: "помогите" }, f.deps, "o");
   assert.deepEqual(f.leads, [5000]);
-  assert.match(f.sent.at(-1)!.text, /не получается выставить счёт/);
+  assert.equal(f.flows.get(7)?.photo, "F");
+  assert.match(f.sent.at(-1)!.text, /Заявку мы записали/);
 });
 
 test("своя кнопка отвечает текстом и возвращает назад", async () => {
@@ -115,6 +121,7 @@ test("ключи — только из хранилища, поллер став
   assert.match(store, /CLAUDERY_BOT_TOKEN/);
   assert.match(store, /PLATEGA_API_KEY/);
   assert.match(store, /\/transaction\/process/);
+  assert.match(store, /PAY_PURPOSE/);
   assert.match(store, /\/transaction\/\$\{/);
   assert.doesNotMatch(store, /console\.(log|error)\([^)]*(token|apiKey|key)\b\)/);
   const unit = read("deploy/devuz-claudery-bot.service");
@@ -129,23 +136,14 @@ test("ключи — только из хранилища, поллер став
   assert.match(read("app/claudery/offer/page.tsx"), /appSecret\("INVOICE_RU_PAYEE"\)/);
 });
 
-test("повторное обращение: кто уже оплачивал — скидка 30%, 3 500 ₽ вместо 5 000 ₽", async () => {
+test("повторное обращение: кто уже оплачивал — скидка 30%, 3 500 ₽ вместо 5 000 ₽ на странице заявки", async () => {
   assert.equal(DEFAULT_SETUP.repeatDiscount, 30);
   const f = fake({ before: true });
   await handle(who, btn(CB.step + "ask"), f.deps, "o");
   await handle(who, { type: "text", text: "опять не работает" }, f.deps, "o");
   assert.deepEqual(f.leads, [3500]);
-  assert.deepEqual(f.invoices, [{ amount: 3500, purpose: PAY_PURPOSE }]);
-  const last = f.sent.at(-1)!;
-  assert.match(last.text, /скидка 30%: 3 500 ₽ вместо 5 000 ₽/);
-  assert.match(last.text, /Стоимость помощи — 3 500 ₽/);
-  assert.ok(last.rows?.flat().some((b) => b.text.includes("3 500 ₽")));
-
-  const g = fake();
-  await handle(who, btn(CB.step + "ask"), g.deps, "o");
-  await handle(who, { type: "text", text: "помогите" }, g.deps, "o");
-  assert.deepEqual(g.invoices, [{ amount: 5000, purpose: PAY_PURPOSE }]);
-  assert.doesNotMatch(g.sent.at(-1)!.text, /скидка/);
+  assert.deepEqual(f.invoices, [{ amount: 3500, full: 5000, discount: 30 }]);
+  assert.match(read("app/claudery/z/[token]/page.tsx"), /скидка \{order\.discount\}%/);
   assert.match(read("lib/claudery/store.ts"), /payload->>status", "paid"/);
 });
 
