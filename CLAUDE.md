@@ -315,7 +315,9 @@ https://devuz.studio/sia-cms/admin.
   Platega). Обновления забирает поллер `deploy/devuz-claudery-bot.service`
   (`bot/poller.mjs`, ключи из хранилища), сайт — `/api/claudery/tg/[secret]`
   (`secretOk`). Ключи — хранилище: `app.CLAUDERY_BOT_TOKEN`,
-  `app.PLATEGA_MERCHANT_ID`, `app.PLATEGA_API_KEY` вставляют в «Ключах»,
+  `app.PLATEGA_MERCHANT_ID`, `app.PLATEGA_API_KEY` переносит с сервера
+  AI-юриста (`/opt/seller-ai-v3/.env`) задача «Claudery: ключи Platega»
+  (владелец: «токены вытащи сам от аи юриста с сервера») или вставляют в «Ключах»,
   `app.CLAUDERY_WEBHOOK_SECRET` заводится сам при «Сохранить и проверить».
   В чат и журнал — не печатать.
 - **Оплата** — путь AI-юриста (`egeg23/seller-ai`, `api/integrations/platega.py`):
