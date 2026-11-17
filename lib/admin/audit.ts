@@ -56,6 +56,10 @@ export const AUDIT_ACTIONS = [
   "scout.settings_saved",
   // Ключи «Блогеров» вставили в блоке «Подключения Instagram» (только имена ключей, без значений).
   "ai_staff.key_saved",
+  // Бот Claudery (lib/claudery/store.ts): сценарий из конструктора, ключи (только имена), оплата Platega.
+  "claudery.scenario_saved",
+  "claudery.key_saved",
+  "claudery.paid",
   // Статьи на площадках (lib/outside/store.ts): опубликовал, пропустил, кто публикует.
   "outside.published",
   "outside.skipped",

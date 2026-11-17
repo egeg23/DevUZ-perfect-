@@ -16,6 +16,7 @@ import { refreshXp } from "@/lib/admin/levels-store";
 import { runSilence } from "@/lib/admin/silence-store";
 import { sendStaffReport } from "@/lib/admin/staff-report-store";
 import { sendBotSubsReport } from "@/lib/admin/bot-subs-report-store";
+import { checkClauderyPayments } from "@/lib/claudery/store";
 import { sendHelperStats } from "@/lib/admin/helper-stats-store";
 import { sendInstantOpenNote } from "@/lib/proto/instant/announce-store";
 import { sendStaffWeek } from "@/lib/admin/staff-week-store";
@@ -327,6 +328,9 @@ async function sweep(): Promise<Response> {
     await sendInstantOpenNote(new Date()).catch((error) => console.error("макет в боте, уведомление:", error));
     // Подписчики бота за день — с 20:00 (lib/admin/bot-subs-report-store).
     await sendBotSubsReport(new Date()).catch((error) => console.error("подписчики бота, сводка:", error));
+    // Claudery: оплату счетов спрашиваем у Platega сами — уведомления её
+    // магазина смотрят на AI-юриста (lib/claudery/store.ts).
+    await checkClauderyPayments(new Date()).catch((error) => console.error("claudery, оплаты:", error));
   });
   after(async () => {
     // Дожим касаний — первым: он ограничен рабочими часами и тремя

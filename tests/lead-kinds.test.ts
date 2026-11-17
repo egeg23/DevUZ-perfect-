@@ -43,7 +43,7 @@ test("вид лида — по каждому источнику, кодом", (
 test("по умолчанию все виды; снятые — строками lead:<вид> рядом с галочками бота", () => {
   for (const kind of LEAD_KINDS) assert.equal(wantsLead(null, kind), true);
   const off = leadOffFromForm(["outreach", "partner", "чужое"]);
-  assert.deepEqual(off, ["lead:tender", "lead:scout", "lead:inbound", "lead:mockup"]);
+  assert.deepEqual(off, ["lead:tender", "lead:scout", "lead:inbound", "lead:mockup", "lead:claudery"]);
   assert.equal(wantsLead(off, "tender"), false);
   assert.equal(wantsLead(off, "partner"), true);
 

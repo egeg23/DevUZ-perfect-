@@ -19,7 +19,7 @@ import type { Tr } from "@/lib/admin/i18n";
  * лид идёт всем, как раньше (`withFallback`), и руководителю строка.
  */
 
-export const LEAD_KINDS = ["outreach", "tender", "scout", "partner", "inbound", "mockup"] as const;
+export const LEAD_KINDS = ["outreach", "tender", "scout", "partner", "inbound", "mockup", "claudery"] as const;
 export type LeadKind = (typeof LEAD_KINDS)[number];
 
 export const LEAD_KIND_PREFIX = "lead:";
@@ -58,6 +58,7 @@ export function leadKindOf(lead: LeadKindInput): LeadKind {
   }
   if (source === "outreach" || source === "maps") return "outreach";
   if (source === "mockup" || source === "mockup-manual") return "mockup";
+  if (source === "claudery") return "claudery";
   return "inbound";
 }
 
@@ -151,6 +152,14 @@ export const LEAD_KIND_TITLE: Record<LeadKind, { title: Tr; note: Tr }> = {
       ru: "клиент сам собрал макет в боте или ждёт макет вручную",
       uz: "mijoz botda o‘zi maket yig‘di yoki qo‘lda maket kutmoqda",
       pl: "klient sam złożył makietę w bocie albo czeka na makietę ręczną",
+    },
+  },
+  claudery: {
+    title: { ru: "Помощь с ИИ (Claudery)", uz: "SI bo‘yicha yordam (Claudery)", pl: "Pomoc z AI (Claudery)" },
+    note: {
+      ru: "заявка из бота Claudery: удалённая помощь с нейросетями, платная",
+      uz: "Claudery botidan ariza: neyrotarmoqlar bo‘yicha pullik masofaviy yordam",
+      pl: "zgłoszenie z bota Claudery: płatna zdalna pomoc z sieciami neuronowymi",
     },
   },
 };

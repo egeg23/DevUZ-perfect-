@@ -1,0 +1,32 @@
+[Unit]
+Description=Бот Claudery (помощь с ИИ): забор обновлений у Telegram
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/devuz
+EnvironmentFile=/opt/devuz/.env
+
+# Тот же поллер, что у бота студии (bot/poller.mjs): Telegram не дозванивается
+# до сервера, вебхук ловил «Connection timed out». Токен и секрет — из
+# хранилища Supabase (POLLER_FROM_VAULT), адрес приложения содержит секрет,
+# сайт — lib/claudery/store.ts.
+Environment=NODE_OPTIONS=--use-env-proxy
+Environment=NO_PROXY=127.0.0.1,localhost
+Environment=POLLER_TOKEN_VAR=CLAUDERY_BOT_TOKEN
+Environment=POLLER_SECRET_VAR=CLAUDERY_WEBHOOK_SECRET
+Environment=POLLER_APP_PATH=/api/claudery/tg/{secret}
+Environment=POLLER_UPDATES=message,callback_query
+Environment=POLLER_FROM_VAULT=1
+
+ExecStart=/usr/bin/node /opt/devuz/bot/poller.mjs
+
+Restart=always
+RestartSec=5
+
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

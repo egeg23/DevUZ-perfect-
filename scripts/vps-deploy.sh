@@ -201,6 +201,7 @@ if [ -d "$APP_DIR/deploy" ] && [ "$(id -u)" = "0" ]; then
   install_unit devuz-bot.service
   install_unit devuz-maximova-bot.service
   install_unit devuz-ai-staff-bot.service
+  install_unit devuz-claudery-bot.service
   # daemon-reload нужен только когда файл юнита изменился.
   [ "$UNITS_CHANGED" = "1" ] && systemctl daemon-reload
 
@@ -316,6 +317,10 @@ if [ -d "$APP_DIR/deploy" ] && [ "$(id -u)" = "0" ]; then
     systemctl enable --now devuz-ai-staff-bot.service >/dev/null 2>&1
     systemctl restart devuz-ai-staff-bot.service >/dev/null 2>&1
     echo "  · бот ИИ-сотрудников забирает обновления"
+    # Бот Claudery — так же: токен и секрет из хранилища, пока их нет — ждёт.
+    systemctl enable --now devuz-claudery-bot.service >/dev/null 2>&1
+    systemctl restart devuz-claudery-bot.service >/dev/null 2>&1
+    echo "  · бот Claudery забирает обновления"
   else
     echo "  · SUPABASE_SERVICE_ROLE_KEY не задан — бот ИИ-сотрудников не запускаю" >&2
   fi
