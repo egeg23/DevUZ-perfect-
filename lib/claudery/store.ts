@@ -25,7 +25,7 @@ import { routeNewLead } from "@/lib/admin/lead-queue-store";
 import { wants } from "@/lib/admin/notify-prefs";
 import { messageWindow } from "@/lib/admin/tasks";
 import { handle, show, type Deps, type Flow, type Incoming, type Who } from "@/lib/claudery/flow";
-import { DEFAULT_SCENARIO, SCENARIO_KEY, parseScenario, rub, stepOf, type Scenario } from "@/lib/claudery/scenario";
+import { SETUP_KEY, parseSetup, rub, scenarioOf, stepOf, type Setup } from "@/lib/claudery/scenario";
 import { roadFetch } from "@/lib/egress.mjs";
 import { salesRecipients } from "@/lib/qualify/brief";
 import { newRequestNo } from "@/lib/qualify/engine";
@@ -112,13 +112,13 @@ async function putSnapshot(key: string, payload: unknown): Promise<void> {
   await db.from("stats_snapshots").upsert({ key, payload, computed_at: new Date().toISOString() }, { onConflict: "key" });
 }
 
-export async function loadScenario(): Promise<Scenario> {
-  return parseScenario(await snapshot(SCENARIO_KEY).catch(() => null)) ?? DEFAULT_SCENARIO;
+export async function loadSetup(): Promise<Setup> {
+  return parseSetup(await snapshot(SETUP_KEY).catch(() => null));
 }
 
-export async function saveScenario(s: Scenario, staffId: string, ip: string | null): Promise<void> {
-  await putSnapshot(SCENARIO_KEY, s);
-  await record("claudery.scenario_saved", { actorStaffId: staffId, meta: { steps: s.steps.length }, ip });
+export async function saveSetup(s: Setup, staffId: string, ip: string | null): Promise<void> {
+  await putSnapshot(SETUP_KEY, s);
+  await record("claudery.scenario_saved", { actorStaffId: staffId, meta: { amount: s.amount, extras: s.extras.length }, ip });
 }
 
 type Pay = { chatId: number; leadId: string | null; requestNo: string; amount: number; status: "pending" | "paid" | "failed"; at: string; paidAt?: string; told?: boolean };
@@ -187,13 +187,13 @@ async function remoteStatus(txn: string): Promise<"paid" | "pending" | "failed" 
 
 // ---------- Лид ----------
 
-export function clauderyLeadInput(who: Who, flow: Flow, why: "priced" | "manual", amount?: number): QualifyToolInput {
+export function clauderyLeadInput(who: Who, flow: Flow, amount: number): QualifyToolInput {
   const contact = who.username ? `@${who.username}` : `tg:${who.chatId}`;
   const request = [
     "Клиент Claudery (удалённая помощь с ИИ).",
     flow.problem ? `Что случилось: ${flow.problem}` : "Что случилось — не написал.",
     flow.photo ? "Приложил скриншот." : "",
-    why === "priced" && amount ? `Счёт Platega на ${rub(amount)} выставлен, оплаты пока нет.` : "Попросил связаться без оплаты.",
+    `Счёт Platega на ${rub(amount)} выставлен, оплаты пока нет.`,
   ]
     .filter(Boolean)
     .join(" ");
@@ -220,9 +220,9 @@ export function clauderyLeadInput(who: Who, flow: Flow, why: "priced" | "manual"
   };
 }
 
-async function lead(who: Who, flow: Flow, why: "priced" | "manual", amount?: number) {
+async function lead(who: Who, flow: Flow, amount: number) {
   if (flow.leadId || flow.requestNo) return { leadId: flow.leadId ?? null, requestNo: flow.requestNo ?? "" };
-  const scored = scoreLead(clauderyLeadInput(who, flow, why, amount), "ru");
+  const scored = scoreLead(clauderyLeadInput(who, flow, amount), "ru");
   const requestNo = newRequestNo();
   const origin = { tgUsername: who.username ?? undefined, entryPath: "bot:claudery", entryRef: null };
   let leadId: string | null = null;
@@ -233,11 +233,8 @@ async function lead(who: Who, flow: Flow, why: "priced" | "manual", amount?: num
   }
   const db = serviceClient();
   // «Цена названа» — ступень продажи: счёт выставлен (lib/admin/sales-stages.ts).
-  if (db && leadId && why === "priced") await db.from("sales_marks").insert({ kind: "priced", lead_id: leadId });
-  const heading =
-    why === "priced"
-      ? `🆘 <b>Claudery · помощь с ИИ</b> · счёт ${esc(rub(amount ?? 0))} выставлен, оплаты пока нет. Оплатит — придёт строка «✅ оплачено».`
-      : "🆘 <b>Claudery · помощь с ИИ</b> · клиент просит связаться.";
+  if (db && leadId) await db.from("sales_marks").insert({ kind: "priced", lead_id: leadId });
+  const heading = `🆘 <b>Claudery · помощь с ИИ</b> · счёт ${esc(rub(amount))} выставлен, оплаты пока нет. Оплатит — придёт строка «✅ оплачено».`;
   await routeNewLead({ leadId: leadId ?? "unsaved", lead: scored, requestNo, origin: { ...origin, source: CLAUDERY_SOURCE }, heading, fallback: await salesRecipients("claudery") }).catch((error) =>
     console.error("claudery: лид не разослан", error),
   );
@@ -296,7 +293,7 @@ async function paid(who: Who, flow: Flow): Promise<"paid" | "pending" | "failed"
 
 export function realDeps(chatId: number): Deps {
   return {
-    scenario: loadScenario,
+    setup: loadSetup,
     flowOf: (chatId) => snapshot<Flow>(FLOW_PREFIX + chatId),
     saveFlow: (chatId, flow) => putSnapshot(FLOW_PREFIX + chatId, flow),
     send: sendToClient,
@@ -325,7 +322,6 @@ export async function handleClauderyUpdate(update: ClauderyUpdate): Promise<void
     chatId: chat.id,
     username: from.username ?? null,
     name: [from.first_name, from.last_name].filter(Boolean).join(" ").slice(0, 120),
-    languageCode: from.language_code ?? null,
   };
   let input: Incoming | null = null;
   const m = update.message;
@@ -366,7 +362,7 @@ export async function checkClauderyPayments(now: Date = new Date()): Promise<voi
     // Клиенту — шаг после оплаты, как если бы он нажал «Я оплатил».
     const flow = await snapshot<Flow>(FLOW_PREFIX + pay.chatId);
     if (flow?.pay?.txn === txn) {
-      const s = await loadScenario();
+      const s = scenarioOf(await loadSetup());
       const step = stepOf(s, flow.step);
       flow.pay.status = "paid";
       if (step?.kind === "pay" && step.next) flow.step = step.next;

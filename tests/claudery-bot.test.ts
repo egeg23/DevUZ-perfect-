@@ -5,24 +5,24 @@ import { test } from "node:test";
 import { leadKindOf } from "@/lib/admin/lead-kinds";
 import { INBOUND_SOURCES } from "@/lib/admin/sales-stages";
 import { CB, handle, type Deps, type Flow, type Row, type Who } from "@/lib/claudery/flow";
-import { DEFAULT_SCENARIO, PAY_PURPOSE, scenarioFromForm, scenarioProblems, type Scenario } from "@/lib/claudery/scenario";
+import { DEFAULT_SETUP, PAY_PURPOSE, scenarioOf, setupFromForm, setupProblems, type Setup } from "@/lib/claudery/scenario";
 
 const read = (p: string) => readFileSync(p, "utf8");
-const who: Who = { chatId: 7, username: "client", name: "Иван", languageCode: "ru" };
+const who: Who = { chatId: 7, username: "client", name: "Иван" };
 
-function fake(state: { pay?: "paid" | "pending" | "failed"; invoice?: boolean } = {}) {
+function fake(state: { pay?: "paid" | "pending" | "failed"; invoice?: boolean; setup?: Setup } = {}) {
   const flows = new Map<number, Flow>();
   const sent: { text: string; rows?: Row[] }[] = [];
-  const leads: string[] = [];
+  const leads: number[] = [];
   const invoices: { amount: number; purpose: string }[] = [];
   const deps: Deps = {
-    scenario: async () => DEFAULT_SCENARIO,
+    setup: async () => state.setup ?? DEFAULT_SETUP,
     flowOf: async (id) => (flows.has(id) ? structuredClone(flows.get(id)!) : null),
     saveFlow: async (id, f) => void flows.set(id, structuredClone(f)),
     send: async (_id, text, rows) => void sent.push({ text, rows }),
     answer: async () => {},
-    lead: async (_w, f, why) => {
-      if (!f.requestNo) leads.push(why);
+    lead: async (_w, f, amount) => {
+      if (!f.requestNo) leads.push(amount);
       return { leadId: "L1", requestNo: f.requestNo ?? "DZ-1" };
     },
     invoice: async (_f, amount, purpose) => {
@@ -36,11 +36,13 @@ function fake(state: { pay?: "paid" | "pending" | "failed"; invoice?: boolean } 
 
 const btn = (data: string) => ({ type: "button" as const, data, callbackId: "c" });
 
-test("сценарий по умолчанию проходит проверку и начинается одной кнопкой", () => {
-  assert.deepEqual(scenarioProblems(DEFAULT_SCENARIO), []);
-  const start = DEFAULT_SCENARIO.steps.find((s) => s.id === DEFAULT_SCENARIO.start)!;
+test("настройки по умолчанию проходят проверку, путь начинается одной кнопкой", () => {
+  assert.deepEqual(setupProblems(DEFAULT_SETUP), []);
+  const start = scenarioOf(DEFAULT_SETUP).steps[0];
   assert.equal(start.buttons.length, 1);
   assert.equal(PAY_PURPOSE, "Claudery: удалённая помощь");
+  // Только по-русски (владелец, 17.11.2026: «бот только на рф аудиторию»).
+  assert.doesNotMatch(JSON.stringify(DEFAULT_SETUP) + read("lib/claudery/flow.ts"), /uz|O‘zbek|Assalomu/);
 });
 
 test("кнопка → что случилось → счёт: лид заводится до оплаты, оплату решает Platega", async () => {
@@ -48,7 +50,7 @@ test("кнопка → что случилось → счёт: лид завод
   await handle(who, { type: "text", text: "/start" }, f.deps, "https://x/offer");
   await handle(who, btn(CB.step + "ask"), f.deps, "https://x/offer");
   await handle(who, { type: "text", text: "ChatGPT не открывается" }, f.deps, "https://x/offer");
-  assert.deepEqual(f.leads, ["priced"]);
+  assert.deepEqual(f.leads, [5000]);
   assert.deepEqual(f.invoices, [{ amount: 5000, purpose: PAY_PURPOSE }]);
   const last = f.sent.at(-1)!;
   assert.ok(last.rows?.flat().some((b) => b.url === "https://pay.example/T1"));
@@ -75,32 +77,30 @@ test("счёт не выставился — заявка всё равно ли
   const f = fake({ invoice: false });
   await handle(who, btn(CB.step + "ask"), f.deps, "o");
   await handle(who, { type: "text", text: "помогите" }, f.deps, "o");
-  assert.deepEqual(f.leads, ["priced"]);
+  assert.deepEqual(f.leads, [5000]);
   assert.match(f.sent.at(-1)!.text, /не получается выставить счёт/);
 });
 
-test("язык: узбекский по кнопке", async () => {
-  const f = fake();
-  await handle(who, btn(CB.lang + "uz"), f.deps, "o");
-  assert.equal(f.flows.get(7)?.lang, "uz");
-  assert.match(f.sent.at(-1)!.text, /Assalomu alaykum/);
+test("своя кнопка отвечает текстом и возвращает назад", async () => {
+  const setup: Setup = { ...DEFAULT_SETUP, extras: [{ label: "Гарантия", answer: "Не помогли — вернём деньги." }] };
+  const f = fake({ setup });
+  await handle(who, btn(CB.step + "x0"), f.deps, "o");
+  assert.match(f.sent.at(-1)!.text, /вернём/);
+  assert.ok(f.sent.at(-1)!.rows?.flat().some((b) => b.data === CB.step + "start"));
 });
 
-test("конструктор: форма → сценарий, ошибки ловит проверка", () => {
+test("форма настроек: пустая строка кнопки пропускается, ошибки ловит проверка", () => {
   const form = new FormData();
-  form.set("start", "a");
-  form.set("n.0.id", "a");
-  form.set("n.0.kind", "message");
-  form.set("n.0.ru", "Привет");
-  form.set("n.0.uz", "Salom");
-  form.set("n.0.b.0.ru", "Дальше");
-  form.set("n.0.b.0.to", "nope");
-  const s: Scenario = scenarioFromForm(form);
-  assert.equal(s.steps.length, 1);
-  assert.ok(scenarioProblems(s).some((p) => p.includes("несуществующий")));
-  form.set("n.0.b.0.to", "");
-  form.set("n.0.b.0.url", "http://insecure");
-  assert.ok(scenarioProblems(scenarioFromForm(form)).some((p) => p.includes("https")));
+  for (const k of ["greet", "helpLabel", "ask", "pay", "paid"]) form.set(k, "текст");
+  form.set("amount", "5 000");
+  form.set("x0.label", "Сайт");
+  form.set("x0.url", "http://insecure");
+  const s = setupFromForm(form);
+  assert.equal(s.amount, 5000);
+  assert.equal(s.extras.length, 1);
+  assert.ok(setupProblems(s).some((p) => p.includes("https")));
+  form.set("x0.url", "https://devuz.studio");
+  assert.deepEqual(setupProblems(setupFromForm(form)), []);
 });
 
 test("источник claudery: свой вид лида, входящий в ступенях, миграция пускает", () => {
