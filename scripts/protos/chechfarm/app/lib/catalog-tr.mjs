@@ -113,7 +113,7 @@ export const PACK_LANGS = {
   lanikzol: ALL, melatonin: ALL, miotir: ALL, nemotan: ALL, geparigen: ALL,
   contryfort: ALL, kantalin: ALL, duinum: ALL, ticoten: ALL, regapen: ALL,
   tiozolin: ALL, fertuna: ALL, kabrineks: ALL, kamalafil: ALL, gution: ALL,
-  deksabut: ALL, tenozum: ALL, femaris: ALL, neirodeks: ALL, neobrain: ALL, "aves-forte": ALL,
+  deksabut: ALL, tenozum: ALL, femaris: ALL, neirodeks: ALL, neobrain: ALL, "aves-forte": ALL, orni: ALL,
   "dilargo-sol": ["en", "ar"], "naprocin-gel": ["en", "ar"],
   cholesterol: ["ar"], glucoflex: ["ar"],
 };
