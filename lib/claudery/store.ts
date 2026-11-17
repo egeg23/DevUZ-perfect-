@@ -32,7 +32,7 @@ import { messageWindow } from "@/lib/admin/tasks";
 import { FALLBACK_RUB_PER_USD, projectNote, usdOf, usdRateFromCbr } from "@/lib/claudery/money";
 import { handle, show, type Deps, type Flow, type Incoming, type Who } from "@/lib/claudery/flow";
 import { PAY_PURPOSE, SETUP_KEY, parseSetup, rub, scenarioOf, stepOf, type Setup } from "@/lib/claudery/scenario";
-import { roadFetch } from "@/lib/egress.mjs";
+import { directDispatcher, roadFetch } from "@/lib/egress.mjs";
 import { salesRecipients } from "@/lib/qualify/brief";
 import { newRequestNo } from "@/lib/qualify/engine";
 import { scoreLead } from "@/lib/qualify/scoring";
@@ -143,23 +143,47 @@ async function platega(): Promise<{ id: string; key: string } | null> {
   return id && key ? { id, key } : null;
 }
 
+/** Последний отказ Platega — только код ответа, для разбора без журнала сервера. */
+const PLATEGA_LAST_KEY = "claudery-platega-last";
+
+/**
+ * Platega — российский шлюз, AI-юрист ходит в него с этого же сервера
+ * напрямую. Через прокси (зарубежный адрес) счёт не выставлялся, а ответ с
+ * любым кодом `roadFetch` считает рабочей дорогой и на прямую не переходит.
+ * Поэтому сюда — сразу напрямую; прокси — только если прямая дорога оборвалась.
+ */
+async function plategaFetch(url: string, init: RequestInit): Promise<Response> {
+  const direct = directDispatcher();
+  if (!direct) return fetch(url, { ...init, signal: AbortSignal.timeout(20_000) });
+  try {
+    return await fetch(url, { ...init, dispatcher: direct, signal: AbortSignal.timeout(20_000) } as RequestInit);
+  } catch {
+    return fetch(url, { ...init, signal: AbortSignal.timeout(20_000) });
+  }
+}
+
 async function plategaCall(path: string, init: RequestInit = {}): Promise<Record<string, unknown> | null> {
   const keys = await platega();
   if (!keys) return null;
+  const what = path.split("/")[1];
+  const failed = (status: number | string) =>
+    putSnapshot(PLATEGA_LAST_KEY, { what, method: init.method ?? "GET", status, at: new Date().toISOString() }).catch(() => {});
   try {
-    const res = await roadFetch(`${PLATEGA}${path}`, {
+    const res = await plategaFetch(`${PLATEGA}${path}`, {
       ...init,
       headers: { "X-MerchantId": keys.id, "X-Secret": keys.key, "content-type": "application/json", accept: "application/json" },
-      signal: AbortSignal.timeout(20_000),
     });
     if (!res.ok) {
       // Текст ошибки Platega в журнал не идёт: в нём бывают данные платежа.
-      console.error(`claudery: Platega ${path.split("/")[1]} ответила ${res.status}`);
+      console.error(`claudery: Platega ${what} ответила ${res.status}`);
+      await failed(res.status);
       return null;
     }
     return (await res.json().catch(() => null)) as Record<string, unknown> | null;
   } catch (error) {
-    console.error("claudery: Platega не ответила —", error instanceof Error ? error.name : error);
+    const name = error instanceof Error ? error.name : "error";
+    console.error("claudery: Platega не ответила —", name);
+    await failed(name);
     return null;
   }
 }

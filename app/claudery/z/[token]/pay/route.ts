@@ -9,6 +9,7 @@ export const dynamic = "force-dynamic";
 export async function POST(_req: Request, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
   const url = await orderPayUrl(token);
-  // Счёт не выставился или заявка уже оплачена — обратно на страницу заявки.
-  return NextResponse.redirect(url ?? `${siteUrl}${ORDER_PATH}/${encodeURIComponent(token)}`, 303);
+  // Счёт не выставился или заявка уже оплачена — обратно на страницу заявки,
+  // с пометкой: иначе нажатие выглядит так, будто ничего не произошло.
+  return NextResponse.redirect(url ?? `${siteUrl}${ORDER_PATH}/${encodeURIComponent(token)}?pay=failed`, 303);
 }

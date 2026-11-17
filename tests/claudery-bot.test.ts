@@ -173,3 +173,16 @@ test("оплата Claudery в деньгах: ведущему 40% с сумм�
   assert.match(read("lib/claudery/store.ts"), /paidProject\(pay, now\)/);
   assert.match(read("supabase/migrations/0189_claudery_projects.sql"), /after update of assigned_staff_id on public\.leads/);
 });
+
+test("Platega — напрямую, как AI-юрист; отказ виден на странице заявки", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const store = await readFile("lib/claudery/store.ts", "utf8");
+  const call = store.slice(store.indexOf("async function plategaFetch"), store.indexOf("/** Платёжная ссылка"));
+  assert.match(call, /directDispatcher\(\)/);
+  assert.doesNotMatch(call, /roadFetch\(/);
+  assert.match(call, /PLATEGA_LAST_KEY/);
+  const route = await readFile("app/claudery/z/[token]/pay/route.ts", "utf8");
+  assert.match(route, /\?pay=failed/);
+  const page = await readFile("app/claudery/z/[token]/page.tsx", "utf8");
+  assert.match(page, /Не получилось открыть страницу оплаты/);
+});
