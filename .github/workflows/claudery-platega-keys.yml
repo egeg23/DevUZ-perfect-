@@ -1,0 +1,65 @@
+# Ключи Platega для бота Claudery — с сервера AI-юриста в наше хранилище.
+#
+# Владелец, 17.11.2026: «А токены вытащи сам от аи юриста с сервера».
+# AI-юрист (egeg23/seller-ai) живёт на том же сервере, его ключи — строки
+# PLATEGA_MERCHANT_ID и PLATEGA_API_KEY в /opt/seller-ai-v3/.env. Задача
+# читает их на сервере и кладёт в хранилище секретов Supabase
+# (app.PLATEGA_MERCHANT_ID, app.PLATEGA_API_KEY — функция app_secret_put),
+# откуда их берёт lib/claudery/store.ts. Значения никуда не печатаются:
+# в лог идёт только «задано / пусто». Журнал задачи публичный.
+#
+# Запуск: Actions → «Claudery: ключи Platega» → Run workflow.
+name: "Claudery: ключи Platega"
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  keys:
+    name: Перенести ключи Platega
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ключи с сервера AI-юриста в хранилище
+        uses: appleboy/ssh-action@v1
+        env:
+          VPS_APP_DIR_IN: ${{ secrets.VPS_APP_DIR }}
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          envs: VPS_APP_DIR_IN
+          command_timeout: 5m
+          script: |
+            set -uo pipefail
+            APP_DIR="${VPS_APP_DIR_IN:-/opt/devuz}"
+            val() { grep -m1 "^$2=" "$1" 2>/dev/null | cut -d= -f2- | sed -E "s/^[\"']//; s/[\"']\$//"; }
+
+            SRC=""
+            for f in /opt/seller-ai-v3/.env /opt/seller-ai/.env /home/seller_ai/seller-ai/.env; do
+              if [ -r "$f" ] && grep -q '^PLATEGA_API_KEY=.\+' "$f"; then SRC="$f"; break; fi
+            done
+            [ -n "$SRC" ] || { echo "✗ .env AI-юриста с ключами Platega не найден или не читается"; exit 1; }
+            echo "· ключи AI-юриста: $SRC"
+
+            SB_URL="$(val "$APP_DIR/.env" NEXT_PUBLIC_SUPABASE_URL)"
+            SB_KEY="$(val "$APP_DIR/.env" SUPABASE_SERVICE_ROLE_KEY)"
+            [ -n "$SB_URL" ] && [ -n "$SB_KEY" ] || { echo "✗ в .env devuz нет адреса или ключа базы"; exit 1; }
+
+            put() {
+              local name="$1" value="$2"
+              [ -n "$value" ] || { echo "✗ $name: в .env AI-юриста пусто"; return 1; }
+              # Значение — через stdin (-K -) и JSON из node: его нет ни в выводе, ни в списке процессов.
+              BODY="$(NAME="app.$name" VALUE="$value" node -e 'process.stdout.write(JSON.stringify({p_name:process.env.NAME,p_value:process.env.VALUE}))')"
+              CODE="$(printf 'url = "%s/rest/v1/rpc/app_secret_put"\nheader = "apikey: %s"\nheader = "Authorization: Bearer %s"\nheader = "Content-Type: application/json"\n' "$SB_URL" "$SB_KEY" "$SB_KEY" \
+                | curl -sS -o /dev/null -w '%{http_code}' --max-time 20 --noproxy '*' -K - --data-binary @<(printf '%s' "$BODY") 2>/dev/null || true)"
+              case "$CODE" in 2*) echo "✓ $name: задано";; *) echo "✗ $name: база ответила $CODE"; return 1;; esac
+            }
+
+            OK=0
+            put PLATEGA_MERCHANT_ID "$(val "$SRC" PLATEGA_MERCHANT_ID)" || OK=1
+            put PLATEGA_API_KEY "$(val "$SRC" PLATEGA_API_KEY)" || OK=1
+            exit $OK

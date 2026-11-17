@@ -184,6 +184,9 @@ export function middleware(request: NextRequest) {
   // страница (lib/ai-staff/auth.ts).
   if (pathname === "/cabinet" || pathname.startsWith("/cabinet/")) return NextResponse.next();
 
+  // Страницы бота Claudery (app/claudery: оферта) — русские, вне языков сайта.
+  if (pathname === "/claudery" || pathname.startsWith("/claudery/")) return NextResponse.next();
+
   const hasLocale = locales.some(
     (locale) => pathname === `/${locale}` || pathname.startsWith(`/${locale}/`),
   );

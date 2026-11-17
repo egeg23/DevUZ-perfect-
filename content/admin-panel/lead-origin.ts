@@ -16,6 +16,7 @@ export const leadChannelDict = defineDict({
   box: { ru: "лист ожидания DevUz Box", uz: "DevUz Box kutish ro‘yxati", pl: "lista oczekujących DevUz Box" },
   mockup: { ru: "макет в боте", uz: "botdagi maket", pl: "makieta w bocie" },
   "mockup-manual": { ru: "макет вручную из бота", uz: "botdan qo‘lda maket", pl: "makieta ręcznie z bota" },
+  claudery: { ru: "бот Claudery — помощь с ИИ", uz: "Claudery boti — SI bo‘yicha yordam", pl: "bot Claudery — pomoc z AI" },
   showcase: { ru: "витрина — бриф по заказу", uz: "vitrina — buyurtma brifi", pl: "witryna — brief zamówienia" },
   outreach: { ru: "наше холодное касание", uz: "bizning sovuq aloqamiz", pl: "nasz zimny kontakt" },
   manual: { ru: "добавлен вручную в панели", uz: "panelda qo‘lda qo‘shilgan", pl: "dodany ręcznie w panelu" },

@@ -2512,7 +2512,7 @@ export const uz: HelpCopy = {
           title: "Xodim uchun «Qaysi lidlarni yuborish»",
           roles: ["admin", "head"],
           body: [
-            "Xodim ismi ostida, «Bildirishnomalar» yonida — **«Lidlar · barcha turlar»** yoki «Lidlar · 6 turdan 4 ta» qatori. Bosing: «Qaysi lidlarni yuborish» oltita belgisi ochiladi — «Sovuq aloqalar», «Tenderlar», «Guruhlardan signallar (skaut)», «Hamkorlar va agentliklar», «Sayt va botdan buyurtmalar», «Botdan maket». Ortiqchasini olib tashlang va **«Saqlash»** ni bosing. Xodimning o‘zi ham xuddi shu belgilarni [Sozlamalar](/admin/settings)da qo‘yadi, shuning uchun sizdan keyin ham o‘zgartirishi mumkin; kim va qachon o‘zgartirgani — jurnalda.",
+            "Xodim ismi ostida, «Bildirishnomalar» yonida — **«Lidlar · barcha turlar»** yoki «Lidlar · 7 turdan 4 ta» qatori. Bosing: «Qaysi lidlarni yuborish» yettita belgisi ochiladi — «Sovuq aloqalar», «Tenderlar», «Guruhlardan signallar (skaut)», «Hamkorlar va agentliklar», «Sayt va botdan buyurtmalar», «Botdan maket», «SI bo‘yicha yordam (Claudery)». Ortiqchasini olib tashlang va **«Saqlash»** ni bosing. Xodimning o‘zi ham xuddi shu belgilarni [Sozlamalar](/admin/settings)da qo‘yadi, shuning uchun sizdan keyin ham o‘zgartirishi mumkin; kim va qachon o‘zgartirgani — jurnalda.",
             "Olib tashlangan tur xodimga kelmaydi va [navbat](#leads-queue) uni taklif qilmaydi: lid bu turni tanlaganlarga ketadi. Hech kim tanlamagan bo‘lsa — lid avvalgidek hammaga ketadi, sizga esa har bir lid uchun bir marta «🧭 … hech kim tanlamadi» qatori keladi («Hisobotlar» ostida). Tungi teng ulush va «Limitsiz lidlar» avvalgidek butun navbat bo‘yicha hisoblanadi.",
           ],
         },
@@ -3018,6 +3018,14 @@ export const uz: HelpCopy = {
           ],
         },
         {
+          id: "claudery",
+          title: "Claudery: masofaviy yordam boti va konstruktor",
+          body: [
+            "**«Claudery»** varag‘i — neyrotarmoqlar bo‘yicha pullik yordam arizalarini qabul qiladigan bot. Mijoz tugmani bosadi, nima bo‘lganini yozadi (skrinshot bilan ham bo‘ladi) va «To‘lov» qadamidagi summaga Platega hisobini oladi. Ariza darhol umumiy lidlar hovuziga tushadi, turi «SI bo‘yicha yordam (Claudery)», va «narx aytildi» bosqichi hisoblanadi: to‘lanmaganini menejer yakunlashi mumkin. To‘lovni Platega o‘zi tasdiqlaydi: bot uni mijozning «To‘ladim» tugmasi bo‘yicha va har bir necha daqiqada ikki kun davomida so‘raydi. To‘langan bo‘lsa, lidda «✅ ОПЛАЧЕНО» paydo bo‘ladi, lidni olib borgan xodimga hamda sizga va rahbarga qator keladi, tunda — ertalab. Mijoz skrinshoti kunduzi shu turdagi lidlarni oladiganlarga studiya botiga boradi.",
+            "**«Kalitlar»** bloki: @BotFather’dan bot tokeni va ikkita Platega kaliti — SI-yuristniki bilan bir xil. **«Saqlash va tekshirish»** ni bosing: panel tokenni Telegramda tekshiradi, server uchun sirni o‘zi yaratadi va «Ulanish» da bot nomini ko‘rsatadi. **«Ssenariy konstruktori»** — bot qadamlari: qadamning lotincha nomi, turi («Xabar», «Savol», «To‘lov», «Ariza»), ruscha va o‘zbekcha matni va oltitagacha tugmasi bor, har biri boshqa qadamga olib boradi yoki https havolani ochadi. Pastda — bo‘sh qadam: nomini yozing, u qo‘shiladi. «Shartlar va kafolat» maydoniga mijozga va’da qilganingizni yozing: bu matn ofertada turadi (**«Mijozlar uchun oferta»** tugmasi), ofertadagi YaTT rekvizitlari ombordan olinadi. **«Ssenariyni saqlash»** ni bosing: biror joyda xato bo‘lsa, panel qayerdaligini aytadi va saqlamaydi.",
+          ],
+        },
+        {
           id: "bloggers-agent",
           title: "Blogerlar: agent o‘zi nima qiladi",
           body: [
@@ -3226,7 +3234,7 @@ export const uz: HelpCopy = {
           id: "leads",
           title: "«Qaysi lidlarni yuborish»: o‘zingiz tanlaysiz",
           body: [
-            "**«Meniki»** blokida **«Qaysi lidlarni yuborish»** qatori bor — lid turlari bo‘yicha oltita belgi: «Sovuq aloqalar» (mijoz ishchi akkauntdan yuborilgan salomga javob berdi va maketga rozi bo‘ldi), «Tenderlar» (skaut topgan davlat xaridlari lotlari), «Guruhlardan signallar (skaut)» (Telegram guruhida odam ijrochi qidirmoqda), «Hamkorlar va agentliklar» (mijoz hamkor havolasi yoki promokodi orqali, blogger yoki agentlikdan keldi), «Sayt va botdan buyurtmalar» (forma, saytdagi chat, bot bilan suhbat, vitrina, DevUz Box kutish ro‘yxati) va «Botdan maket». Odatda hammasi belgilangan. Ortiqchasini olib tashlang va **«Saqlash»** ni bosing — tepada saqlangani haqida xabar chiqadi. Lid turini panel o‘zi lid qayerdan kelganiga qarab aniqlaydi, neyrotarmoqsiz.",
+            "**«Meniki»** blokida **«Qaysi lidlarni yuborish»** qatori bor — lid turlari bo‘yicha yettita belgi: «Sovuq aloqalar» (mijoz ishchi akkauntdan yuborilgan salomga javob berdi va maketga rozi bo‘ldi), «Tenderlar» (skaut topgan davlat xaridlari lotlari), «Guruhlardan signallar (skaut)» (Telegram guruhida odam ijrochi qidirmoqda), «Hamkorlar va agentliklar» (mijoz hamkor havolasi yoki promokodi orqali, blogger yoki agentlikdan keldi), «Sayt va botdan buyurtmalar» (forma, saytdagi chat, bot bilan suhbat, vitrina, DevUz Box kutish ro‘yxati) va «Botdan maket» va «SI bo‘yicha yordam (Claudery)» (Claudery botidan pullik ariza). Odatda hammasi belgilangan. Ortiqchasini olib tashlang va **«Saqlash»** ni bosing — tepada saqlangani haqida xabar chiqadi. Lid turini panel o‘zi lid qayerdan kelganiga qarab aniqlaydi, neyrotarmoqsiz.",
             "Olib tashlangan tur — bu faqat «bot kartochka yubormaydi» degani emas. [Navbat](#leads-queue) ham bunday lidni sizga taklif qilmaydi: u darhol belgisi turgan xodimga ketadi va sizda yarim soat kutib turmaydi. Tunda va ish vaqtidan tashqari lid avvalgidek hammaga ochiladi — lekin faqat bu turni olib tashlamaganlarga. Bu turni hech kim tanlamagan bo‘lsa, lid mijoz yo‘qolmasligi uchun avvalgidek hammaga keladi, rahbar va egasiga esa «🧭 … hech kim tanlamadi» qatori keladi. Har bir saqlash jurnalga yoziladi. Rahbar va egasi bu belgilarni siz uchun ham «Jamoa»da qo‘yishi mumkin.",
           ],
         },

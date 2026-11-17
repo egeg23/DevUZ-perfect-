@@ -139,7 +139,7 @@ jobs:
             echo "════ Перезапуск ════"
             # Сайт: тот же образ, новое окружение — compose пересоздаёт контейнер.
             docker compose up -d --no-build >/dev/null 2>&1 || echo "✗ docker compose up не прошёл"
-            for UNIT in devuz-bot devuz-scout devuz-ai-staff-bot devuz-maximova-bot; do
+            for UNIT in devuz-bot devuz-scout devuz-ai-staff-bot devuz-claudery-bot devuz-maximova-bot; do
               if systemctl is-active --quiet "$UNIT.service"; then
                 systemctl restart "$UNIT.service" && echo "✓ $UNIT перезапущен" || echo "✗ $UNIT не перезапустился"
               fi
