@@ -9,10 +9,16 @@
  * тоже лид («цена названа»), чтобы менеджер мог дожать. Бот только
  * по-русски: «бот только на рф аудиторию будет работать».
  *
+ * Оплаты в самом боте нет (владелец, 17.11.2026: «Телеграм ругается и будет
+ * блокировать ботов, которые принимают оплаты в обход stars… убрать кнопку
+ * "оплатить" в боте, вынести контур оплаты на девуз… чтобы оплата
+ * происходила с веб версии»): бот принимает заявку и даёт ссылку на её
+ * страницу на сайте (`deps.order`), счёт Platega выставляется там.
+ *
  * Здесь только решения; Telegram, база и Platega — в зависимостях
  * (lib/claudery/store.ts), чтобы ход бота проверялся тестом без сети.
  */
-import { PAY_PURPOSE, payText, repeatAmount, rub, scenarioOf, stepOf, type Scenario, type Setup, type Step } from "@/lib/claudery/scenario";
+import { payText, repeatAmount, scenarioOf, stepOf, type Scenario, type Setup, type Step } from "@/lib/claudery/scenario";
 
 export type Row = { text: string; data?: string; url?: string }[];
 
@@ -22,7 +28,10 @@ export type Flow = {
   photo?: string;
   leadId?: string | null;
   requestNo?: string;
-  pay?: { txn: string; url: string; amount: number; status: "pending" | "paid" | "failed" };
+  /** Страница заявки на сайте: там цена и оплата. */
+  order?: { token: string; url: string; amount: number };
+  /** Ставит сервер, когда Platega подтвердила оплату на сайте. */
+  pay?: { status: "pending" | "paid" | "failed" };
 };
 
 export type Who = { chatId: number; username?: string | null; name: string };
@@ -35,23 +44,20 @@ export type Deps = {
   answer: (callbackId: string, text?: string) => Promise<void>;
   /** Заявка в общий пул: saveLead + routeNewLead. Повторно не заводит. */
   lead: (who: Who, flow: Flow, amount: number) => Promise<{ leadId: string | null; requestNo: string }>;
-  invoice: (flow: Flow, amount: number, purpose: string) => Promise<{ txn: string; url: string } | null>;
-  /** Статус у Platega; «paid» — оплачено (и лид отмечен). */
-  paid: (who: Who, flow: Flow) => Promise<"paid" | "pending" | "failed">;
+  /** Страница заявки на сайте (цена и оплата — там, не в боте). */
+  order: (who: Who, flow: Flow, price: { amount: number; full: number; discount: number }) => Promise<{ token: string; url: string } | null>;
   /** Клиент уже хоть раз оплатил (Platega подтвердила) — ему скидка. */
   paidBefore: (who: Who) => Promise<boolean>;
 };
 
 export const T = {
-  payBtn: (a: string) => `💳 Оплатить ${a}`,
-  check: "✅ Я оплатил — проверить",
+  open: "📋 Открыть заявку",
   offer: "📄 Оферта",
-  notYet: "Оплата пока не пришла. Если вы уже оплатили, подождите минуту и нажмите ещё раз: подтверждение приходит от платёжной системы.",
-  failed: "Платёж не прошёл. Попробуйте ещё раз по новой ссылке.",
-  noPay: "Сейчас не получается выставить счёт. Заявку мы записали, специалист напишет вам и пришлёт ссылку на оплату.",
+  noOrder: "Заявку мы записали. Специалист напишет вам здесь, в Telegram.",
   needText: "Напишите, пожалуйста, текстом, что случилось (можно со скриншотом).",
 } as const;
 
+/** `check` — кнопка прежних сообщений («Я оплатил»): теперь просто показывает заявку. */
 export const CB = { step: "s:", check: "p:check" } as const;
 
 function rows(step: Step): Row[] {
@@ -75,18 +81,17 @@ export async function show(who: Who, flow: Flow, s: Scenario, deps: Deps, offerU
     const lead = await deps.lead(who, flow, amount);
     flow.leadId = lead.leadId;
     flow.requestNo = lead.requestNo;
-    if (!flow.pay || flow.pay.status === "failed" || flow.pay.amount !== amount) {
-      const inv = await deps.invoice(flow, amount, PAY_PURPOSE);
-      flow.pay = inv ? { ...inv, amount, status: "pending" } : undefined;
+    if (!flow.order || flow.order.amount !== amount) {
+      const made = await deps.order(who, flow, { amount, full, discount });
+      flow.order = made ? { ...made, amount } : undefined;
     }
     await deps.saveFlow(who.chatId, flow);
-    if (!flow.pay) {
-      await deps.send(who.chatId, T.noPay);
+    if (!flow.order) {
+      await deps.send(who.chatId, T.noOrder);
       return;
     }
-    await deps.send(who.chatId, payText(step.text, amount, full, discount), [
-      [{ text: T.payBtn(rub(amount)), url: flow.pay.url }],
-      [{ text: T.check, data: CB.check }],
+    await deps.send(who.chatId, payText(step.text, amount), [
+      [{ text: T.open, url: flow.order.url }],
       [{ text: T.offer, url: offerUrl }],
     ]);
     return;
@@ -113,23 +118,7 @@ export async function handle(who: Who, input: Incoming, deps: Deps, offerUrl: st
 
   if (input.type === "button") {
     await deps.answer(input.callbackId);
-    if (input.data === CB.check) {
-      if (!flow.pay) return show(who, flow, s, deps, offerUrl);
-      const state = await deps.paid(who, flow);
-      if (state === "paid") {
-        flow.pay.status = "paid";
-        const step = stepOf(s, flow.step);
-        if (step?.kind === "pay" && step.next) flow.step = step.next;
-        return show(who, flow, s, deps, offerUrl);
-      }
-      if (state === "failed") {
-        flow.pay.status = "failed";
-        await deps.send(who.chatId, T.failed);
-        return show(who, flow, s, deps, offerUrl);
-      }
-      await deps.send(who.chatId, T.notYet);
-      return;
-    }
+    if (input.data === CB.check) return show(who, flow, s, deps, offerUrl);
     if (input.data.startsWith(CB.step)) {
       const to = input.data.slice(CB.step.length);
       if (stepOf(s, to)) flow.step = to;

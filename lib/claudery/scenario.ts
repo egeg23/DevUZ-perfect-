@@ -12,7 +12,8 @@
  *   1. Приветствие с кнопкой «Нужна помощь» (и до 4 своих кнопок: ответ
  *      текстом или ссылка);
  *   2. «Что случилось?» — бот ждёт сообщение, можно со скриншотом;
- *   3. Счёт Platega на сумму из настроек (оплату подтверждает Platega);
+ *   3. Ссылка на страницу заявки на сайте: цена и оплата Platega — там, не в
+ *      боте (оплату подтверждает Platega);
  *   4. Сообщение после оплаты;
  *   5. Условия и гарантия — в оферте.
  *
@@ -63,10 +64,10 @@ export const DEFAULT_SETUP: Setup = {
     "Здравствуйте! Это Claudery: удалённая помощь с нейросетями и ИИ-сервисами. Нажмите кнопку, расскажите, что не получается, и специалист поможет.",
   helpLabel: "🆘 Нужна помощь",
   ask: "Что случилось? Опишите одним сообщением. Можно приложить скриншот.",
-  pay: "Спасибо, заявку записали. Стоимость помощи — {сумма}. Оплатите по кнопке ниже: как только оплата пройдёт, специалист напишет вам здесь в Telegram.",
+  pay: "Спасибо, заявку записали. Откройте её по кнопке ниже: там детали и следующий шаг. Специалист свяжется с вами здесь, в Telegram.",
   amount: AMOUNT.default,
   repeatDiscount: REPEAT_DISCOUNT.default,
-  paid: "Оплата прошла, спасибо! Специалист напишет вам в Telegram с 06:00 до 19:00 по Москве.",
+  paid: "Спасибо! В ближайшее время с вами свяжется наш специалист.",
   terms: "",
   extras: [],
 };
@@ -108,7 +109,7 @@ export function setupProblems(s: Setup): string[] {
   const texts: [string, string][] = [
     ["Приветствие", s.greet],
     ["Вопрос «что случилось»", s.ask],
-    ["Текст со счётом", s.pay],
+    ["Текст со ссылкой на заявку", s.pay],
     ["Текст после оплаты", s.paid],
   ];
   for (const [name, value] of texts) {
@@ -182,14 +183,9 @@ export function repeatAmount(amount: number, discount: number): number {
   return Math.round((amount * (100 - discount)) / 100);
 }
 
-/**
- * Текст счёта с суммой этого клиента: {сумма} → «3 500 ₽». Повторному — ещё
- * строка о скидке, чтобы он видел, откуда цена.
- */
-export function payText(text: string, amount: number, full: number, discount: number): string {
-  const body = text.split(SUM_MARK).join(rub(amount)).split(SUM_MARK_LATIN).join(rub(amount));
-  if (amount >= full) return body;
-  return `Вы уже обращались к нам, поэтому скидка ${discount}%: ${rub(amount)} вместо ${rub(full)}.\n\n${body}`;
+/** Текст шага со ссылкой на заявку: {сумма} → сумма этого клиента. */
+export function payText(text: string, amount: number): string {
+  return text.split(SUM_MARK).join(rub(amount)).split(SUM_MARK_LATIN).join(rub(amount));
 }
 
 /** Сумма в тексте: «5 000 ₽». */
