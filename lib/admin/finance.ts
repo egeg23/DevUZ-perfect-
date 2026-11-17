@@ -121,6 +121,20 @@ export const HEAD_TEAM_PERCENT = 5;
 export const AGENCY_FINDER_PERCENT = 5;
 export const AGENCY_FINDER_MONTHS = 12;
 
+/**
+ * Claudery — помощь с ИИ из бота (lib/claudery): тому, кто ведёт заявку,
+ * 40% с суммы, остальное — соучредителям в их пропорции. С суммы, а не с
+ * прибыли, и без строки руководителя: владелец, 17.11.2026: «менеджер
+ * получает 40% от суммы, остально получаем мы с Александром в нашей
+ * пропорции». Такие сделки не идут в счёт грейда и премии за 3 сделки
+ * (lib/admin/grade-month.ts): у них своя ставка.
+ */
+export const CLAUDERY_MANAGER_PERCENT = 40;
+
+export function isClaudery(project: { product?: string | null }): boolean {
+  return project.product === "claudery";
+}
+
 /** Налог по умолчанию для нового проекта; правится в каждом. */
 export const DEFAULT_TAX_PERCENT = 4;
 
@@ -159,6 +173,8 @@ export type ProjectMoney = {
    * нет — строки «за агентство» нет.
    */
   agency_finder?: string | null;
+  /** Продукт со своими правилами денег: «claudery» — CLAUDERY_MANAGER_PERCENT. */
+  product?: string | null;
 };
 
 export type PaymentMoney = { project_id: string; amount_usd: number };
@@ -268,6 +284,24 @@ export function accrualsOf(
   const state = accrualState(project, paidOf(project.id, payments));
   const fromAgency = agencyLine(project, state);
   if (!owner || profit === null) return fromAgency ? [fromAgency] : [];
+
+  if (isClaudery(project)) {
+    // 40% с суммы ведущему; руководителю строки нет — остальное соучредителям.
+    const manual = shares.get(owner.id);
+    const percent = manual ?? CLAUDERY_MANAGER_PERCENT;
+    const sum = Math.max(0, project.amount_usd ?? 0);
+    return [
+      {
+        project_id: project.id,
+        staff_id: owner.id,
+        share: "owner",
+        percent,
+        manual: manual !== undefined,
+        amount_usd: state === "void" ? 0 : Math.round((sum * percent) / 100),
+        state,
+      },
+    ];
+  }
 
   const base = Math.max(0, profit);
   const line = (staffId: string, share: Accrual["share"], byRule: number): Accrual => {

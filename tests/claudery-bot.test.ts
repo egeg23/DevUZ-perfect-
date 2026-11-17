@@ -148,3 +148,30 @@ test("повторное обращение: кто уже оплачивал �
   assert.doesNotMatch(g.sent.at(-1)!.text, /скидка/);
   assert.match(read("lib/claudery/store.ts"), /payload->>status", "paid"/);
 });
+
+test("оплата Claudery в деньгах: ведущему 40% с суммы, без руководителя, остальное соучредителям, не в грейд", async () => {
+  const { accrualsOf, foundersPool, CLAUDERY_MANAGER_PERCENT } = await import("@/lib/admin/finance");
+  const { gradeBook } = await import("@/lib/admin/grade-month");
+  const { usdOf, usdRateFromCbr } = await import("@/lib/claudery/money");
+  assert.equal(CLAUDERY_MANAGER_PERCENT, 40);
+  const earners = new Map([
+    ["m", { id: "m", grade: "manager" as const, rate_percent: null, head_staff_id: "h", founder_percent: null }],
+    ["h", { id: "h", grade: "head" as const, rate_percent: null, head_staff_id: null, founder_percent: null }],
+  ]);
+  const project = { id: "p", owner_staff_id: "m", kind: "new" as const, amount_usd: 60, tax_percent: 6, dev_cost_usd: 0, stage: "build", product: "claudery" };
+  const pay = [{ project_id: "p", amount_usd: 60 }];
+  const lines = accrualsOf(project, pay, earners);
+  assert.deepEqual(lines.map((l) => [l.staff_id, l.percent, l.amount_usd, l.state]), [["m", 40, 24, "earned"]]);
+  // Остаток студии — прибыль минус 40%: он и делится между соучредителями.
+  assert.equal(foundersPool([project], pay, lines, []).pool, 60 - 4 - 24);
+  // Лид ещё ничей — всё соучредителям.
+  assert.deepEqual(accrualsOf({ ...project, owner_staff_id: null }, pay, earners), []);
+  const book = gradeBook([project], [{ ...pay[0], paid_on: "2026-11-17" }], new Date("2026-11-17T12:00:00Z"));
+  assert.equal(book.counts.size, 0);
+  assert.equal(usdOf(5000, 92.5), 54);
+  assert.equal(usdRateFromCbr("<Valute><NumCode>840</NumCode><CharCode>USD</CharCode><Nominal>1</Nominal><Name>Доллар США</Name><Value>92,5012</Value></Valute>"), 92.5012);
+  assert.equal(usdRateFromCbr("<x/>"), null);
+  // Проект заводит оплата, ведущего ставит взявший лид (триггер миграции).
+  assert.match(read("lib/claudery/store.ts"), /paidProject\(pay, now\)/);
+  assert.match(read("supabase/migrations/0189_claudery_projects.sql"), /after update of assigned_staff_id on public\.leads/);
+});

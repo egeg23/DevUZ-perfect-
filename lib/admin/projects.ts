@@ -77,10 +77,12 @@ export type Project = {
   quote: QuoteInput | null;
   /** Кто привёл агентство, чей это проект, — 5% с суммы (ставит loadLedger, lib/partners/rules.ts agencyFinder). */
   agency_finder?: string | null;
+  /** «claudery» — оплата из бота Claudery: ведущему 40% с суммы (lib/admin/finance.ts). */
+  product: string | null;
 };
 
 const COLUMNS =
-  "id, created_at, title, client, lead_id, owner_staff_id, stage, stage_since, started_at, deadline, amount_usd, notes, kind, tax_percent, dev_cost_usd, partner_id, partner_percent, partner_void_reason, partner_model, partner_agency_id, partner_payout_id, partner_bonus_percent, quote, staff!projects_owner_staff_id_fkey(display_name)";
+  "id, created_at, title, client, lead_id, owner_staff_id, stage, stage_since, started_at, deadline, amount_usd, notes, kind, tax_percent, dev_cost_usd, partner_id, partner_percent, partner_void_reason, partner_model, partner_agency_id, partner_payout_id, partner_bonus_percent, quote, product, staff!projects_owner_staff_id_fkey(display_name)";
 
 function shape(row: Record<string, unknown>): Project {
   // Связанная запись приходит объектом или массивом — PostgREST выводит
@@ -117,6 +119,7 @@ function shape(row: Record<string, unknown>): Project {
     partner_payout_id: (row.partner_payout_id as string | null) ?? null,
     partner_bonus_percent: (row.partner_bonus_percent as number | null) ?? null,
     quote: parseQuote(row.quote),
+    product: (row.product as string | null) ?? null,
   };
 }
 

@@ -228,7 +228,7 @@ export async function gradeBookAll(now: Date = new Date()): Promise<GradeBook> {
   const db = serviceClient();
   if (!db) return gradeBook([], [], now);
   const [projects, payments] = await Promise.all([
-    db.from("projects").select("id, owner_staff_id, stage").not("owner_staff_id", "is", null).limit(5000),
+    db.from("projects").select("id, owner_staff_id, stage, product").not("owner_staff_id", "is", null).limit(5000),
     db.from("project_payments").select("project_id, amount_usd, paid_on").limit(20000),
   ]);
   return gradeBook(
@@ -236,6 +236,7 @@ export async function gradeBookAll(now: Date = new Date()): Promise<GradeBook> {
       id: String(r.id),
       owner_staff_id: (r.owner_staff_id as string | null) ?? null,
       stage: String(r.stage ?? ""),
+      product: (r.product as string | null) ?? null,
     })),
     ((payments.data ?? []) as Record<string, unknown>[]).map((r) => ({
       project_id: String(r.project_id),
