@@ -10,6 +10,7 @@ import { makeBlocks, SCENE } from "./blocks.mjs";
 import { makeLaunch } from "./launch.mjs";
 import { CATALOG, AREAS as AREA_KEYS } from "./app/lib/catalog.mjs";
 import { PACK_LANGS } from "./app/lib/catalog-tr.mjs";
+import { HERO_SLOTS, heroStyle } from "./app/lib/hero.mjs";
 
 /*
  * Макет корпоративного сайта CZECHFARM (фармацевтическая компания) по ТЗ
@@ -333,18 +334,12 @@ const areaName = (l, k) => T(l)(...AREA_NAMES[k]);
 /* Шапка «Продуктов»: настоящие упаковки на стеклянных подиумах сцены
    Higgsfield (products/hero*). Места — доли кадра: d — компьютер 16:9,
    m — телефон 9:16; без d на компьютере не стоит. */
-const HERO_PACKS = [
-  { key: "elstar", d: 1, m: 3 },
-  { key: "dilargo-caps", d: 2, m: 1 },
-  { key: "mozeks", d: 3, m: 4 },
-  { key: "kardon-o2", d: 0, m: 2 },
-];
 
 function productsLive(l) {
   const t = T(l);
   const P = `${IMG}/products`;
   const n = CATALOG.length;
-  const packs = HERO_PACKS.map((x, i) => { const f = PACK_LANGS[x.key]?.includes(l) ? `${x.key}-${l}` : x.key; return `<span class="pk pk-d${x.d} pk-m${x.m}" aria-hidden="true"><img src="${P}/${f}-480.webp?v=${PACK_V}" srcset="${P}/${f}-480.webp?v=${PACK_V} 480w, ${P}/${f}-960.webp?v=${PACK_V} 960w" sizes="(max-width: 760px) 30vw, 14vw" alt="" decoding="async"${i < 2 ? ' fetchpriority="high"' : ""}></span>`; }).join("");
+  const packs = HERO_SLOTS.map((x, i) => { const f = PACK_LANGS[x.key]?.includes(l) ? `${x.key}-${l}` : x.key; return `<span class="pk pk-d${x.d.n} pk-m${x.m.n}" data-slot="${i}" style="${heroStyle(x)}" aria-hidden="true"><img src="${P}/${f}-480.webp?v=${PACK_V}" srcset="${P}/${f}-480.webp?v=${PACK_V} 480w, ${P}/${f}-960.webp?v=${PACK_V} 960w" sizes="(max-width: 760px) 30vw, 14vw" alt="" decoding="async"${i < 2 ? ' fetchpriority="high"' : ""}></span>`; }).join("");
   return [`<section class="pf-hero" id="pf-hero"><div class="pf-scene" aria-hidden="true"><picture><source media="(max-width: 760px)" srcset="${P}/hero-m-1080.webp 603w, ${P}/hero-m-1600.webp 893w" sizes="100vw"><img src="${P}/hero-2400.webp" srcset="${P}/hero-1400.webp 1400w, ${P}/hero-2400.webp 2400w" sizes="100vw" alt="" fetchpriority="high"></picture>${packs}</div>
 <div class="wrap pf-in"><p class="crumbs"><a href="${href(l)}">CZECHFARM</a> / ${navName("products", l)}</p>
 <h1 class="rise">${t("Наши <b>продукты</b>", "Bizning <b>mahsulotlarimiz</b>", "Our <b>products</b>")}</h1>

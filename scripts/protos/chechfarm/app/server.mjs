@@ -6,10 +6,11 @@ import { createServer } from "node:http";
 import { gzipSync } from "node:zlib";
 import { createReadStream, existsSync, statSync, readFileSync, mkdirSync, writeFileSync, unlinkSync } from "node:fs";
 import { createHash } from "node:crypto";
-import { extname, join, normalize, resolve, sep } from "node:path";
+import { basename, extname, join, normalize, resolve, sep } from "node:path";
 import { openDb } from "./lib/db.mjs";
 import { makeCore, ROLES, STATUS, KINDS, LANGS, PAGES, CONTACT_KEYS, SEGMENTS, ACC_STATUS } from "./lib/core.mjs";
 import { sameSecret } from "./lib/crypt.mjs";
+import { HERO_SLOTS, heroStyle, imageSize } from "./lib/hero.mjs";
 import { blocksOf, applyTexts, applyImages, orderBlocks, hideBlocks } from "./lib/site-text.mjs";
 
 const MIME = {
@@ -17,6 +18,7 @@ const MIME = {
   ".json": "application/json; charset=utf-8", ".webp": "image/webp", ".png": "image/png", ".jpg": "image/jpeg",
   ".svg": "image/svg+xml", ".mp4": "video/mp4", ".ico": "image/x-icon", ".txt": "text/plain; charset=utf-8", ".xml": "application/xml",
   ".pdf": "application/pdf", ".bin": "application/octet-stream",
+  ".wasm": "application/wasm", ".mjs": "text/javascript; charset=utf-8", ".onnx": "application/octet-stream",
 };
 const COOKIE = "cf_s", ACOOKIE = "cf_a";
 const SITE_PAGES = ["", "about", "products", "partners", "investors", "news", "contacts", "privacy", "account"];
@@ -128,6 +130,28 @@ export function createApp({ core, siteDir, adminDir, dataDir = "", setupCode = "
     const stale = Object.values(own).filter((r) => !known.has(r.h)).map((r) => ({ h: r.h, def: r.def, val: r.v, img: r.h[0] === "i" }));
     return { lang, page: pg, blocks: list, hidden: star ? [] : core.site.hidden(pg), order, stale };
   }
+  /* Шапка «Продуктов»: на подиум встаёт упаковка, выбранная в панели;
+     ширина — по её пропорциям в рамке места (hero.mjs). */
+  function imgFile(u) {
+    if (u.startsWith("/uploads/") && uploadsDir) return join(uploadsDir, basename(u));
+    if (/^\/protos\/chechfarm\/products\/[\w-]+\.webp$/.test(u)) return join(siteDir, u);
+    return "";
+  }
+  function heroPacks(html, lang) {
+    const slots = core.hero.get();
+    if (!slots.some((x) => x)) return html;
+    const prod = new Map(core.live(lang).prod.map((p) => [p.id, p]));
+    slots.forEach((id, i) => {
+      const p = id && prod.get(id), slot = HERO_SLOTS[i];
+      if (!p?.img || !slot) return;
+      const f = imgFile(p.img), sz = f && existsSync(f) ? imageSize(readFileSync(f)) : null;
+      const m = /^(\/protos\/chechfarm\/products\/[\w-]+)-960\.webp$/.exec(p.img), v = core.version();
+      const img = m ? `<img src="${m[1]}-480.webp?h=${v}" srcset="${m[1]}-480.webp?h=${v} 480w, ${m[1]}-960.webp?h=${v} 960w" sizes="(max-width: 760px) 30vw, 14vw" alt="" decoding="async">` : `<img src="${esc(p.img)}" alt="" decoding="async">`;
+      const span = `<span class="pk pk-d${slot.d.n} pk-m${slot.m.n}" data-slot="${i}" style="${heroStyle(slot, sz ? sz.h / sz.w : 0)}" aria-hidden="true">${img}</span>`;
+      html = html.replace(new RegExp(`<span class="pk [^"]*" data-slot="${i}"[^>]*>[\\s\\S]*?</span>`), () => span);
+    });
+    return html;
+  }
   let cache = new Map(), seen = 0;
   function page(lang, pg) {
     if (core.version() !== seen) { cache = new Map(); seen = core.version(); }
@@ -140,6 +164,7 @@ export function createApp({ core, siteDir, adminDir, dataDir = "", setupCode = "
         const own = core.site.texts(lang, pg || "home");
         html = hideBlocks(orderBlocks(applyImages(applyTexts(html, own), own), core.site.order(pg || "home")), core.site.hidden(pg || "home"));
         html = html.replace('"live":null', '"live":' + JSON.stringify(core.live(lang)).replace(/</g, "\\u003c"));
+        if (pg === "products") html = heroPacks(html, lang);
         const s = core.seoFor(lang, pg || "home");
         if (s?.t) html = html.replace(/<title>[^<]*<\/title>/, `<title>${esc(s.t)}</title>`).replace(/(<meta property="og:title" content=")[^"]*"/, `$1${esc(s.t)}"`);
         if (s?.d) html = html.replace(/(<meta name="description" content=")[^"]*"/, `$1${esc(s.d)}"`).replace(/(<meta property="og:description" content=")[^"]*"/, `$1${esc(s.d)}"`);
@@ -207,7 +232,9 @@ export function createApp({ core, siteDir, adminDir, dataDir = "", setupCode = "
     if (M === "POST" && /^\/leads\/\d+\/reply$/.test(path)) { await core.leads.reply(user, id, (await body(req)).text); return core.leads.get(user, id); }
 
     /* Продукты и новости — любой сотрудник. */
-    if (M === "GET" && path === "/products") return { products: core.products.list() };
+    if (M === "GET" && path === "/products") return { products: core.products.list(), hero: core.hero.get(), heroSlots: HERO_SLOTS.map((x) => ({ key: x.key, where: x.where })) };
+    /* Упаковки на подиумах шапки «Продуктов» — руководитель и владелец. */
+    if (M === "POST" && path === "/hero") { lead(); return { hero: core.hero.save((await body(req)).slots, who) }; }
     if (M === "POST" && (path === "/products" || /^\/products\/\d+$/.test(path))) { const nid = core.products.save(id, await body(req), who); return { id: nid, products: core.products.list() }; }
     if (M === "POST" && /^\/products\/\d+\/(pub|unpub|del)$/.test(path)) { const a = path.split("/")[3]; if (a === "del") core.products.remove(id, who); else core.products.publish(id, a === "pub", who); return { products: core.products.list() }; }
     if (M === "GET" && path === "/news") return { news: core.news.list() };
@@ -356,9 +383,11 @@ export function createApp({ core, siteDir, adminDir, dataDir = "", setupCode = "
       const p = decodeURIComponent(url.pathname);
       if (p === "/admin" || p === "/admin/") {
         res.setHeader("X-Frame-Options", "DENY");
-        res.setHeader("Content-Security-Policy", "default-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self'; frame-src https:; frame-ancestors 'none'; base-uri 'none'; form-action 'self'");
+        res.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self'; frame-src https:; frame-ancestors 'none'; base-uri 'none'; form-action 'self'");
         return staticFile(req, res, adminDir, "index.html", "no-cache") || send(res, 404, "Нет панели");
       }
+      /* Движок и модель вырезки фона: имена с версией, браузер качает их один раз. */
+      if (p.startsWith("/admin/cut/")) return staticFile(req, res, adminDir, p.slice(7), "public, max-age=31536000, immutable") || send(res, 404, "Нет файла");
       if (p.startsWith("/admin/")) return staticFile(req, res, adminDir, p.slice(7), "no-cache") || send(res, 404, "Нет файла");
       /* Ключ кадров сцены первого экрана: только своей странице. */
       if (p === "/promo/scene") {

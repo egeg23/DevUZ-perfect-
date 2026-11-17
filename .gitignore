@@ -27,3 +27,6 @@ scripts/protos/*/.before/
 
 # Карта кода graphify — строится в каждой сессии заново
 graphify-out/
+
+# Вырезка фона в панели CZECHFARM: движок и модель качает сборка (deploy/cut-assets.sh)
+scripts/protos/chechfarm/app/admin/cut/
