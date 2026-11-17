@@ -70,6 +70,8 @@ jobs:
           mkdir -p scripts/protos/chechfarm/app/site/protos
           cp -r public/protos/chechfarm scripts/protos/chechfarm/app/site/protos/
           du -sh scripts/protos/chechfarm/app/site
+      - name: Вырезка фона в панели — движок и модель
+        run: bash scripts/protos/chechfarm/app/deploy/cut-assets.sh
       - name: Сервер отдаёт сайт и панель
         working-directory: scripts/protos/chechfarm/app
         run: |
@@ -79,6 +81,8 @@ jobs:
           curl -fsS http://127.0.0.1:3999/ar/ | grep -q 'dir="rtl"'
           curl -fsS http://127.0.0.1:3999/en/products | grep -q '"live":{'
           curl -fsS http://127.0.0.1:3999/admin | grep -q "/admin/app.js"
+          curl -fsSI http://127.0.0.1:3999/admin/cut/silueta-75da6c8d.onnx | grep -qi "immutable"
+          curl -fsSI http://127.0.0.1:3999/admin/cut/ort-1.30.0/ort-wasm-simd-threaded.wasm | grep -qi "application/wasm"
           curl -fsS -o /dev/null http://127.0.0.1:3999/protos/chechfarm/seq/p-d-0.webp
           curl -fsS http://127.0.0.1:3999/api/admin/state | grep -q '"setup":true'
           kill %1

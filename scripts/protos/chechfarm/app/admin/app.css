@@ -139,3 +139,15 @@ ul{padding-left:20px}li{margin:3px 0}
 .pgi{display:grid;grid-template-columns:200px minmax(0,1fr);gap:14px;align-items:center;margin-bottom:14px}
 .pgi img{width:200px;height:120px;object-fit:cover;border-radius:10px;border:1px solid var(--line);background:rgb(255 255 255 / .06)}
 @media (max-width:600px){.pgi{grid-template-columns:1fr}.pgi img{width:100%;height:auto;max-height:200px}}
+
+/* Фото упаковки: вырезка на подиуме направления, как в каталоге сайта */
+.cutbox{display:grid;grid-template-columns:minmax(0,240px) minmax(0,1fr);gap:18px;align-items:start}
+.cutst{position:relative;aspect-ratio:4/5;border-radius:16px;overflow:hidden;background:#d9e3e0 url(/protos/chechfarm/products/bg-neuro-700.webp) center/cover no-repeat}
+.cutst.cut-cardio{background-image:url(/protos/chechfarm/products/bg-cardio-700.webp)}
+.cutst.cut-uro{background-image:url(/protos/chechfarm/products/bg-uro-700.webp)}
+.cutst.cut-women{background-image:url(/protos/chechfarm/products/bg-women-700.webp)}
+.cutst.cut-endo{background-image:url(/protos/chechfarm/products/bg-endo-700.webp)}
+.cutst.cut-care{background-image:url(/protos/chechfarm/products/bg-care-700.webp)}
+.cutst canvas{position:absolute;left:8%;bottom:25%;width:84%;height:56%;object-fit:contain;object-position:50% 100%;filter:drop-shadow(0 14px 14px rgb(0 0 0 / .28)) drop-shadow(0 2px 2px rgb(0 0 0 / .18))}
+.cutwait{position:absolute;inset:auto 10px 10px;padding:8px 10px;border-radius:12px;background:rgb(4 16 15 / .78);color:#fff;font-size:13px}
+@media (max-width:640px){.cutbox{grid-template-columns:1fr}.cutst{max-width:280px}}

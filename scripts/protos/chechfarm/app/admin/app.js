@@ -158,13 +158,31 @@
   function products(main) {
     return api("/products").then(function (j) {
       var b = head(main, "Продукты", '<button class="btn pri" id="padd">Добавить продукт</button>');
-      b.innerHTML = '<p class="note">Карточка появляется в каталоге на сайте после «Опубликовать». Названия и вещества — как в инструкции, на всех языках сайта одинаково. Портфель из таблицы компании уже здесь и на сайте: карточку можно править, снять или удалить, удалённая сама не вернётся.</p><div id="pe"></div>' + (j.products.length ? '<table class="resp"><thead><tr><th></th><th>Название</th><th>Вещество</th><th>Направление</th><th>На сайте</th><th></th></tr></thead><tbody>' + j.products.map(function (p) {
+      b.innerHTML = '<div id="phero"></div><p class="note">Карточка появляется в каталоге на сайте после «Опубликовать». Названия и вещества — как в инструкции, на всех языках сайта одинаково. Портфель из таблицы компании уже здесь и на сайте: карточку можно править, снять или удалить, удалённая сама не вернётся.</p><div id="pe"></div>' + (j.products.length ? '<table class="resp"><thead><tr><th></th><th>Название</th><th>Вещество</th><th>Направление</th><th>На сайте</th><th></th></tr></thead><tbody>' + j.products.map(function (p) {
         return "<tr><td>" + (p.img ? '<img class="thumb" src="' + h(p.img) + '" alt="">' : "") + "</td><td><b>" + h(p.name) + "</b></td><td>" + h(p.inn) + "</td><td>" + h(AREA_NAME[p.area] || p.dir) + '</td><td><span class="pill ' + (p.pub ? "done" : "off") + '">' + (p.pub ? "опубликован" : "черновик") + '</span></td><td class="row"><button class="btn" data-e="' + p.id + '">Изменить</button><button class="btn" data-p="' + p.id + '">' + (p.pub ? "Снять" : "Опубликовать") + '</button><button class="btn warn" data-d="' + p.id + '">Удалить</button></td></tr>';
       }).join("") + "</tbody></table>" : '<div class="card note">Продуктов пока нет.</div>');
       $("#padd").addEventListener("click", function () { editProduct(main, null); });
+      heroBox(main, j);
       $$("[data-e]", b).forEach(function (x) { x.addEventListener("click", function () { editProduct(main, j.products.filter(function (p) { return p.id === +x.getAttribute("data-e"); })[0]); }); });
       $$("[data-p]", b).forEach(function (x) { var p = j.products.filter(function (q) { return q.id === +x.getAttribute("data-p"); })[0]; x.addEventListener("click", function () { api("/products/" + p.id + "/" + (p.pub ? "unpub" : "pub"), {}).then(function () { toast(p.pub ? "Снято с сайта" : "Опубликовано"); products(main); }).catch(fail); }); });
       $$("[data-d]", b).forEach(function (x) { x.addEventListener("click", function () { if (confirm("Удалить продукт совсем?")) api("/products/" + x.getAttribute("data-d") + "/del", {}).then(function () { products(main); }).catch(fail); }); });
+    });
+  }
+  /* Подиумы шапки страницы «Продукты»: какой препарат где стоит. */
+  function heroBox(main, j) {
+    var box = $("#phero"); if (!box || !j.heroSlots) return;
+    var ok = j.products.filter(function (p) { return p.pub && p.img; }), byKey = {};
+    j.products.forEach(function (p) { if (p.key) byKey[p.key] = p; });
+    var ro = staff() ? "" : " disabled";
+    box.innerHTML = '<details class="card grid"' + (j.hero.some(function (x) { return x; }) ? " open" : "") + '><summary><b>Подиумы в шапке страницы «Продукты»</b> <span class="note">какие упаковки стоят на стеклянных подиумах</span></summary>' +
+      '<p class="note">Упаковка встаёт на свой подиум по своим пропорциям: высокая не вылезет за край, широкая не свесится. В списке опубликованные продукты с фото. Лучше всего смотрятся упаковки, вырезанные здесь же, в «Фото упаковки».' + (ro ? " Менять может руководитель или владелец." : "") + '</p><div class="grid g2">' +
+      j.heroSlots.map(function (s, i) {
+        var def = byKey[s.key];
+        return '<label class="f">Место ' + (i + 1) + ': ' + h(s.where) + '<select data-hero="' + i + '"' + ro + '><option value="">как было' + (def ? ": " + h(def.name) : "") + "</option>" + ok.map(function (p) { return '<option value="' + p.id + '"' + (j.hero[i] === p.id ? " selected" : "") + ">" + h(p.name) + "</option>"; }).join("") + "</select></label>";
+      }).join("") + '</div>' + (ro ? "" : '<div class="row"><button class="btn pri" id="hsave">Сохранить подиумы</button><a class="btn" href="/products" target="_blank" rel="noopener">Открыть страницу</a></div>') + "</details>";
+    $("#hsave") && $("#hsave").addEventListener("click", function () {
+      var slots = $$("[data-hero]", box).map(function (x) { return x.value ? +x.value : null; });
+      api("/hero", { slots: slots }).then(function () { toast("Подиумы сохранены, страница «Продукты» уже с ними"); }).catch(fail);
     });
   }
   function editProduct(main, p) {
@@ -175,14 +193,39 @@
       '<label class="f">Состав (если отличается от вещества)<textarea data-k="comp">' + h(p.comp) + "</textarea></label>" +
       '<label class="f">Описание (необязательно)<textarea data-k="about">' + h(p.about) + "</textarea></label>" +
       '<div class="grid g2"><label class="f">Инструкция PDF ' + (p.doc ? '(<a href="' + h(p.doc) + '" target="_blank">загружена</a>)' : "") + '<input type="file" accept="application/pdf" id="pdoc"></label><label class="f">Фото упаковки ' + (p.img ? "(загружено)" : "") + '<input type="file" accept="image/jpeg,image/png,image/webp" id="pimg"></label></div>' +
+      '<div class="cutbox" id="pcut" hidden><div class="cutst" id="pcst"><span class="cutwait" id="pcw">Готовим вырезку…</span></div><div class="grid">' +
+      '<p class="note">Фон убирается прямо в браузере, фото никуда не уходит до «Сохранить». Так упаковка встанет на подиум в каталоге. Снимайте упаковку прямо, целиком, на однотонном столе или стене.</p>' +
+      '<label class="chk"><input type="checkbox" id="pcbox" checked> Ровный контур: для коробки, флакона, тубы (белая коробка не станет дырявой)</label>' +
+      '<label class="f">Наклон, если упаковка стоит косо<input type="range" id="pcdeg" min="-15" max="15" step="0.5" value="0"></label>' +
+      '<label class="chk"><input type="checkbox" id="pcraw"> Без вырезки: фото как есть</label></div></div>' +
       '<div class="row"><button class="btn pri" id="psave">Сохранить</button><button class="btn" id="pcan">Отмена</button><span class="note">Медицинские тексты публикуйте только после согласования с ответственным.</span></div></div>';
     box.scrollIntoView({ behavior: "smooth" });
     $("#pcan").addEventListener("click", function () { box.innerHTML = ""; });
+    /* Фото упаковки: вырезка в браузере (cut.js) и показ на подиуме направления. */
+    var cut = null, cutJob = null;
+    function cutOpts() { return { box: $("#pcbox").checked, deg: +$("#pcdeg").value, raw: $("#pcraw").checked }; }
+    function cutDraw() {
+      if (!cut) return; var st = $("#pcst"), old = $("canvas", st);
+      try { var c = cut.draw(cutOpts()); if (old) old.remove(); st.appendChild(c); $("#pcw").hidden = true; } catch (e) { fail(e); }
+    }
+    function cutArea() { var a = $("[data-k=area]", box).value || p.area; $("#pcst").className = "cutst" + (AREA_NAME[a] ? " cut-" + a : ""); }
+    $("[data-k=area]", box).addEventListener("change", cutArea);
+    ["#pcbox", "#pcraw"].forEach(function (k) { $(k).addEventListener("change", cutDraw); });
+    $("#pcdeg").addEventListener("input", cutDraw);
+    $("#pimg").addEventListener("change", function () {
+      var f = this.files[0]; cut = null; if (!f) { $("#pcut").hidden = true; return; }
+      if (!window.CFCut) return;
+      $("#pcut").hidden = false; cutArea(); var w = $("#pcw"); w.hidden = false; w.textContent = "Готовим вырезку…"; var old = $("canvas", $("#pcst")); if (old) old.remove();
+      $("#psave").disabled = true;
+      cutJob = window.CFCut.open(f, function (t) { w.textContent = t; }).then(function (c) {
+        cut = c; if (c.already) $("#pcbox").checked = false; cutDraw(); $("#psave").disabled = false;
+      }, function (e) { $("#psave").disabled = false; w.textContent = "Вырезать не вышло: " + (e.message || e) + ". Сохранится фото как есть."; cut = null; });
+    });
     $("#psave").addEventListener("click", function () {
       var d = { doc: p.doc || "", img: p.img || "" }; $$("[data-k]", box).forEach(function (i) { d[i.getAttribute("data-k")] = i.value.trim(); });
       var jobs = [];
       if ($("#pdoc").files.length) jobs.push(upload($("#pdoc")).then(function (u) { d.doc = u; }));
-      if ($("#pimg").files.length) jobs.push(upload($("#pimg")).then(function (u) { d.img = u; }));
+      if ($("#pimg").files.length) jobs.push(cut ? api("/upload", { data: cut.data(cutOpts()) }).then(function (j) { d.img = j.url; }) : upload($("#pimg")).then(function (u) { d.img = u; }));
       $("#psave").disabled = true;
       Promise.all(jobs).then(function () { return api("/products" + (p.id ? "/" + p.id : ""), d); }).then(function () { toast("Сохранено. Чтобы карточка появилась на сайте, нажмите «Опубликовать»"); products(main); }).catch(function (e) { $("#psave").disabled = false; fail(e); });
     });
