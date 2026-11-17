@@ -264,6 +264,55 @@ test("czechfarm: продукты, новости, контакты и заго�
   } finally { await a.close(); }
 });
 
+/* Владелец, 17.11.2026: «дай возможность им добавлять свои товары на этот
+   подиум, но чтобы фон вырезался автоматически через бесплатный сервис».
+   Фон убирает браузер в панели (admin/cut.js, модель rembg на их сервере),
+   на сервер приходит уже вырезка; подиумы шапки выбираются в «Продуктах». */
+test("czechfarm: своя упаковка — вырезка в панели и место на подиуме шапки", async () => {
+  const { imageSize, heroStyle, HERO_SLOTS } = await load("lib/hero.mjs");
+  const PUB = new URL("../../../public/protos/chechfarm/products/", ROOT);
+  const tall = readFileSync(new URL("dilargo-caps-960.webp", PUB));
+  assert.deepEqual(imageSize(tall), { w: 420, h: 649 });
+  assert.deepEqual(imageSize(readFileSync(new URL("elstar-960.webp", PUB))), { w: 637, h: 465 });
+  /* Без выбора — те же размеры, что были; высокая в низкой рамке — уже. */
+  assert.equal(heroStyle(HERO_SLOTS[0]), "--wd:11.4%;--wm:21%");
+  assert.equal(heroStyle(HERO_SLOTS[3]), "--wm:18%");
+  assert.ok(parseFloat(heroStyle(HERO_SLOTS[0], 649 / 420).split("--wd:")[1]) < 11.4, "высокая упаковка не ужалась");
+
+  const admin = readFileSync(new URL("admin/index.html", APP), "utf8"), cut = readFileSync(new URL("admin/cut.js", APP), "utf8");
+  assert.ok(admin.indexOf("/admin/cut.js") < admin.indexOf("/admin/app.js"), "вырезка не подключена к панели");
+  assert.ok(/silueta-75da6c8d\.onnx/.test(cut) && readFileSync(new URL("deploy/cut-assets.sh", APP), "utf8").includes("silueta-75da6c8d.onnx"), "имя модели в панели и в сборке разное");
+  assert.ok(!/https?:\/\//.test(cut.replace(/\/\*[\s\S]*?\*\//g, "")), "вырезка ходит на чужой сервис");
+  assert.ok(readFileSync(new URL("../../../.github/workflows/czechfarm-app.yml", ROOT), "utf8").includes("cut-assets.sh"), "сборка не кладёт модель");
+
+  const a = await boot();
+  try {
+    await owner(a);
+    const page = await a.call("/admin");
+    assert.match(page.headers.get("content-security-policy") || "", /script-src 'self' 'wasm-unsafe-eval'/);
+    const up = await a.adminPost("/upload", { data: "data:image/webp;base64," + tall.toString("base64") });
+    const img = up.json.url;
+    assert.match(img, /^\/uploads\/[0-9a-f]{32}\.webp$/);
+    const id = (await a.adminPost("/products", { name: "Новинка-CZ", area: "neuro", img })).json.id;
+    assert.equal((await a.adminPost("/hero", { slots: [id, null, null, null] })).status, 400, "черновик встал на подиум");
+    await a.adminPost(`/products/${id}/pub`, {});
+    const bare = (await a.adminPost("/products", { name: "Без фото" })).json.id;
+    await a.adminPost(`/products/${bare}/pub`, {});
+    assert.equal((await a.adminPost("/hero", { slots: [bare, null, null, null] })).status, 400, "без фото встал на подиум");
+    assert.deepEqual((await a.adminPost("/hero", { slots: [id, null, null, null] })).json.hero, [id, null, null, null]);
+    const html = (await a.call("/products")).text;
+    const slot = /<span class="pk [^"]*" data-slot="0" style="([^"]*)"[^>]*><img src="([^"]*)"/.exec(html);
+    assert.ok(slot && slot[2] === img, "на подиуме не та упаковка");
+    assert.equal(slot![1], heroStyle(HERO_SLOTS[0], 649 / 420));
+    assert.ok(/data-slot="1" style="--wd:6\.9%;--wm:11%"[^>]*><img src="\/protos\/chechfarm\/products\/dilargo-caps/.test(html), "соседний подиум сдвинулся");
+    /* Менеджер подиумы не меняет. */
+    await a.adminPost("/users", { login: "man", name: "Менеджер", role: "manager", pass: "пароль-менеджера" });
+    a.setCookie("");
+    await a.adminPost("/login", { login: "man", pass: "пароль-менеджера" });
+    assert.equal((await a.adminPost("/hero", { slots: [null, null, null, null] })).status, 403);
+  } finally { await a.close(); }
+});
+
 /* Владелец, 16.11.2026: «Делаем раздел на новой странице у них — наши
    продукты». Портфель из таблицы компании ложится в базу сам, один раз. */
 test("czechfarm: портфель из таблицы — на сайте сразу, схема приёма только в панели, удалённое не возвращается", async () => {

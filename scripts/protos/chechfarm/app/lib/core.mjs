@@ -10,6 +10,7 @@ import { makeAudience, SEGMENTS, ACC_STATUS } from "./audience.mjs";
 import { UPLOADED } from "./site-text.mjs";
 import { CATALOG, AREAS, CATALOG_FIXES } from "./catalog.mjs";
 import { CATALOG_TR, packImg } from "./catalog-tr.mjs";
+import { HERO_SLOTS } from "./hero.mjs";
 
 export const STATUS = { new: "Новое", work: "В работе", meet: "Назначена встреча", done: "Ответ отправлен", spam: "Спам" };
 export const ROLES = { owner: "Владелец", head: "Руководитель", manager: "Менеджер" };
@@ -538,6 +539,18 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
     publish(id, on, by) { db.run("update products set pub = ? where id = ?", on ? 1 : 0, id); changed(); note(by, `${on ? "Опубликовал" : "Снял"} продукт № ${id}`); },
     remove(id, by) { db.run("delete from products where id = ?", id); changed(); note(by, `Удалил продукт № ${id}`); },
   };
+  /* Шапка «Продуктов»: какой препарат стоит на каком подиуме (места —
+     HERO_SLOTS в hero.mjs). null — тот, что стоит по умолчанию. */
+  const hero = {
+    get() { const v = json(getS("hero.slots"), []); return HERO_SLOTS.map((_, i) => (Number.isInteger(v[i]) ? v[i] : null)); },
+    save(list, by) {
+      const ok = new Map(products.list().filter((p) => p.pub && p.img).map((p) => [p.id, p.name]));
+      const v = HERO_SLOTS.map((_, i) => { const id = Number(list?.[i]); if (!id) return null; if (!ok.has(id)) throw new Error("На подиум встаёт только опубликованный продукт с фото"); return id; });
+      setS("hero.slots", v.some((x) => x) ? JSON.stringify(v) : "");
+      changed(); note(by, "Поменял упаковки на подиумах шапки «Продуктов»: " + (v.filter((x) => x).map((x) => ok.get(x)).join(", ") || "как было"));
+      return hero.get();
+    },
+  };
   /* Портфель из таблицы компании (catalog.mjs): каждая строка ложится в
      базу один раз, опубликованной. Удалённую в панели не возвращаем
      (ключ в catalog.keys), фото дописываем, если в карточке его нет. */
@@ -722,7 +735,7 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
   const log = () => db.all("select l.at, l.who, l.t, l.lead_id, ld.no from log l left join leads ld on ld.id = l.lead_id order by l.id desc limit 300");
 
   return {
-    aud, users, auth, connect, settingsView, leads, faq, products, news, seo, contacts, ir, summary, log, live, seoFor, site, botProfile,
+    aud, users, auth, connect, settingsView, leads, faq, products, hero, news, seo, contacts, ir, summary, log, live, seoFor, site, botProfile,
     hook, tgSecret: () => getS("tg.secret"), counters: () => ({ metrika: getS("seo.metrika"), yandex: getS("seo.yandex"), google: getS("seo.google") }),
     version: () => version, leadText,
   };
