@@ -24,6 +24,7 @@ import { record } from "@/lib/admin/audit";
 import { routeNewLead } from "@/lib/admin/lead-queue-store";
 import { wants } from "@/lib/admin/notify-prefs";
 import { messageWindow } from "@/lib/admin/tasks";
+import { FALLBACK_RUB_PER_USD, projectNote, usdOf, usdRateFromCbr } from "@/lib/claudery/money";
 import { handle, show, type Deps, type Flow, type Incoming, type Who } from "@/lib/claudery/flow";
 import { SETUP_KEY, parseSetup, rub, scenarioOf, stepOf, type Setup } from "@/lib/claudery/scenario";
 import { roadFetch } from "@/lib/egress.mjs";
@@ -50,6 +51,8 @@ export const PAY_WATCH_MS = 48 * 3600_000;
 const PAY_PREFIX = "claudery-pay:";
 const FLOW_PREFIX = "claudery-flow:";
 const BOT_KEY = "claudery-bot";
+const RATE_KEY = "claudery-usd-rate";
+const CBR_DAILY = "https://www.cbr.ru/scripts/XML_daily.asp";
 
 const offerUrl = () => `${siteUrl}${OFFER_PATH}`;
 
@@ -259,7 +262,71 @@ async function markPaid(txn: string, pay: Pay): Promise<void> {
     await db.from("leads").update({ notes: `${mark} ${String(data?.notes ?? "")}`.trim(), priority: "hot" }).eq("id", pay.leadId);
   }
   await record("claudery.paid", { targetType: "lead", targetId: pay.leadId, meta: { amount: pay.amount, requestNo: pay.requestNo } });
+  await paidProject(pay, now).catch((error) => console.error("claudery: проект не заведён", error));
   await tellPaid(txn, next, now);
+}
+
+/** Курс доллара ЦБ РФ; не ответил — последний сохранённый, потом запасной. */
+async function usdRate(): Promise<{ rate: number; source: "cbr" | "last" | "fallback" }> {
+  try {
+    const res = await roadFetch(CBR_DAILY, { signal: AbortSignal.timeout(10_000) });
+    if (res.ok) {
+      const rate = usdRateFromCbr(new TextDecoder("windows-1251").decode(await res.arrayBuffer()));
+      if (rate) {
+        await putSnapshot(RATE_KEY, { rate, at: new Date().toISOString() });
+        return { rate, source: "cbr" };
+      }
+    }
+  } catch (error) {
+    console.error("claudery: ЦБ не ответил", error instanceof Error ? error.message : error);
+  }
+  const last = await snapshot<{ rate?: number }>(RATE_KEY);
+  if (last?.rate && last.rate > 1) return { rate: last.rate, source: "last" };
+  return { rate: FALLBACK_RUB_PER_USD, source: "fallback" };
+}
+
+/**
+ * Оплата — проект с платежом (владелец, 17.11.2026: «Клиенты оплатившие сразу
+ * должны учитываться в доходе и зарплате менеджера и в нашей статистике»):
+ * доход, «Финансы», ступень «оплата». Ведущий — кто взял лид; лид ещё ничей —
+ * проект без ведущего, и его получит тот, кто возьмёт лид (триггер в
+ * 0189_claudery_projects.sql). Ведущему 40% с суммы (CLAUDERY_MANAGER_PERCENT).
+ * Один лид — один проект (уникальный индекс).
+ */
+async function paidProject(pay: Pay, now: Date): Promise<void> {
+  const db = serviceClient();
+  if (!db || !pay.leadId) return;
+  const { data: existing } = await db.from("projects").select("id").eq("lead_id", pay.leadId).eq("product", "claudery").maybeSingle();
+  if (existing) return;
+  const { data: lead } = await db.from("leads").select("contact_name, contact_handle, assigned_staff_id").eq("id", pay.leadId).maybeSingle();
+  const { rate, source } = await usdRate();
+  const usd = usdOf(pay.amount, rate);
+  const day = now.toISOString().slice(0, 10);
+  const client = String(lead?.contact_name || lead?.contact_handle || "клиент Claudery").slice(0, 120);
+  const { data: project, error } = await db
+    .from("projects")
+    .insert({
+      title: `Claudery · помощь с ИИ · ${pay.requestNo}`.slice(0, 200),
+      client,
+      lead_id: pay.leadId,
+      owner_staff_id: (lead?.assigned_staff_id as string | null) ?? null,
+      product: "claudery",
+      kind: "new",
+      stage: "build",
+      amount_usd: usd,
+      tax_percent: 0,
+      dev_cost_usd: 0,
+      started_at: day,
+      notes: projectNote(rub(pay.amount), rate, source, day, pay.requestNo),
+    })
+    .select("id")
+    .maybeSingle();
+  if (error || !project) {
+    console.error("claudery: проект не записался", error?.message);
+    return;
+  }
+  await db.from("project_payments").insert({ project_id: project.id, amount_usd: usd, paid_on: day, purpose: "other", note: `Platega, ${rub(pay.amount)}` });
+  await record("project.created", { targetType: "project", targetId: project.id as string, meta: { title: "Claudery", via: "claudery", amount_usd: usd } });
 }
 
 async function tellPaid(txn: string, pay: Pay, now: Date): Promise<void> {
