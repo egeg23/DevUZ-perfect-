@@ -28,6 +28,8 @@ export type Setup = {
   ask: string;
   pay: string;
   amount: number;
+  /** Скидка тому, кто уже хоть раз оплатил, % (владелец, 17.11.2026: 30%). */
+  repeatDiscount: number;
   paid: string;
   terms: string;
   extras: Extra[];
@@ -36,11 +38,21 @@ export type Setup = {
 /** Шаг бота — внутреннее устройство, собирается из Setup (`scenarioOf`). */
 export type NodeKind = "message" | "ask" | "pay";
 export type Button = { label: string; to?: string; url?: string };
-export type Step = { id: string; kind: NodeKind; text: string; buttons: Button[]; next?: string; amount?: number };
+export type Step = { id: string; kind: NodeKind; text: string; buttons: Button[]; next?: string; amount?: number; discount?: number };
 export type Scenario = { start: string; terms: string; steps: Step[] };
 
 export const LIMITS = { text: 3500, label: 60, terms: 6000, extras: 4 } as const;
 export const AMOUNT = { min: 100, max: 1_000_000, default: 5000 } as const;
+/**
+ * Повторное обращение — скидка (владелец, 17.11.2026: «Повторное обращение
+ * по любой проблеме даем скидку тому кто уже оплачивал хоть раз в размере
+ * 30%. (3500₽)»). В тексте счёта сумма стоит знаком {сумма}: бот подставит
+ * ту, что выставлена этому клиенту.
+ */
+export const REPEAT_DISCOUNT = { min: 0, max: 90, default: 30 } as const;
+export const SUM_MARK = "{сумма}";
+/** То же знаком латиницей — для инструкции на узбекском и польском. */
+export const SUM_MARK_LATIN = "{sum}";
 export const SETUP_KEY = "claudery-setup";
 /** Назначение платежа в Platega (владелец, 17.11.2026). */
 export const PAY_PURPOSE = "Claudery: удалённая помощь";
@@ -51,8 +63,9 @@ export const DEFAULT_SETUP: Setup = {
     "Здравствуйте! Это Claudery: удалённая помощь с нейросетями и ИИ-сервисами. Нажмите кнопку, расскажите, что не получается, и специалист поможет.",
   helpLabel: "🆘 Нужна помощь",
   ask: "Что случилось? Опишите одним сообщением. Можно приложить скриншот.",
-  pay: "Спасибо, заявку записали. Стоимость помощи — 5 000 ₽. Оплатите по кнопке ниже: как только оплата пройдёт, специалист напишет вам здесь в Telegram.",
+  pay: "Спасибо, заявку записали. Стоимость помощи — {сумма}. Оплатите по кнопке ниже: как только оплата пройдёт, специалист напишет вам здесь в Telegram.",
   amount: AMOUNT.default,
+  repeatDiscount: REPEAT_DISCOUNT.default,
   paid: "Оплата прошла, спасибо! Специалист напишет вам в Telegram с 06:00 до 19:00 по Москве.",
   terms: "",
   extras: [],
@@ -78,7 +91,7 @@ export function scenarioOf(s: Setup): Scenario {
         ],
       },
       { id: "ask", kind: "ask", text: s.ask, buttons: [], next: "pay" },
-      { id: "pay", kind: "pay", text: s.pay, buttons: [], next: "paid", amount: s.amount },
+      { id: "pay", kind: "pay", text: s.pay, buttons: [], next: "paid", amount: s.amount, discount: s.repeatDiscount },
       { id: "paid", kind: "message", text: s.paid, buttons: [] },
       ...extras,
     ],
@@ -104,6 +117,8 @@ export function setupProblems(s: Setup): string[] {
   }
   if (!s.helpLabel.trim() || s.helpLabel.length > LIMITS.label) out.push(`Главная кнопка: от 1 до ${LIMITS.label} знаков.`);
   if (!Number.isInteger(s.amount) || s.amount < AMOUNT.min || s.amount > AMOUNT.max) out.push(`Сумма: от ${AMOUNT.min} до ${AMOUNT.max} ₽.`);
+  if (!Number.isInteger(s.repeatDiscount) || s.repeatDiscount < REPEAT_DISCOUNT.min || s.repeatDiscount > REPEAT_DISCOUNT.max)
+    out.push(`Скидка повторным: от ${REPEAT_DISCOUNT.min} до ${REPEAT_DISCOUNT.max}%.`);
   if (s.terms.length > LIMITS.terms) out.push(`Условия длиннее ${LIMITS.terms} знаков.`);
   if (s.extras.length > LIMITS.extras) out.push(`Своих кнопок больше ${LIMITS.extras}.`);
   s.extras.forEach((e, i) => {
@@ -127,6 +142,7 @@ export function parseSetup(raw: unknown): Setup {
     ask: typeof r.ask === "string" ? r.ask : DEFAULT_SETUP.ask,
     pay: typeof r.pay === "string" ? r.pay : DEFAULT_SETUP.pay,
     amount: typeof r.amount === "number" ? r.amount : DEFAULT_SETUP.amount,
+    repeatDiscount: typeof r.repeatDiscount === "number" ? r.repeatDiscount : DEFAULT_SETUP.repeatDiscount,
     paid: typeof r.paid === "string" ? r.paid : DEFAULT_SETUP.paid,
     terms: typeof r.terms === "string" ? r.terms : "",
     extras: Array.isArray(r.extras) ? (r.extras as Extra[]) : [],
@@ -147,16 +163,33 @@ export function setupFromForm(form: FormData): Setup {
     extras.push({ label, ...(answer ? { answer } : {}), ...(url ? { url } : {}) });
   }
   const amount = Number(str(form.get("amount")).replace(/\s/g, ""));
+  const discount = Number(str(form.get("repeatDiscount")).replace(/[\s%]/g, "") || "0");
   return {
     greet: str(form.get("greet")),
     helpLabel: str(form.get("helpLabel")),
     ask: str(form.get("ask")),
     pay: str(form.get("pay")),
     amount: Number.isFinite(amount) ? Math.round(amount) : 0,
+    repeatDiscount: Number.isFinite(discount) ? Math.round(discount) : -1,
     paid: str(form.get("paid")),
     terms: str(form.get("terms")),
     extras,
   };
+}
+
+/** Сумма для того, кто уже оплачивал: со скидкой, целыми рублями. */
+export function repeatAmount(amount: number, discount: number): number {
+  return Math.round((amount * (100 - discount)) / 100);
+}
+
+/**
+ * Текст счёта с суммой этого клиента: {сумма} → «3 500 ₽». Повторному — ещё
+ * строка о скидке, чтобы он видел, откуда цена.
+ */
+export function payText(text: string, amount: number, full: number, discount: number): string {
+  const body = text.split(SUM_MARK).join(rub(amount)).split(SUM_MARK_LATIN).join(rub(amount));
+  if (amount >= full) return body;
+  return `Вы уже обращались к нам, поэтому скидка ${discount}%: ${rub(amount)} вместо ${rub(full)}.\n\n${body}`;
 }
 
 /** Сумма в тексте: «5 000 ₽». */

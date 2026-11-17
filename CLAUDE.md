@@ -313,6 +313,11 @@ https://devuz.studio/sia-cms/admin.
   Настройки — stats_snapshots `claudery-setup` (`Setup`, `scenarioOf`,
   `setupProblems` в `lib/claudery/scenario.ts`), меняют владелец и
   руководитель, журнал `claudery.scenario_saved`. Гарантий в коде не пишем.
+  **Повторное обращение — скидка** (владелец, 17.11.2026: «скидку тому кто
+  уже оплачивал хоть раз в размере 30%. (3500₽)»): у чата есть платёж,
+  подтверждённый Platega (`paidBefore`), — счёт на `repeatDiscount`%
+  меньше (`repeatAmount`) и строка о скидке; сумма в тексте счёта — знаком
+  `{сумма}` (`payText`).
   Модели нет. Время ответа клиенту — по Москве.
 - **Бот** — `lib/claudery/flow.ts` (решения), `store.ts` (Telegram, база,
   Platega). Обновления забирает поллер `deploy/devuz-claudery-bot.service`

@@ -148,6 +148,10 @@ export default async function AiStaffClauderyPage({ searchParams }: { searchPara
                   {t.amount}
                   <input name="amount" inputMode="numeric" defaultValue={setup.amount} className={INPUT} />
                 </label>
+                <label className="block max-w-[16rem] text-xs text-muted">
+                  {t.repeatDiscount}
+                  <input name="repeatDiscount" inputMode="numeric" defaultValue={setup.repeatDiscount} className={INPUT} />
+                </label>
               </div>
               <div className={STEP}>
                 <p className={STEP_TITLE}>{t.s4}</p>
