@@ -376,7 +376,12 @@ if [ -n "${DEPLOY_IMAGE:-}" ] && [ "$(uname -m)" = "x86_64" ]; then
     printf '%s' "$DEPLOY_TOKEN" | docker login ghcr.io -u "${DEPLOY_ACTOR:-x-access-token}" --password-stdin >/dev/null 2>&1 \
       || echo "  · вход в реестр не удался — пробую без него" >&2
   fi
-  if docker pull --quiet "$DEPLOY_IMAGE" >/dev/null 2>&1; then
+  # Скачивание — не дольше PULL_TIMEOUT. 18.11.2026 docker pull образа
+  # c40cd00 повис без ответа реестра: задача Actions отвалилась через 55
+  # минут, а pull на сервере остался жить и держал замок выкатки, и
+  # следующая (2322b81) через 15 минут ожидания сдалась. Повисший pull —
+  # это «реестр не ответил»: обрываем и идём запасным путём.
+  if timeout --kill-after=30 "${PULL_TIMEOUT:-600}" docker pull --quiet "$DEPLOY_IMAGE" >/dev/null 2>&1; then
     BAKED="$(docker image inspect --format '{{ index .Config.Labels "studio.devuz.public" }}' "$DEPLOY_IMAGE" 2>/dev/null || true)"
     if [ "$BAKED" = "$PUBLIC_SIGNATURE" ]; then
       docker tag "$DEPLOY_IMAGE" devuz:latest

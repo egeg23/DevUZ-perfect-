@@ -179,6 +179,8 @@ test("сервер берёт образ из реестра, сверяет е�
   assert.match(deploy, /IMAGE_READY=0/);
   assert.match(deploy, /docker logout ghcr\.io/, "токен задачи остаётся в ~/.docker/config.json");
   assert.match(deploy, /uname -m\)" = "x86_64"/, "образ с другой архитектуры уедет на сервер");
+  // 18.11.2026 повисший pull держал замок выкатки больше часа.
+  assert.match(deploy, /timeout --kill-after=\d+ "\$\{PULL_TIMEOUT:-\d+\}" docker pull/, "docker pull без предела по времени");
 });
 
 test("новый образ не поднялся — выкатка сама возвращает прежний и остаётся красной", () => {
