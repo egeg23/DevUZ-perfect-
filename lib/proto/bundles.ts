@@ -59,6 +59,7 @@ import optimalprime from "@/content/proto-bundles/optimalprime.json" with { type
 import agora from "@/content/proto-bundles/agora.json" with { type: "json" };
 import samist from "@/content/proto-bundles/samist.json" with { type: "json" };
 import sunday from "@/content/proto-bundles/sunday.json" with { type: "json" };
+import qiyos from "@/content/proto-bundles/qiyos.json" with { type: "json" };
 import { stampPages } from "@/lib/proto/stamp";
 
 type Bundle = { parts: Record<string, string>; pages: Record<string, string> };
@@ -109,6 +110,7 @@ const BUNDLES: Record<string, Bundle> = {
   samist: samist as Bundle,
   sunday: sunday as Bundle,
   nek: nek as Bundle,
+  qiyos: qiyos as Bundle,
 };
 
 /** Имена всех сборок — для проверок, которые идут по каждой (tests/proto-plain-text). */

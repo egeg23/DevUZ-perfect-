@@ -52,9 +52,13 @@ export function formatUzs(value: number, locale: Locale): string {
   return `${grouped} ${suffix}`;
 }
 
+/** Сумма в долларах, округлённая до 50: та же, что показывает `formatUsd`. */
+export function usdOf(uzs: number): number {
+  return Math.round(uzs / USD_RATE / 50) * 50;
+}
+
 export function formatUsd(uzs: number): string {
-  const usd = Math.round(uzs / USD_RATE / 50) * 50;
-  return `$${usd.toLocaleString("en-US")}`;
+  return `$${usdOf(uzs).toLocaleString("en-US")}`;
 }
 
 /** Цена типа проекта без допов: та же сумма, что калькулятор покажет при выборе. */

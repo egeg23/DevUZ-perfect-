@@ -3215,3 +3215,69 @@ test("Nek Dental Studio: сайт 1 000 $ вместо 2 500 $, восемь д�
   const site = bundlePages("nek")!;
   assert.ok(site.html.includes("2 500 $") && site.html.includes("1 000 $"), "на первой странице не та цена");
 });
+
+test("Qiyos (агрегатор микрозаймов): выбор, сайт и админка на ru и uz — условия, noindex, видео DevUz и залёт, шапка 3 с, банки с лицензией, предупреждение о рисках, uz без кириллицы", async () => {
+  const { existsSync } = await import("node:fs");
+  const site = bundlePages("qiyos");
+  assert.ok(site);
+  const all: Record<string, string> = { "": site.html, ...site.pages };
+  assert.deepEqual(Object.keys(all).sort(), ["", "panel", "site", "uz", "uz/panel", "uz/site"]);
+  const data = await import("../scripts/protos/qiyos/data.mjs");
+  const plan = await import("../scripts/protos/qiyos/plan.mjs");
+  for (const [path, page] of Object.entries(all)) {
+    const lang = path.startsWith("uz") ? "uz" : "ru";
+    const kind = path.replace(/^uz\/?/, "") || "land";
+    assert.doesNotMatch(page, /@@[A-Z]+@@/, `${path}: метка сборки осталась`);
+    assert.ok(page.includes(`<html lang="${lang}">`), `${path}: язык страницы`);
+    assert.ok(page.includes(`https://devuz.studio/${lang}/mockup-terms`), `${path}: нет условий на языке страницы`);
+    assert.match(page, /<meta name="robots" content="noindex/, `${path}: нет noindex`);
+    assert.match(page, /prefers-reduced-motion/, `${path}: анимацию нечем выключить`);
+    assert.doesNotMatch(page, /stamp|watermark|fingerprint|отпечат|seed|data-mark/i, `${path}: слово, по которому находят отпечаток`);
+    assert.doesNotMatch(page, /proto-ai|proxyapi|higgsfield\.ai|firecrawl|anthropic/i, `${path}: макет не зовёт модель и чужие сервисы`);
+    assert.doesNotMatch(page, /href="#"/, `${path}: ссылка в никуда`);
+    assert.doesNotMatch(page, /scroll-behavior|passive:\s*false/, `${path}: перехват прокрутки`);
+    assert.doesNotMatch(page.replace(/<script[\s\S]*?<\/script>/g, ""), /[—–]/, `${path}: длинное тире`);
+    for (const img of page.match(/<img [^>]+>/g) ?? []) assert.match(img, /alt="/, `${path}: картинка без alt`);
+    for (const src of page.match(/\/protos\/qiyos\/[\w./-]+\.(?:webp|png|svg|js)/g) ?? []) assert.ok(existsSync("public" + src), `${path}: нет файла ${src}`);
+    if (lang === "uz") assert.doesNotMatch(page.replace(/<script[\s\S]*?<\/script>/g, "").replace(/<style>[\s\S]*?<\/style>/g, ""), /[А-Яа-яЁё]/, `${path}: кириллица на узбекской странице`);
+    if (kind === "panel") continue;
+    assert.match(page, /\bIDLE=3000\b/, `${path}: шапка не по правилу 3 секунд`);
+    assert.match(page, /classList\.add\('hide'\)[\s\S]*IDLE\)/, `${path}: шапка не прячется`);
+    assert.ok(page.includes(`__PROTO_BASE__${lang === "uz" ? "/uz" : ""}/panel"`), `${path}: нет кнопки админки`);
+    if (kind === "land") {
+      assert.ok(page.indexOf('id="dzi"') > 0 && page.indexOf('id="dzi"') < page.indexOf('id="fly"'), `${path}: нет видео DevUz перед залётом`);
+      assert.match(page, /fly\.style\.height=Math\.round\(K\*w\.innerHeight\)\+'px'/, `${path}: высота залёта не пикселями (браузер Telegram)`);
+      for (const a of plan.ADDONS) assert.ok(page.includes(`data-add="${a.id}"`), `${path}: нет тумблера ${a.id}`);
+      continue;
+    }
+    /* Сайт: банки с лицензией, предупреждение о рисках (ЗРУ-1187), расчёт кодом. */
+    assert.ok(page.includes(data.WARN[lang]), `${path}: нет предупреждения о рисках`);
+    assert.ok(page.includes('class="warn"'), `${path}: нет полосы предупреждения на первом экране`);
+    for (const p of data.PARTNERS) {
+      assert.ok(page.includes(`"id":"${p.id}"`), `${path}: нет банка ${p.id}`);
+      assert.ok(page.includes(`"n":"${p.lic.n}"`), `${path}: нет лицензии ${p.id}`);
+      assert.ok(existsSync(`public/protos/qiyos/logo/${p.logo}`), `${p.id}: нет логотипа`);
+      assert.match(p.src, /^https:\/\//, `${p.id}: нет источника условий`);
+    }
+    for (const id of ["offers", "how", "faq", "partners", "mine"]) assert.ok(page.includes(`id="${id}"`), `${path}: нет блока #${id}`);
+    for (const a of plan.ADDONS) assert.ok(page.includes(`data-addon="${a.id}"`), `${path}: тумблер ${a.id} не ведёт к блоку`);
+    assert.match(page, /utm_source=qiyos&utm_medium=cpa&sub_id=/, `${path}: «Получить» без метки перехода`);
+    assert.doesNotMatch(page, /гарантир|одобрим|kafolat/i, `${path}: обещание одобрения`);
+  }
+  /* Аннуитет: 10 млн на 12 мес. под 24% — 945 596 сум. */
+  assert.equal(Math.round(data.annuity(1e7, 24, 12)), 945596);
+  assert.deepEqual(data.ratesFor(data.PARTNERS.find((p: { id: string }) => p.id === "sqb"), 10), [26, 26]);
+  const stamped = stampedBundle("qiyos", SEED)!;
+  assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
+  assert.notEqual(stamped.pages["uz/site"], site.pages["uz/site"], "отпечаток не поставился на узбекском сайте");
+});
+
+test("Qiyos: сайт 1 000 $ вместо 3 900 $, допы 1 950 $, с сайтом не больше 3 000 $, цены в одном месте", async () => {
+  const plan = await import("../scripts/protos/qiyos/plan.mjs");
+  assert.equal(plan.BASE.promo, 1000);
+  assert.equal(plan.BASE.price, 3900);
+  assert.equal(plan.ALL, 2950);
+  assert.ok(plan.ALL <= 3000, "с допами дороже 3 000 $");
+  for (const a of plan.ADDONS) for (const l of ["ru", "uz"] as const) assert.ok(a[l].t && a[l].e && a[l].who, `${a.id}: нет текста на ${l}`);
+  for (const a of plan.ADDONS) assert.doesNotMatch(a.uz.t + a.uz.e + a.uz.who, /[А-Яа-яЁё]/, `${a.id}: кириллица в узбекском`);
+});

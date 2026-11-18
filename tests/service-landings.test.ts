@@ -12,8 +12,8 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
 import { cases } from "@/content/cases";
-import { LANDINGS, LANDING_SLUGS, LANDING_TEXT } from "@/content/service-landings";
-import { calcPrice, fillText, landingText, shortUzs } from "@/content/service-landings/fill";
+import { LANDING_AREA, LANDINGS, LANDING_SLUGS, LANDING_TEXT } from "@/content/service-landings";
+import { calcPrice, fillText, LANDING_MONEY, landingMoney, landingText, shortUzs } from "@/content/service-landings/fill";
 import { categories } from "@/content/calculator";
 import { locales } from "@/lib/i18n";
 
@@ -102,4 +102,64 @@ test("страницы под запросы: в маршруте, карте с
   assert.match(page, /faqSchema\(text\.faq\)/);
   assert.match(readFileSync("app/sitemap.ts", "utf8"), /LANDING_SLUGS\.filter/);
   assert.match(readFileSync("components/sections/services.tsx", "utf8"), /LANDING_SLUGS/);
+});
+
+/**
+ * Владелец, 18.11.2026: «делаем по снг рынок без упора на Узбекистан. Весь
+ * рынок снг нужен»; язык страницы — регион этого языка.
+ */
+const QUERIES = {
+  ru: ["создание сайтов", "создание интернет-магазина", "разработка мобильных приложений", "создание телеграм-бота", "создание лендинга", "разработка корпоративного сайта"],
+  uz: ["Toshkentda sayt yaratish", "Toshkentda internet-do‘kon yaratish", "Toshkentda mobil ilova yaratish", "Toshkentda Telegram bot yaratish", "Toshkentda landing sayt yaratish", "Toshkentda korporativ sayt yaratish"],
+  en: ["website development company", "ecommerce website development", "mobile app development company", "telegram bot development", "landing page design", "business website design"],
+  pl: ["tworzenie stron internetowych", "tworzenie sklepu internetowego", "tworzenie aplikacji mobilnych", "tworzenie bota Telegram", "tworzenie landing page", "strona firmowa"],
+  uk: ["розробка сайтів", "розробка інтернет-магазину", "розробка мобільних додатків", "створення телеграм-бота", "лендінг під ключ", "корпоративний сайт"],
+} as const;
+
+test("страницы под запросы: запросы по Вордстату и планировщику — по языку", () => {
+  for (const [l, qs] of Object.entries(QUERIES) as [keyof typeof QUERIES, readonly string[]][]) {
+    LANDING_SLUGS.forEach((slug, i) => assert.equal(LANDING_TEXT[l].pages[slug].query, qs[i], `${l}/${slug}`));
+  }
+});
+
+test("страницы под запросы: русская — для всего СНГ, без Ташкента; en, pl, uk — без Ташкента и сумов", () => {
+  const city = /ташкент|tashkent|taszkent|узбекистан|uzbekistan|сум(?![а-яіїєґ])|UZS|soum/i;
+  for (const l of ["ru", "en", "pl", "uk"] as const) {
+    for (const meta of LANDINGS) {
+      const t = landingText(meta, l);
+      for (const s of [t.seoTitle, t.seoDescription, t.h1, t.lead, ...t.faq.map((f) => f.q)]) {
+        assert.doesNotMatch(s, /ташкент|tashkent|taszkent/i, `${l}/${meta.slug}: «${s}»`);
+      }
+      assert.doesNotMatch(t.seoTitle, city, `${l}/${meta.slug}: title`);
+      assert.ok(t.h1.toLowerCase().includes(t.query.toLowerCase()), `${l}/${meta.slug}: H1 без запроса`);
+    }
+  }
+  for (const l of ["en", "pl", "uk"] as const) {
+    for (const s of all(LANDING_TEXT[l])) {
+      assert.doesNotMatch(s, /\bpayme\b|\buzum\b|\.uz\b|yandex|яндекс|сум(?![а-яіїєґ])|so‘m|UZS/i, `${l}: «${s}»`);
+    }
+  }
+  // Русская: местное Узбекистана — одним пунктом «Для Узбекистана» на страницу.
+  for (const slug of LANDING_SLUGS) {
+    const local = LANDING_TEXT.ru.pages[slug].local;
+    assert.equal(local.filter((x) => /узбекистан/i.test(x.title)).length, 1, `ru/${slug}: пункт «Для Узбекистана»`);
+  }
+});
+
+test("страницы под запросы: валюта и страны разметки — по языку", () => {
+  const p = calcPrice("landing");
+  for (const l of ["ru", "en", "pl", "uk"] as const) {
+    assert.equal(LANDING_MONEY[l], "usd");
+    assert.match(landingMoney(p.uzs, l).main, /^\$\d/);
+    assert.equal(landingMoney(p.uzs, l).sub, undefined);
+    assert.match(fillText("{price} {priceShort}", p, l), /^\$[\d,]+ \$[\d,]+$/);
+  }
+  assert.equal(LANDING_MONEY.uz, "uzs");
+  assert.match(landingMoney(p.uzs, "uz").main, /so‘m/);
+  assert.ok(LANDING_AREA.ru.countries.includes("Russia") && LANDING_AREA.ru.countries.includes("Kazakhstan"));
+  assert.equal(LANDING_AREA.ru.city, undefined);
+  assert.equal(LANDING_AREA.uz.city, "Tashkent");
+  const page = readFileSync("app/[locale]/services/[slug]/page.tsx", "utf8");
+  assert.match(page, /LANDING_AREA\[lang\]/);
+  assert.match(page, /LANDING_MONEY\[lang\]/);
 });

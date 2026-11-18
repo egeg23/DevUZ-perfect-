@@ -27,6 +27,13 @@ import { zh } from "@/content/service-landings/zh";
  * их подставляет страница из калькулятора и `proof`: цена на странице и в
  * калькуляторе одна.
  *
+ * С 18.11.2026 язык страницы — регион этого языка (владелец: «делаем по
+ * снг рынок без упора на Узбекистан. Весь рынок снг нужен»): русская — весь
+ * СНГ, без «в Ташкенте», узбекская — Ташкент, английская — США,
+ * Великобритания и Канада, польская — Польша, украинская — Украина. Запросы
+ * — по Вордстату и планировщику Google; валюта — `LANDING_MONEY` (fill.ts),
+ * страны разметки — `LANDING_AREA`.
+ *
  * Два адреса — прежние страницы услуг (web-development, mobile-apps): у них
  * уже есть ссылки из разборов и меню, новая страница их заменяет, а не
  * спорит с ними в выдаче. Четыре — новые.
@@ -158,6 +165,22 @@ export type LandingUi = {
 export type LandingLocale = { ui: LandingUi; pages: Record<LandingSlug, LandingText> };
 
 export const LANDING_TEXT: Record<Locale, LandingLocale> = { ru, uz, en, uk, pl, zh };
+
+/**
+ * Где ищут эту страницу — по языку (`REGION_BY_LOCALE` в lib/seo/keywords.ts):
+ * русская — Россия и СНГ, без упора на Узбекистан (владелец, 18.11.2026:
+ * «Весь рынок снг нужен»), узбекская — Ташкент, английская — США,
+ * Великобритания и Канада, польская — Польша, украинская — Украина.
+ * Идёт в разметку `areaServed`.
+ */
+export const LANDING_AREA: Record<Locale, { countries: readonly string[]; city?: string }> = {
+  ru: { countries: ["Russia", "Kazakhstan", "Belarus", "Uzbekistan", "Kyrgyzstan", "Armenia", "Azerbaijan", "Tajikistan"] },
+  uz: { countries: ["Uzbekistan"], city: "Tashkent" },
+  en: { countries: ["United States", "United Kingdom", "Canada"] },
+  pl: { countries: ["Poland"] },
+  uk: { countries: ["Ukraine"] },
+  zh: { countries: ["Uzbekistan"], city: "Tashkent" },
+};
 
 export function isLandingSlug(slug: string): slug is LandingSlug {
   return (LANDING_SLUGS as readonly string[]).includes(slug);

@@ -10,8 +10,7 @@ import { caseBySlug } from "@/content/cases";
 import { proof } from "@/content/company";
 import type { Dictionary } from "@/content/dictionaries";
 import { LANDING_TEXT, landingBySlug, type LandingMeta } from "@/content/service-landings";
-import { calcPrice, landingText, weeksRange } from "@/content/service-landings/fill";
-import { formatUsd, formatUzs } from "@/lib/calculator";
+import { calcPrice, landingMoney, landingText, weeksRange } from "@/content/service-landings/fill";
 import { localeHref, type Locale } from "@/lib/i18n";
 
 /**
@@ -26,6 +25,8 @@ export function ServiceLanding({ meta, locale, dict }: { meta: LandingMeta; loca
   const price = calcPrice(meta.calc);
   const caseItems = meta.cases.map(caseBySlug).filter((c) => c !== undefined);
   const mockupHref = `${localeHref(locale, "")}#maket`;
+  const money = (uzs: number) => landingMoney(uzs, locale);
+  const head = money(price.uzs);
 
   return (
     <>
@@ -50,8 +51,8 @@ export function ServiceLanding({ meta, locale, dict }: { meta: LandingMeta; loca
         <div className="mt-9 grid grid-cols-2 gap-4 rounded-2xl border border-line bg-surface px-6 py-6 lg:grid-cols-5">
           <div className="col-span-2">
             <p className="font-mono text-[0.65rem] uppercase tracking-[0.16em] text-faint">{ui.from}</p>
-            <p className="mt-1.5 font-display text-2xl font-bold text-green">{formatUzs(price.uzs, locale)}</p>
-            <p className="text-[0.85rem] text-faint">≈ {formatUsd(price.uzs)}</p>
+            <p className="mt-1.5 font-display text-2xl font-bold text-green">{head.main}</p>
+            {head.sub ? <p className="text-[0.85rem] text-faint">≈ {head.sub}</p> : null}
           </div>
           <div>
             <p className="font-mono text-[0.65rem] uppercase tracking-[0.16em] text-faint">{ui.weeks}</p>
@@ -94,16 +95,18 @@ export function ServiceLanding({ meta, locale, dict }: { meta: LandingMeta; loca
           <div className={`mt-7 grid gap-4 sm:grid-cols-2 ${text.kinds.length === 4 ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}>
             {text.kinds.map((kind, i) => {
               const p = calcPrice(meta.kinds[i]?.calc ?? meta.calc);
+              const m = money(p.uzs);
               return (
                 <Reveal key={kind.title} delay={i * 60} className="h-full">
                   <article className="flex h-full flex-col rounded-2xl border border-line bg-surface px-6 py-6">
                     <h3 className="text-lg font-bold">{kind.title}</h3>
                     <p className="mt-2 flex-1 text-[0.94rem] leading-relaxed text-muted">{kind.text}</p>
                     <p className="mt-5 font-display text-xl font-bold text-green">
-                      {ui.from.toLowerCase()} {formatUzs(p.uzs, locale)}
+                      {ui.from.toLowerCase()} {m.main}
                     </p>
                     <p className="text-[0.82rem] text-faint">
-                      ≈ {formatUsd(p.uzs)} · {weeksRange(p)} {ui.weeksUnit}
+                      {m.sub ? `≈ ${m.sub} · ` : ""}
+                      {weeksRange(p)} {ui.weeksUnit}
                     </p>
                   </article>
                 </Reveal>
@@ -167,11 +170,12 @@ export function ServiceLanding({ meta, locale, dict }: { meta: LandingMeta; loca
               <tbody>
                 {text.kinds.map((kind, i) => {
                   const p = calcPrice(meta.kinds[i]?.calc ?? meta.calc);
+                  const m = money(p.uzs);
                   return (
                     <tr key={kind.title} className="border-t border-line">
                       <td className="px-5 py-3.5 font-semibold">{kind.title}</td>
                       <td className="px-5 py-3.5 text-green">
-                        {formatUzs(p.uzs, locale)} <span className="text-faint">≈ {formatUsd(p.uzs)}</span>
+                        {m.main} {m.sub ? <span className="text-faint">≈ {m.sub}</span> : null}
                       </td>
                       <td className="px-5 py-3.5 text-muted">
                         {weeksRange(p)} {ui.weeksUnit}
