@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useFormStatus } from "react-dom";
 
 import { usePanelDict } from "@/components/admin/panel-locale";
@@ -30,6 +31,17 @@ const TONE = {
   quiet: "border border-blue-soft/40 text-blue-soft hover:bg-blue-soft/10",
 } as const;
 
+/**
+ * Сколько кнопка после появления не принимает нажатие.
+ *
+ * Дина, 18.11.2026: «часто ещё одна кнопка закрывает другую и в итоге
+ * нажимаются обе». После «Связаться» карточка приходит заново, и на том же
+ * месте уже стоит «Отправить»: второе касание пальца (или двойное) попадало
+ * в неё, и письмо уходило в очередь без того, чтобы человек его прочитал.
+ * Кнопка, которая только что появилась под пальцем, первые 0,7 с молчит.
+ */
+export const ARM_MS = 700;
+
 /** Как выглядит любая кнопка, пока ждёт ответа. Одинаково у всех. */
 const WAITING = "cursor-progress border border-line bg-line/60 text-muted";
 
@@ -59,6 +71,10 @@ export function SubmitButton({
 }) {
   const { pending } = useFormStatus();
   const t = usePanelDict(panelButtonsDict);
+  const shownAt = useRef<number | null>(null);
+  useEffect(() => {
+    shownAt.current = performance.now();
+  }, []);
 
   return (
     <button
@@ -67,6 +83,9 @@ export function SubmitButton({
       value={value}
       formAction={formAction}
       disabled={pending}
+      onClick={(event) => {
+        if (shownAt.current !== null && performance.now() - shownAt.current < ARM_MS) event.preventDefault();
+      }}
       // aria-busy — для читалки экрана: она видит не цвет, а состояние.
       aria-busy={pending}
       className={`${base} inline-flex items-center gap-2 transition ${pending ? WAITING : TONE[tone]}`}

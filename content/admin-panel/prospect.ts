@@ -712,6 +712,18 @@ export const outreachListDict = defineDict({
     uz: (target: string) => `Yuborish: ${target}`,
     pl: (target: string) => `Wyślij do ${target}`,
   },
+  /**
+   * Вместо «Отправить», когда письмо не возьмёт ни один аккаунт: автор
+   * отмечен только на аккаунтах на паузе (canQueueSend).
+   */
+  noSender: {
+    ru: (self: string) =>
+      `Бот сейчас отправить не может: все рабочие аккаунты, на которых вы отмечены, на паузе. Напишите клиенту сами — откройте переписку, вставьте текст и нажмите «${self}» ниже. Лид будет ваш.`,
+    uz: (self: string) =>
+      `Bot hozir yubora olmaydi: siz belgilangan barcha ishchi akkauntlar pauzada. Mijozga o‘zingiz yozing — yozishmani oching, matnni qo‘ying va pastdagi «${self}» tugmasini bosing. Lid sizniki bo‘ladi.`,
+    pl: (self: string) =>
+      `Bot nie może teraz wysłać: wszystkie konta firmowe, do których jesteś przypisany, są wstrzymane. Napisz do klienta sam — otwórz rozmowę, wklej tekst i kliknij «${self}» poniżej. Lead będzie twój.`,
+  },
   leadWillBeYours: {
     ru: "Лид закрепится за вами, как только нажмёте.",
     uz: "Bosishingiz bilan lid sizga biriktiriladi.",

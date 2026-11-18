@@ -152,6 +152,30 @@ export async function assignments(db: NonNullable<ReturnType<typeof serviceClien
   return out;
 }
 
+/**
+ * Возьмёт ли письмо этого сотрудника хоть один аккаунт, если он нажмёт
+ * «Отправить». Нет — когда он привязан только к аккаунтам на паузе.
+ *
+ * 18.11.2026 у Дины и Эльдара так было с каждым письмом: все четыре
+ * дополнительных аккаунта заморожены, а панель всё равно предлагала
+ * «Отправить», и письмо вставало в очередь, которую никто не разберёт.
+ * Правило то же, что в loadQueueEtas: главный пишет всегда, дополнительный —
+ * только «active». База не ответила — считаем, что может (как раньше).
+ */
+export async function canQueueSend(staffId: string): Promise<boolean> {
+  const db = serviceClient();
+  if (!db) return true;
+  const [assigned, { data: live, error }] = await Promise.all([
+    assignments(db),
+    db.from("tg_accounts").select("id").eq("status", "active"),
+  ]);
+  if (error) return true;
+  const mine = assigned.get(staffId);
+  if (!mine?.size) return true;
+  const working = new Set([MAIN_ACCOUNT, ...(live ?? []).map((row) => String(row.id))]);
+  return [...mine].some((key) => working.has(key));
+}
+
 function toQueued(data: Record<string, unknown> | null, hellos: HelloTexts = HELLO_TEXT): Queued | null {
   // Без письма в очередь встаёт только автопрогон: его письмо пишется после
   // ответа (LETTER_AFTER_REPLY), а «Здравствуйте» — на языке сайта.

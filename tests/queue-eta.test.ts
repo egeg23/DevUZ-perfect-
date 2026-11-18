@@ -121,3 +121,17 @@ test("расчёт читает то же, что скаут: очередь, в
   assert.match(fn, /accountState\(MAIN_ACCOUNT, HOURLY_CAP, mainUntil \? new Date\(mainUntil\)\.toISOString\(\) : null\)/);
   assert.match(fn, /ownerFloorMs: OWNER_FLOOR_MS/);
 });
+
+test("все аккаунты автора на паузе — «Отправить» не предлагаем; кнопка под пальцем не жмётся сразу", () => {
+  // Дина, 18.11.2026: письма вставали в очередь, которую никто не разберёт,
+  // а «Связаться» и появившаяся на её месте «Отправить» нажимались обе.
+  const list = read("components/admin/outreach-list.tsx");
+  assert.match(list, /!canSend && row\.target \?/);
+  assert.match(list, /t\.noSender\(t\.selfContacted\)/);
+  assert.match(read("app/admin/prospect/page.tsx"), /canQueueSend\(staff\.id\)/);
+  const queue = read("lib/admin/outreach-queue.ts");
+  assert.match(queue, /export async function canQueueSend/);
+  assert.match(queue, /eq\("status", "active"\)/);
+  const button = read("components/admin/submit-button.tsx");
+  assert.match(button, /performance\.now\(\) - shownAt\.current < ARM_MS\) event\.preventDefault\(\)/);
+});

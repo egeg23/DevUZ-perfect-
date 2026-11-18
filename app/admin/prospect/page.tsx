@@ -23,7 +23,7 @@ import { MapsCampaigns } from "@/components/admin/maps-campaigns";
 import { TouchLegend } from "@/components/admin/touch-legend";
 import { dailyCap, placesConfigured } from "@/lib/maps/places";
 import { listCampaigns, pendingPlaces, usageToday } from "@/lib/maps/store";
-import { loadQueueEtas, queueOwners, sentLastHour } from "@/lib/admin/outreach-queue";
+import { canQueueSend, loadQueueEtas, queueOwners, sentLastHour } from "@/lib/admin/outreach-queue";
 import { hourlyCapacity } from "@/lib/admin/work-accounts";
 import { accountTags, listAccounts } from "@/lib/admin/work-accounts-store";
 import { listProspects, manualReplies, prospectById } from "@/lib/admin/outreach-store";
@@ -63,7 +63,7 @@ export default async function ProspectPage({
   // Автопрогон касаний видят те же, кто ведёт автопоиск: он из него и
   // берёт компании. Менеджеру его касания приходят лидами в очередь.
   const autoStats = seesMaps ? await dayStats() : null;
-  const [latest, hour, replies, plan, portion, owners, stream, accounts, etas, tags] = await Promise.all([
+  const [latest, hour, replies, plan, portion, owners, stream, accounts, etas, tags, canSend] = await Promise.all([
     listProspects(),
     sentLastHour(),
     manualReplies(),
@@ -78,6 +78,9 @@ export default async function ProspectPage({
     loadQueueEtas(),
     // С какого аккаунта ушло каждое касание — подпись на карточке.
     accountTags(),
+    // Возьмёт ли его письмо хоть один живой аккаунт: нет — «Отправить» не
+    // показываем (все дополнительные на паузе с 30.10.2026).
+    canQueueSend(staff.id),
   ]);
   // Открыли из поиска (Ctrl+K) компанию старше двухсот последних — она тоже на месте.
   const opened =
@@ -223,6 +226,7 @@ export default async function ProspectPage({
         hour={hour}
         cap={hourlyCapacity(accounts)}
         etas={Object.fromEntries(etas)}
+        canSend={canSend}
         owners={owners}
         open={open}
         error={e}
