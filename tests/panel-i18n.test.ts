@@ -243,10 +243,7 @@ const STILL_RUSSIAN_IN_UZ: readonly string[] = [
   // бот в Telegram — пока по-русски
   "«Команда» tugmasi bilan xabar keladi",
   "Telegramda «Подтвердить» va «Отклонить» tugmalari",
-  "ostida esa «🙅 Клиент отказался» tugmasi",
-  "(Telegramda — «🙅 Клиент отказался»)",
-  "(Telegramda — «🔇 Игнорирует»)",
-  "xabari ostida — faqat «🙅 Клиент отказался»",
+  "(Telegramda ular ruscha: «🙅 Клиент отказался» va «🔇 Игнорирует»)",
   "«Взять в работу» va «Отклонить» tugmalari u yerda ham",
   // Варианты переноса срока задачи — кнопки бота.
   "«+1 час», «Завтра 18:00», «+3 дня», «Неделя»",
@@ -261,8 +258,6 @@ const STILL_RUSSIAN_IN_UZ: readonly string[] = [
   "**«Открыть»**, **«+2 часа»** va **«Готово»**",
   "«Открыть», «+2 часа» va «Готово»",
   "Xabarlar ostidagi «Открыть» tugmalari",
-  // вечерний отчёт по порциям в Telegram
-  "Bunday kompaniya «не сделано» emas",
 
   // кабинет и бот партнёра — отдельный продукт, по-русски
   "saytdagi kabinetida, «Промо-материалы» blokida ko‘radi: prevyu, «Скачать» va «Подпись к посту», yonida «Скопировать подпись»",
@@ -275,10 +270,7 @@ const STILL_RUSSIAN_IN_UZ: readonly string[] = [
 const STILL_RUSSIAN_IN_PL: readonly string[] = [
   // бот в Telegram — пока по-русски
   "dostają w Telegramie wiadomość z przyciskami «Подтвердить» (zatwierdź) i «Отклонить» (odrzuć)",
-  "a pod spodem przycisk «🙅 Клиент отказался»",
-  "(w Telegramie — «🙅 Клиент отказался»)",
-  "(w Telegramie — «🔇 Игнорирует»)",
-  "o odpowiedzi klienta jest tylko «🙅 Клиент отказался»",
+  "(w Telegramie są po rosyjsku: «🙅 Клиент отказался» i «🔇 Игнорирует»)",
   "wiadomość z przyciskiem «Команда»",
   "Przyciski «Взять в работу» i «Отклонить» działają i tam",
   // Варианты переноса срока задачи — кнопки бота.
