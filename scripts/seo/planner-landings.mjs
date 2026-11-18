@@ -17,6 +17,7 @@
 // польская — Польша, украинская — Украина, китайская — Тайвань, Гонконг и
 // Сингапур. Где ищут и в Яндексе, рядом — показы Вордстата.
 // Ключи и вход в журнал не печатаются: журнал задачи публичный.
+import { refusedGeos } from "@/lib/seo/keyword-planner";
 import { plannerIdeas } from "@/lib/seo/keyword-planner-store";
 import { REGION_BY_LOCALE, wordstatTop } from "@/lib/seo/keywords";
 
@@ -108,5 +109,7 @@ for (const locale of locales) {
     }
   }
 }
+const refused = refusedGeos();
+if (refused.length) console.log(`\nПланировщик не принял страны: ${refused.join(", ")} — их убрали из запроса.`);
 console.log(`\nСпросили ${asked}, планировщик не ответил на ${failed}.`);
 process.exit(failed === asked ? 1 : 0);

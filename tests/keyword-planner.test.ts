@@ -69,6 +69,26 @@ test("запрос к Google: адрес, заголовки и разбор; о
   assert.deepEqual(await keywordIdeas({ ...creds, customerId: "12345" }, "x", GEO.UZ), { ok: false, reason: "номер кабинета Google Ads — 10 цифр" });
 });
 
+test("страну, которую Google не принимает, убираем из набора — остальные спрашиваем", async () => {
+  // 18.11.2026: русская сверка по России и СНГ разом — «invalid value» на всё.
+  const asked: string[][] = [];
+  const fake = async (_url: string, init: RequestInit) => {
+    const geo = (JSON.parse(String(init.body)) as { geoTargetConstants: string[] }).geoTargetConstants;
+    asked.push(geo);
+    if (geo.includes(`geoTargetConstants/${GEO.RU}`)) {
+      return new Response(JSON.stringify({ error: { message: "The input has an invalid value." } }), { status: 400 });
+    }
+    return new Response(JSON.stringify({ results: [{ text: "создание сайтов", keywordIdeaMetrics: { avgMonthlySearches: String(geo.length * 100) } }] }), { status: 200 });
+  };
+  const res = await keywordIdeas(creds, "создание сайтов", [GEO.RU, GEO.KZ, GEO.UZ], fake);
+  assert.deepEqual(res, { ok: true, phrases: [{ phrase: "создание сайтов", value: 200 }] });
+  assert.deepEqual(asked.at(-1), [`geoTargetConstants/${GEO.KZ}`, `geoTargetConstants/${GEO.UZ}`]);
+  // Дальше Россию уже не спрашиваем — один запрос.
+  asked.length = 0;
+  await keywordIdeas(creds, "сайт", [GEO.RU, GEO.KZ], fake);
+  assert.deepEqual(asked, [[`geoTargetConstants/${GEO.KZ}`]]);
+});
+
 test("причины словами: уровень доступа, отозванный вход, чужой кабинет", () => {
   assert.match(plannerReason("DEVELOPER_TOKEN_NOT_APPROVED"), /Basic/);
   assert.match(plannerReason("invalid_grant"), /подключите кабинет заново/);
