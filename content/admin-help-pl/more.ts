@@ -1008,46 +1008,46 @@ export const tail: Pick<
   "channelsTitle" | "channelsLead" | "channels" | "rulesTitle" | "rules" | "askTitle" | "ask"
 > = {
   channelsTitle: "Telegram",
-  channelsLead: "Prawie wszystko, co ważne, przychodzi w Telegramie: karty leadów, kolejka, przypomnienia, porcja dnia, odpowiedzi na kontakty.",
+  channelsLead: "Prawie wszystko, co ważne, bot wysyła w Telegramie: nowe leady, zadania, przypomnienia, porcję dnia i odpowiedzi klientów.",
   channels: [
     {
       name: "Bot studia",
       url: BOT_URL,
-      what: "Główny kanał. Przez niego logujesz się do panelu, dostajesz karty nowych leadów i propozycje z kolejki, przypomnienia, porcję dnia, wiadomości o kontaktach i przekazaniach.",
+      what: "Główny kanał. Przez bota logujesz się do panelu. Tu przychodzą też nowe leady (zgłoszenia klientów), zadania, przypomnienia i odpowiedzi klientów.",
       how: [
-        "Otwórz bota i naciśnij «Start» — inaczej bot nie będzie mógł napisać do Ciebie pierwszy.",
-        "Napisz /login — przyjdzie przycisk «🔓 Открыть панель» i jednorazowy link ważny 15 minut. Przyciski «Открыть» pod wiadomościami też same logują do panelu. Bot odpowiedział «Не смог проверить вход: база сейчас не отвечает» — to awaria po naszej stronie, a nie Twój dostęp: odczekaj minutę i napisz /login ponownie. Odpowiedź «Такой команды у меня нет» oznacza, że Twój Telegram nie jest powiązany z pracownikiem albo zostałeś wyłączony: powiedz kierownikowi.",
-        "Nie wyciszaj powiadomień: propozycja z kolejki jest aktualna 30 minut, a gdy powiadomienie milczy, lead przejdzie do następnej osoby.",
-        "Jakie wiadomości wysyła bot, wybierają właściciel i kierownik projektów polami wyboru na stronie «Zespół». Czegoś nie dostajesz — zapytaj ich: możliwe, że to pole zostało odznaczone.",
-        "Menedżerowie i kierownicy: przycisk «▶️ Получать лиды» na dole czatu (albo /leads) włącza strumień firm ponad porcję, «⏸ Не получать лиды» — wyłącza go. Szczegóły — w sekcji «Zimne kontakty».",
-        "Napisz /ref, jeśli chcesz przyprowadzać klientów i dostawać procent.",
+        "Otwórz bota i kliknij «Старт». Bez tego bot nie może napisać do Ciebie pierwszy.",
+        "Żeby wejść do panelu, napisz botowi /login. Przyjdzie przycisk «🔓 Открыть панель» i zapasowy link, który działa 15 minut. Przyciski z kłódką «🔓» pod wiadomościami bota też od razu otwierają panel.",
+        "Bot odpisał «Не смог проверить вход: база сейчас не отвечает»? To awaria po naszej stronie, odczekaj minutę i napisz /login jeszcze raz. Odpowiedź «Такой команды у меня нет» oznacza, że Twój Telegram nie jest powiązany z panelem. Powiedz o tym kierownikowi.",
+        "Nie wyciszaj dźwięku. Nowy lead czeka na Ciebie 30 minut, a potem idzie do następnej osoby w kolejce.",
+        "Jakie wiadomości wysyła bot, decydują właściciel i kierownik polami w sekcji «Zespół». Jakie leady wysyłać, możesz wybrać też sam: «Ustawienia», potem «Moje». Coś nie przychodzi? Zapytaj kierownika.",
+        "Menedżerom i kierownikom: przycisk «▶️ Получать лиды» na dole czatu (albo /leads) wysyła firmy ponad porcję dnia, «⏸ Не получать лиды» go wyłącza. Szczegóły w sekcji «Zimne kontakty». Chcesz polecać klientów za prowizję? Napisz botowi /ref.",
       ],
     },
     {
       name: "Kanał «Devuz Scout»",
       url: SCOUT_URL,
-      what: "Tutaj skaut przysyła osoby, które właśnie teraz szukają programisty na otwartych czatach, oraz poranne podsumowanie. Szczegóły — w sekcji «Sygnały skauta».",
+      what: "Tu skaut (program, który czyta otwarte czaty w Telegramie) wysyła osoby, które właśnie szukają programisty. Rano przychodzi podsumowanie. Szczegóły w sekcji «Sygnały skauta».",
       how: [
-        "Otwórz link i dołącz do kanału. Włącz dźwięk: takie posty są aktualne godzinę, dwie.",
-        "Do sygnału z oznaczeniem «Сильный сигнал» nie pisz sam — przyjdzie jako lead z kolejki.",
+        "Otwórz link i dołącz do kanału. Włącz dźwięk: takie posty żyją godzinę lub dwie.",
+        "Do posta z oznaczeniem «Сильный сигнал» nie pisz sam. Po kilku minutach przyjdzie jako lead w kolejce, z gotową odpowiedzią.",
       ],
     },
     {
-      name: "Czat działu sprzedaży",
+      name: "Czat sprzedaży",
       url: null,
       roles: ["admin"],
-      what: "Opcjonalny wspólny czat (`TELEGRAM_SALES_CHAT_ID`): trafia do niego, tak jak do Ciebie, kopia każdej karty leada. Bez niego wszystko działa — karty idą do każdego w prywatnej wiadomości.",
+      what: "Tu przychodzi kopia każdej karty leada. Teraz czat sprzedaży to Twój prywatny czat z botem. Menedżerowie dostają karty każdy w prywatnym czacie.",
       how: [
-        "Przyciski «Взять в работу» i «Отклонить» działają i tam, i w prywatnej wiadomości. Osoby, które odeszły ze studia, usuwaj z czatu ręcznie.",
+        "Przyciski «✅ Взять в работу» i «🗄 Отклонить» działają i tutaj, i u menedżerów. Wspólny czat działu zamiast prywatnego podłącza programista.",
       ],
     },
   ],
 
   rulesTitle: "Trzy zasady",
   rules: [
-    "Wziąłeś leada — prowadź go: status, przypomnienie, następny krok. Nie możesz — «Zwróć do kolejki» albo «Poproś o przekazanie».",
-    "Obiecałeś klientowi coś przesłać — prześlij tego samego dnia. Niedotrzymana obietnica traci klienta szybciej niż słaba strona.",
-    "Coś nie działa albo wygląda dziwnie — powiedz właścicielowi od razu, nie czekaj.",
+    "Wziąłeś lead, to go prowadź: status, przypomnienie, następny krok. Nie możesz? Kliknij «Zwróć do kolejki» albo «Poproś o przekazanie».",
+    "Obiecałeś klientowi coś przysłać, przyślij tego samego dnia. Niedotrzymana obietnica traci klienta szybciej niż słaba strona.",
+    "Coś nie działa albo wygląda dziwnie? Od razu powiedz właścicielowi, nie czekaj.",
   ],
 
   askTitle: "Nie wychodzi?",
