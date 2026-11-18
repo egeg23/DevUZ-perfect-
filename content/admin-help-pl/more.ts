@@ -621,11 +621,11 @@ export const moreSections: Record<string, HelpEntry> = {
       },
       {
         id: "claudery",
-        title: "Claudery: bot zdalnej pomocy i kreator",
+        title: "Claudery: bot sprzedaży subskrypcji i kreator",
         body: [
-          "Claudery to bot, który przyjmuje płatne zgłoszenia o pomoc z AI. Klient pisze, co się stało, i dostaje przycisk «Открыть заявку». Prowadzi on na stronę zgłoszenia na naszej stronie, tam jest cena i płatność.",
-          "W samym bocie nie ma ani słowa o płatności i cenie: Telegram blokuje boty, które biorą pieniądze z pominięciem jego systemu. Zgłoszenie od razu trafia do leadów (zgłoszeń klientów) jako «Pomoc z AI (Claudery)». Gdy system płatności potwierdzi wpłatę, bot wysyła klientowi tekst z kroku «4. Po płatności».",
-          "W bloku «Co widzi klient» są kroki bota. Zmieniasz tylko słowa i kwotę i możesz dodać do czterech własnych przycisków pod powitaniem. Kto już płacił, dostaje cenę niższą o «Zniżka dla tych, którzy już płacili, %» (zwykle 30%).",
+          "Claudery to bot, który sprzedaje subskrypcje sieci neuronowych. Klient pisze, jakiej sieci potrzebuje, i dostaje przycisk «Открыть заказ». Prowadzi on na stronę zamówienia na naszej stronie: tam klient wybiera subskrypcję z listy i płaci. Sprzedajemy towar, a nie usługę: podłączenie i odpowiedzi na pytania to bezpłatne wsparcie kupującego, tak uzgodniono z systemem płatności.",
+          "W samym bocie nie ma ani słowa o płatności i cenie: Telegram blokuje boty, które biorą pieniądze z pominięciem jego systemu. Zamówienie od razu trafia do leadów (zgłoszeń klientów) jako «Pomoc z AI (Claudery)». Gdy system płatności potwierdzi wpłatę, bot wysyła klientowi tekst z kroku «4. Po płatności».",
+          "W bloku «Co widzi klient» są kroki bota. Zmieniasz słowa i listę «Towary: subskrypcje i ceny» (do sześciu wierszy: nazwa, co zawiera, cena) i możesz dodać do czterech własnych przycisków pod powitaniem. Tę samą listę widać na witrynie («Witryna na stronie») i w ofercie. Kto już płacił, dostaje cenę dowolnej subskrypcji niższą o «Zniżka dla tych, którzy już płacili, %» (zwykle 30%).",
           "W bloku «Klucze» jest token bota i dwa klucze Platega, przycisk «Zapisz i sprawdź». Bota mogą zmieniać właściciel i kierownik. Po płatności sam zakłada się [projekt](/admin/projects), a prowadzący lead dostaje 40% kwoty.",
         ],
       },

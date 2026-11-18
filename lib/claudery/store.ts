@@ -31,7 +31,7 @@ import { wants } from "@/lib/admin/notify-prefs";
 import { messageWindow } from "@/lib/admin/tasks";
 import { FALLBACK_RUB_PER_USD, projectNote, usdOf, usdRateFromCbr } from "@/lib/claudery/money";
 import { handle, show, type Deps, type Flow, type Incoming, type Who } from "@/lib/claudery/flow";
-import { PAY_PURPOSE, SETUP_KEY, parseSetup, rub, scenarioOf, stepOf, type Setup } from "@/lib/claudery/scenario";
+import { PAY_PURPOSE, SETUP_KEY, parseSetup, productAt, repeatAmount, rub, scenarioOf, stepOf, type Setup } from "@/lib/claudery/scenario";
 import { directDispatcher, roadFetch } from "@/lib/egress.mjs";
 import { salesRecipients } from "@/lib/qualify/brief";
 import { newRequestNo } from "@/lib/qualify/engine";
@@ -128,13 +128,13 @@ export async function loadSetup(): Promise<Setup> {
 
 export async function saveSetup(s: Setup, staffId: string, ip: string | null): Promise<void> {
   await putSnapshot(SETUP_KEY, s);
-  await record("claudery.scenario_saved", { actorStaffId: staffId, meta: { amount: s.amount, extras: s.extras.length }, ip });
+  await record("claudery.scenario_saved", { actorStaffId: staffId, meta: { products: s.products.length, amount: s.amount, extras: s.extras.length }, ip });
 }
 
-type Pay = { chatId: number; leadId: string | null; requestNo: string; amount: number; status: "pending" | "paid" | "failed"; at: string; paidAt?: string; told?: boolean; order?: string };
+type Pay = { chatId: number; leadId: string | null; requestNo: string; amount: number; status: "pending" | "paid" | "failed"; at: string; paidAt?: string; told?: boolean; order?: string; product?: string };
 
 /** Заявка на сайте: токен в адресе связывает страницу, платёж и чат клиента. */
-type Order = { chatId: number; leadId: string | null; requestNo: string; amount: number; full: number; discount: number; problem: string; txn?: string; url?: string; at: string };
+type Order = { chatId: number; leadId: string | null; requestNo: string; amount: number; full: number; discount: number; problem: string; product?: string; txn?: string; url?: string; at: string };
 
 // ---------- Platega ----------
 
@@ -188,7 +188,7 @@ async function plategaCall(path: string, init: RequestInit = {}): Promise<Record
   }
 }
 
-/** Платёжная ссылка на сумму (СБП), назначение — «Claudery: удалённая помощь». */
+/** Платёжная ссылка на сумму (СБП), назначение — купленный товар. */
 async function invoice(token: string, order: Order): Promise<{ txn: string; url: string } | null> {
   const txn = crypto.randomUUID();
   const back = `${siteUrl}${ORDER_PATH}/${token}`;
@@ -198,7 +198,7 @@ async function invoice(token: string, order: Order): Promise<{ txn: string; url:
       paymentMethod: METHOD_SBP,
       id: txn,
       paymentDetails: { amount: order.amount, currency: "RUB" },
-      description: order.requestNo ? `${PAY_PURPOSE}, заявка ${order.requestNo}` : PAY_PURPOSE,
+      description: `${order.product ? `Claudery: ${order.product}` : PAY_PURPOSE}${order.requestNo ? `, заказ ${order.requestNo}` : ""}`.slice(0, 200),
       return: back,
       failedUrl: back,
       payload: JSON.stringify({ claudery: order.requestNo }),
@@ -206,7 +206,7 @@ async function invoice(token: string, order: Order): Promise<{ txn: string; url:
   });
   const url = typeof data?.redirect === "string" ? data.redirect : null;
   if (!url) return null;
-  const pay: Pay = { chatId: order.chatId, leadId: order.leadId, requestNo: order.requestNo, amount: order.amount, status: "pending", at: new Date().toISOString(), order: token };
+  const pay: Pay = { chatId: order.chatId, leadId: order.leadId, requestNo: order.requestNo, amount: order.amount, status: "pending", at: new Date().toISOString(), order: token, ...(order.product ? { product: order.product } : {}) };
   await putSnapshot(PAY_PREFIX + txn, pay);
   return { txn, url };
 }
@@ -224,7 +224,21 @@ async function order(who: Who, flow: Flow, price: { amount: number; full: number
   return { token, url: `${siteUrl}${ORDER_PATH}/${token}` };
 }
 
-export type OrderView = { requestNo: string; problem: string; amount: number; full: number; discount: number; status: "open" | "pending" | "paid" };
+export type OrderView = {
+  requestNo: string;
+  problem: string;
+  amount: number;
+  full: number;
+  discount: number;
+  status: "open" | "pending" | "paid";
+  /** Витрина: цена уже со скидкой повторному покупателю, `full` — без неё. */
+  products: { title: string; note?: string; price: number; full: number }[];
+  /** Товар, по которому уже выставлен счёт. */
+  product?: string;
+};
+
+/** Скидка повторному решена при заказе: цена в нём ниже полной. */
+const repeatOrder = (row: Order) => row.discount > 0 && row.amount < row.full;
 
 /**
  * Что показать на странице заявки. Заодно спрашивает Platega о платеже:
@@ -247,22 +261,32 @@ export async function orderView(token: string): Promise<OrderView | null> {
       else status = "pending";
     }
   }
-  return { requestNo: row.requestNo, problem: row.problem, amount: row.amount, full: row.full, discount: row.discount, status };
+  const repeat = repeatOrder(row);
+  const products = (await loadSetup()).products.map((p) => ({ title: p.title, note: p.note, full: p.price, price: repeat ? repeatAmount(p.price, row.discount) : p.price }));
+  return { requestNo: row.requestNo, problem: row.problem, amount: row.amount, full: row.full, discount: repeat ? row.discount : 0, status, products, product: row.product };
 }
 
-/** Кнопка на странице заявки: ссылка Platega (прежняя, пока счёт жив) или null. */
-export async function orderPayUrl(token: string): Promise<string | null> {
+/**
+ * Кнопка «Оплатить» на странице заказа: счёт Platega на выбранный товар
+ * (прежний счёт на тот же товар живёт 30 минут) или null.
+ */
+export async function orderPayUrl(token: string, productIndex = 0): Promise<string | null> {
   if (!tokenOk(token)) return null;
   const row = await snapshot<Order>(ORDER_PREFIX + token);
   if (!row) return null;
+  const product = productAt(await loadSetup(), productIndex);
+  const amount = repeatOrder(row) ? repeatAmount(product.price, row.discount) : product.price;
   if (row.txn && row.url) {
     const pay = await snapshot<Pay>(PAY_PREFIX + row.txn);
     if (pay?.status === "paid") return null;
-    if (pay?.status === "pending" && Date.now() - Date.parse(pay.at) < 30 * 60_000) return row.url;
+    const same = row.product === product.title && pay?.amount === amount;
+    if (same && pay?.status === "pending" && Date.now() - Date.parse(pay.at) < 30 * 60_000) return row.url;
   }
-  const made = await invoice(token, row);
+  // Цена заказа — цена выбранного товара; `full` и `amount` двигаются вместе, скидка та же.
+  const chosen: Order = { ...row, product: product.title, amount, full: repeatOrder(row) ? product.price : amount };
+  const made = await invoice(token, chosen);
   if (!made) return null;
-  await putSnapshot(ORDER_PREFIX + token, { ...row, ...made });
+  await putSnapshot(ORDER_PREFIX + token, { ...chosen, ...made });
   return made.url;
 }
 
@@ -293,20 +317,20 @@ async function remoteStatus(txn: string): Promise<"paid" | "pending" | "failed" 
 export function clauderyLeadInput(who: Who, flow: Flow, amount: number): QualifyToolInput {
   const contact = who.username ? `@${who.username}` : `tg:${who.chatId}`;
   const request = [
-    "Клиент Claudery (удалённая помощь с ИИ).",
-    flow.problem ? `Что случилось: ${flow.problem}` : "Что случилось — не написал.",
+    "Покупатель Claudery (подписка на нейросеть).",
+    flow.problem ? `Что нужно: ${flow.problem}` : "Что нужно — не написал.",
     flow.photo ? "Приложил скриншот." : "",
-    `Цена ${rub(amount)} названа на странице заявки, оплаты пока нет.`,
+    `Цена от ${rub(amount)} названа на странице заказа, оплаты пока нет.`,
   ]
     .filter(Boolean)
     .join(" ");
-  const unknown = "не выяснено: заявка из бота Claudery, без диалога";
+  const unknown = "не выяснено: заказ из бота Claudery, без диалога";
   return {
     contact_name: who.name,
     company: "",
     contact_handle: contact,
     contact_kind: "telegram",
-    niche: "удалённая помощь с ИИ",
+    niche: "подписка на нейросеть",
     niche_tier: 3,
     expertise: "low",
     services: ["consulting"],
@@ -315,9 +339,9 @@ export function clauderyLeadInput(who: Who, flow: Flow, amount: number): Qualify
     need: "N2",
     timing: "T1",
     intent: "needs_human",
-    summary: { client: who.name || contact, request, niche: "удалённая помощь с ИИ", expertise: unknown, budget: unknown, authority: unknown, need: unknown, timing: unknown },
+    summary: { client: who.name || contact, request, niche: "подписка на нейросеть", expertise: unknown, budget: unknown, authority: unknown, need: unknown, timing: unknown },
     notes: `${request} Написать клиенту в Telegram: ${contact}.`,
-    opening_line: "Здравствуйте! Я специалист Claudery, вижу вашу заявку. Расскажите чуть подробнее, что именно не получается?",
+    opening_line: "Здравствуйте! Это Claudery, вижу ваш заказ. Подскажите, какая нейросеть нужна и для каких задач?",
     already_told: [],
     avoid_asking: [],
   };
@@ -337,14 +361,14 @@ async function lead(who: Who, flow: Flow, amount: number) {
   const db = serviceClient();
   // «Цена названа» — ступень продажи: счёт выставлен (lib/admin/sales-stages.ts).
   if (db && leadId) await db.from("sales_marks").insert({ kind: "priced", lead_id: leadId });
-  const heading = `🆘 <b>Claudery · помощь с ИИ</b> · цена ${esc(rub(amount))} названа, оплаты пока нет. Оплатит — придёт строка «✅ оплачено».`;
+  const heading = `🛒 <b>Claudery · подписка на нейросеть</b> · цена от ${esc(rub(amount))} названа, оплаты пока нет. Оплатит — придёт строка «✅ оплачено».`;
   await routeNewLead({ leadId: leadId ?? "unsaved", lead: scored, requestNo, origin: { ...origin, source: CLAUDERY_SOURCE }, heading, fallback: await salesRecipients("claudery") }).catch((error) =>
     console.error("claudery: лид не разослан", error),
   );
   // Скриншот — тем, кто берёт заявки Claudery, днём (ночью бот молчит).
   if (flow.photo && messageWindow(new Date())) {
     const bytes = await fileBytes(flow.photo);
-    if (bytes) for (const chat of await salesRecipients("claudery")) await sendPhotoFile(chat, bytes, "claudery.jpg", `📎 Скриншот к заявке Claudery ${requestNo}`);
+    if (bytes) for (const chat of await salesRecipients("claudery")) await sendPhotoFile(chat, bytes, "claudery.jpg", `📎 Скриншот к заказу Claudery ${requestNo}`);
   }
   return { leadId, requestNo };
 }
@@ -406,7 +430,7 @@ async function paidProject(pay: Pay, now: Date): Promise<void> {
   const { data: project, error } = await db
     .from("projects")
     .insert({
-      title: `Claudery · помощь с ИИ · ${pay.requestNo}`.slice(0, 200),
+      title: `Claudery · ${pay.product ?? "подписка на нейросеть"} · ${pay.requestNo}`.slice(0, 200),
       client,
       lead_id: pay.leadId,
       owner_staff_id: (lead?.assigned_staff_id as string | null) ?? null,
@@ -444,7 +468,7 @@ async function tellPaid(txn: string, pay: Pay, now: Date): Promise<void> {
   const { data: heads } = await db.from("staff").select("telegram_user_id, notify_off").eq("is_active", true).in("role", ["admin", "head"]);
   for (const h of heads ?? []) if (Number(h.telegram_user_id) && wants(h.notify_off as string[] | null, "reports")) chats.add(Number(h.telegram_user_id));
   const link = pay.leadId ? `\n${siteUrl}/admin/leads/${pay.leadId}` : "";
-  for (const chat of chats) await sendMessage(chat, `✅ <b>Claudery: оплачено ${esc(rub(pay.amount))}</b> · заявка ${esc(pay.requestNo)}. Напишите клиенту в Telegram.${link}`);
+  for (const chat of chats) await sendMessage(chat, `✅ <b>Claudery: оплачено ${esc(rub(pay.amount))}</b> · заказ ${esc(pay.requestNo)}${pay.product ? ` · ${esc(pay.product)}` : ""}. Пришлите клиенту доступ в Telegram.${link}`);
   await putSnapshot(PAY_PREFIX + txn, { ...pay, told: true });
 }
 
@@ -572,7 +596,7 @@ export async function saveKeysAndCheck(
   const me = await tg<{ username?: string }>("getMe", {}, current);
   if (!me?.username) return "bad_token";
   await putSnapshot(BOT_KEY, { username: me.username });
-  await tg("setMyCommands", { commands: [{ command: "start", description: "Нужна помощь" }] }, current);
+  await tg("setMyCommands", { commands: [{ command: "start", description: "Выбрать подписку" }] }, current);
   return "ok";
 }
 
