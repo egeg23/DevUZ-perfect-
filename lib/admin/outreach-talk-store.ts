@@ -31,6 +31,7 @@ import { LETTER_AFTER_REPLY } from "@/lib/admin/autopilot";
 import { lastEdits, lineEditable, type EditState } from "@/lib/admin/outreach-edit";
 import type { CircleLang } from "@/lib/admin/circle-store";
 import { OBJECTIONS, objectionOf, objectionReply, type Objection } from "@/lib/admin/objections";
+import { SPIN_STAGES, spinQuestion, type SpinStage } from "@/lib/admin/spin";
 import {
   INTRO_BEFORE_MS,
   PRICE_KIND,
@@ -1485,9 +1486,10 @@ export type TalkView = {
    * «Ответы на возражения» (lib/admin/objections.ts) — готовые тексты на языке
    * клиента: кнопка вставляет текст в поле ответа, менеджер правит и
    * отправляет. Для всех. «mockup» — «Макет готов» с «Покажу за 15 минут»,
-   * только половине «new» A/B.
+   * только половине «new» A/B. «spin_*» — «Вопросы SPIN» (lib/admin/spin.ts),
+   * по ступеням, для всех.
    */
-  quick: { kind: Objection | "mockup"; text: string }[];
+  quick: { kind: Objection | "mockup" | `spin_${SpinStage}`; text: string }[];
 };
 
 /**
@@ -1557,6 +1559,8 @@ async function talkWhere(column: "lead_id" | "id", value: string): Promise<TalkV
   if (salesNew({ sales_arm: await salesArmOf(String(p.id)) })) {
     quick.push({ kind: "mockup", text: `${lang === "uz" ? "Maket tayyor:" : "Макет готов:"} \n\n${showLine(lang)}` });
   }
+  const spinCtx = { lang, niche: ctx.niche, hasSite: Boolean(ctx.host) } as const;
+  for (const stage of SPIN_STAGES) quick.push({ kind: `spin_${stage}`, text: spinQuestion(stage, spinCtx) });
 
   return {
     prospectId: String(p.id),

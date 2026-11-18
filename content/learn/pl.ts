@@ -320,6 +320,7 @@ export const pl: LearnCopy = {
           title: "Pytanie ze SPIN",
           paras: [
             "SPIN to sprzedaż pytaniami. Najmocniejsze jest pytanie o jego straty. Pytanie o jego pieniądze trzyma uwagę dłużej niż opowieść o nas.",
+            "Pytania SPIN idą po kolei: sytuacja (skąd teraz przychodzą jego klienci), problem (czy widzi to, co znaleźliśmy), konsekwencje (do czego to prowadzi), korzyść (sam mówi, że tego potrzebuje). Po «korzyści» proponujemy makietę. W karcie leada pod polem odpowiedzi takie pytania wstawiają przyciski bloku «Pytania SPIN», połowa rozmów AI idzie tak samo.",
             "Oto tekst podejścia „Pytanie”. Zaczyna się od pytania, potem fakty, potem propozycja. Pytanie na końcu znów zaprasza do odpowiedzi.",
           ],
         },

@@ -1276,6 +1276,15 @@ export const uz: HelpCopy = {
           ],
         },
         {
+          id: "spin",
+          title: "SPIN: savollar bilan sotish",
+          body: [
+            "SPIN — o‘zingiz haqingizda gapirish emas, savollar bilan sotish usuli. Savollar tartib bilan: vaziyat (mijozda hozir qanday, uning mijozlari qayerdan keladi), muammo (biz topgan narsani u sezadimi), oqibat (bu nimaga olib keladi: odam buyurtmagacha yetmadi va boshqalarga ketdi), foyda (tuzatilgani unga kerakligini o‘zi aytadi). «Foyda»dan keyin maket taklif qilamiz. Kerakligini o‘zi aytgan mijoz ko‘ndirilgan mijozdan ko‘ra osonroq rozi bo‘ladi.",
+            "Lid kartochkasida javob maydoni ostida «SPIN savollari» bloki bor: «Vaziyat», «Muammo», «Oqibat», «Foyda» tugmalari. Bosing, savol mijoz tilida va uning sohasi so‘zlari bilan (bemorlar, mehmonlar, buyurtmachilar) maydonga tushadi. Bir martada bitta savol bering va avval mijoz so‘ragan narsaga javob bering. Oldinroq qiziqib qolsa, savollar kerak emas, darhol maket taklif qiling.",
+            "Sun’iy intellekt maketgacha olib boradigan suhbatlarning yarmi SPIN bo‘yicha: har javobda keyingi bosqichning bitta savoli, «foyda»dan keyin «+ yuboring». Qolgan yarmi avvalgidek. Solishtirish [Xat matnlari va A/B](/admin/prospect/texts) dagi «Sun’iy intellekt yozishmasida SPIN» blokida: har yarmida nechta suhbat, «+» va maket. Panel g‘olibni har biriga kamida 30 ta suhbatdan keyin aytadi.",
+          ],
+        },
+        {
           id: "fact-check",
           title: "Saytni fakt bo‘yicha tekshirish va oddiy til",
           body: [

@@ -398,6 +398,15 @@ export const prospectSections: Record<string, HelpEntry> = {
         ],
       },
       {
+        id: "spin",
+        title: "SPIN: sprzedaż pytaniami",
+        body: [
+          "SPIN to sposób sprzedaży pytaniami, a nie opowiadaniem o sobie. Pytania idą po kolei: sytuacja (jak jest u klienta teraz, skąd przychodzą jego klienci), problem (czy widzi to, co znaleźliśmy), konsekwencje (do czego to prowadzi: człowiek nie doszedł do zgłoszenia i odszedł do innych), korzyść (sam mówi, że poprawiona wersja jest mu potrzebna). Po «korzyści» proponujemy makietę. Klient, który sam powiedział, że tego potrzebuje, zgadza się chętniej niż ten, którego przekonywano.",
+          "Pod polem odpowiedzi w karcie leada jest blok «Pytania SPIN»: przyciski «Sytuacja», «Problem», «Konsekwencje», «Korzyść». Kliknij, a pytanie trafi do pola w języku klienta i słowami jego branży (pacjenci, goście, zamawiający). Zadawaj jedno pytanie naraz i najpierw odpowiadaj na to, o co pytał klient. Zainteresował się wcześniej — pytania nie są potrzebne, od razu proponuj makietę.",
+          "Połowa rozmów, które AI prowadzi do makiety, idzie według SPIN: w każdej wiadomości jedno pytanie kolejnego etapu, po «korzyści» — «proszę wysłać «+»». Druga połowa idzie jak dotąd. Porównanie jest w bloku «SPIN w rozmowie AI» w [Teksty wiadomości i A/B](/admin/prospect/texts): ile rozmów, «+» i makiet w każdej połowie. Zwycięzcę panel wskazuje nie wcześniej niż po 30 rozmowach na każdą.",
+        ],
+      },
+      {
         id: "fact-check",
         title: "Sprawdzenie strony na żywo i ludzki język",
         body: [

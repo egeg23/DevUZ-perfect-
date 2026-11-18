@@ -216,7 +216,32 @@ export const letterTextsDict = defineDict({
     ru: "Данных пока нет: половины ставятся с первых «Здравствуйте» после выкатки.",
     uz: "Hozircha ma’lumot yo‘q: yarmilar chiqarilgandan keyingi birinchi salomlardan qo‘yiladi.",
     pl: "Na razie brak danych: połowy przypisują się od pierwszych powitań po wdrożeniu.",
+  },  // Блок «SPIN в переписке ИИ» (lib/admin/spin.ts, 18.11.2026).
+  spinTitle: { ru: "SPIN в переписке ИИ", uz: "Sun’iy intellekt yozishmasida SPIN", pl: "SPIN w rozmowie AI" },
+  spinIntro: {
+    ru: "Половина разговоров, которые ведёт ИИ, идёт по SPIN: один вопрос в реплике — как у клиента сейчас, замечает ли он проблему, к чему она ведёт, нужна ли ему польза, — и после этого предложение макета. Другая половина — как было: ИИ сразу ведёт к «+». Половину решает номер касания, поэтому разговор из неё не выпадает.",
+    uz: "Sun’iy intellekt olib boradigan suhbatlarning yarmi SPIN bo‘yicha: har javobda bitta savol — mijozda hozir qanday, muammoni sezadimi, u nimaga olib keladi, foyda kerakmi — va shundan keyin maket taklifi. Qolgan yarmi avvalgidek: sun’iy intellekt darhol «+» ga olib boradi. Yarmini aloqa raqami belgilaydi, shuning uchun suhbat undan chiqib ketmaydi.",
+    pl: "Połowa rozmów prowadzonych przez AI idzie według SPIN: jedno pytanie w wiadomości — jak jest u klienta teraz, czy widzi problem, do czego on prowadzi, czy potrzebna mu korzyść — a potem propozycja makiety. Druga połowa idzie jak dotąd: AI od razu prowadzi do «+». Połowę wyznacza numer kontaktu, więc rozmowa z niej nie wypada.",
   },
+  spinOn: { ru: "Со SPIN", uz: "SPIN bilan", pl: "Ze SPIN" },
+  spinOffArm: { ru: "Как было", uz: "Avvalgidek", pl: "Jak było" },
+  spinTalks: { ru: "разговоров ИИ", uz: "sun’iy intellekt suhbatlari", pl: "rozmów AI" },
+  spinEarly: {
+    ru: (need: number) => `Победителя рано называть: нужно ещё ${need} разговоров на меньшей половине (не меньше 30 на каждую).`,
+    uz: (need: number) => `G‘olibni aytishga erta: kichik yarmida yana ${need} ta suhbat kerak (har biriga kamida 30 ta).`,
+    pl: (need: number) => `Za wcześnie na zwycięzcę: potrzeba jeszcze ${need} rozmów w mniejszej połowie (co najmniej 30 na każdą).`,
+  },
+  spinOffNote: {
+    ru: "SPIN выключен в коде: все разговоры ИИ идут как было.",
+    uz: "SPIN kodda o‘chirilgan: barcha sun’iy intellekt suhbatlari avvalgidek.",
+    pl: "SPIN jest wyłączony w kodzie: wszystkie rozmowy AI idą jak dotąd.",
+  },
+  spinNone: {
+    ru: "Данных пока нет: счёт идёт с первых ответов ИИ после 18.11.2026.",
+    uz: "Hozircha ma’lumot yo‘q: hisob 18.11.2026 dan keyingi birinchi sun’iy intellekt javoblaridan boshlanadi.",
+    pl: "Na razie brak danych: liczymy od pierwszych odpowiedzi AI po 18.11.2026.",
+  },
+
 });
 
 /** Почему текст не сохранился — по коду проверки (lib/admin/letter-texts.ts). */

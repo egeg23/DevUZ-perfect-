@@ -453,6 +453,17 @@ export const leadCardDict = defineDict({
   quick_have_site: { ru: "Уже есть сайт", uz: "Sayt bor", pl: "Strona już jest" },
   quick_expensive: { ru: "Дорого, есть дешевле", uz: "Qimmat", pl: "Drogo" },
   quick_mockup: { ru: "Макет готов + показ", uz: "Maket tayyor + ko‘rsatish", pl: "Makieta gotowa + pokaz" },
+  // «Вопросы SPIN» (lib/admin/spin.ts): ступени по порядку, вопрос — на языке клиента.
+  spinTitle: { ru: "Вопросы SPIN", uz: "SPIN savollari", pl: "Pytania SPIN" },
+  spinHint: {
+    ru: "По порядку: как у него сейчас, замечает ли проблему, к чему она ведёт, нужна ли ему польза. Один вопрос за раз, после «пользы» — предложение макета.",
+    uz: "Tartib bilan: hozir qanday, muammoni sezadimi, u nimaga olib keladi, foyda kerakmi. Bir martada bitta savol, «foyda»dan keyin maket taklifi.",
+    pl: "Po kolei: jak jest teraz, czy widzi problem, do czego prowadzi, czy korzyść jest mu potrzebna. Jedno pytanie naraz, po «korzyści» propozycja makiety.",
+  },
+  quick_spin_situation: { ru: "Ситуация", uz: "Vaziyat", pl: "Sytuacja" },
+  quick_spin_problem: { ru: "Проблема", uz: "Muammo", pl: "Problem" },
+  quick_spin_implication: { ru: "Последствия", uz: "Oqibat", pl: "Konsekwencje" },
+  quick_spin_need: { ru: "Польза", uz: "Foyda", pl: "Korzyść" },
   /** Причина — как её записал скаут или Telegram, не переводится. */
   lineFailed: {
     ru: (why: string) => `не ушло${why ? `: ${why}` : ""}`,
