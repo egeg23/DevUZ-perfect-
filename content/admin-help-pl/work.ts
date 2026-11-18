@@ -374,22 +374,24 @@ export const workSections: Record<string, HelpEntry> = {
 
   /* ── Статистика ───────────────────────────────────────────────────── */
   "/admin/stats": {
-    what: "Liczby dla całego studia: ile zgłoszeń przychodzi, skąd, jakiej jakości, ile wygrywamy i jak szybko bierzemy leady do pracy. Przydaje się, żeby raz w tygodniu zobaczyć, gdzie tracimy klientów.",
+    what: "Liczby dla wszystkich leadów (zgłoszeń klientów) studia: ile przychodzi, skąd i ile wygrywamy. Zaglądaj tu raz w tygodniu, żeby zobaczyć, gdzie gubimy klientów.",
     items: [
       {
         id: "tiles",
-        title: "Najważniejsze liczby",
+        title: "Główne liczby",
         body: [
-          "**«leadów łącznie»**, **«przyjęte do pracy»** — ile leadów ma teraz osobę prowadzącą.",
-          "**«odsetek wygranych»** — wygrane ÷ (wygrane + przegrane). Liczony od zamkniętych transakcji: to, co jest jeszcze w toku, nie jest przegrane. Dlatego ważne jest, żeby ustawiać status «przegrane», a nie porzucać leada.",
-          "**«mediana do przejęcia»** — ile zwykle mija od zgłoszenia do «Przejmij». Mediana, a nie średnia: jeden lead, który przeleżał weekend, nie psuje obrazu. Przekazanie leada zeruje ten czas.",
+          "**«leadów łącznie»** pokazuje, ile zgłoszeń jest w bazie, a **«przyjęte do pracy»** pokazuje, ile z nich ma prowadzącego menedżera.",
+          "**«odsetek wygranych»** liczy się tylko z zamkniętych transakcji: wygrane dzielimy przez wygrane i przegrane. Lead w toku nie jest jeszcze przegrany. Dlatego nie porzucaj leada po cichu, tylko ustaw mu status «przegrany».",
+          "**«mediana do przejęcia»** pokazuje, ile zwykle mija od zgłoszenia do kliknięcia «Przejmij». Jeden lead zapomniany na weekend prawie jej nie przesuwa. Gdy lead przejdzie do kolegi, czas liczy się od nowa.",
         ],
       },
       {
         id: "panels",
-        title: "Panele poniżej",
+        title: "Bloki poniżej",
         body: [
-          "«Napływ w tygodniach» — 12 tygodni, tydzień od poniedziałku. «Jakość leadów» — według liter A–D. «Statusy». «Skąd przychodzą» — czat, formularz, bot, witryna, skaut, kontakty. «Język zgłoszenia». «O co pytają» — jeden lead może być w kilku wierszach. «Rabat 30%» — ile zgłoszeń dostało rabat i za co: «pierwsza minuta» — klient napisał do asystenta, gdy na stronie leciał licznik pierwszej minuty; «gwarancja 20 sekund» — nie zdążyliśmy z odpowiedzią. Każdy taki rabat to 30% rachunku.",
+          "«Napływ w tygodniach» pokazuje zgłoszenia z 12 tygodni, tydzień zaczyna się w poniedziałek. «Jakość leadów» dzieli zgłoszenia na litery A, B, C i D.",
+          "W «O co pytają» jeden lead może stać w kilku wierszach, więc suma jest większa niż liczba leadów.",
+          "«Rabat 30%» liczy zgłoszenia z rabatem. «pierwsza minuta» znaczy, że klient napisał na czacie, gdy na stronie leciał licznik. «gwarancja 20 sekund» znaczy, że nie odpisaliśmy w 20 sekund.",
         ],
       },
       {
@@ -397,13 +399,13 @@ export const workSections: Record<string, HelpEntry> = {
         title: "Tabela według osób",
         body: {
           manager: [
-            "Tabeli według osób nie widzisz — widzą ją kierownik i właściciel. Publiczny ranking obok nazwiska kolegi zmienia zachowanie szybciej niż wynik: leady zaczyna się brać według łatwości, a nie ważności. Swoje liczby sprawdzaj na «Pulpit»: «Moja praca», «Moje etapy w tym tygodniu» i [«Plan i wykonanie»](#hq-week).",
+            "Tabelę według osób widzą tylko kierownik i właściciel. Swoje liczby sprawdzisz na «Pulpicie»: «Moja praca», «Moje etapy w tym tygodniu» i [«Plan i wykonanie»](#hq-week).",
           ],
           head: [
-            "«Mój zespół» — Ty i Twoi menedżerowie: «W toku», «Wygrane», «Przegrane», «Łącznie» — za cały czas, według tego, kto teraz prowadzi leada. Menedżerowie tej tabeli nie widzą.",
+            "Tabela «Mój zespół» pokazuje ciebie i twoich menedżerów: «W toku», «Wygrane», «Przegrane» i «Łącznie» za cały czas. Lead liczy się temu, kto ma go teraz. Menedżerowie tej tabeli nie widzą.",
           ],
           admin: [
-            "«Według menedżerów» — wszyscy aktywni pracownicy, za cały czas, według tego, kto teraz prowadzi leada. Kierownik widzi tylko siebie i swój zespół, menedżerowie w ogóle nie widzą tabeli.",
+            "Tabela «Według menedżerów» pokazuje wszystkich aktywnych pracowników za cały czas. Lead liczy się temu, kto ma go teraz. Kierownik widzi tylko siebie i swój zespół, menedżerowie nie widzą tabeli wcale.",
           ],
         },
       },
@@ -412,13 +414,13 @@ export const workSections: Record<string, HelpEntry> = {
         title: "Gdzie są plany",
         body: {
           manager: [
-            "Planów tu nie ma. «Plan i wykonanie» jest na dole [«Pulpit»](/admin/hq), plan kontaktów — w [Zimnych kontaktach](/admin/prospect).",
+            "W tej sekcji nie ma planów. «Plan i wykonanie» jest na dole [«Pulpitu»](#hq-week). Swój plan kontaktów widzisz w sekcji [«Zimne kontakty»](/admin/prospect).",
           ],
           head: [
-            "Planów tu nie ma. «Plan i wykonanie» jest na dole [«Pulpit»](/admin/hq), plan kontaktów dla zespołu ustawia się w [Zespole](/admin/team).",
+            "W tej sekcji nie ma planów. «Plan i wykonanie» jest na dole [«Pulpitu»](#hq-week). Plan kontaktów menedżerom ustawiasz w sekcji [«Zespół»](/admin/team).",
           ],
           admin: [
-            "Planów tu nie ma. «Plan i wykonanie» jest na dole [«Pulpit»](/admin/hq), plan kontaktów — w [Zespole](/admin/team).",
+            "W tej sekcji nie ma planów. «Plan i wykonanie» jest na dole [«Pulpitu»](#hq-week). Plan kontaktów ustawia się w sekcji [«Zespół»](/admin/team).",
           ],
         },
       },
@@ -427,23 +429,26 @@ export const workSections: Record<string, HelpEntry> = {
 
   /* ── Трафик ───────────────────────────────────────────────────────── */
   "/admin/stages": {
-    what: "Lista firm i leadów według etapów sprzedaży: do kogo napisaliśmy, kto odpowiedział, wykazał zainteresowanie, dostał makietę, widział prezentację, usłyszał cenę i zapłacił. Tu widać, gdzie dokładnie utyka sprzedaż i kogo trzeba popchnąć dalej. Wcześniej lista otwierała się tylko z liczby na «Pulpit», teraz to punkt w «Raporty». Liczy kod z bazy, bez sieci neuronowej.",
+    what: "Firmy i leady według etapów sprzedaży, od pierwszej wiadomości do płatności. Tu widać, gdzie transakcje utykają i kogo czas popchnąć dalej.",
     items: [
       {
         id: "list",
         title: "Lista etapu: jak czytać",
         body: {
           manager: [
-            "Na górze — etapy: «napisaliśmy», «odpisali», «zainteresowanie», «makieta wysłana», «makieta pokazana», «cena podana», «płatność» — i okres: 7 lub 30 dni. Kliknij etap — niżej pojawią się firmy i leady, które do niego doszły w tym okresie: czyje, kiedy doszły i czy doszły do następnego etapu (na zielono — doszły).",
-            "Widzisz tylko swoje firmy i leady: te, które prowadzisz, i te, gdzie prezentację lub cenę zaznaczyłeś ty. Kliknij wiersz — otworzy się karta leada lub kontaktu. Te same liczby za tydzień — w bloku [«Moje etapy w tym tygodniu»](#hq-my-stages) na «Pulpit».",
+            "Na górze wybierz etap, od «napisaliśmy» do «płatność», i okres: «w 7 dni», «7 dni wcześniej», «w 30 dni» albo «od poniedziałku».",
+            "Niżej pojawią się firmy, które doszły do tego etapu. W wierszu widać, czyj to lead, kiedy doszedł i czy jest już następny etap (jest zielony).",
+            "Widzisz tylko swoje transakcje: te, które prowadzisz, i te, gdzie pokaz albo cenę oznaczyłeś ty. Kliknij wiersz, a otworzy się karta. Te same liczby z tygodnia są na «Pulpicie» w bloku [«Moje etapy w tym tygodniu»](#hq-my-stages).",
           ],
           head: [
-            "Na górze — etapy: «napisaliśmy», «odpisali», «zainteresowanie», «makieta wysłana», «makieta pokazana», «cena podana», «płatność» — i okres: 7 lub 30 dni. Kliknij etap — niżej pojawią się firmy i leady, które do niego doszły w tym okresie: czyje, kiedy doszły i czy doszły do następnego etapu (na zielono — doszły).",
-            "Widzisz transakcje całego zespołu, w każdym wierszu — czyj to lead. Te same liczby za 7 i 30 dni — w bloku [«Etapy sprzedaży»](#hq-stages) na «Pulpit». Pieniędzy tu nie ma nikt: sumy wpływów widzi tylko właściciel na «Pulpit».",
+            "Na górze wybierz etap, od «napisaliśmy» do «płatność», i okres: «w 7 dni», «7 dni wcześniej», «w 30 dni» albo «od poniedziałku».",
+            "Niżej pojawią się firmy, które doszły do tego etapu. W wierszu widać, czyj to lead, kiedy doszedł i czy jest już następny etap (jest zielony).",
+            "Widzisz transakcje całego zespołu. Kwot pieniędzy tu nie ma. Te same liczby z 7 i 30 dni są na «Pulpicie» w bloku [«Etapy sprzedaży»](#hq-stages).",
           ],
           admin: [
-            "Na górze — etapy: «napisaliśmy», «odpisali», «zainteresowanie», «makieta wysłana», «makieta pokazana», «cena podana», «płatność» — i okres: 7 lub 30 dni. Kliknij etap — niżej pojawią się firmy i leady, które do niego doszły w tym okresie: czyje, kiedy doszły i czy doszły do następnego etapu (na zielono — doszły).",
-            "Widzisz transakcje całego zespołu, w każdym wierszu — czyj to lead. Te same liczby za 7 i 30 dni — w bloku [«Etapy sprzedaży»](#hq-stages) na «Pulpit». Na liście nie ma pieniędzy: sumy transakcji — w tym samym bloku, tylko u ciebie.",
+            "Na górze wybierz etap, od «napisaliśmy» do «płatność», i okres: «w 7 dni», «7 dni wcześniej», «w 30 dni» albo «od poniedziałku».",
+            "Niżej pojawią się firmy, które doszły do tego etapu. W wierszu widać, czyj to lead, kiedy doszedł i czy jest już następny etap (jest zielony).",
+            "Widzisz transakcje całego zespołu. Na liście nie ma kwot. Kwoty płatności widzisz tylko ty, na «Pulpicie» w bloku [«Etapy sprzedaży»](#hq-stages).",
           ],
         },
       },
@@ -451,8 +456,9 @@ export const workSections: Record<string, HelpEntry> = {
         id: "marks",
         title: "Dlaczego etap jest pusty",
         body: [
-          "«Makieta pokazana» i «cena podana» baza sama nie widzi: prezentację przez wideo lub na żywo zaznacza człowiek przyciskiem «Pokazałem makietę» — w [«Makiety»](/admin/mockups), w «Moje makiety» na «Pulpit» albo w [karcie leada](#leads-sales-marks). Bez zaznaczenia etap zostanie zerem, a wszystko po nim wyda się gorsze, niż jest.",
-          "Jeśli wierszy jest ponad 200 — pokazujemy pierwsze 200 i linię «jeszcze N»: zawęź okres do 7 dni. Firmy, które przyszły same (zgłoszenie ze strony, czatu lub bota), nie wchodzą do «napisaliśmy» — od razu są «odpisali».",
+          "Prawie wszystkie etapy panel ustawia sam. Pokazu makiety nie widzi. Pokazałeś makietę na wideo albo na żywo? Kliknij «Pokazałem makietę» w sekcji [«Makiety»](/admin/mockups), w «Moje makiety» na «Pulpicie» albo w [karcie leada](#leads-sales-marks).",
+          "Cenę panel oznacza sam, gdy bot wysyła ją klientowi po «+». Podałeś cenę sam, w wiadomości albo przez telefon? Kliknij w karcie leada «Podałem cenę» i wpisz kwotę. Bez oznaczenia etap zostanie pusty, a sprzedaż wyda się gorsza, niż jest.",
+          "Jeśli wierszy jest więcej niż 200, widać pierwsze 200: wybierz krótszy okres. Klienci, którzy przyszli sami (zgłoszenie ze strony, z czatu albo z bota), nie trafiają do «napisaliśmy». Od razu liczą się jako ci, którzy odpisali.",
         ],
       },
     ],

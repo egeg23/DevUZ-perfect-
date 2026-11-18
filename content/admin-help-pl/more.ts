@@ -538,21 +538,21 @@ export const moreSections: Record<string, HelpEntry> = {
 
   /* ── Журнал ───────────────────────────────────────────────────────── */
   "/admin/audit": {
-    what: "Kto co zrobił w panelu i kiedy: otworzył kartę, dane kontaktowe, korespondencję, wziął leada, zmienił status, przekazał, potwierdził płatność, dodał albo wyłączył pracownika. Wpisów nie da się zmienić ani usunąć — ani z panelu, ani z bazy.",
+    what: "Dziennik wszystkich działań w panelu: kto, co i kiedy zrobił. Na przykład otworzył kontakt klienta, przejął leada, zmienił status albo potwierdził płatność. Wpisów nie da się zmienić ani usunąć.",
     items: [
       {
         id: "filters",
         title: "Jak szukać",
         body: [
-          "Filtry: «Kto» — pracownik (wyłączeni są oznaczeni) albo «system» — wszystko, co zrobił timer, bot albo partner przez bota. «Co» — około 75 rodzajów działań. 100 wpisów na stronę.",
-          "Na złoto wyróżnione są działania wrażliwe: dane kontaktowe, korespondencja, pieniądze, dostęp. Przy leadach — link do karty.",
+          "Filtr «Kto» wybiera pracownika albo «system». «system» znaczy, że działanie wykonał bot, licznik czasu albo partner przez bota. Filtr «Co» wybiera rodzaj działania. Na stronie jest 100 wpisów, dalej przechodzisz przyciskami «starsze →» i «← nowsze».",
+          "Na złoto wyróżnione jest to, co ważne: kontakt klienta, korespondencja, pieniądze i dostępy. Przy działaniach z leadem jest link do jego karty.",
         ],
       },
       {
         id: "when",
         title: "Kiedy tu zaglądać",
         body: [
-          "Klient skarży się, że napisały do niego dwie osoby. Lead „zniknął”. Nie wiadomo, kto zmienił kwotę albo etap. Trzeba ustalić, kto otwierał dane kontaktowe, zanim klient odszedł do konkurencji. Tutaj widać to wszystko z dokładnością do minuty.",
+          "Klient skarży się, że napisały do niego dwie osoby. Lead zniknął. Nie wiadomo, kto zmienił kwotę albo status. Tu widać to wszystko co do minuty.",
         ],
       },
     ],
@@ -560,22 +560,22 @@ export const moreSections: Record<string, HelpEntry> = {
 
   /* ── Использование ────────────────────────────────────────────────── */
   "/admin/usage": {
-    what: "Z czego zespół korzysta w panelu: które sekcje otwiera, które funkcje klika, kto czym żyje. Ciche badanie użytkowników: zespół nie wie o tym raporcie, bo raport, o którym wszyscy wiedzą, mierzy nie pracę, tylko starania, żeby dobrze w nim wypaść.",
+    what: "Z których sekcji i przycisków zespół naprawdę korzysta. Raport widzisz tylko ty. Zespół o nim nie wie, więc liczby są uczciwe.",
     items: [
       {
         id: "read",
         title: "Jak czytać",
         body: [
-          "Okres — 7, 30 albo 90 dni, strzałki — w porównaniu z takim samym okresem wcześniej. Liczeni są kierownicy i menedżerowie; Ciebie tu nie ma, Twoich prywatnych sekcji też.",
-          "Wniosek dla wiersza: «rdzeń» — korzysta co najmniej połowa osób, które mają do tego dostęp; «u pojedynczych osób» — mniej; «nikt — zbędne?» — nikt. Funkcje tylko dla kierowników liczone są wśród kierowników.",
+          "Na górze okres: 7, 30 albo 90 dni. Strzałki porównują z takim samym okresem wcześniej. Liczą się kierownicy i menedżerowie, ciebie w raporcie nie ma.",
+          "Każdy wiersz ma oznaczenie. «rdzeń» znaczy, że korzysta co najmniej połowa osób, które mają dostęp. «u pojedynczych osób» znaczy, że korzysta niewielu. Oznaczenie ze słowem «zbędne?» znaczy, że nie korzysta nikt.",
         ],
       },
       {
         id: "use",
         title: "Co z tym zrobić",
         body: [
-          "«nikt — zbędne?» — powód, żeby zapytać: funkcja jest niepotrzebna czy nikt o niej nie wie? Często chodzi o to drugie: wtedy pomoże punkt w instrukcji i przycisk «?».",
-          "Wyświetlenia sekcji liczą się od chwili włączenia raportu, działania — z dziennika za cały czas.",
+          "Oznaczenie «zbędne?» to pytanie, a nie wyrok. Zapytaj zespół: funkcja jest niepotrzebna czy nikt o niej nie wie? Częściej nie wiedzą. Wtedy pomaga punkt w instrukcji i przycisk «?».",
+          "Wyświetlenia sekcji liczą się od dnia, w którym raport włączono. Działania są brane z sekcji [«Dziennik»](/admin/audit) za cały czas.",
         ],
       },
     ],
@@ -730,41 +730,41 @@ export const moreSections: Record<string, HelpEntry> = {
 
   /* ── Обучение ─────────────────────────────────────────────────────── */
   "/admin/learn": {
-    what: "Kursy sprzedaży — o tym, jak studio naprawdę pisze do firm — i test z panelu. Każdy kurs to kilka krótkich lekcji z prawdziwymi zdaniami i test na końcu; test z panelu pyta o działy, które masz otwarte. Testy można zdać tutaj albo w bocie studia w Telegramie.",
+    what: "Kursy sprzedaży i test z panelu. Kursy pokazują, jak studio naprawdę pisze do firm. W każdym kursie są krótkie lekcje i test na końcu.",
     items: [
       {
         id: "switch",
-        title: "Wyłącznik: zespół widzi dział dopiero po twoim kliknięciu",
+        title: "Wyłącznik: zespół widzi sekcję dopiero po twoim kliknięciu",
         roles: ["admin"],
         body: [
-          "Dopóki szkolenia są wyłączone, dział widzisz tylko ty: kierownicy i menedżerowie nie mają go ani w menu, ani w instrukcji, strona przekierowuje ich na główną, a bot na /learn odpowiada, że szkolenia nie są jeszcze włączone. Obowiązek i próg zaliczenia w tym czasie nikogo nie dotyczą. Sam możesz rozwiązać każdy kurs i test — w panelu i w bocie — żeby sprawdzić, jak to wygląda.",
-          "Na górze działu jest żółty pasek i przycisk **«Włącz szkolenia dla zespołu»**. Po kliknięciu dział pojawia się w menu u wszystkich, /learn dochodzi do menu bota u zespołu, a menedżerowie widzą blok «Zostało do zaliczenia». Pasek robi się zielony, a w miejscu przycisku jest **«Wyłącz szkolenia»**: chowa dział z powrotem, wyniki się nie gubią. Kto i kiedy włączał i wyłączał, widać w [Dzienniku](/admin/audit).",
-          "Próg i obowiązek są zapisane w kodzie (`lib/learn/rules.ts`): teraz 70% poprawnych odpowiedzi, kursy obowiązkowe dla menedżerów. Decyzja właściciela z 12.10.2026; zmiana to edycja jednej linii.",
+          "Dopóki szkolenia są wyłączone, sekcję widzisz tylko ty. Zespół nie ma jej ani w menu, ani w instrukcji, a bot na /learn odpowiada, że szkolenia nie są włączone. Sam możesz przejść dowolny kurs i sprawdzić, jak to wygląda.",
+          "Na górze sekcji jest żółty pasek i przycisk **«Włącz szkolenia dla zespołu»**. Po kliknięciu sekcja pojawi się u wszystkich, a /learn pojawi się w menu bota. Przycisk **«Wyłącz szkolenia»** chowa sekcję z powrotem, wyniki zostają.",
+          "Test jest zaliczony od 70% dobrych odpowiedzi. Kursy są obowiązkowe dla menedżerów. Próg zmienia się tylko w kodzie: powiedz programiście.",
         ],
       },
       {
         id: "courses",
         title: "Kursy sprzedaży",
         body: [
-          "Sześć kursów: „Kontakt w dwóch krokach”, „Kółko”, „+ — zgoda na makietę”, „Obiekcje”, „Podejścia w wiadomościach” i „Ciepłe leady”. To nie ogólne rady z książek, tylko nasz proces: dlaczego najpierw wychodzi samo powitanie, kiedy zamiast kółka idzie wiadomość, co jest „tak” na kółko, co odpowiedzieć na „drogo” i „proszę przysłać ofertę”, jak działa kolejka ciepłych leadów. W kursie o podejściach są prawdziwe teksty autoprzebiegu — te same, co w [«Zimne kontakty»](/admin/prospect) → «Teksty wiadomości i A/B».",
-          "Kurs otwiera się kartą w bloku **«Kursy sprzedaży»**. W środku są lekcje po kolei, pod nimi **«Materiały»** — linki dodawane przez właściciela (wideo, nagrania rozmów, artykuły) — i test. Na karcie kursu widać, ile ma lekcji i pytań, oraz twój najlepszy wynik: zaliczony, niezaliczony z najlepszym wynikiem albo jeszcze nierozwiązany.",
+          "Kursów jest sześć i dotyczą naszego prawdziwego procesu: pierwsze «Dzień dobry», kółko, zgoda klienta «+», obiekcje, teksty wiadomości i ciepłe leady. W kursie o wiadomościach są te same teksty co w sekcji [«Zimne kontakty»](/admin/prospect).",
+          "Kliknij kartę kursu w bloku **«Kursy sprzedaży»**. W środku są lekcje po kolei, pod nimi «Materiały» i test. Na karcie widać liczbę lekcji i pytań oraz twój wynik: zaliczony, niezaliczony albo «jeszcze nierozwiązany».",
         ],
       },
       {
         id: "quiz",
         title: "Jak rozwiązywać test",
         body: [
-          "Kliknij **«Rozpocznij test»**. Pytania idą po jednym, warianty są wymieszane. Po wyborze od razu widać, czy dobrze; jeśli źle — która odpowiedź jest poprawna, dlaczego, i link **«Przeczytaj lekcję jeszcze raz»** (w teście z panelu — **«Otwórz punkt instrukcji»**). Dalej **«Następne pytanie»**, na ostatnim **«Zakończ test»**. Pasek u góry pokazuje postęp.",
-          "Zaliczone — od 70% poprawnych odpowiedzi. Pytania nie da się pominąć: bez odpowiedzi liczy się jako błędne. Podchodzić można dowolnie wiele razy — **«Spróbuj ponownie»**, liczy się najlepszy wynik. Odpowiedzi sprawdza serwer, a nie przeglądarka, i każda próba jest zapisywana.",
-          "Te same testy są w bocie studia w Telegramie: napisz mu /learn i wybierz test. Bot wysyła pytanie z ponumerowanymi wariantami i przyciskami z numerami, po kliknięciu odpowiada, czy dobrze, z wyjaśnieniem, a na końcu podaje wynik. Wynik z bota trafia do tej samej tabeli co z panelu. Bot pisze po rosyjsku, dopóki nie nauczy się języka panelu.",
+          "Kliknij **«Rozpocznij test»**. Pytania idą po jednym. Po odpowiedzi od razu widać, czy dobrze, i dlaczego. Pomyłka? Obok jest link **«Przeczytaj lekcję jeszcze raz»**, a w teście z panelu **«Otwórz punkt instrukcji»**.",
+          "Test jest zaliczony od 70% dobrych odpowiedzi. Pytania nie da się pominąć, bez odpowiedzi liczy się jako błąd. Poprawiać można ile razy chcesz przyciskiem **«Spróbuj ponownie»**, liczy się najlepszy wynik.",
+          "Te same testy są w bocie studia w Telegramie. Napisz mu /learn i wybierz test. Wynik z bota trafia tam, gdzie wynik z panelu.",
         ],
       },
       {
         id: "panel-quiz",
         title: "Test z panelu",
         body: [
-          "**«Test z panelu»** sprawdza, jak znasz działy panelu: kolejkę leadów, [porcję dnia](#prospect-portion), powitanie i kółko, makiety, projekty, finanse. Pytania zebrano z tej instrukcji i każde prowadzi do swojego punktu: pomyłka — obok link dokładnie tam, gdzie o tym napisano.",
-          "Pytania dotyczą tylko działów, które masz otwarte, i punktów, które widzi twoja rola. Dlatego menedżer i kierownik mają ich różną liczbę: kierownik odpowiada także o «Zespół», «Partnerzy» i «Konta».",
+          "**«Test z panelu»** sprawdza, jak znasz panel: kolejkę leadów, [porcję dnia](#prospect-portion), makiety i inne sekcje. Przy pomyłce pojawi się link do właściwego punktu tej instrukcji.",
+          "Pytania dotyczą tylko sekcji, które masz otwarte. Dlatego menedżer i kierownik dostają ich różną liczbę.",
         ],
       },
       {
@@ -772,16 +772,16 @@ export const moreSections: Record<string, HelpEntry> = {
         title: "Co jest obowiązkowe",
         body: {
           manager: [
-            "Szkolenia są obowiązkowe dla menedżerów — decyzja właściciela z 12.10.2026: każdy kurs i test z panelu, od 70% poprawnych odpowiedzi. Na górze działu jest blok **«Zostało do zaliczenia»** — co jeszcze niezaliczone, z linkiem do kursu. Gdy zaliczysz wszystko, pojawi się tam informacja, że wszystko obowiązkowe jest zaliczone.",
-            "Nie blokuje to pracy: karty, porcja dnia i leady przychodzą jak zwykle. Ale kierownik i właściciel widzą, kto co zaliczył — przejdź kursy w pierwszych dniach.",
+            "Szkolenia są obowiązkowe dla menedżerów: wszystkie kursy i test z panelu, od 70% dobrych odpowiedzi. Blok **«Zostało do zaliczenia»** na górze sekcji pokazuje, czego jeszcze nie zaliczyłeś. Gdy wszystko zaliczone, jest tam «Wszystko obowiązkowe zaliczone.».",
+            "Nie przeszkadza to w pracy: leady i porcja dnia przychodzą jak zwykle. Ale kierownik i właściciel widzą, kto co zaliczył. Przejdź kursy w pierwszych dniach.",
           ],
           head: [
-            "Kursy są obowiązkowe dla menedżerów — decyzja właściciela z 12.10.2026: każdy kurs i test z panelu, od 70% poprawnych odpowiedzi. Dla ciebie dobrowolnie, ale test z panelu warto zrobić samemu: widać, o co pytani są twoi menedżerowie.",
-            "Obowiązek nie blokuje pracy — tylko się wyświetla: menedżer ma blok «Zostało do zaliczenia», ty — kolumnę **«Niezaliczone»** w [wynikach zespołu](#learn-results).",
+            "Kursy są obowiązkowe dla menedżerów: wszystkie kursy i test z panelu, od 70% dobrych odpowiedzi. Dla ciebie dobrowolnie. Ale test z panelu warto przejść, żeby wiedzieć, o co pytają twoich menedżerów.",
+            "Pracować bez kursów można, obowiązek jest tylko pokazywany. U menedżera to blok «Zostało do zaliczenia», u ciebie kolumna **«Niezaliczone»** w [wynikach zespołu](#learn-results).",
           ],
           admin: [
-            "Gdy szkolenia są włączone, kursy są obowiązkowe dla menedżerów: każdy kurs i test z panelu, od 70% poprawnych odpowiedzi. Kierownikowi i tobie — dobrowolnie. Wyłączone — obowiązek nikogo nie dotyczy, zobacz [wyłącznik](#learn-switch).",
-            "Nie blokuje pracy — tylko się wyświetla: menedżer ma blok «Zostało do zaliczenia», ty i kierownik — kolumnę **«Niezaliczone»** w [wynikach zespołu](#learn-results). „Nowy” menedżer to dodany po uruchomieniu działu; jemu, jak i pozostałym, kursy są obowiązkowe, dopóki ich nie zaliczy.",
+            "Gdy szkolenia są włączone, kursy są obowiązkowe dla menedżerów: wszystkie kursy i test z panelu, od 70% dobrych odpowiedzi. Kierownikowi i tobie dobrowolnie. Gdy szkolenia są wyłączone, nic nie jest obowiązkowe, zobacz [wyłącznik](#learn-switch).",
+            "Pracować bez kursów można, obowiązek jest tylko pokazywany. U menedżera to blok «Zostało do zaliczenia», u ciebie i kierownika kolumna **«Niezaliczone»** w [wynikach zespołu](#learn-results).",
           ],
         },
       },
@@ -790,8 +790,8 @@ export const moreSections: Record<string, HelpEntry> = {
         title: "Wyniki zespołu",
         roles: ["admin", "head"],
         body: [
-          "Na dole działu jest tabela **«Wyniki zespołu»**: w wierszu pracownik i jego rola, w kolumnach każdy kurs i test z panelu. W komórce najlepszy wynik, np. „5/6”: zielony — zaliczony, żółty — jeszcze nie, kropka — nie podchodził. Znaczek **«nowy»** to menedżer dodany po uruchomieniu działu.",
-          "Gdy szkolenia są włączone, ostatnia kolumna **«Niezaliczone»** wymienia, co menedżerowi zostało do zaliczenia, albo pisze, że wszystko zaliczone; u kierownika i właściciela jest tam **«dobrowolnie»**. Tabela zbiera próby z panelu i z bota. Do kogoś, kto zostaje w tyle, lepiej napisać osobiście i zaproponować wspólne omówienie błędów: test pokazuje, co wyjaśnić, a nie kogo ganić.",
+          "Na dole sekcji jest tabela **«Wyniki zespołu»**. W wierszu pracownik, w kolumnach kursy i test z panelu. W komórce najlepszy wynik, na przykład «5/6»: zielony to zaliczony, żółty to jeszcze nie, kropka to nie podchodził.",
+          "Kolumna **«Niezaliczone»** pokazuje, co menedżerowi zostało do zaliczenia. Oznaczenie «nowy» ma menedżer dodany po uruchomieniu szkoleń. Podejścia z bota też tu są. Do zalegającego lepiej napisać osobiście i omówić błędy razem.",
         ],
       },
       {
@@ -799,16 +799,16 @@ export const moreSections: Record<string, HelpEntry> = {
         title: "Kurs wideo dla menedżerów",
         body: {
           manager: [
-            "Blok **«Kurs wideo dla menedżerów»** to 13 krótkich filmów, razem około godziny: co sprzedaje studio, słowa «landing» i «konwersja» prostymi słowami, droga klienta od powitania do umowy, obawy właścicieli i co im odpowiadać, sprzedaż na zaufaniu i poczta pantoflowa. Mowa po rosyjsku, napisy po uzbecku, na ekranie nasze prawdziwe makiety.",
-            "Oglądaj po kolei, po jednym filmie. W każdym jest zadanie: lektor prosi o pauzę, zatrzymaj i odpowiedz sam, potem obejrzyj omówienie. W filmach nie ma cen ani terminów, których studio nie obiecuje, i nie są sprzeczne z kursami powyżej: kursy to szczegółowe zasady, filmy to ogólny obraz. Jeśli pod filmem jest «Film nie został jeszcze wgrany.», po prostu jeszcze go nie dodano.",
+            "Blok **«Kurs wideo dla menedżerów»** to 13 krótkich filmów, razem około godziny. Jest w nich, co sprzedaje studio, droga klienta od «Dzień dobry» do umowy i co odpowiadać na obawy właścicieli. Mowa po rosyjsku, napisy po uzbecku.",
+            "Oglądaj po kolei, jeden film naraz. W każdym jest zadanie: zatrzymaj film, odpowiedz sam, potem obejrzyj omówienie. Napis «Film nie został jeszcze wgrany.» znaczy, że filmu jeszcze nie dodano.",
           ],
           head: [
-            "Blok **«Kurs wideo dla menedżerów»** to 13 krótkich filmów, razem około godziny: co sprzedaje studio, droga klienta, obawy właścicieli, sprzedaż na zaufaniu i poczta pantoflowa. Mowa po rosyjsku, napisy po uzbecku. Filmy widzi każdy, kto ma otwarte «Szkolenia».",
-            "Pod każdym filmem jest zwinięty blok **«Wgraj lub podmień film»**: wybierz **«Język wideo»** (filmy kursu są rosyjskie, ustaw «Rosyjski») i plik MP4, kliknij **«Wgraj»**. Plik idzie w kawałkach i sam się dociąga, jeśli połączenie mignęło. Nowy film zastępuje stary w tym samym języku, **«Usuń»** go kasuje. Pliki filmów właściciel dostał osobno, kolejność według numeru na liście.",
+            "Blok **«Kurs wideo dla menedżerów»** to 13 krótkich filmów, razem około godziny: co sprzedaje studio, droga klienta i obawy właścicieli. Mowa po rosyjsku, napisy po uzbecku. Filmy widzi każdy, kto ma otwarte «Szkolenia».",
+            "Pod każdym filmem jest blok **«Wgraj lub podmień film»**. Wybierz «Język wideo» (w kursie to rosyjski), plik MP4 i kliknij «Wgraj». Nowy film zastępuje stary w tym samym języku, a «Usuń» go kasuje.",
           ],
           admin: [
-            "Blok **«Kurs wideo dla menedżerów»** to 13 krótkich filmów, razem około godziny, według scenariuszy zatwierdzonych przez ciebie 13.10.2026 (`docs/training/video-guides`). Mowa po rosyjsku głosem Vosk, napisy po uzbecku. Filmy widzi każdy, kto ma otwarte «Szkolenia»: dopóki dział jest wyłączony, tylko ty.",
-            "Pod każdym filmem jest zwinięty blok **«Wgraj lub podmień film»**: wybierz **«Język wideo»** («Rosyjski») i plik MP4 z tym samym numerem, kliknij **«Wgraj»**. Wgrywać może też kierownik. Nowy film zastępuje stary w tym samym języku, **«Usuń»** go kasuje; kto co wgrał, widać w [Dzienniku](/admin/audit). Film leży na serwerze obok filmów do instrukcji.",
+            "Blok **«Kurs wideo dla menedżerów»** to 13 krótkich filmów, razem około godziny: co sprzedaje studio, droga klienta i obawy właścicieli. Mowa po rosyjsku, napisy po uzbecku. Dopóki sekcja jest wyłączona, filmy widzisz tylko ty.",
+            "Pod każdym filmem jest blok **«Wgraj lub podmień film»**. Wybierz «Język wideo» (w kursie to rosyjski), plik MP4 i kliknij «Wgraj». Nowy film zastępuje stary w tym samym języku, a «Usuń» go kasuje. Wgrywać może też kierownik.",
           ],
         },
       },
@@ -817,13 +817,13 @@ export const moreSections: Record<string, HelpEntry> = {
         title: "Materiały do kursu",
         body: {
           manager: [
-            "W kursie pod lekcjami jest blok **«Materiały»**: linki dodane przez właściciela — wideo, nagrania udanych rozmów, artykuły. Otwierają się w nowej karcie. Gdy linków nie ma, widać informację, że materiałów jeszcze nie ma: kurs da się przejść i bez nich.",
+            "Pod lekcjami kursu jest blok **«Materiały»**: filmy, nagrania udanych rozmów, artykuły. Linki dodaje właściciel, otwierają się w nowej karcie. Jeśli linków nie ma, kurs i tak da się przejść.",
           ],
           head: [
-            "W kursie pod lekcjami jest blok **«Materiały»**: linki dodane przez właściciela — wideo, nagrania udanych rozmów, artykuły. Otwierają się w nowej karcie. Znalazłeś coś przydatnego dla zespołu — wyślij właścicielowi, doda.",
+            "Pod lekcjami kursu jest blok **«Materiały»**: filmy, nagrania udanych rozmów, artykuły. Linki dodaje właściciel. Znalazłeś coś przydatnego dla zespołu? Wyślij mu.",
           ],
           admin: [
-            "W każdym kursie i w teście z panelu pod lekcjami jest blok **«Materiały»**. Wpisz **«Nazwa»** i **«Link»** (tylko adres zaczynający się od https:// albo http://) i kliknij **«Dodaj materiał»** — link od razu pojawi się u wszystkich, którzy mają otwarty dział. **«Usuń materiał»** obok linku go usuwa. Dodawać i usuwać możesz tylko ty; każde działanie trafia do [Dziennika](/admin/audit).",
+            "W każdym kursie i w teście z panelu jest blok **«Materiały»**. Wpisz «Nazwa» i «Link» (adres zaczyna się od https:// albo http://) i kliknij **«Dodaj materiał»**. Link od razu pojawi się u wszystkich, a «Usuń materiał» go usuwa. Dodawać i usuwać możesz tylko ty.",
           ],
         },
       },
@@ -832,23 +832,29 @@ export const moreSections: Record<string, HelpEntry> = {
 
   /* ── Настройки ───────────────────────────────────────────────────── */
   "/admin/settings": {
-    what: "Wszystko, co się ustawia w panelu, na jednej stronie. Otwiera się zębatką ⚙ w nagłówku, obok twojego imienia. Swoje zmieniasz od razu tutaj, resztę — linkiem tam, gdzie mieszka: przyciski, uprawnienia i sprawdzenia są tam jak dotąd. Strona jest zawsze otwarta dla wszystkich, zaznaczeniem jej nie zamkniesz.",
+    what: "Wszystkie ustawienia panelu na jednej stronie. Otwiera ją zębatka ⚙ w prawym górnym rogu, obok twojego imienia. Swoje zmieniasz od razu tutaj, resztę otwiera link.",
     items: [
       {
         id: "mine",
         title: "«Moje»: język, menu, telefon i bot",
         body: {
           manager: [
-            "Blok **«Moje»** zmienia tylko twoje, na wszystkich twoich urządzeniach. **«Język panelu i instrukcji»** — RU, UZ albo PL, ten sam przełącznik co w nagłówku; wiadomości bota na razie po rosyjsku. **«Wygląd menu»** — przełącznik «Nowe menu»: włączony — pasek ikon po lewej, «Więcej», karty i wyszukiwanie, wyłączony — wszystkie sekcje w jednym wierszu, jak dawniej. **«Powiadomienia na tym urządzeniu»** — push z tym samym tekstem, który bot pisze ci w Telegramie; włącza się osobno na każdym telefonie i komputerze, jak kartą na [Pulpicie](/admin/hq). Obok przełącznika menu — **«Pokaż jeszcze raz poznawanie panelu»**: te same 7 kroków, co przy pierwszym wejściu po odświeżeniu 03.11.2026 (zmienił się wygląd, funkcje te same). Tam też — **«Pokaż na ekranie, jak korzystać z „Rynków”»**: krótkie szkolenie z działu [«Rynki»](/admin/markets).",
-            "**«Co bot mi wysyła»** pokazuje, ile rodzajów wiadomości bota do ciebie przychodzi. Zaznaczenia ustawia kierownik albo właściciel w «Zespół»: poproś ich, jeśli czegoś jest za dużo albo brakuje. Baza nie odpowiedziała — wiersz tak powie, a nie napisze «przychodzi wszystko».",
+            "Blok **«Moje»** zmienia tylko twoje ustawienia, od razu na wszystkich twoich urządzeniach. **«Język panelu i instrukcji»** przełącza RU, UZ albo PL. Wiadomości bota na razie przychodzą po rosyjsku.",
+            "**«Wygląd menu»** wybiera «Nowe menu» z ikonami po lewej albo stare menu w jednym wierszu. Przyciski obok pokażą jeszcze raz poznawanie panelu i szkolenie z sekcji [«Rynki»](/admin/markets).",
+            "**«Powiadomienia na tym urządzeniu»** włączają push (wyskakującą wiadomość) z tym samym tekstem, co wiadomość bota w Telegramie. Włącz je osobno na każdym urządzeniu.",
+            "**«Co bot mi wysyła»** pokazuje, ile rodzajów wiadomości bota do ciebie przychodzi. Zaznaczenia ustawia kierownik albo właściciel w «Zespół». Jeśli czegoś jest za dużo albo brakuje, poproś ich.",
           ],
           head: [
-            "Blok **«Moje»** zmienia tylko twoje, na wszystkich twoich urządzeniach. **«Język panelu i instrukcji»** — RU, UZ albo PL, ten sam przełącznik co w nagłówku; wiadomości bota na razie po rosyjsku. **«Wygląd menu»** — przełącznik «Nowe menu»: włączony — pasek ikon po lewej, «Więcej», karty i wyszukiwanie, wyłączony — wszystkie sekcje w jednym wierszu, jak dawniej. **«Powiadomienia na tym urządzeniu»** — push z tym samym tekstem, który bot pisze ci w Telegramie; włącza się osobno na każdym telefonie i komputerze, jak kartą na [Pulpicie](/admin/hq). Obok przełącznika menu — **«Pokaż jeszcze raz poznawanie panelu»**: te same 7 kroków, co przy pierwszym wejściu po odświeżeniu 03.11.2026 (zmienił się wygląd, funkcje te same). Tam też — **«Pokaż na ekranie, jak korzystać z „Rynków”»**: krótkie szkolenie z działu [«Rynki»](/admin/markets).",
-            "**«Co bot mi wysyła»** pokazuje, ile rodzajów wiadomości bota do ciebie przychodzi, a link obok prowadzi do [Zespołu](/admin/team), do zaznaczeń pod twoim imieniem. Baza nie odpowiedziała — wiersz tak powie, a nie napisze «przychodzi wszystko».",
+            "Blok **«Moje»** zmienia tylko twoje ustawienia, od razu na wszystkich twoich urządzeniach. **«Język panelu i instrukcji»** przełącza RU, UZ albo PL. Wiadomości bota na razie przychodzą po rosyjsku.",
+            "**«Wygląd menu»** wybiera «Nowe menu» z ikonami po lewej albo stare menu w jednym wierszu. Przyciski obok pokażą jeszcze raz poznawanie panelu i szkolenie z sekcji [«Rynki»](/admin/markets).",
+            "**«Powiadomienia na tym urządzeniu»** włączają push (wyskakującą wiadomość) z tym samym tekstem, co wiadomość bota w Telegramie. Włącz je osobno na każdym urządzeniu.",
+            "**«Co bot mi wysyła»** pokazuje, ile rodzajów wiadomości bota do ciebie przychodzi. Link obok prowadzi do sekcji [Zespół](/admin/team), do zaznaczeń pod twoim imieniem.",
           ],
           admin: [
-            "Blok **«Moje»** zmienia tylko twoje, na wszystkich twoich urządzeniach. **«Język panelu i instrukcji»** — RU, UZ albo PL, ten sam przełącznik co w nagłówku; wiadomości bota na razie po rosyjsku. **«Wygląd menu»** — przełącznik «Nowe menu»: włączony — pasek ikon po lewej, «Więcej», karty i wyszukiwanie, wyłączony — wszystkie sekcje w jednym wierszu, jak dawniej. **«Powiadomienia na tym urządzeniu»** — push z tym samym tekstem, który bot pisze ci w Telegramie; włącza się osobno na każdym telefonie i komputerze, jak kartą na [Pulpicie](/admin/hq). Obok przełącznika menu — **«Pokaż jeszcze raz poznawanie panelu»**: te same 7 kroków, co przy pierwszym wejściu po odświeżeniu 03.11.2026 (zmienił się wygląd, funkcje te same). Tam też — **«Pokaż na ekranie, jak korzystać z „Rynków”»**: krótkie szkolenie z działu [«Rynki»](/admin/markets).",
-            "**«Co bot mi wysyła»** pokazuje, ile rodzajów wiadomości bota do ciebie przychodzi, a link obok prowadzi do [Zespołu](/admin/team), do zaznaczeń pod twoim imieniem. Baza nie odpowiedziała — wiersz tak powie, a nie napisze «przychodzi wszystko».",
+            "Blok **«Moje»** zmienia tylko twoje ustawienia, od razu na wszystkich twoich urządzeniach. **«Język panelu i instrukcji»** przełącza RU, UZ albo PL. Wiadomości bota na razie przychodzą po rosyjsku.",
+            "**«Wygląd menu»** wybiera «Nowe menu» z ikonami po lewej albo stare menu w jednym wierszu. Przyciski obok pokażą jeszcze raz poznawanie panelu i szkolenie z sekcji [«Rynki»](/admin/markets).",
+            "**«Powiadomienia na tym urządzeniu»** włączają push (wyskakującą wiadomość) z tym samym tekstem, co wiadomość bota w Telegramie. Włącz je osobno na każdym urządzeniu.",
+            "**«Co bot mi wysyła»** pokazuje, ile rodzajów wiadomości bota do ciebie przychodzi. Link obok prowadzi do sekcji [Zespół](/admin/team), do zaznaczeń pod twoim imieniem.",
           ],
         },
       },
@@ -856,25 +862,26 @@ export const moreSections: Record<string, HelpEntry> = {
         id: "leads",
         title: "«Jakie leady wysyłać»: wybierasz sam",
         body: [
-          "W bloku **«Moje»** jest wiersz **«Jakie leady wysyłać»** — siedem pól według rodzaju leada: «Zimne kontakty» (klient odpowiedział na «Dzień dobry» z konta roboczego i zgodził się na makietę), «Przetargi» (loty zamówień publicznych znalezione przez skauta), «Sygnały z grup (skaut)» (ktoś w grupie Telegram szuka wykonawcy), «Partnerzy i agencje» (klient przyszedł z linku lub kodu partnera, od blogera albo agencji), «Zgłoszenia ze strony i z bota» (formularz, czat na stronie, rozmowa z botem, witryna, lista oczekujących DevUz Box) i «Makieta z bota» oraz «Pomoc z AI (Claudery)» (płatne zgłoszenie z bota Claudery). Domyślnie zaznaczone są wszystkie. Odznacz zbędne i kliknij **«Zapisz»** — u góry pojawi się plakietka, że zapisano. Rodzaj leada panel ustala sam po tym, skąd lead przyszedł, bez sieci neuronowej.",
-          "Odznaczony rodzaj to nie tylko «bot nie przyśle karty». [Kolejka](#leads-queue) też nie zaproponuje ci takiego leada: od razu trafia do osoby, która ma zaznaczone, i nie czeka u ciebie pół godziny. W nocy i poza godzinami pracy lead jak dotąd otwiera się wszystkim — ale tylko tym, którzy nie odznaczyli tego rodzaju. Jeśli tego rodzaju nie wybrał nikt, lead przychodzi do wszystkich jak dotąd, żeby klient nie przepadł, a kierownik i właściciel dostają wiersz «🧭 … nie wybrał nikt». Każdy zapis trafia do dziennika. Kierownik i właściciel mogą ustawić te pola także za ciebie — w «Zespół».",
+          "W bloku «Moje» jest **«Jakie leady wysyłać»**. To zaznaczenia według rodzajów leadów: «Zimne kontakty», «Przetargi», «Sygnały z grup (skaut)», «Partnerzy i agencje», «Zgłoszenia ze strony i z bota», «Makieta z bota» i «Pomoc z AI (Claudery)». Na początku zaznaczone są wszystkie.",
+          "Odznacz zbędne i kliknij **«Zapisz»**. Bot przestanie wysyłać takie leady, a [kolejka](#leads-queue) nie będzie ci ich proponować. Od razu trafią do tych, którzy mają zaznaczone.",
+          "Jeśli rodzaju nie wybrał nikt, lead i tak przychodzi do wszystkich, żeby klient nie przepadł. Kierownik i właściciel mogą ustawić te zaznaczenia za ciebie w «Zespół».",
         ],
       },
       {
         id: "links",
-        title: "Kontakty i zespół — linkami",
+        title: "Kontakty i zespół: linkami",
         body: {
           manager: [
-            "Blok **«Kontakty»** u menedżera to jeden wiersz, **«Teksty wiadomości i A/B»**: twoje teksty wiadomości o stronie, wspólne teksty zespołu i licznik, który tekst częściej dostaje odpowiedź. **«Otwórz»** prowadzi prosto tam, do [Zimnych kontaktów](/admin/prospect). Powitanie, automatyczne kontakty, kółka i konta ustawiają kierownik i właściciel, więc tych wierszy u ciebie nie ma.",
-            "Wiersze są dobrane według twojej roli i zaznaczeń właściciela: sekcja jest dla ciebie zamknięta — nie ma i jej wiersza. Tu jest tylko to, co ci się otworzy, a same przyciski i sprawdzenia zostały na dawnych miejscach.",
+            "W bloku **«Kontakty»** masz jeden wiersz: «Teksty wiadomości i A/B». Są tam twoje teksty wiadomości o stronie, wspólne teksty zespołu i to, który tekst częściej dostaje odpowiedź. **«Otwórz»** prowadzi prosto tam.",
+            "Tu jest tylko to, co masz otwarte. Powitanie, automatyczne kontakty, kółka i konta ustawiają kierownik i właściciel.",
           ],
           head: [
-            "Blok **«Kontakty»**: «Teksty wiadomości i A/B»; «Pierwsza wiadomość» — powitanie, które idzie jako pierwsze z konta roboczego, rosyjskie i uzbeckie osobno; «Automatyczne kontakty» — norma dzienna i licznik na dziś (włącza i wyłącza właściciel); «Kółka według branż» i «Konta robocze». Blok **«Zespół i dostęp»**: «Co bot wysyła zespołowi» — zaznaczenia powiadomień każdego menedżera w [Zespole](/admin/team). **«Otwórz»** prowadzi prosto do właściwego bloku.",
-            "Wiersze są dobrane według twojej roli i zaznaczeń właściciela: sekcja jest dla ciebie zamknięta — nie ma i jej wiersza. Tu jest tylko to, co ci się otworzy, a same przyciski i sprawdzenia zostały na dawnych miejscach.",
+            "W bloku **«Kontakty»** jest pięć wierszy: «Teksty wiadomości i A/B», «Pierwsza wiadomość», «Automatyczne kontakty», «Kółka według branż» i «Konta robocze». W bloku **«Zespół i dostęp»** jest wiersz «Co bot wysyła zespołowi». **«Otwórz»** prowadzi prosto we właściwe miejsce.",
+            "Same przyciski zostały w swoich sekcjach, tu są tylko linki. O dostępie do sekcji, leadach bez limitu i szkoleniach decyduje właściciel, dlatego tych wierszy nie masz.",
           ],
           admin: [
-            "Blok **«Kontakty»**: «Teksty wiadomości i A/B»; «Pierwsza wiadomość» — powitanie, które idzie jako pierwsze z konta roboczego, rosyjskie i uzbeckie osobno; «Automatyczne kontakty» — norma dzienna, licznik na dziś i wyłącznik; «Kółka według branż» i «Konta robocze». Blok **«Zespół i dostęp»**: «Co bot wysyła zespołowi», «Dostęp do sekcji» i «Leady bez limitu» — wszystko w [Zespole](/admin/team), pod imieniem osoby; «Szkolenia dla zespołu» — wyłącznik w [Szkoleniach](/admin/learn). **«Otwórz»** prowadzi prosto do właściwego bloku.",
-            "Kierownik widzi tu wszystko oprócz dostępu do sekcji, leadów bez limitu i szkoleń: o tym decydujesz tylko ty. Menedżer — swoje ustawienia i «Teksty wiadomości i A/B». Zamknięta komuś sekcja usuwa też jej wiersz.",
+            "W bloku **«Kontakty»** jest pięć wierszy: «Teksty wiadomości i A/B», «Pierwsza wiadomość», «Automatyczne kontakty», «Kółka według branż» i «Konta robocze». W bloku **«Zespół i dostęp»**: «Co bot wysyła zespołowi», «Dostęp do sekcji», «Leady bez limitu» i «Szkolenia dla zespołu». **«Otwórz»** prowadzi prosto we właściwe miejsce.",
+            "Kierownik widzi wszystko oprócz dostępu do sekcji, leadów bez limitu i szkoleń. Menedżer ma tylko swoje ustawienia i «Teksty wiadomości i A/B». Jeśli zamkniesz komuś sekcję, jej wiersze znikną też tutaj.",
           ],
         },
       },
@@ -883,23 +890,23 @@ export const moreSections: Record<string, HelpEntry> = {
 
   /* ── Инструкции ───────────────────────────────────────────────────── */
   "/admin/help": {
-    what: "Ta strona. Tutaj sekcja po sekcji opisane jest, jak działa panel i co od czego zależy — tylko to, do czego masz dostęp, i tak, jak to widzisz.",
+    what: "Ta strona. Tu sekcja po sekcji wyjaśniamy, jak działa panel. Widzisz tylko to, do czego masz dostęp.",
     items: [
       {
         id: "how",
         title: "Jak korzystać z instrukcji",
         body: [
-          "W nagłówku każdej sekcji jest przycisk «Jak korzystać z sekcji»: otwiera tutaj punkt o tej sekcji. Przy złożonych blokach w sekcjach jest mały «?», który prowadzi prosto do właściwego punktu.",
-          "Na górze — spis treści i przełącznik języka instrukcji. Sama instrukcja, zarówno z przycisku sekcji, jak i ze «?», otwiera się w [języku panelu](#help-language).",
-          "Jeśli czegoś brakuje albo opis nie zgadza się z tym, co widzisz na ekranie — powiedz właścicielowi, uzupełnimy.",
+          "W każdej sekcji panelu na górze jest przycisk «Jak korzystać z sekcji». Otwiera tutaj punkt o tej sekcji. Przy złożonych blokach jest mały «?», który prowadzi prosto do właściwego punktu.",
+          "Na górze strony jest spis treści i wybór języka instrukcji. Punkt, do którego trafiłeś przyciskiem albo linkiem, przez pięć sekund świeci zieloną ramką.",
+          "Czegoś brakuje albo na ekranie jest inaczej? Powiedz właścicielowi, uzupełnimy.",
         ],
       },
       {
         id: "crash",
         title: "Strona się nie załadowała",
         body: [
-          "Czasem zamiast strony na sekundę pojawia się «Odświeżamy stronę…»: tak bywa przy krótkiej przerwie w połączeniu z serwerem, gdy nie doszła odpowiedź na przejście lub przycisk. Panel sam ponownie pobiera stronę, jak po kliknięciu odświeżenia w przeglądarce; wszystko, co już zapisałeś, jest na miejscu. Błąd jest przy tym zapisywany, żeby programista znalazł i usunął jego przyczynę.",
-          "Jeśli strona nie wstanie także za drugim razem, pojawi się «Strona się nie załadowała» i przycisk «Odśwież». Kliknij go; jeśli powtarza się często, napisz do kierownika, na jakiej stronie i o której: po zapisie błędu przyczynę znajdzie się szybciej.",
+          "Czasem na sekundę pojawia się «Odświeżamy stronę…». To krótka przerwa w połączeniu, panel sam załaduje stronę jeszcze raz. Wszystko, co zapisałeś, jest na miejscu.",
+          "Jeśli za drugim razem też się nie uda, pojawi się «Strona się nie załadowała» i przycisk «Odśwież». Kliknij go. Często się powtarza? Napisz kierownikowi, na której stronie i o której godzinie to było.",
         ],
       },
       {
@@ -907,23 +914,23 @@ export const moreSections: Record<string, HelpEntry> = {
         title: "Menu: pasek ikon, «Więcej» i wyszukiwanie",
         body: {
           manager: [
-            "Od 03.11.2026 panel wygląda jak «DevUz Biuro». To, czego używa się codziennie, jest na **pasku ikon** po lewej (na telefonie — na dole ekranu, z krótkimi podpisami): «Pulpit», [«Skrzynka»](/admin/inbox), «Leady», «Zadania» (na ikonie — liczba twoich otwartych zadań, czerwona, jeśli są wśród nich po terminie), «Zimne kontakty», «Makiety». Najedź myszą na ikonę — pokaże się jej nazwa; otwarta sekcja świeci się na zielono. Reszta jest pod przyciskiem **«Więcej»** na dole paska, w grupach: **«Pieniądze»** — «Projekty», «Finanse», «Zamówienia sklepu». «Statystyki» i «Instrukcje» — tamże, osobnymi wierszami. Na górze — **górny pasek**: logo, wyszukiwanie, «Online» i czas w Taszkencie. Zębatka **⚙** po prawej, obok twojego imienia, otwiera [Ustawienia](/admin/settings): język, menu, powiadomienia na telefonie i linki do wszystkiego, co się ustawia w kontaktach i zespole. Dzwonek **🔔** obok — **«Co przyszło»**: to samo, co bot pisał ci w Telegramie, z 14 dni, nowe na górze; liczba na nim — ile jeszcze nie zaznaczono. «Otwórz» prowadzi tam, dokąd przycisk w bocie, **«✓ Zrobione»** zdejmuje wiersz z liczby, «Zaznacz wszystko» — wszystkie naraz. Zaznaczenie jest tylko twoje, w Telegramie nic się nie zmienia.",
-            "Od 25.10.2026 rzadsze sekcje są **kartami wewnątrz sekcji**: rząd kart stoi nad stroną, otwarta karta jest podświetlona na zielono. «Zimne kontakty» · «Sygnały skauta» · «Analiza rozmów»; «Projekty» · «Umowy»; «Statystyki» · «Etapy sprzedaży». Adresy i zakładki są te same, a «Znajdź sekcję lub firmę» znajduje też karty: wpisz «umo» — otworzą się «Umowy». Gdy otwarta jest karta, w menu świeci się jej sekcja. W karcie projektu, leada czy umowy rzędu kart nie ma — tam by rozpraszał.",
-            "Otwarta sekcja z «Więcej» — świeci się sam przycisk «Więcej», a na jego liście otwarta sekcja jest zielona. Na telefonie na dolnym pasku jest pięć przycisków, «Makiety» — pierwszym wierszem w «Więcej»; na telefonie język panelu i imię zniknęły z górnego paska, język zmienia się w [Ustawieniach](/admin/settings). Listę «Więcej» zamyka przycisk «Zamknij menu», klawisz Esc, kliknięcie obok albo samo przejście do sekcji. Wolisz po staremu — wyłącz przełącznik **«Nowe menu»** na dole listy «Więcej» albo w [Ustawieniach](/admin/settings): sekcje znów staną w jednym rzędzie w nagłówku, jak dawniej, bez paska ikon. Włączysz go — pasek wróci. Wybór zapamiętuje się dla Ciebie, na wszystkich Twoich urządzeniach, i nie dotyczy kolegów.",
-            "Najszybciej — **wyszukiwanie na górnym pasku**, obok logo (na telefonie — ikona lupy) albo klawisze **Ctrl+K** (na Macu — ⌘K) w dowolnym miejscu panelu. Zacznij pisać: «umo» — pierwsza będzie sekcja «Umowy». Nazwa firmy, imię, numer zgłoszenia, strona, telefon lub @nick — niżej pojawią się **«Firmy i leady»**: leady, zimne kontakty i projekty, po prawej podpisane, co to jest. Enter otwiera wybrane, strzałki ↑ ↓ wybierają inne. Leady wyszukujemy tylko wśród tych, które widzisz w «Leady»; po telefonie i @nicku menedżer znajduje tylko swoje leady — dane cudzego nie są mu otwarte nawet w karcie. Kontakt, z którego wyrósł lead, otwiera się kartą leada. Zielona kropka «Online» obok wyszukiwania — urządzenie ma połączenie; żółta i «Brak sieci» — internet zniknął, przyciski panelu nie zadziałają, dopóki nie wróci.",
+            "Sekcje na co dzień są na pasku ikon po lewej: «Pulpit», [«Skrzynka»](/admin/inbox), «Leady», «Zadania», «Zimne kontakty», «Makiety». Na telefonie pasek jest na dole ekranu, a «Makiety» są pierwszym wierszem w «Więcej». Liczba na «Zadaniach» to twoje otwarte zadania, czerwona znaczy, że są zaległe.",
+            "Reszta jest pod przyciskiem «Więcej» na dole paska, na przykład «Projekty», «Statystyki» i «Instrukcje». Rzadsze sekcje otwierają się kartami nad stroną: na przykład «Statystyki» i «Etapy sprzedaży». Wolisz stare menu w jednym wierszu? Wyłącz «Nowe menu» w «Więcej» albo w sekcji [«Ustawienia»](/admin/settings).",
+            "W prawym górnym rogu jest dzwonek 🔔. Jest w nim wszystko, co bot pisał ci w Telegramie przez 14 dni: «✓ Zrobione» zdejmuje wiersz z licznika, «Zaznacz wszystko» zdejmuje wszystkie. Obok jest zębatka ⚙, otwiera ustawienia. Język i «Wyloguj» są pod kółkiem z twoimi inicjałami.",
+            "Najszybciej szuka się polem wyszukiwania na górze albo skrótem Ctrl+K (na Macu ⌘K). Wpisz sekcję, firmę, imię, numer zgłoszenia, telefon albo @nick. Po telefonie i @nicku znajdziesz tylko swoje leady. Zielona kropka «Online» znaczy, że internet jest, a przy «Brak sieci» przyciski panelu nie zadziałają.",
           ],
           head: [
-            "Od 03.11.2026 panel wygląda jak «DevUz Biuro». To, czego używa się codziennie, jest na **pasku ikon** po lewej (na telefonie — na dole ekranu, z krótkimi podpisami): «Pulpit», [«Skrzynka»](/admin/inbox), «Leady», «Zadania» (na ikonie — liczba twoich otwartych zadań, czerwona, jeśli są wśród nich po terminie), «Zimne kontakty», «Makiety». Najedź myszą na ikonę — pokaże się jej nazwa; otwarta sekcja świeci się na zielono. Reszta jest pod przyciskiem **«Więcej»** na dole paska, w grupach: **«Pieniądze»** — «Projekty», «Finanse», «Zamówienia sklepu»; **«Marketing»** — «Ruch», «Partnerzy», «Pracownicy AI»; **«Zespół»** — «Zespół», «Szkolenia». «Statystyki» i «Instrukcje» — tamże, osobnymi wierszami. Na górze — **górny pasek**: logo, wyszukiwanie, «Online» i czas w Taszkencie. Zębatka **⚙** po prawej, obok twojego imienia, otwiera [Ustawienia](/admin/settings): język, menu, powiadomienia na telefonie i linki do wszystkiego, co się ustawia w kontaktach i zespole. Dzwonek **🔔** obok — **«Co przyszło»**: to samo, co bot pisał ci w Telegramie, z 14 dni, nowe na górze; liczba na nim — ile jeszcze nie zaznaczono. «Otwórz» prowadzi tam, dokąd przycisk w bocie, **«✓ Zrobione»** zdejmuje wiersz z liczby, «Zaznacz wszystko» — wszystkie naraz. Zaznaczenie jest tylko twoje, w Telegramie nic się nie zmienia.",
-            "Od 25.10.2026 rzadsze sekcje są **kartami wewnątrz sekcji**: rząd kart stoi nad stroną, otwarta karta jest podświetlona na zielono. «Zimne kontakty» · «Sygnały skauta» · «Analiza rozmów» · «Konta»; «Projekty» · «Umowy»; «Finanse» · «Wydatki»; «Ruch» · «Reklamy»; «Zespół» · «Kandydaci»; «Statystyki» · «Etapy sprzedaży». Adresy i zakładki są te same, a «Znajdź sekcję lub firmę» znajduje też karty: wpisz «umo» — otworzą się «Umowy». Gdy otwarta jest karta, w menu świeci się jej sekcja. W karcie projektu, leada czy umowy rzędu kart nie ma — tam by rozpraszał.",
-            "Otwarta sekcja z «Więcej» — świeci się sam przycisk «Więcej», a na jego liście otwarta sekcja jest zielona. Na telefonie na dolnym pasku jest pięć przycisków, «Makiety» — pierwszym wierszem w «Więcej»; na telefonie język panelu i imię zniknęły z górnego paska, język zmienia się w [Ustawieniach](/admin/settings). Listę «Więcej» zamyka przycisk «Zamknij menu», klawisz Esc, kliknięcie obok albo samo przejście do sekcji. Wolisz po staremu — wyłącz przełącznik **«Nowe menu»** na dole listy «Więcej» albo w [Ustawieniach](/admin/settings): sekcje znów staną w jednym rzędzie w nagłówku, jak dawniej, bez paska ikon. Włączysz go — pasek wróci. Wybór zapamiętuje się dla Ciebie, na wszystkich Twoich urządzeniach, i nie dotyczy kolegów.",
-            "Najszybciej — **wyszukiwanie na górnym pasku**, obok logo (na telefonie — ikona lupy) albo klawisze **Ctrl+K** (na Macu — ⌘K) w dowolnym miejscu panelu. Zacznij pisać: «umo» — pierwsza będzie sekcja «Umowy». Nazwa firmy, imię, numer zgłoszenia, strona, telefon lub @nick — niżej pojawią się **«Firmy i leady»**: leady, zimne kontakty i projekty, po prawej podpisane, co to jest. Enter otwiera wybrane, strzałki ↑ ↓ wybierają inne. Leady wyszukujemy tylko wśród tych, które widzisz w «Leady»; po telefonie i @nicku menedżer znajduje tylko swoje leady — dane cudzego nie są mu otwarte nawet w karcie. Kontakt, z którego wyrósł lead, otwiera się kartą leada. Zielona kropka «Online» obok wyszukiwania — urządzenie ma połączenie; żółta i «Brak sieci» — internet zniknął, przyciski panelu nie zadziałają, dopóki nie wróci.",
+            "Sekcje na co dzień są na pasku ikon po lewej: «Pulpit», [«Skrzynka»](/admin/inbox), «Leady», «Zadania», «Zimne kontakty», «Makiety». Na telefonie pasek jest na dole ekranu, a «Makiety» są pierwszym wierszem w «Więcej». Liczba na «Zadaniach» to twoje otwarte zadania, czerwona znaczy, że są zaległe.",
+            "Reszta jest pod przyciskiem «Więcej» na dole paska, w grupach: «Pieniądze», «Marketing», «Zespół» i inne. Rzadsze sekcje otwierają się kartami nad stroną: na przykład «Zespół» i «Kandydaci». Wolisz stare menu w jednym wierszu? Wyłącz «Nowe menu» w «Więcej» albo w sekcji [«Ustawienia»](/admin/settings).",
+            "W prawym górnym rogu jest dzwonek 🔔. Jest w nim wszystko, co bot pisał ci w Telegramie przez 14 dni: «✓ Zrobione» zdejmuje wiersz z licznika, «Zaznacz wszystko» zdejmuje wszystkie. Obok jest zębatka ⚙, otwiera ustawienia. Język i «Wyloguj» są pod kółkiem z twoimi inicjałami.",
+            "Najszybciej szuka się polem wyszukiwania na górze albo skrótem Ctrl+K (na Macu ⌘K). Wpisz sekcję, firmę, imię, numer zgłoszenia, telefon albo @nick, a niżej pojawią się «Firmy i leady». Zielona kropka «Online» znaczy, że internet jest, a przy «Brak sieci» przyciski panelu nie zadziałają.",
           ],
           admin: [
-            "Od 03.11.2026 panel wygląda jak «DevUz Biuro». To, czego używa się codziennie, jest na **pasku ikon** po lewej (na telefonie — na dole ekranu, z krótkimi podpisami): «Pulpit», [«Skrzynka»](/admin/inbox), «Leady», «Zadania» (na ikonie — liczba twoich otwartych zadań, czerwona, jeśli są wśród nich po terminie), «Zimne kontakty», «Makiety». Najedź myszą na ikonę — pokaże się jej nazwa; otwarta sekcja świeci się na zielono. Reszta jest pod przyciskiem **«Więcej»** na dole paska, w grupach: **«Pieniądze»** — «Projekty», «Finanse», «Zamówienia sklepu»; **«Marketing»** — «Ruch», «Partnerzy», «Analizy», «Pracownicy AI»; **«Zespół»** — «Zespół», «Szkolenia»; **«Raporty»** — «Statystyki», «Dziennik». «Instrukcje» — tamże, osobnym wierszem. Na górze — **górny pasek**: logo, wyszukiwanie, «Online» i czas w Taszkencie. Zębatka **⚙** po prawej, obok twojego imienia, otwiera [Ustawienia](/admin/settings): język, menu, powiadomienia na telefonie i linki do wszystkiego, co się ustawia w kontaktach i zespole. Dzwonek **🔔** obok — **«Co przyszło»**: to samo, co bot pisał ci w Telegramie, z 14 dni, nowe na górze; liczba na nim — ile jeszcze nie zaznaczono. «Otwórz» prowadzi tam, dokąd przycisk w bocie, **«✓ Zrobione»** zdejmuje wiersz z liczby, «Zaznacz wszystko» — wszystkie naraz. Zaznaczenie jest tylko twoje, w Telegramie nic się nie zmienia.",
-            "Od 25.10.2026 rzadsze sekcje są **kartami wewnątrz sekcji**: rząd kart stoi nad stroną, otwarta karta jest podświetlona na zielono. «Zimne kontakty» · «Sygnały skauta» · «Analiza rozmów» · «Konta»; «Makiety» · «Prototypy»; «Projekty» · «Umowy»; «Finanse» · «Wydatki»; «Zamówienia sklepu» · «Wydania»; «Ruch» · «Reklamy»; «Zespół» · «Kandydaci»; «Statystyki» · «Etapy sprzedaży»; «Dziennik» · «Użycie». Adresy i zakładki są te same, a «Znajdź sekcję lub firmę» znajduje też karty: wpisz «umo» — otworzą się «Umowy». Gdy otwarta jest karta, w menu świeci się jej sekcja. W karcie projektu, leada czy umowy rzędu kart nie ma — tam by rozpraszał. Zamkniesz komuś sekcję ptaszkiem — jej karty same staną u niego w menu, w tej samej grupie.",
-            "Otwarta sekcja z «Więcej» — świeci się sam przycisk «Więcej», a na jego liście otwarta sekcja jest zielona. Na telefonie na dolnym pasku jest pięć przycisków, «Makiety» — pierwszym wierszem w «Więcej»; na telefonie język panelu i imię zniknęły z górnego paska, język zmienia się w [Ustawieniach](/admin/settings). Listę «Więcej» zamyka przycisk «Zamknij menu», klawisz Esc, kliknięcie obok albo samo przejście do sekcji. Wolisz po staremu — wyłącz przełącznik **«Nowe menu»** na dole listy «Więcej» albo w [Ustawieniach](/admin/settings): sekcje znów staną w jednym rzędzie w nagłówku, jak dawniej, bez paska ikon. Włączysz go — pasek wróci. Wybór zapamiętuje się dla Ciebie, na wszystkich Twoich urządzeniach, i nie dotyczy kolegów.",
-            "Najszybciej — **wyszukiwanie na górnym pasku**, obok logo (na telefonie — ikona lupy) albo klawisze **Ctrl+K** (na Macu — ⌘K) w dowolnym miejscu panelu. Zacznij pisać: «umo» — pierwsza będzie sekcja «Umowy». Nazwa firmy, imię, numer zgłoszenia, strona, telefon lub @nick — niżej pojawią się **«Firmy i leady»**: leady, zimne kontakty i projekty, po prawej podpisane, co to jest. Enter otwiera wybrane, strzałki ↑ ↓ wybierają inne. Leady wyszukujemy tylko wśród tych, które widzisz w «Leady»; po telefonie i @nicku menedżer znajduje tylko swoje leady — dane cudzego nie są mu otwarte nawet w karcie. Kontakt, z którego wyrósł lead, otwiera się kartą leada. Zielona kropka «Online» obok wyszukiwania — urządzenie ma połączenie; żółta i «Brak sieci» — internet zniknął, przyciski panelu nie zadziałają, dopóki nie wróci.",
-            "Menu słucha Twoich [ptaszków sekcji](#team-sections): otworzysz komuś sekcję — pojawi się u niego w swojej grupie (na przykład «Ruch» — w «Marketingu»; jeśli to jego jedyna sekcja w tej grupie — osobnym linkiem), zamkniesz — zniknie i z grupy, i z wyszukiwania. Menedżer i kierownik mają mniej grup: grupa, w której człowiek nie ma żadnej sekcji, w «Więcej» się nie pojawia. Nowa sekcja panelu dostaje grupę przy tworzeniu — menu nie trzeba ustawiać osobno.",
+            "Sekcje na co dzień są na pasku ikon po lewej: «Pulpit», [«Skrzynka»](/admin/inbox), «Leady», «Zadania», «Zimne kontakty», «Makiety». Na telefonie pasek jest na dole ekranu, a «Makiety» są pierwszym wierszem w «Więcej». Liczba na «Zadaniach» to twoje otwarte zadania, czerwona znaczy, że są zaległe.",
+            "Reszta jest pod przyciskiem «Więcej» na dole paska, w grupach: «Pieniądze», «Marketing», «Zespół», «Raporty» i inne. Rzadsze sekcje otwierają się kartami nad stroną: na przykład «Dziennik» i «Użycie». Wolisz stare menu w jednym wierszu? Wyłącz «Nowe menu» w «Więcej» albo w sekcji [«Ustawienia»](/admin/settings).",
+            "W prawym górnym rogu jest dzwonek 🔔. Jest w nim wszystko, co bot pisał ci w Telegramie przez 14 dni: «✓ Zrobione» zdejmuje wiersz z licznika, «Zaznacz wszystko» zdejmuje wszystkie. Obok jest zębatka ⚙, otwiera ustawienia. Język i «Wyloguj» są pod kółkiem z twoimi inicjałami.",
+            "Najszybciej szuka się polem wyszukiwania na górze albo skrótem Ctrl+K (na Macu ⌘K). Wpisz sekcję, firmę, imię, numer zgłoszenia, telefon albo @nick, a niżej pojawią się «Firmy i leady». Zielona kropka «Online» znaczy, że internet jest, a przy «Brak sieci» przyciski panelu nie zadziałają.",
+            "Menu słucha twoich [zaznaczeń sekcji](#team-sections). Otworzysz komuś sekcję, a pojawi się w jego menu. Zamkniesz, a zniknie i z menu, i z wyszukiwania.",
           ],
         },
       },
@@ -932,22 +939,19 @@ export const moreSections: Record<string, HelpEntry> = {
         title: "Wyszukiwanie: zapytaj własnymi słowami",
         body: {
           manager: [
-            "Nad spisem treści — pole **«Szukaj w instrukcji»**. Napisz pytanie własnymi słowami, tak jak zapytałbyś kolegę: «jak przekazać lead innemu menedżerowi», «dlaczego wiadomość do klienta jeszcze nie wyszła», «jak dać zadanie dwóm osobom naraz» — i kliknij **«Szukaj»**. Można pisać po rosyjsku, uzbecku albo polsku, z literówkami i bez dokładnych nazw przycisków.",
-            "Pytanie analizuje model: widzi tylko punkty, które masz na tej stronie, i wybiera pasujący według sensu, a nie zgodności słów. To samo pytanie drugi raz nie trafia do modelu — odpowiedź bierze się z pamięci, od razu. Jeśli pytanie to słowa z tytułu jednego punktu, ten punkt otwiera się od razu, a model go nie czyta.",
-            "Strona sama przewija się do znalezionego punktu, a on przez pięć sekund mruga zieloną ramką — od razu widać go wśród sąsiednich. Pod polem jest napisane, który punkt otwarto, a jeśli pytanie dotyczy kilku tematów — jeszcze do dwóch punktów po «Może też pasować»: kliknij, a strona przewinie się do niego i podświetli go tak samo. Tak samo podświetla się punkt, do którego trafiasz przyciskiem «Jak korzystać z sekcji», «?» przy bloku albo linkiem w instrukcji.",
-            "Gdy model jest niedostępny albo pytasz częściej niż 20 razy w 10 minut, punkt dobiera się po zgodności słów i pod polem jest to napisane: sprawdź, czy to ten punkt. Nic się nie znalazło — znaczy, tego w instrukcji jeszcze nie ma: zapytaj na czacie zespołu i powiedz właścicielowi, uzupełnimy.",
+            "Nad spisem treści jest pole **«Szukaj w instrukcji»**. Napisz pytanie tak, jak zadałbyś je koledze, na przykład „jak przekazać leada innemu menedżerowi”, i kliknij **«Szukaj»**. Można po rosyjsku, uzbecku albo polsku, nawet z literówkami.",
+            "Program dobierze punkt po sensie. Strona przewinie się do niego, a on zaświeci zieloną ramką. Jeśli pasują też inne punkty, będą niżej, po «Może też pasować:».",
+            "Czasem pod polem jest napisane, że punkt dobrano po zgodności słów. Tak bywa, gdy wyszukiwanie jest zajęte albo pytań jest więcej niż 20 w 10 minut: sprawdź, czy to ten punkt. Nic się nie znalazło? Tego jeszcze nie ma w instrukcji, powiedz właścicielowi.",
           ],
           head: [
-            "Nad spisem treści — pole **«Szukaj w instrukcji»**. Napisz pytanie własnymi słowami, tak jak zapytałbyś kolegę: «jak przekazać lead innemu menedżerowi», «dlaczego wiadomość do klienta jeszcze nie wyszła», «jak dać zadanie dwóm osobom naraz» — i kliknij **«Szukaj»**. Można pisać po rosyjsku, uzbecku albo polsku, z literówkami i bez dokładnych nazw przycisków.",
-            "Pytanie analizuje model: widzi tylko punkty, które masz na tej stronie, i wybiera pasujący według sensu, a nie zgodności słów. To samo pytanie drugi raz nie trafia do modelu — odpowiedź bierze się z pamięci, od razu. Jeśli pytanie to słowa z tytułu jednego punktu, ten punkt otwiera się od razu, a model go nie czyta.",
-            "Strona sama przewija się do znalezionego punktu, a on przez pięć sekund mruga zieloną ramką — od razu widać go wśród sąsiednich. Pod polem jest napisane, który punkt otwarto, a jeśli pytanie dotyczy kilku tematów — jeszcze do dwóch punktów po «Może też pasować»: kliknij, a strona przewinie się do niego i podświetli go tak samo. Tak samo podświetla się punkt, do którego trafiasz przyciskiem «Jak korzystać z sekcji», «?» przy bloku albo linkiem w instrukcji.",
-            "Gdy model jest niedostępny albo pytasz częściej niż 20 razy w 10 minut, punkt dobiera się po zgodności słów i pod polem jest to napisane: sprawdź, czy to ten punkt. Nic się nie znalazło — znaczy, tego w instrukcji jeszcze nie ma: zapytaj na czacie zespołu i powiedz właścicielowi, uzupełnimy.",
+            "Nad spisem treści jest pole **«Szukaj w instrukcji»**. Napisz pytanie tak, jak zadałbyś je koledze, na przykład „jak przekazać leada innemu menedżerowi”, i kliknij **«Szukaj»**. Można po rosyjsku, uzbecku albo polsku, nawet z literówkami.",
+            "Program dobierze punkt po sensie. Strona przewinie się do niego, a on zaświeci zieloną ramką. Jeśli pasują też inne punkty, będą niżej, po «Może też pasować:».",
+            "Czasem pod polem jest napisane, że punkt dobrano po zgodności słów. Tak bywa, gdy wyszukiwanie jest zajęte albo pytań jest więcej niż 20 w 10 minut: sprawdź, czy to ten punkt. Nic się nie znalazło? Tego jeszcze nie ma w instrukcji, powiedz właścicielowi.",
           ],
           admin: [
-            "Nad spisem treści — pole **«Szukaj w instrukcji»**. Napisz pytanie własnymi słowami, tak jak zapytałbyś kolegę: «jak przekazać lead innemu menedżerowi», «dlaczego wiadomość do klienta jeszcze nie wyszła», «jak dać zadanie dwóm osobom naraz» — i kliknij **«Szukaj»**. Można pisać po rosyjsku, uzbecku albo polsku, z literówkami i bez dokładnych nazw przycisków.",
-            "Pytanie analizuje najtańszy model (Haiku): ma tylko wybrać punkt z listy, niczego nie pisze. Widzi tylko punkty z tej strony i wybiera pasujący według sensu, a nie zgodności słów. W trybie «Pokaż jako» wyszukiwanie idzie po instrukcji wybranej roli. To samo pytanie drugi raz nie trafia do modelu — odpowiedź bierze się z pamięci. Model zmienia się zmienną `HELP_SEARCH_MODEL` w .env. Pytania słowami z tytułu jednego punktu model w ogóle nie czyta: punkt otwiera się od razu i za darmo. Gdy takie słowa są w tytułach dwóch punktów, decyduje model.",
-            "Strona sama przewija się do znalezionego punktu, a on przez pięć sekund mruga zieloną ramką — od razu widać go wśród sąsiednich. Pod polem jest napisane, który punkt otwarto, a jeśli pytanie dotyczy kilku tematów — jeszcze do dwóch punktów po «Może też pasować»: kliknij, a strona przewinie się do niego i podświetli go tak samo. Tak samo podświetla się punkt, do którego trafiasz przyciskiem «Jak korzystać z sekcji», «?» przy bloku albo linkiem w instrukcji.",
-            "Gdy model jest niedostępny albo ktoś pyta częściej niż 20 razy w 10 minut, punkt dobiera się po zgodności słów — za darmo, i pod polem jest to napisane. Nic się nie znalazło — znaczy, takiego punktu w instrukcji nie ma: warto go dopisać.",
+            "Nad spisem treści jest pole **«Szukaj w instrukcji»**. Napisz pytanie tak, jak zadałbyś je koledze, na przykład „jak przekazać leada innemu menedżerowi”, i kliknij **«Szukaj»**. Można po rosyjsku, uzbecku albo polsku, nawet z literówkami.",
+            "Program dobierze punkt po sensie. Jeśli pytanie zgadza się z tytułem punktu, punkt otwiera się od razu. W trybie «Pokaż jako:» wyszukiwanie idzie po instrukcji wybranej roli. Podobne punkty będą niżej, po «Może też pasować:».",
+            "Gdy wyszukiwanie jest zajęte albo ktoś zadał ponad 20 pytań w 10 minut, punkt dobiera się po zgodności słów. Pod polem jest o tym napis. Nic się nie znalazło? Takiego punktu nie ma i warto go dopisać.",
           ],
         },
       },
@@ -956,47 +960,46 @@ export const moreSections: Record<string, HelpEntry> = {
         title: "Wideo do sekcji",
         body: {
           manager: [
-            "Na górze strony — wideo wprowadzające: jak wejść do panelu i co zrobić pierwszego dnia. Na górze sekcji — jej wideo, jeśli już je nagrano, a pod nim — szczegółowy tekst. Przycisk «Jak korzystać z sekcji» otwiera sekcję tutaj — czyli od razu wideo.",
-            "Wideo wyświetla się w języku instrukcji, a jeśli w tym języku jeszcze go nie ma — w innym, i pod nim jest to napisane. Wideo nagrywają właściciel i kierownik; jeśli brakuje wideo do sekcji albo coś w nim nie zgadza się z ekranem — powiedz im.",
+            "Na górze strony jest wideo wprowadzające: jak wejść do panelu i co zrobić pierwszego dnia. Sekcja też może mieć swoje wideo, stoi przed tekstem.",
+            "Wideo pokazuje się w języku instrukcji. Jeśli w tym języku go nie ma, będzie inny język i pod wideo jest to napisane. Brakuje wideo do sekcji? Powiedz właścicielowi albo kierownikowi.",
           ],
           head: [
-            "Na górze strony — wideo wprowadzające: jak wejść do panelu i co zrobić pierwszego dnia. Na górze sekcji — jej wideo, jeśli już je nagrano, a pod nim — szczegółowy tekst. Przycisk «Jak korzystać z sekcji» otwiera sekcję tutaj — czyli od razu wideo.",
-            "Wideo wgrywasz ty i właściciel. Pod opisem sekcji jest zwinięty blok «Wideo do sekcji», na górze strony — «Wideo wprowadzające». Wybierz «Język wideo» — w jakim języku się w nim mówi i są podpisy — plik MP4, MOV lub WebM do 500 MB i kliknij «Wgraj». Plik idzie częściami i sam ponawia część, przy której zerwało się połączenie; nie zamykaj strony, dopóki pasek nie dojdzie do końca. Wideo w tym samym języku zastępuje poprzednie.",
-            "Wideo wyświetla się w języku instrukcji, a jeśli w nim go nie ma — w innym: najpierw rosyjskim, potem uzbeckim, potem polskim. Dlatego jedno wideo w dowolnym języku wystarczy, żeby wszyscy je mieli. «Usuń» obok języka w bloku kasuje to wideo z serwera.",
+            "Na górze strony jest wideo wprowadzające: jak wejść do panelu i co zrobić pierwszego dnia. Sekcja też może mieć swoje wideo, stoi przed tekstem.",
+            "Wgrywać wideo możesz ty i właściciel. Otwórz blok «Wideo do sekcji» pod opisem sekcji albo «Wideo wprowadzające» na górze strony. Wybierz «Język wideo», plik MP4, MOV albo WebM do 500 MB i kliknij «Wgraj».",
+            "Nie zamykaj strony, dopóki pasek wgrywania nie dojdzie do końca. Nowe wideo w tym samym języku zastąpi stare, a «Usuń» je skasuje. Jedno wideo w dowolnym języku wystarczy, żeby zobaczyli je wszyscy.",
           ],
           admin: [
-            "Na górze strony — wideo wprowadzające: jak wejść do panelu i co zrobić pierwszego dnia. Na górze sekcji — jej wideo, jeśli już je nagrano, a pod nim — szczegółowy tekst. Przycisk «Jak korzystać z sekcji» otwiera sekcję tutaj — czyli od razu wideo.",
-            "Wideo wgrywasz ty i kierownik. Pod opisem sekcji jest zwinięty blok «Wideo do sekcji», na górze strony — «Wideo wprowadzające». Wybierz «Język wideo» — w jakim języku się w nim mówi i są podpisy — plik MP4, MOV lub WebM do 500 MB i kliknij «Wgraj». Plik idzie częściami i sam ponawia część, przy której zerwało się połączenie; nie zamykaj strony, dopóki pasek nie dojdzie do końca. Wideo w tym samym języku zastępuje poprzednie.",
-            "Wideo wyświetla się w języku instrukcji, a jeśli w nim go nie ma — w innym: najpierw rosyjskim, potem uzbeckim, potem polskim. Dlatego jedno wideo w dowolnym języku wystarczy, żeby wszyscy je mieli. «Usuń» obok języka w bloku kasuje to wideo z serwera. Kto wgrał i usunął wideo — w dzienniku działań.",
+            "Na górze strony jest wideo wprowadzające: jak wejść do panelu i co zrobić pierwszego dnia. Sekcja też może mieć swoje wideo, stoi przed tekstem.",
+            "Wgrywać wideo możesz ty i kierownik. Otwórz blok «Wideo do sekcji» pod opisem sekcji albo «Wideo wprowadzające» na górze strony. Wybierz «Język wideo», plik MP4, MOV albo WebM do 500 MB i kliknij «Wgraj».",
+            "Nie zamykaj strony, dopóki pasek wgrywania nie dojdzie do końca. Nowe wideo w tym samym języku zastąpi stare, a «Usuń» je skasuje. Jedno wideo w dowolnym języku wystarczy, żeby zobaczyli je wszyscy. Kto wgrał i usunął wideo, widać w sekcji [«Dziennik»](/admin/audit).",
           ],
         },
       },
       {
         id: "language",
-        title: "Język panelu: RU / UZ / PL",
+        title: "Język panelu: RU, UZ, PL",
         body: [
-          "W nagłówku panelu, obok «Jak korzystać z sekcji», jest przełącznik **RU / UZ / PL**: rosyjski, uzbecki (alfabetem łacińskim) i polski. Kliknij wybrany — strona od razu przerysuje się w tym języku, adres i otwarta sekcja się nie zmieniają.",
-          "Język zapamiętuje się przy Tobie, a nie w przeglądarce: zalogujesz się z telefonu albo z innego komputera — panel otworzy się w tym samym języku. Język możesz zmienić tylko sobie, u współpracowników się nie zmienia. Dopóki go nie wybierzesz, panel jest po rosyjsku.",
-          "Cały panel jest przetłumaczony: przyciski, podpisy i podpowiedzi są w wybranym języku. Po rosyjsku zostają tylko wiadomości i przyciski bota w Telegramie (bot na razie pisze po rosyjsku), panel partnera i treść umowy dla zamawiającego — w instrukcji są nazwane po rosyjsku, żeby łatwo było je znaleźć na ekranie.",
-          "Instrukcja otwiera się w języku panelu: rosyjska, uzbecka albo polska. Inny język instrukcji możesz wybrać na górze tej strony — nie zmienia to języka panelu.",
+          "Język panelu przełączają przyciski RU, UZ i PL: rosyjski, uzbecki w alfabecie łacińskim i polski. W nowym menu są pod kółkiem z twoimi inicjałami w prawym górnym rogu, w starym prosto w nagłówku. Język zmienisz też w sekcji [«Ustawienia»](/admin/settings).",
+          "Język zapamiętuje się dla ciebie, a nie dla przeglądarki. Na telefonie panel otworzy się w tym samym języku. Twój wybór nie zmienia języka kolegom.",
+          "Po rosyjsku zostają tylko wiadomości i przyciski bota w Telegramie, gabinet partnera i umowa dla klienta. Instrukcja otwiera się w języku panelu, inny język wybierzesz na górze tej strony.",
         ],
       },
       {
         id: "first-day",
         title: "Co zrobić pierwszego dnia",
         body: [
-          "Otwórz [bota studia](https://t.me/Devuz_studio_bot) i naciśnij «Start» — bez tego nie wyśle Ci ani leada, ani przypomnienia. Logowanie do panelu — komendą /login.",
-          "Dołącz do kanału «Devuz Scout» i włącz dźwięk w bocie i na kanale: propozycja leada jest aktualna 30 minut, post na czacie — godzinę, dwie.",
-          "Przeczytaj punkty o [kolejce leadów](#leads-queue) i [karcie leada](#leads-card) — to podstawa pracy. Resztę czytaj, gdy pierwszy raz otworzysz daną sekcję: przycisk «Jak korzystać z sekcji» jest zawsze w nagłówku.",
+          "Otwórz [bota studia](https://t.me/Devuz_studio_bot) i kliknij «Старт». Bez tego nie przyśle ci leada ani przypomnienia. Do panelu wejdziesz komendą /login.",
+          "Dołącz do kanału «Devuz Scout» i włącz dźwięk w bocie i kanale. Propozycja leada czeka na ciebie 30 minut, potem idzie do następnej osoby.",
+          "Przeczytaj punkty o [kolejce leadów](#leads-queue) i [karcie leada](#leads-card). Resztę czytaj, gdy pierwszy raz otworzysz sekcję. Przycisk «Jak korzystać z sekcji» jest zawsze na górze.",
         ],
       },
       {
         id: "owner-view",
-        title: "Zobacz oczami zespołu",
+        title: "Zobaczyć oczami zespołu",
         roles: ["admin"],
         body: [
-          "«Pokaż jako: właściciel / kierownik / menedżer» — instrukcja dokładnie w takiej postaci, w jakiej czyta ją osoba z tą rolą: bez Twoich sekcji i z jej tekstem. Tak sprawdzisz, co jest tłumaczone nowej osobie, bez logowania na cudze konto.",
-          "Zasada dla zmian: każda nowa funkcja przychodzi razem ze swoim punktem tutaj — po rosyjsku, uzbecku i polsku, według ról. Sprawdza to test przy każdym wdrożeniu.",
+          "Na górze strony jest «Pokaż jako:» i trzy role: «właściciel», «kierownik», «menedżer». Wybierz rolę, a instrukcja pokaże się tak, jak widzi ją osoba z tą rolą. Tak sprawdzisz, co czyta nowa osoba.",
+          "Każda nowa funkcja przychodzi razem ze swoim punktem tutaj, po rosyjsku, uzbecku i polsku. Sprawdza to test przy każdej aktualizacji panelu.",
         ],
       },
     ],
