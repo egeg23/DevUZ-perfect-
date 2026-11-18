@@ -906,11 +906,11 @@ export const autopilotDict = defineDict({
   /** `mark` — шапка карточки лида в боте; бот пишет по-русски, поэтому строкой из lib. */
   note: {
     ru: (mark: string) =>
-      `Пишет сам с 07:00 до 17:30, письма уходят с рабочих аккаунтов в пределе «три в час» на аккаунт. Ответ клиента сразу уходит менеджерам в Telegram по очереди лидов с шапкой «${mark}».`,
+      `Пишет сам с 07:00 до 17:30, письма уходят с дополнительных рабочих аккаунтов, не больше трёх в час на аккаунт. Переписку до макета ведёт бот. Когда клиент согласился на макет или попросил позвонить, лид уходит менеджерам в Telegram по очереди с шапкой «${mark}».`,
     uz: (mark: string) =>
-      `07:00 dan 17:30 gacha o‘zi yozadi, xabarlar ishchi akkauntlardan har bir akkauntga «soatiga uchta» chegarasida ketadi. Mijozning javobi darhol menejerlarga Telegram’da lidlar navbati bo‘yicha «${mark}» sarlavhasi bilan boradi.`,
+      `07:00 dan 17:30 gacha o‘zi yozadi, xabarlar qo‘shimcha ishchi akkauntlardan, har biridan soatiga uchtadan ko‘p emas ketadi. Maketgacha yozishmani bot olib boradi. Mijoz maketga rozi bo‘lsa yoki qo‘ng‘iroq so‘rasa, lid menejerlarga Telegram’da navbat bo‘yicha «${mark}» sarlavhasi bilan boradi.`,
     pl: (mark: string) =>
-      `Pisze samo od 07:00 do 17:30, wiadomości wychodzą z kont roboczych w limicie „trzy na godzinę” na konto. Odpowiedź klienta od razu trafia do menedżerów w Telegramie przez kolejkę leadów z nagłówkiem «${mark}».`,
+      `Pisze samo od 07:00 do 17:30, wiadomości wychodzą z dodatkowych kont roboczych, najwyżej trzy na godzinę z konta. Rozmowę do makiety prowadzi bot. Gdy klient zgodzi się na makietę albo poprosi o telefon, lead trafia do menedżerów w Telegramie po kolei z nagłówkiem «${mark}».`,
   },
   stop: { ru: "Остановить автопрогон", uz: "Avtomatik aloqalarni to‘xtatish", pl: "Zatrzymaj automatyczne kontakty" },
   start: { ru: "Запустить автопрогон", uz: "Avtomatik aloqalarni ishga tushirish", pl: "Uruchom automatyczne kontakty" },
