@@ -235,7 +235,7 @@ test("версии идут свипом, по одной на язык, той 
   const run = read("lib/razbor/foreign-run.ts");
   assert.match(run, /process\.env\.RAZBOR_MODEL \|\| "claude-sonnet-5-5"/);
   assert.match(run, /process\.env\.ARTICLE_MODEL \|\| "claude-haiku-4-5"/, "название — дешёвой моделью");
-  assert.match(run, /keywordResearch\(query\)/, "запрос не сверен с Trends и Вордстатом");
+  assert.match(run, /keywordResearch\(query, regionFor\(locale\)\)/, "запрос не сверен с Trends и планировщиком в регионе языка версии");
   assert.match(run, /\.eq\("status", "published"\)/, "переводится только вышедшее");
   assert.match(run, /\[tried\]: now\.toISOString\(\)/, "без отметки свип возьмёт тот же разбор дважды");
   assert.match(run, /Предыдущая попытка не прошла проверку/, "промахи не возвращаются модели");

@@ -41,7 +41,7 @@ export async function plannerAccount(): Promise<{ account: Account | null; chose
 }
 
 /** Идеи по фразе для статьи. Не подключён — так и пишет, статья идёт дальше без него. */
-export async function plannerIdeas(seed: string, geo: number): Promise<SourceResult> {
+export async function plannerIdeas(seed: string, geo: number | readonly number[]): Promise<SourceResult> {
   try {
     const { account } = await plannerAccount();
     if (!account) return { ok: false, reason: "планировщик Google Ads не подключён" };

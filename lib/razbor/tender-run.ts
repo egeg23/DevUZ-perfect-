@@ -2,7 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 
 import type { TenderTopic } from "@/content/razbor/tenders";
 import { anthropic } from "@/lib/model-road";
-import { keywordResearch } from "@/lib/seo/keywords";
+import { keywordResearch, regionFor, whereFor } from "@/lib/seo/keywords";
 import type { RazborLocale } from "@/lib/razbor/model";
 import {
   TENDER_NICHE,
@@ -149,9 +149,10 @@ const CHECK_FAILED = "статья не прошла проверку";
 
 /** Две попытки: провал проверки возвращается модели её же словами. */
 async function writeChecked(topic: TenderTopic, locale: RazborLocale): Promise<RazborArticle | string> {
-  // Что ищут вместе с запросом в Узбекистане — Google Trends и Вордстат
-  // (правило владельца, 04.10.2026). Один раз на статью, на обе попытки.
-  const { related } = await keywordResearch(topic[locale].query);
+  // Что ищут вместе с запросом — Google Trends, Вордстат и планировщик
+  // (правило владельца, 04.10.2026), в регионе языка версии (18.11.2026).
+  // Один раз на статью, на обе попытки.
+  const { related } = await keywordResearch(topic[locale].query, regionFor(locale));
   const first = await writeTender(topic, locale, null, related);
   if (typeof first !== "string" || !first.startsWith(CHECK_FAILED)) return first;
   return writeTender(topic, locale, first, related);
@@ -199,7 +200,7 @@ export async function writeTender(
     `Запрос, под который пишем: «${side.query}». Он должен звучать в заголовке естественно.`,
     ...(related.length
       ? [
-          `С этим запросом в Узбекистане ищут ещё (Google Trends и Вордстат): ${related.map((r) => `«${r}»`).join(", ")}. 1–3 подходящих по смыслу вставь естественно; чисел из них не бери, чужие по теме пропусти.`,
+          `С этим запросом ${whereFor(locale)} ищут ещё (Google Trends и Вордстат): ${related.map((r) => `«${r}»`).join(", ")}. 1–3 подходящих по смыслу вставь естественно; чисел из них не бери, чужие по теме пропусти.`,
         ]
       : []),
     `Что закупают: «${side.label}».`,

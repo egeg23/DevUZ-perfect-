@@ -22,16 +22,19 @@ import type { SourceResult } from "@/lib/seo/keywords";
  */
 
 /** Страны в Google Ads — 2000 + цифровой код ISO. */
-export const GEO = { UZ: 2860, RU: 2643, KZ: 2398 } as const;
+export const GEO = { UZ: 2860, RU: 2643, KZ: 2398, BY: 2112, KG: 2417, US: 2840, GB: 2826, CA: 2124, PL: 2616, UA: 2804 } as const;
 /** Язык русский в Google Ads. Узбекский не ставим: без языка — все языки. */
 export const LANGUAGE_RU = 1031;
 
 export type PlannerIdea = { phrase: string; value: number; competition: string | null };
 
-export function ideasRequest(seed: string, geo: number): Record<string, unknown> {
+export function ideasRequest(seed: string, geo: number | readonly number[]): Record<string, unknown> {
+  // Несколько стран — показы складываются: русская статья сверяется сразу
+  // по России и СНГ (REGION_BY_LOCALE в lib/seo/keywords.ts).
+  const countries = typeof geo === "number" ? [geo] : [...geo];
   return {
     ...(/[Ѐ-ӿ]/.test(seed) ? { language: `languageConstants/${LANGUAGE_RU}` } : {}),
-    geoTargetConstants: [`geoTargetConstants/${geo}`],
+    geoTargetConstants: countries.map((c) => `geoTargetConstants/${c}`),
     keywordPlanNetwork: "GOOGLE_SEARCH",
     keywordSeed: { keywords: [seed] },
     pageSize: 50,
@@ -78,7 +81,7 @@ type Fetch = (url: string, init: RequestInit) => Promise<Response>;
 export async function keywordIdeas(
   creds: GoogleCreds,
   seed: string,
-  geo: number,
+  geo: number | readonly number[],
   fetchImpl: Fetch = (url, init) => fetch(url, init),
 ): Promise<SourceResult> {
   const cid = creds.customerId.replace(/-/g, "");

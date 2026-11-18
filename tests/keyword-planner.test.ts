@@ -11,7 +11,7 @@ import { test } from "node:test";
 
 import { googleKeysToSave } from "@/lib/ads/google-keys";
 import { GEO, ideasRequest, keywordIdeas, parseIdeas, plannerReason } from "@/lib/seo/keyword-planner";
-import { UZ_REGION } from "@/lib/seo/keywords";
+import { REGION_BY_LOCALE, UZ_REGION, interleave, regionFor, whereFor, wordstatRequest } from "@/lib/seo/keywords";
 
 const read = (p: string) => readFileSync(p, "utf8");
 const creds = { customerId: "123-456-7890", developerToken: "", accessToken: async () => "token" };
@@ -23,7 +23,9 @@ test("запрос: страна всегда, русский язык — то�
   assert.deepEqual(ru.keywordSeed, { keywords: ["создание сайтов"] });
   assert.equal(ru.keywordPlanNetwork, "GOOGLE_SEARCH");
   assert.equal(ideasRequest("sayt yaratish", GEO.UZ).language, undefined, "узбекская латиница — все языки");
-  assert.deepEqual({ ...GEO }, { UZ: 2860, RU: 2643, KZ: 2398 });
+  assert.deepEqual({ ...GEO }, { UZ: 2860, RU: 2643, KZ: 2398, BY: 2112, KG: 2417, US: 2840, GB: 2826, CA: 2124, PL: 2616, UA: 2804 });
+  // Несколько стран — одним запросом, показы складываются.
+  assert.deepEqual(ideasRequest("создание сайтов", [GEO.RU, GEO.KZ]).geoTargetConstants, ["geoTargetConstants/2643", "geoTargetConstants/2398"]);
   assert.equal(UZ_REGION.geo, 2860);
 });
 
@@ -118,4 +120,51 @@ test("ключи Google: шаги подключения — «Шаг N —» н
   }
   assert.match(String(d.g6.ru), /Basic/, "уровень Basic назван");
   assert.match(String(d.g4.ru), /redirect/, "адрес возврата назван");
+});
+
+test("регион запросов — по языку версии: русская не только Узбекистан", () => {
+  // Владелец, 18.11.2026: «универсальная адаптация СЕО как для Узбекистана,
+  // так и для России и снг… статьи на разных языках должны затрагивать те
+  // регионы, на языке которого написаны статьи».
+  const ru = regionFor("ru");
+  assert.deepEqual(ru.geo, [GEO.RU, GEO.KZ, GEO.BY, GEO.UZ, GEO.KG]);
+  assert.deepEqual(ru.wordstat, [225, 159, 149, 171, 207]);
+  assert.equal(ru.trends, "RU");
+  assert.equal(ru.mixed, true);
+  assert.equal(regionFor("uz"), UZ_REGION);
+  assert.deepEqual(regionFor("en").geo, [GEO.US, GEO.GB, GEO.CA]);
+  assert.deepEqual(regionFor("pl").geo, [GEO.PL]);
+  assert.deepEqual(regionFor("uk").geo, [GEO.UA]);
+  // Яндексом ищут только там, где он есть.
+  for (const l of ["en", "pl", "uk", "zh"]) assert.equal(regionFor(l).wordstat, null, l);
+  // Каждому языку сайта — свой регион и слова для модели; чужой язык — как русский.
+  for (const l of ["ru", "uz", "en", "pl", "uk", "zh"]) {
+    assert.ok(l in REGION_BY_LOCALE, l);
+    assert.match(whereFor(l), /^(в|на) /, l);
+  }
+  assert.equal(regionFor("de"), REGION_BY_LOCALE.ru);
+  // Вордстат — несколько регионов одним запросом.
+  assert.deepEqual(JSON.parse(String(wordstatRequest("AQVNtest", "smm", [225, 171]).init.body)).regions, ["225", "171"]);
+  assert.deepEqual(JSON.parse(String(wordstatRequest("y0_test", "smm", [225, 171]).init.body)).regions, [225, 171]);
+  // Вперемежку: полсотни фраз планировщика не вытесняют Вордстат.
+  const a = { ok: true as const, phrases: [{ phrase: "a1", value: 9 }, { phrase: "a2", value: 8 }] };
+  const b = { ok: true as const, phrases: [{ phrase: "b1", value: 7 }] };
+  assert.deepEqual(interleave(a, b), { ok: true, phrases: [a.phrases[0], b.phrases[0], a.phrases[1]] });
+  assert.equal(interleave({ ok: false, reason: "x" }, b), b);
+  assert.equal(interleave(a, { ok: false, reason: "x" }), a);
+});
+
+test("каждая статья сверяет запрос в регионе своего языка", () => {
+  assert.match(read("lib/marketing/articles-run.ts"), /keywordResearch\(ruQuery, regionFor\("ru"\)\)/);
+  assert.match(read("lib/marketing/articles-run.ts"), /keywordResearch\(uzQuery, regionFor\("uz"\)\)/);
+  assert.match(read("lib/razbor/shift-run.ts"), /keywordResearch\(queryFor\(input\.niche, input\.city, input\.locale\), regionFor\(input\.locale\)\)/);
+  assert.match(read("lib/razbor/tender-run.ts"), /keywordResearch\(topic\[locale\]\.query, regionFor\(locale\)\)/);
+  assert.match(read("lib/razbor/foreign-run.ts"), /keywordResearch\(query, regionFor\(locale\)\)/);
+  // Модели не говорят «в Узбекистане ищут» про русскую, английскую и польскую версии.
+  for (const f of ["lib/marketing/articles-run.ts", "lib/razbor/shift-run.ts", "lib/razbor/tender-run.ts", "lib/razbor/foreign-run.ts"]) {
+    assert.doesNotMatch(read(f), /С этим запросом в Узбекистане/, f);
+    assert.match(read(f), /С этим запросом \$\{whereFor\(locale\)\} ищут ещё/, f);
+  }
+  // Русская статья о маркетинге — не только для Узбекистана.
+  assert.match(read("lib/marketing/articles-run.ts"), /Русскую версию читают в России, Узбекистане, Казахстане и других странах СНГ/);
 });

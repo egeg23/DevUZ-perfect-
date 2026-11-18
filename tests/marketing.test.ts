@@ -293,7 +293,7 @@ test("запрос — у каждой темы и на обоих языках:
   assert.equal(blend.query?.ru, "Will It Blend", "вопрос из названия в запрос не идёт");
   const niche = MARKETING_TOPICS.find((t) => t.key === "niche:stomatologii:instagram")!;
   assert.equal(niche.query?.uz, "stomatologiya uchun Instagram reklama");
-  assert.match(read("lib/marketing/articles-run.ts"), /if \(ruQuery\) research\.ru = await keywordResearch\(ruQuery\);/);
+  assert.match(read("lib/marketing/articles-run.ts"), /if \(ruQuery\) research\.ru = await keywordResearch\(ruQuery, regionFor\("ru"\)\);/);
 });
 
 test("запрос — в заголовке, описании и первом абзаце, по началу слова", () => {
@@ -311,7 +311,7 @@ test("запрос — в заголовке, описании и первом �
   assert.match(articlePrompt(smm, { locale: "uz" }), /Поисковый запрос, под который пишется версия: «SMM nima»/);
 });
 
-test("перед статьёй — Google Trends и Вордстат по Узбекистану", async () => {
+test("перед статьёй — Google Trends и Вордстат, регион — по языку версии", async () => {
   const { mergeRelated, trendsJson, wordstatPhrases, wordstatRequest, WORDSTAT_UZ, TRENDS_GEO } = await import(
     "@/lib/seo/keywords"
   );
@@ -350,12 +350,12 @@ test("перед статьёй — Google Trends и Вордстат по Уз�
 
   // Все генераторы статей спрашивают оба источника и передают модели.
   const run = read("lib/marketing/articles-run.ts");
-  assert.match(run, /keywordResearch\(ruQuery\)/);
-  assert.match(run, /keywordResearch\(uzQuery\)/);
+  assert.match(run, /keywordResearch\(ruQuery, regionFor\("ru"\)\)/);
+  assert.match(run, /keywordResearch\(uzQuery, regionFor\("uz"\)\)/);
   assert.match(run, /research,\n\s+\}\);/, "ответ источников пишется в строку статьи");
   assert.match(articlePrompt(MARKETING_TOPICS[0], { related: ["smm kurslari"] }), /Google Trends и Вордстат\): «smm kurslari»/);
   assert.match(read("lib/razbor/shift-run.ts"), /keywordResearch\(queryFor\(/);
-  assert.match(read("lib/razbor/tender-run.ts"), /keywordResearch\(topic\[locale\]\.query\)/);
+  assert.match(read("lib/razbor/tender-run.ts"), /keywordResearch\(topic\[locale\]\.query, regionFor\(locale\)\)/);
   // Правило — в CLAUDE.md, чтобы его видела и ручная работа.
   assert.match(read("CLAUDE.md"), /## Статьи — под живые запросы и недорогой моделью/);
 });

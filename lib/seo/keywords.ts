@@ -3,7 +3,7 @@ import { plannerIdeas } from "@/lib/seo/keyword-planner-store";
 import { appSecret } from "@/lib/secrets";
 
 /**
- * Что ищут в Узбекистане: Google Trends и Яндекс Вордстат.
+ * Что ищут в регионе статьи: Google Trends, Яндекс Вордстат и планировщик Google Ads.
  *
  * Правило владельца, 04.10.2026: «При составлении статей и их выкатке
  * всегда используй Google Trends для понимания запроса и Яндекс Вордстат».
@@ -26,18 +26,70 @@ export const WORDSTAT_UZ = 171;
 export const TRENDS_GEO = "UZ";
 
 /**
- * Где смотреть запросы. По умолчанию — Узбекистан (статьи сайта). Статьи на
- * чужих площадках (lib/outside/) читают в России: там регион Вордстата 225
- * и Trends «RU» (владелец, 07.11.2026: «Делаем по твоей рекомендации» — на
- * «тема из Вордстата и Trends, регион — по рынку площадки»).
+ * Где смотреть запросы. Статьи на чужих площадках (lib/outside/) читают в
+ * России: регион Вордстата 225 и Trends «RU» (владелец, 07.11.2026). Статьи
+ * и разборы сайта — по языку версии, см. `REGION_BY_LOCALE`.
+ *
+ * Несколько стран — списком: Вордстат и планировщик складывают показы по
+ * ним. Trends смотрит одну страну — самую большую по языку.
  */
 export type KeywordRegion = {
-  wordstat: number;
+  /** Регионы Вордстата (дерево Яндекса). `null` — не спрашиваем: в этих странах Яндексом не ищут. */
+  wordstat: number | readonly number[] | null;
   trends: string;
-  /** Страна в планировщике Google Ads (lib/seo/keyword-planner.ts): 2000 + цифровой код ISO. */
-  geo?: number;
+  /** Страны в планировщике Google Ads (lib/seo/keyword-planner.ts): 2000 + цифровой код ISO. */
+  geo?: number | readonly number[];
+  /** Как назвать регион модели: «С этим запросом {where} ищут ещё…». */
+  where?: string;
+  /**
+   * Вордстат и планировщик — вперемежку. Там, где ищут и в Яндексе, и в
+   * Google (Россия и СНГ), полсотни фраз планировщика иначе заняли бы все
+   * двенадцать мест сопутствующих запросов.
+   */
+  mixed?: boolean;
 };
-export const UZ_REGION: KeywordRegion = { wordstat: WORDSTAT_UZ, trends: TRENDS_GEO, geo: 2860 };
+export const UZ_REGION: KeywordRegion = { wordstat: WORDSTAT_UZ, trends: TRENDS_GEO, geo: 2860, where: "в Узбекистане" };
+
+/**
+ * Регион запросов — по языку версии.
+ *
+ * Владелец, 18.11.2026: «Должно быть универсальная адаптация СЕО как для
+ * Узбекистана, так и для России и снг. То есть, статьи на разных языках
+ * должны как раз затрагивать те регионы, на языке которого написаны статьи,
+ * мы же для этого и делаем это». До этого запросы любой версии — русской,
+ * английской, польской — сверялись по одному Узбекистану.
+ *
+ * - ru — Россия, Казахстан, Беларусь, Узбекистан, Киргизия: по-русски ищут
+ *   во всех, показы складываются. Trends — Россия.
+ * - uz — Узбекистан.
+ * - en — США, Великобритания, Канада; pl — Польша; uk — Украина. Вордстата
+ *   нет: Яндексом там не ищут.
+ * - zh — Тайвань, Гонконг, Сингапур: в материковом Китае Google закрыт, и
+ *   его цифры по Китаю ни о чём не говорят.
+ *
+ * Новый язык статей — строкой здесь; язык без строки идёт как русский.
+ */
+export const REGION_BY_LOCALE = {
+  ru: { wordstat: [225, 159, 149, 171, 207], trends: "RU", geo: [2643, 2398, 2112, 2860, 2417], where: "в России, Узбекистане и странах СНГ", mixed: true },
+  uz: UZ_REGION,
+  en: { wordstat: null, trends: "US", geo: [2840, 2826, 2124], where: "в США, Великобритании и Канаде" },
+  pl: { wordstat: null, trends: "PL", geo: [2616], where: "в Польше" },
+  uk: { wordstat: null, trends: "UA", geo: [2804], where: "в Украине" },
+  zh: { wordstat: null, trends: "TW", geo: [2158, 2344, 2702], where: "на Тайване, в Гонконге и Сингапуре" },
+} as const satisfies Record<string, KeywordRegion>;
+
+export type RegionLocale = keyof typeof REGION_BY_LOCALE;
+
+export function regionFor(locale: string): KeywordRegion {
+  return (REGION_BY_LOCALE as Record<string, KeywordRegion>)[locale] ?? REGION_BY_LOCALE.ru;
+}
+
+/** «в Узбекистане», «в России, Узбекистане и странах СНГ» — для задания модели. */
+export function whereFor(locale: string): string {
+  return regionFor(locale).where ?? "в этом регионе";
+}
+
+const list = (value: number | readonly number[]): number[] => (typeof value === "number" ? [value] : [...value]);
 
 const TIMEOUT_MS = 12_000;
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0 Safari/537.36";
@@ -181,14 +233,15 @@ async function trendsVia(query: string, road: Fetcher, geo: string = TRENDS_GEO,
  * и устройства строками, число фраз обязательно. Старый api.wordstat.yandex.net
  * берёт OAuth-токен (`y0_…`) — оставлен на случай такого токена.
  */
-export function wordstatRequest(token: string, query: string, region: number = WORDSTAT_UZ): { url: string; init: RequestInit } {
+export function wordstatRequest(token: string, query: string, region: number | readonly number[] = WORDSTAT_UZ): { url: string; init: RequestInit } {
+  const regions = list(region);
   if (token.startsWith("AQVN")) {
     return {
       url: "https://searchapi.api.cloud.yandex.net/v2/wordstat/topRequests",
       init: {
         method: "POST",
         headers: { authorization: `Api-Key ${token}`, "content-type": "application/json" },
-        body: JSON.stringify({ phrase: query, numPhrases: "50", regions: [String(region)], devices: ["DEVICE_ALL"] }),
+        body: JSON.stringify({ phrase: query, numPhrases: "50", regions: regions.map(String), devices: ["DEVICE_ALL"] }),
       },
     };
   }
@@ -197,7 +250,7 @@ export function wordstatRequest(token: string, query: string, region: number = W
     init: {
       method: "POST",
       headers: { authorization: `Bearer ${token}`, "content-type": "application/json;charset=utf-8" },
-      body: JSON.stringify({ phrase: query, regions: [region], devices: ["all"] }),
+      body: JSON.stringify({ phrase: query, regions, devices: ["all"] }),
     },
   };
 }
@@ -213,8 +266,8 @@ export function wordstatPhrases(data: unknown): Array<{ phrase: string; value: n
     .filter((r) => r.phrase);
 }
 
-/** Запросы с этим словом за 30 дней — Вордстат, регион Узбекистан. */
-export async function wordstatTop(query: string, region: number = WORDSTAT_UZ): Promise<SourceResult> {
+/** Запросы с этим словом за 30 дней — Вордстат; по умолчанию регион Узбекистан. */
+export async function wordstatTop(query: string, region: number | readonly number[] = WORDSTAT_UZ): Promise<SourceResult> {
   const token = await appSecret("WORDSTAT_TOKEN");
   if (!token) return { ok: false, reason: "нет ключа Вордстата (WORDSTAT_TOKEN)" };
   try {
@@ -306,15 +359,37 @@ export async function firstWithData(
   return last;
 }
 
+/**
+ * Два источника вперемежку: первая фраза одного, первая другого, вторая…
+ * Не ответил один — остаётся другой как есть.
+ */
+export function interleave(a: SourceResult, b: SourceResult): SourceResult {
+  if (!a.ok) return b;
+  if (!b.ok) return a;
+  const phrases: Array<{ phrase: string; value: number }> = [];
+  for (let i = 0; i < Math.max(a.phrases.length, b.phrases.length); i += 1) {
+    if (a.phrases[i]) phrases.push(a.phrases[i]);
+    if (b.phrases[i]) phrases.push(b.phrases[i]);
+  }
+  return { ok: true, phrases };
+}
+
 export async function keywordResearch(query: string, region: KeywordRegion = UZ_REGION): Promise<KeywordResearch> {
   const ladder = [query, ...broaderQueries(query)];
+  const yandex = region.wordstat;
   const [wordstat, trends, planner] = await Promise.all([
-    firstWithData(ladder, (q) => wordstatTop(q, region.wordstat), wordstatEmpty),
+    yandex === null
+      ? Promise.resolve<SourceResult>({ ok: false, reason: "в этом регионе Яндексом не ищут — Вордстат не спрашивали" })
+      : firstWithData(ladder, (q) => wordstatTop(q, yandex), wordstatEmpty),
     // Исходную фразу Trends смотрит и за пять лет, шире — за год.
     firstWithData(ladder, (q, step) => googleTrendsRelated(q, undefined, region.trends, step === 0 ? [TRENDS_TIME, TRENDS_LONG] : [TRENDS_TIME]), trendsEmpty),
     // Планировщик идеи даёт и по редкой фразе — лесенка ему не нужна.
     region.geo ? plannerIdeas(query, region.geo) : Promise.resolve<SourceResult>({ ok: false, reason: "у региона нет страны для планировщика" }),
   ]);
-  // Планировщик первым: у него поиски в Google — там в Узбекистане и ищут.
-  return { query, trends, wordstat, planner, related: mergeRelated(query, planner, wordstat, trends) };
+  // Планировщик первым: у него поиски в Google. Где ищут и в Яндексе
+  // (`mixed`), Вордстат идёт с ним вперемежку и начинает.
+  const related = region.mixed
+    ? mergeRelated(query, interleave(wordstat, planner), trends)
+    : mergeRelated(query, planner, wordstat, trends);
+  return { query, trends, wordstat, planner, related };
 }

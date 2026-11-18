@@ -77,9 +77,9 @@ export const adsGoogleDict = defineDict({
   copied: { ru: "Скопировано", uz: "Nusxa olindi", pl: "Skopiowano" },
   plannerTitle: { ru: "Планировщик ключевых слов", uz: "Kalit so‘zlar rejalashtiruvchisi", pl: "Planer słów kluczowych" },
   plannerHint: {
-    ru: "Сколько раз в месяц ищут фразу в Google: для каждой статьи сайта — по Узбекистану, для статей на площадках — по России. Берётся из подключённого кабинета Google Ads. Google открывает его с уровня доступа Basic у проекта Google Cloud.",
-    uz: "Iborani Google’da oyiga necha marta qidirishadi: sayt maqolalari uchun — O‘zbekiston bo‘yicha, platformalardagi maqolalar uchun — Rossiya bo‘yicha. Ulangan Google Ads kabinetidan olinadi. Google uni Google Cloud loyihasining Basic kirish darajasidan ochadi.",
-    pl: "Ile razy w miesiącu fraza jest wyszukiwana w Google: dla każdego artykułu strony — w Uzbekistanie, dla artykułów na platformach — w Rosji. Dane z podłączonego konta Google Ads. Google udostępnia go od poziomu dostępu Basic w projekcie Google Cloud.",
+    ru: "Сколько раз в месяц ищут фразу в Google: для каждой статьи сайта — в регионе её языка (русская — Россия, Узбекистан и СНГ, узбекская — Узбекистан, английская — США, Великобритания и Канада, польская — Польша), для статей на площадках — по России. Берётся из подключённого кабинета Google Ads. Google открывает его с уровня доступа Basic у проекта Google Cloud.",
+    uz: "Iborani Google’da oyiga necha marta qidirishadi: sayt maqolalari uchun — maqola tilining hududi bo‘yicha (ruscha — Rossiya, O‘zbekiston va MDH, o‘zbekcha — O‘zbekiston, inglizcha — AQSH, Buyuk Britaniya va Kanada, polyakcha — Polsha), platformalardagi maqolalar uchun — Rossiya bo‘yicha. Ulangan Google Ads kabinetidan olinadi. Google uni Google Cloud loyihasining Basic kirish darajasidan ochadi.",
+    pl: "Ile razy w miesiącu fraza jest wyszukiwana w Google: dla każdego artykułu strony — w regionie jego języka (rosyjski — Rosja, Uzbekistan i WNP, uzbecki — Uzbekistan, angielski — USA, Wielka Brytania i Kanada, polski — Polska), dla artykułów na platformach — w Rosji. Dane z podłączonego konta Google Ads. Google udostępnia go od poziomu dostępu Basic w projekcie Google Cloud.",
   },
   account: { ru: "Кабинет", uz: "Kabinet", pl: "Konto" },
   accountAuto: {
