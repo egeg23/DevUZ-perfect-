@@ -22,6 +22,7 @@ import { aiStyleProblems, humanSendAfter, plainHost, withoutOpener } from "@/lib
 import { runQualifyTurn } from "@/lib/qualify/engine";
 import { buildSystemPrompt } from "@/lib/qualify/prompt";
 import { talkLang } from "@/lib/talk/language";
+import { spinOn } from "@/lib/admin/spin";
 
 /**
  * Ход модели по холодному касанию.
@@ -93,16 +94,6 @@ async function answerOne(inbound: Inbound): Promise<Outcome> {
     return "handed";
   }
 
-  const note = talkNote({
-    host: inbound.host,
-    label: inbound.label,
-    findings: inbound.findings,
-    firstMessage: inbound.firstMessage,
-    managerName: inbound.managerName,
-    repliesSoFar: inbound.repliesSoFar,
-    untilMockup: inbound.untilMockup,
-  });
-
   const thread = await threadFor(inbound.prospectId);
 
   /**
@@ -115,6 +106,21 @@ async function answerOne(inbound: Inbound): Promise<Outcome> {
    * вопрос по-русски — это то же самое, что не услышать.
    */
   const locale = talkLang(thread);
+
+  // SPIN (lib/admin/spin.ts) — у половины касаний: вопросы по ступеням,
+  // пример вопроса — на языке клиента и словами его ниши.
+  const note = talkNote({
+    host: inbound.host,
+    label: inbound.label,
+    findings: inbound.findings,
+    firstMessage: inbound.firstMessage,
+    managerName: inbound.managerName,
+    repliesSoFar: inbound.repliesSoFar,
+    untilMockup: inbound.untilMockup,
+    spin: spinOn(inbound.prospectId)
+      ? { lang: locale === "uz" ? "uz" : "ru", niche: inbound.niche, hasSite: Boolean(inbound.siteHost) }
+      : null,
+  });
 
   // Возражение до макета у половины «new» (lib/admin/objections.ts): уходит
   // готовый текст, модель в эту минуту молчит — как на «да?» после

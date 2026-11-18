@@ -58,6 +58,9 @@ export function LeadTimeline({
   chat?: ReactNode;
 }) {
   const t = usePanelDict(leadCardDict);
+  // «Вопросы SPIN» (lib/admin/spin.ts) — своим блоком, после возражений.
+  const spin = quick.filter((q) => q.kind.startsWith("spin_"));
+  const objections = quick.filter((q) => !q.kind.startsWith("spin_"));
   const results = usePanelDict(leadResultDict);
   const ss = usePanelDict(salesStagesDict);
   const locale = usePanelLocale();
@@ -221,11 +224,11 @@ export function LeadTimeline({
           ) : null}
         </div>
         <p className="mt-2 text-xs leading-snug text-faint">{hint}</p>
-        {channel === "touch" && quick.length ? (
+        {channel === "touch" && objections.length ? (
           <div className="mt-3" data-quick-replies>
             <p className="text-xs font-semibold text-muted">{t.quickTitle}</p>
             <div className="mt-1.5 flex flex-wrap gap-2">
-              {quick.map((q) => (
+              {objections.map((q) => (
                 <button
                   key={q.kind}
                   type="button"
@@ -237,6 +240,24 @@ export function LeadTimeline({
               ))}
             </div>
             <p className="mt-1.5 text-[11px] leading-snug text-faint">{t.quickHint}</p>
+          </div>
+        ) : null}
+        {channel === "touch" && spin.length ? (
+          <div className="mt-3" data-spin-questions>
+            <p className="text-xs font-semibold text-muted">{t.spinTitle}</p>
+            <div className="mt-1.5 flex flex-wrap gap-2">
+              {spin.map((q) => (
+                <button
+                  key={q.kind}
+                  type="button"
+                  onClick={() => setText(q.text)}
+                  className="rounded-full border border-line px-3 py-1 text-xs text-text transition hover:border-green/50 hover:text-green active:scale-[0.98]"
+                >
+                  {t[`quick_${q.kind}`]}
+                </button>
+              ))}
+            </div>
+            <p className="mt-1.5 text-[11px] leading-snug text-faint">{t.spinHint}</p>
           </div>
         ) : null}
       </div>

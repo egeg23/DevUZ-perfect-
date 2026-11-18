@@ -8,6 +8,8 @@ import { requireSection } from "@/lib/admin/guard";
 import { helpAnchor } from "@/lib/admin/help";
 import { SALES_NEW, abVerdict } from "@/lib/admin/sales-after-reply";
 import { abCounts } from "@/lib/admin/sales-after-reply-store";
+import { SPIN, spinVerdict } from "@/lib/admin/spin";
+import { spinCounts } from "@/lib/admin/spin-store";
 import { pick, type Picked } from "@/lib/admin/i18n";
 import {
   AUTO_ARMS,
@@ -54,12 +56,13 @@ export default async function LetterTextsPage({
   // панели {кто}, в узбекской и польской {kim}.
   const example = staff.panel_locale === "ru" ? EXAMPLE.ru : EXAMPLE.latin;
 
-  const [texts, stats, people, hello, ab] = await Promise.all([
+  const [texts, stats, people, hello, ab, sp] = await Promise.all([
     liveTexts(),
     variantStats(),
     lead ? activeStaff() : Promise.resolve([]),
     savedHello(),
     abCounts().catch(() => null),
+    spinCounts().catch(() => null),
   ]);
   const helloNow = effectiveHello(hello);
   const helloErrors = parseProblems(he).map((p) => problemText(p, tp));
@@ -298,6 +301,57 @@ export default async function LetterTextsPage({
           </>
         ) : (
           <p className="mt-2 text-xs text-faint">{t.abNone}</p>
+        )}
+      </section>
+
+      {/* A/B «SPIN в переписке ИИ» (lib/admin/spin.ts): половины по номеру
+          касания, победитель — не раньше 30 разговоров на каждую. */}
+      <section id="spin-ab" className={BOX}>
+        <h2 className="flex items-center gap-2 text-sm font-semibold">
+          {t.spinTitle}
+          <HelpHint topic={helpAnchor("/admin/prospect", "spin")} />
+        </h2>
+        <p className="mt-1 text-xs leading-relaxed text-faint">{t.spinIntro}</p>
+        {!SPIN ? <p className="mt-2 text-xs text-gold">{t.spinOffNote}</p> : null}
+        {sp && sp.some((a) => a.talks > 0) ? (
+          <>
+            <div className="mt-3 overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="text-faint">
+                  <tr>
+                    <th className="py-1 pr-3 font-normal" />
+                    <th className="py-1 pr-3 font-normal">{t.spinOffArm}</th>
+                    <th className="py-1 font-normal">{t.spinOn}</th>
+                  </tr>
+                </thead>
+                <tbody className="font-mono text-text">
+                  {(
+                    [
+                      [t.spinTalks, "talks"],
+                      [t.abPlus, "plus"],
+                      [t.abMockup, "mockup"],
+                    ] as const
+                  ).map(([label, key]) => (
+                    <tr key={key} className="border-t border-line/60">
+                      <td className="py-1 pr-3 font-sans text-muted">{label}</td>
+                      <td className="py-1 pr-3">{sp[1][key]}</td>
+                      <td className="py-1">{sp[0][key]}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="mt-3 text-xs text-muted">
+              {(() => {
+                const v = spinVerdict(sp[0], sp[1]);
+                if (v.kind === "early") return t.spinEarly(v.need);
+                if (v.kind === "even") return t.abEven;
+                return t.abLeader(v.spin ? t.spinOn : t.spinOffArm, Math.round(v.chance * 100));
+              })()}
+            </p>
+          </>
+        ) : (
+          <p className="mt-2 text-xs text-faint">{t.spinNone}</p>
         )}
       </section>
 

@@ -320,6 +320,7 @@ export const uz: LearnCopy = {
           title: "SPIN savoli",
           paras: [
             "SPIN — savollar bilan sotish. Eng kuchlisi — uning yo‘qotishlari haqidagi chiqaruvchi savol. Uning puli haqidagi savol biz haqimizdagi hikoyadan ko‘ra diqqatni uzoqroq ushlab turadi.",
+            "SPIN savollari tartib bilan: vaziyat (hozir mijozlari qayerdan keladi), muammo (biz topgan narsani sezadimi), oqibat (bu nimaga olib keladi), foyda (bu unga kerakligini o‘zi aytadi). «Foyda»dan keyin maket taklif qilamiz. Lid kartochkasida javob maydoni ostida bunday savollarni «SPIN savollari» bloki tugmalari qo‘yadi, sun’iy intellekt suhbatlarining yarmi ham shunday olib boriladi.",
             "Mana «Savol» yondashuvining matni. U savol bilan ochiladi, keyin faktlar, keyin taklif. Oxiridagi savol yana javob berishga chaqiradi.",
           ],
         },
