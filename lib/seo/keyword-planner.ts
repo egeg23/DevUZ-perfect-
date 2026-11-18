@@ -77,6 +77,21 @@ export function plannerReason(message: string): string {
 
 type Fetch = (url: string, init: RequestInit) => Promise<Response>;
 
+/**
+ * Страны, которые планировщик не принимает. 18.11.2026 русская сверка по
+ * России и СНГ разом отвечала «The input has an invalid value» на каждую
+ * фразу, а те же фразы по Украине и Узбекистану — числами: одна страна из
+ * набора Google не берёт, и падал весь запрос. Такую страну находим по одной
+ * и дальше не спрашиваем, пока процесс жив.
+ */
+const refusedGeo = new Set<number>();
+const INVALID = /invalid value|INVALID_ARGUMENT|INVALID_GEO|geo.?target/i;
+
+/** Какие страны планировщик не принял — для журнала сверки. */
+export function refusedGeos(): number[] {
+  return [...refusedGeo];
+}
+
 /** Идеи по фразе для страны. Сбой — `ok: false` с причиной словами, без исключений. */
 export async function keywordIdeas(
   creds: GoogleCreds,
@@ -84,6 +99,21 @@ export async function keywordIdeas(
   geo: number | readonly number[],
   fetchImpl: Fetch = (url, init) => fetch(url, init),
 ): Promise<SourceResult> {
+  const countries = (typeof geo === "number" ? [geo] : [...geo]).filter((c) => !refusedGeo.has(c));
+  if (!countries.length) return { ok: false, reason: "планировщик не принимает ни одну страну этого региона" };
+  const first = await askIdeas(creds, seed, countries, fetchImpl);
+  if (first.ok || countries.length < 2 || !INVALID.test(first.reason)) return first;
+  // Ищем страну, из-за которой Google отказал: каждую — отдельно.
+  for (const c of countries) {
+    const one = await askIdeas(creds, seed, [c], fetchImpl);
+    if (!one.ok && INVALID.test(one.reason)) refusedGeo.add(c);
+  }
+  const rest = countries.filter((c) => !refusedGeo.has(c));
+  if (!rest.length || rest.length === countries.length) return first;
+  return askIdeas(creds, seed, rest, fetchImpl);
+}
+
+async function askIdeas(creds: GoogleCreds, seed: string, geo: readonly number[], fetchImpl: Fetch): Promise<SourceResult> {
   const cid = creds.customerId.replace(/-/g, "");
   if (!/^\d{10}$/.test(cid)) return { ok: false, reason: "номер кабинета Google Ads — 10 цифр" };
   try {
