@@ -3,7 +3,8 @@
 # Владелец, 17.11.2026: «А токены вытащи сам от аи юриста с сервера».
 # AI-юрист (egeg23/seller-ai) живёт на том же сервере, его ключи — строки
 # PLATEGA_MERCHANT_ID и PLATEGA_API_KEY в /opt/seller-ai-v3/.env. Задача
-# читает их на сервере и кладёт в хранилище секретов Supabase
+# берёт их у живого AI-юриста (окружение контейнера, иначе .env), проверяет,
+# что Platega их принимает (в лог — только код ответа), и кладёт в хранилище секретов Supabase
 # (app.PLATEGA_MERCHANT_ID, app.PLATEGA_API_KEY — функция app_secret_put),
 # откуда их берёт lib/claudery/store.ts. Значения никуда не печатаются:
 # в лог идёт только «задано / пусто». Журнал задачи публичный.
@@ -38,12 +39,43 @@ jobs:
             APP_DIR="${VPS_APP_DIR_IN:-/opt/devuz}"
             val() { grep -m1 "^$2=" "$1" 2>/dev/null | cut -d= -f2- | sed -E "s/^[\"']//; s/[\"']\$//"; }
 
-            SRC=""
-            for f in /opt/seller-ai-v3/.env /opt/seller-ai/.env /home/seller_ai/seller-ai/.env; do
-              if [ -r "$f" ] && grep -q '^PLATEGA_API_KEY=.\+' "$f"; then SRC="$f"; break; fi
+            # Код ответа Platega на вопрос о несуществующем платеже: 401/403 — ключи
+            # не приняты, любой другой — приняты. Значения — через stdin, не в аргументах.
+            probe() {
+              printf 'url = "https://app.platega.io/transaction/00000000-0000-4000-8000-000000000000"\nheader = "X-MerchantId: %s"\nheader = "X-Secret: %s"\nheader = "Accept: application/json"\n' "$1" "$2" \
+                | curl -sS -o /dev/null -w '%{http_code}' --max-time 20 --noproxy '*' -K - 2>/dev/null || echo 000
+            }
+            accepted() { case "$1" in 401|403|000) return 1;; *) return 0;; esac; }
+
+            MID=""; KEY=""; FROM=""
+            try() {
+              local from="$1" mid="$2" key="$3" code
+              [ -n "$mid" ] && [ -n "$key" ] || { echo "· $from: ключей нет"; return 1; }
+              code="$(probe "$mid" "$key")"
+              echo "· $from: Platega ответила $code"
+              accepted "$code" || return 1
+              MID="$mid"; KEY="$key"; FROM="$from"
+            }
+
+            # 1) Живые сервисы владельца (Seller AI первым): окружение контейнеров —
+            #    то, чем они платят на деле. Владелец, 18.11.2026: «возьми селлер аи,
+            #    это тоже мой продукт, там ключи свежие».
+            for c in $(docker ps --format '{{.Names}}' 2>/dev/null | grep -v -i -E '^devuz' | sort | awk '{ print (/seller/ ? 0 : 1) " " $0 }' | sort | cut -d' ' -f2- || true); do
+              [ -z "$FROM" ] || break
+              E="$(docker exec "$c" printenv 2>/dev/null || true)"
+              printf '%s\n' "$E" | grep -q '^PLATEGA_API_KEY=.' || continue
+              try "контейнер $c" "$(printf '%s\n' "$E" | grep -m1 '^PLATEGA_MERCHANT_ID=' | cut -d= -f2-)" "$(printf '%s\n' "$E" | grep -m1 '^PLATEGA_API_KEY=' | cut -d= -f2-)" || true
             done
-            [ -n "$SRC" ] || { echo "✗ .env AI-юриста с ключами Platega не найден или не читается"; exit 1; }
-            echo "· ключи AI-юриста: $SRC"
+            # 2) Файлы .env — если контейнеров нет или в них пусто.
+            for f in /opt/seller-ai-v3/.env /opt/seller*/.env* /opt/*/.env /opt/*/.env.prod* /home/*/*/.env; do
+              [ -z "$FROM" ] || break
+              [ -f "$f" ] && [ -r "$f" ] || continue
+              case "$f" in *.example|*.sample|"$APP_DIR"/*) continue;; esac
+              grep -q '^PLATEGA_API_KEY=.' "$f" 2>/dev/null || continue
+              try "файл $f" "$(val "$f" PLATEGA_MERCHANT_ID)" "$(val "$f" PLATEGA_API_KEY)" || true
+            done
+            [ -n "$FROM" ] || { echo "✗ ключей, которые Platega принимает, на сервере не нашлось"; exit 1; }
+            echo "✓ рабочие ключи: $FROM"
 
             SB_URL="$(val "$APP_DIR/.env" NEXT_PUBLIC_SUPABASE_URL)"
             SB_KEY="$(val "$APP_DIR/.env" SUPABASE_SERVICE_ROLE_KEY)"
@@ -51,7 +83,6 @@ jobs:
 
             put() {
               local name="$1" value="$2"
-              [ -n "$value" ] || { echo "✗ $name: в .env AI-юриста пусто"; return 1; }
               # Значение — через stdin (-K -) и JSON из node: его нет ни в выводе, ни в списке процессов.
               BODY="$(NAME="app.$name" VALUE="$value" node -e 'process.stdout.write(JSON.stringify({p_name:process.env.NAME,p_value:process.env.VALUE}))')"
               CODE="$(printf 'url = "%s/rest/v1/rpc/app_secret_put"\nheader = "apikey: %s"\nheader = "Authorization: Bearer %s"\nheader = "Content-Type: application/json"\n' "$SB_URL" "$SB_KEY" "$SB_KEY" \
@@ -60,6 +91,6 @@ jobs:
             }
 
             OK=0
-            put PLATEGA_MERCHANT_ID "$(val "$SRC" PLATEGA_MERCHANT_ID)" || OK=1
-            put PLATEGA_API_KEY "$(val "$SRC" PLATEGA_API_KEY)" || OK=1
+            put PLATEGA_MERCHANT_ID "$MID" || OK=1
+            put PLATEGA_API_KEY "$KEY" || OK=1
             exit $OK
