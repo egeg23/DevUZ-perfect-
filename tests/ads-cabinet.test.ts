@@ -122,6 +122,26 @@ test("сбой обновления — одно сообщение людям �
 });
 
 test("после подключения кабинета первое обновление — сразу, фоном", () => {
-  const callback = read("app/api/ads/oauth/[platform]/callback/route.ts");
+  const callback = read("lib/ads/oauth-routes.ts");
   assert.match(callback, /after\(async \(\) => \{\n\s+const fresh = await accountById/);
+});
+
+test("«Подключить» у команды студии — через /admin: кука панели живёт только там", async () => {
+  // 18.11.2026: владелец нажал «Подключить» у кабинета Google и получил
+  // «forbidden» — под /api/... сервер не видит куку панели (path "/admin").
+  const { connectHref } = await import("@/lib/ads/connect-href");
+  assert.equal(connectHref("google", "a1", true), "/admin/ads/oauth/google/start?account=a1");
+  assert.equal(connectHref("yandex", "a1", false), "/api/ads/oauth/yandex/start?account=a1");
+  assert.match(read("middleware.ts"), /path: "\/admin",\n\s+maxAge: SESSION_MAX_AGE_SECONDS/);
+  assert.match(read("components/ads/board.tsx"), /href=\{connectHref\(account\.platform, account\.id, staff\)\}/);
+  for (const side of ["start", "callback"]) {
+    assert.match(read(`app/admin/ads/oauth/[platform]/${side}/route.ts`), /from "@\/lib\/ads\/oauth-routes"/);
+    assert.match(read(`app/api/ads/oauth/[platform]/${side}/route.ts`), /from "@\/lib\/ads\/oauth-routes"/);
+  }
+  // Возврат зарегистрирован у площадок на /api: не узнал человека, а state наш —
+  // переводим на /admin, второй раз не переводим.
+  const routes = read("lib/ads/oauth-routes.ts");
+  assert.match(routes, /if \(accountId && !viaAdmin && supported\(platform\)\)/);
+  assert.match(read("app/admin/ads/oauth/[platform]/callback/route.ts"), /finishOAuth\(request, \(await params\)\.platform, true\)/);
+  assert.match(read("app/api/ads/oauth/[platform]/callback/route.ts"), /finishOAuth\(request, \(await params\)\.platform, false\)/);
 });

@@ -14,6 +14,7 @@ import {
 import { adsDict } from "@/content/admin-panel/ads";
 import { pick, PANEL_INTL, type PanelLocale, type Picked } from "@/lib/admin/i18n";
 import { alertText } from "@/lib/ads/alerts";
+import { connectHref } from "@/lib/ads/connect-href";
 import { explain } from "@/lib/ads/explain";
 import { money } from "@/lib/ads/negatives";
 import { actionsOf, openAlerts, proposalsOf, testsOf, thresholdsOf, type Account, type Action, type Proposal } from "@/lib/ads/store";
@@ -154,7 +155,7 @@ export async function AdsBoard({
         <p className="mt-2 text-sm text-muted">{real ? (account.has_credentials ? t.connected : t.notConnected) : t.stubNote}</p>
         <div className="mt-3 flex flex-wrap gap-2">
           {real ? (
-            <a href={`/api/ads/oauth/${account.platform}/start?account=${account.id}`} className={`${BTN} bg-green/90 text-ink hover:bg-green`}>
+            <a href={connectHref(account.platform, account.id, staff)} className={`${BTN} bg-green/90 text-ink hover:bg-green`}>
               {account.has_credentials ? t.reconnect : t.connect}
             </a>
           ) : null}
