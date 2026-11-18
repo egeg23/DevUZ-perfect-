@@ -16,22 +16,22 @@ const SCOUT_URL = "https://t.me/+puC_Ns-kCbQ5NzJi";
 export const moreSections: Record<string, HelpEntry> = {
   /* ── Релизы ───────────────────────────────────────────────────────── */
   "/admin/releases": {
-    what: "Pliki gotowych produktów, które kupujący dostają po opłaceniu zamówienia w sekcji «Zamówienia sklepu». Opublikowanie pliku oznacza decyzję, co dokładnie dostanie każdy, kto już zapłacił — dlatego ta sekcja jest tylko u właściciela.",
+    what: "Tu są pliki gotowych produktów, które kupujący pobiera po zapłacie. Sekcja jest tylko u Ciebie.",
     items: [
       {
         id: "upload",
         title: "Opublikuj wersję",
         body: [
-          "Najpierw wgraj archiwum do prywatnego bucketu Supabase ze swojego komputera — strona nie przyjmuje dużych plików. Potem formularz «Opublikuj wydanie»: produkt, wersja, bucket, ścieżka w buckecie, sha256 (opcjonalnie) i notatka — «Opublikuj».",
-          "Panel sprawdzi, czy plik jest na miejscu. Nowa wersja staje się aktualna, poprzednia przestaje nią być.",
+          "Wgraj archiwum ze swojego komputera do zamkniętego magazynu Supabase.",
+          "Wypełnij «Opublikuj wydanie»: produkt, wersja, bucket i ścieżka do pliku. Kliknij «Opublikuj». Panel sprawdzi, czy plik jest na miejscu, i nowa wersja stanie się aktualna.",
         ],
       },
       {
         id: "downloads",
         title: "Co widzi kupujący",
         body: [
-          "Po opłaceniu — przycisk pobierania na stronie zamówienia: łącznie do 20 pobrań i do 10 dziennie, każdy link działa 60 sekund. Dopóki nie ma wydania — komunikat, że plik jest w przygotowaniu.",
-          "Jeśli na górze widzisz ostrzeżenie o `DOWNLOAD_SIGNING_SECRET` — pobieranie nie działa u nikogo. Dostęp odbierasz przyciskiem na karcie zamówienia w sekcji [«Zamówienia sklepu»](/admin/orders).",
+          "Kupujący pobiera plik ze strony zamówienia: do 20 razy łącznie i 10 dziennie. Każdy link do pobrania działa 60 sekund. Dopóki nie ma wydania, widzi „plik przygotowujemy”.",
+          "Na górze «Wydawanie wyłączone»? Nikt nie może pobrać plików. Dostęp jednego kupującego zamyka się w sekcji [«Zamówienia sklepu»](/admin/orders).",
         ],
       },
     ],
