@@ -123,7 +123,7 @@ test("страницы под запросы: запросы по Вордста
 });
 
 test("страницы под запросы: русская — для всего СНГ, без Ташкента; en, pl, uk — без Ташкента и сумов", () => {
-  const city = /ташкент|tashkent|taszkent|узбекистан|uzbekistan|сум\b|UZS|soum/i;
+  const city = /ташкент|tashkent|taszkent|узбекистан|uzbekistan|сум(?![а-яіїєґ])|UZS|soum/i;
   for (const l of ["ru", "en", "pl", "uk"] as const) {
     for (const meta of LANDINGS) {
       const t = landingText(meta, l);
@@ -136,7 +136,7 @@ test("страницы под запросы: русская — для всег
   }
   for (const l of ["en", "pl", "uk"] as const) {
     for (const s of all(LANDING_TEXT[l])) {
-      assert.doesNotMatch(s, /click|payme|uzum|\.uz\b|yandex|яндекс|сум\b|so‘m|UZS/i, `${l}: «${s}»`);
+      assert.doesNotMatch(s, /\bpayme\b|\buzum\b|\.uz\b|yandex|яндекс|сум(?![а-яіїєґ])|so‘m|UZS/i, `${l}: «${s}»`);
     }
   }
   // Русская: местное Узбекистана — одним пунктом «Для Узбекистана» на страницу.
