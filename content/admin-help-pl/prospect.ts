@@ -11,42 +11,42 @@ import type { HelpEntry } from "@/lib/admin/help";
 export const prospectSections: Record<string, HelpEntry> = {
   /* ── Заявки ───────────────────────────────────────────────────────── */
   "/admin/orders": {
-    what: "Zamówienia gotowych produktów ze sklepu na stronie — nie projekty klientów. Kupujący składa zamówienie ze swoimi danymi, my wystawiamy fakturę, on płaci przelewem i dostaje pliki. Wszyscy pracownicy widzą wszystkie zamówienia i mogą prowadzić każde z nich; kto kliknął ostatni, ten jest przy zamówieniu jako «prowadzi: …».",
+    what: "Tu są zamówienia gotowych produktów ze sklepu na stronie. To nie są projekty klientów. Zamówienie może prowadzić każdy pracownik.",
     items: [
       {
         id: "flow",
         title: "Droga zamówienia",
         body: [
-          "«nowe» → «faktura wystawiona» → «opłacone» → «przekazane». Albo «anulowane». Filtry na górze działają według tych statusów.",
-          "Dane kontaktowe kupującego widać od razu: sam je zostawił, żeby wystawić mu fakturę. «bot połączony» obok kontaktu oznacza, że kupujący podłączył naszego bota i powiadomienia o fakturze i płatności przyjdą do niego właśnie tam.",
-          "Jeśli zamówienie utknęło, w Telegramie przyjdzie przypomnienie: 2 dni bez faktury, faktura nieopłacona od 14 i 30 dni, opłacone, a nie ma pliku do wydania.",
+          "Statusy zamówienia: «nowe», «faktura wystawiona», «opłacone», «przekazane» albo «anulowane». Przyciski na górze pokazują zamówienia z wybranym statusem.",
+          "Kontakt kupującego widać od razu. Oznaczenie «bot połączony» znaczy, że o fakturze i płatności napisze mu nasz bot.",
+          "Zamówienie utknęło, na przykład faktura czeka na zapłatę 14 dni? Bot przypomni o tym w Telegramie.",
         ],
       },
       {
         id: "invoice",
         title: "Kwota i faktura",
         body: [
-          "Niektóre produkty mają cenę w widełkach i wtedy zamówienie przychodzi bez kwoty. Wpisz ją w pole «kwota, $» i kliknij **«ustaw»**. Po wystawieniu faktury kwoty nie da się już zmienić.",
-          "**«wystaw fakturę»** — potrzebna jest kwota. Numer faktury nadaje się sam; ponowne kliknięcie go nie zmienia. Kupujący widzi fakturę na stronie swojego zamówienia (link dostał przy składaniu zamówienia), a jeśli bot jest połączony — dostaje też wiadomość. Linku do płatności w wiadomości celowo nie ma: płaci się na dane do przelewu z faktury.",
-          "Jeśli na górze wisi «Dane bankowe nie są skonfigurowane» — faktura się wystawi, ale kupujący nie zobaczy, dokąd zapłacić. Powiedz o tym właścicielowi.",
+          "Zamówienie przyszło bez kwoty? Wpisz ją w «kwota, $» i kliknij **«ustaw»**. Po wystawieniu faktury kwoty nie da się zmienić.",
+          "Potem kliknij **«wystaw fakturę»**. Kupujący zobaczy fakturę na stronie zamówienia i zapłaci według danych z niej.",
+          "Na górze wisi «Dane bankowe nie są skonfigurowane»? Powiedz właścicielowi: bez nich kupujący nie zobaczy, dokąd zapłacić.",
         ],
       },
       {
         id: "paid",
         title: "Płatność i wydanie plików",
         body: [
-          "Pieniądze wpłynęły na konto — wpisz **«pozycja z wyciągu»** (z wyciągu bankowego) i kliknij **«płatność otrzymana»**. Bez tej pozycji się nie da: inaczej za miesiąc nie udowodnisz, że płatność była.",
-          "Od tej chwili kupujący ma dostęp do plików — o ile właściciel wgrał je w dziale «Wydania». Pobrań jest najwyżej 20 łącznie i 10 dziennie; ponowne pobranie tego samego pliku w ciągu 10 minut się nie liczy.",
-          "Pierwsze pobranie samo ustawia «przekazane». Przycisk **«kod przekazany»** jest na wypadek, gdy przekazujesz produkt inaczej, na przykład przez dostęp do repozytorium. Przed płatnością nie zadziała: przekazanie kodu to jedyny krok, którego nie da się cofnąć.",
+          "Pieniądze wpłynęły? Wpisz «pozycja z wyciągu» z wyciągu bankowego i kliknij **«płatność otrzymana»**. Bez tej pozycji przycisk nie zadziała.",
+          "Teraz kupujący może pobrać pliki ze strony zamówienia: do 20 razy, nie więcej niż 10 dziennie.",
+          "Pierwsze pobranie samo ustawia «przekazane». Kod przekazany inaczej? Kliknij **«kod przekazany»**.",
         ],
       },
       {
         id: "access",
         title: "Linki, dostęp i anulowanie",
         body: [
-          "**«wygeneruj link ponownie»** — nowy link do strony zamówienia, stary przestaje działać. Nowy pokazuje się tylko raz — od razu wyślij go kupującemu.",
-          "**«cofnij dostęp do plików»** całkiem zamyka pobieranie: wydane już linki przestają działać, a na stronie zamówienia zamiast przycisku kupujący widzi «Dostęp do plików jest zamknięty». Strona i faktura zostają — kupujący nie traci swoich dokumentów. W zamówieniu pojawia się «Dostęp: zamknięty od …». **«przywróć dostęp do plików»** znów otwiera pobieranie, ale stare linki pozostają martwe — dlatego jeśli link wyciekł, kliknij «cofnij dostęp do plików», a potem «przywróć dostęp do plików»: link, który wyciekł, wygaśnie, a kupujący pobierze pliki na nowo ze swojej strony.",
-          "**«anuluj»** — kupujący dostanie powiadomienie. **«przywróć do realizacji»** odtwarza status według dat, a nie według Twojego wyboru: jeśli faktura była wystawiona — wróci «faktura wystawiona».",
+          "**«wygeneruj link ponownie»** daje nowy link do zamówienia, a stary gaśnie. Nowy widać tylko raz, od razu wyślij go kupującemu.",
+          "**«cofnij dostęp do plików»** zamyka pobieranie, **«przywróć dostęp do plików»** otwiera je znowu. Link do pliku wyciekł? Cofnij i przywróć dostęp: stary link zgaśnie.",
+          "**«anuluj»** anuluje zamówienie, a kupujący dostaje powiadomienie. **«przywróć do realizacji»** wraca do poprzedniego statusu.",
         ],
       },
     ],

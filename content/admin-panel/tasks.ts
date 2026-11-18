@@ -280,9 +280,9 @@ export const tasksDict = defineDict({
 export const taskNoticeDict = defineDict({
   created: { ru: "Задача поставлена.", uz: "Vazifa qo‘yildi.", pl: "Zadanie zlecone." },
   createdLater: {
-    ru: "Задача поставлена. Сейчас ночь — бот напишет исполнителю в 07:00.",
-    uz: "Vazifa qo‘yildi. Hozir tun — bot ijrochiga soat 07:00 da yozadi.",
-    pl: "Zadanie zlecone. Jest noc — bot napisze do wykonawcy o 07:00.",
+    ru: "Задача поставлена. Сейчас ночь — бот напишет исполнителю в 08:00.",
+    uz: "Vazifa qo‘yildi. Hozir tun — bot ijrochiga soat 08:00 da yozadi.",
+    pl: "Zadanie zlecone. Jest noc — bot napisze do wykonawcy o 08:00.",
   },
   createdMany: {
     ru: "Задачи поставлены — каждому своя.",
@@ -290,9 +290,9 @@ export const taskNoticeDict = defineDict({
     pl: "Zadania zlecone — każdy ma własne.",
   },
   createdManyLater: {
-    ru: "Задачи поставлены — каждому своя. Сейчас ночь — бот напишет исполнителям в 07:00.",
-    uz: "Vazifalar qo‘yildi — har biriga o‘ziniki. Hozir tun — bot ijrochilarga soat 07:00 da yozadi.",
-    pl: "Zadania zlecone — każdy ma własne. Jest noc — bot napisze do wykonawców o 07:00.",
+    ru: "Задачи поставлены — каждому своя. Сейчас ночь — бот напишет исполнителям в 08:00.",
+    uz: "Vazifalar qo‘yildi — har biriga o‘ziniki. Hozir tun — bot ijrochilarga soat 08:00 da yozadi.",
+    pl: "Zadania zlecone — każdy ma własne. Jest noc — bot napisze do wykonawców o 08:00.",
   },
   createdPartly: {
     ru: "Поставлено не всем: база не ответила. Проверьте «Я поставил» и поставьте остальным ещё раз.",
@@ -331,9 +331,9 @@ export const taskNoticeDict = defineDict({
     pl: "Zadanie przekazane — bot sam napisze do nowego wykonawcy.",
   },
   editedNewLater: {
-    ru: "Задача передана. Сейчас ночь — бот напишет новому исполнителю в 07:00.",
-    uz: "Vazifa topshirildi. Hozir tun — bot yangi ijrochiga soat 07:00 da yozadi.",
-    pl: "Zadanie przekazane. Jest noc — bot napisze do nowego wykonawcy o 07:00.",
+    ru: "Задача передана. Сейчас ночь — бот напишет новому исполнителю в 08:00.",
+    uz: "Vazifa topshirildi. Hozir tun — bot yangi ijrochiga soat 08:00 da yozadi.",
+    pl: "Zadanie przekazane. Jest noc — bot napisze do nowego wykonawcy o 08:00.",
   },
   unchanged: {
     ru: "Ничего не поменялось — задача осталась как была.",

@@ -241,7 +241,6 @@ const STILL_RUSSIAN_IN_UZ: readonly string[] = [
   // менеджеров в Ташкенте телефон на русском — кнопку называем и так и так.
   "«Qo‘shish» («Добавить»)",
   // бот в Telegram — пока по-русски
-  "«Команда» tugmasi bilan xabar keladi",
   "Telegramda «Подтвердить» va «Отклонить» tugmalari",
   "(Telegramda ular ruscha: «🙅 Клиент отказался» va «🔇 Игнорирует»)",
   // Варианты переноса срока задачи — кнопки бота.
@@ -256,9 +255,7 @@ const STILL_RUSSIAN_IN_UZ: readonly string[] = [
   // «Макетах», по-узбекски «Ochish», — а бот пишет «Открыть».
   "«Открыть», «+2 часа» va «Готово»",
   // вечерний отчёт по порциям в Telegram
-
   // кабинет и бот партнёра — отдельный продукт, по-русски
-  "saytdagi kabinetida, «Промо-материалы» blokida ko‘radi: prevyu, «Скачать» va «Подпись к посту», yonida «Скопировать подпись»",
 ];
 
 /**
@@ -269,7 +266,6 @@ const STILL_RUSSIAN_IN_PL: readonly string[] = [
   // бот в Telegram — пока по-русски
   "dostają w Telegramie wiadomość z przyciskami «Подтвердить» (zatwierdź) i «Отклонить» (odrzuć)",
   "(w Telegramie są po rosyjsku: «🙅 Клиент отказался» i «🔇 Игнорирует»)",
-  "wiadomość z przyciskiem «Команда»",
   // Варианты переноса срока задачи — кнопки бота.
   "«+1 час», «Завтра 18:00», «+3 дня», «Неделя»",
   // Срок следующего шага под «⏳» — кнопки бота.
