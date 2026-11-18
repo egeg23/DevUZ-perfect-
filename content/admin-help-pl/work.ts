@@ -11,60 +11,60 @@ import type { HelpEntry } from "@/lib/admin/help";
 export const workSections: Record<string, HelpEntry> = {
   /* ── Рабочие аккаунты ──────────────────────────────────────────────── */
   "/admin/accounts": {
-    what: "Konta robocze Telegrama, z których wychodzą pierwsze wiadomości kontaktów i toczy się korespondencja z klientami. Główne jest podłączone na serwerze i dodatkowo czyta czaty; tutaj podłącza się dodatkowe i zaznacza, kto na którym pracuje. Sekcję widzą właściciel i kierownik.",
+    what: "Tutaj są robocze konta Telegram. Z nich studio pierwsze pisze do firm i prowadzi korespondencję z klientami. Konto główne jest już podłączone, tutaj dodaje się dodatkowe.",
     items: [
       {
         id: "add",
-        title: "Podłącz konto",
+        title: "Podłączenie konta",
         body: [
-          "Wpisz nazwę konta (na przykład «Konto Dilnozy») i jego numer telefonu — +998… albo 9 cyfr bez kodu kraju. Kliknij **«Wyślij kod»**. Za kilka sekund skaut poprosi Telegram o kod, a przy koncie pojawi się pole «Kod z Telegrama»; w trakcie logowania strona odświeża się sama.",
-          "Kod przychodzi do aplikacji Telegram na telefonie tego konta — wiadomością od Telegrama, zwykle nie SMS-em. Wpisz go i kliknij **«Zaloguj»**. Nie przesyłaj nikomu kodu i nie wysyłaj go na czat: Telegram unieważnia kod przesłany wiadomością i logowanie trzeba zaczynać od nowa.",
-          "Jeśli włączona jest weryfikacja dwuetapowa, pojawi się pole «Hasło weryfikacji dwuetapowej»: wpisz hasło i znowu **«Zaloguj»**. Hasła nie przechowujemy: skaut je sprawdza i od razu usuwa. Udało się — status «pracuje», a obok nazwa konta. Na telefonie konta na liście urządzeń pojawi się nowa sesja — to my; nie kończ jej, bo konto się odłączy.",
-          "«kod nie pasuje» — wpisz kod jeszcze raz; «kod wygasł» albo inny błąd — kliknij **«Odłącz»** i podłącz konto ponownie tym samym numerem.",
+          "Wpisz nazwę konta i numer telefonu, kliknij **«Wyślij kod»**. Kod przyjdzie do aplikacji Telegram na tym telefonie, zwykle nie SMS-em. Wpisz go i kliknij **«Zaloguj»**.",
+          "Nie przekazuj nikomu kodu: przesłany dalej kod Telegram unieważnia. Jeśli pojawi się prośba o hasło weryfikacji dwuetapowej, wpisz je i znowu kliknij **«Zaloguj»**. Nie przechowujemy go.",
+          "Na telefonie pojawi się nowa sesja. Nie kończ jej, bo konto się odłączy. Błąd przy logowaniu? Kliknij «Odłącz» i podłącz konto od nowa.",
         ],
       },
       {
         id: "limits",
         title: "Ile wiadomości i z którego konta",
         body: [
-          "Każde konto ma własny limit pierwszych wiadomości do nowych osób na godzinę: główne — 3, nowe — też 3. Świeżemu numerowi przez pierwszy tydzień lepiej ustawić 1–2 w polu «Wiadomości na godzinę»: nowe konto Telegram ogranicza szybciej. Pierwsze wiadomości wychodzą codziennie od 07:30 do 20:30 czasu taszkenckiego — dodane w nocy czekają i wychodzą rano; korespondencja z tymi, którzy już odpisali, toczy się o każdej porze i bez limitu. Na górze sekcji — ile wychodzi ze wszystkich razem; ta sama liczba stoi nad listą w [Zimnych kontaktach](/admin/prospect).",
-          "Kolejka kontaktów jest jedna: wiadomość wychodzi z konta, na którym wcześniej zwolniło się miejsce — menedżer niczego nie wybiera; jeśli ktoś jest przypisany do kont (punkt [kto pracuje na koncie](#accounts-staff)), — tylko z jego kont. Odpowiedzi do klienta, odpowiedzi modelu i poprawka wiadomości idą z tego samego konta, z którego wyszła pierwsza wiadomość: napisać do człowieka z innego numeru to pojawić się w jego rozmowie jako nieznajomy.",
-          "Pod każdym kontem — ile pierwszych wiadomości wyszło w ostatniej godzinie i dziś, oraz «połączone», jeśli skaut trzyma je podłączone (znacznik co minutę). Brak znacznika dłużej niż trzy minuty — skaut nie pracuje tym kontem: sprawdź serwer albo podłącz konto ponownie.",
+          "Każde konto wysyła nowym osobom do trzech pierwszych wiadomości na godzinę, w godzinach 07:30-20:30. Nowemu numerowi w pierwszym tygodniu ustaw 1-2 w polu «Wiadomości na godzinę».",
+          "Wiadomość wychodzi z konta, na którym wcześniej zwolniło się miejsce. Potem do klienta pisze się z tego samego numeru. Autopilot (bot, który sam pisze do firm) działa tylko z kont dodatkowych.",
+          "Znacznik «połączone» oznacza, że konto działa. Zniknął na dłużej niż trzy minuty? Podłącz konto od nowa.",
         ],
       },
       {
         id: "staff",
         title: "Kto pracuje na koncie",
         body: [
-          "Pod kontem głównym i pod każdym podłączonym — blok **«Kto pracuje na koncie»**: pola wyboru ze wszystkimi, którzy pracują w studiu. Zaznacz osoby tego konta i kliknij **«Zapisz»**. Ta sama osoba może być na kilku kontach — zaznacz ją na każdym; odznaczenie zdejmuje ją z konta.",
-          "Po co: pierwsze wiadomości zaznaczonej osoby wychodzą tylko z jej kont — z tego, na którym wcześniej zwolni się miejsce w limicie «3 na godzinę». Dzięki temu klient dostaje wiadomość z numeru, za którym stoi jego menedżer. Osoba niezaznaczona na żadnym koncie — jej wiadomości bierze dowolne konto, jak wcześniej: nowy menedżer może pisać od razu, bez czekania na przypisanie. Konto odłączono — jego przypisania znikają same, a wiadomości jego ludzi znowu biorą pozostałe. Kto kogo przypisał, zapisuje się w dzienniku działań.",
+          "W bloku **«Kto pracuje na koncie»** zaznacz osoby i kliknij **«Zapisz»**. Ich pierwsze wiadomości będą wychodzić tylko z ich kont. Dzięki temu klient dostaje wiadomość z numeru swojego menedżera.",
+          "Ktoś nie jest zaznaczony nigdzie? Jego wiadomości bierze dowolne konto.",
         ],
       },
       {
         id: "circle",
         title: "Kółko do kontaktów",
         body: [
-          "Tym, którzy odpowiedzieli na powitanie po rosyjsku, wychodzi kółko po rosyjsku, po uzbecku — kółko po uzbecku: krótkie wideo od studia: obejrzeliśmy stronę, znaleźliśmy kilka błędów, zaraz je rozpiszemy. Analizę z propozycją darmowej makiety bot wysyła, gdy klient odpowie na kółko ([kontakt w dwóch krokach](#prospect-hello)). Tym, którzy odpowiedzieli w innym języku, wychodzi wiadomość w ich języku, bez kółka. Bot bierze kółko w potrzebnym języku z «Zapisanych» tego konta firmowego, z którego szedł kontakt, i wysyła kopię, bez oznaczenia „przekazano”.",
-          "Nie trzeba ręcznie zapisywać kółek w «Zapisanych» każdego konta: w bloku **«Kółko do kontaktów»** na górze tej strony są dwa miejsca — **«Kółko po rosyjsku»** i **«Kółko po uzbecku»**. Do każdego wgraj plik — MP4, kwadratowe wideo do minuty (kółko zapisane z Telegrama pasuje bez zmian) — i kliknij **«Wgraj kółko»**. W ciągu dziesięciu minut bot sam zapisze je w «Zapisanych» konta głównego i każdego podłączonego. Tam też widać, które kółko w każdym języku wychodzi teraz, kiedy i przez kogo zostało wgrane; nowe zastępuje poprzednie w tym samym języku na wszystkich kontach, kółko w drugim języku zostaje. Kto wgrał — w dzienniku działań. Można też bez pliku: przekaż kółko botowi studia na prywatnym czacie — bot zapyta o język, wybierz «🇷🇺 Русский» albo «🇺🇿 O‘zbekcha», a on odpowie na przykład «Узбекский кружок сохранён для касаний». Kółka mogą zmieniać właściciel i kierownik.",
-          "Przy każdym koncie są tu dwa wiersze — o kółku po rosyjsku («Kółko po rosyjsku: jest, zapisane …» albo «Brak kółka po rosyjsku») i o kółku po uzbecku. Nie ma potrzebnego — zamiast kółka wyjdzie wiadomość w języku odpowiedzi. Bot zagląda do «Zapisanych» co dziesięć minut, więc wiersze nie odświeżą się od razu. Kółko po rosyjsku można zapisać w «Zapisanych» także ręcznie — bot weźmie ostatnie. Po uzbecku — tylko przez ten blok albo bota: po wideo języka nie poznać, a kółko zapisane ręcznie bot uznaje za rosyjskie. Jeśli kółko nie wyszło, bo go nie ma, mówi o tym też wiersz w raporcie o 18:00.",
+          "Kółko (krótkie wideo) dostają ci, którzy odpowiedzieli na «Здравствуйте». Kto odpisał po rosyjsku, dostaje rosyjskie, kto po uzbecku, uzbeckie. Gdy klient odpowie, bot wyśle analizę strony ([kontakt w dwóch krokach](#prospect-hello)).",
+          "Wgraj oba kółka w bloku **«Kółko do kontaktów»**: plik MP4, kwadrat, do minuty. Kliknij **«Wgraj kółko»**, a w ciągu dziesięciu minut bot zapisze je w «Zapisanych» wszystkich kont.",
+          "Kółko można też przesłać botowi studia, zapyta o język. Brakuje potrzebnego kółka? Wtedy klient dostanie wiadomość tekstową.",
         ],
       },
       {
         id: "circle-niches",
         title: "Kółka według branż",
         body: [
-          "Pod ogólnymi kółkami są **«Kółka według branż»**: kółko na branżę i język. Branże: centrum medyczne, stomatologia, meble, restauracja, salon urody, biuro podróży, centrum szkoleniowe, nieruchomości. Kółko branży wychodzi do firm z tej branży w nowej połowie kontaktów ([A/B](/admin/prospect/texts#sales-ab)); nie ma kółka branży w potrzebnym języku, wychodzi ogólne, jak dotąd. Branżę firmy panel bierze z jej karty, a jeśli jej nie ma, z nazwy i adresu strony.",
-          "Wiersz **«Brakuje: …»** pokazuje, których kółek branż nie ma ani wśród wgranych, ani w «Zapisanych» kont. Niżej dla każdej branży i języka: «jest» z datą wgrania albo «brak, wychodzi ogólne».",
-          "Wgrywanie: wybierz **«Branża»** i **«Język kółka»**, plik (MP4, kwadrat, do minuty) i kliknij **«Wgraj kółko branży»**. W ciągu 10 minut bot zapisze je w «Zapisanych» każdego konta. Albo przekaż kółko botowi studia: zapyta o język, potem przyciskami o branżę.",
+          "W bloku **«Kółka według branż»** kółko nagrywa się pod branżę: do stomatologii o stomatologii, do producenta mebli o meblach. Gdy nie ma kółka branży, wychodzi ogólne.",
+          "Wybierz **«Branża»** i **«Język kółka»**, plik i kliknij **«Wgraj kółko branży»**. Linijka «Brakuje: …» pokazuje, których kółek nie ma.",
+          "Kółka branż dostaje połowa kontaktów: tak porównujemy dwa podejścia ([A/B](#prospect-sales-ab)).",
         ],
       },
       {
         id: "stop",
-        title: "Wstrzymanie, ograniczenie i odłączenie",
+        title: "Pauza, ograniczenie i odłączenie",
         body: [
-          "**«Wstrzymaj»** — konto przestaje pisać pierwsze wiadomości, ale odpowiada w już rozpoczętych rozmowach. **«Przywróć do pracy»** — znowu pisze.",
-          "Jeśli Telegram ograniczy konto za masową wysyłkę, samo staje na dobę: pierwsze wiadomości wychodzą z pozostałych, korespondencja trwa, a przy koncie widać, do kiedy stoi. Wiadomość, przy której to się stało, wraca do kolejki i wyjdzie z innego konta. Jeśli nie ma już kto pisać, kolejka jest zdejmowana w całości, jak wcześniej. Co godzinę każde konto, także główne, samo pyta @SpamBot, czy nie jest ograniczone. Teraz to sprawdzanie jest wyłączone decyzją właściciela (od 03.11.2026): o ograniczeniu dowiadujemy się dopiero, gdy Telegram odmówi wysłania. Jeśli Telegram podał termin dłuższy niż doba, konto stoi do tego terminu. O ograniczeniu bot pisze do całego zespołu: które konto i do której godziny stoi, ile i czyich wiadomości czeka właśnie na nie i co robić — pisać do klientów z prywatnego konta albo z innego konta roboczego. Gdy ograniczenie zniknie, bot napisze, że konto znowu pisze. Żeby wiadomości menedżera nie czekały na ograniczone konto, przypisz go jeszcze do jednego — punkt [kto pracuje na koncie](#accounts-staff).",
-          "**«Odłącz»** — skaut zamyka sesję w Telegramie (zniknie z urządzeń na telefonie) i usuwa ją u nas. Rozmowy rozpoczęte z tego konta zostają w «Zimnych kontaktach», ale dalej odpowiadasz w nich sam: z tego numeru nie ma już kto pisać.",
+          "**«Wstrzymaj»** zatrzymuje pierwsze wiadomości, odpowiedzi w rozpoczętych rozmowach idą dalej. **«Przywróć do pracy»** włącza konto z powrotem.",
+          "Jeśli Telegram ograniczy konto, staje ono na dobę albo na termin podany przez Telegram. Bot uprzedzi zespół. Póki ograniczenie trwa, pisz z innego konta ([kto pracuje na koncie](#accounts-staff)).",
+          "Telegram zamroził konto? Bot podpowie, jak się odwołać. Po odmrożeniu kliknij «Przywróć do pracy».",
+          "**«Odłącz»** zamyka sesję. Rozmowy z tego konta prowadź dalej ręcznie.",
         ],
       },
     ],
@@ -72,23 +72,22 @@ export const workSections: Record<string, HelpEntry> = {
 
   /* ── Надзор ───────────────────────────────────────────────────────── */
   "/admin/talks": {
-    what: "Analiza rozmów z zimnych kontaktów. Każdą rozmowę, która ucichła, czyta drugi model — nie ten, który ją prowadził — i odpowiada: co zaciekawiło klienta, jaki padł zarzut, na czym się posypało i jaka z tego lekcja. Lekcja przydaje się temu, kto pisze następną wiadomość.",
+    what: "Tutaj jest analiza rozmów z zimnych kontaktów: co zaciekawiło klienta, gdzie rozmowa się urwała i jaka z tego lekcja.",
     items: [
       {
         id: "when",
         title: "Kiedy pojawia się analiza",
         body: [
-          "Mniej więcej godzinę po ostatniej odpowiedzi klienta. Jeśli klient napisze coś później, rozmowa jest analizowana od nowa, a stara analiza zostaje zastąpiona nową. Analiza powstaje od nowa także wtedy, gdy kontakt zamknięto przyciskiem «🙅 Klient odmówił» albo «🔇 Ignoruje»: wynik zmienia się na «odmówił» albo «rozmowa utknęła».",
-          "Analizowane są tylko rozmowy z kontaktów, w których klient choć raz odpowiedział. Czaty ze strony i z bota tu nie trafiają.",
+          "Mniej więcej godzinę po ostatniej odpowiedzi klienta. Klient napisał znowu, a rozmowa zostanie przeanalizowana od nowa.",
+          "Trafiają tu tylko kontakty, w których klient choć raz odpowiedział.",
         ],
       },
       {
         id: "read",
         title: "Jak czytać wiersz",
         body: [
-          "Wynik: «odmówił», «poprosił o człowieka», «wstępna rozmowa zamknięta», «rozmowa utknęła» albo «jeszcze trwa». «Rozmowa utknęła» to wszystko pozostałe: milczenie, prośba o przesłanie pliku, niejasna odpowiedź.",
-          "Na zielono — lekcja. Poniżej — «Zaciekawiło», «Zarzut», «Posypało się». «Za mało rozmowy — wniosek słaby» oznacza, że klient napisał mniej niż dwie wiadomości: z jednej wypowiedzi nie wyciąga się wniosków i lekcji tam nie ma.",
-          "Kafelki u góry: ile rozmów przeanalizowano, ile jest lekcji opartych na słowach klienta, ile odmów i ile rozmów po uzbecku.",
+          "Wynik pokazuje, jak skończyła się rozmowa: «odmówił», «poprosił o człowieka», «rozmowa utknęła» albo «jeszcze trwa».",
+          "Lekcja jest na zielono. Niżej «Zaciekawiło», «Zarzut» i «Posypało się». Klient napisał mniej niż dwie wiadomości? Wtedy lekcji nie ma.",
         ],
       },
       {
@@ -96,14 +95,14 @@ export const workSections: Record<string, HelpEntry> = {
         title: "Co z tym zrobić",
         body: {
           manager: [
-            "Przeczytaj świeże lekcje, zanim zaczniesz poprawiać wiadomości z porcji dnia: co przyciąga ludzi i na czym rozmowy się urywają. Lekcje nie są na razie same dodawane do wiadomości — zdecyduje o tym właściciel, gdy uzbiera się kilkadziesiąt odpowiedzi.",
-            "«lead →» otwiera leada z tej rozmowy, jeśli jest Twój.",
+            "Czytaj lekcje, zanim zaczniesz pisać wiadomości: co przyciąga ludzi i gdzie milkną.",
+            "Link «lead →» otwiera Twój lead z tej rozmowy.",
           ],
           head: [
-            "Omawiaj lekcje z zespołem: które haczyki działają, na jakich zarzutach rozmowy się sypią. Na razie nie są same dodawane do wiadomości — zdecyduje o tym właściciel, gdy uzbiera się kilkadziesiąt odpowiedzi.",
+            "Omawiaj lekcje z zespołem: które zaczepki działają i gdzie tracimy klientów.",
           ],
           admin: [
-            "Lekcje na razie tylko się zbierają i nie trafiają do wiadomości. Dodawanie ich do promptu pierwszej wiadomości to Twoja decyzja — warto ją podjąć, gdy uzbiera się kilkadziesiąt odpowiedzi.",
+            "Lekcje na razie tylko się zbierają i nie trafiają do wiadomości. Dodawać je do wiadomości warto, gdy zbierze się kilkadziesiąt odpowiedzi.",
           ],
         },
       },
