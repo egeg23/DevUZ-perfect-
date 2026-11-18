@@ -110,7 +110,7 @@ test("кнопки «Вопросы SPIN» у менеджера — для вс
   const store = read("lib/admin/outreach-talk-store.ts");
   assert.match(store, /for \(const stage of SPIN_STAGES\) quick\.push\(\{ kind: `spin_\$\{stage\}`/);
   for (const stage of SPIN_STAGES) {
-    const label = (leadCardDict as Record<string, { ru: string; uz: string; pl: string }>)[`quick_spin_${stage}`];
+    const label = (leadCardDict as unknown as Record<string, { ru: string; uz: string; pl: string }>)[`quick_spin_${stage}`];
     assert.ok(label?.ru && label.uz && label.pl, `нет подписи quick_spin_${stage}`);
   }
   assert.match(read("components/admin/lead-timeline.tsx"), /data-spin-questions/);
