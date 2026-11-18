@@ -932,6 +932,16 @@ CRM — amoCRM или Bitrix24, какая окажется; наполнени�
   меняются все три текста. Автомат отказал снова — в Verification Center
   «I believe the issues found are incorrect. Request additional review» и
   ждать письма Google несколько дней.
+  **Подключён 18.11.2026**: Google одобрил бренд, проект — Basic, кабинет
+  7755346956 в «Рекламе», «Проверить» — «работает» («разработка сайтов» по
+  Узбекистану — 390 в месяц, у Вордстата — 2). «Подключить» у команды
+  студии ведёт через `/admin/ads/oauth/…` (`connectHref`,
+  `lib/ads/oauth-routes.ts`): кука панели живёт только на `/admin`, и под
+  `/api/…` вход отвечал «forbidden»; возврат от Google на `/api/…`
+  переводится на `/admin/…`. Из России вход Google может зависнуть на
+  accounts.youtube.com — открыть ссылку согласия из `continue` или с VPN.
+  Сверка страниц услуг по Google — кнопка «Вордстат — проверить ключ» →
+  `planner` (`scripts/seo/planner-landings.mjs`).
   Держит `tests/keyword-planner.test.ts`.
 - **Запрос стоит в заголовке, описании и первом абзаце** — это держит проверка
   кодом (`lib/marketing/article-check.ts`).

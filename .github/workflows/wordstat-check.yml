@@ -6,15 +6,16 @@
 # Сам ключ в публичный журнал не попадает. Сайт и сервер не меняет.
 # «landings» — сверка запросов шести страниц услуг (scripts/seo/wordstat-landings.mjs).
 # «tomsk» — запросы страниц сайта клиники «Сияние Севера» по Томску (регион 67), тот же скрипт.
+# «planner» — те же шесть страниц по планировщику Google Ads, Узбекистан (scripts/seo/planner-landings.mjs).
 name: Вордстат — проверить ключ
 
 on:
   workflow_dispatch:
     inputs:
       what:
-        description: "Что проверить: key — ключ, landings — запросы страниц услуг, tomsk — запросы сайта клиники по Томску"
+        description: "Что проверить: key — ключ, landings — запросы страниц услуг, tomsk — запросы сайта клиники по Томску, planner — страницы услуг по Google"
         type: choice
-        options: [key, landings, tomsk]
+        options: [key, landings, tomsk, planner]
         default: key
 
 permissions:
@@ -41,6 +42,7 @@ jobs:
             case "${{ inputs.what || 'key' }}" in
               landings) file=wordstat-landings.mjs ;;
               tomsk) file=wordstat-landings.mjs; arg=tomsk ;;
+              planner) file=planner-landings.mjs ;;
               *) file=wordstat-check.mjs ;;
             esac
             git fetch -q --depth 1 origin main && git show "origin/main:scripts/seo/$file" > "/tmp/$file" || exit 1
