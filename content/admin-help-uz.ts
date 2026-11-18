@@ -931,42 +931,42 @@ export const uz: HelpCopy = {
 
     /* ── Заявки ───────────────────────────────────────────────────────── */
     "/admin/orders": {
-      what: "Saytdagi do‘kondan tayyor mahsulotlarga buyurtmalar — mijozlar loyihalari emas. Xaridor rekvizitlari bilan buyurtma qoldiradi, biz hisob chiqaramiz, u naqd pulsiz to‘laydi va fayllarni oladi. Barcha xodimlar barcha buyurtmalarni ko‘radi va istalganini olib bora oladi; kim oxirgi bosgan bo‘lsa, buyurtmada o‘sha «mas’ul: …» bo‘ladi.",
+      what: "Bu yerda saytdagi do‘kondan tayyor mahsulotlar buyurtmalari. Bu mijozlar loyihalari emas. Buyurtmani istalgan xodim olib borishi mumkin.",
       items: [
         {
           id: "flow",
           title: "Buyurtma yo‘li",
           body: [
-            "«yangi» → «hisob-faktura chiqarilgan» → «to‘langan» → «topshirilgan». Yoki «bekor qilingan». Tepadagi filtrlar — shu holatlar bo‘yicha.",
-            "Xaridor kontakti darhol ko‘rinadi: hisob chiqarilishi uchun rekvizitlarni o‘zi qoldirgan. Kontakt yonidagi «bot ulangan» xaridor botimizni ulaganini bildiradi — hisob va to‘lov haqidagi bildirishnomalar unga o‘sha yerga boradi.",
-            "Buyurtma qotib qolsa, Telegramga eslatma keladi: 2 kun hisobsiz, hisob 14 va 30 kun to‘lanmagan, to‘langan, lekin beriladigan fayl yo‘q.",
+            "Buyurtma holatlari: «yangi», «hisob-faktura chiqarilgan», «to‘langan», «topshirilgan» yoki «bekor qilingan». Yuqoridagi tugmalar kerakli holatdagi buyurtmalarni ko‘rsatadi.",
+            "Xaridor kontakti darhol ko‘rinadi. «bot ulangan» belgisi hisob-faktura va to‘lov haqida unga botimiz yozishini bildiradi.",
+            "Buyurtma qotib qoldimi, masalan hisob-faktura 14 kun to‘lanmadi? Bot sizga Telegramda eslatadi.",
           ],
         },
         {
           id: "invoice",
-          title: "Summa va hisob",
+          title: "Summa va hisob-faktura",
           body: [
-            "Ba’zi mahsulotlarning narxi — oraliq, va buyurtma summasiz keladi. Uni «summa, $» maydoniga yozing va **«kiritish»** tugmasini bosing. Hisobdan keyin summani o‘zgartirib bo‘lmaydi.",
-            "**«hisob-faktura chiqarish»** — summa kerak. Hisob raqami o‘zi beriladi; qayta bosish raqamni o‘zgartirmaydi. Xaridor hisobni o‘z buyurtmasi sahifasida ko‘radi (havolani u buyurtma berayotganda olgan), bot ulangan bo‘lsa — yana xabar ham oladi. Xabarda to‘lov havolasi ataylab yo‘q: hisobdagi rekvizitlar bo‘yicha to‘lashadi.",
-            "Tepada «Bank rekvizitlari sozlanmagan» turgan bo‘lsa — hisob chiqadi, lekin xaridor qayerga to‘lashni ko‘rmaydi. Egasiga ayting.",
+            "Buyurtma summasiz keldimi? Uni «summa, $» maydoniga yozing va **«kiritish»** tugmasini bosing. Hisob-fakturadan keyin summani o‘zgartirib bo‘lmaydi.",
+            "Keyin **«hisob-faktura chiqarish»** tugmasini bosing. Xaridor hisob-fakturani buyurtma sahifasida ko‘radi va undagi rekvizitlar bo‘yicha to‘laydi.",
+            "Yuqorida «Bank rekvizitlari sozlanmagan» turibdimi? Egasiga ayting: ularsiz xaridor qayerga to‘lashni ko‘rmaydi.",
           ],
         },
         {
           id: "paid",
           title: "To‘lov va fayllarni berish",
           body: [
-            "Pul hisob raqamga tushdi — **«ko‘chirmadagi qator»** maydoniga bank ko‘chirmasidagi qatorni yozing va **«to‘lov olindi»** tugmasini bosing. Qatorsiz bo‘lmaydi: aks holda bir oydan keyin to‘lov bo‘lganini isbotlab bo‘lmaydi.",
-            "Shu daqiqadan xaridorga fayllar ochiladi — agar egasi ularni «Relizlar» bo‘limiga joylagan bo‘lsa. Yuklab olish — jami 20 tagacha va kuniga 10 tagacha, o‘sha faylni 10 daqiqa ichida qayta yuklash hisoblanmaydi.",
-            "Birinchi yuklab olish o‘zi «topshirilgan» qo‘yadi. **«kod topshirildi»** tugmasi — boshqacha berganingizda, masalan, repozitoriyga kirish huquqi bilan. To‘lovdan oldin u ishlamaydi: kodni berish — bekor qilib bo‘lmaydigan yagona qadam.",
+            "Pul keldimi? «ko‘chirmadagi qator» maydoniga bank ko‘chirmasidagi qatorni yozing va **«to‘lov olindi»** tugmasini bosing. Qatorsiz tugma ishlamaydi.",
+            "Endi xaridor fayllarni buyurtma sahifasidan yuklab olishi mumkin: jami 20 martagacha, kuniga 10 martadan ko‘p emas.",
+            "Birinchi yuklab olish o‘zi «topshirilgan» holatini qo‘yadi. Kodni boshqacha berdingizmi? **«kod topshirildi»** tugmasini bosing.",
           ],
         },
         {
           id: "access",
           title: "Havolalar, kirish va bekor qilish",
           body: [
-            "**«havolani qayta chiqarish»** — buyurtma sahifasiga yangi havola, eskisi ishlamay qoladi. Yangisi bir marta ko‘rsatiladi — uni darhol xaridorga yuboring.",
-            "**«fayllarga kirishni bekor qilish»** yuklab olishni butunlay yopadi: berilgan havolalar ishlamay qoladi, buyurtma sahifasida esa tugma o‘rniga xaridor «Fayllarga kirish yopildi» deb ko‘radi. Sahifa va hisob saqlanadi — u o‘z hujjatlarini yo‘qotmaydi. Buyurtmada «Kirish: … dan yopiq» paydo bo‘ladi. **«fayllarga kirishni qaytarish»** yuklab olishni qayta ochadi, lekin eski havolalar o‘lik qoladi — shuning uchun havola sizib chiqqan bo‘lsa, «fayllarga kirishni bekor qilish», keyin «fayllarga kirishni qaytarish» tugmasini bosing: sizib chiqqani o‘chadi, xaridor esa o‘z sahifasidan yangisini yuklab oladi.",
-            "**«bekor qilish»** — xaridorga bildirishnoma boradi. **«ishga qaytarish»** holatni tanlab emas, sanalar bo‘yicha tiklaydi: hisob chiqarilgan bo‘lsa — «hisob-faktura chiqarilgan» qaytadi.",
+            "**«havolani qayta chiqarish»** buyurtmaga yangi havola beradi, eskisi esa o‘chadi. Yangisi bir marta ko‘rinadi, uni darhol xaridorga yuboring.",
+            "**«fayllarga kirishni bekor qilish»** yuklab olishni yopadi, **«fayllarga kirishni qaytarish»** yana ochadi. Fayl havolasi begonalarga tushib qoldimi? Kirishni bekor qilib, qayta oching: eski havola o‘chadi.",
+            "**«bekor qilish»** buyurtmani bekor qiladi, xaridorga xabar boradi. **«ishga qaytarish»** buyurtmani avvalgi holatiga qaytaradi.",
           ],
         },
       ],
@@ -1814,14 +1814,14 @@ export const uz: HelpCopy = {
 
     /* ── Проекты ──────────────────────────────────────────────────────── */
     "/admin/projects": {
-      what: "Kelishib bo‘lingan ish: qaysi bosqichda, qaysi muddatgacha, qancha summaga, kim olib boradi va mijoz qancha to‘lagan. «Moliya» bo‘limidagi hisoblanmalar loyihaga bog‘liq: summasi bor loyiha bo‘lmasa, bitim uchun hech kim pul olmaydi.",
+      what: "Loyiha deb mijoz bilan kelishib olingan ishni aytamiz. Summasi bor loyiha bo‘lmasa, bitim uchun hech kim pul olmaydi.",
       items: [
         {
           id: "tasks",
           title: "Loyiha bo‘yicha vazifalar",
           body: [
-            "Loyiha kartochkasida, nomining darhol ostida — **«Loyiha bo‘yicha vazifalar»**: unga biriktirilgan barcha vazifalar — kimdan, kimga, muddat va hozir ular qanday holatda. Ochiqlari tepada, eng yaqin muddatdan, yopilganlari pastda. Agar vazifa sizda bo‘lsa yoki uni siz qo‘ygan bo‘lsangiz, bu yerdagi tugmalar [«Vazifalar»](#tasks-board) bo‘limidagi bilan bir xil.",
-            "Loyiha bo‘yicha vazifa qo‘yish uchun o‘ngdagi **«Vazifa qo‘yish»** ni bosing: «Vazifalar» bo‘limi forma bilan ochiladi, unda bu loyiha allaqachon tanlangan. Vazifani loyihaga faqat loyiha shu yerda, «Loyihalar» da qo‘shilgan bo‘lsa biriktirish mumkin — shuning uchun avval mijoz loyihasi qo‘shiladi. Vazifalar haqida batafsil — [vazifalar](#tasks-board) bandida.",
+            "Loyiha kartochkasida «Loyiha bo‘yicha vazifalar» bloki bor. Unda loyihaning barcha vazifalari: kim qo‘ygan, kimga va qaysi muddatgacha. Vazifalar haqida batafsil [vazifalar](#tasks-board) bandida.",
+            "O‘ngdagi **«Vazifa qo‘yish»** tugmasi loyiha allaqachon tanlangan formani ochadi.",
           ],
         },
         {
@@ -1829,17 +1829,17 @@ export const uz: HelpCopy = {
           title: "Loyiha ochish",
           body: {
             manager: [
-              "Mijoz ishlashga rozi bo‘ldi — loyiha oching: «Yangi loyiha» bloki, nomi, mijoz, summa, muddat va «Yaratish».",
-              "**Kim ochsa, o‘sha mas’ul bo‘ladi.** Hisoblanmalar mas’ulga yoziladi, uni esa faqat egasi almashtira oladi — shuning uchun o‘z loyihangizni o‘zingiz oching, hamkasbdan so‘ramang.",
-              "Ro‘yxat: «shu bosqichda N kun», «olib boruvchi: …», «muddat …» va muddat o‘tgan bo‘lsa «muddati o‘tgan». «yopilganlarini ko‘rsatish» — tugallangan va bekor qilinganlar.",
+              "Mijoz ishlashga rozi bo‘ldimi? Loyiha oching. «Yangi loyiha» blokida nomi, mijoz, summa va muddatni yozing va «Yaratish» tugmasini bosing.",
+              "Loyihani uni ochgan xodim olib boradi va bitim puli unga tushadi. Olib boruvchini faqat egasi almashtira oladi. Shuning uchun loyihangizni o‘zingiz oching.",
+              "Muddat o‘tdimi? Ro‘yxatda «muddati o‘tgan» belgisi chiqadi. «yopilganlarini ko‘rsatish» tugmasi tugagan va bekor qilingan loyihalarni ko‘rsatadi.",
             ],
             head: [
-              "Loyihani istalgan odam ochadi — va kim ochsa, o‘sha mas’ul bo‘ladi. Hisoblanmalar mas’ulga yoziladi (sizga esa jamoangiz loyihalaridan 5%), mas’ulni esa faqat egasi almashtira oladi. Menejerlar o‘z loyihalarini o‘zlari ochishini kuzating.",
-              "Ro‘yxat hamma uchun umumiy: bosqich, undagi kunlar, mas’ul, muddat va «muddati o‘tgan».",
+              "Loyihani uni ochgan xodim olib boradi va bitim puli unga tushadi. Siz jamoangiz loyihalaridan 5% olasiz.",
+              "Menejerlar loyihalarini o‘zlari ochishini kuzating. Olib boruvchini faqat egasi almashtira oladi.",
             ],
             admin: [
-              "Loyihani ochgan xodim o‘zi mas’ul bo‘ladi. Siz ochganingizda birinchi maydonda **kim olib borishini** tanlang: hisoblanmalar unga yoziladi. O‘zingizni tanlasangiz — loyiha bo‘yicha jamoaga hisoblanma bo‘lmaydi, egasi foiz emas, qoldiqni oladi. Mas’ulni istalgan paytda almashtirish mumkin: [«Loyiha ma’lumotlari»](#projects-data) → «Olib boradi»; siz olib borayotgan loyiha kartochkasida sariq eslatma turadi.",
-              "Ro‘yxatda loyiha bosqichda necha kun turgani va muddati o‘tgan-o‘tmagani ko‘rinadi.",
+              "Loyihani ochgan xodim o‘zi olib boruvchi bo‘ladi. Siz ochsangiz, kim olib borishini tanlang: bitim puli unga tushadi.",
+              "O‘zingizni tanlasangiz, jamoa bu loyihadan hech narsa olmaydi. Olib boruvchini [«Loyiha ma’lumotlari»](#projects-data) blokidagi «Olib boradi» maydonida almashtirish mumkin.",
             ],
           },
         },
@@ -1847,9 +1847,9 @@ export const uz: HelpCopy = {
           id: "stages",
           title: "Bosqichlar",
           body: [
-            "Tartib bilan: «brif» → «shartnoma» → «dizayn» → «ishlab chiqish» → «qabul qilish» → «ishga tushirish» → «qo‘llab-quvvatlash». Alohida: «pauzada», «yopilgan», «bekor qilingan».",
-            "Bosqichni faqat egasi o‘zgartiradi: bosqich — mijozga berilgan va’da, ijrochining kayfiyati haqidagi belgi emas. Har bir o‘zgarish jurnalga loyiha oldingi bosqichda necha kun turgani bilan birga yoziladi.",
-            "Pulga faqat «bekor qilingan» ta’sir qiladi — unda hisoblanmalar «hisoblanmaydi» bo‘ladi. «Yopilgan» va «bekor qilingan» yana mas’ulga summani tahrirlashni ham yopadi.",
+            "Bosqichlar tartib bilan: «brif», «shartnoma», «dizayn», «ishlab chiqish», «qabul qilish», «ishga tushirish», «qo‘llab-quvvatlash». Yana «pauzada», «yopilgan» va «bekor qilingan» bor.",
+            "Bosqichni faqat egasi o‘zgartiradi, chunki bu mijozga berilgan va’da. Har bir o‘zgarish jurnalga yoziladi.",
+            "Pulga faqat «bekor qilingan» ta’sir qiladi: bunday loyihadan hech kim hech narsa olmaydi.",
           ],
         },
         {
@@ -1857,21 +1857,21 @@ export const uz: HelpCopy = {
           title: "Loyiha kartochkasi",
           body: {
             manager: [
-              "Tepadan pastga: «Bosqich», «Smeta», «Pul», «Loyiha ma’lumotlari», «Shartnoma».",
-              "**«Smeta»** — toifani va muddatni haftalarda tanlang, panel «kamida» (chegara), «ko‘pi bilan» va muddatni hisoblaydi. Chegara — bundan past summada loyiha o‘zini oqlamaydi; undan pastga faqat egasi tusha oladi.",
-              "**«Pul»**: «Bitim turi» — «yangi mijoz» yoki «qo‘shimcha sotuv» (foizingiz shunga bog‘liq, [«Moliya»](/admin/finance) bo‘limiga qarang) va «Shartnoma summasi, $». Butun dollarda yozing, «$» va sentlarsiz, aks holda maydon tozalanadi. Loyiha bo‘yicha birorta to‘lov bo‘lmaguncha summani siz tahrirlaysiz; keyin — faqat egasi.",
-              "Soliq va tannarxni shartnomadan keyin egasi yozadi. Mijoz to‘lovlarini ham egasi yozadi — va faqat shundan keyin hisoblanmalaringiz muzdan chiqadi. Shartnoma hisobi bo‘yicha to‘lov egasi uni tasdiqlaganda bu yerga o‘zi tushadi; ungacha «Mijoz to‘lovlari» blokida sariq qator turadi: «to‘lov hali tasdiqlanmagan».",
-              "**«Loyiha ma’lumotlari»** — nomi, mijoz, muddat, izohlar; ularni siz mas’ul sifatida tahrirlaysiz. **«Shartnoma»** — shartnoma kartochkasi: raqami, u hozir qayerda (qoralama, egasida imzoda, tasdiqlangan, imzolangan), summa, qoralamada — imzogacha nima yetishmasligi va «Shartnomani ochish». Shartnoma yo‘q ekan — [«Maketdan tarkib»](#contracts-compose) va «Rekvizitlarni qo‘yish» bilan forma; tayyorlanmasa, forma ustida nimani tuzatish kerakligi yoziladi. Batafsil — [shartnomalar](/admin/contracts).",
+              "«Smeta» blokida toifa va muddatni haftalarda tanlang. Panel chegarani hisoblaydi: undan past summada loyiha o‘zini oqlamaydi. Undan pastga faqat egasi tusha oladi.",
+              "«Pul» blokida «Bitim turi»ni tanlang: «yangi mijoz» yoki «qo‘shimcha sotuv». Foizingiz shunga bog‘liq. «Shartnoma summasi, $»ni butun dollarda yozing. Birinchi to‘lovdan keyin summani faqat egasi o‘zgartiradi.",
+              "Soliq, tannarx va mijoz to‘lovlarini egasi yozadi. Mijoz hammasini to‘lamaguncha, loyiha bo‘yicha pulingiz muzlatilgan turadi.",
+              "«Shartnoma» blokida shartnoma raqami, holati va summasi ko‘rinadi. Shartnoma bo‘lmasa, u yerda uni tayyorlash formasi turadi. Batafsil [«Shartnomalar»](/admin/contracts) bo‘limida.",
             ],
             head: [
-              "Bloklar: «Bosqich», «Smeta», «Pul», «Loyiha ma’lumotlari», «Shartnoma». Siz istalgan loyiha kartochkasini ko‘rasiz; pulni — o‘z loyihalaringiz va jamoa loyihalari bo‘yicha.",
-              "Smeta va summani loyiha mas’uli va egasi tahrirlaydi — siz jamoa loyihalarida ularni faqat ko‘rasiz. Summa — butun dollarda; birinchi to‘lovdan keyin uni faqat egasi o‘zgartiradi.",
-              "Hisoblanma qatorlari: daraja bo‘yicha mas’ul va siz — jamoa loyihalaridan «rahbar · 5 %» (muassisda bu qator 0).",
+              "Siz istalgan loyiha kartochkasini ko‘rasiz, pulni esa faqat o‘z loyihalaringiz va jamoa loyihalari bo‘yicha.",
+              "Smeta va summani olib boruvchi va egasi o‘zgartiradi. Jamoa loyihalarida siz ularni faqat ko‘rasiz.",
+              "Hisoblanmalarda sizning «rahbar» qatoringiz bor, jamoa loyihasidan 5%. Hammuassisda u nolga teng: u baribir butun foydadan ulush oladi.",
             ],
             admin: [
-              "Siz hammasini tahrirlaysiz: bosqich (10 ta tugma), smeta, summa va bitim turini istalgan paytda, **«Soliq, %»** (odatiy 4) va **«Ishlab chiqish tannarxi, $»** — faqat siz, hech kim tannarxni kamaytirib, o‘z hisoblanmasini oshirmasligi uchun.",
-              "Hisoblanma qatorlarida — shu bitim uchun foiz: «belgilash» yoki «daraja bo‘yicha»ga qaytarish. **«Hamkor»** bloki: kim olib kelgan, hamkorga foiz («pog‘ona bo‘yicha» — loyiha summasiga qarab: aylanmadan 6–20%, «foydadan» eski loyihada — 10–30%), «Agentlik buyurtmasi» — agar loyiha hamkor agentligidan bo‘lsa — va «Hisobga olmaslik sababi».",
-              "**«Mijoz to‘lovlari»** → «To‘lovni yozish»: summa, sana, maqsad. Hammasi to‘langanda hisoblanmalar «ishlab topilgan» bo‘ladi, hamkorga esa xabar ketadi. Shartnoma hisoblari bo‘yicha to‘lovlar bu yerga o‘zi yoziladi — sizning «To‘landi» belgingizdan yoki shartnomadagi «To‘lovni tasdiqlash» tugmasidan; to‘lov sizni kutayotgan paytda bu yerda shartnomaga havolali sariq qator turadi. Kartochkadagi «Egasiga qoladi» — hamkor ulushi ayirilmagan; aniq raqam — [«Moliya»](/admin/finance) bo‘limida.",
+              "Siz hamma narsani istalgan vaqtda o‘zgartirasiz. «Soliq, %» va «Ishlab chiqish tannarxi, $»ni faqat siz yozasiz. Shunda hech kim o‘ziga hisoblanmani oshira olmaydi.",
+              "Hisoblanma qatorida «belgilash» bu bitim uchun o‘z foizingizni qo‘yadi, «daraja bo‘yicha» esa xodim darajasidagi foizni qaytaradi. «Hamkor» blokida mijozni kim olib kelganini tanlang.",
+              "Mijoz to‘lovini «To‘lovni yozish» tugmasi bilan yozing. Shartnoma hisob-fakturasi bo‘yicha to‘lov siz tasdiqlagandan keyin o‘zi yoziladi.",
+              "Egasining aniq ulushi, hamkor ulushi ayirilgan holda, [«Moliya»](/admin/finance) bo‘limida ko‘rinadi.",
             ],
           },
         },
@@ -1879,8 +1879,8 @@ export const uz: HelpCopy = {
           id: "data",
           title: "«Loyiha ma’lumotlari»",
           body: [
-            "Nomi, mijoz, muddat va izohlarni loyiha mas’uli, uning rahbari va egasi tahrirlaydi; qolganlar ularni formasiz ko‘radi. Mas’ulni faqat egasi almashtiradi — «Olib boradi» maydoni: hisoblanmalar mas’ulga bog‘liq va xodim loyihani boshqa odamga yozib qo‘ya olmaydi.",
-            "Summa endi bu yerda tahrirlanmaydi — u «Pul» blokida.",
+            "Nomi, mijoz, muddat va izohlarni olib boruvchi, uning rahbari va egasi o‘zgartiradi.",
+            "Olib boruvchini faqat egasi «Olib boradi» maydonida almashtiradi. Summa «Pul» blokida o‘zgartiriladi.",
           ],
         },
       ],
@@ -2157,24 +2157,24 @@ export const uz: HelpCopy = {
 
     /* ── Договоры ─────────────────────────────────────────────────────── */
     "/admin/contracts": {
-      what: "YaTTimiz nomidan buyurtmachi bilan shartnoma. Jamoadagi har kim tayyorlaydi va tekshiradi, faqat egasi tasdiqlaydi — aynan shu paytda hujjatda uning imzosi paydo bo‘ladi. Keyin — bosqichlar bo‘yicha hisoblar va buyurtmachi uchun havola. Bu yerda shartnomalar ro‘yxati yo‘q: shartnoma loyiha kartochkasida turadi.",
+      what: "YaTTimizning mijoz bilan shartnomasi loyiha kartochkasida tayyorlanadi. Uni jamoadan istalgan kishi tayyorlay oladi, tasdiqlaydi esa faqat egasi. Shu paytda hujjatda uning imzosi paydo bo‘ladi.",
       items: [
         {
           id: "prepare",
-          title: "Shartnoma tayyorlash",
+          title: "Shartnomani tayyorlash",
           body: [
-            "[Loyihani](/admin/projects) oching → «Shartnoma» bloki. Tepada — [«Maketdan tarkib»](#contracts-compose): maketni tanlang, smeta, summa, predmet va muddat o‘zi qo‘yiladi. Buyurtmachi rekvizitlarini bitta matn bilan «Rekvizitlarni qo‘yish» maydoniga qo‘ying va «Maydonlarga taqsimlash» tugmasini bosing. Qolgani — sana va bosqichlar: **bosqichlar ulushlari yig‘indisi — roppa-rosa 100%**. **«Shartnomani tayyorlash»** tugmasini bosing — shartnoma tayyorlanayotganda tugma kulrang, ikkinchi bosish ketmaydi.",
-            "Natijada DU-2026-07 ko‘rinishidagi raqamli qoralama chiqadi. Loyihada shartnoma allaqachon bo‘lsa, «Shartnomani tayyorlash» uni ochadi, ikkinchisi paydo bo‘lmaydi. Qoralamada imzo hujjatda jismonan yo‘q — uni chop etib, imzolangan deb ko‘rsatib bo‘lmaydi.",
-            "Smeta chegarasidan past summani tayyorlab bo‘lmaydi — buni faqat egasi hal qiladi. Shartnomaga imzogacha nima yetishmasligi darhol ko‘rinadi: loyihadagi shartnoma kartochkasida va hujjat ustida, «Imzoga yuborish» yonida ro‘yxat bilan. Rekvizitlarni qoralamada to‘ldirish mumkin — «Buyurtmachi rekvizitlari» bloki, «Rekvizitlarni saqlash» tugmasi.",
+            "[Loyiha](/admin/projects)ni oching va «Shartnoma» blokini toping. [«Maketdan tarkib»](#contracts-compose) blokida maketni tanlang. Smeta, summa, predmet va muddat o‘zi qo‘yiladi.",
+            "Mijoz rekvizitlarini «Rekvizitlarni qo‘yish» maydoniga qo‘ying va «Maydonlarga taqsimlash» tugmasini bosing. Sana va bosqichlarni yozing, bosqichlar ulushi jami 100% bo‘lsin. **«Shartnomani tayyorlash»** tugmasini bosing.",
+            "Imzosiz qoralama chiqadi. Imzogacha nima yetishmasligi hujjat ustida ro‘yxat bilan yozilgan. Loyihada ikkinchi shartnoma paydo bo‘lmaydi: tugma birinchisini ochadi.",
           ],
         },
         {
           id: "compose",
           title: "«Maketdan tarkib» va «Rekvizitlarni qo‘yish»",
           body: [
-            "«Maketdan tarkib» — loyihadagi shartnoma formasida va qoralamada. Maketni tanlang: pastda asos va narxlari bilan qo‘shimchalar — mijoz maketdagi narx konstruktorida ko‘rganining aynan o‘zi. ★ belgili qo‘shimchalar darhol kiritilgan (maket shular uchun), keraksizini olib tashlang va mijoz olganini belgilang. Pastda — uchtagacha o‘z qatorlaringiz «nomi + narx»: narx 0 — bu sovg‘a, qator smetaga «(в подарок)» bilan tushadi. Jami shu yerda hisoblanadi.",
-            "«Shartnomani tayyorlash» bosilganda (qoralamada — «Shartnomaga qo‘yish») kod o‘zi smeta qatorlarini, shartnoma summasini, predmetni («… с дополнительными функциями: …») va maket rejasida bo‘lsa muddatni qo‘yadi — «до 5 недель с даты аванса»; siz yozib qo‘ygan muddat almashtirilmaydi. Bu yerda model yo‘q: narxlar maketdan shundayligicha olinadi. Maket ro‘yxatda bo‘lmasa — uning konstruktori boshqa shaklda yoki narxlari dollarda emas; unda smeta fayl bilan yoki qatorlar qo‘lda, avvalgidek.",
-            "«Rekvizitlarni qo‘yish» — mijoz yuborgan matnni qo‘ying va «Maydonlarga taqsimlash» tugmasini bosing. Kod nomini (MChJ «…», YaTT …), manzilni, STIR (9 raqam) yoki JShShIR (14), hisob raqamini (20 raqam, bo‘shliqlarni olib tashlaydi), MFO (5), bankni topadi; QQS to‘lovchi kodi, IFUT va direktorni «Buyurtmachining manzili va kontakti» maydoniga yozadi. Topilmagani — maydon bo‘sh, tugma ostida nimani qo‘lda yozish kerakligi yoziladi. Hech narsa taxmin qilinmaydi: maydonlarni ko‘z bilan tekshiring.",
+            "Maketni tanlang, shunda maketda mijoz ko‘rgandek asos va narxli qo‘shimchalar chiqadi. ★ belgili qo‘shimchalar allaqachon belgilangan. Keraksizini olib tashlang.",
+            "Narxi bilan uchtagacha o‘z qatoringizni qo‘shish mumkin. Narx 0 sovg‘a degani. Maket ro‘yxatda yo‘qmi? Smetani fayl bilan yuklang.",
+            "«Rekvizitlarni qo‘yish»ga mijoz matnini qanday bo‘lsa shunday qo‘ying va «Maydonlarga taqsimlash» tugmasini bosing. Panel nomi, STIR, hisob raqami, MFO va bankni topadi. Maydonlarni ko‘z bilan tekshiring.",
           ],
         },
         {
@@ -2182,8 +2182,8 @@ export const uz: HelpCopy = {
           title: "«Imzolanadigan shartnomalar»",
           roles: ["admin"],
           body: [
-            "Sahifadagi birinchi blok — menejerlar sizga imzoga yuborgan shartnomalar: raqam, loyiha va summa. Qatorni bosing — «Tasdiqlash va imzolash» va «Qayta ishlashga qaytarish» tugmalari bilan shartnoma ochiladi. Bo‘sh bo‘lsa — «Imzo kutayotgan hech narsa yo‘q».",
-            "Ilgari bu ro‘yxat «Lidlar»ning «Bugun» varag‘ida edi. Endi bo‘limda, boshqalar kabi, menyuli sarlavha bor; sarlavhasiz faqat shartnoma va hisobning o‘z sahifalari qoldi — bu chop etish uchun hujjatlar va buyurtmachiga havolalar.",
+            "Sahifada birinchi bo‘lib «Imzolanadigan shartnomalar» bloki turadi. Qatorni bosing, shartnoma ochiladi.",
+            "Shartnomada ikki tugma bor: «Tasdiqlash va imzolash» va «Qayta ishlashga qaytarish».",
           ],
         },
         {
@@ -2191,58 +2191,57 @@ export const uz: HelpCopy = {
           title: "Shartnoma sahifasi: smeta va imzoga yuborish",
           body: {
             manager: [
-              "Shartnoma qoralama ekan: **«Smetani yuklash»** va **«Muddat»** («60 рабочих дней с даты аванса»). Smeta Excel (xlsx), CSV, TSV va matnli PDF dan qatorma-qator o‘qiladi: panel ustunlarni sarlavha bo‘yicha topadi («Nomi», «Miqdori», «Narxi», «Summa»; ruscha sarlavhalar ham tushuniladi), «Jami» qatorini o‘tkazib yuboradi, qatorlar yig‘indisi esa shartnoma summasiga aylanadi. PDF skan yoki Word’ni o‘qib bo‘lmaydi — unda **«Smeta qatorlarini qo‘lda kiritish»**: qatorlarni Excel’dan nusxalang yoki har bir pozitsiyaga bitta qator yozing — nomi, soni, narxi «;» orqali. Smeta qatorlarisiz shartnomani imzoga yuborib bo‘lmaydi.",
-              "**«Imzoga yuborish»** — panel hammasi joyidami tekshiradi, bo‘lmasa «Yetishmayapti: …» deb yozadi. Yubordingiz — egasiga Telegramda xabar bordi, shartnoma «Imzo uchun egasiga yuborilgan» holatida va boshqa tahrirlanmaydi.",
-              "Egasi tasdiqlasa — «Egasi tasdiqlagan», yoki qayta ishlashga qaytaradi. Tasdiqlangandan keyin mijoz o‘z qismini imzolaydi, siz esa **«Imzolanganini yuklash»** tugmasini bosasiz (PDF yoki rasm) — shartnoma «Ikki tomon imzolagan» bo‘ladi.",
-              "Telegram bildirishnomani yetkazmasa, panel shuni aytadi — egasiga og‘zaki ayting.",
+              "Qoralamada **«Smetani yuklash»** tugmasini bosing (Excel, CSV yoki matnli PDF) va **«Muddat»**ni ko‘rsating. Fayl o‘qilmadimi? **«Smeta qatorlarini qo‘lda kiritish»** tugmasini bosing: nomi, miqdori, narxi «;» bilan.",
+              "**«Imzoga yuborish»** tugmasini bosing. Egasiga Telegramda xabar boradi, shartnoma esa endi o‘zgartirilmaydi.",
+              "Egasi shartnomani tasdiqlaydi yoki qayta ishlashga qaytaradi. Mijoz imzolagach, skaner nusxasini **«Imzolanganini yuklash»** tugmasi bilan yuklang.",
             ],
             head: [
-              "Siz ham menejer qiladigan ishni qilasiz: smeta (Excel, CSV, matnli PDF yoki qo‘lda qatorlar — qatorlarsiz yuborib bo‘lmaydi), «Muddat», «Imzoga yuborish», «Imzolanganini yuklash», hisoblar va buyurtmachi uchun havola. Shartnomani faqat egasi tasdiqlaydi, qaytaradi va bekor qiladi — tasdiqlash uning imzosining o‘zi.",
+              "Siz menejer bilan bir xil ishlarni qilasiz. Shartnomani faqat egasi tasdiqlaydi va bekor qiladi.",
             ],
             admin: [
-              "Loyiha kartochkasida imzoingizni kutayotgan shartnomada «Ochish va imzolash» tugmasi bor.",
-              "Imzoga shartnoma sizga Telegramda keladi va «Bosh sahifa»dagi «E’tibor talab qiladi»da hamda [Shartnomalar](/admin/contracts) bo‘limida ko‘rinadi. Tugmalar: **«Tasdiqlash va imzolash»** yoki **«Qayta ishlashga qaytarish»**. Qaytarish — ishning oddiy qismi, xato emas.",
-              "Tasdiqlash imzongizni qo‘yadi va **birinchi bosqichga darhol hisob chiqaradi**. Tasdiqlangan shartnomani bekor qilish — «Bekor qilish sababi» va «Bekor qilish»: shartnomalar o‘chirilmaydi, faqat belgilanadi. Tasdiqlangani tahrirlanmaydi — tuzatish kerak bo‘lsa, yangisi tayyorlanadi.",
-              "Imzolar bilan skan yuklangandan keyin shartnoma ekranida imzongiz boshqa ko‘rinmaydi — u allaqachon skanda bor.",
+              "Imzoga shartnoma sizga Telegramda keladi va «Bosh sahifa»dagi «E’tibor talab qiladi» blokida ko‘rinadi. **«Tasdiqlash va imzolash»** yoki **«Qayta ishlashga qaytarish»** tugmasini bosing.",
+              "Tasdiqlash imzongizni qo‘yadi va birinchi bosqich uchun darhol hisob-faktura chiqaradi. Tasdiqlangan shartnoma o‘zgartirilmaydi, tuzatish uchun yangisi tayyorlanadi.",
+              "Shartnomani bekor qilish mumkin: «Bekor qilish sababi»ni yozing va «Bekor qilish» tugmasini bosing.",
             ],
           },
         },
         {
           id: "invoices",
-          title: "Bosqichlar bo‘yicha hisoblar va buyurtmachi uchun havola",
+          title: "Bosqichlar bo‘yicha hisob-fakturalar va buyurtmachi uchun havola",
           body: {
             manager: [
-              "Har bir bosqich oldindan, narxining 100% to‘lanadi. Birinchi bosqichga hisob tasdiqlashda o‘zi chiqadi, keyingilari — **«Hisob-faktura berish»** tugmasi bilan. To‘lov muddati — 14 kun. Pul keldi — **«To‘landi»**: to‘lovni bankda ko‘rgan odam belgilaydi.",
-              "Belgingizdan keyin egasiga Telegram’da xabar keladi. U «To‘lovni tasdiqlash» tugmasini bosadi — va to‘lov [loyihada](/admin/projects) to‘lov bo‘lib yoziladi: pulga tushadi va shu bo‘yicha hisoblanmalaringiz muzdan chiqadi. U tasdiqlamaguncha hisob yonida «egasining tasdig‘ini kutmoqda» deb yozilgan, loyiha kartochkasida esa sariq qator turadi. Xato belgilagan bo‘lsangiz — egasiga ayting, belgini u olib tashlaydi.",
-              "**«Buyurtmachi uchun havola»** — mijoz shartnoma va hisoblarni ko‘radigan sahifa. Havola bir marta ko‘rsatiladi — darhol nusxalang. «Yangi havola yaratish» eskisini o‘chiradi.",
+              "Har bir bosqichni mijoz oldindan to‘laydi. Birinchi bosqich hisob-fakturasi o‘zi chiqadi, keyingilarini **«Hisob-faktura berish»** tugmasi bilan chiqaring.",
+              "Pul keldimi? **«To‘landi»** tugmasini bosing. Egasi to‘lovni tasdiqlagach, shu to‘lov bo‘yicha pulingiz muzdan chiqadi.",
+              "**«Buyurtmachi uchun havola»** mijozga shartnoma va hisob-fakturalarni ochadi. Havola bir marta ko‘rinadi, uni darhol nusxalab oling.",
             ],
             head: [
-              "Har bir bosqich oldindan, narxining 100% to‘lanadi. Birinchi bosqichga hisob tasdiqlashda o‘zi chiqadi, keyingilari — **«Hisob-faktura berish»** tugmasi bilan. To‘lov muddati — 14 kun. Pul keldi — **«To‘landi»**: to‘lovni bankda ko‘rgan odam belgilaydi.",
-              "Belgidan keyin egasiga Telegram’da xabar keladi. U «To‘lovni tasdiqlash» tugmasini bosadi — va to‘lov [loyihada](/admin/projects) to‘lov bo‘lib yoziladi: pulga tushadi va shu bo‘yicha hisoblanmalar — sizniki ham, jamoaniki ham — muzdan chiqadi. U tasdiqlamaguncha hisob yonida «egasining tasdig‘ini kutmoqda» deb yozilgan, loyiha kartochkasida esa sariq qator turadi. Xato belgilangan bo‘lsa — egasiga ayting, belgini u olib tashlaydi.",
-              "**«Buyurtmachi uchun havola»** — mijoz shartnoma va hisoblarni ko‘radigan sahifa. Havola bir marta ko‘rsatiladi — darhol nusxalang. «Yangi havola yaratish» eskisini o‘chiradi.",
+              "Har bir bosqichni mijoz oldindan to‘laydi. Birinchi bosqich hisob-fakturasi o‘zi chiqadi, keyingilarini **«Hisob-faktura berish»** tugmasi bilan chiqaring.",
+              "Pul keldimi? **«To‘landi»** tugmasini bosing. Egasi to‘lovni tasdiqlagach, shu to‘lov bo‘yicha jamoa puli muzdan chiqadi.",
+              "**«Buyurtmachi uchun havola»** mijozga shartnoma va hisob-fakturalarni ochadi. Havola bir marta ko‘rinadi, uni darhol nusxalab oling.",
             ],
             admin: [
-              "Har bir bosqich oldindan, narxining 100% to‘lanadi. Birinchi bosqichga hisob tasdiqlashda o‘zi chiqadi, keyingilari — **«Hisob-faktura berish»** tugmasi bilan. To‘lov muddati — 14 kun. Pul keldi — **«To‘landi»**: to‘lovni bankda ko‘rgan odam belgilaydi.",
-              "Sizning «To‘landi» belgingiz to‘lovni darhol loyihaga yozadi — loyiha kartochkasida uni ikkinchi marta yozish shart emas: hisob summasi, sana — bugun, maqsad — birinchi bosqichda avans, oxirgisida qoldiq, izohda «Счёт № … по договору № …». Agar to‘lovni xodim belgilagan bo‘lsa, sizga Telegram’da xabar keladi, hisob yonida esa — **«To‘lovni tasdiqlash»** va **«To‘lov bo‘lmagan»** (xato belgini olib tashlaydi). Tasdiqlangan to‘lov oddiy to‘lov kabi loyiha kartochkasida o‘chiriladi; shundan keyin hisob yana tasdiqni kutadi.",
-              "**«Buyurtmachi uchun havola»** — mijoz shartnoma va hisoblarni ko‘radigan sahifa. Havola bir marta ko‘rsatiladi — darhol nusxalang. «Yangi havola yaratish» eskisini o‘chiradi.",
+              "Har bir bosqichni mijoz oldindan to‘laydi. Birinchi bosqich hisob-fakturasi o‘zi chiqadi, keyingilarini **«Hisob-faktura berish»** tugmasi bilan chiqaring.",
+              "Sizning «To‘landi» belgingiz to‘lovni darhol loyihaga yozadi. Xodim belgiladimi? **«To‘lovni tasdiqlash»** yoki **«To‘lov bo‘lmagan»** tugmasini bosing.",
+              "**«Buyurtmachi uchun havola»** mijozga shartnoma va hisob-fakturalarni ochadi. Havola bir marta ko‘rinadi, uni darhol nusxalab oling.",
             ],
           },
         },
         {
           id: "signature",
-          title: "Sizning imzongiz",
+          title: "Sizning imzoingiz",
           roles: ["admin"],
           body: [
-            "Shu sahifadagi «Imzo» bloki: shaffof fonli PNG, 2 MB gacha, barcha shartnomalar uchun bitta — «Yuklash» yoki «Almashtirish».",
-            "Imzo faqat tasdiqlangan shartnomalarda va ularning hisoblarida ko‘rsatiladi. Imzo fayli bo‘lmasa, tasdiqlangan shartnoma usiz chop etiladi — panel ogohlantiradi.",
+            "«Imzo» blokida shaffof fonli PNG rasmni yuklang, 2 MB gacha. U barcha shartnomalar uchun bitta.",
+            "Imzo faqat tasdiqlangan shartnomalar va ularning hisob-fakturalarida ko‘rinadi.",
           ],
         },
         {
           id: "protects",
-          title: "Shartnoma nimadan himoya qiladi",
+          title: "Shartnoma nimani himoya qiladi",
           body: [
-            "Nizolar — arbitrajda; javobgarlik — olingan summadan ko‘p emas; boy berilgan foyda qoplanmaydi; buyurtmachi bosqich topshirilgandan keyin 5 ish kuni jim tursa — bosqich qabul qilingan hisoblanadi; kodga huquqlar to‘liq to‘lovdan keyin o‘tadi.",
-            "Hujjatni yurist tekshirmagan — murakkab holatni unga ko‘rsatgan ma’qul.",
+            "Nizolarni arbitraj hal qiladi. Olingan puldan ortiq javob bermaymiz, boy berilgan foydani qoplamaymiz.",
+            "Bosqich topshirilgandan keyin mijoz 5 ish kuni jim turdimi? Bosqich qabul qilingan hisoblanadi. Kodga huquqlar mijozga to‘liq to‘lovdan keyin o‘tadi.",
+            "Hujjatni yurist tekshirmagan. Murakkab holatni yuristga ko‘rsating.",
           ],
         },
       ],
@@ -2250,14 +2249,14 @@ export const uz: HelpCopy = {
 
     /* ── Расходы ──────────────────────────────────────────────────────── */
     "/admin/expenses": {
-      what: "Studiyaning umumiy xarajatlari — reklama, servislar, pudratchilar, ofis — va har biridan har bir muassisga qanchasi to‘g‘ri kelishi. Yana yaqin ikki haftadagi soliq muddatlari. Ikkala muassis ham ko‘radi: xarajat har birining ulushini kamaytiradi.",
+      what: "Bu yerda studiyaning umumiy xarajatlari va har biridan har bir hammuassisga qancha to‘g‘ri kelishi. Yana ikki haftalik soliq muddatlari.",
       items: [
         {
           id: "split",
           title: "Xarajat qanday bo‘linadi",
           body: [
-            "Foyda bilan bir xil nisbatda — muassislar ulushlari bo‘yicha. Egasining misoli: $100 lik reklama — biriga 70, boshqasiga 30. Qismlar doim sentigacha mos kelishi uchun oxirgisiga qoldiq tushadi.",
-            "Aniq loyihaning tannarxi bu yerga yozilmaydi: u loyihaning o‘zida ayirilgan va bu yerda ikkinchi marta ayirilardi.",
+            "Xarajat hammuassislar ulushlari bo‘yicha bo‘linadi. Ulushlar 70 va 30 bo‘lsa, $100 lik reklama $70 va $30 ga bo‘linadi.",
+            "Loyiha tannarxini bu yerga yozmang: u loyihaning o‘zida ayirilgan.",
           ],
         },
         {
@@ -2265,12 +2264,12 @@ export const uz: HelpCopy = {
           title: "Yozish va o‘chirish",
           body: {
             head: [
-              "«Xarajat qo‘shish»: sana, modda («reklama», «servislar va obunalar», «pudratchilar», «ofis va aloqa», «boshqalar»), summa va nimaga — «Yozish». Siz va egasi yoza olasiz: o‘ylab topilgan xarajat sizning ulushingizni ham kamaytiradi, shuning uchun o‘zingizga foydali yolg‘on gapirib bo‘lmaydi.",
-              "Faqat egasi o‘chiradi: o‘chirish orqali birovning xarajatini manzaradan olib tashlash mumkin bo‘lardi. Xato qildingiz — unga ayting.",
+              "«Xarajat qo‘shish» blokida sana, modda va summani to‘ldiring va «Yozish» tugmasini bosing.",
+              "Xarajatlarni faqat egasi o‘chiradi. Xato qildingizmi? Unga ayting.",
             ],
             admin: [
-              "«Xarajat qo‘shish» va har bir qatordagi «olib tashlash». Muassis-rahbar yoza oladi, lekin o‘chira olmaydi: o‘chirish orqali birovning xarajatini manzaradan olib tashlash mumkin, o‘ylab topilgan xarajat esa uni yozganning ulushini ham kamaytiradi.",
-              "Bu yerda [«Moliya»](/admin/finance) bo‘limidagi «Studiya xarajatlari» blokidagi xarajatlarning o‘zi.",
+              "«Xarajat qo‘shish» xarajatni yozadi, qatordagi «olib tashlash» uni o‘chiradi. Rahbar faqat yoza oladi.",
+              "Shu xarajatlar [«Moliya»](/admin/finance) bo‘limida ham bor.",
             ],
           },
         },
@@ -2279,14 +2278,14 @@ export const uz: HelpCopy = {
           title: "Kim to‘lagan",
           body: {
             head: [
-              "Har bir xarajatda «Kim to‘lagan» bor. «Birgalikda, 70/30» — studiyaning umumiy pulidan to‘langan: xarajat bo‘linadigan summani kamaytiradi va ikkalangizga ulushlar bo‘yicha tushadi. Eski xarajatlar ham, boshqasi qo‘yilmaguncha, shunday turadi.",
-              "Kimdir bitta o‘z pulidan to‘lagan bo‘lsa — uni yozishda yoki keyin xarajat qatorida tanlang va «Saqlash» ni bosing. Bu summa unga bo‘linishdan oldin kelgan puldan qaytariladi: qatorda «$… qaytarish», muassis kartasida «o‘zi to‘lagan: …» ko‘rinadi. Xarajatning o‘zi baribir ulushlar bo‘yicha bo‘linadi: to‘lagan odamga qaytarildi, qoldig‘i bo‘lindi.",
-              "Har kim o‘z qismini o‘z pulidan to‘lagan bo‘lsa — xarajatni ikki qator qilib yozing, har birida o‘z ismi. Belgini siz va egasi qo‘yasiz; har bir o‘zgarishni egasi jurnalda ko‘radi: «o‘zi to‘lagan» odamga qaytarish qo‘shadi.",
+              "«Kim to‘lagan» maydonidagi «Birgalikda» studiyaning umumiy pulidan to‘langanini bildiradi.",
+              "Kimdir bitta o‘z pulidan to‘ladimi? Uni tanlang va «Saqlash» tugmasini bosing. Bu summa unga bo‘linishdan oldin qaytariladi.",
+              "Har kim o‘z qismini to‘ladimi? Xarajatni ikki qator bilan yozing.",
             ],
             admin: [
-              "Har bir xarajatda «Kim to‘lagan» bor. «Birgalikda, 70/30» — studiyaning umumiy pulidan to‘langan: xarajat bo‘linadigan summani kamaytiradi va ikkalangizga ulushlar bo‘yicha tushadi. Eski xarajatlar ham, boshqasi qo‘yilmaguncha, shunday turadi.",
-              "Kimdir bitta o‘z pulidan to‘lagan bo‘lsa — uni yozishda yoki keyin xarajat qatorida tanlang va «Saqlash» ni bosing. Bu summa unga bo‘linishdan oldin kelgan puldan qaytariladi: qatorda «$… qaytarish», muassis kartasida «o‘zi to‘lagan: …», [«Moliya»](/admin/finance) bo‘limidagi «Hammuassislar ulushlari» da esa «ulush + xarajatlar uchun qaytarish = to‘lanadi» ko‘rinadi.",
-              "Har kim o‘z qismini o‘z pulidan to‘lagan bo‘lsa — xarajatni ikki qator qilib yozing, har birida o‘z ismi. Belgini siz va muassis-rahbar qo‘yasiz; har bir o‘zgarish [«Jurnal»](/admin/audit) da avval nima edi va endi nima bo‘ldi, shu bilan yoziladi: «o‘zi to‘lagan» odamga qaytarish qo‘shadi.",
+              "«Kim to‘lagan» maydonidagi «Birgalikda» studiyaning umumiy pulidan to‘langanini bildiradi.",
+              "Kimdir bitta o‘z pulidan to‘ladimi? Uni tanlang va «Saqlash» tugmasini bosing. Bu summa unga bo‘linishdan oldin qaytariladi, bu [«Moliya»](/admin/finance) bo‘limida ko‘rinadi.",
+              "Har kim o‘z qismini to‘ladimi? Xarajatni ikki qator bilan yozing. Har bir o‘zgarish [«Jurnal»](/admin/audit) bo‘limiga yoziladi.",
             ],
           },
         },
@@ -2294,8 +2293,8 @@ export const uz: HelpCopy = {
           id: "taxes",
           title: "Soliq muddatlari",
           body: [
-            "«Soliqlar: muddati yaqinlashayotganlar» bloki — 14 kun oldinga muddatlar: aylanmadan soliq va ijtimoiy soliq — har oyning 15-sanasigacha, yillik hisobot — 1-aprelgacha. 3 kun va undan kam qolsa — sariq.",
-            "Har bir sana yonida «sana buxgalter tomonidan tasdiqlanmagan» belgisi bor: bu buxgalter bilan suhbat uchun qoralama, uning so‘zi emas. Kechikish uchun jarima bir marta va to‘liq keladi, shuning uchun blok birinchi turadi.",
+            "«Soliqlar: muddati yaqinlashayotganlar» bloki 14 kun oldinga muddatlarni ko‘rsatadi. Muddatga 3 kun yoki kamroq qolsa, sana sariq bo‘ladi.",
+            "Sanalar buxgalter tomonidan tasdiqlanmagan. Ularni buxgalter bilan solishtiring.",
           ],
         },
         {
@@ -2303,10 +2302,10 @@ export const uz: HelpCopy = {
           title: "Nega bu yerda foyda yo‘q",
           body: {
             head: [
-              "Bu yerda faqat xarajatlar va ularning bo‘linishi ko‘rinadi. Foyda va undagi ulushlar — egasida: 30% ni ko‘rsatish qolgan 70% ni ham ko‘rsatish demak, biri ikkinchisidan xayolan hisoblanadi.",
+              "Foyda va undan ulushlarni faqat egasi ko‘radi.",
             ],
             admin: [
-              "Rahbarga bu yerda faqat xarajatlar ko‘rinadi: foyda va undagi ulushlar — faqat sizda, [«Moliya»](/admin/finance) bo‘limidagi «Hammuassislar ulushlari» blokida. Uning 30% ini ko‘rsatish sizning 70% ingizni ham ko‘rsatish bo‘lardi.",
+              "Rahbar bu yerda faqat xarajatlarni ko‘radi. Foyda va ulushlar faqat sizga, [«Moliya»](/admin/finance) bo‘limida ko‘rinadi.",
             ],
           },
         },
@@ -2315,33 +2314,33 @@ export const uz: HelpCopy = {
 
     /* ── Финансы ──────────────────────────────────────────────────────── */
     "/admin/finance": {
-      what: "Jamoaning puli: har kim bitimlardan qancha ishlab topgani, mijoz qolganini to‘lashini qanchasi kutayotgani va qanchasi to‘lab berilgani. Maosh yo‘q — har kim o‘z bitimlarining sof foydasidan foiz oladi.",
+      what: "Bu yerda har kim bitimlardan qancha topgani, qanchasi mijoz to‘lovini kutayotgani va qanchasi to‘langani ko‘rinadi. Maosh yo‘q: har kim o‘z bitimlaridan foiz oladi.",
       items: [
         {
           id: "how",
           title: "Foiz qanday hisoblanadi",
           body: [
-            "**Bitimning sof foydasi** = shartnoma summasi − soliq − ishlab chiqish tannarxi. Foiz shartnoma summasidan emas, undan olinadi. Soliq va tannarxni egasi yozadi.",
-            "Daraja bo‘yicha stavkalar: **kichik menejer** — yangi mijozdan 10% va qo‘shimcha sotuvdan 0; **menejer** — 15% va 5%; **rahbar** — 30% va 30%. Daraja va shaxsiy stavkani egasi «Jamoa» bo‘limida qo‘yadi. Shaxsiy stavka darajani faqat yangi mijozlar uchun almashtiradi.",
-            "Rahbar qo‘shimcha ravishda o‘z jamoasi menejerlarining har bir bitimidan 5% oladi — ustiga, ularning ulushidan emas. Muassis-rahbarda bu qator 0: u baribir qolgan hamma narsadan ulush oladi. Agentlikni olib kelib, uni [Agentliklar](/admin/agencies) bo‘limida qo‘shgan odam esa 12 oy davomida shu agentlikning har bir loyihasi summasidan yana 5% oladi — «hamkorni olib kelgan» qatori, foydadan emas, shartnoma summasidan.",
-            "Egasi aniq bitim uchun foiz belgilashi mumkin — u daraja va shaxsiy stavkadan muhimroq. Hisoblanma loyihada summa va mas’ul bo‘lganda paydo bo‘ladi. Bitim minusga ketdi — hisoblanma 0: minus — egasining tashvishi.",
+            "Foiz bitimning sof foydasidan hisoblanadi: shartnoma summasi minus soliq va tannarx. Soliq va tannarxni egasi yozadi.",
+            "Yangi mijozdan menejer 10% oladi, o‘tgan oyda 3 ta bitim bo‘lsa, 15%. Qo‘shimcha sotuvdan (eski mijoz uchun yangi ish) 5%, kichik menejerda 0. Rahbar 30% oladi.",
+            "Rahbar yana o‘z jamoasi bitimlaridan 5% oladi. Agentlik yoki hamkorni olib kelgan xodim 12 oy davomida uning loyihalari summasidan 5% oladi.",
+            "Claudery buyurtmasi (botdagi sun’iy intellekt bo‘yicha yordam) uchun olib boruvchiga summadan 40%. Egasi istalgan bitimga o‘z foizini belgilashi mumkin.",
           ],
         },
         {
           id: "grade",
-          title: "Bitimlar bo‘yicha grade va «Bitimlar uchun mukofot»",
+          title: "Bitimlar uchun daraja va «Bitimlar uchun mukofot»",
           body: [
-            "2026-yil 1-noyabrdan menejerning yangi mijozdan foizi o‘tgan oy bitimlariga bog‘liq: 10%, o‘tgan kalendar oyida 3 ta va undan ko‘p bitim bo‘lsa — 15%. Bitim — birinchi to‘lovli loyiha, shu to‘lov oyiga hisoblanadi. Shaxsiy stavka asos bo‘lib qoladi, bitim bo‘yicha qo‘lda qo‘yilgan foizlar qoidadan kuchliroq, qo‘shimcha sotuvlar va rahbar — avvalgidek. 1-noyabrgacha hammasi grade bo‘yicha hisoblanadi.",
-            "Foizdan tashqari — oyning har 3 ta bitimi uchun $200 mukofot (1-noyabrdan boshlab bitimlar uchun). U darhol topilgan va to‘lanadigan summaga kiradi, «Bitimlar uchun mukofot» bloki esa kimga, qaysi oy uchun va nechta bitim ekanini ko‘rsatadi. Mukofotni odamning hisob-kitoblarini ko‘radiganlar ko‘radi.",
+            "Birinchi to‘lov kelgan loyiha bitim hisoblanadi, shu to‘lov oyida. Oyiga 3 ta bitim keyingi oyda 10% o‘rniga 15% beradi.",
+            "Yana oyning har 3 ta bitimi uchun $200 mukofot bor. U «Bitimlar uchun mukofot» blokida ko‘rinadi va darhol «To‘lanadi»ga kiradi.",
           ],
         },
         {
           id: "freeze",
-          title: "Muzlatilgan, ishlab topilgan, to‘lanadigan",
+          title: "Muzlatilgan, ishlab topilgan, to‘lanadi",
           body: [
-            "**«Muzlatilgan»** — bitim bor, lekin mijoz hali butun summani to‘lamagan. **«Ishlab topilgan»** — mijoz loyihani to‘liq to‘lagan (egasi to‘lovlarni loyiha kartochkasiga yozgan). **«hisoblanmaydi»** — loyiha bekor qilingan.",
-            "**«To‘lanadi»** = ishlab topilgan − to‘lab berilgan. Manfiy bo‘lsa — «oldindan to‘langan».",
-            "Hisoblanmalar saqlanmaydi, har ochilganda qaytadan hisoblanadi — tannarxni o‘zgartirdingiz, raqam darhol boshqacha.",
+            "**«Muzlatilgan»** mijoz hali butun summani to‘lamaganini bildiradi. **«Ishlab topilgan»** mijoz hammasini to‘laganini bildiradi.",
+            "**«To‘lanadi»** ishlab topilgan minus to‘langan pulga teng.",
+            "Raqamlar sahifa har ochilganda qayta hisoblanadi.",
           ],
         },
         {
@@ -2349,16 +2348,16 @@ export const uz: HelpCopy = {
           title: "Sahifada nima bor",
           body: {
             manager: [
-              "Siz bo‘yicha plitkalar: «Ishlab topilgan», «Muzlatilgan», «To‘langan», «To‘lanadi». Pastda «Loyihalar bo‘yicha» — loyihalaringiz: summa, to‘liq to‘langanmi va sizning hisoblanmangiz. Va sizga qilingan to‘lovlar ro‘yxati.",
-              "Ko‘proq olishni xohlaysizmi — yangi mijozlar qidiring: yangi mijozdan foiz qo‘shimcha sotuvdagidan yuqori. Va o‘z [loyihalaringizni](/admin/projects) o‘zingiz oching — hisoblanma olib borayotgan odamga yoziladi.",
+              "Yuqorida sizning plitkalaringiz. Pastda «Loyihalar bo‘yicha»: summa, to‘liq to‘langanmi va hisoblanmangiz.",
+              "Ko‘proq xohlaysizmi? Yangi mijozlar qidiring va [loyihalar](/admin/projects)ni o‘zingiz oching.",
             ],
             head: [
-              "Plitkalar — sizning balansingiz. Odamlar jadvali — siz va jamoangiz: daraja, loyihalar, muzlatilgan, ishlab topilgan, to‘lab berilgan, to‘lanadigan. «Loyihalar bo‘yicha» — siznikilar va jamoanikilar, sizning doirangiz hisoblanmalari bilan. «To‘lovlar» — sizniki va jamoaniki.",
-              "Studiya foydasidagi ulushlarni va uning qoldig‘ini faqat egasi ko‘radi.",
+              "Siz o‘zingizni va jamoangizni ko‘rasiz: balans, loyihalar va to‘lovlar.",
+              "Studiya foydasini faqat egasi ko‘radi.",
             ],
             admin: [
-              "Studiya bo‘yicha plitkalar: «Shartnomalar bo‘yicha», «Mijozlar to‘lagan», «Sof foyda» (nechta loyihada tannarx yo‘qligi belgisi bilan), «Jamoa va hamkorlarga hisoblangan», «Egasiga qoladi».",
-              "Odamlar jadvali va «Loyihalar bo‘yicha» — soliq, tannarx, foyda va «Egasiga» (hamkorlar ayirilgan) ustunlari bilan. «Hammuassislar ulushlari» — kelgan pul minus hamkorlar va agentliklar ulushi va minus xarajatlar, u qanday bo‘linadi va xarajatni o‘z pulidan to‘laganga qancha qaytariladi (ulush + xarajatlar uchun qaytarish = to‘lanadi). «Studiya xarajatlari» — [«Xarajatlar»](/admin/expenses) bo‘limidagi ro‘yxatning o‘zi.",
+              "Plitkalar butun studiya bo‘yicha, «Shartnomalar bo‘yicha»dan «Egasiga qoladi»gacha.",
+              "«Hammuassislar ulushlari» nima kelgani, nima ayirilgani (hamkorlar, agentliklar, xarajatlar) va kimga qancha to‘lashni ko‘rsatadi.",
             ],
           },
         },
@@ -2367,13 +2366,13 @@ export const uz: HelpCopy = {
           title: "To‘lovlar",
           body: {
             manager: [
-              "To‘lovlarni egasi pulni o‘tkazgandan keyin yozadi. Ular «To‘lovlar» ro‘yxatida chiqadi va «To‘lanadi»ni kamaytiradi.",
+              "To‘lovlarni egasi pulni o‘tkazgandan keyin yozadi. Ular «To‘lanadi»ni kamaytiradi.",
             ],
             head: [
-              "To‘lovlarni faqat egasi yozadi. Siz o‘zingizga va jamoangizga qilingan to‘lovlarni ko‘rasiz.",
+              "To‘lovlarni faqat egasi yozadi.",
             ],
             admin: [
-              "«To‘lovlar» → «Kimga», «Summa, $», «Sana» (bo‘sh — bugun), «Izoh» («avgust uchun») → «To‘lovni yozish». Avval pulni o‘tkazing, keyin yozing. O‘zingizga to‘lov yozib bo‘lmaydi: sizga qoldiq qoladi.",
+              "Avval pulni o‘tkazing, keyin «To‘lovlar» blokida «To‘lovni yozish» tugmasi bilan yozing. O‘zingizga to‘lov yozib bo‘lmaydi.",
             ],
           },
         },
@@ -2382,8 +2381,8 @@ export const uz: HelpCopy = {
           title: "Kassa, kutilayotgan to‘lovlar va soliqlar",
           roles: ["admin"],
           body: [
-            "Bo‘lim pastida — «Oylar bo‘yicha kassa»: yarim yillik tushumlar va xarajatlar, har oy ostida — farq. Yonida — «Kutilayotgan to‘lovlar»: faol loyihalar bo‘yicha yana qancha to‘lanishi kerakligi va ularni kim olib borayotgani, hamda «Yaqin ikki haftadagi soliqlar va hisobotlar». Ilgari bu «Lidlar»dagi «Pul» varag‘i edi.",
-            "Raqamlar «Moliya»ning boshqa bloklari bilan bir xil yozuvlardan olinadi: tushumlar — loyihalar bo‘yicha mijoz to‘lovlari, xarajatlar — [Xarajatlar](/admin/expenses) bo‘limi yozuvlari. Ularni faqat siz ko‘rasiz.",
+            "Bo‘lim pastida yarim yillik «Oylar bo‘yicha kassa», kutilayotgan to‘lovlar va soliq muddatlari bor.",
+            "Xarajatlar [«Xarajatlar»](/admin/expenses) bo‘limidan olinadi. Bu bloklarni faqat siz ko‘rasiz.",
           ],
         },
       ],
@@ -2391,22 +2390,22 @@ export const uz: HelpCopy = {
 
     /* ── Релизы ───────────────────────────────────────────────────────── */
     "/admin/releases": {
-      what: "«Do‘kon buyurtmalari» bo‘limida to‘lovdan keyin xaridorlar oladigan tayyor mahsulot fayllari. Faylni joylash — allaqachon to‘lagan har bir kishi aynan nimani olishini hal qilish demak, shuning uchun bo‘lim faqat egasida.",
+      what: "Bu yerda xaridor to‘lovdan keyin yuklab oladigan tayyor mahsulotlar fayllari. Bo‘lim faqat sizda.",
       items: [
         {
           id: "upload",
           title: "Versiyani joylash",
           body: [
-            "Avval arxivni o‘z kompyuteringizdan Supabase’dagi yopiq bucket’ga yuklang — sayt katta fayllarni qabul qilmaydi. Keyin «Relizni joylash» formasi: mahsulot, versiya, bucket, bucket ichidagi yo‘l, sha256 (ixtiyoriy) va izoh — «Joylash».",
-            "Panel fayl joyidami tekshiradi. Yangi versiya amaldagi bo‘ladi, oldingisi — yo‘q.",
+            "Arxivni kompyuteringizdan Supabase yopiq xotirasiga yuklang.",
+            "«Relizni joylash»ni to‘ldiring: mahsulot, versiya, bucket va faylga yo‘l. «Joylash» tugmasini bosing. Panel fayl joyida ekanini tekshiradi va yangi versiya joriy bo‘ladi.",
           ],
         },
         {
           id: "downloads",
           title: "Xaridor nimani ko‘radi",
           body: [
-            "To‘lovdan keyin — buyurtma sahifasida yuklab olish tugmasini: jami 20 tagacha va kuniga 10 tagacha yuklab olish, har bir havola 60 soniya yashaydi. Reliz bo‘lmaguncha — «fayl tayyorlanmoqda».",
-            "Tepada `DOWNLOAD_SIGNING_SECRET` haqida ogohlantirish bo‘lsa — yuklab olish hech kimda ishlamaydi. Kirishni yopish — [«Do‘kon buyurtmalari»](/admin/orders) bo‘limidagi buyurtma kartochkasidagi tugma bilan.",
+            "Xaridor faylni buyurtma sahifasidan yuklab oladi: jami 20 martagacha va kuniga 10 marta. Har bir yuklab olish havolasi 60 soniya ishlaydi. Reliz bo‘lmaguncha u «fayl tayyorlanmoqda» yozuvini ko‘radi.",
+            "Yuqorida «Berish o‘chirilgan» turibdimi? Hech kim yuklab ololmaydi. Bitta xaridorning kirishini [«Do‘kon buyurtmalari»](/admin/orders) bo‘limida yopishadi.",
           ],
         },
       ],

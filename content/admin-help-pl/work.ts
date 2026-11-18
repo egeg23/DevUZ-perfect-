@@ -300,14 +300,14 @@ export const workSections: Record<string, HelpEntry> = {
 
   /* ── Проекты ──────────────────────────────────────────────────────── */
   "/admin/projects": {
-    what: "Praca, na którą już się umówiliśmy: na jakim etapie, do kiedy, na jaką kwotę, kto prowadzi i ile klient zapłacił. Od projektu zależą naliczenia w «Finansach»: bez projektu z kwotą nikt nie dostanie pieniędzy za transakcję.",
+    what: "Projekt to praca, którą już uzgodniliśmy z klientem. Dopóki nie ma projektu z kwotą, nikt nie dostanie pieniędzy za transakcję.",
     items: [
       {
         id: "tasks",
         title: "Zadania w projekcie",
         body: [
-          "W karcie projektu, zaraz pod nazwą, jest **«Zadania w projekcie»**: wszystkie zadania do niego przypisane — od kogo, dla kogo, termin i co się z nimi teraz dzieje. Otwarte na górze, od najbliższego terminu, zamknięte niżej. Jeśli zadanie jest dla Ciebie albo Ty je zleciłeś, przyciski są tu te same co na stronie głównej.",
-          "Żeby zlecić zadanie w projekcie, kliknij **«Zleć zadanie»** po prawej: otworzy się sekcja «Zadania» z formularzem, w którym ten projekt jest już wybrany. Zadanie można przypisać do projektu tylko wtedy, gdy projekt jest założony tutaj, w «Projektach» — dlatego najpierw zakłada się projekt klienta. Więcej o zadaniach — w punkcie [zadania](#tasks-board).",
+          "W karcie projektu jest blok «Zadania w projekcie». Są w nim wszystkie zadania projektu: kto zlecił, komu i na kiedy. Więcej o zadaniach w punkcie [zadania](#tasks-board).",
+          "Przycisk **«Zleć zadanie»** po prawej otworzy formularz z już wybranym projektem.",
         ],
       },
       {
@@ -315,17 +315,17 @@ export const workSections: Record<string, HelpEntry> = {
         title: "Załóż projekt",
         body: {
           manager: [
-            "Klient zgodził się na współpracę — załóż projekt: blok «Nowy projekt», nazwa, klient, kwota, termin i «Utwórz».",
-            "**Osobą prowadzącą zostaje ten, kto założył projekt.** Naliczenia idą do osoby prowadzącej, a zmienić ją może tylko właściciel — dlatego zakładaj swój projekt sam, nie proś o to kolegi.",
-            "Lista: «N dni na tym etapie», «prowadzi …», «termin …» i «po terminie», jeśli termin minął. «pokaż zamknięte» — zakończone i anulowane.",
+            "Klient zgodził się na współpracę? Załóż projekt. W bloku «Nowy projekt» wpisz nazwę, klienta, kwotę i termin, a potem kliknij «Utwórz».",
+            "Projekt prowadzi ten, kto go założył, i to on dostaje pieniądze za transakcję. Osobę prowadzącą może zmienić tylko właściciel. Dlatego zakładaj swój projekt sam.",
+            "Termin minął? Na liście pojawi się oznaczenie «po terminie». Przycisk «pokaż zamknięte» pokaże zakończone i anulowane projekty.",
           ],
           head: [
-            "Projekt może założyć każdy — i osobą prowadzącą zostaje ten, kto go założył. Naliczenia idą do osoby prowadzącej (a Tobie 5% z projektów Twojego zespołu), a zmienić osobę prowadzącą może tylko właściciel. Pilnuj, żeby menedżerowie zakładali swoje projekty sami.",
-            "Lista jest wspólna dla wszystkich: etap, dni na nim, osoba prowadząca, termin i «po terminie».",
+            "Projekt prowadzi ten, kto go założył, i to on dostaje pieniądze za transakcję. Ty dostajesz 5% od projektów swojego zespołu.",
+            "Pilnuj, żeby menedżerowie zakładali swoje projekty sami. Osobę prowadzącą może zmienić tylko właściciel.",
           ],
           admin: [
-            "Pracownik, który zakłada projekt, sam zostaje osobą prowadzącą. Gdy zakładasz Ty, w pierwszym polu wybierz, **kto prowadzi**: to jemu idą naliczenia. Wybierzesz siebie — zespół nie dostanie naliczeń z projektu, a właściciel dostaje resztę, a nie procent. Osobę prowadzącą możesz zmienić w każdej chwili: [«Dane projektu»](#projects-data) → «Prowadzi»; w karcie projektu, który prowadzisz Ty, wisi żółta podpowiedź.",
-            "Na liście widać, ile dni projekt jest na danym etapie i czy nie minął mu termin.",
+            "Pracownik, który zakłada projekt, sam zostaje osobą prowadzącą. Gdy zakładasz Ty, wybierz, kto prowadzi: to on dostanie pieniądze za transakcję.",
+            "Wybierzesz siebie i zespół nic z projektu nie dostanie. Osobę prowadzącą zmienisz w bloku [«Dane projektu»](#projects-data), w polu «Prowadzi».",
           ],
         },
       },
@@ -333,9 +333,9 @@ export const workSections: Record<string, HelpEntry> = {
         id: "stages",
         title: "Etapy",
         body: [
-          "Po kolei: «brief» → «umowa» → «design» → «programowanie» → «odbiór» → «uruchomienie» → «wsparcie». Osobno: «wstrzymany», «zamknięty», «anulowany».",
-          "Etap zmienia tylko właściciel: etap to obietnica dla klienta, a nie notatka o samopoczuciu wykonawcy. Każda zmiana trafia do dziennika razem z tym, ile dni projekt stał na poprzednim etapie.",
-          "Na pieniądze wpływa tylko «anulowany» — wtedy naliczenia mają status «nie nalicza się». «Zamknięty» i «anulowany» blokują też osobie prowadzącej edycję kwoty.",
+          "Etapy po kolei: «brief», «umowa», «design», «programowanie», «odbiór», «uruchomienie», «wsparcie». Są jeszcze «wstrzymany», «zamknięty» i «anulowany».",
+          "Etap zmienia tylko właściciel, bo to obietnica dla klienta. Każda zmiana trafia do dziennika.",
+          "Na pieniądze wpływa tylko «anulowany»: z takiego projektu nikt nic nie dostanie.",
         ],
       },
       {
@@ -343,21 +343,21 @@ export const workSections: Record<string, HelpEntry> = {
         title: "Karta projektu",
         body: {
           manager: [
-            "Od góry: «Etap», «Kosztorys», «Pieniądze», «Dane projektu», «Umowa».",
-            "**«Kosztorys»** — wybierz kategorię i termin w tygodniach, a panel policzy «nie mniej niż» (próg), «do» i termin. Próg to kwota, poniżej której projekt się nie zwraca; zejść niżej może tylko właściciel.",
-            "**«Pieniądze»**: «Rodzaj transakcji» — «nowy klient» albo «dosprzedaż» (od tego zależy Twój procent, zob. [Finanse](/admin/finance)) i «Kwota z umowy, $». Wpisuj pełne dolary, bez «$» i centów, inaczej pole się wyczyści. Kwotę edytujesz Ty, dopóki w projekcie nie ma żadnej płatności; potem — tylko właściciel.",
-            "Podatek i koszt wytworzenia wpisuje właściciel po podpisaniu umowy. Płatności klienta też zapisuje właściciel — i dopiero wtedy Twoje naliczenia się odmrażają. Wpłata z faktury do umowy trafia tu sama, gdy właściciel ją potwierdzi; do tego czasu w «Płatnościach klienta» wisi żółty wiersz «płatność nie jest jeszcze potwierdzona».",
-            "**«Dane projektu»** — nazwa, klient, termin, notatki; edytujesz je Ty jako osoba prowadząca. **«Umowa»** — karta umowy: numer, jej stan (szkic, u właściciela do podpisu, zatwierdzona, podpisana), kwota, przy szkicu — czego brakuje do podpisu, i «Otwórz umowę». Dopóki umowy nie ma, jest formularz ze [«Składem z makiety»](#contracts-compose) i «Wklej dane firmy»; jeśli umowa się nie przygotowała, nad formularzem jest napisane, co poprawić. Więcej — [umowy](/admin/contracts).",
+            "W bloku «Kosztorys» wybierz kategorię i termin w tygodniach. Panel policzy próg, poniżej którego projekt się nie zwraca. Zejść niżej może tylko właściciel.",
+            "W bloku «Pieniądze» wybierz «Rodzaj transakcji»: «nowy klient» albo «dosprzedaż». Od tego zależy Twój procent. «Kwota z umowy, $» wpisuj w pełnych dolarach. Po pierwszej płatności kwotę zmienia tylko właściciel.",
+            "Podatek, koszt wytworzenia i płatności klienta wpisuje właściciel. Dopóki klient nie zapłaci całości, Twoje pieniądze z projektu są zamrożone.",
+            "W bloku «Umowa» widać numer, status i kwotę umowy. Dopóki umowy nie ma, jest tam formularz do jej przygotowania. Więcej w sekcji [«Umowy»](/admin/contracts).",
           ],
           head: [
-            "Bloki: «Etap», «Kosztorys», «Pieniądze», «Dane projektu», «Umowa». Widzisz kartę każdego projektu; pieniądze — w swoich projektach i projektach zespołu.",
-            "Kosztorys i kwotę edytuje osoba prowadząca projekt i właściciel — w projektach zespołu tylko je widzisz. Kwota — w pełnych dolarach; po pierwszej płatności zmienia ją tylko właściciel.",
-            "Wiersze naliczeń: osoba prowadząca według poziomu i Ty — «kierownik · 5 %» z projektów zespołu (u współzałożyciela ten wiersz wynosi 0).",
+            "Widzisz kartę każdego projektu, a pieniądze tylko w swoich projektach i projektach zespołu.",
+            "Kosztorys i kwotę edytują osoba prowadząca i właściciel. W projektach zespołu tylko je widzisz.",
+            "W naliczeniach jest Twój wiersz «kierownik», 5% od projektu zespołu. U współzałożyciela wynosi zero: i tak dostaje udział w całym zysku.",
           ],
           admin: [
-            "Edytujesz wszystko: etap (10 przycisków), kosztorys, kwotę i rodzaj transakcji w każdej chwili, **«Podatek, %»** (domyślnie 4) i **«Koszt wytworzenia, $»** — tylko Ty, żeby nikt nie podniósł sobie naliczenia, zaniżając koszt wytworzenia.",
-            "W wierszach naliczeń — procent od tej transakcji: «ustaw» albo powrót do «według poziomu». Blok **«Partner»**: kto polecił, procent dla partnera («według progu» — według kwoty projektu: 6–20% od obrotu, przy starym projekcie „od zysku” — 10–30%), «Zlecenie agencji» — jeśli projekt przyszedł od agencji partnera — i «Nie zaliczać, powód».",
-            "**«Płatności klienta»** → «Zapisz płatność»: kwota, data, tytuł płatności. Gdy wszystko jest opłacone, naliczenia zmieniają się na «zarobione», a partner dostaje wiadomość. Wpłaty z faktur do umowy zapisują się tu same — po Twoim oznaczeniu «Opłacona» albo po «Potwierdź płatność» w umowie; dopóki wpłata czeka na Ciebie, jest tu żółty wiersz z linkiem do umowy. «Zostaje właścicielowi» w karcie — bez odjęcia udziału partnera; dokładna liczba jest w [Finansach](/admin/finance).",
+            "Edytujesz wszystko w dowolnym momencie. Tylko Ty wpisujesz «Podatek, %» i «Koszt wytworzenia, $». Dzięki temu nikt nie podniesie sobie naliczenia.",
+            "Przy wierszu naliczenia «ustaw» zmienia procent dla tej transakcji, a «według poziomu» przywraca stawkę z poziomu pracownika. W bloku «Partner» wybierz, kto polecił klienta.",
+            "Płatność klienta zapisuj przyciskiem «Zapisz płatność». Płatność za fakturę z umowy zapisze się sama po Twoim potwierdzeniu.",
+            "Dokładny udział właściciela, już bez udziału partnera, widać w sekcji [«Finanse»](/admin/finance).",
           ],
         },
       },
@@ -365,8 +365,8 @@ export const workSections: Record<string, HelpEntry> = {
         id: "data",
         title: "«Dane projektu»",
         body: [
-          "Nazwę, klienta, termin i notatki edytuje osoba prowadząca projekt, jej kierownik i właściciel; pozostali widzą je bez formularza. Osobę prowadzącą zmienia tylko właściciel — pole «Prowadzi»: od osoby prowadzącej zależą naliczenia, a pracownik nie może przepisać projektu na kogoś innego.",
-          "Kwoty nie edytuje się już tutaj — jest w bloku «Pieniądze».",
+          "Nazwę, klienta, termin i notatki edytują osoba prowadząca, jej kierownik i właściciel.",
+          "Osobę prowadzącą zmienia tylko właściciel, w polu «Prowadzi». Kwotę edytuje się w bloku «Pieniądze».",
         ],
       },
     ],
@@ -643,24 +643,24 @@ export const workSections: Record<string, HelpEntry> = {
   },
 
   "/admin/contracts": {
-    what: "Umowa naszej działalności gospodarczej (IP) z zamawiającym. Przygotować i sprawdzić może każdy z zespołu, zatwierdza tylko właściciel — w tym momencie w dokumencie pojawia się jego podpis. Potem — faktury za etapy i link dla zamawiającego. Nie ma tu listy umów: umowa żyje w karcie projektu.",
+    what: "Umowę naszej działalności gospodarczej z klientem przygotowuje się w karcie projektu. Przygotować ją może każdy z zespołu, a zatwierdza tylko właściciel. Wtedy w dokumencie pojawia się jego podpis.",
     items: [
       {
         id: "prepare",
         title: "Przygotuj umowę",
         body: [
-          "Otwórz [projekt](/admin/projects) → blok «Umowa». Na górze — [«Skład z makiety»](#contracts-compose): wybierz makietę, a kosztorys, kwota, przedmiot i termin wstawią się same. Dane zamawiającego wklej jednym tekstem w «Wklej dane firmy» i kliknij «Rozłóż na pola». Reszta — data i etapy: **udziały etapów muszą dać razem dokładnie 100%**. Kliknij **«Przygotuj umowę»** — dopóki umowa się przygotowuje, przycisk jest szary i drugie kliknięcie nie pójdzie.",
-          "Powstanie szkic z numerem w rodzaju DU-2026-07. Jeśli projekt ma już umowę, «Przygotuj umowę» ją otworzy i druga się nie pojawi. Szkic fizycznie nie ma podpisu w dokumencie — nie da się go wydrukować i przedstawić jako podpisanego.",
-          "Umowy z kwotą poniżej progu kosztorysu nie da się przygotować — o tym decyduje tylko właściciel. Czego umowie brakuje do podpisu, widać od razu: listą w karcie umowy w projekcie i nad dokumentem, obok «Wyślij do podpisu». Dane można uzupełnić w szkicu — blok «Dane zamawiającego», przycisk «Zapisz dane».",
+          "Otwórz [projekt](/admin/projects) i znajdź blok «Umowa». Wybierz makietę w bloku [«Skład z makiety»](#contracts-compose). Kosztorys, kwota, przedmiot i termin wstawią się same.",
+          "Dane klienta wklej w «Wklej dane firmy» i kliknij «Rozłóż na pola». Wpisz datę i etapy, udziały etapów razem dają dokładnie 100%. Kliknij **«Przygotuj umowę»**.",
+          "Powstanie szkic bez podpisu. Czego brakuje do podpisu, widać na liście nad dokumentem. Druga umowa w projekcie nie powstanie: przycisk otworzy pierwszą.",
         ],
       },
       {
         id: "compose",
         title: "«Skład z makiety» i «Wklej dane firmy»",
         body: [
-          "«Skład z makiety» — w formularzu umowy w projekcie i w szkicu. Wybierz makietę: pod nią podstawa i dodatki z cenami — dokładnie te, które klient widział w konfiguratorze ceny na makiecie. Dodatki z ★ są włączone od razu (to, dla czego jest makieta), odznacz zbędne i zaznacz, co klient wziął. Niżej — do trzech własnych wierszy „nazwa + cena”: cena 0 to prezent, wiersz trafi do kosztorysu jako «(в подарок)». Suma liczy się od razu.",
-          "Po «Przygotuj umowę» (w szkicu — «Wstaw do umowy») kod sam wstawia wiersze kosztorysu, kwotę umowy, przedmiot («… с дополнительными функциями: …») i termin, jeśli jest w planie makiety — «до 5 недель с даты аванса»; termin, który już wpisałeś, nie zostanie nadpisany. Nie ma tu modelu: ceny są brane z makiety tak, jak są. Makiety nie ma na liście — jej konfigurator ma inną formę albo ceny nie są w dolarach; wtedy kosztorys plikiem albo wierszami ręcznie, jak dotąd.",
-          "«Wklej dane firmy» — wklej tekst, tak jak przysłał go klient, i kliknij «Rozłóż na pola». Kod znajdzie nazwę (spółka «…», IP …), adres, INN (9 cyfr) lub PINFL (14), numer rachunku (20 cyfr, usunie spacje), MFO (5), bank; kod płatnika VAT, OKED i dyrektora dopisze w «Adres i kontakt zamawiającego». Czego nie znaleziono — pole jest puste, a pod przyciskiem jest napisane, co dopisać ręcznie. Nic nie jest zgadywane: sprawdź pola wzrokiem.",
+          "Wybierz makietę, a pojawią się podstawa i dodatki z cenami, tak jak klient widział je na makiecie. Dodatki z ★ są już zaznaczone. Odznacz zbędne.",
+          "Możesz dodać do trzech własnych wierszy z ceną. Cena 0 oznacza prezent. Makiety nie ma na liście? Wgraj kosztorys plikiem.",
+          "W «Wklej dane firmy» wklej tekst klienta tak, jak jest, i kliknij «Rozłóż na pola». Panel znajdzie nazwę, INN, rachunek, MFO i bank. Sprawdź pola wzrokiem.",
         ],
       },
       {
@@ -668,28 +668,26 @@ export const workSections: Record<string, HelpEntry> = {
         title: "«Umowy do podpisu»",
         roles: ["admin"],
         body: [
-          "Pierwszy blok na stronie — umowy, które menedżerowie wysłali ci do podpisu: numer, projekt i kwota. Kliknij wiersz — otworzy się umowa z przyciskami «Zatwierdź i podpisz» i «Zwróć do poprawy». Pusto — «Nic nie czeka na podpis».",
-          "Wcześniej ta lista była na zakładce «Dziś» na «Leady». Teraz sekcja, jak pozostałe, ma nagłówek z menu; bez nagłówka zostały tylko strony samej umowy i faktury — to dokumenty do druku i linki dla zamawiającego.",
+          "Pierwszy na stronie jest blok «Umowy do podpisu». Kliknij wiersz, a otworzy się umowa.",
+          "W umowie są dwa przyciski: «Zatwierdź i podpisz» oraz «Zwróć do poprawy».",
         ],
       },
       {
         id: "review",
-        title: "Strona umowy: kosztorys i wysyłka do podpisu",
+        title: "Strona umowy: kosztorys i wysłanie do podpisu",
         body: {
           manager: [
-            "Dopóki umowa jest szkicem: **«Wgraj kosztorys»** i **«Termin»** (w umowie po rosyjsku, np. «60 рабочих дней с даты аванса» — 60 dni roboczych od daty zaliczki). Kosztorys jest odczytywany wiersz po wierszu z Excela (xlsx), CSV, TSV i PDF z tekstem: panel znajduje kolumny po nagłówkach (rosyjskich, uzbeckich albo angielskich, np. «Name», «Qty», «Price», «Total»), pomija wiersz sumy, a suma wierszy staje się kwotą umowy. Skanu PDF ani pliku Word nie da się odczytać — wtedy **«Wklej wiersze kosztorysu ręcznie»**: skopiuj wiersze z Excela albo wpisz po jednym wierszu na pozycję — nazwa, ilość, cena, oddzielone «;». Bez wierszy kosztorysu umowy nie da się wysłać do podpisu.",
-            "**«Wyślij do podpisu»** — panel sprawdzi, czy wszystko jest na miejscu, a jeśli nie, napisze «Brakuje: …». Po wysłaniu właściciel dostaje wiadomość w Telegramie, umowa ma status «Wysłana właścicielowi do podpisu» i nie można jej już edytować.",
-            "Właściciel zatwierdzi — status «Zatwierdzona przez właściciela» — albo zwróci ją do poprawy. Po zatwierdzeniu klient podpisuje swoją część, a Ty klikasz **«Wgraj podpisaną»** (PDF albo zdjęcie) — umowa zmieni się na «Podpisana przez obie strony».",
-            "Jeśli Telegram nie dostarczył powiadomienia, panel to powie — wtedy powiedz właścicielowi osobiście.",
+            "W szkicu kliknij **«Wgraj kosztorys»** (Excel, CSV albo PDF z tekstem) i podaj **«Termin»**. Plik się nie odczytał? Kliknij **«Wklej wiersze kosztorysu ręcznie»**: nazwa, ilość, cena rozdzielone «;».",
+            "Kliknij **«Wyślij do podpisu»**. Właściciel dostanie wiadomość w Telegramie, a umowy nie da się już edytować.",
+            "Właściciel zatwierdzi umowę albo zwróci ją do poprawy. Gdy klient podpisze, wgraj skan przyciskiem **«Wgraj podpisaną»**.",
           ],
           head: [
-            "Robisz to samo co menedżer: kosztorys (Excel, CSV, PDF z tekstem albo wiersze ręcznie — bez wierszy nie da się wysłać), «Termin», «Wyślij do podpisu», «Wgraj podpisaną», faktury i link dla zamawiającego. Zatwierdza, zwraca i anuluje umowę tylko właściciel — zatwierdzenie to właśnie jego podpis.",
+            "Robisz to samo co menedżer. Umowę zatwierdza i anuluje tylko właściciel.",
           ],
           admin: [
-            "W karcie projektu przy umowie, która czeka na Twój podpis, jest przycisk «Otwórz i podpisz».",
-            "Umowa do podpisu przychodzi do Ciebie w Telegramie i jest widoczna w «Wymaga uwagi» na «Pulpit» i w sekcji [Umowy](/admin/contracts). Przyciski: **«Zatwierdź i podpisz»** albo **«Zwróć do poprawy»**. Zwrot to normalna część pracy, nie błąd.",
-            "Zatwierdzenie składa Twój podpis i **od razu wystawia fakturę za pierwszy etap**. Anulowanie zatwierdzonej umowy — «Powód anulowania» i «Anuluj»: umowy się nie usuwa, tylko oznacza. Zatwierdzonej nie da się edytować — jeśli potrzebna jest zmiana, przygotowuje się nową.",
-            "Po wgraniu skanu z podpisami Twojego podpisu nie widać już na ekranie umowy — jest już na skanie.",
+            "Umowa do podpisu przychodzi do Ciebie w Telegramie i widać ją w «Wymaga uwagi» na «Pulpit». Kliknij **«Zatwierdź i podpisz»** albo **«Zwróć do poprawy»**.",
+            "Zatwierdzenie stawia Twój podpis i od razu wystawia fakturę za pierwszy etap. Zatwierdzonej umowy nie da się edytować, do poprawek przygotowuje się nową.",
+            "Umowę można anulować: wpisz «Powód anulowania» i kliknij «Anuluj».",
           ],
         },
       },
@@ -698,19 +696,19 @@ export const workSections: Record<string, HelpEntry> = {
         title: "Faktury za etapy i link dla zamawiającego",
         body: {
           manager: [
-            "Każdy etap jest płatny z góry, 100% jego wartości. Faktura za pierwszy etap wystawia się sama przy zatwierdzeniu, kolejne — przyciskiem **«Wystaw fakturę»**. Termin płatności — 14 dni. Pieniądze przyszły — **«Opłacona»**: oznacza ten, kto zobaczył wpłatę w banku.",
-            "Po Twoim oznaczeniu właściciel dostaje wiadomość w Telegramie. Klika «Potwierdź płatność» — i wpłata staje się płatnością w [projekcie](/admin/projects): trafia do pieniędzy, a Twoje naliczenia z niej się odmrażają. Dopóki nie potwierdzi, przy fakturze jest napisane «czeka na potwierdzenie właściciela», a w karcie projektu — żółty wiersz. Oznaczyłeś przez pomyłkę — powiedz właścicielowi, on może zdjąć oznaczenie.",
-            "**«Link dla zamawiającego»** — strona, na której klient widzi umowę i faktury. Link pokazuje się tylko raz — skopiuj go od razu. «Wygeneruj nowy link» unieważnia poprzedni.",
+            "Każdy etap klient opłaca z góry. Faktura za pierwszy etap wystawi się sama, kolejne wystawiaj przyciskiem **«Wystaw fakturę»**.",
+            "Pieniądze wpłynęły? Kliknij **«Opłacona»**. Gdy właściciel potwierdzi płatność, Twoje pieniądze z niej się odmrożą.",
+            "**«Link dla zamawiającego»** otwiera klientowi umowę i faktury. Link widać tylko raz, skopiuj go od razu.",
           ],
           head: [
-            "Każdy etap jest płatny z góry, 100% jego wartości. Faktura za pierwszy etap wystawia się sama przy zatwierdzeniu, kolejne — przyciskiem **«Wystaw fakturę»**. Termin płatności — 14 dni. Pieniądze przyszły — **«Opłacona»**: oznacza ten, kto zobaczył wpłatę w banku.",
-            "Po oznaczeniu właściciel dostaje wiadomość w Telegramie. Klika «Potwierdź płatność» — i wpłata staje się płatnością w [projekcie](/admin/projects): trafia do pieniędzy, a naliczenia z niej — Twoje i zespołu — się odmrażają. Dopóki nie potwierdzi, przy fakturze jest napisane «czeka na potwierdzenie właściciela», a w karcie projektu — żółty wiersz. Oznaczyłeś przez pomyłkę — powiedz właścicielowi, on może zdjąć oznaczenie.",
-            "**«Link dla zamawiającego»** — strona, na której klient widzi umowę i faktury. Link pokazuje się tylko raz — skopiuj go od razu. «Wygeneruj nowy link» unieważnia poprzedni.",
+            "Każdy etap klient opłaca z góry. Faktura za pierwszy etap wystawi się sama, kolejne wystawiaj przyciskiem **«Wystaw fakturę»**.",
+            "Pieniądze wpłynęły? Kliknij **«Opłacona»**. Gdy właściciel potwierdzi płatność, pieniądze zespołu z niej się odmrożą.",
+            "**«Link dla zamawiającego»** otwiera klientowi umowę i faktury. Link widać tylko raz, skopiuj go od razu.",
           ],
           admin: [
-            "Każdy etap jest płatny z góry, 100% jego wartości. Faktura za pierwszy etap wystawia się sama przy zatwierdzeniu, kolejne — przyciskiem **«Wystaw fakturę»**. Termin płatności — 14 dni. Pieniądze przyszły — **«Opłacona»**: oznacza ten, kto zobaczył wpłatę w banku.",
-            "Twoje oznaczenie «Opłacona» od razu zapisuje płatność w projekcie — nie trzeba jej drugi raz zapisywać w karcie projektu: kwota faktury, data — dzisiejsza, tytuł płatności — zaliczka przy pierwszym etapie i reszta przy ostatnim, w notatce «Счёт № … по договору № …» (faktura nr … do umowy nr …). Jeśli wpłatę oznaczył pracownik, dostajesz wiadomość w Telegramie, a przy fakturze są **«Potwierdź płatność»** i **«Nie było wpłaty»** (zdejmuje błędne oznaczenie). Potwierdzoną płatność usuwa się jak zwykłą, w karcie projektu; potem faktura znów czeka na potwierdzenie.",
-            "**«Link dla zamawiającego»** — strona, na której klient widzi umowę i faktury. Link pokazuje się tylko raz — skopiuj go od razu. «Wygeneruj nowy link» unieważnia poprzedni.",
+            "Każdy etap klient opłaca z góry. Faktura za pierwszy etap wystawi się sama, kolejne wystawiaj przyciskiem **«Wystaw fakturę»**.",
+            "Twoje oznaczenie «Opłacona» od razu zapisuje płatność w projekcie. Oznaczył pracownik? Kliknij **«Potwierdź płatność»** albo **«Nie było wpłaty»**.",
+            "**«Link dla zamawiającego»** otwiera klientowi umowę i faktury. Link widać tylko raz, skopiuj go od razu.",
           ],
         },
       },
@@ -719,16 +717,17 @@ export const workSections: Record<string, HelpEntry> = {
         title: "Twój podpis",
         roles: ["admin"],
         body: [
-          "Blok «Podpis» na tej stronie: PNG z przezroczystym tłem, do 2 MB, jeden na wszystkie umowy — «Wgraj» albo «Zamień».",
-          "Podpis pokazuje się tylko w zatwierdzonych umowach i fakturach do nich. Bez pliku podpisu zatwierdzona umowa wydrukuje się bez niego — panel ostrzeże.",
+          "W bloku «Podpis» wgraj obraz PNG z przezroczystym tłem, do 2 MB. Jest jeden na wszystkie umowy.",
+          "Podpis widać tylko na zatwierdzonych umowach i ich fakturach.",
         ],
       },
       {
         id: "protects",
         title: "Przed czym chroni umowa",
         body: [
-          "Spory — w arbitrażu; odpowiedzialność — nie większa niż otrzymana kwota; utraconych korzyści nie zwracamy; jeśli zamawiający milczy 5 dni roboczych po oddaniu etapu — etap jest odebrany; prawa do kodu przechodzą po pełnej zapłacie.",
-          "Dokument nie był sprawdzony przez prawnika — trudny przypadek lepiej mu pokazać.",
+          "Spory rozstrzyga arbitraż. Odpowiadamy najwyżej do kwoty otrzymanych pieniędzy, utraconych korzyści nie zwracamy.",
+          "Klient milczy 5 dni roboczych po oddaniu etapu? Etap jest odebrany. Prawa do kodu przechodzą na klienta po pełnej zapłacie.",
+          "Prawnik nie sprawdzał dokumentu. Trudny przypadek pokaż prawnikowi.",
         ],
       },
     ],
@@ -736,14 +735,14 @@ export const workSections: Record<string, HelpEntry> = {
 
   /* ── Расходы ──────────────────────────────────────────────────────── */
   "/admin/expenses": {
-    what: "Wspólne wydatki studia — reklama, usługi, podwykonawcy, biuro — i ile z każdego przypada na każdego współzałożyciela. Do tego terminy podatkowe na najbliższe dwa tygodnie. Widzą to obaj współzałożyciele: wydatek zmniejsza udział każdego z nich.",
+    what: "Tu są wspólne wydatki studia i ile z każdego przypada na każdego współzałożyciela. Są tu też terminy podatkowe na dwa tygodnie.",
     items: [
       {
         id: "split",
         title: "Jak dzieli się wydatek",
         body: [
-          "W tej samej proporcji co zysk — według udziałów współzałożycieli. Przykład właściciela: reklama za $100 to 70 dla jednego i 30 dla drugiego. Ostatni dostaje resztę, żeby części zawsze zgadzały się co do centa.",
-          "Kosztu wytworzenia konkretnego projektu się tu nie wpisuje: jest już odjęty w samym projekcie i tutaj zostałby odjęty drugi raz.",
+          "Wydatek dzieli się według udziałów współzałożycieli. Przy udziałach 70 i 30 reklama za $100 dzieli się na $70 i $30.",
+          "Kosztu wytworzenia projektu tu nie wpisuj: jest już odjęty w samym projekcie.",
         ],
       },
       {
@@ -751,12 +750,12 @@ export const workSections: Record<string, HelpEntry> = {
         title: "Zapisz i usuń",
         body: {
           head: [
-            "«Dodaj wydatek»: data, kategoria («reklama», «usługi i subskrypcje», «podwykonawcy», «biuro i łączność», «pozostałe»), kwota i na co — «Zapisz». Zapisywać możesz Ty i właściciel: wymyślony wydatek zmniejsza też Twój udział, więc nie da się oszukać na swoją korzyść.",
-            "Usuwa tylko właściciel: usunięciem można by wymazać z obrazu cudzy wydatek. Pomyliłeś się — powiedz mu.",
+            "W bloku «Dodaj wydatek» wypełnij datę, kategorię i kwotę, a potem kliknij «Zapisz».",
+            "Wydatki usuwa tylko właściciel. Pomyłka? Powiedz mu.",
           ],
           admin: [
-            "«Dodaj wydatek» i «usuń» przy każdym wierszu. Kierownik-współzałożyciel może zapisywać, ale nie usuwać: usunięciem można wymazać z obrazu cudzy wydatek, a wymyślony wydatek zmniejsza też udział tego, kto go zapisał.",
-            "Są tu te same wydatki co w bloku «Wydatki studia» w [Finansach](/admin/finance).",
+            "«Dodaj wydatek» zapisuje wydatek, a «usuń» w wierszu go usuwa. Kierownik może tylko zapisywać.",
+            "Te same wydatki są w sekcji [«Finanse»](/admin/finance).",
           ],
         },
       },
@@ -765,14 +764,14 @@ export const workSections: Record<string, HelpEntry> = {
         title: "Kto zapłacił",
         body: {
           head: [
-            "Każdy wydatek ma «Kto zapłacił». «Wspólnie, 70/30» znaczy, że zapłacono ze wspólnych pieniędzy studia: wydatek zmniejsza to, co się dzieli, i rozkłada się na obu według udziałów. Tak stoją też wszystkie stare wydatki, dopóki ktoś tego nie zmieni.",
-            "Zapłacił ktoś jeden z własnych — wybierz go przy zapisie albo później w wierszu wydatku i kliknij «Zapisz». Ta kwota wróci do niego z wpływów przed podziałem: w wierszu widać «zwrot $…», w karcie współzałożyciela «zapłacił sam: …». Sam wydatek i tak dzieli się według udziałów: temu, kto zapłacił, zwrócono, resztę podzielono.",
-            "Każdy dołożył swoją część z własnych — zapisz wydatek w dwóch wierszach, każdy ze swoim imieniem. Zaznaczać możesz Ty i właściciel; każdą zmianę właściciel widzi w dzienniku: «zapłacił sam» dodaje danej osobie zwrot.",
+            "«Wspólnie» w polu «Kto zapłacił» znaczy, że zapłacono wspólnymi pieniędzmi studia.",
+            "Zapłacił ktoś jeden z własnych pieniędzy? Wybierz go i kliknij «Zapisz». Ta kwota wróci do niego przed podziałem.",
+            "Każdy dołożył swoją część? Zapisz wydatek dwoma wierszami.",
           ],
           admin: [
-            "Każdy wydatek ma «Kto zapłacił». «Wspólnie, 70/30» znaczy, że zapłacono ze wspólnych pieniędzy studia: wydatek zmniejsza to, co się dzieli, i rozkłada się na obu według udziałów. Tak stoją też wszystkie stare wydatki, dopóki ktoś tego nie zmieni.",
-            "Zapłacił ktoś jeden z własnych — wybierz go przy zapisie albo później w wierszu wydatku i kliknij «Zapisz». Ta kwota wróci do niego z wpływów przed podziałem: w wierszu widać «zwrot $…», w karcie współzałożyciela «zapłacił sam: …», a w «Udziałach współzałożycieli» w [Finansach](/admin/finance) «udział + zwrot za wydatki = do wypłaty».",
-            "Każdy dołożył swoją część z własnych — zapisz wydatek w dwóch wierszach, każdy ze swoim imieniem. Zaznaczasz Ty i kierownik-współzałożyciel; każda zmiana jest w [Dzienniku](/admin/audit) z tym, co było i co jest: «zapłacił sam» dodaje danej osobie zwrot.",
+            "«Wspólnie» w polu «Kto zapłacił» znaczy, że zapłacono wspólnymi pieniędzmi studia.",
+            "Zapłacił ktoś jeden z własnych pieniędzy? Wybierz go i kliknij «Zapisz». Ta kwota wróci do niego przed podziałem, widać to w sekcji [«Finanse»](/admin/finance).",
+            "Każdy dołożył swoją część? Zapisz wydatek dwoma wierszami. Każda zmiana trafia do sekcji [«Dziennik»](/admin/audit).",
           ],
         },
       },
@@ -780,19 +779,19 @@ export const workSections: Record<string, HelpEntry> = {
         id: "taxes",
         title: "Terminy podatkowe",
         body: [
-          "Blok «Podatki: co się zbliża» — terminy na 14 dni do przodu: podatek od obrotu i podatek socjalny — do 15. dnia każdego miesiąca, roczne sprawozdanie — do 1 kwietnia. Na 3 dni lub mniej — na żółto.",
-          "Przy każdej dacie jest dopisek «data niepotwierdzona przez księgowego»: to punkt wyjścia do rozmowy z księgowym, a nie jego słowo. Kara za spóźnienie przychodzi raz i w całości, dlatego ten blok jest pierwszy.",
+          "Blok «Podatki: co się zbliża» pokazuje terminy na 14 dni do przodu. Gdy do terminu zostały 3 dni lub mniej, data robi się żółta.",
+          "Daty nie są potwierdzone przez księgowego. Sprawdź je z nim.",
         ],
       },
       {
         id: "no-profit",
-        title: "Dlaczego nie ma tu zysku",
+        title: "Dlaczego tu nie ma zysku",
         body: {
           head: [
-            "Widać tu tylko wydatki i ich podział. Zysk i udziały w nim widzi właściciel: pokazanie 30% oznacza pokazanie także pozostałych 70%, jedno wylicza się z drugiego w pamięci.",
+            "Zysk i udziały w nim widzi tylko właściciel.",
           ],
           admin: [
-            "Kierownik widzi tu tylko wydatki: zysk i udziały w nim są tylko u Ciebie, w bloku «Udziały współzałożycieli» w [Finansach](/admin/finance). Pokazanie jego 30% oznaczałoby pokazanie także Twoich 70%.",
+            "Kierownik widzi tu tylko wydatki. Zysk i udziały widzisz tylko Ty, w sekcji [«Finanse»](/admin/finance).",
           ],
         },
       },
@@ -801,33 +800,33 @@ export const workSections: Record<string, HelpEntry> = {
 
   /* ── Финансы ──────────────────────────────────────────────────────── */
   "/admin/finance": {
-    what: "Pieniądze zespołu: ile każdy zarobił na transakcjach, ile czeka, aż klient dopłaci, i ile już wypłacono. Nie ma pensji — każdy dostaje procent od zysku netto swoich transakcji.",
+    what: "Tu widać, ile każdy zarobił na transakcjach, ile czeka na płatność klienta i ile już wypłacono. Pensji nie ma: każdy dostaje procent od swoich transakcji.",
     items: [
       {
         id: "how",
         title: "Jak liczy się procent",
         body: [
-          "**Zysk netto z transakcji** = kwota z umowy − podatek − koszt wytworzenia. Procent liczy się od niego, a nie od kwoty umowy. Podatek i koszt wytworzenia wpisuje właściciel.",
-          "Stawki według poziomu: **młodszy menedżer** — 10% od nowego klienta i 0 od dosprzedaży; **menedżer** — 15% i 5%; **kierownik** — 30% i 30%. Poziom i stawkę indywidualną ustawia właściciel w sekcji «Zespół». Stawka indywidualna zastępuje poziom tylko przy nowych klientach.",
-          "Kierownik dodatkowo dostaje 5% z każdej transakcji menedżerów swojego zespołu — ponad to, a nie z ich udziału. U kierownika-współzałożyciela ten wiersz wynosi 0: i tak dostaje udział we wszystkim, co zostało. Kto przyprowadził i dodał [agencję](/admin/agencies), dostaje jeszcze 5% od kwoty każdego projektu tej agencji przez 12 miesięcy — wierszem «przyprowadził partnera», od kwoty umowy, a nie od zysku.",
-          "Właściciel może ustawić procent na konkretną transakcję — ma on pierwszeństwo przed poziomem i stawką indywidualną. Naliczenie pojawia się, gdy projekt ma kwotę i osobę prowadzącą. Transakcja wyszła na minus — naliczenie wynosi 0: minus to zmartwienie właściciela.",
+          "Procent liczy się od zysku netto transakcji: kwota umowy minus podatek i koszt wytworzenia. Podatek i koszt wpisuje właściciel.",
+          "Od nowego klienta menedżer dostaje 10%, a po 3 transakcjach w poprzednim miesiącu 15%. Od dosprzedaży (nowej pracy dla starego klienta) 5%, młodszy menedżer 0. Kierownik dostaje 30%.",
+          "Kierownik dostaje jeszcze 5% od transakcji swojego zespołu. Kto przyprowadził agencję albo partnera, przez 12 miesięcy dostaje 5% od kwoty jego projektów.",
+          "Za zamówienie Claudery (pomoc z AI z bota) osoba prowadząca dostaje 40% kwoty. Właściciel może ustawić własny procent dla każdej transakcji.",
         ],
       },
       {
         id: "grade",
-        title: "Grade za transakcje i «Premie za transakcje»",
+        title: "Poziom za transakcje i «Premie za transakcje»",
         body: [
-          "Od 1 listopada 2026 procent menedżera od nowego klienta zależy od transakcji z poprzedniego miesiąca: 10%, a jeśli w poprzednim miesiącu kalendarzowym były 3 transakcje lub więcej — 15%. Transakcja — projekt z pierwszą płatnością, liczy się w miesiącu tej płatności. Stawka osobista zostaje bazą, procenty ustawione ręcznie przy transakcji są silniejsze od zasady, dosprzedaże i kierownik — jak dotąd. Do 1 listopada wszystko liczy się według grade.",
-          "Ponad procent — premia $200 za każde 3 transakcje miesiąca (od transakcji od 1 listopada). Od razu wchodzi do zarobionego i do wypłaty, a blok «Premie za transakcje» pokazuje, komu, za który miesiąc i ile transakcji. Premię widzą ci sami, którzy widzą naliczenia danej osoby.",
+          "Transakcja to projekt z pierwszą płatnością, liczony w miesiącu tej płatności. 3 transakcje w miesiącu dają 15% zamiast 10% w następnym miesiącu.",
+          "Do tego za każde 3 transakcje w miesiącu jest premia $200. Widać ją w bloku «Premie za transakcje» i od razu wchodzi do «Do wypłaty».",
         ],
       },
       {
         id: "freeze",
         title: "Zamrożone, zarobione, do wypłaty",
         body: [
-          "**«Zamrożone»** — transakcja jest, ale klient jeszcze nie zapłacił całej kwoty. **«Zarobione»** — klient zapłacił za projekt w całości (właściciel zapisał płatności w karcie projektu). **«Nie nalicza się»** — projekt jest anulowany.",
-          "**«Do wypłaty»** = zarobione − wypłacone. Wartość ujemna — «wypłacone z góry».",
-          "Naliczenia nie są przechowywane, tylko liczone od nowa przy każdym otwarciu — zmieniono koszt wytworzenia i liczba od razu jest inna.",
+          "**«Zamrożone»** znaczy, że klient jeszcze nie zapłacił całej kwoty. **«Zarobione»** znaczy, że klient zapłacił wszystko.",
+          "**«Do wypłaty»** to zarobione minus wypłacone.",
+          "Liczby przeliczają się przy każdym otwarciu strony.",
         ],
       },
       {
@@ -835,16 +834,16 @@ export const workSections: Record<string, HelpEntry> = {
         title: "Co jest na stronie",
         body: {
           manager: [
-            "Kafelki dla Ciebie: «Zarobione», «Zamrożone», «Wypłacone», «Do wypłaty». Poniżej «Według projektów» — Twoje projekty: kwota, czy opłacone w całości i Twoje naliczenie. I lista Twoich wypłat.",
-            "Chcesz więcej — szukaj nowych klientów: od nowego klienta procent jest wyższy niż od dosprzedaży. I zakładaj swoje [projekty](/admin/projects) sam — naliczenie idzie do tego, kto prowadzi.",
+            "Na górze Twoje kafelki. Niżej «Według projektów»: kwota, czy zapłacono w całości i Twoje naliczenie.",
+            "Chcesz więcej? Szukaj nowych klientów i zakładaj [projekty](/admin/projects) sam.",
           ],
           head: [
-            "Kafelki — Twoje saldo. Tabela osób — Ty i Twój zespół: poziom, projekty, zamrożone, zarobione, wypłacone, do wypłaty. «Według projektów» — Twoje i zespołu, z naliczeniami Twojego zakresu. «Wypłaty» — Twoje i zespołu.",
-            "Udziały w zysku studia i jego resztę widzi tylko właściciel.",
+            "Widzisz siebie i swój zespół: saldo, projekty i wypłaty.",
+            "Zysk studia widzi tylko właściciel.",
           ],
           admin: [
-            "Kafelki dla studia: «Z umów», «Zapłacone przez klientów», «Zysk netto» (z dopiskiem, ile projektów nie ma kosztu wytworzenia), «Naliczone zespołowi i partnerom», «Zostaje właścicielowi».",
-            "Tabela osób i «Według projektów» — z kolumnami podatku, kosztu wytworzenia, zysku i «Dla właściciela» (po odjęciu partnerów). «Udziały współzałożycieli» — co wpłynęło minus udziały partnerów i agencji i minus wydatki, jak to się dzieli i ile zwrócić temu, kto zapłacił za wydatek z własnych (udział + zwrot za wydatki = do wypłaty). «Wydatki studia» — ta sama lista co w [Wydatkach](/admin/expenses).",
+            "Kafelki dla całego studia, od «Z umów» do «Zostaje właścicielowi».",
+            "«Udziały współzałożycieli» pokazują, co wpłynęło, co odjęto (partnerzy, agencje, wydatki) i ile komu wypłacić.",
           ],
         },
       },
@@ -853,13 +852,13 @@ export const workSections: Record<string, HelpEntry> = {
         title: "Wypłaty",
         body: {
           manager: [
-            "Wypłaty zapisuje właściciel, gdy przeleje pieniądze. Pojawiają się na liście «Wypłaty» i zmniejszają «Do wypłaty».",
+            "Wypłaty zapisuje właściciel, gdy przeleje pieniądze. Zmniejszają «Do wypłaty».",
           ],
           head: [
-            "Wypłaty zapisuje tylko właściciel. Widzisz wypłaty dla siebie i swojego zespołu.",
+            "Wypłaty zapisuje tylko właściciel.",
           ],
           admin: [
-            "«Wypłaty» → «Komu», «Kwota, $», «Data» (puste — dziś), «Notatka» («za sierpień») → «Zapisz wypłatę». Najpierw przelej pieniądze, potem zapisz. Wypłaty dla siebie nie da się zapisać: Tobie zostaje reszta.",
+            "Najpierw przelej pieniądze, potem zapisz wypłatę w bloku «Wypłaty» przyciskiem «Zapisz wypłatę». Sobie wypłaty zapisać nie można.",
           ],
         },
       },
@@ -868,8 +867,8 @@ export const workSections: Record<string, HelpEntry> = {
         title: "Kasa, oczekiwane płatności i podatki",
         roles: ["admin"],
         body: [
-          "Na dole sekcji — «Kasa w podziale na miesiące»: wpływy i wydatki z pół roku, pod każdym miesiącem — różnica. Obok — «Oczekiwane płatności»: ile jeszcze mają zapłacić za aktywne projekty i kto je prowadzi, oraz «Podatki i sprawozdania w ciągu najbliższych dwóch tygodni». Wcześniej to była zakładka «Finanse» na «Leady».",
-          "Liczby pochodzą z tych samych zapisów co pozostałe bloki «Finanse»: wpływy — płatności klientów za projekty, wydatki — zapisy sekcji [Wydatki](/admin/expenses). Widzisz je tylko ty.",
+          "Na dole sekcji jest «Kasa w podziale na miesiące» za pół roku, oczekiwane płatności i terminy podatkowe.",
+          "Wydatki biorą się z sekcji [«Wydatki»](/admin/expenses). Te bloki widzisz tylko Ty.",
         ],
       },
     ],
