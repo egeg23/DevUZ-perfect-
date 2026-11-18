@@ -27,6 +27,28 @@ export function shortUzs(uzs: number, locale: Locale): string {
   return `${n} ${unit}`;
 }
 
+/**
+ * Валюта страницы — по языку и его региону (владелец, 18.11.2026: «делаем
+ * по снг рынок без упора на Узбекистан»). Русская страница — для всего СНГ,
+ * английская, польская и украинская — для своих стран: цена в долларах,
+ * сумов нет. Узбекская — для Узбекистана, в сумах и рядом в долларах;
+ * китайская — как была.
+ */
+export const LANDING_MONEY: Record<Locale, "usd" | "uzs"> = {
+  ru: "usd",
+  en: "usd",
+  pl: "usd",
+  uk: "usd",
+  uz: "uzs",
+  zh: "uzs",
+};
+
+/** Цена на странице: главная строка и подпись «≈ …» (у долларовых языков подписи нет). */
+export function landingMoney(uzs: number, locale: Locale): { main: string; sub?: string } {
+  if (LANDING_MONEY[locale] === "usd") return { main: formatUsd(uzs) };
+  return { main: formatUzs(uzs, locale), sub: formatUsd(uzs) };
+}
+
 export function weeksRange(p: CalcPrice): string {
   return `${p.weeksLow}–${p.weeksHigh}`;
 }
@@ -34,8 +56,8 @@ export function weeksRange(p: CalcPrice): string {
 /** Подставляет значки страницы. Неизвестный значок остаётся как есть — тест его поймает. */
 export function fillText(text: string, p: CalcPrice, locale: Locale): string {
   const values: Record<string, string> = {
-    price: formatUzs(p.uzs, locale),
-    priceShort: shortUzs(p.uzs, locale),
+    price: landingMoney(p.uzs, locale).main,
+    priceShort: LANDING_MONEY[locale] === "usd" ? formatUsd(p.uzs) : shortUzs(p.uzs, locale),
     usd: formatUsd(p.uzs),
     weeks: weeksRange(p),
     hours: String(PROTOTYPE_HOURS),

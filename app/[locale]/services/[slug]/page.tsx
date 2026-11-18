@@ -8,8 +8,9 @@ import { Container } from "@/components/ui/container";
 import { Icon } from "@/components/ui/icon";
 import { Reveal } from "@/components/ui/reveal";
 import { getDictionary } from "@/content/dictionaries";
-import { LANDING_SLUGS, LANDING_TEXT, landingBySlug } from "@/content/service-landings";
-import { calcPrice, landingText } from "@/content/service-landings/fill";
+import { LANDING_AREA, LANDING_SLUGS, LANDING_TEXT, landingBySlug } from "@/content/service-landings";
+import { calcPrice, LANDING_MONEY, landingText } from "@/content/service-landings/fill";
+import { usdOf } from "@/lib/calculator";
 import { serviceBySlug, services } from "@/content/services";
 import { isLocale, locales, localeHref, t, tList, type Locale } from "@/lib/i18n";
 import { breadcrumbSchema, faqSchema, jsonLdGraph, landingSchema, serviceSchema } from "@/lib/schema";
@@ -82,7 +83,11 @@ export default async function ServicePage({
                 name: text.h1,
                 serviceType: text.title,
                 description: text.seoDescription,
-                priceUzs: price.uzs,
+                areaServed: LANDING_AREA[lang].countries,
+                city: LANDING_AREA[lang].city,
+                ...(LANDING_MONEY[lang] === "usd"
+                  ? { currency: "USD" as const, minPrice: usdOf(price.uzs) }
+                  : { currency: "UZS" as const, minPrice: price.uzs }),
               }),
               faqSchema(text.faq),
               breadcrumbSchema([
