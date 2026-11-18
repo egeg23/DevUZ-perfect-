@@ -1931,26 +1931,24 @@ export const uz: HelpCopy = {
     },
 
     "/admin/traffic": {
-      what: "devuz.studio saytiga qancha odam kiradi, ular qayerdan keladi va qaysi sahifadan boshlaydi — Yandex Metrika va Google Analytics bo‘yicha. Reklama va e’lonlar ishlayaptimi, shuni ko‘rish uchun kerak: lidlar saytdan keladi, saytga kirish kamaysa, bir-ikki haftadan keyin lidlar ham kamayadi. Egasi va rahbarlar ko‘radi, menejerlar — yo‘q.",
+      what: "Bu yerda devuz.studio saytiga qancha odam kirishi va ular qayerdan kelishi ko‘rinadi. Raqamlar Yandex Metrika va Google Analytics’dan olinadi. Arizalar saytdan keladi: kirishlar kamaysa, bir-ikki haftadan keyin arizalar ham kamayadi. Bo‘limni egasi va rahbar ko‘radi.",
       items: [
         {
           id: "numbers",
           title: "Raqamlar nimani bildiradi",
           body: [
-            "O‘ng tepada — davr: **«7 kun»**, **«30 kun»** yoki **«90 kun»**. Har bir raqam yonidagi strelka — u oldingi xuddi shuncha kunga nisbatan qancha o‘sgani yoki tushgani: «30 kun»da — oldingi 30 kunga nisbatan. Yashil strelka — yaxshi, sariq — yomon, «yangi» — oldin nol edi.",
-            "**«tashriflar»** — saytga necha marta kirilgan: bitta odam ertalab va kechqurun — ikki tashrif. **«tashrif buyuruvchilar»** — nechta turli odam, aniqrog‘i turli brauzer: bitta odam telefondan va noutbukdan ikki marta hisoblanadi. **«ko‘rishlar»** — jami nechta sahifa ochilgan.",
-            "**«rad etishlar»** — odam bitta sahifani ochib, deyarli darhol chiqib ketgan tashriflar ulushi. Bu yerda teskari: rad etishlar o‘sishi — sariq strelka, bu yomon. **«o‘rtacha tashrif»** — tashrif o‘rtacha qancha davom etadi, daqiqa:soniya.",
-            "Ustunlar — kunlar bo‘yicha tashriflar, ustunga sichqonchani olib borsangiz sana va son ko‘rinadi. **«Qayerdan keladi»** — qidiruvdan, ijtimoiy tarmoqlardan, reklamadan yoki to‘g‘ridan-to‘g‘ri havola orqali. Metrikada nomlar ruscha, Google’da inglizcha: «Organic Search» — qidiruv, «Direct» — to‘g‘ridan-to‘g‘ri kirish, «Referral» — boshqa saytlardan o‘tish, «Organic Social» va «Paid Social» — ijtimoiy tarmoqlar, «Paid Search» — qidiruvdagi reklama. **«Kirish sahifalari»** — odam tashrifni qaysi sahifadan boshlagan.",
-            "Raqamlar har 10 daqiqada yangilanadi: panel har ochilganda Metrika va Google’dan so‘ramaydi, shuning uchun hozirgina ishga tushirilgan reklama bu yerda darhol ko‘rinmaydi.",
+            "O‘ng tepada davrni tanlang: «7 kun», «30 kun» yoki «90 kun». Raqam yonidagi strelka uni oldingi xuddi shunday davr bilan solishtiradi. Yashil strelka yaxshiroq, sariq yomonroq, «yangi» esa oldin nol bo‘lganini bildiradi.",
+            "«tashriflar» saytga necha marta kirilganini ko‘rsatadi. Bir odam ertalab va kechqurun kirsa, ikki tashrif bo‘ladi. «tashrif buyuruvchilar» turli odamlarni, aniqrog‘i turli brauzerlarni sanaydi. «ko‘rishlar» ochilgan barcha sahifalarni sanaydi.",
+            "«rad etishlar» odam bitta sahifani ochib, darhol chiqib ketgan tashriflar ulushini ko‘rsatadi. Bu yerda o‘sish yomon, strelka sariq bo‘ladi. «o‘rtacha tashrif» tashrif o‘rtacha qancha davom etishini ko‘rsatadi.",
+            "Pastda «Kunlar bo‘yicha tashriflar», «Qayerdan keladi» va «Kirish sahifalari» bor. Google’da manbalar inglizcha: «Organic Search» qidiruv, «Direct» to‘g‘ridan-to‘g‘ri kirish, «Referral» boshqa saytlardan o‘tish. Raqamlar har 10 daqiqada yangilanadi.",
           ],
         },
         {
           id: "two-sources",
           title: "Nega Metrika va Google har xil ko‘rsatadi",
           body: [
-            "Metrika va Google Analytics yonma-yon turadi va qo‘shilmaydi. Har biri tashrifni o‘zicha hisoblaydi va robotlarni o‘zicha ajratadi, ba’zi odamlarning brauzerida esa ulardan biri bloklangan, ikkinchisi yo‘q. Shuning uchun raqamlar farq qiladi va bu normal: yig‘indi na u yerda, na bu yerda yo‘q raqam bo‘lardi.",
-            "Aniq songa emas, yo‘nalishga qarang. Reklama ishga tushgandan keyin ikkalasi ham o‘sishni ko‘rsatsa — reklama odam olib kelyapti. Faqat bittasi o‘ssa — ehtimol gap odamlarda emas, hisoblashda.",
-            "Saytga kirish — hali mijoz emas. Nechta odam yozgani [statistikada](/admin/stats), «Qayerdan keladi» blokida ko‘rinadi: u yerda murojaatlar, bu yerda tashriflar. Tashriflar ko‘paysa-yu, murojaatlar ko‘paymasa — odamlar keladi, lekin nima uchun kelganini topmaydi.",
+            "Metrika va Google tashriflarni o‘zicha sanaydi, shuning uchun raqamlar mos kelmaydi. Bu normal, ularni qo‘shish shart emas. Ikkalasi qayoqqa ketayotganiga qarang: birga o‘ssa, odamlar haqiqatan ko‘paygan.",
+            "Saytga kirish hali mijoz emas. Necha kishi yozganini [«Statistika»](/admin/stats) bo‘limida ko‘ring. Kirish ko‘p, ariza yo‘qmi? Demak, odamlar saytda izlagan narsasini topmayapti.",
           ],
         },
         {
@@ -1958,14 +1956,13 @@ export const uz: HelpCopy = {
           title: "Qanday ulanadi",
           body: {
             head: [
-              "Egasi ulaydi: Metrika uchun serverda kalit, Google uchun — uning Google akkaunti bilan kirish kerak. Sizda ulash tugmalari yo‘q, faqat raqamlar — bu yerdan ulanishni buzib ham, almashtirib ham bo‘lmaydi.",
-              "Kartochkada «Ulanmagan» yoki «Google egasining kirishi bo‘yicha ruxsat bermay qo‘ydi» deb yozilgan bo‘lsa — egasiga ayting, unga bu bir daqiqalik ish. «Javob bermadi» — odatda vaqtinchalik: sahifani bir daqiqadan keyin yangilang, takrorlansa — yana egasiga.",
+              "Metrika va Google’ni egasi ulaydi. Sizda bu yerda faqat raqamlar bor, ulanishni bu yerdan buzib bo‘lmaydi.",
+              "«Ulanmagan» yoki Google kiritmay qo‘ygani yozilganmi? Egasiga ayting, unga bir daqiqa kerak. «Javob bermadi» odatda o‘zi o‘tadi: sahifani bir daqiqadan keyin yangilang.",
             ],
             admin: [
-              "**Metrika** `YANDEX_METRIKA_TOKEN` tokeni bilan ulanadi (hisoblagich raqamini panel o‘zi biladi) — serverdagi `/opt/devuz/.env` faylida yoki Supabase maxfiy ma’lumotlar omborida (Vault) `app.YANDEX_METRIKA_TOKEN` nomi bilan: `.env`da kalit bo‘lmasa, panel uni o‘sha yerdan oladi.",
-              "**Google Analytics** Google orqali kirish bilan ulanadi — kalitlarsiz va serverga kirmasdan. Google Cloud’da bir marta «mijoz» (client) yaratiladi — Google panelimizni taniydigan ruxsatnoma; qadamlari «Google Analytics» kartochkasining o‘zida yozilgan. Uning Client ID va Client secret qatorlari kartochkaga qo‘yiladi, keyin — **«Saqlash va Google orqali kirish»**. Saytning Analytics’iga kirish huquqi bor Google akkaunti bilan kirish kerak va «See and download your Google Analytics data» belgisini olib tashlamaslik kerak. Resurs raqamini panel o‘zi topadi — sayt hisoblagichi `G-L52MCVNS0W` bo‘yicha. Olingan hamma narsa Supabase’ning shifrlangan maxfiy ma’lumotlar omborida saqlanadi, panelda esa faqat o‘qish huquqi bor: Analytics’da biror narsani o‘zgartira olmaydi. Har bir kirish [jurnalda](/admin/audit) ko‘rinadi.",
-              "Agar Google kiritmay qo‘ysa — kartochkada «Google saqlangan kirish bo‘yicha endi ruxsat bermayapti» deb yoziladi va bu **«Google orqali kirish»** tugmasi bilan hal bo‘ladi. Ko‘pincha sabab bitta: Google Cloud’dagi ilova e’lon qilinmagan — «Testing» rejimida Google kirishni 7 kundan keyin o‘chiradi, shuning uchun u yerda bir marta «Publish app» bosish kerak. Agar panel resurs raqamini o‘zi topa olmasa («Google Analytics Admin API» yoqilmagan yoki resurs boshqa akkauntda), uni yozishni so‘raydi: Google Analytics → «Admin» → «Property details», faqat raqamlar. Raqamlar ostidagi **«qayta kirish»** havolasi — Google akkauntini almashtirish uchun.",
-              "Rahbarlar bu bo‘limni ko‘radi, lekin ulash qadamlarisiz, kirish tugmalarisiz va Google akkauntingiz pochtasisiz — ularning o‘rniga «Egasi ulaydi» deb yozilgan. Menejerlarga bo‘lim ko‘rinmaydi. Oldin «Trafik» bosh sahifadagi varaq edi — eski xatcho‘plar shu yerga olib keladi.",
+              "Metrika Yandex tokeni bilan ulanadi. Ulanmaguncha qadamlar «Yandex Metrika» kartasining o‘zida yozilgan. Tokenni server sozlamalariga yoki maxfiy kalitlar omboriga qo‘yiladi.",
+              "Google Analytics Google akkauntingiz orqali kirish bilan ulanadi. Bir marta kartadagi qadamlar bo‘yicha Google Cloud’da ilova yarating, Client ID va Client secret’ni qo‘ying va «Saqlash va Google orqali kirish» tugmasini bosing. «See and download your Google Analytics data» belgisini olib tashlamang: panel raqamlarni faqat o‘qiydi.",
+              "Google kiritmay qo‘ydimi? «Google orqali kirish» tugmasini bosing. Ko‘pincha Google Cloud’dagi ilova «Testing» rejimida qolgan, u yerda kirish 7 kun yashaydi: «Publish app» tugmasini bosing. Akkauntni raqamlar ostidagi «qayta kirish» havolasi bilan almashtirish mumkin.",
             ],
           },
         },
@@ -1974,35 +1971,32 @@ export const uz: HelpCopy = {
 
     /* ── Reklama ──────────────────────────────────────────────────────── */
     "/admin/outside": {
-      what: "vc.ru, Dzen va Tenchat uchun maqola qoralamalari: haftada bir marta model har bir platformaga bittadan yozadi, odam ularni studiyaning platformadagi akkauntidan e’lon qiladi va havolani shu yerga qo‘yadi. Rossiya va MDHda biznes egalari o‘qiydigan joylarda studiya haqida yozilishi va shu maqolalardan saytimizga odamlar hamda havolalar kelishi uchun kerak.",
+      what: "Bu yerda vc.ru, Dzen va Tenchat uchun studiya haqidagi maqolalar qoralamalari. Haftada bir marta dastur har bir platformaga bittadan yozadi. Siz uni studiya akkauntidan e’lon qilasiz va havolani bu yerga qo‘yasiz. Shunda Rossiya va MDHdagi biznes egalari bizni biladi, sayt esa havolalar oladi.",
       items: [
         {
           id: "how",
-          title: "Bu qanday ishlaydi",
+          title: "Qanday ishlaydi",
           body: [
-            "Haftada bir marta, Toshkent vaqti bilan kunduzi (11:00 dan), har bir platforma uchun qoralama tayyorlanadi. Mavzu — koddagi ro‘yxatdan, uning so‘rovi Rossiya bo‘yicha Wordstat va Google Trends bilan solishtiriladi: bu platformalarni asosan o‘sha yerda o‘qishadi. Arzon model yozadi, saytimizdagi keyslarimiz faktlari bo‘yicha.",
-            "Qoralama shu yerda paydo bo‘lishidan oldin uni kod tekshiradi: so‘rov sarlavhada va birinchi xatboshida turadi, uzun tire va neyrotarmoq shtamplari yo‘q, narxlar, foizlar va keyslarda yo‘q raqamlar yo‘q, havolalar faqat saytimizga va keyslarimizga, ikkitadan ko‘p emas (Tenchatda — bitta). Uch urinishda o‘tmasa — qoralama bo‘lmaydi, egasiga nima chiqmagani haqida qator keladi.",
-            "Qoralamalar to‘planib qolmaydi: platforma yangisini faqat avvalgisi e’lon qilingan yoki o‘tkazib yuborilgandan keyin oladi. Bir haftada uch platformada — uch xil mavzu, va bitta mavzu har bir platformada o‘z matni bilan yoziladi: vc.ru da tahlil, Dzenda oddiy tilda, Tenchatda qisqa post.",
-            "Robot emas, odam e’lon qiladi: bu platformalarda dastur orqali e’lon qilishning ochiq yo‘li yo‘q, akkauntga o‘zi kiradigan robot esa ularning qoidalarini buzadi va akkaunt bloklanadi.",
+            "Haftada bir marta, Toshkent vaqti bilan kunduzi, har bir platforma qoralama oladi. Mavzu Rossiyada nimani qidirishiga qarab tanlanadi. Faktlar saytdagi keyslarimizdan olinadi.",
+            "Bu yerga tushishdan oldin qoralama tekshiruvdan o‘tadi. Unda narxlar, foizlar va o‘ylab topilgan raqamlar yo‘q, havolalar faqat bizning saytga olib boradi. To‘rt urinishda o‘tmadimi? Qoralama bo‘lmaydi, egasi va rahbarga hisobotda qator keladi.",
+            "Platforma yangi qoralamani oldingisi e’lon qilingan yoki o‘tkazib yuborilganda oladi. E’lonni odam qiladi. Akkauntga o‘zi kiradigan robot platformalar qoidalarini buzadi va akkaunt bloklanadi.",
           ],
         },
         {
           id: "publish",
-          title: "Qanday e’lon qilish kerak",
+          title: "Qanday e’lon qilish",
           body: [
-            "**«E’lon qilinishini kutmoqda»** blokida qoralama yonida — platforma, so‘rov va tugmalar. **«Sarlavhadan nusxa olish»** — muharrirdagi sarlavha maydoniga. **«Nusxa olish»** — butun matn: vc.ru va Dzen uchun bezagi bilan (sarlavhachalar, ro‘yxatlar va havolalar o‘zicha qo‘yiladi), Tenchat uchun — oddiy matn. Muharrir matnni noto‘g‘ri qo‘ysa — **«Bezaksiz nusxa olish»**.",
-            "**«vc.runi ochish»** (yoki boshqa platforma) uni yangi oynada ochadi: studiya akkauntiga kiring, yangi nashrni boshlang, sarlavha va matnni qo‘ying, rasm qo‘shing va e’lon qiling. **«Matnni ko‘rsatish»** — qoralamani oldindan o‘qish; to‘g‘ridan-to‘g‘ri platforma muharririda tuzatish mumkin.",
-            "E’londan keyin maqola manzilini brauzer qatoridan nusxa oling, **«E’lon qilingan maqola havolasi»** maydoniga qo‘ying va **«E’lon qildim»**ni bosing. Havola faqat shu platforma manzilidan va faqat https bilan qabul qilinadi. **«O‘tkazib yuborish»** — qoralama yaramasa: platforma keyingi hafta yangisini oladi.",
-            "Matndagi havolalar saytimizga Metrika belgilari bilan olib boradi (belgida — platforma nomi): [Trafik](/admin/traffic)da har bir platformadan nechta odam kelgani ko‘rinadi.",
+            "«E’lon qilinishini kutmoqda» blokida qoralama yonida tugmalar bor. «Sarlavhadan nusxa olish» va «Nusxa olish» matnni buferga qo‘yadi. Qiyshiq qo‘yildimi? «Bezaksiz nusxa olish» tugmasini bosing.",
+            "«vc.runi ochish» tugmasi (yoki boshqa platformaniki) uni yangi oynada ochadi. Studiya akkauntiga kiring, sarlavha va matnni qo‘ying, rasm qo‘shing va e’lon qiling. Qoralamani oldindan «Matnni ko‘rsatish» tugmasi bilan o‘qish mumkin.",
+            "Chiqqan maqola manzilidan nusxa oling, uni «E’lon qilingan maqola havolasi» maydoniga qo‘ying va «E’lon qildim» tugmasini bosing. Qoralama mos emasmi? «O‘tkazib yuborish» tugmasini bosing, bir haftadan keyin yangisi keladi.",
           ],
         },
         {
           id: "links",
-          title: "E’lon qilinganlar va havola tekshiruvi",
+          title: "E’lon qilinganlar va havolani tekshirish",
           body: [
-            "**«E’lon qilinganlar»** blokida — maqolalar havolasi bilan, kim va qachon e’lon qilgani. «E’lon qildim»dan 10 daqiqa o‘tib, keyin esa haftada bir marta kod maqola sahifasini o‘zi ochadi va unda devuz.studio ga havolani qidiradi.",
-            "Maqola ostidagi qator: «qidiruvda vazn beradi» — oddiy havola, u saytga Google va Yandexda yordam beradi; «nofollow deb belgilagan» — platforma qidiruv tizimlaridan havolani hisobga olmaslikni so‘ragan: vazn yo‘q, lekin odamlar u orqali o‘tadi, bunday platformalar uchun bu odatiy hol; «havola topilmadi» — uni moderatsiyada olib tashlashgan yoki maqola faqat kirgandan keyin ko‘rinadi; «sahifa ochilmadi» — maqola o‘chirilgan yoki platforma tekshiruvni kiritmaydi.",
-            "Bo‘lim tepasida — 30 kunda nechta maqola e’lon qilingani va nechta qoralama o‘tkazib yuborilgani.",
+            "«E’lon qilinganlar» blokida chiqqan maqolalar turadi. «E’lon qildim»dan 10 daqiqa keyin va keyin haftada bir marta panel maqolani o‘zi ochib, saytimizga havolani qidiradi. Bo‘lim tepasida 30 kunda nechta maqola chiqqani ko‘rinadi.",
+            "Maqola ostida natija yoziladi. Qidiruvda vazn beradigan havola saytga Google va Yandex’da yordam beradi. nofollow belgisi vazn yo‘qligini bildiradi, lekin odamlar havoladan o‘tadi. Havola topilmadi yoki sahifa ochilmadimi? Maqola o‘chirilgan yoki kirish ortiga yashirilgan bo‘lishi mumkin.",
           ],
         },
         {
@@ -2010,9 +2004,9 @@ export const uz: HelpCopy = {
           title: "O‘zi e’lon qilinadi: Telegraph, VKontakte, Telegram-kanal",
           roles: ["admin", "head"],
           body: [
-            "**«O‘zi e’lon qilinadi»** bloki — o‘z qoidalariga ko‘ra dastur orqali e’lon qilish mumkin bo‘lgan platformalar. Ular vc.ru kabi haftada bir marta qoralama oladi, kodning o‘sha tekshiruvidan o‘tadi va odamsiz chiqadi: maqola darhol **«E’lon qilinganlar»**da «o‘zi chiqdi» belgisi bilan paydo bo‘ladi, bizga havolani kod boshqalardagidek tekshiradi. Chiqmasa (platforma javob bermadi, kanal uzildi), qoralama sababi bilan **«E’lon qilinishini kutmoqda»**ga qaytadi va uni qo‘lda e’lon qilishadi.",
-            "**Telegraph** (telegra.ph — Telegramning maqola sahifalari) ro‘yxatdan o‘tishni talab qilmaydi: studiya akkauntini kod birinchi maqola bilan o‘zi ochadi, uning kaliti sirlar omborida turadi. Hech narsa qilish shart emas.",
-            "**VKontakte va Telegram-kanal** Postiz orqali chiqadi — bu platformalarga rasmiy ulanishi bor kechiktirilgan e’lonlar xizmati. Bir marta: postiz.com da ro‘yxatdan o‘tish, «Add Channel» tugmasini bosib studiyaning VKontakte hamjamiyatiga va Telegram-kanaliga kirish, keyin Settings → Developers → Public API → kalitdan nusxa olib, uni **«Postiz API kaliti»** maydoniga qo‘yish, **«Saqlash va tekshirish»** tugmasi. Kalit faqat Postiz uni qabul qilsa saqlanadi; panel qaytib faqat «kiritilgan» yoki «bo‘sh» ko‘rsatadi, harakatlar jurnaliga qiymatsiz yoziladi. Maydon ostidagi qator Postiz qaysi kanallarni ko‘rishini va bizning qaysi platformalarimiz o‘zi e’lon qilinishini aytadi. Postizda kanali yo‘q platforma qoralama olmaydi.",
+            "«O‘zi e’lon qilinadi» blokida maqola odamsiz chiqadigan platformalar. Qoralama xuddi shu tekshiruvdan o‘tadi va darhol «E’lon qilinganlar»da paydo bo‘ladi. Chiqmadimi? U sababi bilan «E’lon qilinishini kutmoqda»ga qaytadi va qo‘lda e’lon qilinadi.",
+            "Telegraph hech narsa talab qilmaydi. Studiya akkaunti u yerda birinchi maqola bilan o‘zi ochiladi.",
+            "VKontakte va Telegram-kanal Postiz xizmati orqali ishlaydi. Bir marta u yerda ro‘yxatdan o‘ting, kanallarni «Add Channel» tugmasi bilan ulang va kalitni Settings → Developers → Public API’dan oling. Uni «Postiz API kaliti» maydoniga qo‘ying va «Saqlash va tekshirish» tugmasini bosing: kalit faqat Postiz qabul qilsa saqlanadi.",
           ],
         },
         {
@@ -2020,74 +2014,74 @@ export const uz: HelpCopy = {
           title: "Kim e’lon qiladi",
           roles: ["admin", "head"],
           body: [
-            "Pastda — **«Kim e’lon qiladi»**: qoralamalar tayyor bo‘lganda bot «📝 Статьи на площадки» kartochkasini kimga yuborishi. Hech kim tanlanmasa — kartochka egasi va rahbarga boradi, agar ularda «Jamoa»da «Hisobotlar» belgisi olib tashlanmagan bo‘lsa.",
-            "Ro‘yxatda — shu bo‘lim ochiq bo‘lganlar. U egasi va rahbarga ochiq; e’lon qiladigan menejerga egasi uni [Jamoa](/admin/team) → «Bo‘limlar» belgisi bilan ochadi. Platformalardagi akkauntlar studiya nomiga ochiladi; login va parol — e’lon qiladigan odamda, panelga ular kiritilmaydi.",
+            "«Kim e’lon qiladi» blokida bot tayyor qoralamalar haqidagi kartochkani kimga yuborishini tanlang. Hech kim tanlanmaganmi? Kartochka egasi va rahbarga keladi.",
+            "Ro‘yxatda bu bo‘lim ochiq bo‘lganlar bor. Menejerga uni egasi [«Jamoa»](/admin/team) → «Bo‘limlar» belgisi bilan ochadi. Platformalar loginlari panelga kiritilmaydi, ular e’lon qiladigan odamda turadi.",
           ],
         },
       ],
     },
     "/admin/ads": {
-      what: "Google Ads va Yandex Direct’dagi reklama avtopiloti — studiyaning marketologlar va agentliklar uchun yangi xizmati. Kuniga bir marta u reklama kabinetining hisobotlarini olib, uchta narsani taklif qiladi: minus-so‘zlar, byudjetni qayta taqsimlash va e’lonlar testi, — har biri sababi va raqamlari bilan. Odatiy holatda o‘zi hech narsani o‘zgartirmaydi: «Qabul qilish» va «Rad etish» tugmalari bilan inson hal qiladi. Egasi va rahbarlar ko‘radi, menejerlar — yo‘q.",
+      what: "Bu Google Ads va Yandex Direct’dagi reklama avtopiloti, agentliklar va marketologlar uchun. Kuniga bir marta u reklama kabinetining hisobotlarini ko‘rib, sababi va raqamlari bilan o‘zgarishlar taklif qiladi. Odam «Qabul qilish»ni bosmaguncha o‘zi hech narsani o‘zgartirmaydi. Bo‘limni egasi va rahbar ko‘radi.",
       items: [
         {
           id: "what",
           title: "Avtopilot nima qiladi",
           body: [
-            "**Minus-so‘zlar.** Reklama ko‘rsatilgan qidiruv so‘rovlari so‘z va so‘z juftlariga bo‘linadi, har biri bo‘yicha pul va arizalar qo‘shiladi. Odatdagi ariza narxidan kam bo‘lmagan pul sarflagan, klik yig‘gan va birorta ariza keltirmagan so‘z («bepul», «yuklab olish», «vakansiya») minusga taklif qilinadi. Qoidaga ko‘rinmaydigan, lekin aniq bu biznes haqida bo‘lmagan so‘rovlarni arzon model belgilaydi. Taklifdan oldin kod minus-so‘z kampaniyaning birorta kalit so‘ziga tegmasligini tekshiradi. Direct’da yana **kross-minuslash** bor: agar umumiy kalit so‘z («ingliz tili kurslari») va aniqlashtirilgani («bolalar uchun ingliz tili kurslari») turli guruhlarda bo‘lsa, umumiy guruhga «bolalar» minusi taklif qilinadi, shunda bunday so‘rov o‘z e’loniga boradi.",
-            "**Byudjet.** Pul arizasi qimmat kampaniyadan arizasi arzon kampaniyaga o‘tadi, lekin faqat u har kuni o‘z byudjetiga tiralib qolsa. Ma’lumot kam bo‘lganda «ko‘z bilan» solishtirish aldaydi, shuning uchun avtopilot bitta kampaniya haqiqatan yaxshiroq ekanligi ehtimolini hisoblaydi va siljitishni faqat 90% va undan yuqorida taklif qiladi. Umumiy byudjet bunda o‘zgarmaydi.",
-            "**E’lonlar testi.** Guruhda bitta e’lon bo‘lsa, model guruh tilida ikkinchi variantni yozadi, uzun tire, shtamp va «kafolat» yoki «eng yaxshi» kabi va’dalarsiz. 10–45 kundan keyin ko‘proq ariza keltirgani qoladi, ikkinchisi pauzaga qo‘yiladi.",
-            "Kalit so‘zlar stavkalariga avtopilot tegmaydi: buni Google va Yandex o‘z strategiyalarida o‘zlari qiladi. Batafsil — `docs/ads-autopilot/design.md` da.",
+            "**Minus-so‘zlar.** Avtopilot pul ketgan, lekin ariza bo‘lmagan so‘rovlardagi so‘zlarni qidiradi: «bepul», «yuklab olish», «vakansiya». Bunday so‘zlarni taqiqlashni taklif qiladi. Kampaniya kalit so‘zlaridagi so‘zlarga tegmaydi.",
+            "**Byudjet.** Pul arizasi qimmat kampaniyadan arizasi arzon kampaniyaga o‘tadi, agar u o‘z byudjetiga taqalib qolayotgan bo‘lsa. Taklif faqat farq deyarli aniq haqiqiy bo‘lganda chiqadi. Umumiy byudjet o‘zgarmaydi.",
+            "**E’lonlar testi.** Guruhda bitta e’lon bo‘lsa, avtopilot ikkinchisini yozadi. 10-45 kundan keyin ko‘proq ariza beradigani qoladi, ikkinchisi pauzaga qo‘yiladi.",
+            "Kalit so‘zlar stavkalariga avtopilot tegmaydi. Ularni Google va Yandex’ning o‘zi boshqaradi.",
           ],
         },
         {
           id: "setup",
           title: "Agentlik kabinetini qanday ochish",
           body: [
-            "Chapda — kabinetlar ro‘yxati. **«Yangi kabinet»**: nomi, kimligi (studiya, agentlik yoki biznes) va tili — bot shu kabinet odamlariga shu tilda yozadi. **«Yaratish»** ni bosing, kabinet o‘ngda ochiladi.",
-            "**«Odamlar»** blokiga agentlik tomonidan kabinetda ishlaydiganlarni qo‘shing: raqamli Telegram id va ism, **«Qo‘shish»** tugmasi. Ular devuz.studio/ads ga studiya boti orqali kiradi — «Telegram orqali kirish» tugmasi bir martalik havola yuboradi — va bildirishnomalar oladi. Odamni olib tashlasangiz, uning kirishi darhol ishlamay qoladi.",
-            "**«Reklama kabinetini qo‘shish»**: platforma, nom, Direct’dagi mijoz logini (agentlik uchun) yoki 123-456-7890 ko‘rinishidagi Google akkaunt raqami. Keyin kabinetning o‘zida — **«Ulash»**: Yandex yoki Google sahifasi ochiladi, reklama egasi u yerda ruxsat beradi. Kalit shifrlangan holda saqlanadi, uni hech kim, studiya ham ko‘rmaydi. Ulangandan so‘ng avtopilot hisobotlarni darhol o‘zi oladi — takliflar bir-ikki daqiqada paydo bo‘ladi. Agar kabinet keyinchalik yangilanmay qolsa (ruxsat bekor qilingan, platforma rad etgan), kabinet odamlariga Telegram’da bitta xabar keladi va kabinetda sababi ko‘rinadi.",
+            "Chapda kabinetlar ro‘yxati. «Yangi kabinet» tugmasini bosing, nomini yozing, kimligini va tilni tanlang. Keyin «Yaratish» tugmasini bosing.",
+            "«Odamlar» blokida agentlik xodimlarini qo‘shing: Telegram id, ism va «Qo‘shish» tugmasi. Ular devuz.studio/ads’ga studiya boti orqali kiradi va bildirishnomalar oladi. Odamni olib tashlasangiz, uning kirishi darhol ishlamay qoladi.",
+            "«Reklama kabinetini qo‘shish» tugmasini bosing va platforma, nom hamda Direct’dagi login yoki Google akkaunt raqamini kiriting. Keyin «Ulash» tugmasini bosing: reklama egasi Yandex yoki Google sahifasida ruxsat beradi. Bir-ikki daqiqadan keyin birinchi takliflar chiqadi.",
           ],
         },
         {
           id: "proposals",
           title: "Takliflar: «Qabul qilish» va «Rad etish»",
           body: [
-            "**«Takliflar»** blokida — avtopilot oxirgi 30 kunda topgan narsalar, har birining sababi oddiy so‘zlar va raqamlar bilan. **«Qabul qilish»** o‘zgarishni reklama kabinetida darhol qo‘llaydi, **«Rad etish»** taklifni olib tashlaydi. Hal qilinmagan taklif 14 kundan keyin eskiradi: undagi ma’lumotlar endi boshqa.",
-            "Qo‘llashdan oldin avtopilot kabinetni hozirgi holatida yana bir bor ko‘radi. Agar byudjetni qo‘lda o‘zgartirishgan bo‘lsa, kampaniya o‘qitila boshlagan bo‘lsa yoki kalit so‘zlarga minusga tegadigan so‘z qo‘shilgan bo‘lsa, o‘zgarish qo‘llanmaydi va taklif ostida nima uchunligi yoziladi. Bu nosozlik emas, himoya.",
-            "**«Hozir yangilash»** bir kunni kutmasdan hisobotlarni olib, takliflar yozadi — odatda 1–2 daqiqada, natija Telegram’ga ham keladi.",
+            "«Takliflar» blokida avtopilot 30 kunda topgan narsalar. «Qabul qilish» reklama kabinetini darhol o‘zgartiradi, «Rad etish» taklifni olib tashlaydi. Hal qilinmagan taklif 14 kundan keyin eskiradi.",
+            "O‘zgartirishdan oldin avtopilot kabinetni yana bir bor ko‘radi. U yerda biror narsa qo‘lda o‘zgartirilgan bo‘lsa, o‘zgarish qo‘llanmaydi va ostida sababi yoziladi. Bu buzilish emas, himoya.",
+            "«Hozir yangilash» hisobotlarni darhol oladi, odatda 1-2 daqiqada. Natija Telegram’ga ham keladi.",
           ],
         },
         {
           id: "limits",
           title: "Rejim, limitlar va stop-kran",
           body: [
-            "**«Rejim va limitlar»** blokida ikki rejim bor. **«Taklif qilaman — siz tasdiqlaysiz»** odatiy: insonsiz hech narsa o‘zgarmaydi. **«O‘zim, limitlar doirasida»** — avtopilot takliflarni o‘zi qo‘llaydi va bu haqda Telegram’ga yozadi. Uni agentlik bir-ikki hafta takliflarni qabul qilib, ular bilan rozi bo‘lganda yoqish kerak.",
-            "Limitlar: bitta kampaniya byudjetini bir martada necha foizga siljitish mumkin (odatda 20, 30 dan ortig‘i umuman mumkin emas) va avtopilot bir kunda o‘zi nechta o‘zgarish qila oladi. Minus-so‘zlar uchun chegaralar, o‘z ariza narxingiz, minus qilib bo‘lmaydigan so‘zlar (brend, shahar, xizmat) va biznes haqida bir-ikki jumla keraksiz so‘rovlarni aniqroq ajratishga yordam beradi.",
-            "Hech qaysi rejimda o‘zgarmaydigan narsalar: umumiy byudjet oshmaydi, o‘qitilayotgan kampaniyalarga tegilmaydi, minus-so‘z kalit so‘zlarga tegmaydi, bitta kampaniya byudjeti 3 kunda bir martadan ko‘p o‘zgarmaydi, hech narsa o‘chirilmaydi — faqat pauza. **«Stop-kran: barcha o‘zgarishlarni to‘xtatish»** hammasini, «Qabul qilish» tugmasini ham to‘xtatadi; qilinganni u bosilganda ham qaytarish mumkin.",
+            "«Rejim va limitlar» bloki. Avvaliga avtopilot faqat taklif qiladi, qarorni odam qabul qiladi. Ikkinchi rejim, «O‘zim, limitlar doirasida», takliflarni o‘zi qo‘llaydi va bu haqda Telegram’ga yozadi.",
+            "Limitlar kampaniya byudjetini bir martada necha foizga surish mumkinligini (30 dan ko‘p emas) va avtopilot bir kunda o‘zi nechta o‘zgarish qilishini belgilaydi. U yerda minus qilib bo‘lmaydigan so‘zlar ham bor: brend, shahar, xizmat.",
+            "Har qanday rejimda umumiy byudjet o‘smaydi, o‘chirish yo‘q, faqat pauza. «Stop-kran: barcha o‘zgarishlarni to‘xtatish» hammasini, hatto «Qabul qilish»ni ham to‘xtatadi. Qilinganini u yoqilganda ham qaytarish mumkin.",
           ],
         },
         {
           id: "journal",
           title: "Jurnal, qaytarish va hafta hisoboti",
           body: [
-            "**«Jurnal»** da har bir o‘zgarish: qachon, kim (inson yoki avtopilot, «o‘zi» belgisi), nima bo‘lgan va nima uchun. **«Qaytarish»** bir bosishda avvalgi holatga qaytaradi: minus-so‘zlar — faqat biz qo‘shganlari, byudjet — faqat o‘shandan beri qo‘lda o‘zgartirilmagan bo‘lsa, e’lon — yana yoqiladi yoki pauzaga qo‘yiladi. Rejim almashishi va stop-kran ham jurnalga yoziladi.",
-            "**«7 kun ichida»** bloki nechta o‘zgarish qo‘llanganini, minus-so‘zlar oyiga qancha pulni keraksiz so‘rovlarga yo‘l qo‘ymayotganini va nechta taklif qaror kutayotganini ko‘rsatadi. Hafta hisoboti kabinet odamlariga dushanba kunlari soat 09:00 dan keyin Telegram’ga keladi; **«Hafta hisobotini Telegram’ga yuborish»** uni sizga hozir yuboradi.",
+            "«Jurnal»da har bir o‘zgarish: qachon, kim, nima edi va nega. Avtopilot o‘zgarishlari «o‘zi» deb belgilangan. «Qaytarish» bir bosishda avvalgidek qiladi.",
+            "«7 kun ichida» bloki nechta o‘zgarish qo‘llanganini va oyiga qancha pul endi keraksiz so‘rovlarga ketmasligini ko‘rsatadi. Dushanba kunlari 09:00 dan keyin kabinet odamlariga hafta hisoboti keladi. «Hafta hisobotini Telegram’ga yuborish» uni sizga hozir yuboradi.",
           ],
         },
         {
           id: "alerts",
           title: "Ogohlantirishlar",
           body: [
-            "Kuniga bir marta, yangilanish bilan birga, avtopilot kechagi kunni odatdagisi — undan oldingi yetti kunning o‘rtachasi bilan solishtiradi. Ogohlantirish chiqadi, agar kampaniya kecha odatda sarflasa ham hech narsa sarflamagan bo‘lsa; agar sarf ikki baravar oshib, arizalar ko‘paymagan bo‘lsa; agar odatdagi pulda birorta ham ariza kelmagan bo‘lsa (odatda bu buzilgan forma yoki Metrikadagi maqsad); agar platforma e’lonni rad etgan bo‘lsa; agar minus-so‘z kampaniya kalit so‘zini kesayotgan bo‘lsa.",
-            "Har bir ogohlantirish kabinet odamlariga Telegram’ga bir marta keladi va kabinet tepasida sariq **«Ogohlantirishlar»** bloki sifatida ko‘rinadi. Sabab yo‘qolganda — masalan, kampaniya yana sarflay boshlasa — ogohlantirish o‘zi yo‘qoladi, hech narsa bosish shart emas. Avtopilotning o‘zi ogohlantirishlar bo‘yicha hech narsani o‘zgartirmaydi: bu insonga signal.",
+            "Kuniga bir marta avtopilot kechagi kunni oddiy kun bilan solishtiradi. Kampaniya hech narsa sarflamasa, xarajat yangi arizalarsiz ikki baravar o‘ssa, ariza umuman bo‘lmasa yoki platforma e’lonni rad etsa, ogohlantirish chiqadi. Odatiy xarajatda nol ariza ko‘pincha saytdagi forma buzilganini bildiradi.",
+            "Ogohlantirish kabinet odamlariga Telegram’da bir marta keladi va tepada sariq «Ogohlantirishlar» blokida ko‘rinadi. Sabab yo‘qolsa, ogohlantirish o‘zi yo‘qoladi. Avtopilot ogohlantirish bo‘yicha hech narsani o‘zgartirmaydi.",
           ],
         },
         {
           id: "stub",
           title: "Namuna: reklama kabinetisiz sinov",
           body: [
-            "**«Namuna (sinov)»** platformasi — Toshkentdagi o‘quv markazi, so‘mda haqiqatga yaqin raqamlar bilan. Unda hammasi ko‘rinadi: takliflar, «Qabul qilish», jurnal va qaytarish, — va hech bir haqiqiy reklama kabinetida hech narsa sodir bo‘lmaydi. Agentlikka ulashdan oldin ko‘rsatish uchun qulay.",
-            "**«7 kunni o‘tkazish»** faqat namunada va faqat panelda bor: e’lonlar testi ikki haftani kutmasdan natijaga yetishi uchun bir haftalik ko‘rsatishlarni qo‘shadi.",
+            "«Namuna (sinov)» platformasi o‘ylab topilgan raqamlar bilan o‘quv kabineti. U yerda hammasi ishlaydi, lekin haqiqiy kabinetlar o‘zgarmaydi. Uni agentlikka ulanishdan oldin ko‘rsatish qulay.",
+            "«7 kunni o‘tkazish» tugmasi faqat namunada bor. U bir hafta ko‘rsatishlar qo‘shadi, shunda e’lonlar testi tezroq natijaga yetadi.",
           ],
         },
         {
@@ -2095,8 +2089,8 @@ export const uz: HelpCopy = {
           title: "Kalitlar va yoqish",
           roles: ["admin"],
           body: [
-            "Fon rejimidagi yurishlarni `ADS_AUTOPILOT=1` yoqadi (`/opt/devuz/.env` da yoki maxfiy ma’lumotlar omborida `app.ADS_AUTOPILOT` sifatida); usiz faqat tugmalar ishlaydi. Mijozlar kalitlari `ADS_TOKEN_KEY` bilan shifrlanadi — base64 dagi 32 tasodifiy bayt; uni almashtirish barcha kabinetlarni qayta ulash demakdir.",
-            "«Ulash» tugmasi uchun ilova kalitlari kerak: `YANDEX_DIRECT_CLIENT_ID` va `YANDEX_DIRECT_CLIENT_SECRET`, `GOOGLE_ADS_CLIENT_ID` va `GOOGLE_ADS_CLIENT_SECRET`. Ularni qanday olish va Yandex hamda Google’ga nima topshirish — `docs/ads-autopilot/api-access.md` da qadamma-qadam. Model sarfi `model_usage` da `ads-negatives` va `ads-copy` belgilari bilan ko‘rinadi.",
+            "Kundalik yangilanishlar serverdagi alohida sozlama bilan yoqiladi. Usiz faqat tugmalar ishlaydi.",
+            "«Ulash» tugmasi uchun maxfiy kalitlar omborida Yandex Direct va Google Ads ilovalari kalitlari kerak. Mijozlar tokenlari shifrlangan holda saqlanadi. Shifrlash kaliti almashtirilsa, barcha kabinetlarni qaytadan ulashga to‘g‘ri keladi.",
           ],
         },
         {
@@ -2104,10 +2098,10 @@ export const uz: HelpCopy = {
           title: "Google: kalitlar va kalit so‘zlar rejalashtiruvchisi",
           roles: ["admin", "head"],
           body: [
-            "Google Ads kalit so‘zlar rejalashtiruvchisi iborani Google’da oyiga necha marta qidirishlarini aytadi. 07.11.2026 dan u Trends va Wordstat bilan birga har bir maqola uchun uchinchi manba: sayt maqolalari o‘z tilining hududini ko‘radi (ruscha versiya — Rossiya, O‘zbekiston, Qozog‘iston, Belarus va Qirg‘izistonni birga, o‘zbekcha — O‘zbekistonni, inglizcha — AQSH, Buyuk Britaniya va Kanadani, polyakcha — Polshani), platformalardagi maqolalar Rossiyani ko‘radi. Eng ko‘p qidirilgan iboralarni model birinchi bo‘lib oladi. Ulanmagan bo‘lsa — maqolalar avvalgidek, usiz chiqadi.",
-            "Google’da bir marta nima qilish kerak (egasi; xuddi shu qadamlar «1-qadam — …» so‘zlari bilan — **«Google ilovasi kalitlari»** blokining o‘zida, rejalashtiruvchi ishlamaguncha): console.cloud.google.com da — loyiha, unda «Google Ads API» → Enable. «OAuth consent screen»: turi External, holati In production, brending — nom, logotip, pochta, sayt https://devuz.studio, siyosat https://devuz.studio/ru/privacy, domen devuz.studio → «Verify branding». «Credentials» → «OAuth client ID» → Web application, Authorized redirect URI ga — **«Google ilovasi kalitlari»** blokidagi manzil (**«Nusxa olish»** tugmasi). Client ID va sirni shu blokka qo‘ying va **«Saqlash»**ni bosing.",
-            "Kirish darajasi: «Google Ads API» → «Overview» → «Upgrade access level» → «Apply for access», avval Explorer, keyin Basic. Rejalashtiruvchini Google faqat Basic dan ochadi; daraja pastroq bo‘lsa, **«Tekshirish»** shuni aytadi. Brend tekshiruvidan keyin Basic odatda bir necha daqiqada beriladi.",
-            "Kabinet: chapda kabinet yarating (studiya), 10 raqamli raqam bilan Google reklama kabinetini qo‘shing (u ads.google.com tepasida) va undagi «Ulash»ni bosing — shu kabinetga kirish huquqi bor akkaunt bilan kiring. Keyin **«Kalit so‘zlar rejalashtiruvchisi»** blokida uni tanlang (bittasi bo‘lsa, o‘zi olinadi) va **«Tekshirish»**ni bosing: «ishlaydi» deb javob berishi va eng ko‘p nima qidirilishini ko‘rsatishi kerak. Avtopilot bu kabinetda o‘zi hech narsani o‘zgartirmaydi, faqat taklif qiladi.",
+            "Google kalit so‘zlar rejalashtiruvchisi ibora oyiga necha marta qidirilishini ko‘rsatadi. Sayt va platformalar uchun maqola yozadigan dastur uning maslahatlarini Google Trends va Wordstat bilan birga oladi. Ulanmagan bo‘lsa, maqolalar usiz chiqadi.",
+            "Egasi yoki rahbar bir marta ulaydi. Rejalashtiruvchi ishlamaguncha qadamlar «Google ilovasi kalitlari» blokida yozilgan. Client ID va secret’ni o‘sha yerga qo‘ying va «Saqlash» tugmasini bosing.",
+            "Google rejalashtiruvchini Basic kirish darajasidagi loyihaga ochadi. Daraja pastroq bo‘lsa, «Tekshirish» tugmasi shuni aytadi.",
+            "Keyin studiya kabinetini oching, 10 xonali raqamli Google reklama kabinetini qo‘shing va «Ulash» tugmasini bosing. «Kalit so‘zlar rejalashtiruvchisi» blokida uni tanlang va «Tekshirish» tugmasini bosing. «ishlayapti» javobi va tez-tez qidiriladigan so‘rovlar ro‘yxati hammasi tayyorligini bildiradi.",
           ],
         },
       ],
@@ -2795,54 +2789,54 @@ export const uz: HelpCopy = {
 
     /* ── Разборы ──────────────────────────────────────────────────────── */
     "/admin/razbor": {
-      what: "Saytimiz uchun begona saytlar tahlili maqolalari: smena ularni har kuni ertalab o‘zi yozadi va darhol e’lon qiladi — sizning tasdig‘ingizsiz, matnni odam o‘rniga kod tekshiradi. Chiqqan tahlil darhol saytda va qidiruvda. Bu yerda chiqqanlarning hammasi ko‘rinadi va istalgan tahlilni tuzatish, e’londan olish yoki o‘chirish mumkin.",
+      what: "Tahlillar bu saytimizdagi boshqa saytlar haqidagi maqolalar: ularning mijozlariga nima xalaqit beradi va buni qanday tuzatish kerak. Smena ularni har kuni ertalab yozadi va darhol e’lon qiladi, sizning tasdig‘ingizsiz. Matnni dastur tekshiradi. Bu yerda istalgan tahlilni tahrirlash, saytdan olish yoki o‘chirish mumkin.",
       items: [
         {
           id: "shift",
           title: "Tahlillar smenasi",
           body: [
-            "Har kuni Toshkent vaqti bilan 08:03 da smena «Sovuq aloqalar» bo‘limidagi hali yozilmagan saytlarni oladi, 12 tagachasini ko‘radi va 3 tagacha tahlil yozadi — ruscha va o‘zbekcha — va ularni darhol e’lon qiladi. «Смена разборов» hisoboti Telegramga keladi: nechtasi chiqdi, chiqqan sahifalarga havolalar, ular sayt xaritasida bormi (smena uni qidiruv tizimi kabi ochadi va har bir tahlilning ikkala sahifasini qidiradi) va qolgan saytlar nega olinmadi.",
-            "Rad etish sabablari: sayt ochilmadi, sayt joyida yoki topilmalar kam, nisha yoki shahar aniqlanmadi, nishani tahlil qilmaymiz (tibbiyot va boshqa taqiqlanganlar), so‘rov band (bunday tahlil allaqachon bor — bu model maqola yozishidan oldin tekshiriladi), maqola tekshiruvdan o‘tmadi. 11:03 gacha hisobot bo‘lmasa — «Смена разборов — молчит» keladi.",
+            "Har kuni Toshkent vaqti bilan 08:03 da smena «Sovuq aloqalar» bo‘limidan hali yozilmagan saytlarni oladi. U 12 tagacha saytni ko‘rib, rus va o‘zbek tillarida 3 tagacha tahlil yozadi. Hisobot Telegram’ga havolalar va sahifalar sayt xaritasida bor-yo‘qligi belgisi bilan keladi.",
+            "Hisobotda qolgan saytlar nega olinmagani yozilgan: sayt ochilmadi, xato kam, soha yoki shahar noaniq, bunday tahlil allaqachon bor, maqola tekshiruvdan o‘tmadi. Tibbiyot va boshqa taqiqlangan sohalarni smena tahlil qilmaydi. 11:03 gacha hisobot yo‘qmi? Ogohlantirish keladi.",
           ],
         },
         {
           id: "tender",
           title: "Haftaning tender tahlili",
           body: [
-            "Haftada bir marta, haftaning birinchi kuni Toshkent vaqti bilan 08:33 dan keyin, alohida smena tender tahlilini yozadi: begona saytni emas, IT-xaridning odatiy texnik topshirig‘ini — davlat tashkiloti sayti, CRM, elektron hujjat aylanishi, chat-bot va hokazo. Bunday texnik topshiriqda odatda nima e’tibordan chetda qoladi, qabulda bu nimaga olib keladi va qanday to‘g‘ri yozish kerak. Mavzu `content/razbor/tenders.ts` dagi ro‘yxatdan navbatdagisi olinadi; maqola buyurtmachilar, xaridlar va shartnoma summalarini nomlamaydi. Agar dushanba kuni server ishlamagan bo‘lsa, maqola u ko‘tarilgan kuni chiqadi.",
-            "Maqola sayt tahlili kabi darhol chiqadi, «tenderlar va davlat shartnomalari» belgisi bilan — uning suratlari yo‘q va bo‘lmaydi, shunday rejalashtirilgan. Saytda u «Тендеры и госконтракты» xizmatiga va «Контакты» ga olib boradi. Hisobot Telegramga alohida «Тендерный разбор недели» qatori bilan, maqolaga havola bilan keladi. Rad etilgan mavzu ikkinchi marta yozilmaydi; mavzular tugaganda hisobot shuni aytadi — ro‘yxat kodda to‘ldiriladi.",
+            "Haftada bir marta, dushanba kuni 08:33 dan keyin, tender tahlili chiqadi. Bu boshqa sayt emas, IT-xaridning namunaviy texnik topshirig‘i: unda odatda nima unutiladi va qanday to‘g‘ri yozish kerak. Maqola buyurtmachilar va summalarni aytmaydi.",
+            "Maqola darhol, «tenderlar va davlat shartnomalari» belgisi bilan va suratlarsiz chiqadi. Unga havola Telegram’ga alohida qator bo‘lib keladi. Mavzular tugasa, hisobot buni aytadi.",
           ],
         },
         {
           id: "marketing-articles",
-          title: "Marketing haqida maqolalar",
+          title: "Marketing haqidagi maqolalar",
           body: [
-            "Saytdagi «Marketing» sahifasi ostida (devuz.studio/ru/marketing va devuz.studio/uz/marketing) har kuni ikkita qisqa maqola chiqadi — Toshkent vaqti bilan 10:00 va 16:00 da, birdaniga rus va o‘zbek tillarida. Ularni arzon model `content/marketing-topics.ts` dagi mavzular ro‘yxati bo‘yicha yozadi: qidiriladigan narsa bo‘yicha tushuntirish («что такое SMM», «SMM nima», «Toshkentda reklama» — so‘rovlar Google Trends’dan olingan; har bir maqoladan oldin smena Google Trends va Vordstatdan uning so‘rovi versiya tilida o‘qiladigan joyda (ruscha — Rossiya, O‘zbekiston va MDH mamlakatlarida, o‘zbekcha — O‘zbekistonda) nima bilan birga qidirilishini yana so‘raydi va mosini matnga qo‘shadi; Vordstat serverda uning `WORDSTAT_TOKEN` tokeni bo‘lganda javob beradi), mashhur reklama keysi, keng tarqalgan xato, nishani kanalda targ‘ib qilish — navbat bilan. So‘rov sarlavhada, tavsifda va birinchi xatboshida turadi — busiz maqola chiqmaydi. Ular «Tekshiruvda»ga tushmaydi: o‘zi chiqadi, darhol sayt xaritasiga qo‘shiladi, Bing va Yandex esa signal oladi. Nima uchun: har bir maqola — bizni Google va Yandexda topadigan yana bitta sahifa, har birining oxirida esa «sayt + marketing» taklifi va kalkulyator.",
-            "Inson tekshiruvi o‘rnida kod turadi: keys tahlilida mavzu faktlarida yo‘q birorta ham raqam bo‘lishi mumkin emas, qolgan maqolalarda — foizlar, summalar va yillar yo‘q, o‘zbekcha versiya — faqat lotin yozuvida. Tekshiruvdan ikki marta o‘tmasa — bu safar maqola chiqmaydi, Telegramga esa sababi bilan «Статьи о маркетинге» qatori keladi. Chiqqan maqola sayt xaritasida bo‘lmasa ham shu qator keladi: chiqqandan keyin server buni o‘zi tekshiradi. Mavzular tugaganda ham (taxminan ikki oydan keyin) shu qator xabar beradi — ro‘yxat kodda to‘ldiriladi. Chiqqan maqolani paneldan olib tashlab bo‘lmaydi: dasturchilar chatiga yozing, uni bazada yashirishadi.",
+            "Saytning «Marketing» sahifasida har kuni ikkita qisqa maqola chiqadi, Toshkent vaqti bilan 10:00 va 16:00 da, rus va o‘zbek tillarida. Mavzular Google Trends va Wordstat’dagi jonli so‘rovlar bo‘yicha tanlanadi. Har bir maqola bizni qidiruvda topadigan yana bir sahifa beradi.",
+            "Maqolalar o‘zi chiqadi va darhol sayt xaritasiga tushadi. Ularda foizlar, summalar va mavzu faktlarida yo‘q raqamlar bo‘lmaydi. Tekshiruvdan o‘tmadimi yoki sayt xaritasida topilmadimi? Telegram’ga sababi bilan qator keladi. Chiqqan maqolani paneldan olib bo‘lmaydi, ishlab chiqish chatiga yozing.",
           ],
         },
         {
           id: "review",
-          title: "Kod nimani tekshiradi",
+          title: "Dastur nimani tekshiradi",
           body: [
-            "Chiqishdan oldin tahlilni endi odam o‘qimaydi (sizning qaroringiz, 19.10.2026): har bir maqolani kod tekshiradi, tekshiruvdan o‘tmagani chiqmaydi. Kompaniya nomlanmagan — na nomi, na manzili, na sayti sarlavhasidagi so‘z bilan; har bir raqam audit topilmalarida bor; o‘sish foizlari va «topga chiqaramiz» va’dalari yo‘q; topilmalar auditdan so‘zma-so‘z ko‘chirilmagan; tibbiyot va boshqa taqiqlangan nishalarni smena tahlil qilmaydi.",
-            "Saytda xato ko‘rsangiz — tahlilni «E’lon qilingan» ro‘yxatidan toping: ikkala maqola u yerda to‘liq, manba-sayt manzili faqat sizga ko‘rinadi. **«Tahrirlash»** faqat matnni o‘zgartiradi: sarlavha, tavsif, kirish, topilmalar va xulosa; manzil va so‘rov o‘zgarmaydi.",
+            "Har bir maqolani chiqishdan oldin dastur tekshiradi. Kompaniya na nomi, na manzili bilan aytilmaydi. Har bir raqam sayt tekshiruvi topilmalarida bor. O‘sish foizlari va «topga chiqarish» va’dalari yo‘q.",
+            "Xato ko‘rdingizmi? Tahlilni «E’lon qilingan» ro‘yxatidan toping: u yerda ikkala maqola va faqat siz ko‘radigan sayt manzili bor. «Tahrirlash» faqat matnni o‘zgartiradi, sahifa manzili va so‘rov o‘zgarmaydi.",
           ],
         },
         {
           id: "publish",
-          title: "Chop etish, olib tashlash, rad etish",
+          title: "E’lon qilish, olish, rad etish",
           body: [
-            "**«E’londan olish»** tahlilni saytdan olib, «Tekshiruvda»ga qo‘yadi — endi u yerda faqat siz olib qo‘ygan tahlillar turadi, smena ularni qaytarib chiqarmaydi. Saytga qaytarish — **«E’lon qilish»**: ikkala maqola kerak, sahifa darhol ochiladi, sayt xaritasi yangilanadi, Bing va Yandex signal oladi. Panel shu zahoti jonli sayt xaritasini ochadi va unda ikkala sahifa topildimi, yozadi; topilmasa — dasturchilar chatiga yozing.",
-            "**«E’lon qilmaymiz»** — olib qo‘yilgan tahlil uchun, sabab bilan yoki sababsiz. Smena bu saytga boshqa qaytmaydi. Saytni smena navbatiga qaytarish — faqat **«O‘chirish»** (maydonga «o‘chirish» deb yozing).",
+            "«E’londan olish» tahlilni saytdan «Tekshiruvda» ro‘yxatiga oladi, smena uni qaytib qo‘ymaydi. «E’lon qilish» tahlilni saytga qaytaradi, ikkala maqola kerak. Panel darhol sayt xaritasini tekshiradi va sahifalar topilganini aytadi.",
+            "«E’lon qilmaymiz» olingan tahlilni ro‘yxatda qoldiradi va smena bu saytga boshqa qaytmaydi. Saytni smena navbatiga faqat «O‘chirish» tugmasi bilan qaytarish mumkin: «o‘chirish» so‘zini yozing.",
           ],
         },
         {
           id: "english",
           title: "Inglizcha va polyakcha versiyalar",
           body: [
-            "E’lon qilingan tahlil bir soat ichida yana ikkita sahifa oladi — ingliz tilida (devuz.studio/en/razbor) va polyak tilida (devuz.studio/pl/razbor). Ularni server o‘zi yozadi, panelda tekshiruvsiz: chiqqan ruscha maqolani olib, shu tildagi so‘rov ostiga o‘tkazadi — «restaurant website in Tashkent», «strona internetowa dla restauracji w Taszkencie», — so‘rovni shu tilda o‘qiladigan joyda Google Trends va Google rejalashtiruvchisi bilan solishtirib: inglizcha versiyani — AQSH, Buyuk Britaniya va Kanadada, polyakchani — Polshada. Topilmalar, raqamlar va skrinshotlar o‘sha-o‘sha; yangi raqam, foiz va topilmalarni kod o‘tkazmaydi, bu versiyalarda kirill harflari bo‘lishi mumkin emas.",
-            "Ikki marta tekshiruvdan o‘tmasa — server olti soatdan keyin yana urinadi, hozircha tahlilning shu tildagi sahifasi yo‘q: til almashtirgich undan shu tildagi tahlillar ro‘yxatiga olib boradi. **«Tahrirlash»** ikkala versiyani o‘chiradi: ular eski matndan yozilgan, server ularni tuzatilgan matn bo‘yicha qaytadan yozadi — sahifa manzillari o‘zgarmaydi. **«E’londan olish»** va **«O‘chirish»** ularni ham saytdan olib tashlaydi.",
+            "Chiqqanidan bir soat keyin tahlilning ingliz va polyak tilidagi versiyalari paydo bo‘ladi. Ularni server ruscha maqola bo‘yicha, shu tildagi so‘rovga moslab o‘zi yozadi. Topilmalar, raqamlar va suratlar o‘sha, yangi raqamlar bo‘lmaydi.",
+            "Chiqmasa, server olti soatdan keyin yana urinadi. «Tahrirlash» ikkala versiyani bekor qiladi, ular yangi matn bo‘yicha qayta yoziladi. «E’londan olish» va «O‘chirish» ularni ham olib tashlaydi.",
           ],
         },
       ],
@@ -2895,15 +2889,15 @@ export const uz: HelpCopy = {
 
     /* ── SI xodimlar ──────────────────────────────────────────────────── */
     "/admin/ai-staff": {
-      what: "Studiyaning SI xodimlari bo‘limi: bu yerda bizning SI xodimlarimiz ishlaydi va ular nima qilgani ko‘rinadi. «Blogerlar» yorlig‘i hamkorlik dasturi uchun O‘zbekistondan blogerlarni topadigan, auditoriyasini baholaydigan va birinchi xabarni tayyorlaydigan SI xodim, odamlarga esa uni yuborish va kelishish qoladi.",
+      what: "Bu yerda studiyaning SI xodimlari, ya’ni ishning bir qismini o‘zi qiladigan dasturlar ishlaydi. «Blogerlar» hamkorlik dasturi uchun blogerlarni qidiradi. «Skaut» Telegram guruhlarini o‘qib, buyurtmalarni ushlaydi. «Claudery» SI bo‘yicha pullik yordam arizalarini qabul qiladi.",
       items: [
         {
           id: "service",
           title: "Xizmat va xizmat boti",
           roles: ["admin"],
           body: [
-            "Yuqorida xizmat yoqilganmi yoki yo‘qmi ko‘rinadi. U o‘chiq bo‘lsa, mijozlar kabineti, ularning saytlaridagi vidjet va xizmat boti hech kimga javob bermaydi, saytdagi xizmat sahifasi ochilmaydi. **«Xizmatni yoqish»** / **«Xizmatni o‘chirish»** tugmasi bir daqiqa ichida ishlaydi.",
-            "Xizmatning Telegramda o‘z boti bor, studiya boti emas: u orqali mijozlar kabinetga kiradi, Telegram Business ni ulaydi va arizalarni oladi. Botni @BotFather da o‘zingiz yaratasiz, u yerda Business Mode ni yoqasiz, tokenni sirlar omboriga `AI_STAFF_BOT_TOKEN` sifatida qo‘yasiz, yoniga `AI_STAFF_WEBHOOK_SECRET` (istalgan uzun tasodifiy qator) va `AI_STAFF_KEY` (mijozlar botlari tokenlarini shifrlash kaliti). So‘ng **«Xizmat botini ulash»** ni bosing: server tokenni, Business Mode yoqilganini (@BotFather da u Secretary Mode deb ataladi) tekshiradi va botga /start buyrug‘ini yoqadi. Xabarlarni bot Telegramdan o‘zi oladi, studiya boti kabi serverdagi xizmat orqali: Telegram vebxuki serverimizga yetib bormaydi. Xizmat tokenni ombordan oladi va yangilanishda o‘rnatiladi, uni alohida ishga tushirish shart emas.",
+            "Tepada mijozlar uchun SI xodimlar xizmati yoqilgani ko‘rinadi. O‘chirilgan xizmat hech kimga javob bermaydi: na kabinet, na mijozlar saytidagi vidjet, na xizmat boti. «Xizmatni yoqish» va «Xizmatni o‘chirish» bir daqiqa ichida ishlaydi.",
+            "Xizmatning o‘z Telegram boti bor, bu studiya boti emas. Uni @BotFather’da yaratiladi, u yerda Business Mode yoqiladi va token maxfiy kalitlar omboriga qo‘yiladi. Keyin «Xizmat botini ulash» tugmasini bosing, server token va Business Mode’ni tekshiradi.",
           ],
         },
         {
@@ -2911,17 +2905,17 @@ export const uz: HelpCopy = {
           title: "Pilotga tayyorlik",
           roles: ["admin"],
           body: [
-            "**«Pilotga tayyorlik»** bloki server ishlayotganda o‘zi tekshiradigan narsalarni ko‘rsatadi: xizmat boti tokeni, vebhuk siri va shifrlash kaliti bormi, Instagram ochiqmi, karta orqali to‘lov ulanganmi. Sirlarning qiymati bu yerda ko‘rinmaydi, faqat «tayyor» yoki «yo‘q». Bot tokenisiz mijozlarning arizalari ularning menejerlariga yetib bormaydi, hisobotlar ketmaydi, kabinetga kirib bo‘lmaydi, shuning uchun bu band boshqalaridan muhimroq.",
-            "Meta ilovamizni tekshirmaguncha Instagram «kutilmoqda»: shungacha «Instagramni ulash» tugmasi faqat `AI_STAFF_IG_TESTERS` dagi kabinetlarga ko‘rinadi (id vergul bilan), boshqa mijozlarga ulash tez orada ochilishi yoziladi. Tekshiruvdan keyin `AI_STAFF_IG_PUBLIC=1` qo‘ying. Oxirgi qator bu oyda mijoz xodimlariga Telegramda yetib bormagan arizalarni sanaydi: token yo‘q yoki mijozda hech kimda «arizalarni oladi» belgisi yo‘q. Noldan katta son mijoz xaridorlarni yo‘qotayotganini bildiradi, mijoz kabinetidagi odamlari ro‘yxatini tekshiring.",
+            "«Pilotga tayyorlik» bloki nima sozlanganini ko‘rsatadi: bot tokeni, maxfiy kalitlar, Instagram, karta bilan to‘lov. Qiymatlar ko‘rinmaydi, faqat «tayyor» yoki «yo‘q». Eng muhimi bot tokeni: usiz mijozlar arizalari ularning odamlariga yetib bormaydi.",
+            "Meta ilovamizni tekshirmaguncha Instagram «kutilmoqda» holatida turadi. Ungacha uni faqat test kabinetlari ulay oladi. Oxirgi qator oy davomida mijoz odamlariga yetib bormagan arizalarni sanaydi. Noldan ko‘pmi? Mijoz kabinetida arizalarni kim olishini tekshiring.",
           ],
         },
-            {
+        {
           id: "clients",
           title: "Mijozlar va raqamlar qayerdan",
           roles: ["admin"],
           body: [
-            "Har bir kartochka xizmatning bitta mijozi. «Suhbatlar» SI shu oyda Toshkent vaqti bo‘yicha xaridorlar bilan nechta suhbat olib borganini tarif limitidan ko‘rsatadi: suhbat oyiga bir marta hisoblanadi, unda qancha xabar bo‘lishidan qat’i nazar. Limit tugasa, mijozning SI jim bo‘ladi, xaridor «menejer javob beradi» xabarini oladi, mijozning odamlariga xabar keladi.",
-            "«Tannarx» mijoz oy davomida model sarfi bo‘yicha qancha turganini model narxlarida dollarda ko‘rsatadi: har bir chaqiruv mijoz belgisi bilan yoziladi. Yonida bir suhbat narxi va «Marja»: tarif narxi minus `AI_STAFF_UZS_PER_USD` kursi bo‘yicha so‘mdagi tannarx (odatiy 12 700). ProxyAPI orqali model qimmatroq, bu raqamda hisobga olinmagan. Yuqorida barcha mijozlar sarfi va to‘langan tariflar bo‘yicha tushum.",
+            "Har bir kartochka xizmatning bitta mijozi. «Suhbatlar» shu oyda SI tarif limitidan nechta suhbat olib borganini ko‘rsatadi. Limit tugasa, mijozning SI jim bo‘ladi, uning odamlariga xabar keladi.",
+            "«Tannarx» oy davomida SI uchun xarajatni dollarda ko‘rsatadi. «Marja» bu tarif narxidan tannarx ayirilgani, server sozlamalaridagi kurs bo‘yicha so‘mda (odatda 12 700). Tepada umumiy xarajat va to‘langan tariflar bo‘yicha tushum.",
           ],
         },
         {
@@ -2929,8 +2923,8 @@ export const uz: HelpCopy = {
           title: "To‘lov, sinov muddati va holat",
           roles: ["admin"],
           body: [
-            "Hozircha to‘lov hisob orqali: mijoz bizga yozadi, siz hisob chiqarasiz, pul kelganda tarif, oylar soni, summa va usulni tanlab **«To‘lovni belgilash»** ni bosasiz. Agar to‘langan sana hali o‘tmagan bo‘lsa, muddat undan uzaytiriladi: oldindan to‘lov yonib ketmaydi. Summa bo‘sh bo‘lsa, tanlangan oylar uchun tarif narxi olinadi. «Pro» tarifi mijozning SI ni o‘zi eng kuchli modelga o‘tkazadi. Sirlar omborida Payme (`AI_STAFF_PAYME_MERCHANT_ID`, `AI_STAFF_PAYME_KEY`) yoki Click (`AI_STAFF_CLICK_SERVICE_ID`, `AI_STAFF_CLICK_MERCHANT_ID`, `AI_STAFF_CLICK_SECRET`) kalitlari paydo bo‘lganda, mijoz kabinetida karta bilan to‘lov paydo bo‘ladi: to‘langan hisob tarifni sizning belgingizsiz o‘zi uzaytiradi va uning to‘lovlar tarixiga tushadi.",
-            "Yangi mijoz 14 kunlik sinov muddati va 100 suhbat oladi. **«Sinovni 7 kunga uzaytirish»** mijozga to‘lovgacha vaqt kerak bo‘lganda. **«Holatni o‘zgartirish»**: «pauza» va «bloklangan» mijozning SI ni darhol to‘xtatadi, xaridorlar «menejer javob beradi» xabarini oladi.",
+            "Hozircha to‘lov hisob bo‘yicha. Pul keldimi? Tarif, oylar, summa va usulni tanlang va «To‘lovni belgilash» tugmasini bosing. Muddat allaqachon to‘langan sanadan uzaytiriladi. Payme yoki Click kalitlari paydo bo‘lganda mijoz karta bilan o‘zi to‘lay oladi.",
+            "Yangi mijoz 14 kun va 100 suhbatni bepul oladi. «Sinovni 7 kunga uzaytirish» to‘lovgacha vaqt beradi. «Holatni o‘zgartirish» bilan «pauza» yoki «bloklangan» qo‘yilsa, mijozning SI darhol to‘xtaydi.",
           ],
         },
         {
@@ -2938,61 +2932,63 @@ export const uz: HelpCopy = {
           title: "Mijoz kabineti va demo",
           roles: ["admin"],
           body: [
-            "**«Kabinetni ochish»** mijoz kabinetiga yordam xizmati nomidan 2 soatga kirish: bilimlar bazasi yoki kanalni sozlashga yordam berish uchun. Kabinet sarlavhasida yordam xizmati kirgani belgisi bo‘ladi.",
-            "**«Demo sifatida ko‘rsatish»** shu mijozning chat-vidjetini saytdagi xizmat sahifasiga qo‘yadi: tashrif buyuruvchi SI ni jonli misolda sinab ko‘radi. Demo uchun o‘ylab topilgan kompaniya va to‘ldirilgan bilimlar bazasi bilan alohida mijoz ochgan ma’qul: tashrif buyuruvchining har bir savoli uning suhbatlari va model sarfini sarflaydi.",
+            "«Kabinetni ochish» sizni mijoz kabinetiga qo‘llab-quvvatlash nomidan 2 soatga kiritadi. Kabinet sarlavhasida qo‘llab-quvvatlash kirgani belgisi bo‘ladi.",
+            "«Demo sifatida ko‘rsatish» shu mijozning chatini saytdagi xizmat sahifasiga qo‘yadi. Demo uchun o‘ylab topilgan kompaniya ochgan ma’qul: tashrif buyuruvchining har bir savoli uning suhbatlarini sarflaydi.",
           ],
         },
         {
           id: "scout",
-          title: "Skaut: guruhlar va xabarlarni qanday saralashi",
+          title: "Skaut: guruhlar va xabarlarni qanday saralaydi",
           body: [
-            "**«Skaut»** yorlig‘i — Telegram guruhlarini o‘qiydigan va ijrochi qidirilayotgan xabarlarni ushlaydigan skaut sozlamalari. Topilgani [Skaut signallari](/admin/scout)ga tushadi, kuchlisi lidga aylanadi. Yorliq pastida — **«Skaut uchun guruhlar»**, «Skaut signallari»dagi o‘sha blok: guruhni har kim qo‘sha oladi, olib tashlashni qo‘shgan odam, rahbar va egasi qiladi. Olib tashlangan guruhdan skaut chiqmaydi, faqat 20 daqiqa ichida undan xabar olishni to‘xtatadi.",
-            "**«Xabarlarni qanday saralash»** blokida ikki rejim bor. **«Avtomatik»**: skaut mavzuni (sayt, do‘kon, ilova, bot, avtomatlashtirish) va «kerak, qidiryapman, kim qiladi» iltimosini rus, o‘zbek va ingliz tillarida o‘zi ko‘radi, ijrochilar reklamasini tashlab yuboradi. **«So‘zlar bo‘yicha»**: faqat ro‘yxatingizdagi kamida bitta so‘z bor xabarlar o‘tadi. So‘z boshidan ushlanadi, shuning uchun «sayt» «saytga» va «saytni»ni ham topadi. Ikkala rejimda ham keyin model buyurtmani reklamadan ajratadi, begona e’lonlar lentaga tushmaydi. Rejim va so‘zlarni egasi va rahbar o‘zgartiradi, skaut 5 daqiqa ichida qayta ishga tushmasdan yangisiga o‘tadi. Heshtegli xabarni (#sayt, #ish) skaut hech bir rejimda olmaydi: bunday qilib buyurtmachilar emas, e’lonlar va tarqatmalar yozadi.",
+            "«Skaut» yorlig‘i Telegram guruhlarini o‘qib, ijrochi qidirilayotgan xabarlarni ushlaydigan dasturni sozlaydi. Topilganlar [«Skaut signallari»](/admin/scout)ga tushadi. «Skaut uchun guruhlar» blokida guruhni har kim qo‘sha oladi. Uni qo‘shgan odam, rahbar va egasi olib tashlay oladi.",
+            "«Xabarlarni qanday saralash» blokida ikki rejim bor. «Avtomatik»: skaut sayt, bot yoki ilova qilish so‘rovlarini rus, o‘zbek va ingliz tillarida o‘zi taniydi. «So‘zlar bo‘yicha»: faqat ro‘yxatingizdagi so‘zlar bor xabarlar olinadi, «sayt» so‘zi «saytga»ni ham topadi.",
+            "Rejim va so‘zlarni egasi va rahbar o‘zgartiradi, skaut ularga 5 daqiqada o‘tadi. Xeshtegli xabarlarni (#ish) u hech qachon olmaydi: bunday qilib reklama yoziladi, buyurtma emas.",
           ],
         },
         {
           id: "claudery",
           title: "Claudery: masofaviy yordam boti va konstruktor",
           body: [
-            "**«Claudery»** varag‘i — neyrotarmoqlar bo‘yicha pullik yordam arizalarini qabul qiladigan bot. Mijoz tugmani bosadi, nima bo‘lganini yozadi (skrinshot bilan ham bo‘ladi) va arizani ochish tugmasini oladi: u saytimizdagi ariza sahifasiga olib boradi. Botning o‘zida to‘lov yo‘q va bot narx haqida yozmaydi: Telegram Stars’dan tashqari to‘lov qabul qiladigan botlarni bloklaydi. Narx va Platega to‘lov tugmasi ariza sahifasida turadi; har bir arizaning o‘z manzili bor, to‘lov mijoz bilan shu manzil orqali bog‘lanadi. Ariza darhol umumiy lidlar hovuziga tushadi, turi «SI bo‘yicha yordam (Claudery)», va «narx aytildi» bosqichi hisoblanadi: to‘lanmaganini menejer yakunlashi mumkin. To‘lovni Platega o‘zi tasdiqlaydi: sayt uni mijoz ariza sahifasiga qaytganda va har bir necha daqiqada ikki kun davomida so‘raydi. To‘langan bo‘lsa, bot o‘zi mijozga «To‘lovdan keyin» qadamidagi matnni yozadi, lidda «✅ ОПЛАЧЕНО» paydo bo‘ladi, lidni olib borgan xodimga hamda sizga va rahbarga qator keladi, tunda — ertalab. Mijoz skrinshoti kunduzi shu turdagi lidlarni oladiganlarga studiya botiga boradi.",
-            "**«Kalitlar»** bloki: @BotFather’dan bot tokeni va ikkita Platega kaliti — SI-yuristniki bilan bir xil. **«Saqlash va tekshirish»** ni bosing: panel tokenni Telegramda tekshiradi, server uchun sirni o‘zi yaratadi va «Ulanish» da bot nomini ko‘rsatadi. **«Mijoz nimani ko‘radi»** bloki — mijoz yo‘li, u doim bitta: salomlashuv → «nima bo‘ldi» → arizaga havola (to‘lov saytda) → to‘lovdan keyingi xabar. Bot faqat rus tilida yozadi. Siz faqat so‘zlarni o‘zgartirasiz: salomlashuv matni va asosiy tugmadagi yozuv, savol, arizaga havola matni va summa, to‘lovdan keyingi matn. Bot matnlarida to‘lov va narx haqida yozmang: ular ariza sahifasida. Salomlashuv ostiga to‘rttagacha o‘z tugmangizni qo‘shish mumkin, masalan «Kafolat»: tugma yo sizning matningiz bilan javob beradi (orqaga qaytish tugmasi bilan), yo https havolani ochadi. «Shartlar va kafolat» maydoniga mijozga va’da qilganingizni yozing: bu matn ofertada turadi (**«Mijozlar uchun oferta»** tugmasi), ofertadagi YaTT rekvizitlari ombordan olinadi. **«Saqlash»** ni bosing: biror joy bo‘sh yoki xato bo‘lsa, panel qayerdaligini aytadi va saqlamaydi. **Qayta murojaat:** avval kamida bir marta to‘lagan mijozga (Platega tasdig‘i bo‘yicha, so‘ziga ko‘ra emas) ariza sahifasida «Avval to‘laganlarga chegirma, %» maydonidagi chegirma bilan narx turadi — odatda 30%, ya’ni 5 000 ₽ o‘rniga 3 500 ₽ — va chegirma haqida qator.",
-            "**To‘langan ariza uchun pul.** Platega to‘lovni tasdiqlashi bilan bot o‘zi to‘lovli [loyiha](/admin/projects) «Claudery · помощь с ИИ» ochadi: summa to‘lov kunidagi Rossiya Markaziy banki kursi bo‘yicha dollarga o‘tkaziladi (kurs va rubl summasi loyiha izohida; Markaziy bank javob bermasa, oxirgi ma’lum kurs, u ham bo‘lmasa, zaxira kurs va izohda summani tekshirish so‘raladi). Shunday qilib to‘lov daromadga, «Moliya»ga va «to‘lov» bosqichiga tushadi. Lidni olib borgan xodimga summadan 40%, rahbar qatorisiz; qolgani ta’sischilarga ularning ulushida. Lidni hali hech kim olmagan bo‘lsa, loyiha olib boruvchisiz ochiladi va 40% lidni olgan xodimga tushadi. Bu bitimlar daraja va mukofot uchun «3 bitim» hisobiga kirmaydi: ularning o‘z stavkasi bor.",
+            "Claudery SI bo‘yicha pullik yordam arizalarini qabul qiladigan bot. Mijoz nima bo‘lganini yozadi va «Открыть заявку» tugmasini oladi. U saytimizdagi ariza sahifasiga olib boradi, narx va to‘lov o‘sha yerda.",
+            "Botning o‘zida to‘lov va narx haqida bir og‘iz ham yo‘q: Telegram o‘z tizimini chetlab pul oladigan botlarni bloklaydi. Ariza darhol lidlarga (mijoz arizalariga) «SI bo‘yicha yordam (Claudery)» turi bilan tushadi. To‘lov tizimi to‘lovni tasdiqlaganda bot mijozga «4. To‘lovdan keyin» qadamidagi matnni yozadi.",
+            "«Mijoz nimani ko‘radi» blokida bot qadamlari. Siz faqat so‘zlar va summani o‘zgartirasiz va salomlashuv ostiga to‘rttagacha o‘z tugmangizni qo‘sha olasiz. Avval to‘laganlarga narx «Avval to‘laganlarga chegirma, %» qadar past (odatda 30%).",
+            "«Kalitlar» blokida bot tokeni va ikkita Platega kaliti, «Saqlash va tekshirish» tugmasi. Botni egasi va rahbar o‘zgartira oladi. To‘lovdan keyin [loyiha](/admin/projects) o‘zi ochiladi, lidni olib borganga summaning 40% tushadi.",
           ],
         },
         {
           id: "bloggers-agent",
           title: "Blogerlar: agent o‘zi nima qiladi",
           body: [
-            "Agent studiyaga mijoz olib kela oladigan O‘zbekistondagi blogerlarni qidiradi: tadbirkorlar, ekspertlar, marketologlar, IT-blogerlar. Internetda Firecrawl orqali **«Agent sozlamalari»** dagi so‘rovlar bo‘yicha navbat bilan qidiradi: har safar eng uzoq vaqt ishlatilmagan so‘rovni oladi. Natijalardan Instagram profillarini va blogerlar to‘plamlari maqolalaridan niklarni oladi. Firecrawl kreditlari aloqalar uchun kompaniyalarni qidirish bilan bir xil kunlik limitdan sarflanadi: agent o‘zining «Kuniga qidiruv kreditlari» ulushidan (odatiy 2) va umumiy limitdan qolganidan ko‘p sarflamaydi, shuning uchun kompaniyalar qidiruvi blogerlar sababli to‘xtamaydi.",
-            "Yoqilgan agent (**«Agentni yoqish»**) Toshkent vaqti bilan 9:00 dan 20:00 gacha har besh daqiqada o‘zi ishlaydi: topilgan blogerlardan uchtagacha baholaydi, baholaydigan hech kim bo‘lmasa, bitta qidiruv qiladi. O‘chirilgan agent hech narsa qidirmaydi va sarflamaydi, lekin ikki tugma doim ishlaydi: **«Hozir topish»** shunday o‘tishni darhol, istalgan vaqtda qiladi, **«Bloger qo‘shish»** esa blogerni nik yoki profil havolasi bo‘yicha qo‘shadi va Firecrawlsiz darhol baholaydi.",
-            "«Manbalar» qatori nima ulanganini ko‘rsatadi. «Internetda qidiruv» agent bugun o‘z ulushidan qancha kredit sarflaganini ko‘rsatadi. «Instagram raqamlari» Instagramning begona profillarga rasmiy kirishi (Business Discovery) bormi: usiz agent faqat qidiruv natijasidagi obunachilar sonini biladi, layklar, izohlar va postlar chastotasini bilmaydi. «Direct yozishmasi» agent studiya Directida blogerlarga o‘zi javob bera oladigan Instagram ilovasi ulanganmi. Ulanmaguncha yozishmani odam olib boradi.",
+            "Agent studiyaga mijoz olib kela oladigan O‘zbekiston blogerlarini qidiradi: tadbirkorlar, ekspertlar, marketologlar. U internetda «Agent sozlamalari»dagi so‘rovlar bo‘yicha qidiradi va Instagram profillarini oladi. Bunga kunlik qidiruv kreditlarining o‘z ulushi ketadi, aloqalar uchun kompaniya qidiruvi to‘xtamaydi.",
+            "Yoqilgan agent («Agentni yoqish») Toshkent vaqti bilan 9:00 dan 20:00 gacha har besh daqiqada ishlaydi. U topilgan blogerlarni baholaydi yoki yangilarini qidiradi. «Hozir topish» va «Bloger qo‘shish» doim ishlaydi, agent o‘chirilgan bo‘lsa ham.",
+            "«Manbalar» qatori nima ulanganini ko‘rsatadi. «Instagram raqamlari» aniq layk va izohlarni beradi, ularsiz agent faqat obunachilar sonini biladi. «Direct yozishmasi» agent blogerlarga o‘zi javob berishi uchun kerak.",
           ],
         },
         {
           id: "bloggers-score",
           title: "Agent blogerni qanday baholaydi",
           body: [
-            "0 dan 100 gacha ballni model emas, kod hisoblaydi va u besh qismdan iborat. Auditoriya hajmi 20 gacha: eng yaxshisi 10 dan 100 minggacha obunachi, «Obunachilar dan» va «Obunachilar gacha» chegarasidan tashqaridagi bloger saralanmaydi. Faollik 30 gacha: oxirgi 12 postdagi o‘rtacha layk va izohlar obunachilarga nisbatan foizda. 3% dan yaxshi, 1% dan kam bo‘lsa auditoriya deyarli javob bermaydi, 10 mingdan katta blogda 25% dan ko‘p bo‘lsa sun’iy oshirishga o‘xshaydi. Faolligi 15 gacha: haftasiga nechta post, oxirgi post 45 kundan eski bo‘lsa nol. O‘zbekiston 15 gacha. Mavzu 20 gacha.",
-            "Mavzular, til, shahar va auditoriya mos keladimi yo‘qligini profil sarlavhasi va postlar izohlari bo‘yicha arzon model (Haiku) o‘qiydi: yuqori biznes, marketing, IT, o‘z mijozlari bor ekspertlar; past hazil, o‘yinlar, maktab o‘quvchilari. Uning nima uchun shunday degan jumlasi kartochkada ko‘rinadi. Biror narsani bilmasak, agent shkalaning o‘rtasini qo‘yadi va aynan nima yetishmasligini sariq bilan yozadi; O‘zbekistondan bo‘lmagan bloger darhol saralanmaydi. «O‘tish bali» dan past (odatiy 55) bo‘lsa, bloger «Saralanmaganlar» ga tushadi: u yerda uni **«Qaytarish»** yoki **«Qayta baholash»** mumkin.",
-            "Raqamlar yonida ular qayerdanligi yozilgan: «Instagram raqamlari» aniq, rasmiy kirishdan; «raqamlar qidiruvdan» faqat natijadagi obunachilar. Auditoriyaning shaharlari, yoshi va qamrovini faqat blogerning o‘zi statistikasida ko‘radi, shuning uchun u javob berganda undan statistika skrinshotlarini so‘rash kerak.",
+            "Agent blogerga 0 dan 100 gacha ball qo‘yadi. Unda besh qism bor: auditoriya hajmi, faollik darajasi (obunachiga qancha layk va izoh), post chastotasi, O‘zbekiston va mavzu.",
+            "10-100 ming obunachisi, 3% dan yuqori faolligi va yangi postlari bor blogerning bali yuqori. Biznes, marketing va IT mavzulari mos keladi. Hazil, o‘yinlar va maktab o‘quvchilari past ball beradi.",
+            "«O‘tish bali»dan (odatda 55) past bo‘lsa, bloger «Saralanmaganlar»ga o‘tadi. U yerda uni «Qaytarish» yoki «Qayta baholash» mumkin. Auditoriya shaharlari va yoshini faqat blogerning o‘zi ko‘radi, shuning uchun undan statistika skrinshotlarini so‘rang.",
           ],
         },
         {
           id: "bloggers-send",
           title: "Birinchi xabar: Telegram, Direct, pochta",
           body: [
-            "Mos bloger tayyor matn bilan «Yuborishga» ga tushadi. Qayerga yozishni agent profil sarlavhasidagi va saytidagi kontaktlar bo‘yicha hal qiladi: Telegram bo‘lsa unga, pochta bo‘lsa pochtaga, ikkalasi ham bo‘lmasa Instagram Directiga. Matn model emas, shablon: biz kimmiz, nima taklif qilamiz va hamkorlik dasturi shartlari. Foizlar va eng kam to‘lov dastur qoidalaridan olinadi, [«Hamkorlar»](/admin/partners) va saytdagi dastur sahifasidagi bilan bir xil: agent o‘z raqamlarini o‘ylab topmaydi. Matn tili rus yoki o‘zbek, bloger blogini qaysi tilda yuritsa.",
-            "Instagram o‘zining rasmiy kirishi orqali birinchi bo‘lib yozishga ruxsat bermaydi, studiya akkauntiga begona dastur bilan kirmaymiz: buning uchun Instagram akkauntni bloklaydi. Shuning uchun Direct va pochtaga odam o‘z telefonidan yuboradi: **«Nusxalash va Directni ochish»** matnni buferga qo‘yadi va Instagram ilovasida bloger bilan yozishmani ochadi, **«Nusxalash va pochtani ochish»** esa tayyor xatni ochadi. Qo‘ying, yuboring va **«Yubordim»** ni bosing, bloger «Yozdik, javob kutyapmiz» ga o‘tadi. Studiyaning Instagram akkauntidan yuboring: blogerning javobi o‘sha yerga keladi.",
-            "Kuniga «Kuniga Direct va pochta» dan ko‘p emas (odatiy 10): bitta akkauntdan ko‘p bir xil birinchi xabarlarni Instagram spam deb hisoblaydi. Norma bajarilsa, yuborish tugmalari ertagacha yo‘qoladi. Telegrami bor blogerlarga, aloqalardagi kompaniyalar kabi, studiyaning ishchi akkauntidan birinchi bo‘lib faqat salom ketadi, blogerlarning esa o‘z «Kuniga Telegram» kvotasi bor (odatiy 3) va u kompaniyalar uchun 20 ta aloqa normasiga tegmaydi. **«Mos emas»** blogerni ro‘yxatdan olib tashlaydi. Menejer «Blogerlar» yorlig‘ini, agar egasi unga bo‘limni [«Jamoa»](/admin/team) da ochgan bo‘lsa, ko‘radi: u matnlarni yuboradi, javoblarni belgilaydi va suhbatni o‘zi olib borishi mumkin, agent sozlamalari, qidiruv, baholash, studiya Instagrami va hamkor ochish esa unga ko‘rinmaydi.",
+            "Mos bloger tayyor matn bilan «Yuborishga» ro‘yxatiga tushadi. Unda Telegram bo‘lsa, birinchi bo‘lib studiya ish akkauntidan salom ketadi. Bo‘lmasa, pochtaga yoki Instagram Direct’ga yozamiz. Matndagi shartlar hamkorlik dasturi qoidalaridan olinadi.",
+            "Direct va pochtaga odam yuboradi. «Nusxalash va Directni ochish» matnni buferga qo‘yib, yozishmani ochadi. Matnni qo‘ying, studiya akkauntidan yuboring va «Yubordim» tugmasini bosing, bloger «Yozdik, javob kutyapmiz»ga o‘tadi.",
+            "Kuniga «Kuniga Direct va pochta»dan (odatda 10) ko‘p yuborib bo‘lmaydi, aks holda Instagram buni spam deb biladi. Norma bajarilsa, tugmalar ertagacha yo‘qoladi. «Mos emas» blogerni ro‘yxatdan olib tashlaydi.",
           ],
         },
         {
           id: "bloggers-partner",
           title: "Bloger javob berdi: suhbat va hamkorlik",
           body: [
-            "Bloger javob berdi, keyin yozishmani agent olib boradi. Telegramdagi javobni u o‘zi ko‘radi: blogerning birinchi xabariga o‘sha ishchi akkauntdan javob tilida dastur haqidagi matn ketadi, keyin agent javob beradi. Directda ham xuddi shunday, studiya Instagrami **«Studiya Instagramini ulash»** tugmasi bilan ulanganda: siz studiya akkauntidan yozgan bloger javob beradi va agent uni nik bo‘yicha topadi. Direct ulanmaguncha, Directdagi javobni o‘zingiz belgilaysiz, «Yozdik, javob kutyapmiz» da **«Javob berdi»**, va suhbatni telefondan olib borasiz.",
-            "Agent arzon model (Haiku). Birinchi xabarida u studiyaning SI yordamchisi ekanini aytadi, faqat dastur qoidalaridagi shartlarni aytadi (qoidalarda yo‘q raqamlarni kod tekshiruvi o‘tkazmaydi) va blogerga qiziq bo‘lsa, statistika skrinshotlarini so‘raydi: shaharlar, yosh, 30 kunlik qamrov. Skrinshotlarni rasmli model o‘qiydi, auditoriya balini esa kod qo‘yadi: obunachilar qayerdan, 40 gacha; 25–44 yoshlilar ulushi, 30 gacha; qamrovning obunachilarga nisbati, 30 gacha. U kartochkada «Auditoriya» qatorida ko‘rinadi. Skrinshotlarning o‘zini saqlamaymiz, faqat xulosani.",
-            "Rozi bo‘ldi va auditoriya bali 60 dan yuqori bo‘lsa, agent o‘zi [«Hamkorlar»](/admin/partners) da hamkor ochadi va blogerga havola yuboradi, egasi va rahbarga esa botga xabar keladi. Bal past yoki skrinshotlar yo‘q bo‘lsa, siz hal qilasiz: **«Hamkor qilish»** yoki **«Rad etdi»**. Odamni, maxsus shartlarni so‘rasa yoki javob tekshiruvdan o‘tmasa, agent 12 soatga jim bo‘ladi, sizga botga xabar keladi. Blogerga studiya akkauntidan o‘zingiz javob bersangiz yoki **«O‘zim olib boraman»** ni bossangiz, agent ham 12 soat jim turadi, **«Agentga qaytarish»** esa uni yana yoqadi. Hamkor Telegramsiz ochiladi: bloger botda balansini ko‘rmaydi, uni o‘zingiz ayting.",
+            "Bloger javob berdi, endi yozishmani agent olib boradi. Telegram’da u javobni o‘zi ko‘radi, Direct’da ham, agar «Studiya Instagramini ulash» bosilgan bo‘lsa. Direct ulanmaguncha «Javob berdi» tugmasini bosing va suhbatni telefondan olib boring.",
+            "Agent darhol o‘zi studiyaning SI yordamchisi ekanini aytadi. U faqat dastur shartlarini aytadi va statistika skrinshotlarini so‘raydi. Ular bo‘yicha auditoriya bali qo‘yiladi, u «Auditoriya» qatorida ko‘rinadi.",
+            "Rozi bo‘ldi va auditoriya bali 60 dan yuqorimi? Agent o‘zi hamkor ochadi va blogerga havola yuboradi. Aks holda siz hal qilasiz: «Hamkor qilish» yoki «Rad etdi». «O‘zim olib boraman» agentni 12 soatga o‘chiradi, «Agentga qaytarish» yana yoqadi.",
           ],
         },
         {
@@ -3000,9 +2996,9 @@ export const uz: HelpCopy = {
           title: "Instagram ulanishlari: qaysi kalitlar va ularni qayerdan olish",
           roles: ["admin", "head"],
           body: [
-            "**«Instagram ulanishlari»** bloki — Meta (Facebook va Instagram kompaniyasi) kalitlari, ularsiz agent yarim kuch bilan ishlaydi. Kalitni maydonga qo‘ying va **«Saqlash va tekshirish»** ni bosing: server uni sirlar omboriga qo‘yadi, u yerda u shifrlangan. Kalit ekranga qaytib chiqmaydi, faqat «kiritilgan» yoki «bo‘sh» ko‘rinadi, saqlashda bo‘sh maydon esa kalitni o‘zgartirmaydi. Agar kalit serverdagi .env faylida turgan bo‘lsa, u ombordan ustun, maydon yonida shu yozib qo‘yiladi. Jurnalga faqat qaysi kalit kiritilgani tushadi, qiymatisiz.",
-            "«1. Boshqa profillar raqamlari» — Facebook tokeni, u EA… bilan boshlanadi. U bilan agent blogerning aniq obunachilari, layklari, izohlari va qanchalik tez-tez yozishini ko‘radi (rasmiy Business Discovery kirishi); usiz — faqat qidiruv natijasidagi obunachilar soni. Token Graph API Explorer’da maslahatdagi huquqlar bilan olinadi va «Access Token Debugger» da 60 kungacha uzaytiriladi; havolali barcha qadamlar — «Qayerdan olish — qadamma-qadam» ostida. Studiya Instagram akkaunti raqamini yozish shart emas: tekshiruv uni token orqali o‘zi topadi va boshqa profil raqamlarini olishga urinib ko‘radi. Tekshiruvdan keyin blokda ishlayaptimi va token qaysi sanagacha amal qilishi yoziladi; tugashiga bir hafta qolganda qator sariq bo‘ladi — 3 va 4-qadamlarni takrorlang.",
-            "«2. Directda blogerlarga javoblar» — Meta dasturchi kabinetidagi Instagram ilovasi ID va siri. Vebhuk tekshiruv tokeni birinchi saqlashda o‘zi yaratiladi: uni, vebhuk manzilini va ikkita qaytish manzilini ilova sozlamalariga «Nusxalash» tugmasi bilan qo‘yishadi. Keyin «Direct yozishmasi» qatoridagi **«Studiya Instagramini ulash»** ni bosing. Ko‘p uchraydigan xato — «Instagram app ID» o‘rniga ilovaning umumiy raqamini qo‘yish: unda ulashda Instagram «Invalid request» deb yozadi (kerakli raqam qayerdaligini 3-qadam aytadi). Meta kabinetida ilova holati «Unpublished» ekan, agent xabarlarni faqat tester akkauntlardan oladi. Unga barcha blogerlar yozishi uchun ilova o‘z «Dashboard» idagi talablar ro‘yxatidan o‘tadi: «testlar» (har bir ruxsat bo‘yicha Instagramga kamida bitta muvaffaqiyatli murojaat, ularni ulashning o‘zi qiladi), «Business verification» (YaTT hujjatlari, bir necha kundan bir necha haftagacha), «App Review» (ingliz tilida tavsif va ekran yozuvlari) va «Publish» — «Qayerdan olish — qadamma-qadam» ostidagi 9–12-qadamlar. Boshqa profillar raqamlari uchun bularning hammasi shart emas. Hammasi kiritilgan va tekshiruvdan o‘tgan bo‘lsa, blok bitta qatorga yig‘iladi.",
+            "«Instagram ulanishlari» blokida Meta (Facebook va Instagram kompaniyasi) kalitlari. Ularsiz agent yarim kuch bilan ishlaydi. Kalitni qo‘ying va «Saqlash va tekshirish» tugmasini bosing. Kalit qaytib ko‘rsatilmaydi, faqat «kiritilgan» yoki «bo‘sh» ko‘rinadi.",
+            "«1. Boshqa profillar raqamlari» bu Facebook tokeni, u EA bilan boshlanadi. U bilan agent blogerlarning aniq obunachilari, layklari va izohlarini ko‘radi. Token 60 kungacha yashaydi, tugashiga bir hafta qolganda qator sariq bo‘ladi.",
+            "«2. Directda blogerlarga javoblar» bu Instagram ilovasining ID va secret’i. Havolali barcha qadamlar blokning o‘zida ochiladi. Meta’dagi ilova e’lon qilinmaguncha agentga faqat test akkauntlari yozadi.",
           ],
         },
         {
@@ -3010,16 +3006,16 @@ export const uz: HelpCopy = {
           title: "Bo‘lim kimga ochiq",
           roles: ["admin"],
           body: [
-            "Varaqning pastida — **«Bo‘lim kimga ochiq»** bloki: belgilar bilan rahbarlar va menejerlar. Odatiy holatda bo‘lim sizga va rahbarga ochiq. Belgilangan menejerga «SI xodimlar» bo‘limi — «Blogerlar» varag‘i ochiladi: u birinchi xabarlarni yuboradi, javoblarni belgilaydi va suhbatni o‘zi olib borishi mumkin. Kalitlar, agent sozlamalari, qidiruv va hamkor qo‘shish menejerga ko‘rinmaydi.",
-            "Bu har bir xodimdagi [«Jamoa»](/admin/team) → «Bo‘limlar» dagi o‘sha belgi: bu yerda qo‘yilsa — u yerda ham turadi, va aksincha. **«Kirishni saqlash»** dan keyin bo‘lim odamga paneldagi keyingi o‘tishda ochiladi, jurnalda esa «xodimga panelning qaysi bo‘limlari ochiqligini o‘zgartirdi» qatori qoladi.",
+            "Yorliq pastida «Bo‘lim kimga ochiq» bloki. Dastlab bo‘lim sizga va rahbarga ochiq. Belgilangan menejer «Blogerlar» yorlig‘ini ko‘radi: xabar yuboradi, javoblarni belgilaydi va suhbat olib boradi, lekin kalitlar va agent sozlamalarini ko‘rmaydi.",
+            "Bu [«Jamoa»](/admin/team) → «Bo‘limlar»dagi o‘sha belgi. «Kirishni saqlash» tugmasini bosing, bo‘lim odamga keyingi o‘tishda ochiladi.",
           ],
         },
         {
           id: "bloggers-invite",
           title: "Botdagi «Работа с блогерами» taklifi",
           body: [
-            "Hozircha yuborilmaydi: taklif «Blogerlar» agenti ishga tushgach va egasi ruxsat berganda ketadi. Egasi 12.10.2026 da menejerlar va rahbarni blogerlar bilan ishlashga taklif qildi: ularni topish, birinchi bo‘lib yozish, «ha» degan javobgacha olib borish va hamkor qilib ro‘yxatdan o‘tkazish. Taklif studiya botidan Telegramga bir marta keldi, tunda emas: nima uchun (kontaktlar me’yoridan tashqari o‘z daromadingiz: olib kelingan bloger mijozlaridan studiya sof foydasining 5% i, birinchi yarim yil davomida), nima qilish kerak va qayerda. Uning ostida ikki tugma: «✅ Принять» va «✖ Отклонить».",
-            "Javob bir marta yoziladi: bosgandan keyin tugmalar yo‘qoladi, taklif ostida javob qatori qoladi, qayta bosilsa «Ответ уже записан» deb javob beradi. «✅ Принять» darhol ishga ulaydi: menejerga shu bo‘lim, «Blogerlar» varag‘i, egasining belgisi kabi ochiladi va bot birinchi xabar matnlari hamda e’tirozlarga javoblar yozilgan PDF eslatmani yuboradi. Rahbarga bo‘lim baribir ochiq, unga faqat eslatma keladi. «✖ Отклонить» hech narsani ochmaydi; fikringiz o‘zgarsa, rahbar yoki egaga yozing.",
+            "Bu menejerlarga blogerlar bilan ishlash taklifi. Hozircha u yuborilmaydi, uni egasi yoqadi. Studiya botidan bir marta, kunduzi, «✅ Принять» va «✖ Отклонить» tugmalari bilan keladi.",
+            "Javob bir marta yoziladi. «✅ Принять» sizga «Blogerlar» yorlig‘ini ochadi va bot matnlar hamda e’tirozlarga javoblar yozilgan eslatma yuboradi. Rad etib, fikringiz o‘zgardimi? Rahbar yoki egasiga yozing.",
           ],
         },
         {
@@ -3028,12 +3024,12 @@ export const uz: HelpCopy = {
           roles: ["admin", "head"],
           body: {
             admin: [
-              "Har bir javob sizga botga «Ism qabul qildi / rad etdi» qatori bilan joriy natija bilan birga keladi: kim qabul qildi, kim rad etdi, kim jim. Yuborilgan kuni soat 18:00 da natija yana bir xabar bilan keladi. Yuborilgandan so‘ng darhol bot taklif nusxasini yuboradi: sizning nomingizdan menejerlarga ketgan matn.",
-              "Qabul qilgan menejerga «SI xodimlar» bo‘limi [«Jamoa»](/admin/team) → «Bo‘limlar» dagi belgi bilan ochiladi. Bo‘limni qaytarib yopish kerak bo‘lsa, shu belgini olib tashlang: taklifdagi javob saqlanadi, taklif qayta ketmaydi. «Blogerlar» varag‘ida menejer belgi bo‘yicha qila oladigan ishlarni qiladi: birinchi xabarlarni yuboradi va javoblarni belgilaydi; agent sozlamalari, qidiruv va hamkor qo‘shish siz va rahbarda qoladi.",
+              "Har bir javob sizga botda natija bilan qator bo‘lib keladi: kim qabul qildi, kim rad etdi, kim jim. Yuborilgan kuni 18:00 da natija bitta xabarda keladi.",
+              "Qabul qilganga bo‘limni [«Jamoa»](/admin/team) → «Bo‘limlar» belgisi bilan yopish mumkin. Taklif unga qayta ketmaydi.",
             ],
             head: [
-              "Menejerning har bir javobi sizga botga «Ism qabul qildi / rad etdi» qatori bilan keladi. Butun jamoa bo‘yicha natijani (kim qabul qildi, kim rad etdi, kim jim) egasi yuborilgan kuni soat 18:00 da oladi.",
-              "Qabul qilgan menejerga «Blogerlar» varag‘i ochiladi: u birinchi xabarlarni yuboradi va javoblarni belgilaydi, agent sozlamalari, qidiruv va hamkor qo‘shish esa siz va egada qoladi. Bloger menejerga «ha» desa, hamkor kartasida uni kim olib kelganini belgilang: belgisiz menejerga bonus hisoblab bo‘lmaydi.",
+              "Menejerning har bir javobi sizga botda qator bo‘lib keladi. Butun jamoa bo‘yicha natijani 18:00 da egasi oladi.",
+              "Qabul qilgan menejer «Blogerlar» yorlig‘ini ko‘radi. Bloger unga «ha» dedimi? Hamkor kartochkasida uni kim olib kelganini belgilang, aks holda bonus hisoblanmaydi.",
             ],
           },
         },

@@ -459,41 +459,38 @@ export const workSections: Record<string, HelpEntry> = {
   },
 
   "/admin/traffic": {
-    what: "Ile osób wchodzi na stronę devuz.studio, skąd przychodzą i od której strony zaczynają — według Yandex Metryki i Google Analytics. Przydaje się, żeby widzieć, czy działają reklama i publikacje: leady przychodzą ze strony, a jeśli ludzie przestali na nią wchodzić, leadów będzie mniej za tydzień lub dwa. Widzą to właściciel i kierownicy, menedżerowie — nie.",
+    what: "Tu widać, ile osób wchodzi na stronę devuz.studio i skąd przychodzą. Liczby pochodzą z Yandex Metryki i Google Analytics. Zgłoszenia przychodzą ze strony: mniej wejść dziś oznacza mniej zgłoszeń za tydzień lub dwa. Dział widzą właściciel i kierownik.",
     items: [
       {
         id: "numbers",
         title: "Co znaczą liczby",
         body: [
-          "W prawym górnym rogu — okres: **«7 dni»**, **«30 dni»** albo **«90 dni»**. Strzałka przy każdej liczbie pokazuje, o ile wzrosła lub spadła w porównaniu z taką samą liczbą dni wcześniej: przy «30 dni» — w porównaniu z poprzednimi 30. Zielona strzałka — dobrze, żółta — źle, «nowe» — wcześniej było zero.",
-          "**«wizyty»** — ile razy wchodzono na stronę: jedna osoba rano i wieczorem to dwie wizyty. **«użytkownicy»** — ile różnych osób, a dokładniej różnych przeglądarek: ta sama osoba z telefonu i z laptopa liczy się podwójnie. **«odsłony»** — ile stron otwarto łącznie.",
-          "**«odrzucenia»** — odsetek wizyt, w których ktoś otworzył jedną stronę i prawie od razu wyszedł. Tu jest odwrotnie: wzrost odrzuceń to żółta strzałka, czyli źle. **«śr. wizyta»** — ile średnio trwa wizyta, minuty:sekundy.",
-          "Słupki — wizyty dziennie; najedź na słupek, a zobaczysz datę i liczbę. **«Skąd przychodzą»** — z wyszukiwarki, mediów społecznościowych, reklamy albo bezpośrednio z linku. Metryka podaje nazwy po rosyjsku, Google — po angielsku: «Organic Search» — wyszukiwarka, «Direct» — wejścia bezpośrednie, «Referral» — przejścia z innych stron, «Organic Social» i «Paid Social» — media społecznościowe, «Paid Search» — reklama w wyszukiwarce. **«Strony wejścia»** — od której strony ktoś zaczął wizytę.",
-          "Liczby odświeżają się co 10 minut: panel nie pyta Metryki i Google przy każdym otwarciu, więc dopiero co uruchomiona reklama nie pojawi się tu od razu.",
+          "W prawym górnym rogu wybierz okres: «7 dni», «30 dni» albo «90 dni». Strzałka przy liczbie porównuje ją z takim samym okresem wcześniej. Zielona strzałka znaczy lepiej, żółta gorzej, a «nowe» znaczy, że wcześniej było zero.",
+          "«wizyty» pokazują, ile razy wchodzono na stronę. Jedna osoba rano i wieczorem to dwie wizyty. «użytkownicy» to różne osoby, a dokładniej różne przeglądarki. «odsłony» liczą wszystkie otwarte strony.",
+          "«odrzucenia» to odsetek wizyt, w których ktoś otworzył jedną stronę i od razu wyszedł. Tu wzrost jest zły, a strzałka będzie żółta. «śr. wizyta» pokazuje, ile średnio trwa wizyta.",
+          "Niżej są «Wizyty dziennie», «Skąd przychodzą» i «Strony wejścia». W Google źródła są po angielsku: «Organic Search» to wyszukiwarka, «Direct» to wejścia bezpośrednie, «Referral» to przejścia z innych stron. Liczby odświeżają się co 10 minut.",
         ],
       },
       {
         id: "two-sources",
         title: "Dlaczego Metryka i Google pokazują co innego",
         body: [
-          "Metryka i Google Analytics stoją obok siebie i się nie sumują. Każda liczy wizytę po swojemu i po swojemu odsiewa roboty, a część osób ma w przeglądarce zablokowaną jedną z nich, ale nie drugą. Dlatego liczby się różnią i to normalne: suma byłaby liczbą, której nie ma ani tu, ani tam.",
-          "Patrz na kierunek, a nie na dokładną liczbę. Obie pokazują wzrost po uruchomieniu reklamy — reklama przyprowadza ludzi. Rośnie tylko jedna — najpewniej chodzi o sposób liczenia, a nie o ludzi.",
-          "Wejście na stronę to jeszcze nie klient. Ile osób napisało, widać w [Statystykach](/admin/stats), w bloku «Skąd przychodzą»: tam są zgłoszenia, tu — odwiedziny. Jeśli odwiedzin jest więcej, a zgłoszeń nie — ludzie przychodzą, ale nie znajdują tego, po co przyszli.",
+          "Metryka i Google liczą wizyty po swojemu, więc liczby się nie zgadzają. To normalne i nie trzeba ich sumować. Patrz, w którą stronę idą obie: rosną razem, czyli ludzi naprawdę przybyło.",
+          "Wejście na stronę to jeszcze nie klient. Ile osób napisało, sprawdzisz w dziale [«Statystyki»](/admin/stats). Wejść więcej, a zgłoszeń brak? Ludzie nie znajdują na stronie tego, po co przyszli.",
         ],
       },
       {
         id: "connect",
-        title: "Jak to jest podłączone",
+        title: "Jak się podłącza",
         body: {
           head: [
-            "Podłącza właściciel: Metryka potrzebuje klucza na serwerze, Google — logowania jego kontem Google. Nie masz przycisków podłączania, tylko liczby — stąd nie da się zepsuć ani zmienić podłączenia.",
-            "Jeśli na karcie jest «Nie podłączono» albo «Google przestał wpuszczać przez logowanie właściciela» — powiedz właścicielowi, zajmie mu to minutę. «Brak odpowiedzi» to zwykle coś chwilowego: odśwież stronę za minutę, a jeśli się powtarza — też do właściciela.",
+            "Metrykę i Google podłącza właściciel. Ty masz tu tylko liczby i nie zepsujesz stąd podłączenia.",
+            "Widzisz, że nic nie jest podłączone albo Google przestał wpuszczać? Powiedz właścicielowi, zajmie mu to minutę. Brak odpowiedzi zwykle mija sam: odśwież stronę za minutę.",
           ],
           admin: [
-            "**Metryka** podłącza się tokenem `YANDEX_METRIKA_TOKEN` (numer licznika panel zna sam) — w `/opt/devuz/.env` na serwerze albo w magazynie sekretów Supabase (Vault) pod nazwą `app.YANDEX_METRIKA_TOKEN`: jeśli w `.env` nie ma klucza, panel bierze go stamtąd.",
-            "**Google Analytics** podłącza się logowaniem przez Google, bez kluczy i bez serwera. Raz w Google Cloud tworzy się «klienta» — przepustkę, po której Google rozpoznaje nasz panel; krok po kroku opisano to bezpośrednio na karcie «Google Analytics». Jego Client ID i Client secret wkleja się na kartę, a potem — **«Zapisz i zaloguj przez Google»**. Zaloguj się kontem Google, które ma dostęp do Analytics strony, i nie odznaczaj «See and download your Google Analytics data». Numer usługi panel znajduje sam — po liczniku strony `G-L52MCVNS0W`. Wszystko, co otrzymano, leży w zaszyfrowanym magazynie sekretów Supabase, a panel ma dostęp tylko do odczytu: nie może niczego zmienić w Analytics. Każde logowanie widać w [Dzienniku](/admin/audit).",
-            "Jeśli Google przestał wpuszczać — karta pisze «Google nie wpuszcza już przez zapisane logowanie», a rozwiązaniem jest przycisk **«Zaloguj przez Google»**. Najczęściej przyczyna jest jedna: aplikacja w Google Cloud nie jest opublikowana — w trybie «Testing» Google wyłącza logowanie po 7 dniach, dlatego trzeba tam raz kliknąć «Publish app». Jeśli panel nie znalazł sam numeru usługi (nie włączono «Google Analytics Admin API» albo usługa jest na innym koncie), poprosi o jego wpisanie: Google Analytics → «Administracja» → «Szczegóły usługi», same cyfry. Link **«zaloguj ponownie»** pod liczbami służy do zmiany konta Google.",
-            "Kierownicy widzą tę sekcję, ale bez kroków podłączania, bez przycisków logowania i bez adresu Twojego konta Google — zamiast nich jest napisane «Podłącza właściciel». Menedżerowie tej sekcji nie widzą. Dawniej «Ruch» był zakładką na stronie głównej — stare zakładki w przeglądarce prowadzą tutaj.",
+            "Metryka podłącza się tokenem Yandex. Dopóki nie jest podłączona, kroki są opisane na karcie «Yandex Metryka». Token trafia do ustawień serwera albo do sejfu sekretów.",
+            "Google Analytics podłącza się logowaniem przez twoje konto Google. Raz utwórz aplikację w Google Cloud według kroków z karty, wklej Client ID i Client secret i kliknij «Zapisz i zaloguj przez Google». Nie odznaczaj «See and download your Google Analytics data»: panel tylko czyta liczby.",
+            "Google przestał wpuszczać? Kliknij «Zaloguj przez Google». Najczęściej aplikacja w Google Cloud została w trybie «Testing», gdzie logowanie żyje 7 dni: kliknij tam «Publish app». Konto zmienisz linkiem «zaloguj ponownie» pod liczbami.",
           ],
         },
       },
@@ -503,45 +500,42 @@ export const workSections: Record<string, HelpEntry> = {
   /* ── Договоры ─────────────────────────────────────────────────────── */
   /* ── Reklamy ──────────────────────────────────────────────────────── */
   "/admin/outside": {
-    what: "Szkice artykułów dla vc.ru, Dzen i Tenchat: raz w tygodniu model pisze po jednym na platformę, człowiek publikuje je z konta studia na platformie i wkleja tu link. Potrzebne, żeby o studiu pisano tam, gdzie czytają właściciele firm w Rosji i WNP, i żeby z tych artykułów przychodzili ludzie i linki do naszej strony.",
+    what: "Tu są szkice artykułów o studiu dla vc.ru, Dzen i Tenchat. Raz w tygodniu program pisze po jednym na każdą platformę. Publikujesz go z konta studia i wklejasz tu link. Dzięki temu dowiadują się o nas właściciele firm w Rosji i WNP, a strona dostaje linki.",
     items: [
       {
         id: "how",
         title: "Jak to działa",
         body: [
-          "Raz w tygodniu, w dzień czasu taszkenckiego (od 11:00), dla każdej platformy przygotowuje się szkic. Temat jest z listy w kodzie, a zapytanie do niego sprawdza się w Wordstacie i Google Trends dla Rosji: tam głównie czyta się te platformy. Pisze tani model, na podstawie faktów z naszych case studies na stronie.",
-          "Zanim szkic pojawi się tutaj, sprawdza go kod: zapytanie stoi w tytule i pierwszym akapicie, nie ma długich myślników ani klisz sieci neuronowych, nie ma cen, procentów i liczb, których nie ma w case studies, linki prowadzą tylko do naszej strony i naszych case studies, nie więcej niż dwa (w Tenchat — jeden). Nie przeszedł w trzech próbach — szkicu nie ma, a właściciel dostaje wiadomość, co nie wyszło.",
-          "Szkice się nie gromadzą: platforma dostaje nowy dopiero, gdy poprzedni jest opublikowany albo pominięty. W jednym tygodniu trzy platformy mają trzy różne tematy, a jeden temat na każdej platformie pisze się własnym tekstem: na vc.ru analiza, w Dzen prostym językiem, w Tenchat krótki post.",
-          "Publikuje człowiek, a nie robot: te platformy nie mają otwartego sposobu publikowania programem, a robot, który sam loguje się na konto, łamie ich regulamin i konto zostaje zablokowane.",
+          "Raz w tygodniu, w dzień czasu Taszkentu, każda platforma dostaje szkic. Temat dobiera się według tego, czego szukają w Rosji. Fakty pochodzą z naszych case studies na stronie.",
+          "Zanim szkic tu trafi, przechodzi kontrolę. Nie ma w nim cen, procentów ani zmyślonych liczb, a linki prowadzą tylko na naszą stronę. Nie przeszedł w czterech próbach? Szkicu nie będzie, a właściciel i kierownik dostaną linijkę w raporcie.",
+          "Nowy szkic platforma dostaje, gdy poprzedni jest opublikowany albo pominięty. Publikuje człowiek. Robot, który sam loguje się na konto, łamie zasady platform, a konto dostaje bana.",
         ],
       },
       {
         id: "publish",
         title: "Jak opublikować",
         body: [
-          "W bloku **«Czekają na publikację»** przy szkicu są platforma, zapytanie i przyciski. **«Kopiuj tytuł»** — do pola tytułu w edytorze. **«Kopiuj»** — cały tekst: dla vc.ru i Dzen z formatowaniem (śródtytuły, listy i linki wkleją się tak, jak są), dla Tenchat — zwykłym tekstem. Jeśli edytor wkleił tekst krzywo — **«Kopiuj bez formatowania»**.",
-          "**«Otwórz vc.ru»** (albo inną platformę) otwiera ją w nowej karcie: zaloguj się na konto studia, zacznij nową publikację, wklej tytuł i tekst, dodaj obrazek i opublikuj. **«Pokaż tekst»** — przeczytać szkic wcześniej; poprawić można od razu w edytorze platformy.",
-          "Po publikacji skopiuj adres artykułu z paska przeglądarki, wklej go w **«Link do opublikowanego artykułu»** i kliknij **«Opublikowałem»**. Link jest przyjmowany tylko z adresu tej platformy i tylko https. **«Pomiń»** — jeśli szkic się nie nadaje: platforma dostanie nowy w przyszłym tygodniu.",
-          "Linki w tekście prowadzą na naszą stronę z oznaczeniami dla Metryki (w oznaczeniu — nazwa platformy): w [Ruchu](/admin/traffic) widać, ile osób przyszło z każdej platformy.",
+          "W bloku «Czekają na publikację» przy szkicu są przyciski. «Kopiuj tytuł» i «Kopiuj» wkładają tekst do schowka. Wkleił się krzywo? Kliknij «Kopiuj bez formatowania».",
+          "Przycisk «Otwórz vc.ru» (albo innej platformy) otwiera ją w nowej karcie. Zaloguj się na konto studia, wklej tytuł i tekst, dodaj obrazek i opublikuj. Szkic przeczytasz wcześniej przyciskiem «Pokaż tekst».",
+          "Skopiuj adres opublikowanego artykułu, wklej go w «Link do opublikowanego artykułu» i kliknij «Opublikowałem». Szkic się nie nadaje? Kliknij «Pomiń», za tydzień przyjdzie nowy.",
         ],
       },
       {
         id: "links",
         title: "Opublikowane i sprawdzanie linku",
         body: [
-          "W bloku **«Opublikowane»** są artykuły z linkiem do nich, kto i kiedy opublikował. 10 minut po „Opublikowałem”, a potem raz w tygodniu kod sam otwiera stronę artykułu i szuka na niej linku do devuz.studio.",
-          "Wiersz pod artykułem: „przekazuje moc w wyszukiwarce” — zwykły link, pomaga stronie w Google i Yandex; „oznaczyła go nofollow” — platforma poprosiła wyszukiwarki, żeby nie liczyły linku: mocy nie ma, ale ludzie z niego przechodzą, dla takich platform to normalne; „nie znaleźliśmy linku” — usunięto go podczas moderacji albo artykuł widać dopiero po zalogowaniu; „strona nie otworzyła się” — artykuł usunięto albo platforma nie wpuszcza sprawdzania.",
-          "Na górze działu — ile artykułów opublikowano w 30 dni i ile szkiców pominięto.",
+          "W bloku «Opublikowane» są wydane artykuły. 10 minut po «Opublikowałem», a potem raz w tygodniu panel sam otwiera artykuł i szuka linku do naszej strony. Na górze działu widać, ile artykułów wyszło w 30 dni.",
+          "Pod artykułem pojawia się wynik. Link, który przekazuje moc w wyszukiwarce, pomaga stronie w Google i Yandex. Oznaczenie nofollow znaczy, że mocy nie ma, ale ludzie w link klikają. Linku nie znaleziono albo strona się nie otworzyła? Artykuł mógł zostać usunięty albo schowany za logowaniem.",
         ],
       },
       {
         id: "auto",
-        title: "Publikuje się samo: Telegraph, VKontakte, kanał Telegram",
+        title: "Publikuje się samo: Telegraph, VK, kanał Telegram",
         roles: ["admin", "head"],
         body: [
-          "Blok **«Publikuje się samo»** to platformy, na których wolno publikować programem według ich regulaminu. Dostają szkic raz w tygodniu, jak vc.ru, przechodzą to samo sprawdzenie kodem i wychodzą bez człowieka: artykuł od razu pojawia się w **«Opublikowane»** z dopiskiem «wyszedł sam», a link do nas kod sprawdza tak samo jak u pozostałych. Jeśli się nie uda (platforma nie odpowiedziała, kanał odłączono), szkic wraca do **«Czekają na publikację»** z powodem i publikuje się go ręcznie.",
-          "**Telegraph** (telegra.ph, strony-artykuły Telegrama) nie wymaga rejestracji: konto studia kod zakłada sam przy pierwszym artykule, jego klucz leży w sejfie sekretów. Nic nie trzeba robić.",
-          "**VKontakte i kanał Telegram** idą przez Postiz, serwis publikacji odroczonych z oficjalnym połączeniem z platformami. Jeden raz: zarejestrować się na postiz.com, kliknąć «Add Channel» i zalogować się do społeczności VKontakte i kanału Telegram studia, potem Settings → Developers → Public API → skopiować klucz i wkleić go w **«Klucz API Postiz»**, przycisk **«Zapisz i sprawdź»**. Klucz zapisuje się tylko wtedy, gdy Postiz go przyjął; z powrotem panel pokazuje tylko «ustawiony» albo «pusty», do dziennika działań trafia bez wartości. Wiersz pod polem mówi, jakie kanały widzi Postiz i które nasze platformy publikują się same. Platforma bez kanału w Postiz nie dostaje szkicu.",
+          "W bloku «Publikuje się samo» są platformy, na których artykuł wychodzi bez człowieka. Szkic przechodzi tę samą kontrolę i od razu pojawia się w «Opublikowane». Nie wyszło? Wróci do «Czekają na publikację» z powodem i opublikuje się go ręcznie.",
+          "Telegraph niczego nie wymaga. Konto studia zakłada się tam samo przy pierwszym artykule.",
+          "VK i kanał Telegram idą przez serwis Postiz. Raz zarejestruj się tam, podłącz kanały przyciskiem «Add Channel» i weź klucz w Settings → Developers → Public API. Wklej go w «Klucz API Postiz» i kliknij «Zapisz i sprawdź»: klucz zapisze się tylko wtedy, gdy Postiz go przyjął.",
         ],
       },
       {
@@ -549,83 +543,83 @@ export const workSections: Record<string, HelpEntry> = {
         title: "Kto publikuje",
         roles: ["admin", "head"],
         body: [
-          "Na dole — **«Kto publikuje»**: komu bot wysyła kartę «📝 Статьи на площадки», gdy szkice są gotowe. Nikt nie wybrany — karta idzie do właściciela i kierownika, jeśli w «Zespole» nie mają odznaczonego pola «Raporty».",
-          "Na liście są ci, którzy mają dostęp do tego działu. Jest on otwarty dla właściciela i kierownika; menedżerowi, który będzie publikował, właściciel otwiera go zaznaczeniem w [Zespole](/admin/team) → «Działy». Konta na platformach zakłada się na studio; login i hasło ma ten, kto publikuje, do panelu się ich nie wpisuje.",
+          "W bloku «Kto publikuje» wybierz, komu bot wyśle kartę o gotowych szkicach. Nikogo nie wybrano? Karta trafi do właściciela i kierownika.",
+          "Na liście są ci, którym ten dział jest otwarty. Menedżerowi otwiera go właściciel ptaszkiem w [«Zespół»](/admin/team) → «Działy». Loginów do platform nie wpisuje się do panelu, ma je ten, kto publikuje.",
         ],
       },
     ],
   },
   "/admin/ads": {
-    what: "Autopilot reklam w Google Ads i Yandex Direct — nowa usługa studia dla marketerów i agencji. Raz na dobę pobiera raporty konta reklamowego i proponuje trzy rzeczy: wykluczające słowa kluczowe, przesunięcie budżetu i testy reklam, — każdą z powodem i liczbami. Domyślnie sam niczego nie zmienia: decyduje człowiek przyciskami «Akceptuj» i «Odrzuć». Widzą to właściciel i kierownicy, menedżerowie — nie.",
+    what: "To autopilot reklam w Google Ads i Yandex Direct dla agencji i marketerów. Raz na dobę przegląda raporty konta reklamowego i proponuje zmiany z powodem i liczbami. Sam niczego nie zmienia, dopóki człowiek nie kliknie «Akceptuj». Dział widzą właściciel i kierownik.",
     items: [
       {
         id: "what",
         title: "Co robi autopilot",
         body: [
-          "**Wykluczenia.** Zapytania, na które wyświetlała się reklama, są dzielone na słowa i pary słów, a dla każdego sumuje się pieniądze i zgłoszenia. Słowo, które wydało nie mniej niż zwykły koszt zgłoszenia, zebrało kliknięcia i nie przyniosło żadnego zgłoszenia («za darmo», «pobierz», «praca»), jest proponowane do wykluczenia. Zapytania, których reguła nie widzi, ale które wyraźnie nie dotyczą tej firmy, oznacza tani model. Przed propozycją kod sprawdza, że wykluczenie nie blokuje żadnego słowa kluczowego kampanii. W Direct są jeszcze **wykluczenia krzyżowe**: jeśli ogólne słowo kluczowe («kursy angielskiego») i doprecyzowane («kursy angielskiego dla dzieci») są w różnych grupach, do ogólnej grupy proponowane jest wykluczenie «dzieci», żeby takie zapytanie trafiało do swojej reklamy.",
-          "**Budżet.** Pieniądze przechodzą z kampanii z drogim zgłoszeniem do kampanii z tanim, ale tylko jeśli ta codziennie wyczerpuje swój budżet. Przy małej ilości danych porównanie «na oko» wprowadza w błąd, dlatego autopilot liczy prawdopodobieństwo, że jedna kampania naprawdę jest lepsza, i proponuje przesunięcie dopiero przy 90% i więcej. Łączny budżet się przy tym nie zmienia.",
-          "**Testy reklam.** Jeśli w grupie jest jedna reklama, model pisze drugi wariant w języku grupy, bez długich myślników, sztampy i obietnic typu «gwarancja» czy «najlepszy». Po 10–45 dniach zostaje ta, która przynosi więcej zgłoszeń, druga idzie na pauzę.",
-          "Stawek za słowa kluczowe autopilot nie rusza: robią to same Google i Yandex w swoich strategiach. Szczegóły — w `docs/ads-autopilot/design.md`.",
+          "**Wykluczające słowa.** Autopilot szuka słów w zapytaniach, na które poszły pieniądze, a zgłoszeń nie było: «za darmo», «pobierz», «praca». Takie słowa proponuje wykluczyć. Słów z fraz kampanii nie rusza.",
+          "**Budżet.** Pieniądze przechodzą z kampanii z drogim zgłoszeniem do kampanii z tanim, jeśli ta dobija do swojego budżetu. Propozycja pojawia się tylko wtedy, gdy różnica jest niemal na pewno prawdziwa. Łączny budżet się nie zmienia.",
+          "**Testy reklam.** Jeśli w grupie jest jedna reklama, autopilot pisze drugą. Po 10-45 dniach zostaje ta, która daje więcej zgłoszeń, a druga idzie na pauzę.",
+          "Stawek za frazy autopilot nie rusza. Prowadzą je same Google i Yandex.",
         ],
       },
       {
         id: "setup",
         title: "Jak założyć konto agencji",
         body: [
-          "Po lewej — lista kont. **«Nowe konto»**: nazwa, kto to (studio, agencja albo firma) i język — w nim bot pisze do osób z tego konta. Kliknij **«Utwórz»**, a konto otworzy się po prawej.",
-          "W bloku **«Osoby»** dodaj te osoby, które będą pracować na koncie po stronie agencji: liczbowy Telegram id i imię, przycisk **«Dodaj»**. Logują się na devuz.studio/ads przez bota studia — przycisk «Zaloguj przez Telegram» wysyła jednorazowy link — i dostają powiadomienia. Usunięta osoba traci dostęp od razu.",
-          "**«Dodaj konto reklamowe»**: platforma, nazwa, login klienta w Direct (dla agencji) albo numer konta Google w formacie 123-456-7890. Potem na samym koncie — **«Połącz»**: otworzy się strona Yandex lub Google, gdzie właściciel reklam udziela dostępu. Klucz jest przechowywany w postaci zaszyfrowanej, nikt go nie widzi, łącznie ze studiem. Zaraz po podłączeniu autopilot sam pobiera raporty — propozycje pojawią się w ciągu kilku minut. Jeśli konto przestanie się później odświeżać (dostęp cofnięty, platforma odmówiła), osoby z konta dostaną jedną wiadomość na Telegram, a na koncie będzie widoczna przyczyna.",
+          "Po lewej jest lista kont. Kliknij «Nowe konto», wpisz nazwę, wybierz, kto to jest, i język. Potem kliknij «Utwórz».",
+          "W bloku «Osoby» dodaj ludzi agencji: Telegram id, imię i przycisk «Dodaj». Logują się na devuz.studio/ads przez bota studia i dostają powiadomienia. Usuniesz osobę, a jej logowanie od razu przestaje działać.",
+          "Kliknij «Dodaj konto reklamowe» i podaj platformę, nazwę oraz login w Direct albo numer konta Google. Potem kliknij «Połącz»: właściciel reklam da dostęp na stronie Yandex albo Google. Za parę minut pojawią się pierwsze propozycje.",
         ],
       },
       {
         id: "proposals",
         title: "Propozycje: «Akceptuj» i «Odrzuć»",
         body: [
-          "W bloku **«Propozycje»** — to, co autopilot znalazł w ostatnich 30 dniach, każda z powodem prostymi słowami i liczbami. **«Akceptuj»** od razu stosuje zmianę na koncie reklamowym, **«Odrzuć»** usuwa propozycję. Nierozstrzygnięta propozycja po 14 dniach się przedawnia: dane w niej są już nieaktualne.",
-          "Przed zastosowaniem autopilot jeszcze raz patrzy na konto w obecnym stanie. Jeśli budżet zmieniono już ręcznie, kampania zaczęła się uczyć albo do słów kluczowych dodano słowo, które blokuje wykluczenie, zmiana nie zostanie zastosowana, a pod propozycją pojawi się wiersz z powodem. To nie awaria, tylko ochrona.",
-          "**«Odśwież teraz»** pobiera raporty i pisze propozycje bez czekania doby — zwykle w 1–2 minuty, wynik przyjdzie też na Telegram.",
+          "W bloku «Propozycje» jest to, co autopilot znalazł w 30 dni. «Akceptuj» od razu zmienia konto reklamowe, «Odrzuć» usuwa propozycję. Po 14 dniach nierozstrzygnięta propozycja się przedawnia.",
+          "Przed zmianą autopilot jeszcze raz sprawdza konto. Jeśli coś zmieniono tam ręcznie, zmiana się nie zastosuje, a pod nią pojawi się powód. To ochrona, a nie awaria.",
+          "«Odśwież teraz» pobierze raporty od razu, zwykle w 1-2 minuty. Wynik przyjdzie też na Telegram.",
         ],
       },
       {
         id: "limits",
         title: "Tryb, limity i hamulec",
         body: [
-          "W bloku **«Tryb i limity»** są dwa tryby. **«Proponuję — Ty zatwierdzasz»** jest domyślny: bez człowieka nic się nie zmienia. **«Sam, w granicach limitów»** — autopilot sam stosuje propozycje i pisze o tym na Telegram. Warto go włączyć, gdy agencja przez tydzień lub dwa akceptowała propozycje i się z nimi zgadza.",
-          "Limity: o ile procent można naraz przesunąć budżet jednej kampanii (domyślnie 20, więcej niż 30 w ogóle nie wolno) i ile zmian autopilot może zrobić sam w ciągu doby. Progi dla wykluczeń, własny koszt zgłoszenia, słowa, których nie wolno wykluczać (marka, miasto, usługa), i kilka zdań o firmie pomagają dokładniej odróżniać śmieciowe zapytania.",
-          "Co nie zmienia się w żadnym trybie: łączny budżet nie rośnie, kampanii w trakcie nauki się nie rusza, wykluczenie nie blokuje słów kluczowych, budżet jednej kampanii zmienia się nie częściej niż raz na 3 dni, nic nie jest usuwane — tylko pauza. **«Hamulec: zatrzymaj wszystkie zmiany»** zatrzymuje wszystko, łącznie z przyciskiem «Akceptuj»; cofać zrobione można także przy nim.",
+          "Blok «Tryb i limity». Na początku autopilot tylko proponuje, a decyduje człowiek. Drugi tryb, «Sam, w granicach limitów», stosuje propozycje sam i pisze o tym na Telegram.",
+          "Limity mówią, o ile procent można przesunąć budżet kampanii naraz (najwyżej 30) i ile zmian autopilot zrobi sam w ciągu doby. Tam też są słowa, których nie wolno wykluczać: marka, miasto, usługa.",
+          "W każdym trybie łączny budżet nie rośnie, a usuwania nie ma, tylko pauza. «Hamulec: zatrzymaj wszystkie zmiany» zatrzymuje wszystko, nawet «Akceptuj». Cofnąć zrobione można i przy nim.",
         ],
       },
       {
         id: "journal",
         title: "Dziennik, cofanie i raport tygodnia",
         body: [
-          "W **«Dzienniku»** każda zmiana: kiedy, kto (człowiek czy autopilot, znacznik «sam»), co było i dlaczego. **«Cofnij»** jednym kliknięciem przywraca stan sprzed zmiany: wykluczenia — tylko te dodane przez nas, budżet — tylko jeśli od tamtej pory nie zmieniano go ręcznie, reklama — znów się włącza albo idzie na pauzę. Zmiana trybu i hamulec też trafiają do dziennika.",
-          "Blok **«Z 7 dni»** pokazuje, ile zmian zastosowano, ile pieniędzy miesięcznie wykluczenia nie wpuszczają już na śmieciowe zapytania i ile propozycji czeka na decyzję. Raport tygodnia przychodzi osobom z konta na Telegram w poniedziałki po 09:00; **«Wyślij raport tygodnia na Telegram»** wyśle go Tobie teraz.",
+          "W «Dziennik» jest każda zmiana: kiedy, kto, co było i dlaczego. Zmiany autopilota mają oznaczenie «sam». «Cofnij» przywraca stan jednym kliknięciem.",
+          "Blok «Z 7 dni» pokazuje, ile zmian zastosowano i ile pieniędzy miesięcznie nie idzie już na śmieciowe zapytania. W poniedziałki po 09:00 ludzie konta dostają raport tygodnia. «Wyślij raport tygodnia na Telegram» wyśle go tobie teraz.",
         ],
       },
       {
         id: "alerts",
         title: "Alarmy",
         body: [
-          "Raz na dobę, razem z odświeżeniem, autopilot porównuje wczorajszy dzień ze zwykłym — średnią z siedmiu dni przed nim. Alarm pojawia się, jeśli kampania wczoraj nic nie wydała, choć zwykle wydaje; jeśli wydatek wzrósł dwukrotnie, a zgłoszeń nie przybyło; jeśli przy zwykłych pieniądzach nie przyszło żadne zgłoszenie (zwykle to zepsuty formularz albo cel w Metryce); jeśli platforma odrzuciła reklamę; jeśli wykluczenie blokuje słowo kluczowe kampanii.",
-          "Każdy alarm przychodzi osobom z konta na Telegram raz i jest widoczny jako żółty blok **«Alarmy»** na górze konta. Gdy przyczyna ustąpi — na przykład kampania znów wydaje — alarm znika sam, nic nie trzeba klikać. Sam autopilot w reakcji na alarmy niczego nie zmienia: to sygnał dla człowieka.",
+          "Raz na dobę autopilot porównuje wczorajszy dzień ze zwykłym. Alarm pojawi się, gdy kampania nic nie wydała, wydatki wzrosły dwukrotnie bez nowych zgłoszeń, zgłoszeń nie ma wcale albo platforma odrzuciła reklamę. Zero zgłoszeń przy zwykłych wydatkach często znaczy, że zepsuł się formularz na stronie.",
+          "Alarm przychodzi ludziom konta na Telegram raz i widać go w żółtym bloku «Alarmy» na górze. Powód zniknął, a alarm znika sam. Autopilot po alarmie niczego nie zmienia.",
         ],
       },
       {
         id: "stub",
         title: "Atrapa: testy bez konta reklamowego",
         body: [
-          "Platforma **«Atrapa (testy)»** to ośrodek szkoleniowy w Taszkencie z realistycznymi liczbami w sumach. Widać na niej wszystko: propozycje, «Akceptuj», dziennik i cofanie, — a na żadnym prawdziwym koncie reklamowym nic się nie dzieje. Wygodnie pokazać agencji przed podłączeniem.",
-          "**«Przewiń 7 dni»** jest tylko przy atrapie i tylko w panelu: dodaje tydzień wyświetleń, żeby test reklam doszedł do wyniku bez czekania dwóch tygodni.",
+          "Platforma «Atrapa (testy)» to konto szkoleniowe ze zmyślonymi liczbami. Działa tam wszystko, ale prawdziwe konta się nie zmieniają. Wygodnie pokazać ją agencji przed podłączeniem.",
+          "Przycisk «Przewiń 7 dni» jest tylko w atrapie. Dodaje tydzień wyświetleń, żeby test reklam szybciej dotarł do wyniku.",
         ],
       },
       {
         id: "keys",
-        title: "Klucze i włączenie",
+        title: "Klucze i włączanie",
         roles: ["admin"],
         body: [
-          "Przebiegi w tle włącza `ADS_AUTOPILOT=1` (w `/opt/devuz/.env` albo w magazynie sekretów jako `app.ADS_AUTOPILOT`); bez tego działają tylko przyciski. Klucze klientów są szyfrowane `ADS_TOKEN_KEY` — 32 losowe bajty w base64; zmiana oznacza ponowne podłączenie wszystkich kont.",
-          "Przycisk «Połącz» potrzebuje kluczy aplikacji: `YANDEX_DIRECT_CLIENT_ID` i `YANDEX_DIRECT_CLIENT_SECRET`, `GOOGLE_ADS_CLIENT_ID` i `GOOGLE_ADS_CLIENT_SECRET`. Jak je zdobyć i co złożyć w Yandex i Google — krok po kroku w `docs/ads-autopilot/api-access.md`. Zużycie modelu widać w `model_usage` z etykietami `ads-negatives` i `ads-copy`.",
+          "Codzienne odświeżanie włącza osobne ustawienie na serwerze. Bez niego działają tylko przyciski.",
+          "Do przycisku «Połącz» potrzebne są klucze aplikacji Yandex Direct i Google Ads w sejfie sekretów. Tokeny klientów są przechowywane w postaci zaszyfrowanej. Po zmianie klucza szyfrowania wszystkie konta trzeba podłączyć od nowa.",
         ],
       },
       {
@@ -633,10 +627,10 @@ export const workSections: Record<string, HelpEntry> = {
         title: "Google: klucze i planer słów kluczowych",
         roles: ["admin", "head"],
         body: [
-          "Planer słów kluczowych Google Ads mówi, ile razy w miesiącu fraza jest wyszukiwana w Google. Od 07.11.2026 to trzecie źródło dla każdego artykułu obok Trends i Wordstatu: artykuły strony patrzą na region swojego języka (wersja rosyjska — Rosja, Uzbekistan, Kazachstan, Białoruś i Kirgistan razem, uzbecka — Uzbekistan, angielska — USA, Wielka Brytania i Kanada, polska — Polska), artykuły na platformach — na Rosję. Frazy z największą liczbą wyszukiwań model dostaje jako pierwsze. Niepodłączony — artykuły idą jak dawniej, bez niego.",
-          "Co zrobić w Google raz (właściciel; te same kroki słowami „Krok 1 — …” — w samym bloku **«Klucze aplikacji Google»**, dopóki planer nie zadziała): w console.cloud.google.com — projekt, w nim «Google Ads API» → Enable. «OAuth consent screen»: typ External, status In production, branding — nazwa, logo, e-mail, strona https://devuz.studio, polityka https://devuz.studio/ru/privacy, domena devuz.studio → «Verify branding». «Credentials» → «OAuth client ID» → Web application, w Authorized redirect URI — adres z bloku **«Klucze aplikacji Google»** (przycisk **«Kopiuj»**). Client ID i sekret wklej w ten sam blok i kliknij **«Zapisz»**.",
-          "Poziom dostępu: «Google Ads API» → «Overview» → «Upgrade access level» → «Apply for access», najpierw Explorer, potem Basic. Planer Google udostępnia dopiero od Basic; dopóki poziom jest niższy, **«Sprawdź»** tak właśnie powie. Po weryfikacji marki Basic zwykle przyznawany jest w kilka minut.",
-          "Konto: po lewej załóż przestrzeń (studio), dodaj konto reklamowe Google z numerem z 10 cyfr (jest na górze ads.google.com) i kliknij przy nim «Połącz» — zaloguj się kontem, które ma dostęp do tego konta reklamowego. Potem w bloku **«Planer słów kluczowych»** wybierz je (jeśli jest jedno, bierze się samo) i kliknij **«Sprawdź»**: powinno odpowiedzieć „działa” i pokazać, co wyszukuje się najczęściej. Autopilot na tym koncie sam nic nie zmienia, tylko proponuje.",
+          "Planer słów kluczowych Google pokazuje, ile razy w miesiącu szuka się frazy. Program, który pisze artykuły na stronę i platformy, bierze jego podpowiedzi razem z Google Trends i Wordstatem. Bez planera artykuły wychodzą tak samo, tylko bez jego danych.",
+          "Podłącza właściciel albo kierownik, jeden raz. Dopóki planer nie działa, kroki są opisane w bloku «Klucze aplikacji Google». Tam też wklej Client ID i sekret i kliknij «Zapisz».",
+          "Google otwiera planer projektowi z poziomem dostępu Basic. Dopóki poziom jest niższy, przycisk «Sprawdź» to powie.",
+          "Potem załóż konto studia, dodaj konto reklamowe Google z numerem z 10 cyfr i kliknij «Połącz». W bloku «Planer słów kluczowych» wybierz je i kliknij «Sprawdź». Odpowiedź, że działa, i lista częstych zapytań znaczą, że wszystko gotowe.",
         ],
       },
     ],

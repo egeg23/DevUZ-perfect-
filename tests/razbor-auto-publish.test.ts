@@ -65,8 +65,8 @@ test("панель и инструкция говорят, что разборы
   assert.match(dict, /Разборы выходят сами; сюда попадает только то, что вы сняли с публикации\./);
 
   const ru = read("content/admin-help-ru.ts");
-  assert.match(ru, /сразу публикует — без вашего утверждения/);
+  assert.match(ru, /сразу публикует, без вашего утверждения/);
   assert.doesNotMatch(ru, /оставляет вам на проверку/);
-  assert.match(read("content/admin-help-uz.ts"), /darhol e’lon qiladi — sizning tasdig‘ingizsiz/);
-  assert.match(read("content/admin-help-pl/more.ts"), /od razu publikuje — bez Twojej akceptacji/);
+  assert.match(read("content/admin-help-uz.ts"), /darhol e’lon qiladi, sizning tasdig‘ingizsiz/);
+  assert.match(read("content/admin-help-pl/more.ts"), /od razu publikuje, bez Twojej akceptacji/);
 });
