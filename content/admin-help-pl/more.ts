@@ -424,58 +424,58 @@ export const moreSections: Record<string, HelpEntry> = {
 
   /* ── Прототипы ────────────────────────────────────────────────────── */
   "/admin/proto": {
-    what: "Prototyp przyszłej strony klienta — strona, którą wysyłasz linkiem po pierwszej rozmowie, póki jest świeża: klient otwiera ją na telefonie i widzi swój biznes. Na razie sekcja jest tylko u właściciela: budowanie to najdroższe wywołanie modelu.",
+    what: "Tu składasz prototyp, czyli stronę przyszłej witryny klienta. Wysyła się ją linkiem po pierwszej rozmowie, a klient widzi swój biznes na telefonie. Sekcja jest tylko u właściciela.",
     items: [
       {
         id: "build",
-        title: "Zbuduj",
+        title: "Zbudować",
         body: [
-          "«Strona klienta», branża (wulkanizacja, warsztat samochodowy, myjnia, barbershop, salon kosmetyczny, studio paznokci, detailing, stomatologia, centrum szkoleniowe, centrum medyczne) i język strony. Nazwa, opis, telefon, komunikatory i logo pobiorą się same z jego strony.",
-          "Usługi — każda w osobnej linii, jego słowami, od 3 do 12. Cena — po myślniku ze spacjami, i tylko taka, którą sam podał. «Nadpisz to, co znaleziono na stronie» — jeśli strona się pomyliła. «Zbuduj prototyp».",
+          "Wpisz «Strona klienta», wybierz «Branża» i «Język strony». Branże to: wulkanizacja, serwis samochodowy, myjnia samochodowa, barbershop, salon kosmetyczny, studio paznokci, detailing, stomatologia, centrum szkoleniowe, centrum medyczne. Nazwę, telefon, komunikatory i logo panel weźmie z jego strony sam.",
+          "Usługi pisz po jednej w wierszu, jego słowami, od 3 do 12. Cenę stawiaj po myślniku i tylko tę, którą podał sam. Jeśli strona się myli, rozwiń «Nadpisz to, co znaleziono na stronie».",
+          "Prototyp zlecono zadaniem? Wybierz zadanie w polu «Według zlecenia z zadania». Wtedy odpowiedzialny będzie ten, kto zlecił, a zadanie zamknie się samo. Potem kliknij «Zbuduj prototyp».",
         ],
       },
       {
         id: "auto",
-        title: "Zbudowane automatycznie — do kontaktów",
+        title: "Zbudowane same, do kontaktów",
         body: [
-          "Prototypy z dopiskiem «zbudowany automatycznie, do kontaktu» panel zbudował bez Ciebie, przygotowując wiadomość kontaktu: firmom z najsłabszymi stronami, w branżach, które obsługuje budowniczy. Nazwa, kontakty, logo i zdjęcia — z jego strony, usługi — te, które są napisane na jego stronie, każda porównana słowo w słowo. Kontrola jest ta sama co przy budowanych ręcznie: z zastrzeżeniem prototyp zostaje «szkic» i nie trafia do wiadomości. Teraz takich prototypów na liście nie ma: wszystkie 29 są zamknięte hasłem i usunięte stąd oraz z sekcji «Makiety» (właściciel, 09.10.2026), żeby nie myliły się z budowanymi ręcznie.",
-          "Link takiego prototypu wychodzi w wiadomości kontaktu sam — nie trzeba klikać «Wysłałem klientowi»: prototyp staje się «wysłany», gdy wyszła wiadomość. Jak to wygląda u menedżera — [prototyp z wyprzedzeniem](#prospect-proto-ahead).",
+          "Bot nie składa sam prototypów do kontaktów. Prototypy z etykietą «zbudowany automatycznie, do kontaktu» zostały z przeszłości, są zamknięte na hasło i nie pokazują się na liście.",
+          "Prototyp do kontaktu składasz tutaj, ręcznie. Jak to wygląda u menedżera, opisuje punkt [prototyp z wyprzedzeniem](#prospect-proto-ahead).",
         ],
       },
       {
         id: "check",
         title: "Kontrola i link",
         body: [
-          "Gotową stronę czyta kontrola: zmyślone liczby, procenty, przechwałki, brak nazwy firmy, niedziałający przycisk, usługi, których klient nie wymienił; długie myślniki i frazesy tekstu AI («не просто …, а …», «… dunyosiga», «noyob»): po nich właściciel firmy w sekundę rozpoznaje tekst modelu i przestaje wierzyć makiecie. Myślniki w godzinach pracy i nazwach usług z jego strony panel zamienia sam, a frazes, którym firma sama opisuje się na swojej stronie, kontrola przepuszcza: to jej słowa. Jeśli coś znajdzie — prototyp zostaje «szkic», link zwraca 404, a problemy są wypisane: popraw je i zbuduj ponownie.",
-          "Czysto — «gotowy», link już działa: «Kopiuj link». Wysłałeś — «Wysłałem klientowi».",
+          "Gotową stronę od razu sprawdza program. Szuka wymyślonych liczb, przechwałek, usług, których klient nie podał, i niedziałającego przycisku. Szuka też długich myślników i szablonów w stylu «zanurz się w świat»: po nich właściciel firmy od razu poznaje tekst sieci neuronowej.",
+          "Jest problem? Prototyp zostaje «szkic», link nie działa, a problemy są wypisane. Popraw i zbuduj jeszcze raz. Wszystko czyste i prototyp jest «gotowy»: kliknij «Kopiuj link», a po wysłaniu «Wysłałem klientowi».",
         ],
       },
       {
         id: "opens",
         title: "Czy klient otworzył",
         body: [
-          "«otworzył … wejść: N» albo «jeszcze nie otworzył». Liczy się każde otwarcie przez człowieka; Twoje własne otwarcia z panelu (jesteś zalogowany do panelu w tej przeglądarce) i podgląd linku, który komunikator rysuje sam, się nie liczą.",
-          "Otworzył i wrócił drugi raz — dzwoń dziś. Nie otworzył przez dwa dni — link do niego nie dotarł. Przycisk zapisu na prototypie otwiera jego własny Telegram albo WhatsApp — tak klient widzi, że to działa.",
+          "W wierszu prototypu widać, czy klient go otworzył i ile razy. Twoje otwarcia z panelu i podgląd linku w komunikatorze się nie liczą.",
+          "Otworzył i wrócił drugi raz? Dzwoń dziś. Nie otworzył przez dwa dni, czyli link do niego nie dotarł. Przycisk zapisu na prototypie otwiera jego własny Telegram lub WhatsApp: tak klient widzi, że wszystko działa.",
         ],
       },
       {
         id: "trace",
-        title: "Ukryty odcisk i sprawdzanie cudzej strony",
+        title: "Ukryty odcisk i sprawdzenie cudzej strony",
         body: [
-          "W każdy prototyp przy budowaniu wbudowuje się ukryty odcisk: odcienie kolorów, zaokrąglenia, odstępy między literami i wysokość wierszy są przesunięte o wielkości, których oko nie odróżnia, a zestaw przesunięć jest inny w każdym prototypie. Na stronie nie ma o nim ani słowa, co dokładnie przesunięto — wie tylko panel. Prototypy zbudowane wcześniej dostają odcisk i linijkę o warunkach same — przy pierwszym otwarciu przez klienta albo gdy wejdziesz do tej sekcji.",
-          "W stopce każdego prototypu jest linijka w jego języku — «Прототип принадлежит DevUz Studio. Использовать его можно только по договору» (po uzbecku na prototypach uzbeckich) — z linkiem do warunków udostępniania makiet (devuz.studio/ru/mockup-terms): kara 200% ceny zadeklarowanej klientowi, a jeśli jej nie podano — 200% naszych cen za takie prace. Gdy klient zgadza się na darmową makietę, link do warunków sam trafia do niego w tej samej korespondencji — do zapoznania się, osobne „zgadzam się” nie jest potrzebne: warunki przyjmuje swoimi działaniami po nim — odpisał w sprawie projektu, dostał albo otworzył makietę. Prototyp wysłany bez prośby przyjmuje się otwarciem — link jest na nim samym. Kto się nie zgadza, musi to powiedzieć przed otrzymaniem makiety — wtedy makiety nie robimy.",
-          "«Sprawdź stronę pod kątem naszej makiety»: wklej adres cudzej strony i kliknij «Sprawdź». Panel odczyta jej style i porówna je z odciskami wszystkich prototypów. «nasza makieta — na pewno» — zgadza się ponad połowa ukrytych wartości, przypadkiem tak nie bywa; «podobne do naszej makiety» — zgadza się kilka, w tym kolor. Jeśli odcisk wskazuje na jeden prototyp, panel to pisze — pokazano go temu klientowi — a obok daty i adresy otwarć.",
-          "Słowa-pułapki: w danych demo makiet zbudowanych od 30.10.2026 są wymyślone nazwy demo-aptek, sklepów, ulic, inne dla każdego klienta (jak «nieistniejąca ulica» na mapach). Prawdziwa strona nie ma skąd ich wziąć: znalazły się — tekst i dane wzięto z naszej makiety. Sprawdzenie pokazuje je w wierszu «słowa-pułapki z danych demo». W makietach są też lekko przesunięte liczby skryptów (płynność, progi pojawiania się) — panel szuka ich w plikach skryptów cudzej strony.",
-          "Dziennik pokazów zapisuje każde otwarcie prototypu przez żywą osobę: czas, adres i przeglądarkę; podglądy komunikatorów i Twoje otwarcia z panelu nie są zapisywane. To dowód, że klient widział makietę i przyjął warunki. Do wezwania zapisz wynik sprawdzenia i zamów notarialne oględziny strony.",
+          "W każdym prototypie jest ukryty odcisk. Kolory, odstępy i inne drobiazgi są lekko przesunięte, u każdego klienta inaczej. Okiem tego nie widać, a panel rozpoznaje swoją makietę.",
+          "W danych demo są też słowa-pułapki: wymyślone nazwy ulic i sklepów. Na cudzej stronie nie mają skąd się wziąć. Jeśli tam są, tekst wzięto z naszej makiety.",
+          "W stopce każdego prototypu jest link do warunków: bez umowy makiety używać nie wolno, kara to 200% ceny. Klient przyjmuje warunki tym, że otwiera makietę albo dalej rozmawia o projekcie.",
+          "Żeby sprawdzić cudzą stronę, wklej adres w «Sprawdź stronę pod kątem naszej makiety» i kliknij «Sprawdź». Jeśli panel pisze, że makieta na pewno jest nasza, zgadza się za dużo jak na przypadek. Do roszczenia zapisz wynik i zamów notarialne oględziny strony.",
         ],
       },
       {
         id: "trace-month",
-        title: "Raz w miesiącu — strony klientów",
+        title: "Raz w miesiącu strony klientów",
         roles: ["admin"],
         body: [
-          "Co miesiąc od 1. dnia, od 11:00 czasu Taszkentu, bot sam sprawdza strony wszystkich klientów, dla których robiliśmy makietę (adres z karty prototypu; makiety zbudowane przez bota do kontaktów nie są brane): to samo sprawdzenie co «Sprawdź stronę pod kątem naszej makiety», i to ze wszystkimi naszymi makietami, nie tylko z ich własną. Po trzy strony naraz, więc cała lista przechodzi w godzinę-dwie.",
-          "Gdy wszystkie są sprawdzone, ty i kierownik dostajecie «🔎 Сайты клиентов» pod znacznikiem «Raporty»: ile sprawdzono, a jeśli znalazło się nasze — klient, która makieta (ta, którą robiliśmy im, czy makieta innego klienta), ile się zgadza, słowa-pułapki i link «Проверка в панели». Nie znalazło się — «Нашего не нашли». W nocy (od 21:00) raport nie przychodzi, dośle go następnego dnia. Do wezwania otwórz sprawdzenie w panelu, zapisz wynik i zamów notarialne oględziny strony.",
+          "Co miesiąc od 1. dnia bot sam sprawdza strony wszystkich klientów, dla których robiliśmy makietę. Kontrola jest ta sama, co «Sprawdź stronę pod kątem naszej makiety». Bierze po trzy strony naraz, więc cała lista zajmuje godzinę lub dwie.",
+          "Potem ty i kierownik dostajecie raport «🔎 Сайты клиентов»: ile sprawdzono i gdzie znalazła się nasza makieta. W nocy po 21:00 raport nie przychodzi, przyjdzie następnego dnia.",
         ],
       },
     ],
