@@ -145,7 +145,13 @@ export function OutreachList({
   accounts = {},
   edits = {},
   lastEdits = {},
+  canSend = true,
 }: {
+  /**
+   * Возьмёт ли письмо того, кто смотрит, хоть один рабочий аккаунт
+   * (canQueueSend). Нет — вместо «Отправить» карточка учит написать самому.
+   */
+  canSend?: boolean;
   rows: Prospect[];
   /** Что ушло за последний час: предел считается по факту отправки. */
   hour: { count: number; oldestAgoMs: number | null };
@@ -680,17 +686,37 @@ export function OutreachList({
                   {route && route.kind !== "manual" ? (
                     <p className="mt-2 text-xs leading-relaxed text-faint">{t.helloFirstNote}</p>
                   ) : null}
-                  <div className="mt-2 flex flex-wrap items-center gap-3">
-                    <SubmitButton
-                      pendingLabel={t.sending}
-                      base="rounded-xl px-4 py-2 text-sm font-semibold"
-                    >
-                      {route?.kind === "manual" ? t.takeIntoWork : t.sendTo(route?.target ?? "")}
-                    </SubmitButton>
-                    <span className="text-xs text-faint">
-                      {t.leadWillBeYours}
-                    </span>
-                  </div>
+                  {/* Все аккаунты автора на паузе — «Отправить» не показываем:
+                      письмо встало бы в очередь, которую никто не разберёт
+                      (canQueueSend). Вместо неё — как написать самому. */}
+                  {route?.kind !== "manual" && !canSend && row.target ? (
+                    <div className="mt-2 rounded-lg border border-gold/30 bg-gold/5 px-4 py-3">
+                      <p className="text-sm text-amber-200">{t.noSender(t.selfContacted)}</p>
+                      <div className="mt-2 flex flex-wrap items-center gap-3">
+                        <a
+                          href={`https://t.me/${row.target.replace(/^@/, "")}`}
+                          target="_blank"
+                          rel="noreferrer noopener"
+                          className="rounded-lg border border-line px-3 py-1.5 text-xs text-muted transition hover:text-text"
+                        >
+                          {t.openInTelegram(row.target)}
+                        </a>
+                        <CopyMessage text={row.message} label={t.copyText} />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mt-2 flex flex-wrap items-center gap-3">
+                      <SubmitButton
+                        pendingLabel={t.sending}
+                        base="rounded-xl px-4 py-2 text-sm font-semibold"
+                      >
+                        {route?.kind === "manual" ? t.takeIntoWork : t.sendTo(route?.target ?? "")}
+                      </SubmitButton>
+                      <span className="text-xs text-faint">
+                        {t.leadWillBeYours}
+                      </span>
+                    </div>
+                  )}
                   {failure && open === row.id ? (
                     <p className="mt-3 rounded-lg border border-gold/40 bg-gold/5 px-4 py-3 text-sm text-amber-200">
                       {t.notSent} {failureText}
