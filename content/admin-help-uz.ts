@@ -1846,22 +1846,24 @@ export const uz: HelpCopy = {
 
     /* ── Статистика ───────────────────────────────────────────────────── */
     "/admin/stats": {
-      what: "Butun studiya bo‘yicha raqamlar: qancha murojaat keladi, qayerdan, qanday sifatda, qanchasini yutamiz va lidlarni qanchalik tez ishga olamiz. Haftada bir marta mijozlarni qayerda yo‘qotayotganimizni ko‘rish uchun kerak.",
+      what: "Studiyaning barcha lidlari (mijoz buyurtmalari) bo‘yicha raqamlar: qancha keladi, qayerdan va qanchasini yutamiz. Mijozlar qayerda yo‘qolayotganini ko‘rish uchun bu yerga haftada bir marta kiring.",
       items: [
         {
           id: "tiles",
           title: "Asosiy raqamlar",
           body: [
-            "**«jami lidlar»**, **«ishga olingan»** — hozir nechtasining mas’uli bor.",
-            "**«yutilganlar ulushi»** — yutilganlar ÷ (yutilganlar + yutqazilganlar). Yopilgan bitimlardan hisoblanadi: hali ishdagisi yutqazilmagan. Shuning uchun lidni tashlab qo‘ymasdan, «yutqazilgan» holatini qo‘yish muhim.",
-            "**«olishgacha mediana»** — murojaatdan «O‘zimga olish»gacha odatda qancha vaqt o‘tadi. O‘rtacha emas, mediana: dam olish kunlari yotib qolgan bitta lid manzarani buzmaydi. Lidni berish bu vaqtni nolga tushiradi.",
+            "**«jami lidlar»** bazada nechta buyurtma borligini ko‘rsatadi, **«ishga olingan»** esa ulardan nechtasida mas’ul menejer borligini.",
+            "**«yutilganlar ulushi»** faqat yopilgan bitimlar bo‘yicha hisoblanadi: yutilganlarni yutilgan va yutqazilganlar yig‘indisiga bo‘lamiz. Ishdagi lid hali yutqazilmagan. Shuning uchun lidni indamay tashlab qo‘ymang, unga «yutqazilgan» holatini qo‘ying.",
+            "**«olishgacha mediana»** buyurtmadan «O‘zimga olish» bosilguncha odatda qancha vaqt o‘tishini ko‘rsatadi. Dam olish kunlari unutilgan bitta lid bu raqamni deyarli o‘zgartirmaydi. Lid hamkasbga berilsa, vaqt qaytadan hisoblanadi.",
           ],
         },
         {
           id: "panels",
-          title: "Pastdagi panellar",
+          title: "Pastdagi bloklar",
           body: [
-            "«Haftalar bo‘yicha kelishi» — 12 hafta, hafta dushanbadan. «Lidlar sifati» — A–D harflari bo‘yicha. «Holatlar». «Qayerdan keladi» — chat, forma, bot, vitrina, skaut, aloqalar. «Murojaat tili». «Nima so‘rashadi» — bitta lid bir necha qatorda bo‘lishi mumkin. «30% chegirma» — nechta murojaat chegirma olgani va nima uchun: «birinchi daqiqa» — saytda birinchi daqiqa taymeri ishlayotganda mijoz yordamchiga yozgan; «20 soniya kafolati» — javobga ulgurmaganmiz. Har bir shunday chegirma — chekning 30%.",
+            "«Haftalar bo‘yicha kelishi» 12 haftalik buyurtmalarni ko‘rsatadi, hafta dushanbadan boshlanadi. «Lidlar sifati» buyurtmalarni A, B, C va D harflariga bo‘ladi.",
+            "«Nima so‘rashadi» blokida bitta lid bir nechta qatorda turishi mumkin, shuning uchun yig‘indi lidlar sonidan katta.",
+            "«30% chegirma» chegirma olgan buyurtmalarni sanaydi. «birinchi daqiqa» mijoz saytda taymer ketayotganda chatga yozganini bildiradi. «20 soniya kafolati» biz 20 soniyada javob bermaganimizni bildiradi.",
           ],
         },
         {
@@ -1869,13 +1871,13 @@ export const uz: HelpCopy = {
           title: "Odamlar bo‘yicha jadval",
           body: {
             manager: [
-              "Odamlar bo‘yicha jadvalni siz ko‘rmaysiz — uni rahbar va egasi ko‘radi. Hamkasb ismi yonidagi ochiq reyting natijadan oldin xulqni o‘zgartiradi: lidlarni muhimligiga qarab emas, osonligiga qarab olishni boshlashadi. O‘z raqamlaringizni «Bosh sahifa»da ko‘ring: «Mening ishim», «Haftalik bosqichlarim» va [«Reja va fakt»](#hq-week).",
+              "Odamlar bo‘yicha jadvalni faqat rahbar va egasi ko‘radi. O‘z raqamlaringizni «Bosh sahifa»da ko‘ring: «Mening ishim», «Haftalik bosqichlarim» va [«Reja va fakt»](#hq-week).",
             ],
             head: [
-              "«Mening jamoam bo‘yicha» — siz va menejerlaringiz: «Ishda», «Yutdi», «Yutqazdi», «Jami» — butun vaqt uchun, lid hozir kimga biriktirilganiga qarab. Menejerlar bu jadvalni ko‘rmaydi.",
+              "«Mening jamoam bo‘yicha» jadvali sizni va menejerlaringizni ko‘rsatadi: «Ishda», «Yutdi», «Yutqazdi» va «Jami», butun vaqt uchun. Lid hozir kimda bo‘lsa, o‘shaniki hisoblanadi. Menejerlar bu jadvalni ko‘rmaydi.",
             ],
             admin: [
-              "«Menejerlar bo‘yicha» — barcha faol xodimlar, butun vaqt uchun, lid hozir kimga biriktirilganiga qarab. Rahbar faqat o‘zini va jamoasini ko‘radi, menejerlar jadvalni umuman ko‘rmaydi.",
+              "«Menejerlar bo‘yicha» jadvali barcha faol xodimlarni butun vaqt uchun ko‘rsatadi. Lid hozir kimda bo‘lsa, o‘shaniki hisoblanadi. Rahbar faqat o‘zini va jamoasini ko‘radi, menejerlar jadvalni ko‘rmaydi.",
             ],
           },
         },
@@ -1884,13 +1886,13 @@ export const uz: HelpCopy = {
           title: "Rejalar qayerda",
           body: {
             manager: [
-              "Bu yerda rejalar yo‘q. «Reja va fakt» — [«Bosh sahifa»](/admin/hq) pastida, aloqalar rejasi — [«Sovuq aloqalar»](/admin/prospect) bo‘limida.",
+              "Bu bo‘limda rejalar yo‘q. «Reja va fakt» [«Bosh sahifa»ning](#hq-week) pastida turadi. Aloqalar rejangizni [«Sovuq aloqalar»](/admin/prospect) bo‘limida ko‘rasiz.",
             ],
             head: [
-              "Bu yerda rejalar yo‘q. «Reja va fakt» — [«Bosh sahifa»](/admin/hq) pastida, jamoaga aloqalar rejasi [«Jamoa»](/admin/team) bo‘limida qo‘yiladi.",
+              "Bu bo‘limda rejalar yo‘q. «Reja va fakt» [«Bosh sahifa»ning](#hq-week) pastida turadi. Menejerlarga aloqalar rejasini [«Jamoa»](/admin/team) bo‘limida qo‘yasiz.",
             ],
             admin: [
-              "Bu yerda rejalar yo‘q. «Reja va fakt» — [«Bosh sahifa»](/admin/hq) pastida, aloqalar rejasi — [«Jamoa»](/admin/team) bo‘limida.",
+              "Bu bo‘limda rejalar yo‘q. «Reja va fakt» [«Bosh sahifa»ning](#hq-week) pastida turadi. Aloqalar rejasi [«Jamoa»](/admin/team) bo‘limida qo‘yiladi.",
             ],
           },
         },
@@ -1899,23 +1901,26 @@ export const uz: HelpCopy = {
 
     /* ── Трафик ───────────────────────────────────────────────────────── */
     "/admin/stages": {
-      what: "Kompaniyalar va lidlar sotuv bosqichlari bo‘yicha ro‘yxati: kimga yozildi, kim javob berdi, qiziqish bildirdi, maket oldi, ko‘rsatuvni ko‘rdi, narxni eshitdi va to‘ladi. Bu yerda sotuv aynan qayerda to‘xtab qolayotgani va kimni oldinga surish kerakligi ko‘rinadi. Ilgari ro‘yxat faqat «Bosh sahifa»dagi raqam orqali ochilardi, endi u «Hisobotlar»dagi band. Bazadan kod hisoblaydi, neyrotarmoqsiz.",
+      what: "Kompaniyalar va lidlar sotuv bosqichlari bo‘yicha, birinchi xabardan to‘lovgacha. Bu yerda bitimlar qayerda to‘xtab qolayotgani va kimni oldinga surish vaqti kelgani ko‘rinadi.",
       items: [
         {
           id: "list",
-          title: "Bosqich ro‘yxati: qanday o‘qish kerak",
+          title: "Bosqich ro‘yxati: qanday o‘qish",
           body: {
             manager: [
-              "Yuqorida — bosqichlar: «yozdik», «javob berdi», «qiziqish», «maket yuborildi», «maket ko‘rsatildi», «narx aytildi», «to‘lov» — va davr: 7 yoki 30 kun. Bosqichni bosing — pastda davr ichida unga yetgan kompaniyalar va lidlar chiqadi: kimniki, qachon yetgan va keyingi bosqichga yetganmi (yashil — yetgan).",
-              "Siz faqat o‘z kompaniya va lidlaringizni ko‘rasiz: o‘zingiz olib borayotganlar va ko‘rsatuv yoki narxni siz belgilaganlar. Qatorni bosing — lid yoki aloqa kartochkasi ochiladi. Hafta bo‘yicha xuddi shu raqamlar — «Bosh sahifa»dagi [«Haftalik bosqichlarim»](#hq-my-stages) blokida.",
+              "Tepada bosqichni tanlang, «yozdik»dan «to‘lov»gacha, va davrni: «7 kunda», «undan oldingi 7 kun», «30 kunda» yoki «dushanbadan beri».",
+              "Pastda shu bosqichga yetgan kompaniyalar chiqadi. Qatorda lid kimniki, qachon yetgani va keyingi bosqich bor-yo‘qligi ko‘rinadi (u yashil).",
+              "Siz faqat o‘z bitimlaringizni ko‘rasiz: o‘zingiz yuritayotganlar va ko‘rsatish yoki narxni siz belgilaganlar. Qatorni bosing, kartochka ochiladi. Haftalik shu raqamlar «Bosh sahifa»dagi [«Haftalik bosqichlarim»](#hq-my-stages) blokida bor.",
             ],
             head: [
-              "Yuqorida — bosqichlar: «yozdik», «javob berdi», «qiziqish», «maket yuborildi», «maket ko‘rsatildi», «narx aytildi», «to‘lov» — va davr: 7 yoki 30 kun. Bosqichni bosing — pastda davr ichida unga yetgan kompaniyalar va lidlar chiqadi: kimniki, qachon yetgan va keyingi bosqichga yetganmi (yashil — yetgan).",
-              "Siz butun jamoa bitimlarini ko‘rasiz, har bir qatorda — lid kimniki. 7 va 30 kunlik xuddi shu raqamlar — «Bosh sahifa»dagi [«Sotuv bosqichlari»](#hq-stages) blokida. Bu yerda hech kimda pul yo‘q: tushumlar summasini faqat egasi «Bosh sahifa»da ko‘radi.",
+              "Tepada bosqichni tanlang, «yozdik»dan «to‘lov»gacha, va davrni: «7 kunda», «undan oldingi 7 kun», «30 kunda» yoki «dushanbadan beri».",
+              "Pastda shu bosqichga yetgan kompaniyalar chiqadi. Qatorda lid kimniki, qachon yetgani va keyingi bosqich bor-yo‘qligi ko‘rinadi (u yashil).",
+              "Siz butun jamoaning bitimlarini ko‘rasiz. Bu yerda pul summalari yo‘q. 7 va 30 kunlik shu raqamlar «Bosh sahifa»dagi [«Sotuv bosqichlari»](#hq-stages) blokida turadi.",
             ],
             admin: [
-              "Yuqorida — bosqichlar: «yozdik», «javob berdi», «qiziqish», «maket yuborildi», «maket ko‘rsatildi», «narx aytildi», «to‘lov» — va davr: 7 yoki 30 kun. Bosqichni bosing — pastda davr ichida unga yetgan kompaniyalar va lidlar chiqadi: kimniki, qachon yetgan va keyingi bosqichga yetganmi (yashil — yetgan).",
-              "Siz butun jamoa bitimlarini ko‘rasiz, har bir qatorda — lid kimniki. 7 va 30 kunlik xuddi shu raqamlar — «Bosh sahifa»dagi [«Sotuv bosqichlari»](#hq-stages) blokida. Ro‘yxatda pul yo‘q: bitimlar summasi — o‘sha blokda, faqat sizda.",
+              "Tepada bosqichni tanlang, «yozdik»dan «to‘lov»gacha, va davrni: «7 kunda», «undan oldingi 7 kun», «30 kunda» yoki «dushanbadan beri».",
+              "Pastda shu bosqichga yetgan kompaniyalar chiqadi. Qatorda lid kimniki, qachon yetgani va keyingi bosqich bor-yo‘qligi ko‘rinadi (u yashil).",
+              "Siz butun jamoaning bitimlarini ko‘rasiz. Ro‘yxatda summalar yo‘q. To‘lovlar summasini faqat siz ko‘rasiz, «Bosh sahifa»dagi [«Sotuv bosqichlari»](#hq-stages) blokida.",
             ],
           },
         },
@@ -1923,8 +1928,9 @@ export const uz: HelpCopy = {
           id: "marks",
           title: "Nega bosqich bo‘sh",
           body: [
-            "«Maket ko‘rsatildi» va «narx aytildi»ni baza o‘zi ko‘rmaydi: video yoki jonli ko‘rsatuvni odam «Maketni ko‘rsatdim» tugmasi bilan belgilaydi — [«Maketlar»](/admin/mockups)da, «Bosh sahifa»dagi «Mening maketlarim»da yoki [lid kartochkasida](#leads-sales-marks). Belgilanmasa — bosqich nol bo‘lib qoladi va undan keyingi hammasi aslidagidan yomonroq ko‘rinadi.",
-            "Qatorlar 200 dan ko‘p bo‘lsa — birinchi 200 tasi va «yana N» qatori ko‘rsatiladi: davrni 7 kungacha qisqartiring. O‘zi kelgan kompaniyalar (saytdan, chatdan yoki botdan ariza) «yozdik»ga kirmaydi — ular darhol «javob berdi».",
+            "Deyarli barcha bosqichlarni panel o‘zi qo‘yadi. Maket ko‘rsatilganini u ko‘rmaydi. Maketni video orqali yoki yuzma-yuz ko‘rsatdingizmi? [«Maketlar»](/admin/mockups) bo‘limida, «Bosh sahifa»dagi «Mening maketlarim»da yoki [lid kartochkasida](#leads-sales-marks) «Maketni ko‘rsatdim» tugmasini bosing.",
+            "Bot narxni «+» dan keyin mijozga yuborganda, panel narxni o‘zi belgilaydi. Narxni o‘zingiz, yozishmada yoki telefonda aytdingizmi? Lid kartochkasida «Narxni aytdim» tugmasini bosib, summani yozing. Belgisiz bosqich bo‘sh qoladi va sotuvlar aslidagidan yomonroq ko‘rinadi.",
+            "Qatorlar 200 dan ko‘p bo‘lsa, birinchi 200 tasi ko‘rsatiladi: qisqaroq davrni tanlang. O‘zi kelgan mijozlar (saytdan, chatdan yoki botdan buyurtma) «yozdik»ga kirmaydi. Ular darhol javob berganlar hisoblanadi.",
           ],
         },
       ],
@@ -2844,21 +2850,21 @@ export const uz: HelpCopy = {
 
     /* ── Журнал ───────────────────────────────────────────────────────── */
     "/admin/audit": {
-      what: "Panelda kim nima qilgani va qachon: kartochkani, kontaktni, yozishmani ochdi, lidni oldi, holatni o‘zgartirdi, berdi, to‘lovni tasdiqladi, xodim qo‘shdi yoki o‘chirdi. Yozuvlarni o‘zgartirib ham, o‘chirib ham bo‘lmaydi — na paneldan, na bazadan.",
+      what: "Paneldagi barcha amallar jurnali: kim, nima va qachon qilgan. Masalan, mijoz kontaktini ochgan, lidni olgan, holatni o‘zgartirgan yoki to‘lovni tasdiqlagan. Yozuvlarni o‘zgartirib ham, o‘chirib ham bo‘lmaydi.",
       items: [
         {
           id: "filters",
           title: "Qanday qidirish",
           body: [
-            "«Kim» filtri — xodim (o‘chirilganlar belgilangan) yoki «tizim» — taymer, bot yoki bot orqali hamkor qilgan hamma narsa. «Nima» — 75 ga yaqin harakat turi. Har sahifada 100 ta yozuv.",
-            "Tilla rang bilan sezgir harakatlar ajratilgan: kontakt, yozishma, pul, kirish huquqi. Lidlarda — kartochkaga havola.",
+            "«Kim» filtri xodimni yoki «tizim»ni tanlaydi. «tizim» amalni bot, taymer yoki bot orqali hamkor qilganini bildiradi. «Nima» filtri amal turini tanlaydi. Sahifada 100 ta yozuv, keyingilarini «eskiroq →» va «← yangiroq» tugmalari bilan varaqlang.",
+            "Muhimlari oltin rangda: mijoz kontakti, yozishma, pul va kirish huquqlari. Lid bilan bog‘liq amallarda uning kartochkasiga havola bor.",
           ],
         },
         {
           id: "when",
           title: "Bu yerga qachon qarash kerak",
           body: [
-            "Mijoz unga ikki kishi yozganidan shikoyat qilyapti. Lid «yo‘qolib qoldi». Summa yoki bosqichni kim o‘zgartirgani noma’lum. Mijoz raqobatchilarga ketishidan oldin kontaktni kim ochganini bilish kerak. Bu yerda bularning hammasi daqiqasigacha aniq ko‘rinadi.",
+            "Mijoz unga ikki kishi yozganidan shikoyat qiladi. Lid yo‘qolib qoldi. Summani yoki holatni kim o‘zgartirgani tushunarsiz. Bularning hammasi bu yerda daqiqasigacha ko‘rinadi.",
           ],
         },
       ],
@@ -2866,22 +2872,22 @@ export const uz: HelpCopy = {
 
     /* ── Использование ────────────────────────────────────────────────── */
     "/admin/usage": {
-      what: "Jamoa panelda nimadan foydalanadi: qaysi bo‘limlarni ochadi, qaysi funksiyalarni bosadi, kim nima bilan band. Jim kastdev: jamoa bu hisobot haqida bilmaydi, chunki hamma biladigan hisobot ishni emas, unda yaxshi ko‘rinishga urinishni o‘lchaydi.",
+      what: "Jamoa aslida qaysi bo‘limlar va tugmalardan foydalanadi. Hisobotni faqat siz ko‘rasiz. Jamoa u haqida bilmaydi, shuning uchun raqamlar halol.",
       items: [
         {
           id: "read",
           title: "Qanday o‘qish",
           body: [
-            "Davr — 7, 30 yoki 90 kun, strelkalar — undan oldingi xuddi shunday davrga nisbatan. Rahbarlar va menejerlar hisoblanadi; siz yo‘qsiz, shaxsiy bo‘limlaringiz ham.",
-            "Qator bo‘yicha xulosa: «asosiy» — foydalanish huquqi borlarning kamida yarmi ishlatadi; «bir-ikki kishida» — kamrog‘i; «hech kim — ortiqchami?» — hech kim. Faqat rahbarlar uchun funksiyalar rahbarlar bo‘yicha hisoblanadi.",
+            "Tepada davr: 7, 30 yoki 90 kun. Strelkalar undan oldingi xuddi shunday davr bilan solishtiradi. Rahbarlar va menejerlar hisoblanadi, siz hisobotda yo‘qsiz.",
+            "Har bir qatorda belgi bor. «asosiy» bu ochiq bo‘lganlarning kamida yarmi foydalanayotganini bildiradi. «bir-ikki kishida» bu oz kishi foydalanayotganini bildiradi. «ortiqchami?» so‘zli belgi hech kim foydalanmayotganini bildiradi.",
           ],
         },
         {
           id: "use",
           title: "Bu bilan nima qilish kerak",
           body: [
-            "«Hech kim — ortiqchami?» — so‘rash uchun sabab: funksiya keraksizmi yoki u haqda bilishmaydimi. Ko‘pincha javob — ikkinchisi: unda yo‘riqnomadagi band va «?» tugmasi yordam beradi.",
-            "Bo‘limlarni ko‘rishlar hisobot yoqilgan paytdan, harakatlar esa butun vaqt uchun jurnaldan hisoblanadi.",
+            "«ortiqchami?» belgisi hukm emas, savol. Jamoadan so‘rang: funksiya kerak emasmi yoki u haqda bilishmaydimi? Ko‘pincha bilishmaydi. Unda yo‘riqnomadagi band va «?» tugmasi yordam beradi.",
+            "Bo‘limlarni ko‘rishlar hisobot yoqilgan kundan hisoblanadi. Amallar butun vaqt uchun [«Jurnal»](/admin/audit) bo‘limidan olinadi.",
           ],
         },
       ],
@@ -3038,41 +3044,41 @@ export const uz: HelpCopy = {
 
     /* ── Обучение ─────────────────────────────────────────────────────── */
     "/admin/learn": {
-      what: "Sotuv kurslari — studiya kompaniyalarga aslida qanday yozishi haqida — va panel bo‘yicha test. Har bir kurs — jonli iboralar bilan bir nechta qisqa dars va oxirida test; panel bo‘yicha test sizga ochiq bo‘limlar haqida so‘raydi. Testlarni shu yerda yoki studiyaning Telegram botida topshirish mumkin.",
+      what: "Sotuv kurslari va panel bo‘yicha test. Kurslar studiya kompaniyalarga aslida qanday yozishini tushuntiradi. Har bir kursda qisqa darslar va oxirida test bor.",
       items: [
         {
           id: "switch",
           title: "O‘chirgich: jamoa bo‘limni faqat siz tugmani bosgandan keyin ko‘radi",
           roles: ["admin"],
           body: [
-            "Ta’lim o‘chirilgan ekan, bo‘limni faqat siz ko‘rasiz: rahbar va menejerlarda u na menyuda, na yo‘riqnomada bor, sahifa ularni bosh sahifaga qaytaradi, bot esa /learn ga ta’lim hali yoqilmaganini aytadi. Bu vaqtda majburiylik va o‘tish bali hech kimga ta’sir qilmaydi. O‘zingiz istalgan kurs va testni — panelda ham, botda ham — topshirib, qanday ko‘rinishini tekshirishingiz mumkin.",
-            "Bo‘lim tepasida sariq plashka va **«Jamoa uchun ta’limni yoqish»** tugmasi. Bosdingiz — bo‘lim hammaning menyusida paydo bo‘ladi, jamoaning bot menyusiga /learn qo‘shiladi, menejerlarda esa «Topshirish qoldi» bloki chiqadi. Plashka yashil bo‘ladi, tugma o‘rnida — **«Ta’limni o‘chirish»**: u bo‘limni yana yashiradi, natijalar yo‘qolmaydi. Kim va qachon yoqqan va o‘chirgani [Jurnal](/admin/audit)da ko‘rinadi.",
-            "O‘tish bali va majburiylik kodda yozilgan (`lib/learn/rules.ts`): hozir — 70% to‘g‘ri javob, kurslar menejerlar uchun majburiy. Egasining 12.10.2026 dagi qarori; ularni o‘zgartirish — bitta qatorni tahrirlash.",
+            "Ta’lim o‘chirilgan paytda bo‘limni faqat siz ko‘rasiz. Jamoada u menyuda ham, yo‘riqnomada ham yo‘q, bot esa /learn ga ta’lim yoqilmaganini aytadi. O‘zingiz istalgan kursni topshirib, qanday ko‘rinishini tekshirishingiz mumkin.",
+            "Bo‘lim tepasida sariq yozuv va **«Jamoa uchun ta’limni yoqish»** tugmasi bor. Bosgandan keyin bo‘lim hammada paydo bo‘ladi, /learn esa bot menyusiga qo‘shiladi. **«Ta’limni o‘chirish»** tugmasi bo‘limni yana yashiradi, natijalar saqlanib qoladi.",
+            "To‘g‘ri javoblar 70% va undan ko‘p bo‘lsa, test topshirilgan hisoblanadi. Kurslar menejerlar uchun majburiy. Chegarani faqat kodda o‘zgartirish mumkin: dasturchiga ayting.",
           ],
         },
         {
           id: "courses",
           title: "Sotuv kurslari",
           body: [
-            "Oltita kurs: «Ikki qadamli aloqa», «Dumaloq video», «+» — maketga rozilik», «E’tirozlar», «Xat yondashuvlari» va «Iliq lidlar». Bu kitoblardagi umumiy maslahatlar emas, bizning jarayonimiz: nega birinchi bo‘lib faqat salom ketadi, qachon dumaloq video o‘rniga xat ketadi, dumaloq videoga nima «ha» hisoblanadi, «qimmat» va «taklif yuboring»ga nima deyish kerak, iliq lidlar navbati qanday ishlaydi. Yondashuvlar kursida avtoaloqaning haqiqiy matnlari bor — [«Sovuq aloqalar»](/admin/prospect) → «Xat matnlari va A/B»dagilarning o‘zi.",
-            "Kurs **«Sotuv kurslari»** blokidagi kartochka orqali ochiladi. Ichida — tartib bilan darslar, ular ostida **«Materiallar»** — egasi qo‘shadigan havolalar (video, suhbat yozuvlari, maqolalar) va test. Kurs kartochkasida unda nechta dars va savol borligi hamda eng yaxshi natijangiz ko‘rinadi: «topshirildi», eng yaxshi hisob bilan «topshirilmadi» yoki «hali topshirilmagan».",
+            "Kurslar oltita va ular bizning haqiqiy jarayon haqida: birinchi «Здравствуйте», dumaloq video, mijozning «+» roziligi, e’tirozlar, xat matnlari va iliq lidlar. Xatlar haqidagi kursda [«Sovuq aloqalar»](/admin/prospect) bo‘limidagi matnlarning o‘zi turadi.",
+            "**«Sotuv kurslari»** blokida kurs kartochkasini bosing. Ichida darslar tartib bilan, ularning ostida «Materiallar» va test. Kartochkada darslar va savollar soni hamda natijangiz ko‘rinadi: topshirilgan, topshirilmagan yoki «hali topshirilmagan».",
           ],
         },
         {
           id: "quiz",
-          title: "Testni qanday topshirish kerak",
+          title: "Testni qanday topshirish",
           body: [
-            "**«Testni boshlash»**ni bosing. Savollar birma-bir keladi, variantlar aralashtirilgan. Javob tanladingiz — darhol to‘g‘ri yoki noto‘g‘riligi ko‘rinadi; noto‘g‘ri bo‘lsa — qaysi javob to‘g‘ri, nega va **«Darsni qayta o‘qish»** havolasi (panel bo‘yicha testda — **«Yo‘riqnoma bandini ochish»**). Keyin — **«Keyingi savol»**, oxirgisida — **«Testni yakunlash»**. Tepadagi chiziq qanchasi o‘tilganini ko‘rsatadi.",
-            "Topshirildi — kamida 70% to‘g‘ri javob. Savolni o‘tkazib yuborib bo‘lmaydi: javobsiz savol noto‘g‘ri hisoblanadi. Qayta topshirish cheklanmagan — **«Yana topshirish»**, eng yaxshi natija hisoblanadi. Javoblarni brauzer emas, server tekshiradi va har bir urinish saqlanadi.",
-            "Xuddi shu testlar studiyaning Telegram botida ham bor: unga /learn deb yozing va testni tanlang. Bot raqamlangan variantlar va raqamli tugmalar bilan savol yuboradi, bosgandan keyin tushuntirish bilan to‘g‘ri yoki noto‘g‘riligini aytadi, oxirida — natija. Botdagi natija paneldagi bilan bitta jadvalga tushadi. Bot panel tilini o‘rganmaguncha ruscha yozadi.",
+            "**«Testni boshlash»** tugmasini bosing. Savollar bittadan keladi. Javobdan keyin darhol to‘g‘ri yoki noto‘g‘ri ekani va nima uchunligi ko‘rinadi. Xato qildingizmi? Yonida **«Darsni qayta o‘qish»** havolasi bor, panel bo‘yicha testda esa **«Yo‘riqnoma bandini ochish»**.",
+            "To‘g‘ri javoblar 70% va undan ko‘p bo‘lsa, test topshirilgan. Savolni o‘tkazib bo‘lmaydi, javobsiz savol xato hisoblanadi. **«Yana topshirish»** tugmasi bilan xohlagancha qayta topshirish mumkin, eng yaxshi natija hisobga olinadi.",
+            "Shu testlar Telegramdagi studiya botida ham bor. Unga /learn deb yozing va testni tanlang. Botdagi natija paneldagi bilan bir joyga tushadi.",
           ],
         },
         {
           id: "panel-quiz",
           title: "Panel bo‘yicha test",
           body: [
-            "**«Panel bo‘yicha test»** panel bo‘limlarini qanchalik bilishingizni tekshiradi: lidlar navbati, [kunlik to‘plam](#prospect-portion), salom va dumaloq video, maketlar, loyihalar, moliya. Savollar shu yo‘riqnomadan yig‘ilgan va har biri o‘z bandiga olib boradi: xato qildingiz — yonida aynan shu haqda yozilgan joyga havola.",
-            "Savollar — faqat sizga ochiq bo‘limlar va rolingiz ko‘radigan bandlar haqida. Shuning uchun menejer va rahbarda ularning soni har xil: rahbar «Jamoa», «Hamkorlar» va «Akkauntlar» haqida ham javob beradi.",
+            "**«Panel bo‘yicha test»** panelni qanchalik bilishingizni tekshiradi: lidlar navbati, [kunlik to‘plam](#prospect-portion), maketlar va boshqa bo‘limlar. Xato qilsangiz, yonida shu yo‘riqnomaning kerakli bandiga havola chiqadi.",
+            "Savollar faqat sizga ochiq bo‘limlar haqida. Shuning uchun menejer va rahbarda ularning soni har xil.",
           ],
         },
         {
@@ -3080,16 +3086,16 @@ export const uz: HelpCopy = {
           title: "Nima majburiy",
           body: {
             manager: [
-              "Ta’lim menejerlar uchun majburiy — egasining 12.10.2026 dagi qarori: har bir kurs va panel bo‘yicha test, kamida 70% to‘g‘ri javob. Bo‘lim tepasida **«Topshirish qoldi»** bloki — hali nima topshirilmagani, kursga havola bilan. Hammasini topshirdingiz — u yerda barcha majburiy testlar topshirilgani yoziladi.",
-              "Bu ishni yopmaydi: kartochkalar, kunlik to‘plam va lidlar odatdagidek keladi. Lekin rahbar va egasi kim nimani topshirganini ko‘radi — kurslarni birinchi kunlarda o‘ting.",
+              "Ta’lim menejerlar uchun majburiy: barcha kurslar va panel bo‘yicha test, kamida 70% to‘g‘ri javob. Bo‘lim tepasidagi **«Topshirish qoldi»** bloki hali nima topshirilmaganini ko‘rsatadi. Hammasi topshirilganda u yerda «Barcha majburiy testlar topshirildi.» deb yoziladi.",
+              "Bu ishlashga xalaqit bermaydi: lidlar va kunlik to‘plam odatdagidek keladi. Lekin rahbar va egasi kim nimani topshirganini ko‘radi. Kurslarni birinchi kunlarda topshiring.",
             ],
             head: [
-              "Kurslar menejerlar uchun majburiy — egasining 12.10.2026 dagi qarori: har bir kurs va panel bo‘yicha test, kamida 70% to‘g‘ri javob. Siz uchun — xohishga ko‘ra, lekin panel bo‘yicha testni o‘zingiz topshirgan foydali: menejerlaringizdan nima so‘ralishi ko‘rinadi.",
-              "Majburiylik ishni yopmaydi — faqat ko‘rsatiladi: menejerda «Topshirish qoldi» bloki, sizda — [jamoa natijalari](#learn-results)dagi **«Topshirilmagan»** ustuni.",
+              "Kurslar menejerlar uchun majburiy: barcha kurslar va panel bo‘yicha test, kamida 70% to‘g‘ri javob. Siz uchun ixtiyoriy. Lekin menejerlaringizdan nima so‘ralishini bilish uchun panel bo‘yicha testni topshirish foydali.",
+              "Kurslarsiz ham ishlash mumkin, majburiylik faqat ko‘rsatiladi. Menejerda bu «Topshirish qoldi» bloki, sizda esa [jamoa natijalaridagi](#learn-results) **«Topshirilmagan»** ustuni.",
             ],
             admin: [
-              "Ta’lim yoqilgan ekan, kurslar menejerlar uchun majburiy: har bir kurs va panel bo‘yicha test, kamida 70% to‘g‘ri javob. Rahbar va siz uchun — xohishga ko‘ra. O‘chirilgan bo‘lsa — majburiylik hech kimga ta’sir qilmaydi, [o‘chirgich](#learn-switch)ga qarang.",
-              "U ishni yopmaydi — faqat ko‘rsatiladi: menejerda «Topshirish qoldi» bloki, sizda va rahbarda — [jamoa natijalari](#learn-results)dagi **«Topshirilmagan»** ustuni. «Yangi» menejer — bo‘lim ishga tushgandan keyin qo‘shilgan; unga ham, boshqalarga ham kurslar topshirilmaguncha majburiy.",
+              "Ta’lim yoqilgan paytda kurslar menejerlar uchun majburiy: barcha kurslar va panel bo‘yicha test, kamida 70% to‘g‘ri javob. Rahbar va siz uchun ixtiyoriy. Ta’lim o‘chirilganda majburiy narsa yo‘q, qarang: [o‘chirgich](#learn-switch).",
+              "Kurslarsiz ham ishlash mumkin, majburiylik faqat ko‘rsatiladi. Menejerda bu «Topshirish qoldi» bloki, siz va rahbarda esa [jamoa natijalaridagi](#learn-results) **«Topshirilmagan»** ustuni.",
             ],
           },
         },
@@ -3098,8 +3104,8 @@ export const uz: HelpCopy = {
           title: "Jamoa natijalari",
           roles: ["admin", "head"],
           body: [
-            "Bo‘lim pastida — **«Jamoa natijalari»** jadvali: qatorda — xodim va uning roli, ustunlarda — har bir kurs va panel bo‘yicha test. Katakda — eng yaxshi natija, masalan «5/6»: yashil — topshirilgan, sariq — hali yo‘q, nuqta — topshirmagan. **«yangi»** belgisi — bo‘lim ishga tushgandan keyin qo‘shilgan menejer.",
-            "Ta’lim yoqilgan ekan, oxirgi **«Topshirilmagan»** ustuni menejerga nima topshirish qolganini sanaydi yoki hammasi topshirilganini yozadi; rahbar va egasida u yerda **«xohishga ko‘ra»**. Jadval panel va botdagi urinishlarni birga yig‘adi. Ortda qolganga shaxsan yozib, xatolarni birga ko‘rib chiqishni taklif qilgan yaxshi: test kimni urishishni emas, nimani tushuntirishni ko‘rsatadi.",
+            "Bo‘lim pastida **«Jamoa natijalari»** jadvali. Qatorda xodim, ustunlarda kurslar va panel bo‘yicha test. Katakda eng yaxshi natija, masalan «5/6»: yashil topshirilgan, sariq hali yo‘q, nuqta topshirmagan degani.",
+            "**«Topshirilmagan»** ustuni menejerga nima topshirish qolganini ko‘rsatadi. «yangi» belgisi ta’lim boshlangandan keyin qo‘shilgan menejerda turadi. Botdagi urinishlar ham shu yerda. Ortda qolganga shaxsan yozib, xatolarni birga ko‘rib chiqqan yaxshi.",
           ],
         },
         {
@@ -3107,16 +3113,16 @@ export const uz: HelpCopy = {
           title: "Menejerlar uchun videokurs",
           body: {
             manager: [
-              "**«Menejerlar uchun videokurs»** bloki — 13 ta qisqa video, jami bir soatga yaqin: studiya nima sotadi, «lending» va «konversiya» so‘zlari oddiy tilda, mijozning salomdan shartnomagacha yo‘li, biznes egalarining qo‘rquvlari va ularga nima javob berish, ishonch bilan sotish va og‘izdan og‘izga tavsiya. Nutq rus tilida, subtitrlar o‘zbekcha, ekranda bizning haqiqiy maketlarimiz.",
-              "Tartib bilan, bir vaqtda bitta videodan ko‘ring. Har birida topshiriq bor: diktor pauzaga qo‘yishni so‘raydi, qo‘ying va o‘zingiz javob bering, keyin tahlilni ko‘ring. Videoda studiya va’da qilmaydigan narx va muddatlar yo‘q, u yuqoridagi kurslarga zid emas: kurslar batafsil qoidalar, video umumiy manzara. Video ostida «Video hali yuklanmagan.» yozilgan bo‘lsa, uni hali joylashmagan.",
+              "**«Menejerlar uchun videokurs»** bloki bu 13 ta qisqa video, jami bir soatga yaqin. Ularda studiya nima sotishi, mijozning «Здравствуйте»dan shartnomagacha yo‘li va egalarning qo‘rquvlariga nima javob berish haqida. Nutq rus tilida, subtitrlar o‘zbekcha.",
+              "Tartib bilan, bir vaqtda bitta videodan ko‘ring. Har birida topshiriq bor: pauza qiling, o‘zingiz javob bering, keyin tahlilni ko‘ring. «Video hali yuklanmagan.» yozuvi video hali joylanmaganini bildiradi.",
             ],
             head: [
-              "**«Menejerlar uchun videokurs»** bloki — 13 ta qisqa video, jami bir soatga yaqin: studiya nima sotadi, mijoz yo‘li, egalarning qo‘rquvlari, ishonch bilan sotish va og‘izdan og‘izga tavsiya. Nutq rus tilida, subtitrlar o‘zbekcha. Videoni «Ta’lim» ochiq bo‘lgan har kim ko‘radi.",
-              "Har bir video ostida **«Videoni yuklash yoki almashtirish»** bloki yig‘ilgan: **«Video tili»**ni tanlang (kurs videolari ruscha, «Ruscha»ni qo‘ying) va MP4 faylni, **«Yuklash»**ni bosing. Fayl bo‘laklab ketadi va aloqa uzilsa o‘zi davom etadi. Yangi video shu tildagi eskisini almashtiradi, **«Olib tashlash»** uni o‘chiradi. Video fayllarini egasi alohida olgan, tartib ro‘yxatdagi raqam bo‘yicha.",
+              "**«Menejerlar uchun videokurs»** bloki bu 13 ta qisqa video, jami bir soatga yaqin: studiya nima sotadi, mijoz yo‘li va egalarning qo‘rquvlari. Nutq rus tilida, subtitrlar o‘zbekcha. Videoni «Ta’lim» ochiq bo‘lgan har kim ko‘radi.",
+              "Har bir video ostida **«Videoni yuklash yoki almashtirish»** bloki bor. «Video tili»ni (kursda bu rus tili), MP4 faylni tanlang va «Yuklash»ni bosing. Yangi video shu tildagi eskisining o‘rnini egallaydi, «Olib tashlash» esa uni o‘chiradi.",
             ],
             admin: [
-              "**«Menejerlar uchun videokurs»** bloki — 13 ta qisqa video, jami bir soatga yaqin, siz 13.10.2026 da tasdiqlagan ssenariylar bo‘yicha (`docs/training/video-guides`). Nutq rus tilida Vosk ovozida, subtitrlar o‘zbekcha. Videoni «Ta’lim» ochiq bo‘lgan har kim ko‘radi: bo‘lim o‘chiq ekan, faqat siz.",
-              "Har bir video ostida **«Videoni yuklash yoki almashtirish»** bloki yig‘ilgan: **«Video tili»**ni («Ruscha») va shu raqamli MP4 faylni tanlang, **«Yuklash»**ni bosing. Rahbar ham yuklay oladi. Yangi video shu tildagi eskisini almashtiradi, **«Olib tashlash»** uni o‘chiradi; kim nima yuklagani [Jurnalda](/admin/audit). Video serverda yo‘riqnoma videolari yonida turadi.",
+              "**«Menejerlar uchun videokurs»** bloki bu 13 ta qisqa video, jami bir soatga yaqin: studiya nima sotadi, mijoz yo‘li va egalarning qo‘rquvlari. Nutq rus tilida, subtitrlar o‘zbekcha. Bo‘lim o‘chirilgan paytda videoni faqat siz ko‘rasiz.",
+              "Har bir video ostida **«Videoni yuklash yoki almashtirish»** bloki bor. «Video tili»ni (kursda bu rus tili), MP4 faylni tanlang va «Yuklash»ni bosing. Yangi video shu tildagi eskisining o‘rnini egallaydi, «Olib tashlash» esa uni o‘chiradi. Rahbar ham yuklay oladi.",
             ],
           },
         },
@@ -3125,13 +3131,13 @@ export const uz: HelpCopy = {
           title: "Kurs materiallari",
           body: {
             manager: [
-              "Kursda darslar ostida — **«Materiallar»** bloki: egasi qo‘shgan havolalar — video, muvaffaqiyatli suhbatlar yozuvlari, maqolalar. Yangi oynada ochiladi. Havola yo‘q bo‘lsa, kursga hozircha material yo‘qligi yoziladi: kurs ularsiz ham o‘tiladi.",
+              "Kurs darslari ostida **«Materiallar»** bloki bor: videolar, muvaffaqiyatli suhbatlar yozuvlari, maqolalar. Havolalarni egasi qo‘shadi, ular yangi oynada ochiladi. Havola bo‘lmasa ham kursni topshirish mumkin.",
             ],
             head: [
-              "Kursda darslar ostida — **«Materiallar»** bloki: egasi qo‘shgan havolalar — video, muvaffaqiyatli suhbatlar yozuvlari, maqolalar. Yangi oynada ochiladi. Jamoa uchun foydali narsa topsangiz — egasiga yuboring, u qo‘shadi.",
+              "Kurs darslari ostida **«Materiallar»** bloki bor: videolar, muvaffaqiyatli suhbatlar yozuvlari, maqolalar. Havolalarni egasi qo‘shadi. Jamoa uchun foydali narsa topdingizmi? Unga yuboring.",
             ],
             admin: [
-              "Har bir kursda va panel bo‘yicha testda darslar ostida — **«Materiallar»** bloki. **«Nomi»** va **«Havola»**ni kiriting (faqat https:// yoki http:// bilan boshlanadigan manzil) va **«Material qo‘shish»**ni bosing — havola bo‘lim ochiq bo‘lgan hammada darhol paydo bo‘ladi. Havola yonidagi **«Materialni olib tashlash»** uni o‘chiradi. Qo‘shish va olib tashlashni faqat siz qila olasiz; har bir harakat — [Jurnal](/admin/audit)da.",
+              "Har bir kursda va panel bo‘yicha testda **«Materiallar»** bloki bor. «Nomi» va «Havola»ni (manzil https:// yoki http:// bilan boshlanadi) yozib, **«Material qo‘shish»**ni bosing. Havola darhol hammada paydo bo‘ladi, «Materialni olib tashlash» esa uni o‘chiradi. Qo‘shish va olib tashlashni faqat siz qila olasiz.",
             ],
           },
         },
@@ -3140,23 +3146,29 @@ export const uz: HelpCopy = {
 
     /* ── Настройки ───────────────────────────────────────────────────── */
     "/admin/settings": {
-      what: "Panelda sozlanadigan hamma narsa bitta sahifada. Sarlavhada, ismingiz yonidagi ⚙ tishli g‘ildirak bilan ochiladi. O‘zingizniki shu yerning o‘zida o‘zgaradi, qolgani — o‘z joyiga havola orqali: tugmalar, huquqlar va tekshiruvlar u yerda avvalgidek. Sahifa hammaga doim ochiq, uni belgi bilan yopib bo‘lmaydi.",
+      what: "Panelning barcha sozlamalari bitta sahifada. U tepada o‘ngda, ismingiz yonidagi ⚙ tishli g‘ildirak bilan ochiladi. O‘zingizniki shu yerda o‘zgaradi, qolgani havola orqali ochiladi.",
       items: [
         {
           id: "mine",
           title: "«Meniki»: til, menyu, telefon va bot",
           body: {
             manager: [
-              "**«Meniki»** bloki faqat sizga tegishlisini, barcha qurilmalaringizda o‘zgartiradi. **«Panel va yo‘riqnoma tili»** — RU, UZ yoki PL, sarlavhadagi xuddi shu almashtirgich; bot xabarlari hozircha ruscha. **«Menyu ko‘rinishi»** — «Yangi menyu» tumbleri: yoqilgan — chapda belgilar qatori, «Yana», yorliqlar va qidiruv, o‘chirilgan — barcha bo‘limlar bir qatorda, avvalgidek. **«Shu qurilmadagi bildirishnomalar»** — bot sizga Telegramda yozadigan matn bilan push; har bir telefon va kompyuterda alohida yoqiladi, [Bosh sahifa](/admin/hq)dagi kartochka kabi. Menyu tumbleri yonida — **«Panel bilan tanishuvni yana ko‘rsatish»**: 03.11.2026 yangilanishidan keyin birinchi kirishdagi o‘sha 7 qadam (ko‘rinish o‘zgardi, funksiyalar o‘sha). O‘sha yerda — **«Ekranda ko‘rsatish: «Bozorlar»dan qanday foydalanish»**: [«Bozorlar»](/admin/markets) bo‘limi bo‘yicha qisqa o‘rgatish.",
-              "**«Bot menga nimalarni yuboradi»** sizga botning nechta turdagi xabarlari kelishini ko‘rsatadi. Belgilarni rahbar yoki egasi «Jamoa»da qo‘yadi: ortiqcha yoki yetishmayotgan narsa bo‘lsa, ulardan so‘rang. Baza javob bermasa, qator shuni aytadi, «hammasi keladi» deb yozmaydi.",
+              "**«Meniki»** bloki faqat sizga tegishlisini o‘zgartiradi, darhol barcha qurilmalaringizda. **«Panel va yo‘riqnoma tili»** RU, UZ yoki PL ni almashtiradi. Bot xabarlari hozircha rus tilida keladi.",
+              "**«Menyu ko‘rinishi»** chapda belgilar bilan «Yangi menyu»ni yoki bitta qatorli eski menyuni tanlaydi. Yonidagi tugmalar panel bilan tanishuvni va [«Bozorlar»](/admin/markets) bo‘limi bo‘yicha ta’limni qayta ko‘rsatadi.",
+              "**«Shu qurilmadagi bildirishnomalar»** pushni (ekranda chiqadigan xabar) yoqadi, unda bot Telegramda yozadigan matnning o‘zi bo‘ladi. Har bir qurilmada alohida yoqing.",
+              "**«Bot menga nimalarni yuboradi»** botning nechta turdagi xabari sizga kelishini ko‘rsatadi. Belgilarni rahbar yoki egasi «Jamoa»da qo‘yadi. Biror narsa ortiqcha yoki yetishmasa, ulardan so‘rang.",
             ],
             head: [
-              "**«Meniki»** bloki faqat sizga tegishlisini, barcha qurilmalaringizda o‘zgartiradi. **«Panel va yo‘riqnoma tili»** — RU, UZ yoki PL, sarlavhadagi xuddi shu almashtirgich; bot xabarlari hozircha ruscha. **«Menyu ko‘rinishi»** — «Yangi menyu» tumbleri: yoqilgan — chapda belgilar qatori, «Yana», yorliqlar va qidiruv, o‘chirilgan — barcha bo‘limlar bir qatorda, avvalgidek. **«Shu qurilmadagi bildirishnomalar»** — bot sizga Telegramda yozadigan matn bilan push; har bir telefon va kompyuterda alohida yoqiladi, [Bosh sahifa](/admin/hq)dagi kartochka kabi. Menyu tumbleri yonida — **«Panel bilan tanishuvni yana ko‘rsatish»**: 03.11.2026 yangilanishidan keyin birinchi kirishdagi o‘sha 7 qadam (ko‘rinish o‘zgardi, funksiyalar o‘sha). O‘sha yerda — **«Ekranda ko‘rsatish: «Bozorlar»dan qanday foydalanish»**: [«Bozorlar»](/admin/markets) bo‘limi bo‘yicha qisqa o‘rgatish.",
-              "**«Bot menga nimalarni yuboradi»** sizga botning nechta turdagi xabarlari kelishini ko‘rsatadi, yonidagi havola esa [Jamoa](/admin/team)ga, ismingiz ostidagi belgilarga olib boradi. Baza javob bermasa, qator shuni aytadi, «hammasi keladi» deb yozmaydi.",
+              "**«Meniki»** bloki faqat sizga tegishlisini o‘zgartiradi, darhol barcha qurilmalaringizda. **«Panel va yo‘riqnoma tili»** RU, UZ yoki PL ni almashtiradi. Bot xabarlari hozircha rus tilida keladi.",
+              "**«Menyu ko‘rinishi»** chapda belgilar bilan «Yangi menyu»ni yoki bitta qatorli eski menyuni tanlaydi. Yonidagi tugmalar panel bilan tanishuvni va [«Bozorlar»](/admin/markets) bo‘limi bo‘yicha ta’limni qayta ko‘rsatadi.",
+              "**«Shu qurilmadagi bildirishnomalar»** pushni (ekranda chiqadigan xabar) yoqadi, unda bot Telegramda yozadigan matnning o‘zi bo‘ladi. Har bir qurilmada alohida yoqing.",
+              "**«Bot menga nimalarni yuboradi»** botning nechta turdagi xabari sizga kelishini ko‘rsatadi. Yonidagi havola [Jamoa](/admin/team) bo‘limiga, ismingiz ostidagi belgilarga olib boradi.",
             ],
             admin: [
-              "**«Meniki»** bloki faqat sizga tegishlisini, barcha qurilmalaringizda o‘zgartiradi. **«Panel va yo‘riqnoma tili»** — RU, UZ yoki PL, sarlavhadagi xuddi shu almashtirgich; bot xabarlari hozircha ruscha. **«Menyu ko‘rinishi»** — «Yangi menyu» tumbleri: yoqilgan — chapda belgilar qatori, «Yana», yorliqlar va qidiruv, o‘chirilgan — barcha bo‘limlar bir qatorda, avvalgidek. **«Shu qurilmadagi bildirishnomalar»** — bot sizga Telegramda yozadigan matn bilan push; har bir telefon va kompyuterda alohida yoqiladi, [Bosh sahifa](/admin/hq)dagi kartochka kabi. Menyu tumbleri yonida — **«Panel bilan tanishuvni yana ko‘rsatish»**: 03.11.2026 yangilanishidan keyin birinchi kirishdagi o‘sha 7 qadam (ko‘rinish o‘zgardi, funksiyalar o‘sha). O‘sha yerda — **«Ekranda ko‘rsatish: «Bozorlar»dan qanday foydalanish»**: [«Bozorlar»](/admin/markets) bo‘limi bo‘yicha qisqa o‘rgatish.",
-              "**«Bot menga nimalarni yuboradi»** sizga botning nechta turdagi xabarlari kelishini ko‘rsatadi, yonidagi havola esa [Jamoa](/admin/team)ga, ismingiz ostidagi belgilarga olib boradi. Baza javob bermasa, qator shuni aytadi, «hammasi keladi» deb yozmaydi.",
+              "**«Meniki»** bloki faqat sizga tegishlisini o‘zgartiradi, darhol barcha qurilmalaringizda. **«Panel va yo‘riqnoma tili»** RU, UZ yoki PL ni almashtiradi. Bot xabarlari hozircha rus tilida keladi.",
+              "**«Menyu ko‘rinishi»** chapda belgilar bilan «Yangi menyu»ni yoki bitta qatorli eski menyuni tanlaydi. Yonidagi tugmalar panel bilan tanishuvni va [«Bozorlar»](/admin/markets) bo‘limi bo‘yicha ta’limni qayta ko‘rsatadi.",
+              "**«Shu qurilmadagi bildirishnomalar»** pushni (ekranda chiqadigan xabar) yoqadi, unda bot Telegramda yozadigan matnning o‘zi bo‘ladi. Har bir qurilmada alohida yoqing.",
+              "**«Bot menga nimalarni yuboradi»** botning nechta turdagi xabari sizga kelishini ko‘rsatadi. Yonidagi havola [Jamoa](/admin/team) bo‘limiga, ismingiz ostidagi belgilarga olib boradi.",
             ],
           },
         },
@@ -3164,25 +3176,26 @@ export const uz: HelpCopy = {
           id: "leads",
           title: "«Qaysi lidlarni yuborish»: o‘zingiz tanlaysiz",
           body: [
-            "**«Meniki»** blokida **«Qaysi lidlarni yuborish»** qatori bor — lid turlari bo‘yicha yettita belgi: «Sovuq aloqalar» (mijoz ishchi akkauntdan yuborilgan salomga javob berdi va maketga rozi bo‘ldi), «Tenderlar» (skaut topgan davlat xaridlari lotlari), «Guruhlardan signallar (skaut)» (Telegram guruhida odam ijrochi qidirmoqda), «Hamkorlar va agentliklar» (mijoz hamkor havolasi yoki promokodi orqali, blogger yoki agentlikdan keldi), «Sayt va botdan buyurtmalar» (forma, saytdagi chat, bot bilan suhbat, vitrina, DevUz Box kutish ro‘yxati) va «Botdan maket» va «SI bo‘yicha yordam (Claudery)» (Claudery botidan pullik ariza). Odatda hammasi belgilangan. Ortiqchasini olib tashlang va **«Saqlash»** ni bosing — tepada saqlangani haqida xabar chiqadi. Lid turini panel o‘zi lid qayerdan kelganiga qarab aniqlaydi, neyrotarmoqsiz.",
-            "Olib tashlangan tur — bu faqat «bot kartochka yubormaydi» degani emas. [Navbat](#leads-queue) ham bunday lidni sizga taklif qilmaydi: u darhol belgisi turgan xodimga ketadi va sizda yarim soat kutib turmaydi. Tunda va ish vaqtidan tashqari lid avvalgidek hammaga ochiladi — lekin faqat bu turni olib tashlamaganlarga. Bu turni hech kim tanlamagan bo‘lsa, lid mijoz yo‘qolmasligi uchun avvalgidek hammaga keladi, rahbar va egasiga esa «🧭 … hech kim tanlamadi» qatori keladi. Har bir saqlash jurnalga yoziladi. Rahbar va egasi bu belgilarni siz uchun ham «Jamoa»da qo‘yishi mumkin.",
+            "«Meniki» blokida **«Qaysi lidlarni yuborish»** bor. Bu lid turlari bo‘yicha belgilar: «Sovuq aloqalar», «Tenderlar», «Guruhlardan signallar (skaut)», «Hamkorlar va agentliklar», «Sayt va botdan buyurtmalar», «Botdan maket» va «SI bo‘yicha yordam (Claudery)». Boshida hammasi belgilangan.",
+            "Ortiqchasini olib tashlab, **«Saqlash»**ni bosing. Bot bunday lidlarni yubormaydi, [navbat](#leads-queue) ham ularni sizga taklif qilmaydi. Ular darhol belgisi turganlarga ketadi.",
+            "Bu turni hech kim tanlamagan bo‘lsa, mijoz yo‘qolmasligi uchun lid baribir hammaga keladi. Rahbar va egasi bu belgilarni siz uchun «Jamoa»da qo‘ya oladi.",
           ],
         },
         {
           id: "links",
-          title: "Aloqalar va jamoa — havolalar bilan",
+          title: "Aloqalar va jamoa: havolalar bilan",
           body: {
             manager: [
-              "Menejerda **«Aloqalar»** bloki — bitta qator, **«Xat matnlari va A/B»**: sayt haqidagi xatingiz matnlari, jamoaning umumiy matnlari va qaysi matn ko‘proq javob olishi hisobi. **«Ochish»** to‘g‘ridan-to‘g‘ri u yerga, [Sovuq aloqalar](/admin/prospect)ga olib boradi. Salomlashuv, avtomatik aloqalar, dumaloq videolar va akkauntlarni rahbar va egasi sozlaydi, shuning uchun sizda bu qatorlar yo‘q.",
-              "Qatorlar rolingiz va egasining belgilari bo‘yicha tanlangan: bo‘lim sizga yopiq bo‘lsa, uning qatori ham yo‘q. Bu yerda faqat sizga ochiladigan narsa, tugmalar va tekshiruvlarning o‘zi esa avvalgi joylarida qolgan.",
+              "**«Aloqalar»** blokida sizda bitta qator: «Xat matnlari va A/B». U yerda sayt haqidagi xat matnlaringiz, jamoaning umumiy matnlari va qaysi matnga ko‘proq javob kelishi. **«Ochish»** to‘g‘ri o‘sha yerga olib boradi.",
+              "Bu yerda faqat sizga ochiq narsalar. Salomlashuv, avtomatik aloqalar, dumaloq videolar va akkauntlarni rahbar va egasi sozlaydi.",
             ],
             head: [
-              "**«Aloqalar»** bloki: «Xat matnlari va A/B»; «Birinchi xabar» — ishchi akkauntdan birinchi ketadigan salomlashuv, ruscha va o‘zbekcha alohida; «Avtomatik aloqalar» — kunlik me’yor va bugungi hisob (egasi yoqadi va o‘chiradi); «Sohalar bo‘yicha dumaloq videolar» va «Ishchi akkauntlar». **«Jamoa va kirish»** bloki: «Bot jamoaga nimalarni yuboradi» — har bir menejerning bildirishnoma belgilari [Jamoa](/admin/team)da. **«Ochish»** kerakli blokka to‘g‘ridan-to‘g‘ri olib boradi.",
-              "Qatorlar rolingiz va egasining belgilari bo‘yicha tanlangan: bo‘lim sizga yopiq bo‘lsa, uning qatori ham yo‘q. Bu yerda faqat sizga ochiladigan narsa, tugmalar va tekshiruvlarning o‘zi esa avvalgi joylarida qolgan.",
+              "**«Aloqalar»** blokida beshta qator: «Xat matnlari va A/B», «Birinchi xabar», «Avtomatik aloqalar», «Sohalar bo‘yicha dumaloq videolar» va «Ishchi akkauntlar». **«Jamoa va kirish»** blokida «Bot jamoaga nimalarni yuboradi» qatori. **«Ochish»** to‘g‘ri kerakli joyga olib boradi.",
+              "Tugmalarning o‘zi o‘z bo‘limlarida qolgan, bu yerda faqat havolalar. Bo‘limlarga kirish, cheklovsiz lidlar va ta’limni egasi hal qiladi, shuning uchun bu qatorlar sizda yo‘q.",
             ],
             admin: [
-              "**«Aloqalar»** bloki: «Xat matnlari va A/B»; «Birinchi xabar» — ishchi akkauntdan birinchi ketadigan salomlashuv, ruscha va o‘zbekcha alohida; «Avtomatik aloqalar» — kunlik me’yor, bugungi hisob va o‘chirgich; «Sohalar bo‘yicha dumaloq videolar» va «Ishchi akkauntlar». **«Jamoa va kirish»** bloki: «Bot jamoaga nimalarni yuboradi», «Bo‘limlarga kirish» va «Cheklovsiz lidlar» — hammasi [Jamoa](/admin/team)da, xodim ismi ostida; «Jamoa uchun ta’lim» — [Ta’lim](/admin/learn)dagi o‘chirgich. **«Ochish»** kerakli blokka to‘g‘ridan-to‘g‘ri olib boradi.",
-              "Rahbar bu yerda bo‘limlarga kirish, cheklovsiz lidlar va ta’limdan boshqa hammasini ko‘radi: bularni faqat siz hal qilasiz. Menejer — o‘z sozlamalari va «Xat matnlari va A/B». Xodimga yopilgan bo‘lim uning qatorini ham olib tashlaydi.",
+              "**«Aloqalar»** blokida beshta qator: «Xat matnlari va A/B», «Birinchi xabar», «Avtomatik aloqalar», «Sohalar bo‘yicha dumaloq videolar» va «Ishchi akkauntlar». **«Jamoa va kirish»** blokida: «Bot jamoaga nimalarni yuboradi», «Bo‘limlarga kirish», «Cheklovsiz lidlar» va «Jamoa uchun ta’lim». **«Ochish»** to‘g‘ri kerakli joyga olib boradi.",
+              "Rahbar bo‘limlarga kirish, cheklovsiz lidlar va ta’limdan boshqa hammasini ko‘radi. Menejerda faqat o‘z sozlamalari va «Xat matnlari va A/B». Odamga bo‘limni yopsangiz, uning qatorlari bu yerdan ham yo‘qoladi.",
             ],
           },
         },
@@ -3191,23 +3204,23 @@ export const uz: HelpCopy = {
 
     /* ── Инструкции ───────────────────────────────────────────────────── */
     "/admin/help": {
-      what: "Shu sahifa. Bu yerda bo‘limlar bo‘yicha panel qanday ishlashi va nima nimaga bog‘liqligi yozilgan — faqat sizga ochiq narsalar haqida va siz ko‘rgandek.",
+      what: "Shu sahifa. Bu yerda bo‘limlar bo‘yicha panel qanday ishlashi tushuntirilgan. Siz faqat sizga ochiq narsalarni ko‘rasiz.",
       items: [
         {
           id: "how",
           title: "Yo‘riqnomadan qanday foydalanish",
           body: [
-            "Istalgan bo‘limning tepasida — «Bo‘limdan qanday foydalanish» tugmasi: u shu yerda o‘sha bo‘limning bandini ochadi. Bo‘limlar ichidagi murakkab bloklar yonida — kichik «?», u to‘g‘ri kerakli bandga olib boradi.",
-            "Tepada — mundarija va yo‘riqnoma tilini almashtirish. Yo‘riqnomaning o‘zi — bo‘lim tugmasidan ham, «?» dan ham — [panel tilida](#help-language) ochiladi.",
-            "Biror narsa yetishmasa yoki ekrandagidan boshqacha yozilgan bo‘lsa — egasiga ayting, qo‘shib qo‘yamiz.",
+            "Panelning har bir bo‘limida tepada «Bo‘limdan qanday foydalanish» tugmasi bor. U shu yerda o‘sha bo‘lim haqidagi bandni ochadi. Murakkab bloklar yonida kichik «?» bor, u to‘g‘ri kerakli bandga olib boradi.",
+            "Sahifa tepasida mundarija va yo‘riqnoma tilini tanlash. Tugma yoki havola orqali kelgan bandingiz besh soniya yashil ramka bilan yonib turadi.",
+            "Biror narsa yetishmayaptimi yoki ekranda boshqacha? Egasiga ayting, qo‘shib qo‘yamiz.",
           ],
         },
         {
           id: "crash",
           title: "Sahifa yuklanmadi",
           body: [
-            "Ba’zan sahifa o‘rniga bir soniyaga «Sahifa yangilanmoqda…» chiqadi: bu server bilan aloqa qisqa uzilganda bo‘ladi, o‘tish yoki tugmaga javob yetib kelmagan. Panel sahifani o‘zi qayta so‘raydi, xuddi brauzerda yangilashni bosgandek; saqlaganlaringiz joyida. Nosozlik yozib olinadi, dasturchi uning sababini topib tuzatishi uchun.",
-            "Sahifa ikkinchi marta ham ochilmasa, «Sahifa yuklanmadi» va «Yangilash» tugmasi chiqadi. Uni bosing; tez-tez takrorlansa, rahbarga qaysi sahifada va soat nechada bo‘lganini yozing: nosozlik yozuvi bo‘yicha sabab tezroq topiladi.",
+            "Ba’zan bir soniyaga «Sahifa yangilanmoqda…» chiqadi. Bu aloqadagi qisqa uzilish, panel sahifani o‘zi qayta yuklaydi. Saqlagan hamma narsangiz joyida.",
+            "Ikkinchi marta ham chiqmasa, «Sahifa yuklanmadi» va «Yangilash» tugmasi chiqadi. Uni bosing. Tez-tez takrorlanadimi? Rahbarga qaysi sahifada va soat nechada bo‘lganini yozing.",
           ],
         },
         {
@@ -3215,23 +3228,23 @@ export const uz: HelpCopy = {
           title: "Menyu: belgilar qatori, «Yana» va qidiruv",
           body: {
             manager: [
-              "03.11.2026 dan panel «DevUz Ofis» kabi tuzilgan. Har kuni ishlatiladiganlar chapdagi **belgilar qatorida** turadi (telefonda — ekran pastida, qisqa yozuvlar bilan): «Bosh sahifa», [«Kiruvchi»](/admin/inbox), «Lidlar», «Vazifalar» (belgida — ochiq vazifalaringiz soni, muddati o‘tgani bo‘lsa qizil), «Sovuq aloqalar», «Maketlar». Sichqonchani belgi ustiga olib boring — nomi chiqadi; ochiq bo‘lim yashil yonadi. Qolganlari — qator pastidagi **«Yana»** tugmasi ostida, guruhlarda: **«Pul»** — «Loyihalar», «Moliya», «Do‘kon buyurtmalari». «Statistika» va «Yo‘riqnoma» — o‘sha yerda, alohida qatorlar. Tepada — **yuqori panel**: logotip, qidiruv, «Onlayn» va Toshkent vaqti. O‘ngda, ismingiz yonidagi **⚙** tishli g‘ildirak [Sozlamalar](/admin/settings)ni ochadi: til, menyu, telefondagi bildirishnomalar va aloqalar hamda jamoada sozlanadigan hamma narsaga havolalar. Uning yonidagi **🔔** qo‘ng‘iroqcha — **«Nima keldi»**: bot sizga Telegramda yozgan narsa, 14 kun ichida, yangisi tepada; undagi raqam — hali belgilanmaganlar soni. «Ochish» botdagi tugma olib boradigan joyga olib boradi, **«✓ Bajarildi»** qatorni sondan chiqaradi, «Hammasini belgilash» — barchasini birdan. Belgi faqat sizniki, Telegramda hech narsa o‘zgarmaydi.",
-              "25.10.2026 dan kam ishlatiladiganlar — **bo‘lim ichidagi yorliqlar**: yorliqlar qatori sahifa ustida turadi, ochiq yorliq yashil rangda. «Sovuq aloqalar» · «Skaut signallari» · «Yozishmalar tahlili»; «Loyihalar» · «Shartnomalar»; «Statistika» · «Sotuv bosqichlari». Manzillar va xatcho‘plar avvalgidek, «Bo‘lim yoki kompaniyani topish» yorliqlarni ham topadi: «shar» deb yozsangiz — «Shartnomalar» ochiladi. Yorliq ochiq paytda menyuda uning bo‘limi yonadi. Loyiha, lid yoki shartnoma kartochkasida yorliqlar qatori yo‘q — u yerda chalg‘itardi.",
-              "«Yana» ichidagi bo‘lim ochiq bo‘lsa — «Yana» tugmasining o‘zi yonadi, uning ro‘yxatida esa ochiq bo‘lim yashil. Telefonda pastki qatorda beshta tugma, «Maketlar» — «Yana»da birinchi qator; telefonda panel tili va ism yuqori paneldan olingan, til [Sozlamalar](/admin/settings)da o‘zgartiriladi. «Yana» ro‘yxati «Menyuni yopish» tugmasi, Esc tugmasi, chetga bosish bilan yoki bo‘limga o‘tishingiz bilan o‘zi yopiladi. Eskicha qulayroq bo‘lsa — «Yana» ro‘yxati pastidagi yoki [Sozlamalar](/admin/settings)dagi **«Yangi menyu»** tugmachasini o‘chiring: bo‘limlar yana avvalgidek sarlavhada bitta qatorda, belgilar qatorisiz turadi. Yoqsangiz — belgilar qatori qaytadi. Tanlov sizga, barcha qurilmalaringizda saqlanadi va hamkasblarga ta’sir qilmaydi.",
-              "Eng tezi — logotip yonidagi **yuqori paneldagi qidiruv** (telefonda — lupa belgisi) yoki panelning istalgan joyida **Ctrl+K** (Mac’da — ⌘K) tugmalari. Yozishni boshlang: «shar» — birinchi bo‘lib «Shartnomalar» bo‘limi chiqadi. Kompaniya nomi, ism, ariza raqami, sayt, telefon yoki @nik — pastda **«Kompaniyalar va lidlar»** chiqadi: lidlar, sovuq aloqalar va loyihalar, o‘ng tomonda nima ekanligi yozilgan. Enter tanlanganini ochadi, ↑ ↓ strelkalari boshqasini tanlaydi. Lidlar faqat «Lidlar»da sizga ko‘rinadiganlar orasidan qidiriladi; telefon va @nik bo‘yicha menejer faqat o‘z lidlarini topadi — boshqaning kontakti unga kartochkada ham ochiq emas. Lid o‘sib chiqqan aloqa lid kartochkasi bo‘lib ochiladi. Qidiruv yonidagi yashil «Onlayn» nuqtasi — qurilmada aloqa bor; sariq va «Aloqa yo‘q» — internet uzilgan, u qaytmaguncha panel tugmalari ishlamaydi.",
+              "Har kungi bo‘limlar chapdagi belgilar qatorida: «Bosh sahifa», [«Kiruvchi»](/admin/inbox), «Lidlar», «Vazifalar», «Sovuq aloqalar», «Maketlar». Telefonda bu qator ekran pastida, «Maketlar» esa «Yana»da birinchi qatorda. «Vazifalar»dagi raqam ochiq vazifalaringizni ko‘rsatadi, qizil bo‘lsa muddati o‘tganlari bor.",
+              "Qolgani qator pastidagi «Yana» tugmasi ostida, masalan «Loyihalar», «Statistika» va «Yo‘riqnoma». Kam ishlatiladigan bo‘limlar sahifa tepasida yorliqlar bo‘lib ochiladi: masalan «Statistika» va «Sotuv bosqichlari». Eski bir qatorli menyu qulaymi? «Yana»da yoki [«Sozlamalar»](/admin/settings) bo‘limida «Yangi menyu»ni o‘chiring.",
+              "Tepada o‘ngda qo‘ng‘iroqcha 🔔. Unda bot sizga 14 kun ichida Telegramda yozgan hamma narsa: «✓ Bajarildi» qatorni hisobdan olib tashlaydi, «Hammasini belgilash» hammasini. Yonida ⚙ tishli g‘ildirak, u sozlamalarni ochadi. Til va «Chiqish» ism-sharifingiz bosh harflari yozilgan doiracha ostida.",
+              "Eng tezi tepadagi qidiruv yoki Ctrl+K tugmalari (Mac’da ⌘K). Bo‘lim, kompaniya, ism, buyurtma raqami, telefon yoki @nikni yozing. Telefon va @nik bo‘yicha faqat o‘z lidlaringiz topiladi. Yashil «Onlayn» nuqtasi internet borligini bildiradi, «Aloqa yo‘q» bo‘lsa panel tugmalari ishlamaydi.",
             ],
             head: [
-              "03.11.2026 dan panel «DevUz Ofis» kabi tuzilgan. Har kuni ishlatiladiganlar chapdagi **belgilar qatorida** turadi (telefonda — ekran pastida, qisqa yozuvlar bilan): «Bosh sahifa», [«Kiruvchi»](/admin/inbox), «Lidlar», «Vazifalar» (belgida — ochiq vazifalaringiz soni, muddati o‘tgani bo‘lsa qizil), «Sovuq aloqalar», «Maketlar». Sichqonchani belgi ustiga olib boring — nomi chiqadi; ochiq bo‘lim yashil yonadi. Qolganlari — qator pastidagi **«Yana»** tugmasi ostida, guruhlarda: **«Pul»** — «Loyihalar», «Moliya», «Do‘kon buyurtmalari»; **«Marketing»** — «Trafik», «Hamkorlar», «SI xodimlar»; **«Jamoa»** — «Jamoa», «Ta’lim». «Statistika» va «Yo‘riqnoma» — o‘sha yerda, alohida qatorlar. Tepada — **yuqori panel**: logotip, qidiruv, «Onlayn» va Toshkent vaqti. O‘ngda, ismingiz yonidagi **⚙** tishli g‘ildirak [Sozlamalar](/admin/settings)ni ochadi: til, menyu, telefondagi bildirishnomalar va aloqalar hamda jamoada sozlanadigan hamma narsaga havolalar. Uning yonidagi **🔔** qo‘ng‘iroqcha — **«Nima keldi»**: bot sizga Telegramda yozgan narsa, 14 kun ichida, yangisi tepada; undagi raqam — hali belgilanmaganlar soni. «Ochish» botdagi tugma olib boradigan joyga olib boradi, **«✓ Bajarildi»** qatorni sondan chiqaradi, «Hammasini belgilash» — barchasini birdan. Belgi faqat sizniki, Telegramda hech narsa o‘zgarmaydi.",
-              "25.10.2026 dan kam ishlatiladiganlar — **bo‘lim ichidagi yorliqlar**: yorliqlar qatori sahifa ustida turadi, ochiq yorliq yashil rangda. «Sovuq aloqalar» · «Skaut signallari» · «Yozishmalar tahlili» · «Akkauntlar»; «Loyihalar» · «Shartnomalar»; «Moliya» · «Xarajatlar»; «Trafik» · «Reklama»; «Jamoa» · «Nomzodlar»; «Statistika» · «Sotuv bosqichlari». Manzillar va xatcho‘plar avvalgidek, «Bo‘lim yoki kompaniyani topish» yorliqlarni ham topadi: «shar» deb yozsangiz — «Shartnomalar» ochiladi. Yorliq ochiq paytda menyuda uning bo‘limi yonadi. Loyiha, lid yoki shartnoma kartochkasida yorliqlar qatori yo‘q — u yerda chalg‘itardi.",
-              "«Yana» ichidagi bo‘lim ochiq bo‘lsa — «Yana» tugmasining o‘zi yonadi, uning ro‘yxatida esa ochiq bo‘lim yashil. Telefonda pastki qatorda beshta tugma, «Maketlar» — «Yana»da birinchi qator; telefonda panel tili va ism yuqori paneldan olingan, til [Sozlamalar](/admin/settings)da o‘zgartiriladi. «Yana» ro‘yxati «Menyuni yopish» tugmasi, Esc tugmasi, chetga bosish bilan yoki bo‘limga o‘tishingiz bilan o‘zi yopiladi. Eskicha qulayroq bo‘lsa — «Yana» ro‘yxati pastidagi yoki [Sozlamalar](/admin/settings)dagi **«Yangi menyu»** tugmachasini o‘chiring: bo‘limlar yana avvalgidek sarlavhada bitta qatorda, belgilar qatorisiz turadi. Yoqsangiz — belgilar qatori qaytadi. Tanlov sizga, barcha qurilmalaringizda saqlanadi va hamkasblarga ta’sir qilmaydi.",
-              "Eng tezi — logotip yonidagi **yuqori paneldagi qidiruv** (telefonda — lupa belgisi) yoki panelning istalgan joyida **Ctrl+K** (Mac’da — ⌘K) tugmalari. Yozishni boshlang: «shar» — birinchi bo‘lib «Shartnomalar» bo‘limi chiqadi. Kompaniya nomi, ism, ariza raqami, sayt, telefon yoki @nik — pastda **«Kompaniyalar va lidlar»** chiqadi: lidlar, sovuq aloqalar va loyihalar, o‘ng tomonda nima ekanligi yozilgan. Enter tanlanganini ochadi, ↑ ↓ strelkalari boshqasini tanlaydi. Lidlar faqat «Lidlar»da sizga ko‘rinadiganlar orasidan qidiriladi; telefon va @nik bo‘yicha menejer faqat o‘z lidlarini topadi — boshqaning kontakti unga kartochkada ham ochiq emas. Lid o‘sib chiqqan aloqa lid kartochkasi bo‘lib ochiladi. Qidiruv yonidagi yashil «Onlayn» nuqtasi — qurilmada aloqa bor; sariq va «Aloqa yo‘q» — internet uzilgan, u qaytmaguncha panel tugmalari ishlamaydi.",
+              "Har kungi bo‘limlar chapdagi belgilar qatorida: «Bosh sahifa», [«Kiruvchi»](/admin/inbox), «Lidlar», «Vazifalar», «Sovuq aloqalar», «Maketlar». Telefonda bu qator ekran pastida, «Maketlar» esa «Yana»da birinchi qatorda. «Vazifalar»dagi raqam ochiq vazifalaringizni ko‘rsatadi, qizil bo‘lsa muddati o‘tganlari bor.",
+              "Qolgani qator pastidagi «Yana» tugmasi ostida, guruhlar bilan: «Pul», «Marketing», «Jamoa» va boshqalar. Kam ishlatiladigan bo‘limlar sahifa tepasida yorliqlar bo‘lib ochiladi: masalan «Jamoa» va «Nomzodlar». Eski bir qatorli menyu qulaymi? «Yana»da yoki [«Sozlamalar»](/admin/settings) bo‘limida «Yangi menyu»ni o‘chiring.",
+              "Tepada o‘ngda qo‘ng‘iroqcha 🔔. Unda bot sizga 14 kun ichida Telegramda yozgan hamma narsa: «✓ Bajarildi» qatorni hisobdan olib tashlaydi, «Hammasini belgilash» hammasini. Yonida ⚙ tishli g‘ildirak, u sozlamalarni ochadi. Til va «Chiqish» ism-sharifingiz bosh harflari yozilgan doiracha ostida.",
+              "Eng tezi tepadagi qidiruv yoki Ctrl+K tugmalari (Mac’da ⌘K). Bo‘lim, kompaniya, ism, buyurtma raqami, telefon yoki @nikni yozing, pastda «Kompaniyalar va lidlar» chiqadi. Yashil «Onlayn» nuqtasi internet borligini bildiradi, «Aloqa yo‘q» bo‘lsa panel tugmalari ishlamaydi.",
             ],
             admin: [
-              "03.11.2026 dan panel «DevUz Ofis» kabi tuzilgan. Har kuni ishlatiladiganlar chapdagi **belgilar qatorida** turadi (telefonda — ekran pastida, qisqa yozuvlar bilan): «Bosh sahifa», [«Kiruvchi»](/admin/inbox), «Lidlar», «Vazifalar» (belgida — ochiq vazifalaringiz soni, muddati o‘tgani bo‘lsa qizil), «Sovuq aloqalar», «Maketlar». Sichqonchani belgi ustiga olib boring — nomi chiqadi; ochiq bo‘lim yashil yonadi. Qolganlari — qator pastidagi **«Yana»** tugmasi ostida, guruhlarda: **«Pul»** — «Loyihalar», «Moliya», «Do‘kon buyurtmalari»; **«Marketing»** — «Trafik», «Hamkorlar», «Tahlillar», «SI xodimlar»; **«Jamoa»** — «Jamoa», «Ta’lim»; **«Hisobotlar»** — «Statistika», «Jurnal». «Yo‘riqnoma» — o‘sha yerda, alohida qator. Tepada — **yuqori panel**: logotip, qidiruv, «Onlayn» va Toshkent vaqti. O‘ngda, ismingiz yonidagi **⚙** tishli g‘ildirak [Sozlamalar](/admin/settings)ni ochadi: til, menyu, telefondagi bildirishnomalar va aloqalar hamda jamoada sozlanadigan hamma narsaga havolalar. Uning yonidagi **🔔** qo‘ng‘iroqcha — **«Nima keldi»**: bot sizga Telegramda yozgan narsa, 14 kun ichida, yangisi tepada; undagi raqam — hali belgilanmaganlar soni. «Ochish» botdagi tugma olib boradigan joyga olib boradi, **«✓ Bajarildi»** qatorni sondan chiqaradi, «Hammasini belgilash» — barchasini birdan. Belgi faqat sizniki, Telegramda hech narsa o‘zgarmaydi.",
-              "25.10.2026 dan kam ishlatiladiganlar — **bo‘lim ichidagi yorliqlar**: yorliqlar qatori sahifa ustida turadi, ochiq yorliq yashil rangda. «Sovuq aloqalar» · «Skaut signallari» · «Yozishmalar tahlili» · «Akkauntlar»; «Maketlar» · «Prototiplar»; «Loyihalar» · «Shartnomalar»; «Moliya» · «Xarajatlar»; «Do‘kon buyurtmalari» · «Relizlar»; «Trafik» · «Reklama»; «Jamoa» · «Nomzodlar»; «Statistika» · «Sotuv bosqichlari»; «Jurnal» · «Foydalanish». Manzillar va xatcho‘plar avvalgidek, «Bo‘lim yoki kompaniyani topish» yorliqlarni ham topadi: «shar» deb yozsangiz — «Shartnomalar» ochiladi. Yorliq ochiq paytda menyuda uning bo‘limi yonadi. Loyiha, lid yoki shartnoma kartochkasida yorliqlar qatori yo‘q — u yerda chalg‘itardi. Kimgadir bo‘limni belgi bilan yopsangiz — uning yorliqlari o‘sha guruhda menyusiga o‘zi chiqadi.",
-              "«Yana» ichidagi bo‘lim ochiq bo‘lsa — «Yana» tugmasining o‘zi yonadi, uning ro‘yxatida esa ochiq bo‘lim yashil. Telefonda pastki qatorda beshta tugma, «Maketlar» — «Yana»da birinchi qator; telefonda panel tili va ism yuqori paneldan olingan, til [Sozlamalar](/admin/settings)da o‘zgartiriladi. «Yana» ro‘yxati «Menyuni yopish» tugmasi, Esc tugmasi, chetga bosish bilan yoki bo‘limga o‘tishingiz bilan o‘zi yopiladi. Eskicha qulayroq bo‘lsa — «Yana» ro‘yxati pastidagi yoki [Sozlamalar](/admin/settings)dagi **«Yangi menyu»** tugmachasini o‘chiring: bo‘limlar yana avvalgidek sarlavhada bitta qatorda, belgilar qatorisiz turadi. Yoqsangiz — belgilar qatori qaytadi. Tanlov sizga, barcha qurilmalaringizda saqlanadi va hamkasblarga ta’sir qilmaydi.",
-              "Eng tezi — logotip yonidagi **yuqori paneldagi qidiruv** (telefonda — lupa belgisi) yoki panelning istalgan joyida **Ctrl+K** (Mac’da — ⌘K) tugmalari. Yozishni boshlang: «shar» — birinchi bo‘lib «Shartnomalar» bo‘limi chiqadi. Kompaniya nomi, ism, ariza raqami, sayt, telefon yoki @nik — pastda **«Kompaniyalar va lidlar»** chiqadi: lidlar, sovuq aloqalar va loyihalar, o‘ng tomonda nima ekanligi yozilgan. Enter tanlanganini ochadi, ↑ ↓ strelkalari boshqasini tanlaydi. Lidlar faqat «Lidlar»da sizga ko‘rinadiganlar orasidan qidiriladi; telefon va @nik bo‘yicha menejer faqat o‘z lidlarini topadi — boshqaning kontakti unga kartochkada ham ochiq emas. Lid o‘sib chiqqan aloqa lid kartochkasi bo‘lib ochiladi. Qidiruv yonidagi yashil «Onlayn» nuqtasi — qurilmada aloqa bor; sariq va «Aloqa yo‘q» — internet uzilgan, u qaytmaguncha panel tugmalari ishlamaydi.",
-              "Menyu sizning [bo‘lim belgilaringizga](#team-sections) bo‘ysunadi: kimgadir bo‘lim ochsangiz — u unda o‘z guruhida paydo bo‘ladi (masalan, «Trafik» — «Marketing»da; agar u yerda bu uning yagona bo‘limi bo‘lsa — alohida havola bo‘lib), yopsangiz — guruhdan ham, qidiruvdan ham yo‘qoladi. Menejer va rahbarda guruhlar kamroq: odamda birorta ham bo‘limi bo‘lmagan guruh «Yana»da chizilmaydi. Panelning yangi bo‘limi guruhni ishlab chiqishda oladi — menyuni alohida sozlash kerak emas.",
+              "Har kungi bo‘limlar chapdagi belgilar qatorida: «Bosh sahifa», [«Kiruvchi»](/admin/inbox), «Lidlar», «Vazifalar», «Sovuq aloqalar», «Maketlar». Telefonda bu qator ekran pastida, «Maketlar» esa «Yana»da birinchi qatorda. «Vazifalar»dagi raqam ochiq vazifalaringizni ko‘rsatadi, qizil bo‘lsa muddati o‘tganlari bor.",
+              "Qolgani qator pastidagi «Yana» tugmasi ostida, guruhlar bilan: «Pul», «Marketing», «Jamoa», «Hisobotlar» va boshqalar. Kam ishlatiladigan bo‘limlar sahifa tepasida yorliqlar bo‘lib ochiladi: masalan «Jurnal» va «Foydalanish». Eski bir qatorli menyu qulaymi? «Yana»da yoki [«Sozlamalar»](/admin/settings) bo‘limida «Yangi menyu»ni o‘chiring.",
+              "Tepada o‘ngda qo‘ng‘iroqcha 🔔. Unda bot sizga 14 kun ichida Telegramda yozgan hamma narsa: «✓ Bajarildi» qatorni hisobdan olib tashlaydi, «Hammasini belgilash» hammasini. Yonida ⚙ tishli g‘ildirak, u sozlamalarni ochadi. Til va «Chiqish» ism-sharifingiz bosh harflari yozilgan doiracha ostida.",
+              "Eng tezi tepadagi qidiruv yoki Ctrl+K tugmalari (Mac’da ⌘K). Bo‘lim, kompaniya, ism, buyurtma raqami, telefon yoki @nikni yozing, pastda «Kompaniyalar va lidlar» chiqadi. Yashil «Onlayn» nuqtasi internet borligini bildiradi, «Aloqa yo‘q» bo‘lsa panel tugmalari ishlamaydi.",
+              "Menyu sizning [bo‘lim belgilaringizga](#team-sections) bo‘ysunadi. Odamga bo‘limni ochsangiz, u uning menyusida paydo bo‘ladi. Yopsangiz, bo‘lim menyudan ham, qidiruvdan ham yo‘qoladi.",
             ],
           },
         },
@@ -3240,62 +3253,58 @@ export const uz: HelpCopy = {
           title: "Qidiruv: o‘z so‘zlaringiz bilan so‘rang",
           body: {
             manager: [
-              "Mundarija ustida — **«Yo‘riqnomadan topish»** maydoni. Savolingizni hamkasbdan so‘ragandek o‘z so‘zlaringiz bilan yozing: «lidni boshqa menejerga qanday o‘tkazaman», «nega mijozga xat hali ketmadi», «vazifani ikki kishiga birdan qanday qo‘yaman» — va **«Topish»** tugmasini bosing. Ruscha, o‘zbekcha yoki polyakcha, xatolar bilan va tugmalarning aniq nomlarisiz yozish mumkin.",
-              "Savolni model tahlil qiladi: u faqat shu sahifada sizda bor bandlarni ko‘radi va mosini so‘zlar mosligi bo‘yicha emas, ma’nosi bo‘yicha tanlaydi. Bir xil savol ikkinchi marta modelga berilmaydi — javob xotiradan, darhol olinadi. Savol bitta bandning sarlavhasidagi so‘zlar bilan yozilgan bo‘lsa, o‘sha band darhol ochiladi, model uni o‘qimaydi.",
-              "Sahifa o‘zi topilgan bandga aylanadi va u besh soniya yashil ramka bilan miltillaydi — shunda u qo‘shnilari orasida darhol ko‘rinadi. Maydon ostida qaysi band ochilgani yoziladi, savol bir nechta mavzuga tegsa — «Yana mos kelishi mumkin» dan keyin yana ikkitagacha band: bossangiz, sahifa unga aylanadi va uni ham xuddi shunday yoritadi. «Bo‘limdan qanday foydalanish» tugmasi, blok yonidagi «?» yoki yo‘riqnoma ichidagi havola bilan kelgan band ham xuddi shunday yoritiladi.",
-              "Model ishlamasa yoki siz 10 daqiqada 20 martadan ko‘p so‘rasangiz, band so‘zlar mosligi bo‘yicha tanlanadi va maydon ostida shunday yozilgan bo‘ladi: band o‘sha haqidami, tekshiring. Hech narsa topilmasa — demak, bu yo‘riqnomada hali yo‘q: jamoa chatida so‘rang va egasiga ayting, qo‘shib qo‘yamiz.",
+              "Mundarija ustida **«Yo‘riqnomadan topish»** maydoni bor. Savolni hamkasbdan so‘ragandek yozing, masalan «lidni boshqa menejerga qanday berish», va **«Topish»**ni bosing. Rus, o‘zbek yoki polyak tilida, hatto xatolar bilan ham yozish mumkin.",
+              "Dastur bandni ma’nosiga qarab tanlaydi. Sahifa unga aylanadi va u yashil ramka bilan yonadi. Boshqa bandlar ham mos kelsa, ular pastda, «Yana mos kelishi mumkin:» dan keyin bo‘ladi.",
+              "Ba’zan maydon ostida band so‘zlar mosligi bo‘yicha tanlangani yoziladi. Bu qidiruv band bo‘lsa yoki 10 daqiqada 20 tadan ko‘p savol berilsa bo‘ladi: o‘sha band ekanini tekshiring. Hech narsa topilmadimi? Demak, bu yo‘riqnomada hali yo‘q, egasiga ayting.",
             ],
             head: [
-              "Mundarija ustida — **«Yo‘riqnomadan topish»** maydoni. Savolingizni hamkasbdan so‘ragandek o‘z so‘zlaringiz bilan yozing: «lidni boshqa menejerga qanday o‘tkazaman», «nega mijozga xat hali ketmadi», «vazifani ikki kishiga birdan qanday qo‘yaman» — va **«Topish»** tugmasini bosing. Ruscha, o‘zbekcha yoki polyakcha, xatolar bilan va tugmalarning aniq nomlarisiz yozish mumkin.",
-              "Savolni model tahlil qiladi: u faqat shu sahifada sizda bor bandlarni ko‘radi va mosini so‘zlar mosligi bo‘yicha emas, ma’nosi bo‘yicha tanlaydi. Bir xil savol ikkinchi marta modelga berilmaydi — javob xotiradan, darhol olinadi. Savol bitta bandning sarlavhasidagi so‘zlar bilan yozilgan bo‘lsa, o‘sha band darhol ochiladi, model uni o‘qimaydi.",
-              "Sahifa o‘zi topilgan bandga aylanadi va u besh soniya yashil ramka bilan miltillaydi — shunda u qo‘shnilari orasida darhol ko‘rinadi. Maydon ostida qaysi band ochilgani yoziladi, savol bir nechta mavzuga tegsa — «Yana mos kelishi mumkin» dan keyin yana ikkitagacha band: bossangiz, sahifa unga aylanadi va uni ham xuddi shunday yoritadi. «Bo‘limdan qanday foydalanish» tugmasi, blok yonidagi «?» yoki yo‘riqnoma ichidagi havola bilan kelgan band ham xuddi shunday yoritiladi.",
-              "Model ishlamasa yoki siz 10 daqiqada 20 martadan ko‘p so‘rasangiz, band so‘zlar mosligi bo‘yicha tanlanadi va maydon ostida shunday yozilgan bo‘ladi: band o‘sha haqidami, tekshiring. Hech narsa topilmasa — demak, bu yo‘riqnomada hali yo‘q: jamoa chatida so‘rang va egasiga ayting, qo‘shib qo‘yamiz.",
+              "Mundarija ustida **«Yo‘riqnomadan topish»** maydoni bor. Savolni hamkasbdan so‘ragandek yozing, masalan «lidni boshqa menejerga qanday berish», va **«Topish»**ni bosing. Rus, o‘zbek yoki polyak tilida, hatto xatolar bilan ham yozish mumkin.",
+              "Dastur bandni ma’nosiga qarab tanlaydi. Sahifa unga aylanadi va u yashil ramka bilan yonadi. Boshqa bandlar ham mos kelsa, ular pastda, «Yana mos kelishi mumkin:» dan keyin bo‘ladi.",
+              "Ba’zan maydon ostida band so‘zlar mosligi bo‘yicha tanlangani yoziladi. Bu qidiruv band bo‘lsa yoki 10 daqiqada 20 tadan ko‘p savol berilsa bo‘ladi: o‘sha band ekanini tekshiring. Hech narsa topilmadimi? Demak, bu yo‘riqnomada hali yo‘q, egasiga ayting.",
             ],
             admin: [
-              "Mundarija ustida — **«Yo‘riqnomadan topish»** maydoni. Savolingizni hamkasbdan so‘ragandek o‘z so‘zlaringiz bilan yozing: «lidni boshqa menejerga qanday o‘tkazaman», «nega mijozga xat hali ketmadi», «vazifani ikki kishiga birdan qanday qo‘yaman» — va **«Topish»** tugmasini bosing. Ruscha, o‘zbekcha yoki polyakcha, xatolar bilan va tugmalarning aniq nomlarisiz yozish mumkin.",
-              "Savolni eng arzon model (Haiku) tahlil qiladi: unga faqat ro‘yxatdan bandni tanlash kerak, u hech narsa yozmaydi. U faqat shu sahifadagi bandlarni ko‘radi va mosini so‘zlar mosligi bo‘yicha emas, ma’nosi bo‘yicha tanlaydi. «Kim sifatida ko‘rsatish» rejimida qidiruv tanlangan rolning yo‘riqnomasi bo‘yicha boradi. Bir xil savol ikkinchi marta modelga berilmaydi — javob xotiradan olinadi. Model .env dagi `HELP_SEARCH_MODEL` o‘zgaruvchisi bilan almashtiriladi. Bitta bandning sarlavhasidagi so‘zlar bilan yozilgan savolni model umuman o‘qimaydi: band darhol va bepul ochiladi. Bunday so‘zlar ikki band sarlavhasida bo‘lsa, model hal qiladi.",
-              "Sahifa o‘zi topilgan bandga aylanadi va u besh soniya yashil ramka bilan miltillaydi — shunda u qo‘shnilari orasida darhol ko‘rinadi. Maydon ostida qaysi band ochilgani yoziladi, savol bir nechta mavzuga tegsa — «Yana mos kelishi mumkin» dan keyin yana ikkitagacha band: bossangiz, sahifa unga aylanadi va uni ham xuddi shunday yoritadi. «Bo‘limdan qanday foydalanish» tugmasi, blok yonidagi «?» yoki yo‘riqnoma ichidagi havola bilan kelgan band ham xuddi shunday yoritiladi.",
-              "Model ishlamasa yoki xodim 10 daqiqada 20 martadan ko‘p so‘rasa, band so‘zlar mosligi bo‘yicha tanlanadi — bepul, va maydon ostida shunday yozilgan bo‘ladi. Hech narsa topilmasa — demak, yo‘riqnomada bunday band yo‘q: uni qo‘shish kerak.",
+              "Mundarija ustida **«Yo‘riqnomadan topish»** maydoni bor. Savolni hamkasbdan so‘ragandek yozing, masalan «lidni boshqa menejerga qanday berish», va **«Topish»**ni bosing. Rus, o‘zbek yoki polyak tilida, hatto xatolar bilan ham yozish mumkin.",
+              "Dastur bandni ma’nosiga qarab tanlaydi. Savol band sarlavhasiga mos kelsa, band darhol ochiladi. «Kim sifatida ko‘rsatish:» rejimida qidiruv tanlangan rol yo‘riqnomasi bo‘yicha boradi. O‘xshash bandlar pastda, «Yana mos kelishi mumkin:» dan keyin bo‘ladi.",
+              "Qidiruv band bo‘lsa yoki odam 10 daqiqada 20 tadan ko‘p savol bersa, band so‘zlar mosligi bo‘yicha tanlanadi. Maydon ostida bu haqida yoziladi. Hech narsa topilmadimi? Demak, bunday band yo‘q va uni yozib qo‘yish kerak.",
             ],
           },
         },
         {
           id: "video",
-          title: "Bo‘limlar videosi",
+          title: "Bo‘limlar videolari",
           body: {
             manager: [
-              "Sahifa tepasida — kirish videosi: panelga qanday kirish va birinchi kuni nima qilish kerak. Bo‘lim tepasida — uning videosi, agar u allaqachon yozib olingan bo‘lsa, ostida esa batafsil matn. «Bo‘limdan qanday foydalanish» tugmasi bo‘limni shu yerda ochadi — ya’ni darhol videoni.",
-              "Video yo‘riqnoma tilida ko‘rsatiladi, agar bu tilda hali bo‘lmasa — boshqa tilda, va ostida shunday yozilgan bo‘ladi. Videolarni egasi va rahbar yozib oladi; biror bo‘limga video yetishmasa yoki unda nimadir ekrandagidek bo‘lmasa — ularga ayting.",
+              "Sahifa tepasida kirish videosi bor: panelga qanday kirish va birinchi kuni nima qilish. Bo‘limning ham o‘z videosi bo‘lishi mumkin, u matndan oldin turadi.",
+              "Video yo‘riqnoma tilida ko‘rsatiladi. Bu tilda video bo‘lmasa, boshqa tildagisi chiqadi va video ostida bu yozilgan. Bo‘limga video yetishmayaptimi? Egasi yoki rahbarga ayting.",
             ],
             head: [
-              "Sahifa tepasida — kirish videosi: panelga qanday kirish va birinchi kuni nima qilish kerak. Bo‘lim tepasida — uning videosi, agar u allaqachon yozib olingan bo‘lsa, ostida esa batafsil matn. «Bo‘limdan qanday foydalanish» tugmasi bo‘limni shu yerda ochadi — ya’ni darhol videoni.",
-              "Videoni siz va egasi yuklaysiz. Bo‘lim tavsifi ostida — yig‘ilgan «Bo‘lim videosi» bloki, sahifa tepasida — «Kirish videosi». «Video tili»ni tanlang — unda qaysi tilda gapirilgan va izohlar yozilgan, — 500 MB gacha MP4, MOV yoki WebM faylni tanlang va «Yuklash» tugmasini bosing. Fayl qismlarga bo‘linib ketadi va aloqa uzilgan qismni o‘zi qayta yuboradi; chiziq oxiriga yetmaguncha sahifani yopmang. Xuddi shu tildagi video eskisining o‘rnini egallaydi.",
-              "Video yo‘riqnoma tilida ko‘rsatiladi, agar bu tilda video bo‘lmasa — boshqa tilda: avval ruscha, keyin o‘zbekcha, keyin polyakcha. Shuning uchun istalgan tildagi bitta video hammada bo‘lishi uchun yetarli. Blokdagi til yonidagi «Olib tashlash» bu videoni serverdan o‘chiradi.",
+              "Sahifa tepasida kirish videosi bor: panelga qanday kirish va birinchi kuni nima qilish. Bo‘limning ham o‘z videosi bo‘lishi mumkin, u matndan oldin turadi.",
+              "Videoni siz va egasi yuklay olasiz. Bo‘lim tavsifi ostidagi «Bo‘lim videosi» blokini yoki sahifa tepasidagi «Kirish videosi»ni oching. «Video tili»ni, 500 MB gacha MP4, MOV yoki WebM faylni tanlang va «Yuklash»ni bosing.",
+              "Yuklash chizig‘i oxirigacha yetmaguncha sahifani yopmang. Shu tildagi yangi video eskisining o‘rnini egallaydi, «Olib tashlash» esa uni o‘chiradi. Hamma ko‘rishi uchun istalgan tilda bitta video yetarli.",
             ],
             admin: [
-              "Sahifa tepasida — kirish videosi: panelga qanday kirish va birinchi kuni nima qilish kerak. Bo‘lim tepasida — uning videosi, agar u allaqachon yozib olingan bo‘lsa, ostida esa batafsil matn. «Bo‘limdan qanday foydalanish» tugmasi bo‘limni shu yerda ochadi — ya’ni darhol videoni.",
-              "Videoni siz va rahbar yuklaysiz. Bo‘lim tavsifi ostida — yig‘ilgan «Bo‘lim videosi» bloki, sahifa tepasida — «Kirish videosi». «Video tili»ni tanlang — unda qaysi tilda gapirilgan va izohlar yozilgan, — 500 MB gacha MP4, MOV yoki WebM faylni tanlang va «Yuklash» tugmasini bosing. Fayl qismlarga bo‘linib ketadi va aloqa uzilgan qismni o‘zi qayta yuboradi; chiziq oxiriga yetmaguncha sahifani yopmang. Xuddi shu tildagi video eskisining o‘rnini egallaydi.",
-              "Video yo‘riqnoma tilida ko‘rsatiladi, agar bu tilda video bo‘lmasa — boshqa tilda: avval ruscha, keyin o‘zbekcha, keyin polyakcha. Shuning uchun istalgan tildagi bitta video hammada bo‘lishi uchun yetarli. Blokdagi til yonidagi «Olib tashlash» bu videoni serverdan o‘chiradi. Kim video yuklagani va olib tashlagani — harakatlar jurnalida.",
+              "Sahifa tepasida kirish videosi bor: panelga qanday kirish va birinchi kuni nima qilish. Bo‘limning ham o‘z videosi bo‘lishi mumkin, u matndan oldin turadi.",
+              "Videoni siz va rahbar yuklay olasiz. Bo‘lim tavsifi ostidagi «Bo‘lim videosi» blokini yoki sahifa tepasidagi «Kirish videosi»ni oching. «Video tili»ni, 500 MB gacha MP4, MOV yoki WebM faylni tanlang va «Yuklash»ni bosing.",
+              "Yuklash chizig‘i oxirigacha yetmaguncha sahifani yopmang. Shu tildagi yangi video eskisining o‘rnini egallaydi, «Olib tashlash» esa uni o‘chiradi. Hamma ko‘rishi uchun istalgan tilda bitta video yetarli. Videoni kim yuklagan va olib tashlagani [«Jurnal»](/admin/audit) bo‘limida ko‘rinadi.",
             ],
           },
         },
         {
           id: "language",
-          title: "Panel tili: RU / UZ / PL",
+          title: "Panel tili: RU, UZ, PL",
           body: [
-            "Panel tepasida, «Bo‘limdan qanday foydalanish» yonida — **RU / UZ / PL** tanlagichi: ruscha, o‘zbekcha (lotin yozuvida) va polyakcha. Keraklisini bosing — sahifa darhol shu tilda qayta ochiladi, manzil va ochiq bo‘lim o‘zgarmaydi.",
-            "Til brauzerga emas, sizga saqlanadi: telefondan yoki boshqa kompyuterdan kirsangiz ham, panel o‘sha tilda ochiladi. Tilni faqat o‘zingizga o‘zgartira olasiz — hamkasblaringizda u o‘zgarmaydi. Til tanlanmaguncha panel ruscha.",
-            "Panel to‘liq tarjima qilingan: tugmalar, yozuvlar va maslahatlar — tanlangan tilda. Ruscha faqat Telegramdagi bot xabarlari va tugmalari (bot hozircha ruscha yozadi), hamkor kabineti va buyurtmachi uchun shartnoma matni qoladi — yo‘riqnomada ular ruscha nomlangan, ekranda ko‘z bilan topishingiz uchun.",
-            "Yo‘riqnoma panel tilida ochiladi: ruscha, o‘zbekcha yoki polyakcha. Yo‘riqnomaning boshqa tilini shu sahifaning tepasida tanlash mumkin — bu panel tiliga ta’sir qilmaydi.",
+            "Panel tili RU, UZ va PL tugmalari bilan almashtiriladi: rus, lotin yozuvidagi o‘zbek va polyak tili. Yangi menyuda ular tepada o‘ngdagi bosh harflaringiz yozilgan doiracha ostida, eski menyuda to‘g‘ri tepada. Tilni [«Sozlamalar»](/admin/settings) bo‘limida ham o‘zgartirish mumkin.",
+            "Til brauzerga emas, sizga biriktiriladi. Telefondan ham panel shu tilda ochiladi. Sizning tanlovingiz hamkasblar tilini o‘zgartirmaydi.",
+            "Rus tilida faqat Telegramdagi bot xabarlari va tugmalari, hamkor kabineti va buyurtmachi uchun shartnoma qoladi. Yo‘riqnoma panel tilida ochiladi, boshqa tilni shu sahifa tepasida tanlash mumkin.",
           ],
         },
         {
           id: "first-day",
           title: "Birinchi kuni nima qilish kerak",
           body: [
-            "[Studiya botini](https://t.me/Devuz_studio_bot) oching va «Старт» tugmasini bosing — busiz u sizga na lid, na eslatma yubora oladi. Panelga kirish — /login buyrug‘i bilan.",
-            "«Devuz Scout» kanaliga qo‘shiling va bot hamda kanal ovozini yoqing: lid taklifi 30 daqiqa yashaydi, chatdagi post — bir-ikki soat.",
-            "[Lidlar navbati](#leads-queue) va [lid kartochkasi](#leads-card) haqidagi bandlarni o‘qing — bu ishning asosi. Qolganini bo‘limni birinchi marta ochganingizda o‘qing: «Bo‘limdan qanday foydalanish» tugmasi doim tepada.",
+            "[Studiya botini](https://t.me/Devuz_studio_bot) oching va «Старт» tugmasini bosing. Busiz u sizga lid yoki eslatma yubora olmaydi. Panelga /login buyrug‘i bilan kirish mumkin.",
+            "«Devuz Scout» kanaliga qo‘shiling va bot hamda kanal ovozini yoqing. Lid taklifi sizni 30 daqiqa kutadi, keyin keyingi odamga o‘tadi.",
+            "[Lidlar navbati](#leads-queue) va [lid kartochkasi](#leads-card) haqidagi bandlarni o‘qing. Qolganini bo‘limni birinchi marta ochganda o‘qing. «Bo‘limdan qanday foydalanish» tugmasi doim tepada.",
           ],
         },
         {
@@ -3303,8 +3312,8 @@ export const uz: HelpCopy = {
           title: "Jamoa ko‘zi bilan ko‘rish",
           roles: ["admin"],
           body: [
-            "«Kim sifatida ko‘rsatish: egasi / rahbar / menejer» — yo‘riqnoma aynan shu roldagi odam o‘qiydigan ko‘rinishda: sizning bo‘limlaringizsiz va uning matni bilan. Shunday qilib yangi odamga nima tushuntirilayotganini birovning akkauntiga kirmasdan tekshirasiz.",
-            "Qo‘shimchalar uchun qoida: har bir yangi funksiya shu yerdagi o‘z bandi bilan birga keladi — rus, o‘zbek va polyak tillarida, rollar bo‘yicha. Bu har bir yangilanish chiqishida test bilan tekshiriladi.",
+            "Sahifa tepasida «Kim sifatida ko‘rsatish:» va uchta rol bor: «egasi», «rahbar», «menejer». Rolni tanlang, yo‘riqnoma shu roldagi odam ko‘rgandek ko‘rsatiladi. Shunday qilib yangi xodim nimani o‘qishini tekshirish mumkin.",
+            "Har bir yangi funksiya shu yerdagi o‘z bandi bilan birga keladi, rus, o‘zbek va polyak tilida. Buni har bir panel yangilanishida test tekshiradi.",
           ],
         },
       ],
