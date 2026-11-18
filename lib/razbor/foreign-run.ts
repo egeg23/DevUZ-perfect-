@@ -17,7 +17,7 @@ import { isTender } from "@/lib/razbor/tender";
 import { forgetRazbors, type RazborArticle } from "@/lib/razbor/store";
 import { serviceClient } from "@/lib/supabase";
 import { anthropic } from "@/lib/model-road";
-import { keywordResearch } from "@/lib/seo/keywords";
+import { keywordResearch, regionFor, whereFor } from "@/lib/seo/keywords";
 import { checkSitemap, sitemapLine } from "@/lib/seo/sitemap-check";
 
 // Статья — той же моделью, что русские разборы: Sonnet, не Opus
@@ -142,9 +142,10 @@ async function translateOne(locale: ForeignLocale, row: Row): Promise<{ path: st
   if ("error" in named) return `не назвали запрос: ${named.error}`;
   const { query } = named;
 
-  // Что ищут вместе с запросом в Узбекистане — Google Trends и Вордстат,
-  // как у любой статьи сайта (правило владельца, 04.10.2026).
-  const { related } = await keywordResearch(query);
+  // Что ищут вместе с запросом — как у любой статьи сайта (правило
+  // владельца, 04.10.2026), но там, где читают на языке версии: английскую —
+  // в США, Великобритании и Канаде, польскую — в Польше (18.11.2026).
+  const { related } = await keywordResearch(query, regionFor(locale));
   const price = foreignPrice(locale, row.category);
 
   const input = { locale, ru, query, related, price };
@@ -341,14 +342,15 @@ const LANG: Record<ForeignLocale, { version: string; language: string; section: 
     language: "английским",
     section: "Website teardowns",
     reader:
-      "иностранная компания или владелец бизнеса, который ищет подрядчика в Узбекистане и Центральной Азии по-английски",
+      "владелец бизнеса или компания из англоязычных стран (США, Великобритания, Канада), которая выбирает подрядчика на сайт и читает по-английски; разобранный сайт для неё — пример из Центральной Азии, а выводы она примеряет к своему сайту",
     decimals: "десятичная точка вместо запятой («1,3» → «1.3»)",
   },
   pl: {
     version: "польскую",
     language: "польским",
     section: "Analizy stron",
-    reader: "польская компания или владелец бизнеса, который ищет подрядчика в Узбекистане и Центральной Азии по-польски",
+    reader:
+      "владелец бизнеса или компания из Польши, которая выбирает подрядчика на сайт и читает по-польски; разобранный сайт для неё — пример из Центральной Азии, а выводы она примеряет к своему сайту",
     decimals: "десятичная запятая, как в русском («1,3»)",
   },
 };
@@ -397,7 +399,7 @@ export async function writeVersion(
     `Запрос, под который пишем: «${query}». Он звучит в заголовке, описании и первом абзаце естественно, а не вставлен куском.`,
     ...(related.length
       ? [
-          `С этим запросом в Узбекистане ищут ещё (Google Trends и Вордстат): ${related.map((r) => `«${r}»`).join(", ")}. 1–2 подходящих по смыслу вставь естественно; чисел из них не бери, чужие по теме пропусти.`,
+          `С этим запросом ${whereFor(locale)} ищут ещё (Google Trends и планировщик Google): ${related.map((r) => `«${r}»`).join(", ")}. 1–2 подходящих по смыслу вставь естественно; чисел из них не бери, чужие по теме пропусти.`,
         ]
       : []),
     `Цена студии на языке версии, её вставит страница сама: «${price}». В тексте цену не повторяй.`,

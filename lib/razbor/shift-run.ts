@@ -25,7 +25,7 @@ import { serviceClient } from "@/lib/supabase";
 import type { AuditReport } from "@/lib/audit/checks";
 import type { City, Niche } from "@/content/razbor/catalog";
 import { anthropic } from "@/lib/model-road";
-import { keywordResearch } from "@/lib/seo/keywords";
+import { keywordResearch, regionFor, whereFor } from "@/lib/seo/keywords";
 
 // Sonnet, а не Opus чата на сайте: владелец, 04.10.2026 — «не используй
 // сильно дорогую модель, стараемся сэкономить не в ущерб качеству». Разбор —
@@ -346,9 +346,10 @@ async function writeChecked(input: {
   locale: "ru" | "uz";
   title: string | null;
 }): Promise<RazborArticle | string> {
-  // Что ищут вместе с запросом в Узбекистане — Google Trends и Вордстат
-  // (правило владельца, 04.10.2026). Один раз на статью, на обе попытки.
-  const { related } = await keywordResearch(queryFor(input.niche, input.city, input.locale));
+  // Что ищут вместе с запросом — Google Trends, Вордстат и планировщик
+  // (правило владельца, 04.10.2026), в регионе языка версии (18.11.2026).
+  // Один раз на статью, на обе попытки.
+  const { related } = await keywordResearch(queryFor(input.niche, input.city, input.locale), regionFor(input.locale));
   const first = await writeArticle({ ...input, related });
   if (typeof first !== "string" || !first.startsWith(CHECK_FAILED)) return first;
   return writeArticle({ ...input, related }, first);
@@ -390,7 +391,7 @@ export async function writeArticle(
     `Запрос, под который пишем: «${query}». Он должен звучать в заголовке естественно, а не быть вставлен куском.`,
     ...(input.related?.length
       ? [
-          `С этим запросом в Узбекистане ищут ещё (Google Trends и Вордстат): ${input.related.map((r) => `«${r}»`).join(", ")}. 1–3 подходящих по смыслу вставь естественно; чисел из них не бери, чужие по теме пропусти.`,
+          `С этим запросом ${whereFor(locale)} ищут ещё (Google Trends и Вордстат): ${input.related.map((r) => `«${r}»`).join(", ")}. 1–3 подходящих по смыслу вставь естественно; чисел из них не бери, чужие по теме пропусти.`,
         ]
       : []),
     `Как называем разобранный бизнес: «${label}». Имени компании у тебя нет и не будет.`,

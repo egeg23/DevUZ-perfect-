@@ -88,7 +88,7 @@ test("темы: ключи не повторяются, кейсы есть на
   }
   assert.deepEqual({ ...OUTSIDE_REGION }, { wordstat: 225, trends: "RU", geo: 2643, label: "Россия" });
   assert.match(read("lib/outside/run.ts"), /keywordResearch\(topic\.query, OUTSIDE_REGION\)/);
-  // Регион по умолчанию у статей сайта — прежний, Узбекистан.
+  // Без региона — Узбекистан; статьи сайта передают регион своего языка (tests/keyword-planner.test.ts).
   assert.match(read("lib/seo/keywords.ts"), /region: KeywordRegion = UZ_REGION/);
 });
 

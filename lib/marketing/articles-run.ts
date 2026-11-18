@@ -15,7 +15,7 @@ import {
   type ArticleText,
 } from "@/lib/marketing/articles-store";
 import { anthropic } from "@/lib/model-road";
-import { keywordResearch, type KeywordResearch } from "@/lib/seo/keywords";
+import { keywordResearch, regionFor, whereFor, type KeywordResearch } from "@/lib/seo/keywords";
 import { checkSitemap, sitemapLine } from "@/lib/seo/sitemap-check";
 import { siteUrl } from "@/lib/seo";
 import { serviceClient } from "@/lib/supabase";
@@ -104,15 +104,17 @@ export async function runMarketingArticles(now = new Date()): Promise<ArticleRun
     // те же факты, но своим языком. Две версии одним вызовом дешёвая модель
     // собирала через раз: 4 октября обе попытки первой статьи пришли без
     // одной из версий.
-    // Перед каждой версией — что ищут в Узбекистане: Google Trends и
-    // Вордстат (правило владельца, 04.10.2026). Сопутствующие запросы идут
-    // модели, ответ источников — в строку статьи.
+    // Перед каждой версией — что ищут: Google Trends, Вордстат и
+    // планировщик (правило владельца, 04.10.2026), в регионе языка версии:
+    // русская — Россия, Узбекистан и СНГ, узбекская — Узбекистан
+    // (18.11.2026). Сопутствующие запросы идут модели, ответ источников —
+    // в строку статьи.
     const research: Partial<Record<ArticleLocale, KeywordResearch>> = {};
     const ruQuery = topic.query?.ru;
-    if (ruQuery) research.ru = await keywordResearch(ruQuery);
+    if (ruQuery) research.ru = await keywordResearch(ruQuery, regionFor("ru"));
     const ru = await writeChecked(topic, "ru", null, research.ru?.related ?? []);
     const uzQuery = topic.query?.uz;
-    if (typeof ru !== "string" && uzQuery) research.uz = await keywordResearch(uzQuery);
+    if (typeof ru !== "string" && uzQuery) research.uz = await keywordResearch(uzQuery, regionFor("uz"));
     const uz = typeof ru === "string" ? null : await writeChecked(topic, "uz", ru, research.uz?.related ?? []);
     if (typeof ru === "string") run.errors.push(`ru: ${ru}`);
     else if (typeof uz === "string" || !uz) run.errors.push(`uz: ${uz ?? "не написана"}`);
@@ -295,13 +297,13 @@ export function articlePrompt(
   if (related.length) {
     lines.push(
       "",
-      `С этим запросом в Узбекистане ищут ещё (Google Trends и Вордстат): ${related.map((r) => `«${r}»`).join(", ")}. Возьми 2–4 подходящих по смыслу и вставь естественно — в абзацы или советы. Чужие по теме (имена людей, другие страны, не то значение слова) пропусти.`,
+      `С этим запросом ${whereFor(locale)} ищут ещё (Google Trends и Вордстат): ${related.map((r) => `«${r}»`).join(", ")}. Возьми 2–4 подходящих по смыслу и вставь естественно — в абзацы или советы. Чужие по теме (имена людей, другие страны, не то значение слова) пропусти.`,
     );
   }
   if (topic.kind === "explainer") {
     lines.push(
       "",
-      "Вид: объяснение для того, кто ищет это впервые. Простыми словами: что это, как работает, сколько ждать результата, частые ошибки и с чего начать бизнесу в Узбекистане. Без статистики, процентов, сумм и годов.",
+      "Вид: объяснение для того, кто ищет это впервые. Простыми словами: что это, как работает, сколько ждать результата, частые ошибки и с чего начать малому и среднему бизнесу. Без статистики, процентов, сумм и годов.",
     );
   } else if (topic.kind === "case") {
     lines.push(
@@ -310,7 +312,7 @@ export function articlePrompt(
       ...(topic.facts ?? []).map((fact) => `- ${fact}`),
       "",
       `Главный вывод: ${topic.lesson}`,
-      "Дальше — как применить этот приём малому и среднему бизнесу в Узбекистане, без чисел.",
+      "Дальше — как применить этот приём малому и среднему бизнесу там, где читают эту версию (см. «Читатель»), без чисел.",
     );
   } else if (topic.kind === "mistake") {
     lines.push(
@@ -346,7 +348,10 @@ export function articlePrompt(
 
 const SYSTEM = `Ты пишешь короткие статьи о маркетинге для блога на devuz.studio — сайте веб-студии DevUz Studio из Ташкента, которая делает сайты и ведёт маркетинг: SMM, таргет, контекстная реклама Google и Яндекс, Telegram Ads, SEO.
 
-Читатель — владелец или маркетолог малого и среднего бизнеса в Узбекистане. Он пришёл из Google или Яндекса и хочет за три минуты понять одну вещь и что с ней делать.
+Читатель — владелец или маркетолог малого и среднего бизнеса. Он пришёл из Google или Яндекса и хочет за три минуты понять одну вещь и что с ней делать. Где он живёт, зависит от языка версии:
+
+- Русскую версию читают в России, Узбекистане, Казахстане и других странах СНГ. Пиши так, чтобы статья была верна в любой из них: не привязывай её к одной стране, городу, валюте или местному сервису, если запрос сам не называет место.
+- Узбекскую версию читают в Узбекистане: там, где русская говорит общо, можно назвать привычное в Узбекистане.
 
 Статья выходит на двух языках, и пишешь ты одну версию за раз — язык указан в задании. Русская пишется первой. Узбекская — по готовой русской: латиницей, литературным деловым языком, без кальки с русского и без кириллицы; пиши так, как ищут и говорят по-узбекски.
 
