@@ -975,68 +975,62 @@ export const uz: HelpCopy = {
     /* ── Поиск ────────────────────────────────────────────────────────── */
     /* ── Tenderlar ─────────────────────────────────────────────────── */
     "/admin/tenders": {
-      what: "Skaut O‘zbekiston xarid maydonchalarini o‘qiydi va faqat studiya qiladigan ishlarni qoldiradi: sayt, ilova, bot, sun’iy intellekt, CRM, platforma, axborot tizimi. Har bir shunday lot botga lid bo‘lib keladi, bu yerda esa — ularning tasmasi ariza muddati, buyurtmachi aloqasi va tugmalar bilan. Bo‘lim barcha xodimlarga ochiq.",
+      what: "Bu yerda studiyaga mos davlat xaridlari lotlari: saytlar, ilovalar, botlar, CRM. Har bir lot botga ham lid (mijoz arizasi) bo‘lib keladi.",
       items: [
         {
           id: "how",
           title: "Skaut tenderlarni qanday qidiradi",
           body: [
-            "Har 30 daqiqada skaut maydonchalardagi ochiq lotlar ro‘yxatini o‘qiydi: etender.uzex.uz, xarid.uzex.uz, Hayot Birja (XT-Xarid) va Tender.asia. Faqat maydoncha har qanday tashrif buyuruvchiga kirishsiz ko‘rsatadigan narsa: skautda login va ERI yo‘q, kapchani aylanib o‘tmaydi. Maydonchadagi va Tender.asia’dagi bir xil lot — bitta qator: Tender.asia’dagi aloqa maydoncha lotiga qo‘shiladi.",
-            "Lot biznikimi — buni kod nomiga qarab, modelsiz hal qiladi: mavzu (sayt, ilova, bot, axborot tizimi, CRM, avtomatlashtirish, platforma, sun’iy intellekt) va ish (ishlab chiqish, yaratish, takomillashtirish, qo‘llab-quvvatlash) kerak. Maydonchaning IT toifasida ham mavzusiz lot olinmaydi. Hech qachon bizniki emas: kiberxavfsizlik, antiviruslar, 1C, litsenziyalar, serverlar va bulut, videokuzatuv, yong‘in tizimlari, kompyuter va kartrijlar.",
-            "Har bir yangi lot lidga aylanadi va saytdagi ariza bilan bir xil [lidlar navbati](#leads-queue) bo‘yicha yuradi: kunduzi — navbat bilan, kechasi — ertalab. Botdagi kartada — maydoncha, muddat, lotga havola, buyurtmachining telefoni, pochtasi va mas’ul shaxsi (maydoncha ko‘rsatsa) hamda majburiy shart: «Перед подачей заявки — связаться с Егором или Александром и запросить цену». O‘sha lot skaut kanaliga ham qator bo‘lib ketadi, bir o‘tishda sakkiztadan ko‘p emas. O‘zbekcha nomga ruscha qisqa «nima xohlashadi» jumlasi qo‘shiladi (uni arzon model yozadi, yangi raqamlarsiz). Lot kartasida telefon bo‘lmasa — skaut uni o‘sha buyurtmachining boshqa xaridlaridan STIR bo‘yicha topadi.",
-            "Yuqoridagi «Oxirgi o‘tish» qatori skaut maydonchalarni qachon o‘qiganini, har birida nechta lot va ulardan nechtasi bizniki ekanini ko‘rsatadi. Maydoncha javob bermasa — u ajratib ko‘rsatiladi, qolganlari odatdagidek o‘qiladi.",
+            "Skaut (studiya dasturi) har 30 daqiqada etender, xarid, Hayot Birja va Tender.asia maydonchalarini tekshiradi. U faqat bizning ishimizni oladi: sayt, ilova, bot va tizim yaratish. 1C, litsenziyalar, serverlar va videokuzatuvni o‘tkazib yuboradi.",
+            "Yangi lot saytdagi ariza kabi [lidlar navbati](#leads-queue)ga tushadi. Kartada muddat, havola, buyurtmachi kontakti va nomning ruscha tarjimasi bor.",
           ],
         },
         {
           id: "work",
           title: "Lot bilan nima qilish kerak",
           body: [
-            "**Kelishilgan narxsiz ariza topshirmaymiz**: lid-tenderni oldingiz — avval Yegor yoki Aleksandrga qaysi lot va qanday muddatda ekanini yozing va narxni oling. Bu shart bo‘lim tepasida, botdagi lid kartasida va uning izohlarining birinchi qatorida turadi. Lot yonidagi «Lid kartasi» undan yaratilgan lidga olib boradi.",
-            "Lotni «Lotni ochish» tugmasi bilan oching — u yerda TZ, shartlar va hujjatlar. Mos kelsa — **«Olaman»** ni bosing: lot ismingiz bilan «Olaman» yorlig‘iga o‘tadi va hamkasblar u bilan shug‘ullanilayotganini ko‘radi. Maydonchada ariza topshirdingiz — **«Topshirildi»**. Mos kelmasa — **«Bizniki emas»**, lot yangilardan yo‘qoladi.",
-            "Yangilar muddat bo‘yicha turadi: qaysi biriga ariza qabuli tezroq tugasa, o‘sha yuqorida. Ikki kun yoki kamroq qolgan bo‘lsa — muddat ajratiladi. Qabuli bir kundan ko‘proq oldin tugagan lotlar «Yangi» dan o‘zi chiqib ketadi.",
-            "Ariza maydonchaning o‘zida, kompaniya ERI bilan topshiriladi — paneldan topshirib bo‘lmaydi. IT xaridi TZ’sini qanday o‘qish — studiya saytidagi tender tahlillarida.",
+            "**Narx kelishilmasa, ariza topshirmaymiz.** Avval Egor yoki Aleksandrga lot va muddatlar haqida yozing.",
+            "Mos keldimi? «Olaman» tugmasini bosing, hamkasblar lot sizniki ekanini ko‘radi. Ariza topshirdingiz, «Topshirildi»ni bosing. Mos kelmasa, «Bizniki emas»ni bosing.",
+            "Tepada muddati eng yaqin lotlar turadi. Ariza maydonchaning o‘zida, kompaniya ERI (elektron imzosi) bilan topshiriladi.",
           ],
         },
       ],
     },
 
     "/admin/scout": {
-      what: "Skaut-robot kechayu kunduz Telegramdagi ochiq chatlarni o‘qiydi va hozir dasturchi qidirayotgan odamlarni topadi. Kuchli topilmalarni o‘zi lidga aylantiradi, qolganlarini «Devuz Scout» kanaliga yuboradi. Bu yerda u nima topgani va ishlayotgani ko‘rinadi.",
+      what: "Skaut (studiya dasturi) kechayu kunduz Telegramdagi ochiq chatlarni o‘qiydi va dasturchi qidirayotgan odamlarni topadi. Bu yerda u nima topgani ko‘rinadi.",
       items: [
         {
           id: "how",
           title: "Bu qanday ishlaydi",
           body: [
-            "Skaut chatlarni studiyaning ishchi akkauntidan o‘qiydi. Har bir xabar saralashdan o‘tadi, qolganini model o‘qiydi va 0 dan 100 gacha baho hamda toifa qo‘yadi.",
-            "**20 dan past** — darhol «mos emas», lentada xalaqit bermaydi. **60 dan** — Telegramdagi «Devuz Scout» kanaliga keladi. **70 dan** — kuchli signal: bir-ikki daqiqadan keyin svip undan tayyor birinchi xabar bilan lid ochadi va [lidlar navbati](#leads-queue) bo‘yicha yuboradi. «субподряд» toifasi har qanday bahoda kanalga ketadi.",
-            "Har kuni ertalab 09:00 dan keyin o‘sha kanalga «☀️ Скаут за сутки» xulosasi keladi: robot ishlayaptimi va nima topdi.",
+            "Skaut har bir xabarni 0 dan 100 gacha baholaydi: odam ijrochi qidiryaptimi. Xeshtegli xabarlarni o‘tkazib yuboradi, bu deyarli har doim reklama.",
+            "60 dan signal «Devuz Scout» kanaliga keladi. 70 dan bir-ikki daqiqada undan o‘zi lid (mijoz arizasi) bo‘ladi. Har kuni ertalab kanalga «☀️ Скаут за сутки» xulosasi keladi.",
           ],
         },
         {
           id: "strong",
-          title: "Kuchli signal (70+) — o‘zingiz yozmang",
+          title: "Kuchli signal (70+): o‘zingiz yozmang",
           body: [
-            "Kanalda bunday signalning oxirgi qatori: «Сильный сигнал: через пару минут он уйдёт менеджерам очередью лидов с готовым ответом — сами не пишите». Bu muhim: odamga ikki kishi yozsa, biz spamga o‘xshab qolamiz.",
-            "Lid navbati kelgan odamga keladi. Uning izohlarida nima qilish kerakligi yozilgan: bunday postlar bir necha soat yashaydi, shaxsiy xabarga hozir yozing. Muallifning username’i bo‘lmasa — faqat chatning o‘zida javob berish mumkin.",
+            "Bunday signal navbati kelgan odamga tayyor birinchi xabar bilan lid bo‘lib keladi. Odamga oldinroq yozmang: studiyadan ikki kishi yozsa, spamga o‘xshaydi.",
+            "Shunday lid keldimi? Darhol yozing, bunday xabarlar bir necha soat yashaydi.",
           ],
         },
         {
           id: "signals",
-          title: "Oddiy signal — nima qilish kerak",
+          title: "Oddiy signal: nima qilish kerak",
           body: [
-            "70 dan past signallarni sizdan boshqa hech kim ko‘rib chiqmaydi. Mos kelsa — tez, qo‘lda va o‘z akkauntingizdan javob bering: o‘sha chatda yoki muallifga shaxsiy xabarda. Servis chatlarga bir qator ham yozmaydi.",
-            "Keyin signal kartochkasida belgilang: **«javob berildi»** yoki **«mos emas»**. «o‘zi keldi» avtomatik qo‘yiladi — odam botimizga yozganda yoki signal lidga aylanganda.",
-            "Plitkalar: «signallar» — jami, «ochilmagan» — qaror kutayotganlar, «o‘zlari kelgan», «bizgacha yetib keladi» — ko‘rib chiqilganlarning qancha qismi bizgacha yetib kelgani. Signal lidning bir qismiga aylanmasa, 90 kun saqlanadi.",
+            "70 dan past signallarni sizdan boshqa hech kim ko‘rib chiqmaydi. Mos keldimi? O‘z akkauntingizdan javob bering, chatda yoki muallifga shaxsiy xabarda.",
+            "Keyin signalni belgilang: «javob berildi» yoki «mos emas». «O‘zi keldi» odam botimizga yozsa o‘zi qo‘yiladi. Signal 90 kun saqlanadi.",
           ],
         },
         {
           id: "groups",
-          title: "Skaut uchun guruhlar — o‘zingiznikini qo‘shing",
+          title: "Skaut uchun guruhlar: o‘zingiznikini qo‘shing",
           body: [
-            "«Skaut uchun guruhlar» bloki — skaut asosiylaridan tashqari o‘qiydigan Telegram guruh va kanallari. Har kim qo‘sha oladi: «Guruh manzili yoki taklif havolasi» maydoniga @group, t.me/group ko‘rinishidagi manzilni yoki t.me/+… havolasini qo‘ying, xohlasangiz — izoh (mamlakat, guruh nima haqida), va «Guruh qo‘shish» tugmasini bosing. Skaut bot va shaxsiy akkauntni o‘qimaydi — maydon bunday manzilni qabul qilmaydi. Bitta guruh ro‘yxatga bir marta tushadi.",
-            "Keyin skaut guruhga ishchi akkauntdan o‘zi qo‘shiladi: kuniga 10 ta urinishdan ko‘p emas, urinishlar orasida bir-ikki soat va faqat Toshkent vaqti bilan 08:00 dan 22:00 gacha. Tirik odam shunday qo‘shiladi, tez-tez qo‘shilish esa Telegram uchun akkauntni cheklashga sabab bo‘ladi, biz esa shu akkauntdan mijozlar bilan ham yozishamiz. Guruhlar qo‘shilish tartibida boradi. Forma ostida bugun nechta urinish bo‘lgani, nechta guruh kutayotgani va keyingi qo‘shilish qachonligi ko‘rinadi; Telegram kutishni so‘rasa yoki ishchi akkauntni cheklasa — qo‘shilish bo‘lmaydi va qachongacha ekani ham o‘sha yerda yozilgan.",
-            "Guruh holati: «qo‘shilishni kutmoqda»; «o‘qiyapmiz» — «skaut qo‘shildi» yoki «qo‘lda qo‘shilingan» belgisi bilan (skaut akkauntidan o‘zingiz qo‘shilsangiz — u buni sezadi); «ariza adminda» — guruh yopiq, tasdiqni kutyapmiz; «qo‘shilib bo‘lmaydi» — manzil yo‘q, havola eskirgan, akkaunt guruhda bloklangan yoki guruh bot tekshiruvidan o‘tishni so‘raydi, unda faqat qo‘lda qo‘shilish mumkin. Telegram ko‘rsatgan sabab holat ostida ko‘rinadi. Yangi guruhni skaut qo‘shilgandan keyin darhol, qayta ishga tushirmasdan o‘qiydi.",
-            "«Olib tashlash» — siz qo‘shgan guruhlarda; rahbar va egasi istalganini olib tashlaydi. Olib tashlangan guruhga skaut qo‘shilmaydi va eng yaqin qayta ishga tushishdan keyin uni o‘qimay qo‘yadi; kim qo‘shgani va kim olib tashlagani amallar jurnalida yozilib qoladi.",
+            "Ijrochi qidiradigan guruhni bilasizmi? Uning manzilini «Skaut uchun guruhlar» blokiga qo‘ying va «Guruh qo‘shish»ni bosing. @group, t.me/group yoki t.me/+… havola mos keladi.",
+            "Skaut guruhga o‘zi qo‘shiladi: kuniga 10 tagacha, bir-ikki soat tanaffus bilan, 08:00-22:00 da. Shunda Telegram uni spamer deb hisoblamaydi.",
+            "«Ariza adminda» guruh yopiq va ruxsat kutilayotganini bildiradi. «Qo‘shilib bo‘lmaydi» havola eskirgan yoki tekshiruv kerakligini bildiradi, unda qo‘lda qo‘shiladi. «Olib tashlash» sizning guruhlaringizda bor, rahbar va egasi istalganini olib tashlaydi.",
           ],
         },
         {
@@ -1044,15 +1038,17 @@ export const uz: HelpCopy = {
           title: "Skaut ishlayaptimi",
           body: {
             manager: [
-              "Tepadagi tilla rangli ogohlantirish — nimadir noto‘g‘ri: skaut jim, birorta chatni o‘qimayapti yoki model ishlamayapti. «Akkaunt berilgan 29 ta chatdan 12 tasini o‘qiyapti» ogohlantirishi — chatlarning bir qismi hozircha o‘qilmayapti: [«Skaut uchun guruhlar»](#scout-groups)dagi guruhlarga skaut o‘zi, bir-ikki soatda bittadan qo‘shiladi. Skaut jim, model ishlamayapti yoki ogohlantirish bir necha kun ketmasa — egasiga ayting: bu paneldan tuzatilmaydi.",
+              "Tepadagi oltin plashka skaut bilan nimadir noto‘g‘ri ekanini bildiradi. Bir-ikki kun ketmasa, egasiga ayting.",
+              "«Akkaunt berilgan 29 ta chatdan 12 tasini o‘qiyapti» plashkasi buzilish emas. Skaut qolgan guruhlarga o‘zi qo‘shiladi.",
             ],
             head: [
-              "Tepadagi tilla rangli ogohlantirish — nosozlik: «Skaut N daqiqadan beri jim» (jarayon to‘xtagan), «birorta ham chatni o‘qimayapti» yoki «Model ishlamayapti». «O‘qilmayapti» ro‘yxati bilan «Akkaunt berilgan Y ta chatdan X tasini o‘qiyapti» — ishchi akkaunt bu chatlarga hali qo‘shilmagan. [«Skaut uchun guruhlar»](#scout-groups)dagi guruhlarga u o‘zi, bir-ikki soatda bittadan qo‘shiladi; nosozliklarni va serverda berilgan chatlarni egasi tuzatadi.",
+              "Tepadagi oltin plashka buzilishni bildiradi: skaut jim yoki chatlarni o‘qimayapti. Uni egasi tuzatadi.",
+              "«Akkaunt berilgan 29 ta chatdan 12 tasini o‘qiyapti» plashkasi buzilish emas. [«Skaut uchun guruhlar»](#scout-groups)dagi guruhlarga skaut o‘zi qo‘shiladi.",
             ],
             admin: [
-              "«Skaut N daqiqadan beri jim» — serverdagi jarayon yiqilgan yoki to‘xtatilgan: `systemctl status devuz-scout`. «Model ishlamayapti» — kalitda yoki undagi pulda muammo.",
-              "«Akkaunt berilgan Y ta chatdan X tasini o‘qiyapti» va «O‘qilmayapti» ro‘yxati — ishchi akkaunt bu chatlarga qo‘shilmagan yoki manzil ochilmagan. [«Skaut uchun guruhlar»](#scout-groups)dagi guruhlarga u o‘zi, kuniga 10 tadan ko‘p emas qo‘shiladi; serverdagi SCOUT_CHATS chatlariga — ishchi akkauntdan qo‘lda.",
-              "«Mexanizm butun: … Ishlab chiqish so‘rovlari hali bo‘lmagan» — bu chatlardagi jimlik, nosozlik emas.",
+              "«Skaut N daqiqadan beri jim» serverdagi skaut jarayoni to‘xtaganini bildiradi: uni qayta ishga tushiring. «Model ishlamayapti» xabarlarni baholaydigan dastur kaliti ishlamayotganini bildiradi.",
+              "«Akkaunt berilgan Y ta chatdan X tasini o‘qiyapti» akkaunt hamma chatlarga qo‘shilmaganini bildiradi. [«Skaut uchun guruhlar»](#scout-groups)dagi guruhlarga u o‘zi qo‘shiladi, serverdagi chatlarga qo‘lda qo‘shiladi.",
+              "«Mexanizm butun: …» chatlarda jimlik ekanini bildiradi. Bu buzilish emas.",
             ],
           },
         },
@@ -1060,24 +1056,24 @@ export const uz: HelpCopy = {
     },
 
     "/admin/markets": {
-      what: "O‘zbekistondan tashqarida mijozlarni qayerdan qidirish kerak: har bir mamlakat bo‘yicha — frilans birjalari, studiyalar kataloglari, e’lonlar taxtalari, tenderlar, xaritalar va Telegram chatlari, havolalar bilan va har bir maydonda qanday ishlash kerakligi bilan. Studiya MDH va AQShga chiqyapti, bu bo‘lim esa har bir mamlakatda nimadan boshlash kerakligi haqida qisqacha ma’lumot.",
+      what: "Bu yerda boshqa mamlakatlarda mijozlarni qayerdan qidirish kerakligi jamlangan. Har bir mamlakat bo‘yicha havolalar va maslahatlar bilan maydonchalar bor.",
       items: [
         {
           id: "start",
-          title: "Mamlakatni qanday tanlash kerak",
+          title: "Mamlakatni qanday tanlash",
           body: [
-            "«Bozorlar» bo‘limi menyudan ochiladi: yangi menyuda — «Yana» → «Bozorlar», bir qatorli menyuda — «Bozorlar» tugmasi; u [«Sovuq aloqalar»](/admin/prospect) bo‘limining yorlig‘i ham. Qidiruv (Ctrl+K) uni «davlatlar», «platformalar» so‘zlari bilan ham topadi. Birinchi sahifada — mamlakatlar kartochkalari: bayroq, nomi, belgi, u yerda dasturchini qanday qidirishlari va nechta maydon to‘plangani. Kartochkani bosing — mamlakat sahifasi ochiladi.",
-            "Belgi — studiya birinchi navbatda qayerga chiqishini ko‘rsatadi: «asosiy bozor» (Rossiya, Qozog‘iston, AQSh) — asosiy kuch shu yerga; «sinab ko‘ramiz» — qidiramiz, lekin kamroq; «imkon bo‘lganda» — sabab bo‘lganda kiramiz. O‘zbekiston ham ro‘yxatda — «imkon bo‘lganda» belgisi bilan.",
-            "Havolalar 06.11.2026 da tekshirilgan. Ba’zi saytlar (Upwork, Clutch, Avito, OLX) robotlarni kiritmaydi, odamga esa ochiladi. Maydon yopilgan yoki ko‘chgan bo‘lsa — rahbarga ayting: ro‘yxat kodda tuzatiladi va uni tuzatishadi.",
+            "«Bozorlar» menyuda va [«Sovuq aloqalar»](/admin/prospect)da tab sifatida bor. Mamlakatni ochish uchun uning kartochkasini bosing.",
+            "«asosiy bozor» belgisi bor mamlakatlardan boshlang: Rossiya, Qozog‘iston, AQSH. «sinab ko‘ramiz» ham mumkin, «imkon bo‘lganda» faqat sabab bo‘lsa.",
+            "Maydoncha ochilmayaptimi yoki yopilganmi? Rahbarga ayting.",
           ],
         },
         {
           id: "country",
           title: "Mamlakat sahifasi va «Skautga» tugmasi",
           body: [
-            "Tepada — bu mamlakatda dasturchini qanday qidirishlari, qaysi tilda yozish kerakligi va Toshkent bilan vaqt farqi. Pastda — «Nimadan boshlash kerak»: boshlashga arziydigan uch-to‘rt qadam. Ro‘yxatga qaytmaslik uchun tepada mamlakatlar almashtirgichi bor.",
-            "Keyin maydonlar turlari bo‘yicha: frilans birjalari, studiyalar kataloglari va reytinglari, e’lonlar taxtalari, tenderlar, xaritalar va kompaniyalar ma’lumotnomalari, Telegram chatlari, hamjamiyatlar. Har birida — havola, bu qanday maydon, unda mijozlarni qanday qidirish kerak va qancha turadi: «bepul», «qisman pullik» (joylashish bepul, takliflar yoki reklama — pullik) yoki «pullik». Pullik maydonlarda ro‘yxatdan o‘tish va to‘lash — faqat rahbar bilan kelishgandan keyin.",
-            "Telegram chatlarida «Skautga» tugmasi bor: guruh [«Skaut signallari»](/admin/scout)dagi «Skaut uchun guruhlar»ga tushadi va skaut unga o‘zi, navbati kelganda qo‘shiladi — kuniga 10 ta guruhdan ko‘p emas. Undan signallar odatdagidek keladi. Guruh skautda allaqachon bo‘lsa, sahifa shuni aytadi.",
+            "Tepada qisqacha: u yerda dasturchini qanday qidirishadi va qaysi tilda yozish kerak. «Nimadan boshlash kerak» blokida sizning rejangiz: qadamlarni tartib bilan bajaring.",
+            "Pastda turlari bo‘yicha maydonchalar: birjalar, kataloglar, e’lonlar taxtalari, Telegram chatlari. Maydoncha uchun faqat rahbar bilan kelishib pul to‘lash mumkin.",
+            "Telegram chatlarida «Skautga» tugmasi bor. Uni bosing, skaut guruhga o‘zi qo‘shiladi va u yerdan buyurtmalarni [«Skaut signallari»](/admin/scout)ga yuboradi.",
           ],
         },
         {
@@ -1085,16 +1081,16 @@ export const uz: HelpCopy = {
           title: "Ekrandagi o‘rgatish",
           body: {
             manager: [
-              "**«Ekranda ko‘rsatish: «Bozorlar»dan qanday foydalanish»** tugmasi bo‘lim tepasida — sakkiz qadamli qisqa o‘rgatish: bo‘lim qayerda, mamlakatni qanday tanlash, mamlakat sahifasida nima bor (misol uchun — Rossiya), maydon va «Skautga» tugmasi. Kerakli joy yoritiladi, qolgani qorong‘ilashadi, sahifadan sahifaga o‘rgatish o‘zi o‘tadi. «O‘tkazib yuborish» yoki Esc — yopish.",
-              "Sizga u bir marta o‘zi ko‘rsatiladi — yangi panel bilan tanishuvdan so‘ng darhol. Yana ko‘rish — shu tugma bilan yoki [«Sozlamalar»](/admin/settings) da.",
+              "Bo‘lim tepasidagi **«Ekranda ko‘rsatish: «Bozorlar»dan qanday foydalanish»** tugmasi sakkiz qadamli qisqa o‘rgatishni ochadi. Uni «O‘tkazib yuborish» tugmasi yoki Esc tugmasi bilan yopish mumkin.",
+              "O‘rgatish sizga bir marta o‘zi ko‘rsatiladi. Uni yana shu tugma bilan yoki [«Sozlamalar»](/admin/settings)da ochish mumkin.",
             ],
             head: [
-              "**«Ekranda ko‘rsatish: «Bozorlar»dan qanday foydalanish»** tugmasi bo‘lim tepasida — sakkiz qadamli qisqa o‘rgatish: bo‘lim qayerda, mamlakatni qanday tanlash, mamlakat sahifasida nima bor (misol uchun — Rossiya), maydon va «Skautga» tugmasi. Kerakli joy yoritiladi, qolgani qorong‘ilashadi, sahifadan sahifaga o‘rgatish o‘zi o‘tadi. «O‘tkazib yuborish» yoki Esc — yopish.",
-              "Menejerlarga u bir marta o‘zi ko‘rsatiladi — yangi panel bilan tanishuvdan so‘ng darhol; sizga — faqat tugma bilan, shu yerda yoki [«Sozlamalar»](/admin/settings) da.",
+              "Bo‘lim tepasidagi **«Ekranda ko‘rsatish: «Bozorlar»dan qanday foydalanish»** tugmasi sakkiz qadamli qisqa o‘rgatishni ochadi. Uni «O‘tkazib yuborish» tugmasi yoki Esc tugmasi bilan yopish mumkin.",
+              "Menejerlarga u bir marta o‘zi ko‘rsatiladi, sizga faqat tugma bilan. Tugma [«Sozlamalar»](/admin/settings)da ham bor.",
             ],
             admin: [
-              "**«Ekranda ko‘rsatish: «Bozorlar»dan qanday foydalanish»** tugmasi bo‘lim tepasida — sakkiz qadamli qisqa o‘rgatish: bo‘lim qayerda, mamlakatni qanday tanlash, mamlakat sahifasida nima bor (misol uchun — Rossiya), maydon va «Skautga» tugmasi. Kerakli joy yoritiladi, qolgani qorong‘ilashadi, sahifadan sahifaga o‘rgatish o‘zi o‘tadi. «O‘tkazib yuborish» yoki Esc — yopish.",
-              "Menejerlarga u bir marta o‘zi ko‘rsatiladi — yangi panel bilan tanishuvdan so‘ng darhol; sizga — faqat tugma bilan, shu yerda yoki [«Sozlamalar»](/admin/settings) da.",
+              "Bo‘lim tepasidagi **«Ekranda ko‘rsatish: «Bozorlar»dan qanday foydalanish»** tugmasi sakkiz qadamli qisqa o‘rgatishni ochadi. Uni «O‘tkazib yuborish» tugmasi yoki Esc tugmasi bilan yopish mumkin.",
+              "Menejerlarga u bir marta o‘zi ko‘rsatiladi, sizga faqat tugma bilan. Tugma [«Sozlamalar»](/admin/settings)da ham bor.",
             ],
           },
         },
@@ -1525,60 +1521,60 @@ export const uz: HelpCopy = {
 
     /* ── Рабочие аккаунты ──────────────────────────────────────────────── */
     "/admin/accounts": {
-      what: "Aloqalarning birinchi xatlari ketadigan va mijozlar bilan yozishma boradigan Telegram ishchi akkauntlari. Asosiysi serverda ulangan va chatlarni ham o‘qiydi; bu yerda qo‘shimchalari ulanadi va kim qaysi birida ishlashi belgilanadi. Bo‘limni egasi va rahbar ko‘radi.",
+      what: "Bu yerda ishchi Telegram akkauntlari. Ulardan studiya kompaniyalarga birinchi bo‘lib yozadi va mijozlar bilan yozishadi. Asosiy akkaunt allaqachon ulangan, bu yerda qo‘shimchalari qo‘shiladi.",
       items: [
         {
           id: "add",
           title: "Akkaunt ulash",
           body: [
-            "Akkaunt nomini (masalan, «Dilnoza akkaunti») va uning telefon raqamini yozing — +998… yoki mamlakat kodisiz 9 ta raqam. **«Kod yuborish»** tugmasini bosing. Bir necha soniyadan keyin skaut Telegramdan kod so‘raydi va akkauntda «Telegramdan kelgan kod» maydoni paydo bo‘ladi; kirish davom etayotganda sahifa o‘zi yangilanadi.",
-            "Kod shu akkaunt telefonidagi Telegram ilovasiga keladi — Telegramdan xabar bilan, odatda SMS emas. Uni yozing va **«Kirish»** tugmasini bosing. Kodni hech kimga jo‘natmang va chatga yubormang: xabar bilan jo‘natilgan kodni Telegram bekor qiladi va kirishni qaytadan boshlashga to‘g‘ri keladi.",
-            "Ikki bosqichli himoya yoqilgan bo‘lsa, «Ikki bosqichli himoya paroli» maydoni chiqadi: parolni yozing va yana **«Kirish»**. Parolni saqlamaymiz: skaut uni tekshiradi va darhol o‘chiradi. Bo‘ldi — holat «ishlamoqda» va yonida akkaunt nomi. Akkaunt telefonidagi qurilmalar ro‘yxatida yangi seans paydo bo‘ladi — bu biz; uni yakunlamang, aks holda akkaunt uziladi.",
-            "«kod mos kelmadi» — kodni qaytadan yozing; «kodning muddati o‘tgan» yoki boshqa xato — **«O‘chirish»** tugmasini bosing va o‘sha raqam bilan qaytadan ulang.",
+            "Akkaunt nomi va telefon raqamini yozing, **«Kod yuborish»**ni bosing. Kod shu telefondagi Telegram ilovasiga keladi, odatda SMS emas. Uni yozing va **«Kirish»**ni bosing.",
+            "Kodni hech kimga yubormang: yuborilgan kodni Telegram bekor qiladi. Ikki bosqichli himoya paroli so‘ralsa, yozing va yana **«Kirish»**ni bosing. Biz uni saqlamaymiz.",
+            "Telefonda yangi seans paydo bo‘ladi. Uni tugatmang, aks holda akkaunt uziladi. Kirishda xato bo‘ldimi? «O‘chirish»ni bosing va qaytadan ulang.",
           ],
         },
         {
           id: "limits",
           title: "Qancha xat va qaysi akkauntdan",
           body: [
-            "Har bir akkauntning yangi odamlarga soatiga birinchi xatlar chegarasi o‘ziniki: asosiysida — 3, yangisida ham — 3. Yangi raqamga birinchi haftada «Soatiga xat» maydonida 1–2 qo‘ygan ma’qul: yangi akkauntni Telegram tezroq cheklaydi. Birinchi xatlar har kuni Toshkent vaqti bilan 07:30 dan 20:30 gacha ketadi — tunda qo‘yilgani kutadi va ertalab ketadi; javob berganlar bilan yozishma istalgan vaqtda va chegarasiz boradi. Bo‘lim tepasida — hammasidan birga qanchasi ketishi; xuddi shu raqam [Aloqalar](/admin/prospect)dagi ro‘yxat ustida turadi.",
-            "Aloqalar navbati bitta: xat qaysi akkauntda joy oldinroq bo‘shasa, o‘shandan ketadi — menejer hech narsa tanlamaydi; agar odam akkauntlarda belgilangan bo‘lsa ([akkauntda kim ishlaydi](#accounts-staff) bandi), — faqat uning akkauntlaridan. Mijozga javoblar, model javoblari va xat tuzatishi birinchi xat ketgan akkauntdan boradi: odamga boshqa raqamdan yozish — uning yozishmasida begona bo‘lib paydo bo‘lish demak.",
-            "Har bir akkaunt ostida — oxirgi soatda va bugun nechta birinchi xat ketgani, skaut uni ulangan holda ushlab turgan bo‘lsa «aloqada» (belgi har daqiqada). Belgi uch daqiqadan ko‘p bo‘lmasa — skaut bu akkaunt bilan ishlamayapti: serverni tekshiring yoki akkauntni qaytadan ulang.",
+            "Har bir akkaunt yangi odamlarga soatiga uchtagacha birinchi xabar yozadi, 07:30-20:30 da. Yangi raqamga birinchi haftada «Soatiga xat» maydoniga 1-2 qo‘ying.",
+            "Xabar joyi oldinroq bo‘shagan akkauntdan ketadi. Keyin mijozga o‘sha raqamdan yoziladi. Avtoyurish (kompaniyalarga o‘zi yozadigan bot) faqat qo‘shimcha akkauntlardan ishlaydi.",
+            "«Aloqada» belgisi akkaunt ishlayotganini bildiradi. Uch daqiqadan ko‘proq yo‘qoldimi? Akkauntni qaytadan ulang.",
           ],
         },
         {
           id: "staff",
           title: "Akkauntda kim ishlaydi",
           body: [
-            "Asosiy akkaunt ostida va har bir ulangan akkaunt ostida — **«Akkauntda kim ishlaydi»** bloki: studiyada ishlaydigan hammaning belgilari. Shu akkaunt odamlarini belgilang va **«Saqlash»** ni bosing. Bitta odam bir nechta akkauntda turishi mumkin — har birida belgilang; olib tashlangan belgi uni akkauntdan oladi.",
-            "Nima uchun: belgilangan odamning birinchi xatlari faqat uning akkauntlaridan ketadi — «soatiga 3» chegarasida qaysi birida joy oldinroq bo‘shasa, o‘shandan. Shunda mijozga uning menejeri turgan raqamdan yoziladi. Odam hech bir akkauntda belgilanmagan bo‘lsa — uning xatlarini istalgan akkaunt oladi, avvalgidek: yangi menejer belgini kutmasdan darhol yozishi mumkin. Akkaunt o‘chirilsa — uning belgilari o‘zi olinadi va uning odamlari xatlarini qolganlari oladi. Kim kimni belgilagani amallar jurnaliga yoziladi.",
+            "**«Akkauntda kim ishlaydi»** blokida odamlarni belgilang va **«Saqlash»**ni bosing. Ularning birinchi xabarlari faqat ularning akkauntlaridan ketadi. Shunda mijozga uning menejeri raqamidan yoziladi.",
+            "Odam hech qayerda belgilanmaganmi? Uning xabarlarini istalgan akkaunt oladi.",
           ],
         },
         {
           id: "circle",
           title: "Aloqalar uchun dumaloq video",
           body: [
-            "Salomga ruscha javob berganlarga ruscha dumaloq video, o‘zbekcha javob berganlarga o‘zbekchasi ketadi — studiyadan qisqa video: saytni ko‘rdik, bir nechta xato topdik, hozir yozib beramiz. Bepul maket taklifi bilan tahlilni bot mijoz dumaloq videoga javob berganda yuboradi ([ikki bosqichli aloqa](#prospect-hello)). Boshqa tilda javob berganlarga dumaloq videosiz, ularning tilidagi xat ketadi. Bot aloqa ketgan ishchi akkauntning «Saqlangan xabarlar»idan kerakli tildagi dumaloq videoni oladi va «uzatildi» belgisisiz nusxasini yuboradi.",
-            "Dumaloq videolarni har bir akkauntning «Saqlangan xabarlar»iga qo‘lda qo‘yish shart emas: shu sahifaning tepasidagi **«Aloqalar uchun dumaloq video»** blokida ikki joy bor — **«Ruscha dumaloq video»** va **«O‘zbekcha dumaloq video»**. Har biriga fayl yuklang — MP4, bir daqiqagacha kvadrat video (Telegramdan saqlangan dumaloq video shundayligicha mos keladi) — va **«Dumaloq videoni yuklash»** tugmasini bosing. O‘n daqiqa ichida bot uni asosiy va har bir ulangan akkauntning «Saqlangan xabarlar»iga o‘zi saqlaydi. U yerda har bir tilda hozir qaysi dumaloq video ketayotgani, qachon va kim yuklagani ham ko‘rinadi; yangisi barcha akkauntlarda shu tildagi oldingisining o‘rnini oladi, boshqa tildagisi qoladi. Kim yuklagani — harakatlar jurnalida. Faylsiz ham bo‘ladi: dumaloq videoni studiya botiga shaxsiy chatda yuboring — bot tilni so‘raydi, «🇷🇺 Русский» yoki «🇺🇿 O‘zbekcha» ni bosing, u esa, masalan, «Узбекский кружок сохранён для касаний» deb javob beradi. Dumaloq videolarni egasi va rahbar almashtira oladi.",
-            "Bu yerda har bir akkauntda ikki qator bor — ruscha dumaloq video haqida («Ruscha dumaloq video: bor, … da saqlangan» yoki «Ruscha dumaloq video yo‘q») va o‘zbekchasi haqida. Kerakligi bo‘lmasa — dumaloq video o‘rniga javob tilida xat ketadi. Bot «Saqlangan xabarlar»ga o‘n daqiqada bir marta qaraydi, shuning uchun qatorlar darhol yangilanmaydi. Ruscha dumaloq videoni «Saqlangan xabarlar»ga qo‘lda ham saqlash mumkin — bot oxirgisini oladi. O‘zbekchasini — faqat shu blok yoki bot orqali: videodan tilni bilib bo‘lmaydi va qo‘lda saqlanganini bot ruscha deb hisoblaydi. Dumaloq video yo‘qligi sababli ketmagan bo‘lsa, bu haqda soat 18:00 dagi avtoprogon hisobotida ham qator bor.",
+            "Dumaloq video (qisqa video) «Здравствуйте»ga javob berganlarga ketadi. Ruscha javob berganlar ruschasini, o‘zbekcha javob berganlar o‘zbekchasini oladi. Mijoz javob bersa, bot sayt tahlilini yuboradi ([ikki bosqichli aloqa](#prospect-hello)).",
+            "Ikkala videoni **«Aloqalar uchun dumaloq video»** blokiga yuklang: MP4 fayl, kvadrat, bir daqiqagacha. **«Dumaloq videoni yuklash»**ni bosing, o‘n daqiqada bot uni barcha akkauntlarning «Saqlangan xabarlar»iga qo‘yadi.",
+            "Videoni studiya botiga yuborsa ham bo‘ladi, u tilni so‘raydi. Kerakli video yo‘qmi? Unda mijozga xat ketadi.",
           ],
         },
         {
           id: "circle-niches",
           title: "Sohalar bo‘yicha dumaloq videolar",
           body: [
-            "Umumiy videolar ostida **«Sohalar bo‘yicha dumaloq videolar»**: soha va til uchun video. Sohalar: tibbiyot markazi, stomatologiya, mebel, restoran, go‘zallik saloni, turagentlik, o‘quv markazi, ko‘chmas mulk. Soha videosi aloqalarning yangi yarmida shu sohadagi kompaniyalarga ketadi ([A/B](/admin/prospect/texts#sales-ab)); kerakli tilda soha videosi bo‘lmasa, avvalgidek umumiysi ketadi. Kompaniya sohasini panel uning kartochkasidan, bo‘lmasa nomi va sayt manzilidan oladi.",
-            "**«Yetishmaydi: …»** qatori: qaysi soha videolari na yuklanganlar orasida, na akkauntlarning «Saqlangan xabarlar»ida bor. Pastda har bir soha va til bo‘yicha: yuklangan sanasi bilan «bor» yoki «yo‘q, umumiysi ketadi».",
-            "Yuklash: **«Soha»** va **«Video tili»** ni tanlang, fayl (MP4, kvadrat, bir daqiqagacha) va **«Soha videosini yuklash»** ni bosing. 10 daqiqa ichida bot uni har bir akkauntning «Saqlangan xabarlar»iga qo‘yadi. Yoki videoni studiya botiga yuboring: u avval tilni, keyin sohani tugmalar bilan so‘raydi.",
+            "**«Sohalar bo‘yicha dumaloq videolar»** blokida video sohaga qarab yoziladi: stomatologiyaga stomatologiya haqida, mebelchiga mebel haqida. Soha videosi bo‘lmasa, umumiysi ketadi.",
+            "**«Soha»** va **«Video tili»**ni, faylni tanlang va **«Soha videosini yuklash»**ni bosing. «Yetishmaydi: …» qatori qaysi videolar yo‘qligini ko‘rsatadi.",
+            "Soha videolarini aloqalarning yarmi oladi: shunday qilib ikki yondashuvni solishtiramiz ([A/B](#prospect-sales-ab)).",
           ],
         },
         {
           id: "stop",
           title: "Pauza, cheklov va o‘chirish",
           body: [
-            "**«Pauza»** — akkaunt birinchi xatlarni yozishni to‘xtatadi, lekin boshlangan suhbatlarda javob beradi. **«Ishga qaytarish»** — yana yozadi.",
-            "Telegram akkauntni ommaviy tarqatma uchun cheklasa, u o‘zi bir sutkaga to‘xtaydi: birinchi xatlar qolganlaridan ketadi, yozishma davom etadi, akkauntda esa qachongacha turgani yoziladi. Shu holat yuz bergan xat navbatga qaytadi va boshqa akkauntdan ketadi. Yozadigan boshqa hech kim qolmasa, navbat avvalgidek butunlay olib tashlanadi. Har soatda har bir akkaunt, asosiysi ham, @SpamBot’dan o‘zi cheklanganmi-yo‘qmi deb so‘raydi. Hozir bu tekshiruv egasining so‘zi bilan o‘chirilgan (03.11.2026 dan): cheklov haqida faqat Telegram yuborishni rad etganda bilamiz. Telegram bir sutkadan uzoqroq muddat aytgan bo‘lsa — akkaunt shu muddatgacha to‘xtaydi. Cheklov haqida bot butun jamoaga yozadi: qaysi akkaunt soat nechagacha to‘xtagan, aynan uni nechta va kimning xatlari kutmoqda va nima qilish kerak — mijozlarga shaxsiy akkauntdan yoki boshqa ishchi akkauntdan yozish. Cheklov olib tashlansa — bot akkaunt yana yozayotganini aytadi. Menejerning xatlari cheklangan akkauntni kutmasligi uchun uni yana bitta akkauntda belgilang — [akkauntda kim ishlaydi](#accounts-staff) bandi.",
-            "**«O‘chirish»** — skaut Telegramdagi seansni yopadi (u telefondagi qurilmalardan yo‘qoladi) va uni bizda o‘chiradi. Shu akkauntdan boshlangan suhbatlar «Sovuq aloqalar»da qoladi, lekin ularga keyin o‘zingiz javob berasiz: bu raqamdan yozadigan boshqa hech kim yo‘q.",
+            "**«Pauza»** birinchi xabarlarni to‘xtatadi, boshlangan suhbatlarda javoblar ketaveradi. **«Ishga qaytarish»** akkauntni yana yoqadi.",
+            "Telegram akkauntni cheklasa, u bir sutkaga yoki Telegram aytgan muddatga to‘xtaydi. Bot jamoani ogohlantiradi. Cheklov davomida boshqa akkauntdan yozing ([akkauntda kim ishlaydi](#accounts-staff)).",
+            "Telegram akkauntni muzlatdimi? Bot qanday shikoyat qilishni aytadi. Muzlatish olingach, «Ishga qaytarish»ni bosing.",
+            "**«O‘chirish»** seansni yopadi. Bu akkauntdagi suhbatlarni endi qo‘lda olib boring.",
           ],
         },
       ],
@@ -1586,23 +1582,22 @@ export const uz: HelpCopy = {
 
     /* ── Надзор ───────────────────────────────────────────────────────── */
     "/admin/talks": {
-      what: "Sovuq aloqalar bo‘yicha yozishmalar tahlili. Har bir tinchigan suhbatni ikkinchi model — uni olib borgani emas — o‘qiydi va javob beradi: mijozni nima qiziqtirdi, qanday e’tiroz bo‘ldi, nimada uzildi va bundan qanday saboq chiqadi. Saboq keyingi xatni yozadigan odamga kerak.",
+      what: "Bu yerda sovuq aloqalar bo‘yicha yozishmalar tahlili: mijozni nima qiziqtirdi, suhbat qayerda uzildi va bundan qanday saboq chiqadi.",
       items: [
         {
           id: "when",
           title: "Tahlil qachon paydo bo‘ladi",
           body: [
-            "Mijozning oxirgi javobidan taxminan bir soat o‘tib. Agar mijoz keyin yana yozsa — suhbat qaytadan tahlil qilinadi va eski tahlil yangisiga almashadi. Aloqa «🙅 Mijoz rad etdi» yoki «🔇 Javob bermayapti» tugmasi bilan yopilsa ham tahlil qaytadan qilinadi: natija «rad etdi» yoki «suhbat to‘xtab qoldi» bo‘ladi.",
-            "Faqat mijoz kamida bir marta javob bergan aloqa yozishmalari tahlil qilinadi. Saytdagi va botdagi chatlar bu yerga tushmaydi.",
+            "Mijozning oxirgi javobidan taxminan bir soat o‘tib. Mijoz yana yozsa, suhbat qaytadan tahlil qilinadi.",
+            "Bu yerga faqat mijoz kamida bir marta javob bergan aloqalar tushadi.",
           ],
         },
         {
           id: "read",
-          title: "Qatorni qanday o‘qish",
+          title: "Qatorni qanday o‘qish kerak",
           body: [
-            "Natija: «rad etdi», «odamni chaqirdi», «dastlabki suhbat yakunlandi», «suhbat to‘xtab qoldi» yoki «hali davom etyapti». «Suhbat to‘xtab qoldi» — qolgan hammasi: jimlik, fayl yuborish so‘rovi, tushunarsiz javob.",
-            "Yashil rangda — saboq. Pastroqda — «E’tiborni tortdi», «E’tiroz», «Buzildi». «Suhbat kam — xulosa zaif» mijoz ikkitadan kam xabar yozganini bildiradi: bitta replikadan xulosa chiqarilmaydi, u yerda saboq yo‘q.",
-            "Tepadagi plitkalar: nechtasi tahlil qilingan, nechta saboq mijoz so‘zlariga tayangan, rad etishlar va o‘zbek tilidagi suhbatlar soni.",
+            "Natija suhbat qanday tugaganini ko‘rsatadi: «rad etdi», «odamni chaqirdi», «suhbat to‘xtab qoldi» yoki «hali davom etyapti».",
+            "Saboq yashil rangda. Pastda «E’tiborni tortdi», «E’tiroz» va «Buzildi». Mijoz ikkitadan kam xabar yozdimi? Unda saboq yo‘q.",
           ],
         },
         {
@@ -1610,14 +1605,14 @@ export const uz: HelpCopy = {
           title: "Bu bilan nima qilish kerak",
           body: {
             manager: [
-              "To‘plamdagi xatlarni tuzatishdan oldin yangi saboqlarni o‘qing: odamlarni nima qiziqtiradi va suhbatlar nimada uziladi. Saboqlar hozircha xatlarga o‘zi qo‘shilmaydi — buni bir necha o‘nlab javob yig‘ilganda egasi hal qiladi.",
-              "«lid →» bu suhbat bo‘yicha lidni ochadi, agar u sizniki bo‘lsa.",
+              "Xat yozishdan oldin saboqlarni o‘qing: odamlarni nima qiziqtiradi va ular qayerda jim bo‘lib qoladi.",
+              "«lid →» havolasi shu suhbat bo‘yicha lidingizni ochadi.",
             ],
             head: [
-              "Saboqlarni jamoa bilan muhokama qiling: qaysi gaplar mijozni qiziqtiradi, qaysi e’tirozlarda suhbat uziladi. Xatlarga ular hozircha o‘zi qo‘shilmaydi — buni bir necha o‘nlab javob yig‘ilganda egasi hal qiladi.",
+              "Saboqlarni jamoa bilan muhokama qiling: qaysi ilgaklar ishlaydi va mijozlarni qayerda yo‘qotamiz.",
             ],
             admin: [
-              "Saboqlar hozircha faqat to‘planadi va xatlarga qo‘shilmaydi. Ularni birinchi xat promptiga qo‘shish — sizning qaroringiz, uni bir necha o‘nlab javob yig‘ilganda qabul qilish kerak.",
+              "Saboqlar hozircha faqat to‘planadi va xatlarga qo‘shilmaydi. Ularni xatlarga qo‘shishni o‘nlab javoblar yig‘ilganda boshlash kerak.",
             ],
           },
         },
