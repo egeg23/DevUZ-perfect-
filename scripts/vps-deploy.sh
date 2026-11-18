@@ -379,9 +379,13 @@ if [ -n "${DEPLOY_IMAGE:-}" ] && [ "$(uname -m)" = "x86_64" ]; then
   # Скачивание — не дольше PULL_TIMEOUT. 18.11.2026 docker pull образа
   # c40cd00 повис без ответа реестра: задача Actions отвалилась через 55
   # минут, а pull на сервере остался жить и держал замок выкатки, и
-  # следующая (2322b81) через 15 минут ожидания сдалась. Повисший pull —
-  # это «реестр не ответил»: обрываем и идём запасным путём.
-  if timeout --kill-after=30 "${PULL_TIMEOUT:-600}" docker pull --quiet "$DEPLOY_IMAGE" >/dev/null 2>&1; then
+  # следующая (2322b81) через 15 минут ожидания сдалась. Повисший pull
+  # обрываем — но не через 10 минут: образ с картинками макетов больше
+  # гигабайта, и сервер качает его до 25 минут (12.11.2026). При пределе в
+  # 10 минут 18.11.2026 две выкатки подряд (8cb4cbf, e49ac8e) обрывали
+  # нормальное скачивание и садились собирать Next.js на боевом сервере —
+  # 40 минут полной нагрузки и всё равно «Run Command Timeout».
+  if timeout --kill-after=30 "${PULL_TIMEOUT:-2400}" docker pull --quiet "$DEPLOY_IMAGE" >/dev/null 2>&1; then
     BAKED="$(docker image inspect --format '{{ index .Config.Labels "studio.devuz.public" }}' "$DEPLOY_IMAGE" 2>/dev/null || true)"
     if [ "$BAKED" = "$PUBLIC_SIGNATURE" ]; then
       docker tag "$DEPLOY_IMAGE" devuz:latest
@@ -391,7 +395,12 @@ if [ -n "${DEPLOY_IMAGE:-}" ] && [ "$(uname -m)" = "x86_64" ]; then
       echo "  · в образе вшиты не те открытые значения, что в .env (${BAKED:-метки нет}) — соберу сам" >&2
     fi
   else
-    echo "  · реестр не отдал образ — соберу сам" >&2
+    # Не собираем на месте: сборка здесь дольше скачивания и роняет все
+    # сайты сервера. Сайт остаётся на прежнем образе, выкатка — красной,
+    # следующая выкатка или «Re-run jobs» попробует снова.
+    docker logout ghcr.io >/dev/null 2>&1 || true
+    echo "✗ Реестр не отдал образ за ${PULL_TIMEOUT:-2400} с — сайт остаётся на прежней версии, на сервере не собираю" >&2
+    exit 1
   fi
   docker logout ghcr.io >/dev/null 2>&1 || true
 fi
