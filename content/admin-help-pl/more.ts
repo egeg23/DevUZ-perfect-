@@ -483,54 +483,54 @@ export const moreSections: Record<string, HelpEntry> = {
 
   /* ── Разборы ──────────────────────────────────────────────────────── */
   "/admin/razbor": {
-    what: "Artykuły z analizami cudzych stron na naszą stronę: zmiana sama pisze je każdego ranka i od razu publikuje — bez Twojej akceptacji, tekst zamiast człowieka sprawdza kod. Opublikowana analiza od razu jest na stronie i w wyszukiwarce. Tu widać wszystko, co wyszło, i każdą analizę można poprawić, zdjąć z publikacji albo usunąć.",
+    what: "Analizy to artykuły na naszej stronie o cudzych stronach: co przeszkadza ich klientom i jak to naprawić. Zmiana pisze je co rano i od razu publikuje, bez Twojej akceptacji. Tekst sprawdza program. Tu każdą analizę możesz poprawić, zdjąć ze strony albo usunąć.",
     items: [
       {
         id: "shift",
         title: "Zmiana analiz",
         body: [
-          "Codziennie o 08:03 czasu taszkenckiego zmiana bierze z «Zimnych kontaktów» strony, do których jeszcze nie pisaliśmy, przegląda do 12 i pisze do 3 analiz — po rosyjsku i po uzbecku — i od razu je publikuje. Raport «Смена разборов» przychodzi w Telegramie: ile wyszło, linki do opublikowanych stron, czy są już w mapie strony (zmiana otwiera ją tak jak wyszukiwarka i szuka obu stron każdej analizy) i dlaczego pozostałych stron nie wzięto.",
-          "Powody odrzucenia: strona się nie otworzyła, strona jest w porządku albo ma za mało ustaleń, nie udało się ustalić branży lub miasta, branży nie analizujemy (medycyna i inne zakazane), zapytanie zajęte (taka analiza już istnieje — sprawdza się to, zanim model napisze artykuły), artykuł nie przeszedł kontroli. Jeśli do 11:03 raportu nie ma — przyjdzie «Смена разборов — молчит».",
+          "Codziennie o 08:03 czasu Taszkentu zmiana bierze strony z działu «Zimne kontakty», do których jeszcze nie pisaliśmy. Przegląda do 12 stron i pisze do 3 analiz po rosyjsku i uzbecku. Raport przychodzi na Telegram z linkami i informacją, czy strony są w mapie witryny.",
+          "W raporcie jest napisane, dlaczego reszty stron nie wzięto: strona się nie otworzyła, błędów mało, niejasna branża albo miasto, taka analiza już jest, artykuł nie przeszedł kontroli. Medycyny i innych zakazanych branż zmiana nie analizuje. Brak raportu do 11:03? Przyjdzie ostrzeżenie.",
         ],
       },
       {
         id: "tender",
         title: "Przetargowa analiza tygodnia",
         body: [
-          "Raz w tygodniu, w pierwszy dzień tygodnia po 08:33 czasu taszkenckiego, osobna zmiana pisze analizę przetargową: nie cudzą stronę, tylko typową specyfikację techniczną zamówienia IT — strona urzędu, CRM, system obiegu dokumentów, chatbot i tak dalej. Co w takiej specyfikacji zwykle się pomija, czym to się kończy przy odbiorze i jak napisać ją dobrze. Temat to kolejny z listy w `content/razbor/tenders.ts`; artykuł nie wymienia zamawiających, przetargów ani kwot kontraktów. Jeśli w poniedziałek serwer nie działał, artykuł wyjdzie w ten dzień tygodnia, w którym serwer wróci.",
-          "Artykuł wychodzi od razu, tak jak analiza strony, z oznaczeniem «przetargi i zamówienia publiczne» — nie ma zrzutów i nie będzie miał, tak ma być. Na stronie prowadzi do usługi «Тендеры и госконтракты» i do strony «Контакты». Raport przychodzi w Telegramie osobną linijką «Тендерный разбор недели», z linkiem do artykułu. Odrzucony temat nie jest pisany drugi raz; gdy tematy się skończą, raport to powie — listę uzupełnia się w kodzie.",
+          "Raz w tygodniu, w poniedziałek po 08:33, wychodzi analiza przetargowa. To nie cudza strona, tylko typowa specyfikacja zamówienia IT: co się w niej zwykle pomija i jak napisać ją dobrze. Artykuł nie wymienia zamawiających ani kwot.",
+          "Artykuł wychodzi od razu, z oznaczeniem «przetargi i zamówienia publiczne» i bez zrzutów. Link do niego przychodzi na Telegram osobną linijką. Gdy tematy się skończą, raport to powie.",
         ],
       },
       {
         id: "marketing-articles",
         title: "Artykuły o marketingu",
         body: [
-          "Pod stroną «Marketing» na stronie studia (devuz.studio/ru/marketing i devuz.studio/uz/marketing) codziennie wychodzą dwa krótkie artykuły — o 10:00 i o 16:00 czasu taszkenckiego, od razu po rosyjsku i po uzbecku. Pisze je tani model według listy tematów w `content/marketing-topics.ts`: wyjaśnienie pod to, czego się szuka («что такое SMM», «SMM nima», «реклама в Ташкенте» — frazy z Google Trends; przed każdym artykułem zmiana jeszcze raz pyta Google Trends i Wordstat, z czym wyszukuje się jego frazę tam, gdzie czyta się w języku wersji (rosyjską — w Rosji, Uzbekistanie i krajach WNP, uzbecką — w Uzbekistanie), i wstawia pasujące frazy do tekstu; Wordstat odpowiada, gdy na serwerze jest jego token `WORDSTAT_TOKEN`), znana kampania reklamowa, częsty błąd, promocja branży w danym kanale — po kolei. Fraza stoi w tytule, opisie i pierwszym akapicie — bez tego artykuł nie wychodzi. Nie trafiają na listę «Do sprawdzenia»: wychodzą same, od razu trafiają do mapy strony, a Bing i Yandex dostają sygnał. Po co: każdy artykuł to kolejna strona, po której znajdują nas w Google i Yandex, a na końcu każdego jest oferta «strona + marketing» i kalkulator.",
-          "Zamiast człowieka sprawdza je kod: w omówieniu kampanii nie może być żadnej liczby, której nie ma w faktach tematu, w pozostałych artykułach — ani procentów, ani kwot, ani lat, wersja uzbecka — tylko alfabetem łacińskim. Jeśli artykuł dwa razy nie przejdzie kontroli, tym razem go nie będzie, a w Telegramie przyjdzie linijka «Статьи о маркетинге» z powodem. Ta sama linijka przyjdzie, jeśli opublikowanego artykułu nie ma w mapie strony: po publikacji serwer sprawdza to sam. Ta sama linijka powie, gdy tematy się skończą (mniej więcej za dwa miesiące) — listę uzupełnia się w kodzie. Opublikowanego artykułu nie da się zdjąć z panelu: napisz na czat programistów, ukryją go w bazie.",
+          "Na stronie «Marketing» serwisu codziennie wychodzą dwa krótkie artykuły, o 10:00 i o 16:00 czasu Taszkentu, po rosyjsku i uzbecku. Tematy dobiera się według żywych zapytań z Google Trends i Wordstatu. Każdy artykuł to kolejna strona, po której znajdują nas w wyszukiwarce.",
+          "Artykuły wychodzą same i od razu trafiają do mapy witryny. Nie ma w nich procentów, kwot ani liczb spoza faktów tematu. Nie przeszedł kontroli albo nie ma go w mapie witryny? Na Telegram przyjdzie linijka z powodem. Wydanego artykułu nie zdejmiesz z panelu, napisz na czat programistów.",
         ],
       },
       {
         id: "review",
-        title: "Co sprawdza kod",
+        title: "Co sprawdza program",
         body: [
-          "Przed publikacją analizy nie czyta już człowiek (Twoja decyzja, 19.10.2026): każdy artykuł sprawdza kod, a ten, który nie przejdzie kontroli, nie wychodzi. Firma nie jest wymieniona — ani nazwą, ani adresem, ani słowem z tytułu jej strony; każda liczba jest w ustaleniach audytu; nie ma procentów wzrostu ani obietnic «w topie»; ustalenia nie są skopiowane z audytu słowo w słowo; medycyny i innych zakazanych branż zmiana nie analizuje.",
-          "Widzisz błąd na stronie — znajdź analizę na liście «Opublikowane»: oba artykuły są tam w całości, a adres strony źródłowej widzisz tylko Ty. **«Edytuj»** zmienia tylko tekst: tytuł, opis, wstęp, ustalenia i podsumowanie; adres i zapytanie się nie zmieniają.",
+          "Każdy artykuł przed publikacją sprawdza program. Firma nie jest wymieniona ani nazwą, ani adresem. Każda liczba jest w ustaleniach audytu strony. Nie ma procentów wzrostu ani obietnic «do topu».",
+          "Widzisz błąd? Znajdź analizę na liście «Opublikowane»: są tam oba artykuły i adres strony, który widzisz tylko Ty. «Edytuj» zmienia tylko tekst, adres strony i zapytanie zostają.",
         ],
       },
       {
         id: "publish",
-        title: "Opublikuj, zdejmij, odrzuć",
+        title: "Opublikować, zdjąć, odrzucić",
         body: [
-          "**«Zdejmij z publikacji»** zdejmuje analizę z witryny i odkłada ją na listę «Do sprawdzenia» — trafia tam teraz tylko to, co zostało zdjęte z publikacji, a zmiana nie publikuje tego z powrotem. Przywrócić na witrynę — **«Opublikuj»**: potrzebne są oba artykuły, strona od razu się otwiera, mapa strony się aktualizuje, Bing i Yandex dostają sygnał. Panel od razu otwiera żywą mapę strony i pisze, czy znalazły się w niej obie strony; jeśli nie — napisz na czat programistów.",
-          "**«Nie publikujemy»** — dla zdjętej analizy, z powodem albo bez. Zmiana nie wróci już do tej strony. Przywrócić stronę do kolejki zmiany można tylko przez **«Usuń»** (wpisz «usuń»).",
+          "«Zdejmij z publikacji» przenosi analizę ze strony na listę «Do sprawdzenia», a zmiana nie wystawi jej z powrotem. «Opublikuj» przywraca analizę na stronę, potrzebne są oba artykuły. Panel od razu sprawdzi mapę witryny i powie, czy strony się znalazły.",
+          "«Nie publikujemy» zostawia zdjętą analizę na liście, a zmiana do tej strony już nie wróci. Stronę do kolejki zmiany przywraca tylko przycisk «Usuń»: wpisz słowo «usuń».",
         ],
       },
       {
         id: "english",
         title: "Wersja angielska i polska",
         body: [
-          "Opublikowana analiza w ciągu godziny dostaje jeszcze dwie strony — po angielsku (devuz.studio/en/razbor) i po polsku (devuz.studio/pl/razbor). Pisze je sam serwer, bez sprawdzania w panelu: bierze opublikowany artykuł rosyjski i przenosi go pod zapytanie w tym języku — «restaurant website in Tashkent», «strona internetowa dla restauracji w Taszkencie» — sprawdzone w Google Trends i planerze Google tam, gdzie czyta się w tym języku: wersję angielską — w USA, Wielkiej Brytanii i Kanadzie, polską — w Polsce. Ustalenia, liczby i zrzuty ekranu — te same; nowych liczb, procentów i ustaleń kod nie przepuszcza, a cyrylicy w tych wersjach być nie może.",
-          "Dwa razy nie przeszła sprawdzenia — serwer spróbuje ponownie za sześć godzin, a na razie analiza nie ma strony w tym języku: przełącznik języka prowadzi z niej do listy analiz w tym języku. **«Edytuj»** kasuje obie wersje: napisano je z poprzedniego tekstu, a serwer napisze je od nowa według poprawionego — adresy stron zostają te same. **«Zdejmij z publikacji»** i **«Usuń»** zdejmują z witryny także je.",
+          "Godzinę po publikacji analiza dostaje wersję angielską i polską. Pisze je sam serwer na podstawie rosyjskiego artykułu, pod zapytanie w danym języku. Ustalenia, liczby i zrzuty są te same, nowych liczb nie ma.",
+          "Nie wyszło, więc serwer spróbuje znów za sześć godzin. «Edytuj» kasuje obie wersje, napisze się je od nowa według nowego tekstu. «Zdejmij z publikacji» i «Usuń» usuwają także je.",
         ],
       },
     ],
@@ -583,15 +583,15 @@ export const moreSections: Record<string, HelpEntry> = {
 
   /* ── Pracownicy AI ─────────────────────────────────────────────────── */
   "/admin/ai-staff": {
-    what: "Sekcja pracowników AI studia: tu pracują nasi pracownicy AI i widać, co zdążyli zrobić. Zakładka «Blogerzy» to pracownik AI, który szuka blogerów z Uzbekistanu do programu partnerskiego, ocenia ich odbiorców i przygotowuje pierwszą wiadomość, a ludziom zostaje ją wysłać i się dogadać.",
+    what: "Tu pracują pracownicy AI studia, czyli programy, które część pracy robią same. «Blogerzy» szukają blogerów do programu partnerskiego. «Skaut» czyta grupy w Telegramie i wyłapuje zlecenia. «Claudery» przyjmuje płatne zgłoszenia o pomoc z AI.",
     items: [
       {
         id: "service",
         title: "Usługa i bot usługi",
         roles: ["admin"],
         body: [
-          "Na górze widać, czy usługa jest włączona. Gdy jest wyłączona, panel klientów, widżet na ich stronach i bot usługi nikomu nie odpowiadają, a strona usługi na naszej witrynie się nie otwiera. Przycisk **«Włącz usługę»** / **«Wyłącz usługę»** działa od razu, w ciągu minuty.",
-          "Usługa ma własnego bota w Telegramie, nie bota studia: przez niego klienci logują się do panelu, podłączają swój Telegram Business i dostają zgłoszenia. Bota tworzysz w @BotFather, tam włączasz Business Mode, token zapisujesz w magazynie sekretów jako `AI_STAFF_BOT_TOKEN`, obok `AI_STAFF_WEBHOOK_SECRET` (dowolny długi losowy ciąg) i `AI_STAFF_KEY` (klucz szyfrowania tokenów botów klientów). Potem naciśnij **«Podłącz bota usługi»**: serwer sprawdzi token, czy Business Mode jest włączony (w @BotFather nazywa się Secretary Mode), i włączy botowi komendę /start. Wiadomości bot pobiera z Telegrama sam, usługą na serwerze, jak bot studia: webhook Telegrama nie dociera do naszego serwera. Usługa bierze token z magazynu i instaluje się przy wdrożeniu, nie trzeba jej uruchamiać osobno.",
+          "Na górze widać, czy usługa pracowników AI dla klientów jest włączona. Wyłączona nie odpowiada nikomu: ani panel klienta, ani widżet na ich stronach, ani bot usługi. «Włącz usługę» i «Wyłącz usługę» działają w ciągu minuty.",
+          "Usługa ma własnego bota w Telegramie, to nie bot studia. Tworzy się go w @BotFather, włącza tam Business Mode i wkłada token do sejfu sekretów. Potem kliknij «Podłącz bota usługi», a serwer sprawdzi token i Business Mode.",
         ],
       },
       {
@@ -599,8 +599,8 @@ export const moreSections: Record<string, HelpEntry> = {
         title: "Gotowość do pilotażu",
         roles: ["admin"],
         body: [
-          "Blok **«Gotowość do pilotażu»** pokazuje to, co serwer i tak sprawdza w trakcie pracy: czy jest token bota usługi, sekret webhooka i klucz szyfrowania, czy Instagram jest otwarty, czy podłączona jest płatność kartą. Wartości sekretów nie są tu widoczne, tylko «gotowe» albo «brak». Bez tokena bota zgłoszenia klientów nie docierają do ich menedżerów, raporty nie wychodzą, a do panelu nie da się zalogować, więc ten punkt jest ważniejszy od pozostałych.",
-          "Instagram «czeka», dopóki Meta nie zweryfikuje naszej aplikacji: do tego czasu przycisk «Подключить Instagram» widzą tylko panele z `AI_STAFF_IG_TESTERS` (id po przecinku), pozostali klienci widzą komunikat, że wkrótce się otworzy. Po weryfikacji ustaw `AI_STAFF_IG_PUBLIC=1`. Ostatni wiersz liczy zgłoszenia z tego miesiąca, które nie dotarły do ludzi klienta w Telegramie: brak tokena albo u klienta nikt nie ma zaznaczonego «получает заявки». Liczba większa od zera oznacza, że klient traci kupujących, sprawdź listę jego ludzi w panelu klienta.",
+          "Blok «Gotowość do pilotażu» pokazuje, co jest ustawione: token bota, sekrety, Instagram, płatność kartą. Wartości nie widać, tylko «gotowe» albo «brak». Najważniejszy jest token bota: bez niego zgłoszenia klientów nie docierają do ich ludzi.",
+          "Instagram «czeka», dopóki Meta nie sprawdzi naszej aplikacji. Do tego czasu mogą go podłączyć tylko konta testowe. Ostatnia linijka liczy zgłoszenia z miesiąca, które nie dotarły do ludzi klienta. Więcej niż zero? Sprawdź w panelu klienta, kto u niego odbiera zgłoszenia.",
         ],
       },
       {
@@ -608,8 +608,8 @@ export const moreSections: Record<string, HelpEntry> = {
         title: "Klienci i skąd liczby",
         roles: ["admin"],
         body: [
-          "Każda karta to jeden klient usługi. «Dialogi» pokazują, ile rozmów z kupującymi AI prowadziło w tym miesiącu według czasu Taszkentu, na tle limitu planu: rozmowa liczy się raz w miesiącu, niezależnie od liczby wiadomości. Gdy limit się skończy, AI klienta milknie, kupujący dostaje «menedżer odpowie», a ludzie klienta dostają wiadomość.",
-          "«Koszt» to ile klient kosztował w tym miesiącu według zużycia modelu, w dolarach po cenach modelu: każde wywołanie zapisuje się z oznaczeniem klienta. Obok cena jednego dialogu i «Marża»: cena planu minus koszt w sumach po kursie z `AI_STAFF_UZS_PER_USD` (domyślnie 12 700). Przez ProxyAPI model jest droższy, liczba tego nie uwzględnia. Na górze zużycie wszystkich klientów i przychód z opłaconych planów.",
+          "Każda karta to jeden klient usługi. «Dialogi» pokazują, ile rozmów AI prowadziło w tym miesiącu z limitu planu. Limit się skończył, AI klienta milknie, a jego ludzie dostają wiadomość.",
+          "«Koszt» pokazuje wydatki na AI za miesiąc w dolarach. «Marża» to cena planu minus koszt, w sumach po kursie z ustawień serwera (zwykle 12 700). Na górze jest łączny koszt i przychód z opłaconych planów.",
         ],
       },
       {
@@ -617,8 +617,8 @@ export const moreSections: Record<string, HelpEntry> = {
         title: "Płatność, okres próbny i status",
         roles: ["admin"],
         body: [
-          "Na razie płatność jest na fakturę: klient do nas pisze, wystawiasz fakturę, a gdy pieniądze dotrą, wybierasz plan, liczbę miesięcy, kwotę i sposób i naciskasz **«Zaznacz płatność»**. Termin przedłuża się od już opłaconej daty, jeśli jeszcze nie minęła: płatność z góry nie przepada. Pusta kwota to cena planu za wybrane miesiące. Plan «Pro» sam przełącza AI klienta na najmocniejszy model. Gdy w magazynie sekretów pojawią się klucze Payme (`AI_STAFF_PAYME_MERCHANT_ID`, `AI_STAFF_PAYME_KEY`) albo Click (`AI_STAFF_CLICK_SERVICE_ID`, `AI_STAFF_CLICK_MERCHANT_ID`, `AI_STAFF_CLICK_SECRET`), w panelu klienta pojawi się płatność kartą: opłacona faktura sama przedłuży plan, bez Twojego zaznaczenia, i trafi do jego historii płatności.",
-          "Nowy klient dostaje 14 dni okresu próbnego i 100 dialogów. **«Przedłuż okres próbny o 7 dni»** gdy klient potrzebuje czasu do płatności. **«Zmień status»**: «pauza» i «zablokowany» od razu zatrzymują AI klienta, kupujący dostają «menedżer odpowie».",
+          "Na razie płatność idzie przez fakturę. Pieniądze przyszły? Wybierz plan, miesiące, kwotę i sposób i kliknij «Zaznacz płatność». Termin przedłuża się od już opłaconej daty. Gdy pojawią się klucze Payme albo Click, klient zapłaci kartą sam.",
+          "Nowy klient dostaje 14 dni i 100 dialogów za darmo. «Przedłuż okres próbny o 7 dni» daje czas do płatności. «Zmień status» na «pauza» albo «zablokowany» od razu zatrzymuje AI klienta.",
         ],
       },
       {
@@ -626,61 +626,63 @@ export const moreSections: Record<string, HelpEntry> = {
         title: "Panel klienta i demo",
         roles: ["admin"],
         body: [
-          "**«Otwórz panel klienta»** to wejście do panelu klienta jako wsparcie na 2 godziny: żeby pomóc ustawić bazę wiedzy albo kanał. W nagłówku panelu klienta będzie widać, że weszło wsparcie.",
-          "**«Pokazuj jako demo»** stawia widżet czatu tego klienta na stronie usługi na naszej witrynie: odwiedzający próbuje AI na żywym przykładzie. Do demo lepiej założyć osobnego klienta z wymyśloną firmą i wypełnioną bazą wiedzy: każde pytanie odwiedzającego zużywa jego dialogi i model.",
+          "«Otwórz panel klienta» wpuszcza cię do panelu klienta jako wsparcie na 2 godziny. W nagłówku panelu będzie oznaczenie wsparcia.",
+          "«Pokazuj jako demo» stawia czat tego klienta na stronie usługi. Do demo lepiej założyć zmyśloną firmę: każde pytanie odwiedzającego zużywa jej dialogi.",
         ],
       },
       {
         id: "scout",
         title: "Skaut: grupy i jak wybiera wiadomości",
         body: [
-          "Zakładka **«Skaut»** to ustawienia skauta, który czyta grupy w Telegramie i wyłapuje wiadomości, w których ktoś szuka wykonawcy. Znalezione trafia do [Sygnałów skauta](/admin/scout), mocne staje się leadem. Na dole zakładki jest **«Grupy dla skauta»**, ten sam blok co w „Sygnałach skauta”: grupę może dodać każdy, usunąć ten, kto dodał, kierownik i właściciel. Z usuniętej grupy skaut nie wychodzi, po prostu w ciągu 20 minut przestaje brać z niej wiadomości.",
-          "Blok **«Jak wybierać wiadomości»** ma dwa tryby. **«Automatycznie»**: skaut sam rozpoznaje temat (strona, sklep, aplikacja, bot, automatyzacja) i prośbę „potrzebuję, szukam, kto zrobi” po rosyjsku, uzbecku i angielsku, a reklamy wykonawców odrzuca. **«Według słów»**: dalej trafiają tylko wiadomości z co najmniej jednym słowem z twojej listy. Słowo łapie się od początku, więc „stron” znajdzie „strona” i „stronę”. W obu trybach model potem odróżnia zlecenie od reklamy, więc cudze ogłoszenia nie trafiają do listy. Tryb i słowa zmienia właściciel i kierownik, skaut przechodzi na nowe w ciągu 5 minut, bez restartu. Wiadomości z hashtagiem (#strona, #praca) skaut nie bierze w żadnym trybie: tak piszą ogłoszenia i rozsyłki, a nie zleceniodawcy.",
+          "Zakładka «Skaut» ustawia program, który czyta grupy w Telegramie i wyłapuje wiadomości, w których ktoś szuka wykonawcy. Znalezione trafiają do [«Sygnały skauta»](/admin/scout). W bloku «Grupy dla skauta» grupę może dodać każdy. Usunąć ją mogą ten, kto dodał, kierownik i właściciel.",
+          "W bloku «Jak wybierać wiadomości» są dwa tryby. «Automatycznie»: skaut sam rozpoznaje prośby o stronę, bota albo aplikację po rosyjsku, uzbecku i angielsku. «Według słów»: brane są tylko wiadomości ze słowami z twojej listy, a «strona» znajdzie też «strony».",
+          "Tryb i słowa zmieniają właściciel i kierownik, skaut przechodzi na nie w 5 minut. Wiadomości z hasztagiem (#praca) nie bierze nigdy: tak pisze się reklamy, a nie zlecenia.",
         ],
       },
       {
         id: "claudery",
         title: "Claudery: bot zdalnej pomocy i kreator",
         body: [
-          "Zakładka **«Claudery»** to bot, który przyjmuje płatne zgłoszenia pomocy z sieciami neuronowymi. Klient naciska przycisk, pisze, co się stało (można ze zrzutem ekranu), i dostaje przycisk otwarcia zgłoszenia: prowadzi on na stronę zgłoszenia w naszym serwisie. W samym bocie nie ma płatności i bot nie pisze o cenie: Telegram blokuje boty, które przyjmują płatności poza Stars. Cena i przycisk płatności Platega są na stronie zgłoszenia; każde zgłoszenie ma własny adres i przez niego płatność jest powiązana z klientem. Zgłoszenie od razu trafia do wspólnej puli leadów, rodzaj «Pomoc z AI (Claudery)», i liczy się jako etap «cena podana»: nieopłacone menedżer może domknąć. Płatność potwierdza sama Platega: serwis pyta ją, gdy klient wraca na stronę zgłoszenia, i co kilka minut przez dwie doby. Opłacone — bot sam pisze klientowi tekst z kroku «Po płatności», w leadzie pojawia się «✅ ОПЛАЧЕНО», osoba prowadząca lead oraz Ty i kierownik dostajecie wiadomość, w nocy — rano. Zrzut ekranu klienta w dzień trafia do bota studia do osób, które dostają ten rodzaj leadów.",
-          "Blok **«Klucze»**: token bota z @BotFather i dwa klucze Platega — te same co u AI-prawnika. Naciśnij **«Zapisz i sprawdź»**: panel sprawdzi token w Telegramie, sam utworzy sekret dla serwera i pokaże nazwę bota w «Połączeniu». Blok **«Co widzi klient»** to ścieżka klienta, zawsze jedna: powitanie → «co się stało» → link do zgłoszenia (płatność na stronie) → wiadomość po płatności. Bot pisze tylko po rosyjsku. Zmieniasz tylko słowa: tekst powitania i napis na głównym przycisku, pytanie, tekst z linkiem do zgłoszenia i kwotę, tekst po płatności. W tekstach bota nie pisz o płatności ani cenie: są na stronie zgłoszenia. Pod powitaniem można dodać do czterech własnych przycisków, na przykład «Gwarancja»: przycisk odpowiada Twoim tekstem (z przyciskiem powrotu) albo otwiera link https. W polu «Warunki i gwarancja» wpisz to, co obiecujesz klientowi: ten tekst stoi w ofercie (przycisk **«Oferta dla klientów»**), dane przedsiębiorcy w ofercie pochodzą z magazynu. Naciśnij **«Zapisz»**: jeśli coś jest puste albo błędne, panel powie gdzie i nie zapisze. **Ponowne zgłoszenie:** temu, kto już choć raz zapłacił (według potwierdzenia Platega, a nie słów), na stronie zgłoszenia stoi cena ze zniżką z pola «Zniżka dla tych, którzy już płacili, %» — domyślnie 30%, czyli 3 500 ₽ zamiast 5 000 ₽ — i zdanie o zniżce.",
-          "**Pieniądze za opłacone zgłoszenie.** Gdy tylko Platega potwierdzi płatność, bot sam zakłada [projekt](/admin/projects) «Claudery · помощь с ИИ» z płatnością: kwota jest przeliczana na dolary po kursie Banku Centralnego Rosji z dnia płatności (kurs i ruble są w notatce projektu; gdy bank nie odpowie, ostatni znany kurs, a gdy go brak, kurs zapasowy i prośba o sprawdzenie kwoty). Dzięki temu płatność trafia do przychodu, «Finansów» i etapu «płatność». Prowadzącemu leada przysługuje 40% kwoty, bez wiersza kierownika; reszta trafia do wspólników w ich proporcji. Jeśli nikt jeszcze nie wziął leada, projekt nie ma prowadzącego, a 40% dostanie ten, kto weźmie leada. Te transakcje nie liczą się do «3 transakcji» dla grade’u i premii: mają własną stawkę.",
+          "Claudery to bot, który przyjmuje płatne zgłoszenia o pomoc z AI. Klient pisze, co się stało, i dostaje przycisk «Открыть заявку». Prowadzi on na stronę zgłoszenia na naszej stronie, tam jest cena i płatność.",
+          "W samym bocie nie ma ani słowa o płatności i cenie: Telegram blokuje boty, które biorą pieniądze z pominięciem jego systemu. Zgłoszenie od razu trafia do leadów (zgłoszeń klientów) jako «Pomoc z AI (Claudery)». Gdy system płatności potwierdzi wpłatę, bot wysyła klientowi tekst z kroku «4. Po płatności».",
+          "W bloku «Co widzi klient» są kroki bota. Zmieniasz tylko słowa i kwotę i możesz dodać do czterech własnych przycisków pod powitaniem. Kto już płacił, dostaje cenę niższą o «Zniżka dla tych, którzy już płacili, %» (zwykle 30%).",
+          "W bloku «Klucze» jest token bota i dwa klucze Platega, przycisk «Zapisz i sprawdź». Bota mogą zmieniać właściciel i kierownik. Po płatności sam zakłada się [projekt](/admin/projects), a prowadzący lead dostaje 40% kwoty.",
         ],
       },
       {
         id: "bloggers-agent",
         title: "Blogerzy: co agent robi sam",
         body: [
-          "Agent szuka blogerów z Uzbekistanu, którzy mogą przyprowadzać studiu klientów: przedsiębiorców, ekspertów, marketerów, blogerów IT. Szuka w internecie przez Firecrawl według zapytań z **«Ustawienia agenta»**, po kolei: za każdym razem bierze zapytanie, którego najdłużej nie używał. Z wyników bierze profile na Instagramie i nicki z artykułów z zestawieniami blogerów. Kredyty Firecrawl idą z tego samego dziennego limitu co wyszukiwanie firm do kontaktów: agent wydaje nie więcej niż swoją część «Kredytów wyszukiwania dziennie» (domyślnie 2) i nie więcej, niż zostało z limitu ogólnego, więc wyszukiwanie firm przez blogerów nie staje.",
-          "Włączony agent (**«Włącz agenta»**) pracuje sam co pięć minut od 9:00 do 20:00 czasu Taszkentu: ocenia do trzech znalezionych blogerów, a gdy nie ma kogo oceniać, robi jedno wyszukiwanie. Wyłączony niczego nie szuka i nie wydaje, ale dwa przyciski działają zawsze: **«Szukaj teraz»** robi taki przebieg od razu, o dowolnej porze, a **«Dodaj blogera»** dodaje blogera po nicku lub linku do profilu i od razu go ocenia, bez Firecrawl.",
-          "Wiersz «Źródła» pokazuje, co jest podłączone. «Wyszukiwanie w internecie» to ile kredytów agent wydał dziś ze swojej części. «Liczby z Instagrama» to czy jest oficjalny dostęp Instagrama do cudzych profili (Business Discovery): bez niego agent zna tylko liczbę obserwujących z wyników wyszukiwania, a polubień, komentarzy i częstotliwości postów nie. «Rozmowy w Direct» to czy podłączona jest aplikacja Instagrama, przez którą agent będzie mógł sam odpowiadać blogerom w Direct studia. Dopóki nie jest podłączona, rozmowę prowadzi człowiek.",
+          "Agent szuka blogerów z Uzbekistanu, którzy mogą przyprowadzać studiu klientów: przedsiębiorców, ekspertów, marketerów. Szuka w internecie według zapytań z «Ustawienia agenta» i bierze profile z Instagrama. Idzie na to osobna część dziennych kredytów wyszukiwania, więc szukanie firm do kontaktów nie staje.",
+          "Włączony agent («Włącz agenta») pracuje co pięć minut od 9:00 do 20:00 czasu Taszkentu. Ocenia znalezionych blogerów albo szuka nowych. «Szukaj teraz» i «Dodaj blogera» działają zawsze, nawet gdy agent jest wyłączony.",
+          "Linijka «Źródła» pokazuje, co jest podłączone. «Liczby z Instagrama» dają dokładne polubienia i komentarze, bez nich agent zna tylko liczbę obserwujących. «Rozmowy w Direct» są potrzebne, żeby agent sam odpowiadał blogerom.",
         ],
       },
       {
         id: "bloggers-score",
         title: "Jak agent ocenia blogera",
         body: [
-          "Punkty od 0 do 100 liczy kod, a nie model, i składają się z pięciu części. Wielkość odbiorców do 20: najlepiej od 10 do 100 tysięcy obserwujących, a poza zakresem «Obserwujących od» i «Obserwujących do» bloger odpada. Zaangażowanie do 30: ile średnio polubień i komentarzy mają ostatnie 12 postów, w procentach od obserwujących. Od 3% dobrze, poniżej 1% odbiorcy prawie nie reagują, powyżej 25% przy blogu od 10 tysięcy wygląda na sztuczne podbijanie. Aktywność do 15: ile postów tygodniowo, a ostatni post starszy niż 45 dni daje zero. Uzbekistan do 15. Tematyka do 20.",
-          "Tematy, język, miasto i to, czy odbiorcy pasują, czyta tani model (Haiku) z opisu profilu i podpisów pod postami: wysoko biznes, marketing, IT, eksperci z własnymi klientami; nisko humor, gry, uczniowie. Jego zdanie o tym, dlaczego tak, widać na karcie. Czegoś nie wiemy: agent stawia środek skali i pisze na żółto, czego brakuje; bloger spoza Uzbekistanu odpada od razu. Poniżej «Próg punktowy» (domyślnie 55) bloger trafia do «Odrzuceni»: tam można go **«Przywróć»** albo **«Oceń ponownie»**.",
-          "Obok liczb jest napisane, skąd są: «liczby z Instagrama» są dokładne, z oficjalnego dostępu; «liczby z wyszukiwarki» to tylko obserwujący z wyników. Miasta, wiek i zasięgi odbiorców widzi tylko sam bloger w swoich statystykach, więc gdy odpowie, warto poprosić go o zrzuty ekranu statystyk.",
+          "Agent wystawia blogerowi wynik od 0 do 100. Składa się on z pięciu części: wielkość widowni, zaangażowanie (ile polubień i komentarzy na obserwującego), aktywność, Uzbekistan i tematyka.",
+          "Wysoki wynik ma bloger z 10-100 tysiącami obserwujących, zaangażowaniem od 3% i świeżymi postami. Pasują tematy biznesu, marketingu i IT. Humor, gry i uczniowie dają niski wynik.",
+          "Poniżej «Próg punktowy» (zwykle 55) bloger trafia do «Odrzuceni». Tam są przyciski «Przywróć» i «Oceń ponownie». Miasta i wiek widowni widzi tylko sam bloger, więc poproś go o zrzuty statystyk.",
         ],
       },
       {
         id: "bloggers-send",
         title: "Pierwsza wiadomość: Telegram, Direct, e-mail",
         body: [
-          "Pasujący bloger trafia do «Do wysłania» z gotowym tekstem. Gdzie pisać, agent decyduje według kontaktów z opisu profilu i z jego strony: jest Telegram, to tam; jest e-mail, to na e-mail; nie ma ani jednego, ani drugiego, to do Direct na Instagramie. Tekst to szablon, a nie model: kim jesteśmy, co proponujemy i warunki programu partnerskiego. Procenty i minimalna wypłata pochodzą z zasad programu, te same co w [«Partnerzy»](/admin/partners) i na stronie programu na naszej witrynie: własnych liczb agent nie wymyśla. Język tekstu to rosyjski albo uzbecki, w zależności od tego, w jakim języku bloger prowadzi bloga.",
-          "Instagram nie pozwala pisać pierwszym przez swój oficjalny dostęp, a logować się na konto studia obcym programem nie będziemy: Instagram za to blokuje konto. Dlatego do Direct i na e-mail wysyła człowiek ze swojego telefonu: **«Skopiuj i otwórz Direct»** kopiuje tekst do schowka i otwiera rozmowę z blogerem w aplikacji Instagram, a **«Skopiuj i otwórz pocztę»** otwiera gotowy list. Wklej, wyślij i naciśnij **«Wysłałem»**: bloger przechodzi do «Napisaliśmy, czekamy na odpowiedź». Wysyłaj z konta studia na Instagramie: odpowiedź blogera przyjdzie tam.",
-          "Dziennie nie więcej niż «Direct i e-mail dziennie» (domyślnie 10): wiele jednakowych pierwszych wiadomości z jednego konta Instagram uznaje za spam. Norma wykonana: przyciski wysyłania znikają do jutra. Blogerom z Telegramem, tak jak firmom w kontaktach, jako pierwsze z konta roboczego studia idzie tylko powitanie, a blogerzy mają własny limit «Telegram dziennie» (domyślnie 3), który nie rusza normy 20 kontaktów z firmami. **«Nie pasuje»** usuwa blogera z listy. Menedżer widzi zakładkę «Blogerzy», jeśli właściciel otworzył mu dział w [«Zespół»](/admin/team): wysyła teksty, zaznacza odpowiedzi i może sam prowadzić rozmowę, a ustawień agenta, wyszukiwania, oceny, Instagrama studia i zakładania partnera nie widzi.",
+          "Pasujący bloger trafia do «Do wysłania» z gotowym tekstem. Jeśli ma Telegram, najpierw pójdzie powitanie z konta roboczego studia. Jeśli nie, piszemy na e-mail albo w Direct na Instagramie. Warunki w tekście pochodzą z zasad programu partnerskiego.",
+          "Do Direct i na e-mail wysyła człowiek. «Skopiuj i otwórz Direct» wkłada tekst do schowka i otwiera rozmowę. Wklej, wyślij z konta studia i kliknij «Wysłałem», a bloger przejdzie do «Napisaliśmy, czekamy na odpowiedź».",
+          "Dziennie można wysłać najwyżej tyle, ile w «Direct i e-mail dziennie» (zwykle 10), inaczej Instagram uzna to za spam. Norma wykonana, a przyciski znikną do jutra. «Nie pasuje» usuwa blogera z listy.",
         ],
       },
       {
         id: "bloggers-partner",
         title: "Bloger odpowiedział: rozmowa i partnerstwo",
         body: [
-          "Bloger odpowiedział, dalej rozmowę prowadzi agent. Odpowiedź w Telegramie widzi sam: na pierwszą wiadomość blogera z tego samego konta roboczego idzie tekst o programie w języku odpowiedzi, potem odpowiada agent. W Direct tak samo, gdy Instagram studia jest podłączony przyciskiem **«Podłącz Instagram studia»**: bloger, do którego napisałeś z konta studia, odpowiada, a agent znajduje go po nicku. Dopóki Direct nie jest podłączony, odpowiedź w Direct zaznaczasz sam, **«Odpowiedział»** w «Napisaliśmy, czekamy na odpowiedź», i prowadzisz rozmowę z telefonu.",
-          "Agent to tani model (Haiku). W pierwszej swojej wiadomości mówi, że jest asystentem AI studia, podaje tylko warunki z zasad programu (liczb spoza zasad nie przepuści sprawdzenie kodu) i, jeśli bloger jest zainteresowany, prosi o zrzuty ekranu statystyk: miasta, wiek, zasięg z 30 dni. Zrzuty czyta model obsługujący obrazy, a punkty odbiorców wystawia kod: skąd są obserwujący do 40, udział osób w wieku 25–44 do 30, zasięg względem obserwujących do 30. Widać je na karcie w wierszu «Odbiorcy». Samych zrzutów nie przechowujemy, tylko wniosek.",
-          "Zgodził się i punkty odbiorców od 60: agent sam zakłada partnera w [«Partnerzy»](/admin/partners) i wysyła blogerowi link, a właściciel i kierownik dostają wiadomość w bocie. Punkty niższe albo brak zrzutów: decydujesz ty, **«Zrób partnerem»** albo **«Odmowa»**. Prosi o człowieka, specjalne warunki albo odpowiedź nie przeszła sprawdzenia: agent milknie na 12 godzin, a ty dostajesz wiadomość w bocie. Odpisałeś blogerowi sam z konta studia albo nacisnąłeś **«Prowadzę sam»**: agent też milczy 12 godzin, a **«Oddaj agentowi»** włącza go znowu. Partner zakłada się bez Telegrama: bloger nie zobaczy salda w bocie, podawaj mu je sam.",
+          "Bloger odpowiedział, więc dalej rozmowę prowadzi agent. W Telegramie widzi odpowiedź sam, w Direct też, jeśli kliknięto «Podłącz Instagram studia». Dopóki Direct nie jest podłączony, kliknij «Odpowiedział» i prowadź rozmowę z telefonu.",
+          "Agent od razu mówi, że jest asystentem AI studia. Podaje tylko warunki programu i prosi o zrzuty statystyk. Na ich podstawie powstaje wynik widowni, widać go w linijce «Odbiorcy».",
+          "Zgodził się, a wynik widowni ma od 60? Agent sam założy partnera i wyśle blogerowi link. W przeciwnym razie decydujesz ty: «Zrób partnerem» albo «Odmowa». «Prowadzę sam» wyłącza agenta na 12 godzin, «Oddaj agentowi» włącza go znowu.",
         ],
       },
       {
@@ -688,9 +690,9 @@ export const moreSections: Record<string, HelpEntry> = {
         title: "Połączenia z Instagramem: jakie klucze i skąd je wziąć",
         roles: ["admin", "head"],
         body: [
-          "Blok **«Połączenia z Instagramem»** to klucze od Meta (firmy od Facebooka i Instagrama), bez których agent działa na pół gwizdka. Wklej klucz w pole i kliknij **«Zapisz i sprawdź»**: serwer odłoży go do magazynu sekretów, gdzie jest zaszyfrowany. Klucz nie wraca na ekran, widać tylko «ustawiono» albo «puste», a puste pole przy zapisie nie zmienia klucza. Jeśli klucz jest w .env na serwerze, ma pierwszeństwo przed magazynem i obok pola jest to napisane. Do dziennika trafia tylko to, jaki klucz wklejono, bez wartości.",
-          "«1. Liczby cudzych profili» — token Facebooka, zaczyna się od EA…. Z nim agent widzi u blogera dokładnych obserwujących, polubienia, komentarze i to, jak często publikuje (oficjalny dostęp Business Discovery); bez niego — tylko liczbę obserwujących z wyników wyszukiwania. Token bierze się w Graph API Explorer z uprawnieniami z podpowiedzi i przedłuża do 60 dni w «Access Token Debugger»; wszystkie kroki z linkami są pod «Skąd wziąć — krok po kroku». Numeru konta Instagram studia nie trzeba wpisywać: sprawdzenie samo znajdzie go po tokenie i spróbuje pobrać liczby cudzego profilu. Po sprawdzeniu w bloku jest napisane, czy działa i do kiedy ważny jest token; tydzień przed końcem wiersz robi się żółty — powtórz kroki 3 i 4.",
-          "«2. Odpowiedzi blogerom w Direct» — ID i sekret aplikacji Instagram z panelu deweloperskiego Meta. Token weryfikacyjny webhooka tworzy się sam przy pierwszym zapisie: jego, adres webhooka i dwa adresy powrotu wkleja się w ustawienia aplikacji przyciskiem «Kopiuj». Potem kliknij **«Podłącz Instagram studia»** w wierszu «Rozmowy w Direct». Częsty błąd to wklejenie ogólnego numeru aplikacji zamiast «Instagram app ID»: wtedy Instagram przy podłączaniu pisze «Invalid request» (krok 3 mówi, gdzie jest właściwy). Dopóki aplikacja ma w panelu Meta status «Unpublished», agent dostaje wiadomości tylko od kont testerów. Żeby pisali do niego wszyscy blogerzy, aplikacja przechodzi listę wymagań na swoim «Dashboard»: «testy» (choć jedno udane odwołanie do Instagrama przy każdym uprawnieniu, robi je samo podłączenie), «Business verification» (dokumenty działalności, od kilku dni do kilku tygodni), «App Review» (opis i nagrania ekranu po angielsku) i «Publish» — kroki 9–12 pod «Skąd wziąć — krok po kroku». Liczbom cudzych profili to wszystko nie jest potrzebne. Gdy wszystko jest ustawione i sprawdzenie przeszło, blok zwija się do jednego wiersza.",
+          "W bloku «Połączenia z Instagramem» są klucze od Meta (firmy od Facebooka i Instagrama). Bez nich agent pracuje na pół gwizdka. Wklej klucz i kliknij «Zapisz i sprawdź». Klucz nie wraca na ekran, widać tylko «ustawiono» albo «puste».",
+          "«1. Liczby cudzych profili» to token Facebooka, zaczyna się od EA. Z nim agent widzi dokładnych obserwujących, polubienia i komentarze blogerów. Token żyje do 60 dni, a tydzień przed końcem linijka zrobi się żółta.",
+          "«2. Odpowiedzi blogerom w Direct» to ID i sekret aplikacji Instagram. Wszystkie kroki z linkami rozwijają się w samym bloku. Dopóki aplikacja w Meta nie jest opublikowana, do agenta piszą tylko konta testowe.",
         ],
       },
       {
@@ -698,16 +700,16 @@ export const moreSections: Record<string, HelpEntry> = {
         title: "Komu otwarty jest dział",
         roles: ["admin"],
         body: [
-          "Na dole karty jest blok **«Komu otwarty jest dział»**: kierownicy i menedżerowie ze znacznikami. Domyślnie dział jest otwarty tobie i kierownikowi. Zaznaczonemu menedżerowi otwiera się dział «Pracownicy AI» — zakładka «Blogerzy»: wysyła pierwsze wiadomości, oznacza odpowiedzi i może sam prowadzić rozmowę. Klucze, ustawienia agenta, wyszukiwanie i dodawanie partnera menedżer nie widzi.",
-          "To ten sam znacznik co w [«Zespół»](/admin/team) → «Działy» przy każdym pracowniku: zaznaczony tutaj jest zaznaczony i tam, i odwrotnie. Po **«Zapisz dostęp»** dział otwiera się człowiekowi przy następnym przejściu w panelu, a w dzienniku zostaje wiersz «zmienił, które działy panelu są otwarte dla pracownika».",
+          "Na dole zakładki jest blok «Komu otwarty jest dział». Na start dział jest otwarty tobie i kierownikowi. Zaznaczony menedżer widzi zakładkę «Blogerzy»: wysyła wiadomości, zaznacza odpowiedzi i prowadzi rozmowę, ale kluczy i ustawień agenta nie widzi.",
+          "To ten sam ptaszek co w [«Zespół»](/admin/team) → «Działy». Kliknij «Zapisz dostęp», a dział otworzy się tej osobie przy następnym przejściu.",
         ],
       },
       {
         id: "bloggers-invite",
         title: "Zaproszenie «Работа с блогерами» w bocie",
         body: [
-          "Na razie nie jest wysyłane: zaproszenie pójdzie, gdy agent «Blogerzy» zacznie działać i właściciel da zgodę. Właściciel 12.10.2026 zaprosił menedżerów i kierownika do pracy z blogerami: znajdować ich, pisać pierwsi, doprowadzać do «tak» i zapisywać jako partnerów. Zaproszenie przyszło na Telegram od bota studia, raz, nie w nocy: po co (własny zarobek ponad normę kontaktów: 5% zysku netto studia od wszystkich klientów przyprowadzonego blogera przez pierwsze pół roku), co robić i gdzie. Pod nim dwa przyciski: «✅ Принять» i «✖ Отклонить».",
-          "Odpowiedź zapisuje się raz: po kliknięciu przyciski znikają, pod zaproszeniem zostaje linijka z odpowiedzią, ponowne kliknięcie odpowiada «Ответ уже записан». «✅ Принять» od razu podłącza do pracy: menedżerowi otwiera się ta sekcja, zakładka «Blogerzy», jak znacznikiem właściciela, a bot przysyła notatkę PDF z tekstami pierwszej wiadomości i odpowiedziami na zastrzeżenia. Kierownik ma sekcję otwartą i tak, dostaje tylko notatkę. «✖ Отклонить» niczego nie otwiera; jeśli zmienisz zdanie, napisz do kierownika lub właściciela.",
+          "To zaproszenie dla menedżerów do pracy z blogerami. Na razie nie jest wysyłane, włączy je właściciel. Przyjdzie od bota studia raz, w dzień, z przyciskami «✅ Принять» i «✖ Отклонить».",
+          "Odpowiedź zapisuje się raz. «✅ Принять» otwiera ci zakładkę «Blogerzy», a bot wysyła ściągawkę z tekstami i odpowiedziami na zastrzeżenia. Odmówiłeś i zmieniłeś zdanie? Napisz do kierownika albo właściciela.",
         ],
       },
       {
@@ -716,12 +718,12 @@ export const moreSections: Record<string, HelpEntry> = {
         roles: ["admin", "head"],
         body: {
           admin: [
-            "Każda odpowiedź przychodzi do Ciebie w bocie linijką «Imię przyjął / odmówił» razem z bieżącym podsumowaniem: kto przyjął, kto odmówił, kto milczy. O 18:00 w dniu wysyłki podsumowanie przychodzi jeszcze raz, jedną wiadomością. Zaraz po wysyłce bot przysyła kopię zaproszenia: tekst, który poszedł do menedżerów w Twoim imieniu.",
-            "Menedżerowi, który przyjął, sekcja «Pracownicy AI» otwiera się znacznikiem w [«Zespół»](/admin/team) → «Działy». Ten sam znacznik możesz odznaczyć, jeśli trzeba zamknąć sekcję z powrotem: odpowiedź w zaproszeniu zostaje, zaproszenie nie pójdzie ponownie. W zakładce «Blogerzy» menedżer może to samo co ze znacznikiem: wysyłać pierwsze wiadomości i oznaczać odpowiedzi; ustawienia agenta, wyszukiwanie i dodawanie partnera zostają u Ciebie i kierownika.",
+            "Każda odpowiedź przychodzi ci w bocie linijką z wynikiem: kto przyjął, kto odmówił, kto milczy. O 18:00 w dniu wysyłki przyjdzie podsumowanie jedną wiadomością.",
+            "Zamknąć dział osobie, która przyjęła, możesz ptaszkiem w [«Zespół»](/admin/team) → «Działy». Ponownie zaproszenie do niej nie pójdzie.",
           ],
           head: [
-            "Każda odpowiedź menedżera przychodzi do Ciebie w bocie linijką «Imię przyjął / odmówił». Podsumowanie całego zespołu (kto przyjął, kto odmówił, kto milczy) dostaje właściciel o 18:00 w dniu wysyłki.",
-            "Menedżerowi, który przyjął, otwiera się zakładka «Blogerzy»: wysyła pierwsze wiadomości i oznacza odpowiedzi, a ustawienia agenta, wyszukiwanie i dodawanie partnera zostają u Ciebie i właściciela. Gdy bloger powie menedżerowi «tak», zaznacz w karcie partnera, kto go przyprowadził: bez tego nie da się naliczyć menedżerowi premii.",
+            "Każda odpowiedź menedżera przychodzi ci w bocie linijką. Podsumowanie całego zespołu o 18:00 dostaje właściciel.",
+            "Menedżer, który przyjął, widzi zakładkę «Blogerzy». Bloger powiedział mu «tak»? Zaznacz w karcie partnera, kto go przyprowadził, inaczej premii nie da się naliczyć.",
           ],
         },
       },
