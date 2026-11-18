@@ -58,7 +58,7 @@ function why(p,s,n){
   return''}
 function calc(p,s,n){var r=rates(p,n),lo=r[0],hi=r[1],a=ann(s,lo,n),b=hi!=null?ann(s,hi,n):null;
   return{lo:lo,hi:hi,pay:a,pay2:b,over:a*n-s,over2:b!=null?b*n-s:null,tot:a*n,tot2:b!=null?b*n:null,why:why(p,s,n)}}
-function rng(a,b){return b!=null&&Math.round(b)!==Math.round(a)?T.fr+' '+fmt(a)+' '+T.upto+' '+sum(b):sum(a)}
+function rng(a,b){return b!=null&&Math.round(b)!==Math.round(a)?sum(a)+'<span class="to">'+(T.post?sum(b)+' '+T.upto:T.upto+' '+sum(b))+'</span>':sum(a)}
 function easy(p){return(p.online?2:0)+(p.docs?2:0)+(p.noPledge?1:0)+(p.card?1:0)}
 
 /* ── Сумма и срок ──────────────────────────────────────────────── */
@@ -109,11 +109,11 @@ function upd(){put('qy-calc-1',st);var s=st.s,n=st.n,f=st.f,rows=[];
   flip(function(){Object.keys(cards).forEach(function(k){cards[k].hidden=true});
     rows.forEach(function(r){var p=r.p,x=r.x,c=cards[p.id];if(!c)c=cards[p.id]=card(p);c.hidden=false;list.appendChild(c);
       c.classList.toggle('no',!!x.why);c.classList.toggle('rec',!!p.rec&&!x.why);$('.o-tag',c).hidden=!p.rec;
-      $('.v-pay',c).innerHTML=(x.pay2!=null&&Math.round(x.pay2)!==Math.round(x.pay)?'<small>'+T.fr+'</small>':'')+sum(x.pay);
-      $('.v-pay2',c).textContent=x.pay2==null?T.upto_na:Math.round(x.pay2)!==Math.round(x.pay)?T.upto+' '+sum(x.pay2)+' '+T.att+' '+pct(x.hi):T.fixed;
+      var rg=x.pay2!=null&&Math.round(x.pay2)!==Math.round(x.pay);$('.v-pay',c).innerHTML=T.post?sum(x.pay)+(rg?' <small>'+T.fr+'</small>':''):(rg?'<small>'+T.fr+'</small>':'')+sum(x.pay);
+      $('.v-pay2',c).textContent=x.pay2==null?T.upto_na:Math.round(x.pay2)!==Math.round(x.pay)?(T.post?pct(x.hi)+' '+T.att+' '+sum(x.pay2)+' '+T.upto:T.upto+' '+sum(x.pay2)+' '+T.att+' '+pct(x.hi)):T.fixed;
       $('.v-rate',c).textContent=x.hi==null?T.fr+' '+pct(x.lo):x.lo===x.hi?pct(x.lo):pct(x.lo)+'-'+pct(x.hi);
-      $('.v-over',c).textContent=rng(x.over,x.over2);
-      $('.v-tot',c).textContent=rng(x.tot,x.tot2);
+      $('.v-over',c).innerHTML=rng(x.over,x.over2);
+      $('.v-tot',c).innerHTML=rng(x.tot,x.tot2);
       $('.v-lim',c).textContent=(p.min!=null||p.max!=null?(p.min!=null?T.fr+' '+mln(p.min)+' ':'')+(p.max!=null?T.upto+' '+mln(p.max):''):T.byscore)+', '+p.tmin+'-'+p.tmax+' '+T.mo;
       var wy=$('.o-why',c);wy.hidden=!x.why;$('span',wy).textContent=x.why;
       if($('.o-d',c).classList.contains('on'))sched(c,p)})});

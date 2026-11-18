@@ -97,7 +97,7 @@ function example() {
 function siteDict(l) {
   const t = T(l);
   return {
-    sum: t("сум", "so‘m"), mln: t("млн", "mln"), mo: t("мес.", "oy"), fr: t("от", "dan"), upto: t("до", "gacha"), from: t("от", "sanasi"), of: t("из", "/"),
+    post: l === "uz", sum: t("сум", "so‘m"), mln: t("млн", "mln"), mo: t("мес.", "oy"), fr: t("от", "dan"), upto: t("до", "gacha"), from: t("от", "·"), of: t("из", "/"),
     lic: t("Лицензия ЦБ РУз", "MB litsenziyasi"), rec: t("Рекомендуем", "Tavsiya"), pay: t("Платёж в месяц", "Oylik to‘lov"), rate: t("Ставка, годовых", "Stavka, yillik"),
     over: t("Переплата", "Ortiqcha to‘lov"), tot: t("Итого вернёте", "Jami qaytarasiz"), get: t("Получить", "Olish"), cmp: t("Сравнить", "Solishtirish"), more: t("Подробнее", "Batafsil"),
     demo: t("Демо-ссылка: ведёт на страницу банка с меткой перехода. Настоящую ссылку партнёрки ставят в админке.", "Demo havola: o‘tish belgisi bilan bank sahifasiga olib boradi. Haqiqiy hamkorlik havolasi admin panelda qo‘yiladi."),
