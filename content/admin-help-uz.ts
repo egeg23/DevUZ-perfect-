@@ -1782,31 +1782,31 @@ export const uz: HelpCopy = {
 
     /* ── Кандидаты ────────────────────────────────────────────────────── */
     "/admin/candidates": {
-      what: "Suhbatdan oldin rezyumeni tahlil qilish. PDF yuklaysiz va qaysi ish uchun qarayotganimizni yozasiz — panel xulosa, kuchli tomonlar, to‘xtatuvchi belgilar va berish kerak bo‘lgan savollarni ko‘rsatadi. Faqat rahbarlar va egasi ko‘radi: tahlillarda begona odamlarning shaxsiy ma’lumotlari va odam haqidagi qaror bor.",
+      what: "Bu yerda suhbatdan oldin rezyume tahlil qilinadi. Siz PDF yuklaysiz, panel odamni olish kerakmi va undan nima so‘rash kerakligini yozadi. Bo‘limni faqat rahbar va egasi ko‘radi, chunki unda boshqalarning shaxsiy ma’lumotlari bor.",
       items: [
         {
           id: "upload",
           title: "Rezyume yuklash",
           body: [
-            "«Qaysi ishga qarayapmiz» maydoni — vakansiyani yozing (odatiy — sotuv menejeri). Keyin «PDF formatidagi rezyume» va **«Tahlil qilish»**. Tahlil bir daqiqagacha davom etadi.",
-            "Matni nusxalanadigan, 8 MB gacha PDF kerak; birinchi 12 sahifa o‘qiladi. Skan yoki rasmlar o‘qilmaydi — panel shunday deb aytadi.",
+            "«Qaysi ishga qarayapmiz» maydoniga vakansiyani yozing. «PDF formatidagi rezyume» da faylni tanlang va **«Tahlil qilish»** ni bosing. Tahlil bir daqiqagacha davom etadi.",
+            "Matnini nusxalab olish mumkin bo‘lgan PDF kerak, 8 MB gacha. Birinchi 12 sahifa o‘qiladi. Skan yoki rasm o‘qilmaydi, panel buni aytadi.",
           ],
         },
         {
           id: "result",
           title: "Tahlilda nima bor",
           body: [
-            "Xulosa: «olish», «shart bilan olish» yoki «olmaslik» — va nima uchun. Keyin: «Kuchli tomonlar», «To‘siqlar», «Rezyumeda to‘g‘ridan-to‘g‘ri nima yozilgan», «Suhbatda so‘rash» (har bir to‘xtatuvchi belgiga savol) va «Ishda qanday tekshirish» — bir kunlik pullik sinov kuni uchun topshiriq.",
-            "Tahlil — suhbatga tayyorgarlik, hukm emas. Qaror sizniki.",
+            "Yuqorida xulosa: «olish», «shart bilan olish» yoki «olmaslik», va nima uchun. Pastda «Kuchli tomonlar», «To‘siqlar» (nimasi tashvishlantiradi), «Rezyumeda to‘g‘ridan-to‘g‘ri nima yozilgan» va «Suhbatda so‘rash». Oxirida «Ishda qanday tekshirish»: bir kunlik pullik sinov uchun topshiriq.",
+            "Tahlil suhbatga tayyorlanishga yordam beradi. Qarorni siz qabul qilasiz.",
           ],
         },
         {
           id: "privacy",
           title: "Shaxsiy ma’lumotlar",
           body: [
-            "Fayl hech qayerda saqlanmaydi — faqat ism, lavozim, xulosa va tahlilning o‘zi qoladi. «Tahlilni olib tashlash» tugmasi uni butunlay o‘chiradi.",
-            "Yosh, jins, oilaviy holat, millat, din, tashqi ko‘rinish va tug‘ilgan joy bahoda qatnashmaydi. Agar tahlil baribir ularga tayangan bo‘lsa, u saqlanmaydi: «Tahlil ishga aloqasi yo‘q narsaga tayandi… yana bir bor urinib ko‘ring».",
-            "Har bir tahlil va o‘chirish jurnalga yoziladi.",
+            "Faylning o‘zi saqlanmaydi. Ism, lavozim, xulosa va tahlil qoladi. «Tahlilni olib tashlash» tugmasi uni butunlay o‘chiradi.",
+            "Yosh, jins, oilaviy holat, millat, din, tashqi ko‘rinish va tug‘ilgan joy baholashda qatnashmaydi. Agar tahlil baribir ularga tayangan bo‘lsa, u saqlanmaydi. Panel yana bir bor urinib ko‘rishni so‘raydi.",
+            "Har bir tahlil va har bir o‘chirish jurnalga yoziladi.",
           ],
         },
       ],
@@ -2414,21 +2414,21 @@ export const uz: HelpCopy = {
 
     /* ── Команда ──────────────────────────────────────────────────────── */
     "/admin/team": {
-      what: "Xodimlar: rollar, darajalar, kim kimning rahbari, aloqalar rejasi va botning qaysi xabarlari kimga keladi. Yangi odam shu yerda qo‘shiladi, ketgani o‘chiriladi. Panelga kirish — Telegramdagi raqamli id bo‘yicha: parol yo‘q, username’ni odam bir soniyada almashtiradi, id esa — hech qachon.",
+      what: "Bu yerda studiyaning barcha xodimlari. Shu yerda yangi odam qo‘shiladi, unga rol, rahbar va aloqalar rejasi qo‘yiladi, bot unga nima yuborishi tanlanadi. Ketgan odam ham shu yerda o‘chiriladi.",
       items: [
         {
           id: "invite",
           title: "Xodim qo‘shish",
           body: {
             head: [
-              "«Xodim qo‘shish» bloki: Telegram id (raqamli — odam uni @userinfobot kabi istalgan botdan bilib, sizga yuboradi), paneldagi ism, username ixtiyoriy. Sizda rol bitta — «menejer»: ikkinchi rahbarni egasi tayinlaydi. **«Qo‘shish»** tugmasini bosing.",
-              "Siz qo‘shgan menejer **darhol sizniki** — egasiga bildirishnoma boradi. Odamga bot taklifnoma yuboradi: rol, unga nima ochiq va bir bosishda panelga kiritadigan «Открыть панель» tugmasi.",
-              "«Taklif yetkazilmadi: bot unga hali yozmagan odamga birinchi bo‘lib yoza olmaydi» — odam hali botga yozmagan. U [botni](https://t.me/Devuz_studio_bot) ochib, «Старт» tugmasini bossin, siz esa uning qatorida «taklif yuborish»ni bosing.",
+              "«Xodim qo‘shish» blokini to‘ldiring va **«Qo‘shish»** ni bosing. Telegram id va «Paneldagi ism» kerak. Telegram id bu raqam: odam uni @userinfobot botidan bilib, sizga yuboradi.",
+              "Siz faqat menejer qo‘shasiz, ular darhol jamoangizga tushadi. Bot odamga kirish tugmasi bilan taklif yuboradi.",
+              "Taklif yetib bormadimi? Demak, odam hali botga yozmagan. U [botni](https://t.me/Devuz_studio_bot) ochib, «Старт» ni bossin, siz esa uning qatorida «taklif yuborish» ni bosing.",
             ],
             admin: [
-              "«Xodim qo‘shish»: Telegram id (raqamli, @userinfobot orqali), ism, username ixtiyoriy va rol — «loyiha rahbari» yoki «menejer». Siz qo‘shgan odam rahbarsiz bo‘ladi; uni «Rahbar» ustunida biriktiring.",
-              "Bot «Открыть панель» tugmasi bilan taklifnoma yuboradi. Yetib bormadi — odam botda «Старт» tugmasini bosmagan; shundan keyin — uning qatorida «taklif yuborish». Bu id oldin bo‘lgan va o‘chirilgan bo‘lsa — odam butun tarixi bilan qaytadi.",
-              "«bot buyruqlari menyusini yangilash» — agar kimdadir botda /login ko‘rinmasa. Menyu baribir har bir yangilanish chiqqanda, xodim qo‘shilganda va o‘chirilganda yangilanadi.",
+              "«Xodim qo‘shish» blokini to‘ldiring: Telegram id, «Paneldagi ism» va rol («loyiha rahbari» yoki «menejer»). **«Qo‘shish»** ni bosing. Telegram id ni odam @userinfobot botidan biladi.",
+              "Yangi odam rahbarsiz keladi, uni «Rahbar» ustunida biriktiring. Taklif yetib bormadimi? Odam [botda](https://t.me/Devuz_studio_bot) «Старт» ni bossin, siz esa uning qatorida «taklif yuborish» ni bosing.",
+              "«bot buyruqlari menyusini yangilash» tugmasi kimningdir botida /login buyrug‘i ko‘rinmasa kerak bo‘ladi.",
             ],
           },
         },
@@ -2437,14 +2437,14 @@ export const uz: HelpCopy = {
           title: "Rahbar va uning jamoasi",
           body: {
             head: [
-              "«Rahbar» ustunida rahbarsiz menejerda **«o‘zimga olish»** tugmasi bor. Undan keyin u sizning jamoangizda: uning statistikasi va «Reja va fakt» — sizda, aloqalar rejasini unga siz qo‘yasiz, sizga esa uning bitimlaridan 5% hisoblanadi. Egasiga bildirishnoma boradi.",
-              "Ikki rahbar bir vaqtda bossa, menejer bittasiga tushadi.",
-              "Menejerni ajratish yoki boshqa rahbarga berishni faqat egasi qila oladi — o‘zingizda «siz · egasi ajratadi» yozuvini ko‘rasiz.",
+              "Rahbari yo‘q menejerning «Rahbar» ustunida **«o‘zimga olish»** tugmasi bor. Uni bosing, menejer jamoangizga o‘tadi.",
+              "Menejerlaringiz statistikasi va «Reja va fakt» sizga ko‘rinadi, aloqalar rejasini siz qo‘yasiz. Ularning har bir bitimidan sizga 5% hisoblanadi.",
+              "Menejerni faqat egasi ajrata oladi.",
             ],
             admin: [
-              "«Rahbar» ustuni: rahbarni tanlang va «saqlash», yoki ajratish uchun «rahbarsiz». Odamga xabar boradi.",
-              "Rahbar hech kimga biriktirilmagan menejerlarni «o‘zimga olish» tugmasi bilan o‘zi oladi, o‘zi qo‘shganlari esa darhol uniki. Bu haqda sizga «Команда» tugmasi bilan xabar keladi. Faqat siz ajratasiz.",
-              "«Jamoa» nimani anglatadi: menejerning statistikasi va «Reja va fakt» — rahbarda, aloqalar rejasini u qo‘yadi, unga esa menejerning har bir bitimidan 5% (muassisda — 0).",
+              "«Rahbar» ustunida rahbarni tanlang va «saqlash» ni bosing. Menejerni ajratish uchun «rahbarsiz» ni tanlang. Odamga xabar boradi.",
+              "Rahbar egasiz menejerni o‘zi «o‘zimga olish» tugmasi bilan olishi mumkin. U qo‘shgan menejerlar darhol uniki. Bu haqda sizga xabar keladi, ajratishni esa faqat siz qilasiz.",
+              "Rahbar o‘z menejerlarining statistikasi va «Reja va fakt» ni ko‘radi, ularga aloqalar rejasini qo‘yadi. Menejerning har bir bitimidan unga 5% tushadi.",
             ],
           },
         },
@@ -2453,11 +2453,11 @@ export const uz: HelpCopy = {
           title: "Aloqalar rejasi",
           body: {
             head: [
-              "O‘z menejerlaringizga — «Aloqalar rejasi» ustunida: «haftasiga» soni va «saqlash». O‘zingizga reja qo‘ymaysiz — uni egasi qo‘yadi.",
-              "Bo‘sh maydon — «rejasiz»: unda kunlik to‘plam 5 ta kompaniya. 0 — reja yo‘q va to‘plam ham yo‘q. [Kunlik to‘plam](/admin/prospect) hajmi rejaga bog‘liq: reja ÷ 5, kuniga 2 dan 15 gacha.",
+              "Aloqalar rejasi odam haftasiga nechta kompaniyaga yozishi kerakligini ko‘rsatadi. Menejerlaringizga uni «Aloqalar rejasi» ustunida qo‘yasiz: son va «saqlash». Sizning rejangizni egasi qo‘yadi.",
+              "Rejaga [kunlik to‘plam](/admin/prospect) bog‘liq, ya’ni bugungi kompaniyalar ro‘yxati: kuniga 2 tadan 15 tagacha. Bo‘sh maydon «rejasiz» va kuniga 5 ta kompaniya degani, nol to‘plamni olib tashlaydi.",
             ],
             admin: [
-              "«Aloqalar rejasi» ustuni — o‘zingizdan boshqa istalgan odamga. Rahbar faqat o‘z odamlariga qo‘yadi. Bo‘sh maydon — «rejasiz» (kuniga 5 tadan to‘plam), 0 — na reja, na to‘plam, ko‘pi bilan 500.",
+              "Rejani «Aloqalar rejasi» ustunida o‘zingizdan boshqa har kimga qo‘ying. Bo‘sh maydon «rejasiz» va kuniga 5 ta kompaniya degani, nol rejani ham, to‘plamni ham olib tashlaydi.",
             ],
           },
         },
@@ -2466,11 +2466,11 @@ export const uz: HelpCopy = {
           title: "Daraja va stavka",
           body: {
             head: [
-              "Daraja va shaxsiy stavkani egasi qo‘yadi — siz ularni ko‘rasiz, lekin tahrirlamaysiz. Daraja bitim sof foydasidan foizni belgilaydi: kichik menejer — yangi mijozdan 10%, menejer — 15%, rahbar — 30%. Batafsil — [«Moliya»](/admin/finance) bo‘limida.",
+              "Daraja (menejer darajasi) va shaxsiy stavkani egasi qo‘yadi, siz ularni faqat ko‘rasiz. Yangi mijozdan menejer 10% oladi. O‘tgan oyda uning 3 ta bitimi bo‘lgan bo‘lsa, 15%. Batafsil [Moliyada](/admin/finance).",
             ],
             admin: [
-              "«kichik menejer» (yangi mijozdan 10%, qo‘shimcha sotuvdan 0), «menejer» (15% va 5%), «rahbar» (30% va 30%). Shaxsiy stavka, % — darajani faqat yangi mijozlar uchun almashtiradi; bo‘sh — «daraja bo‘yicha».",
-              "Rol almashganda daraja o‘zi almashadi: rahbarga — «rahbar», menejerga — «menejer»; shaxsiy stavka qoladi.",
+              "Yangi mijozdan menejer 10% oladi. O‘tgan oyda 3 ta bitim bo‘lsa, shu oyda 15%. Oyning har 3 ta bitimi uchun yana $200 mukofot. Bitim birinchi to‘lov oyida hisoblanadi.",
+              "Daraja qo‘shimcha sotuvni hal qiladi: «kichik menejer» undan hech narsa olmaydi, «menejer» 5% oladi, «rahbar» barcha bitimlardan 30%. «Shaxsiy stavka, %» yangi mijozdan 10% o‘rniga ishlaydi, bo‘sh maydon «daraja bo‘yicha» degani.",
             ],
           },
         },
@@ -2479,9 +2479,9 @@ export const uz: HelpCopy = {
           title: "Rol",
           roles: ["admin"],
           body: [
-            "«rahbar qilish» / «menejer qilish». Administrator roli panel orqali hech kimga berilmaydi.",
-            "Rahbarlikdan olsangiz, uning jamoasi ajraladi: panel nechta menejer rahbarsiz qolganini yozadi — ularni boshqasiga biriktiring. Menejerlarning o‘ziga bu haqda xabar berilmaydi.",
-            "O‘zingizni va oxirgi administratorni lavozimdan tushirib bo‘lmaydi.",
+            "«rahbar qilish» va «menejer qilish» tugmalari rolni o‘zgartiradi. Administrator roli panel orqali berilmaydi.",
+            "Rahbarni olib tashlasangiz, uning menejerlari egasiz qoladi. Panel ular nechta ekanini aytadi. Ularni boshqa rahbarga biriktiring.",
+            "O‘zingizni va oxirgi administratorni pasaytirib bo‘lmaydi.",
           ],
         },
         {
@@ -2490,26 +2490,24 @@ export const uz: HelpCopy = {
           roles: ["admin", "head"],
           body: {
             head: [
-              "Oxirgi ustunda har bir menejeringizda va o‘zingizda **«Bildirishnomalar»** qatori bor — yonida «hammasi keladi» yoki «o‘chirilgan: 8 tadan 2 tasi» deb yozilgan. Uni bosing: belgilar ochiladi. Belgi turgan bo‘lsa — bot buni yuboradi, olib tashlansa — yo‘q. Keraklisini belgilab, **«Saqlash»**ni bosing. Yangi xodimlarda sukut bo‘yicha barcha belgilar turadi.",
-              "Har bir belgi ostida usiz nima bo‘lishi yozilgan — olib tashlashdan oldin o‘qing. Asosiysi: **«Navbat bo‘yicha yangi buyurtmalar»**. Usiz odam [navbatdan](#leads-queue) chiqadi — lidlar unga taklif qilinmaydi va darhol keyingisiga ketadi. Bu ta’til yoki kasallik vaqtida qulay: kirish qoladi, arizalar esa yarim soatdan turib qolmaydi.",
-              "Qolgan belgilar faqat Telegramdagi xabarni olib tashlaydi — ishning o‘zi panelda qoladi: eslatma lid kartochkasida ko‘rinadi, kunlik to‘plam — [«Sovuq aloqalar»](/admin/prospect)da, mijozning aloqaga javobi — o‘sha yerda. «Mijozlarning aloqalarga javoblari»ni olib tashlasangiz, menejer o‘zi «Sovuq aloqalar»ga kirmaguncha mijoz javob kutib qolishi mumkin — faqat javoblarni boshqa odam olib borsa, olib tashlang. **«Ertalabki salom 09:00 da»** — har kuni ertalab bot odamga ismi bilan, uning panel tilida xayrli kun tilaydi; agar bu unga kerak bo‘lmasa, olib tashlang. **«Kun boshlanmagan bo‘lsa, 12:00 dagi eslatma»** — tushda bot odamga, agar kun davomida hali aloqa va panel bo‘lmasa, to‘plamni eslatadi; olib tashlash shart emas — jimlik haqida soat 15:00 da baribir bilib olasiz.",
-              "O‘chirilmaydi: panelga taklif, rol va rahbar almashishi, lidni berishni tasdiqlash so‘rovi — bu xabarlarsiz amal bajarilmaydi. Menejerlarga belgilarni siz va egasi o‘zgartirasiz; menejerlarning o‘zi ularni ko‘rmaydi. Kim va qachon o‘zgartirgani — jurnalda.",
+              "Oxirgi ustunda sizda va menejerlaringizda **«Bildirishnomalar»** qatori bor. Uni bosing, keraksiz belgilarni oling va **«Saqlash»** ni bosing. Menejerlar o‘z belgilarini ko‘rmaydi.",
+              "Bu yerda asosiy belgi **«Navbat bo‘yicha yangi buyurtmalar»**. Usiz odam [navbatdan](#leads-queue) chiqadi, lidlar (mijoz buyurtmalari) keyingisiga ketadi. Ta’til yoki kasallik vaqtida bu qulay.",
+              "Qolgan belgilar faqat Telegramdagi xabarni olib tashlaydi, ish panelda qoladi. Javoblarni boshqa odam olib bormasa, «Mijozlarning aloqalarga javoblari» ni olmang: mijoz kutib qoladi.",
             ],
             admin: [
-              "Oxirgi ustunda har bir xodimda (va sizda) **«Bildirishnomalar»** qatori bor — yonida «hammasi keladi» yoki «o‘chirilgan: 8 tadan 2 tasi». Bosing: belgilar ochiladi, turgan bo‘lsa — bot yuboradi, olib tashlansa — yo‘q. **«Saqlash»**. Sukut bo‘yicha hammada hammasi turadi. Loyihalar rahbari ham belgilarni o‘zgartiradi — o‘z menejerlariga va o‘ziga, lekin boshqa rahbarga va sizga emas.",
-              "Har bir rolning o‘z to‘plami bor. Menejerda — navbat bo‘yicha va hamma uchun arizalar, eslatmalar, lid chatidagi xabarlar, berishlar, aloqalarga javoblar, kunlik to‘plam, haftalik tavsiyalar, vazifalar va «Ertalabki salom 09:00 da» — har kuni ertalab, dam olish kunlari ham, ismi bilan xayrli kun tilagi. Rahbarda yana hisobotlar. Sizda — «Navbat takliflari nusxalari» (navbat lidni kimga va qachon taklif qilgani), hisobotlar va vazifalar, navbat va to‘plamsiz: siz navbatda turmaysiz. Ertalabki salom sizga kelmaydi — u xodimlar uchun. Menejer va rahbarda yana «Kun boshlanmagan bo‘lsa, 12:00 dagi eslatma» bor — tushgacha hech narsa qilmaganga to‘plam haqida shaxsiy eslatma. «🔕 К 15:00 молчат» qatori sizga va rahbarlarga «Hisobotlar» ostida keladi.",
-              "Asosiy belgi — **«Navbat bo‘yicha yangi buyurtmalar»**: usiz odam [navbatdan](#leads-queue) chiqadi, lidlar keyingisiga ketadi. Qolganlari faqat Telegramdagi xabarni olib tashlaydi, ish panelda qoladi. Agar hammada «Hamma uchun buyurtmalar» olib tashlansa, tungi arizalarni va aloqalar bo‘yicha «🔥 Нужен прототип»ni Telegramda hech kim ko‘rmaydi — faqat panelda va sotuv chatida, agar u bo‘lsa. Aloqa muallifiga «🛠 Хотят прототип» har doim keladi — birinchi bo‘lib va 30 daqiqaga.",
-              "O‘chirilmaydi: taklif, rol va rahbar almashishi, berishni tasdiqlash so‘rovi, sizga pul va shartnomalar haqidagi xabarlar. Belgilarni kim va qachon o‘zgartirgani — [jurnalda](/admin/audit).",
+              "Oxirgi ustunda har bir xodimda va sizda **«Bildirishnomalar»** qatori bor. Uni bosing, keraksiz belgilarni oling va **«Saqlash»** ni bosing. Rahbar ham belgilarni o‘zgartiradi, lekin faqat o‘ziga va o‘z menejerlariga.",
+              "Asosiy belgi **«Navbat bo‘yicha yangi buyurtmalar»**. Usiz odam [navbatdan](#leads-queue) chiqadi, lidlar (mijoz buyurtmalari) keyingisiga ketadi. Qolgan belgilar faqat Telegramdagi xabarni olib tashlaydi.",
+              "Siz navbatda turmaysiz, lekin sizda «Navbat takliflari nusxalari» bor: lid kimga va qachon taklif qilingani. Belgilarni kim va qachon o‘zgartirgani [jurnalda](/admin/audit) ko‘rinadi.",
             ],
           },
         },
         {
           id: "lead-kinds",
-          title: "Xodim uchun «Qaysi lidlarni yuborish»",
+          title: "Odam uchun «Qaysi lidlarni yuborish»",
           roles: ["admin", "head"],
           body: [
-            "Xodim ismi ostida, «Bildirishnomalar» yonida — **«Lidlar · barcha turlar»** yoki «Lidlar · 7 turdan 4 ta» qatori. Bosing: «Qaysi lidlarni yuborish» yettita belgisi ochiladi — «Sovuq aloqalar», «Tenderlar», «Guruhlardan signallar (skaut)», «Hamkorlar va agentliklar», «Sayt va botdan buyurtmalar», «Botdan maket», «SI bo‘yicha yordam (Claudery)». Ortiqchasini olib tashlang va **«Saqlash»** ni bosing. Xodimning o‘zi ham xuddi shu belgilarni [Sozlamalar](/admin/settings)da qo‘yadi, shuning uchun sizdan keyin ham o‘zgartirishi mumkin; kim va qachon o‘zgartirgani — jurnalda.",
-            "Olib tashlangan tur xodimga kelmaydi va [navbat](#leads-queue) uni taklif qilmaydi: lid bu turni tanlaganlarga ketadi. Hech kim tanlamagan bo‘lsa — lid avvalgidek hammaga ketadi, sizga esa har bir lid uchun bir marta «🧭 … hech kim tanlamadi» qatori keladi («Hisobotlar» ostida). Tungi teng ulush va «Limitsiz lidlar» avvalgidek butun navbat bo‘yicha hisoblanadi.",
+            "Odam ismi ostida **«Lidlar · barcha turlar»** yoki «Lidlar · 7 turdan 4 ta» qatori bor. Bosing, lid turlari bo‘yicha belgilar ochiladi: «Sovuq aloqalar», «Tenderlar», «Hamkorlar va agentliklar» va boshqalar. Keraksizini oling va **«Saqlash»** ni bosing.",
+            "Olib tashlangan tur odamga kelmaydi, navbat ham uni taklif qilmaydi. Xodim bu belgilarni o‘zi [Sozlamalarda](/admin/settings) o‘zgartira oladi. Turni hech kim tanlamaganmi? Unda lid hammaga ketadi.",
           ],
         },
         {
@@ -2517,9 +2515,9 @@ export const uz: HelpCopy = {
           title: "Bo‘limlarga kirish: egasining belgilari",
           roles: ["admin"],
           body: [
-            "Oxirgi ustunda har bir rahbar va menejerda **«Bo‘limlar»** qatori bor — yonida «roldagidek» yoki roldan tashqari nechta bo‘lim ochganingiz va nechtasini yopganingiz yozilgan. Bosing — panelning barcha bo‘limlari belgilar bilan ochiladi: belgi odam hozir ko‘rayotgan bo‘limlarda turadi, «roldagidek emas» esa siz allaqachon o‘zgartirgan joyda. Belgi qo‘ydingiz — bo‘lim uning menyusida paydo bo‘ladi va ochiladi; olib tashladingiz — menyudan yo‘qoladi, to‘g‘ridan-to‘g‘ri havola bo‘yicha esa panel uni «Lidlar»ga olib boradi. **«Saqlash»** ni bosing: o‘zgarish darhol kuchga kiradi, odamga qayta kirish shart emas. Har bir saqlash [jurnal](/admin/audit)ga yoziladi.",
-            "Belgi **ko‘rish** huquqini beradi: odam bo‘limni, undagi hamma narsani va unga yo‘riqnomani ko‘radi — bo‘lim unga ega tomonidan ochilgani haqidagi belgi bilan. Bo‘limda nimani o‘zgartira olishini avvalgidek rol hal qiladi. «Hamkorlar» ochib berilgan menejer hamkorlarni ko‘radi, lekin to‘lovlar, stavkalar va o‘chirish bo‘yicha qarorlar sizda qoladi; rolida yo‘q tugmani bossa — panel hech narsani o‘zgartirmaydi va uni «Lidlar»ga olib boradi. Odam bo‘limda to‘liq ishlashi uchun uning rolini o‘zgartiring.",
-            "«Lidlar» va «Yo‘riqnoma» hammaga doim ochiq, shuning uchun ular ro‘yxatda yo‘q. Sizga hammasi ochiq. Faqat siz o‘zgartirgan narsa saqlanadi: keyin odamning rolini o‘zgartirsangiz, siz tegmagan bo‘limlar o‘zi yangi roldagidek bo‘ladi, belgilaringiz esa qoladi.",
+            "Oxirgi ustunda rahbar va menejerlarda **«Bo‘limlar»** qatori bor. Bosing, kerakli bo‘limlarga belgi qo‘ying va **«Saqlash»** ni bosing. Bo‘lim odamning menyusida darhol paydo bo‘ladi.",
+            "Belgi bo‘limni faqat ko‘rish uchun ochadi. Odam u yerda nimani o‘zgartira olishini uning roli hal qiladi. Masalan, «Hamkorlar» dagi menejer hamkorlarni ko‘radi, lekin to‘lovlar sizda qoladi.",
+            "«Lidlar», «Vazifalar», «Tenderlar», «Sozlamalar» va «Yo‘riqnoma» hammaga ochiq, ular ro‘yxatda yo‘q. Har bir saqlash [jurnalga](/admin/audit) yoziladi.",
           ],
         },
         {
@@ -2527,8 +2525,8 @@ export const uz: HelpCopy = {
           title: "Lidlar cheklovi: kimga tungi ulush kerak emas",
           roles: ["admin"],
           body: [
-            "Menejer va rahbarlarda oxirgi ustunda **«Lidlar: kechasi teng ulush bo‘yicha»** qatori va **«Cheklovni olib tashlash»** tugmasi bor. Kechasi, 18:00 dan 08:00 gacha, lid navbatdagi hammaga ochiq, lekin har kim oyiga teng ulushdan ko‘p olmaydi: shunda bitta uxlamagan odam hammasini olib ketmaydi. «Cheklovni olib tashlash» ni bosdingiz — qator **«Lidlar: cheklovsiz»** bo‘ladi va bu odam kechasi lidlarni xohlagancha oladi. **«Cheklovni qaytarish»** ulushni qaytaradi. Sizning 23.10.2026 dagi qaroringiz: Dina va Aleksandr cheklovsiz ishlaydi.",
-            "Kunduzi hech narsa o‘zgarmaydi: lid avvalgidek navbati kelgan odamga 30 daqiqaga taklif qilinadi va bu yarim soatda boshqaning lidini olib bo‘lmaydi. Cheklovsiz olingan lidlar oyning umumiy hisobiga kiradi, shuning uchun boshqalarning ulushi bundan faqat oshadi. O‘zgarish darhol ishlaydi, har bir bosish [jurnal](/admin/audit) ga «xodimga lidlar cheklovini olib tashladi yoki qaytardi» qatori bilan yoziladi. Tugmani faqat siz ko‘rasiz.",
+            "Ishdan tashqari vaqtda har kim oyiga teng ulushdan ko‘p lid olmaydi, shunda bitta odam hammasini olib qo‘ymaydi. Ishdan tashqari vaqt bu 08:00 gacha, 18:00 dan keyin va dam olish kunlari. Ulushi kamroq hamkasblar joyida bo‘lmasa yoki lid 10 daqiqadan ko‘p kutsa, uni istalgan odam oladi.",
+            "**«Cheklovni olib tashlash»** tugmasi odam uchun ulushni olib tashlaydi, qator «Lidlar: cheklovsiz» bo‘ladi. **«Cheklovni qaytarish»** uni qaytaradi. Tugmani faqat siz ko‘rasiz.",
           ],
         },
         {
@@ -2537,12 +2535,12 @@ export const uz: HelpCopy = {
           roles: ["admin", "head"],
           body: {
             head: [
-              "O‘zingizda ham, har bir menejerda ham oxirgi ustunda **«Ma’lumotlarni o‘zgartirish»** bor. U yerda to‘rtta maydon: **«F.I.Sh.»** — to‘liq, shartnomalar uchun; **«Paneldagi ism»** — qisqa, lidlar va vazifalar shu bilan imzolanadi, uni hamma ko‘radi; **«Username»** — Telegramdagi @; **«Telefon»**. To‘g‘rilang va **«Ma’lumotlarni saqlash»** tugmasini bosing. Shundan keyin F.I.Sh. va telefon xodim qatorida ism ostida va Telegram id ostida ko‘rinadi.",
-              "Yangi ism yoki username xodimning barcha lidlarida darhol paydo bo‘ladi — lidlar ro‘yxatida holat ostida. Telegram id bu yerda o‘zgarmaydi: odam panelga bot orqali shu bilan kiradi. Ikkinchi rahbar va egasining ma’lumotlarini faqat egasi o‘zgartiradi; menejerlar o‘z ma’lumotlarini o‘zgartira olmaydi.",
+              "**«Ma’lumotlarni o‘zgartirish»** tugmasi sizda va har bir menejerda bor. Unda to‘rtta maydon: shartnomalar uchun «F.I.Sh.», «Paneldagi ism», «Username» va «Telefon». To‘g‘rilang va **«Ma’lumotlarni saqlash»** ni bosing.",
+              "Paneldagi ismni hamma ko‘radi, lidlar va vazifalar shu ism bilan imzolangan. Ikkinchi rahbar va egasining ma’lumotlarini faqat egasi tahrirlaydi.",
             ],
             admin: [
-              "Har bir xodimda, sizda ham, oxirgi ustunda **«Ma’lumotlarni o‘zgartirish»** bor: **«F.I.Sh.»** (to‘liq, shartnomalar uchun), **«Paneldagi ism»** (qisqa, lidlar va vazifalar shu bilan imzolanadi), **«Username»** (Telegramdagi @) va **«Telefon»**. To‘g‘rilang va **«Ma’lumotlarni saqlash»** tugmasini bosing; F.I.Sh. va telefon xodim qatorida ism ostida va Telegram id ostida ko‘rinadi.",
-              "Yangi ism yoki username xodimning barcha lidlarida darhol paydo bo‘ladi — ro‘yxatda holat ostida. Telegram id o‘zgarmaydi: bot orqali kirish shu bilan. Rahbar ma’lumotlarni o‘ziga va menejerlarga o‘zgartiradi, menejerlar — hech kimga. Kim nimani o‘zgartirgani — [jurnalda](/admin/audit).",
+              "**«Ma’lumotlarni o‘zgartirish»** tugmasi har bir xodimda, sizda ham bor. Unda to‘rtta maydon: shartnomalar uchun «F.I.Sh.», «Paneldagi ism», «Username» va «Telefon». To‘g‘rilang va **«Ma’lumotlarni saqlash»** ni bosing.",
+              "Telegram id bu yerda o‘zgarmaydi. Rahbar o‘ziga va menejerlarga ma’lumotlarni tahrirlaydi. Kim nimani o‘zgartirgani [jurnalda](/admin/audit) ko‘rinadi.",
             ],
           },
         },
@@ -2552,16 +2550,14 @@ export const uz: HelpCopy = {
           roles: ["admin", "head"],
           body: {
             head: [
-              "O‘zingizning va boshqalarning **menejerlarini** o‘zingiz o‘chira olasiz: oxirgi ustunda «O‘chirish» → nima bo‘lishini o‘qing → **«Tushunarli, o‘chirish»**. Rahbarni va egasini faqat egasi o‘chiradi, o‘zini — hech kim.",
-              "Darhol: kirish yopiladi, barcha sessiyalar uziladi, kirish havolalari bekor bo‘ladi. Keyin tizim o‘zi: ishdagi lidlar navbatga qaytadi, eslatmalar va berish so‘rovlari yopiladi, yuborilmagan aloqalar zaxiraga ketadi, davom etayotgan yozishmalar esa — o‘chirilganning rahbariga (agar u sizniki bo‘lsa — sizga) yoki egasiga.",
-              "Tizim bitta narsani qila olmaydi: **odamni qo‘lda chiqarib yuboring** — «Devuz Scout» kanalidan va sotuv chatidan: bot kanaldan chiqarib yubora olmaydi.",
-              "O‘chirilganlar butunlay yo‘q qilinmaydi — ular sanasi bilan «O‘chirilganlar» ro‘yxatida: ularda yopilgan lidlar, hisoblanmalar va jurnal qoladi. Qaytarish — o‘sha Telegram id bilan qaytadan qo‘shish, avvalgi yozuv yoqiladi.",
+              "Ketgan menejerni oxirgi ustundagi «O‘chirish» tugmasi bilan o‘chiring. Nima bo‘lishini o‘qing va **«Tushunarli, o‘chirish»** ni bosing. Rahbar va egasini faqat egasi o‘chiradi.",
+              "Kirish darhol yopiladi. Uning ishdagi lidlari navbatga qaytadi, yozishmalar esa uning rahbariga yoki egasiga o‘tadi.",
+              "Odamni skaut signallari kanalidan va umumiy savdo chatidan o‘zingiz chiqaring, bot buni qila olmaydi. Odamni qaytarish mumkin: uni o‘sha Telegram id bilan qaytadan qo‘shing.",
             ],
             admin: [
-              "«O‘chirish» → nima bo‘lishini o‘qing → **«Tushunarli, o‘chirish»**. Darhol: kirish yopiladi, barcha sessiyalar uziladi, kirish havolalari bekor bo‘ladi. Menejerlarni loyihalar rahbari ham o‘chira oladi; rahbarni — faqat siz.",
-              "Keyin tizim o‘zi: uning ishdagi lidlari navbatga qaytadi («↩️ Лид вернулся в очередь…»), navbatdagi yarim soatlari tugaydi, eslatmalar va berish so‘rovlari yopiladi, yuborilmagan aloqalar zaxiraga ketadi, davom etayotgan yozishmalar esa — uning rahbariga yoki sizga. Bunday yozishmadagi lidni navbatdan kimdir olsa, yozishma olgan odamga o‘tadi. Uning jamoasi (agar u rahbar bo‘lsa) ajraladi, Telegramidagi lid kartochkalari o‘chiriladi.",
-              "Tizim bitta narsani qila olmaydi: **odamni qo‘lda chiqarib yuboring** — «Devuz Scout» kanalidan va sotuv chatidan.",
-              "O‘chirilganlar butunlay yo‘q qilinmaydi — ular «O‘chirilganlar» ro‘yxatida. Qaytarish — o‘sha id bilan qaytadan qo‘shish.",
+              "Oxirgi ustunda «O‘chirish» ni bosing. Nima bo‘lishini o‘qing va **«Tushunarli, o‘chirish»** ni bosing. Menejerlarni rahbar ham o‘chira oladi.",
+              "Kirish darhol yopiladi. Ishdagi lidlar navbatga qaytadi, yozishmalar uning rahbariga yoki sizga o‘tadi. Rahbar o‘chirilsa, uning menejerlari egasiz qoladi.",
+              "Odamni skaut signallari kanalidan va umumiy savdo chatidan o‘zingiz chiqaring, bot buni qila olmaydi. Odamni qaytarish mumkin: uni o‘sha Telegram id bilan qaytadan qo‘shing.",
             ],
           },
         },
@@ -2570,9 +2566,8 @@ export const uz: HelpCopy = {
           title: "Ilova va bildirishnomalar: kimda yoqilgan",
           roles: ["admin", "head"],
           body: [
-            "Har bir xodim ismi ostida — «📱 Ilova: N ta qurilma» yoki «📱 Ilova: yoqilmagan» qatori. Bu odam panel bildirishnomalarini yoqqan telefon va kompyuterlar soni; sichqonchani olib boring — qaysilari ekanini ko‘rasiz («iPhone · app», «Android · Chrome», «Windows · Chrome»). Ilovani qanday o‘rnatish va bildirishnomalarni yoqish — [«Bosh sahifa» yo‘riqnomasida](/admin/help#hq-app).",
-            "Bildirishnomalar bot xabarlarini takrorlaydi, shuning uchun yuqoridagi belgilar ham ularga ta’sir qiladi: belgini olib tashladingiz — na Telegramga, na ilovaga keladi. [Bosh sahifa](/admin/hq)dagi «Xodimlarga» yorlig‘idagi xabaringiz ham ilovaga keladi; «Bot foydalanuvchilariga» xabari — yo‘q, u yerda xodimlar yo‘q.",
-            "O‘zingizda oxirgi ustunda — «Shu qurilma: bildirishnomalar yoqilgan» yoki «o‘chirilgan», «Bildirishnomalarni yoqish», «Tekshirish» va «O‘chirish» tugmalari bilan. Bu siz hozir qarab turgan telefon yoki kompyuter haqida: boshqa odamga bu yerdan bildirishnomalarni yoqib bo‘lmaydi — faqat u o‘zi, o‘z qurilmasida. Obunani bekor qilgan yoki ilovani o‘chirgan qurilma birinchi bildirishnomadayoq hisobdan o‘zi chiqib ketadi.",
+            "Xodim ismi ostida «📱 Ilova: N ta qurilma» yoki «📱 Ilova: yoqilmagan» qatori bor. Bu odam panel bildirishnomalarini yoqqan telefon va kompyuterlar soni.",
+            "Bildirishnomalar bot xabarlarini takrorlaydi, shuning uchun «Bildirishnomalar» belgilari ularga ham ta’sir qiladi. Bildirishnomalarni odam faqat o‘zi, o‘z qurilmasida yoqa oladi. Buni qanday qilish [«Bosh sahifa» yo‘riqnomasida](/admin/help#hq-app) yozilgan.",
           ],
         },
       ],
@@ -2580,31 +2575,30 @@ export const uz: HelpCopy = {
 
     /* ── Партнёры ─────────────────────────────────────────────────────── */
     "/admin/partners": {
-      what: "O‘z havolasi yoki promokodi bilan mijoz olib keladigan va loyiha summasidan foiz oladigan odamlar. Bu yerda ularning havolalari, mijozlari, hisoblanmalari, to‘lov so‘rovlari va o‘zlarida joylaydigan promo materiallar. Bo‘lim egasi va rahbarda. To‘lov bo‘yicha qaror, hamkorning shaxsiy stavkasi va hamkorni o‘chirish — faqat egasida: bu begona odamlarga beriladigan pul.",
+      what: "Hamkor o‘z havolasi yoki promokodi orqali mijoz olib keladi va loyiha summasidan foiz oladi. Bu yerda uning havolalari, mijozlari, hisob-kitoblari va to‘lov so‘rovlari. Bo‘limni egasi va rahbar ko‘radi. To‘lovlar, shaxsiy stavka va hamkorni o‘chirishni faqat egasi hal qiladi.",
       items: [
         {
           id: "join",
           title: "Hamkor qanday paydo bo‘ladi",
           body: [
-            "O‘zi: saytda «Зарабатывай с нами» menyusida «Стать партнёром» yoki «Войти в кабинет» ni bosadi — bot uni ro‘yxatga oladi va hamkor kabinetiga bir martalik kirish tugmasini yuboradi. Botdagi /ref va /cabinet buyruqlari ham shunday. Studiya xodimlaridan tashqari har kim bo‘la oladi: bot Telegramni xodimlar ro‘yxati bilan solishtiradi va ro‘yxatga olish o‘rniga dastur jamoa uchun yopiqligini aytadi — xodimlarning mijozlari panelda hisoblanadi. Avval qo‘shilgan yozuv ham xodimga hech narsa ochmaydi: na havolalar, na to‘lovlar, na kabinet.",
-            "Yoki siz: «Hamkorni qo‘lda qo‘shish» — ism, kod (bo‘sh — o‘zimiz o‘ylab topamiz), Telegram id ixtiyoriy, izoh. Telegram id bo‘lmasa, bunday hamkor keyin bot orqali kelgan odam bilan birlashmaydi va kabinetga kira olmaydi. Xodimning Telegram id sini panel qabul qilmaydi. Telegrami xodimniki bo‘lgan hamkorlarni «Barcha hamkorlar» jadvali «studiya xodimi» deb belgilaydi.",
-            "Havolalar: qisqa `devuz.studio/r/…` — hamkor aynan shuni e’lon qiladi, har bir kanal uchun alohida (kabinetda yoki `/ref KOD belgi`), 20 tagacha. Kabinetda hamkor havola qayerga olib borishini (bosh sahifa, xizmatlar, keyslar, bot) va auditoriya uchun bonusni — birinchi loyihaga 5/10/15% chegirmani tanlaydi. Eski `?ref=KOD` va `start=ref_KOD` avvalgidek ishlaydi. Havola orqali o‘tishni sayt brauzer cookie’sida 30 kun eslab qoladi (birinchi hamkor yutadi): shu vaqt ichidagi so‘rov — hamkorning mijozi, hatto odam keyin havolasiz qaytgan bo‘lsa ham. Lid kartochkasida «Hamkor» yonida o‘tish so‘rovdan necha kun oldin bo‘lgani ko‘rinadi. Botda ham xuddi shu 30 kun.",
-            "O‘tishlar odamlar bo‘yicha hisoblanadi: messenjerdagi oldindan ko‘rish roboti va o‘sha kuni o‘sha odamning qayta ochishi hisoblanmaydi. Quyidagi jadvalda havolada — «o‘tishlar / so‘rovlar»; kod ustiga kursorni olib borsangiz — qisqa manzilni ko‘rasiz.",
+            "Odatda hamkor o‘zi qo‘shiladi. Saytdagi «Зарабатывай с нами» bo‘limida u «Стать партнёром» ni bosadi, bot unga hamkor kabinetiga kirishni yuboradi. Botdagi /ref va /cabinet buyruqlari ham shuni qiladi. Studiya xodimi hamkor bo‘la olmaydi, bot unga rad javobini beradi.",
+            "Hamkorni o‘zingiz ham «Hamkorni qo‘lda qo‘shish» blokida qo‘shishingiz mumkin: ism, kod, Telegram id va izoh. Kodni yozmasangiz ham bo‘ladi, panel uni o‘zi o‘ylab topadi. Telegram id siz hamkor kabinetga kira olmaydi.",
+            "Hamkorda 20 tagacha qisqa havola bor, har bir maydonchaga alohida. Havola orqali o‘tishni sayt 30 kun eslab qoladi. Shu vaqt ichidagi buyurtma hamkorga hisoblanadi, hatto mijoz havolasiz qaytgan bo‘lsa ham.",
           ],
         },
         {
           id: "count",
-          title: "Mijoz qachon hisobga olinadi",
+          title: "Mijoz qachon hisoblanadi",
           body: {
             head: [
-              "Havola orqali kelgan lid hamkorga hisoblanadi, agar bu uning o‘zi bo‘lmasa, mijoz oldin bizda bo‘lmagan bo‘lsa va hamkor bloklanmagan bo‘lsa. Hisoblandi — hamkorga «🤝 По вашей ссылке пришёл…» keladi. Mijoz saytga havola orqali kelib, keyin sayt chatidan botga yozsa ham, hamkor unga biriktirilgan bo‘lib qoladi.",
-              "Bunday liddan ochilgan loyiha hamkorni meros oladi. Loyiha kartochkasida kim olib kelganini, foizni va «Hisobga olmaslik sababi»ni faqat egasi o‘zgartira oladi. Loyiha bo‘yicha imzolangan shartnoma skanini yuklashganda, hamkorga darhol «📝 С клиентом … подписан договор» keladi — summa va taxminiy ulush bilan.",
-              "Bloklash faqat yangi hisoblashlarni to‘xtatadi: eski hisoblanmalar va to‘lovlar qoladi.",
+              "Mijoz hamkorning havolasi yoki promokodi bilan kelsa, buyurtma hamkorga hisoblanadi. Yana ikki shart: bu hamkorning o‘zi emas va mijoz avval bizda bo‘lmagan. Shunda hamkorga botda xabar boradi.",
+              "Bunday buyurtmadan chiqqan loyiha ham hamkorga yoziladi. Kim olib kelgani va foizni faqat egasi o‘zgartira oladi. Imzolangan shartnoma yuklanganda hamkorga summa va taxminiy ulush bilan xabar boradi.",
+              "Hamkorni bloklash faqat yangi hisoblashlarni to‘xtatadi. Eski hisob-kitoblar va to‘lovlar qoladi.",
             ],
             admin: [
-              "Havola orqali kelgan lid hamkorga hisoblanadi, agar bu uning o‘zi bo‘lmasa, mijoz oldin bizda bo‘lmagan bo‘lsa va hamkor bloklanmagan bo‘lsa. Hisoblandi — hamkorga «🤝 По вашей ссылке пришёл…» keladi. Mijoz saytga havola orqali kelib, keyin sayt chatidan botga yozsa ham, hamkor unga biriktirilgan bo‘lib qoladi.",
-              "Bunday liddan ochilgan loyiha hamkorni meros oladi. Loyiha kartochkasida, «Hamkor» blokida kim olib kelganini, foizni va «Hisobga olmaslik sababi»ni o‘zgartirish mumkin. Loyiha bo‘yicha imzolangan shartnoma skanini yuklashganda, hamkorga darhol «📝 С клиентом … подписан договор» keladi — summa va taxminiy ulush bilan.",
-              "Bloklash faqat yangi hisoblashlarni to‘xtatadi: eski hisoblanmalar va to‘lovlar qoladi.",
+              "Mijoz hamkorning havolasi yoki promokodi bilan kelsa, buyurtma hamkorga hisoblanadi. Yana ikki shart: bu hamkorning o‘zi emas va mijoz avval bizda bo‘lmagan. Shunda hamkorga botda xabar boradi.",
+              "Bunday buyurtmadan chiqqan loyiha ham hamkorga yoziladi. Loyiha kartochkasidagi «Hamkor» blokida kim olib kelganini va foizni o‘zgartirish mumkin. O‘sha yerda sababini ko‘rsatib, loyihani hisobga olmaslik ham mumkin.",
+              "Hamkorni bloklash faqat yangi hisoblashlarni to‘xtatadi. Eski hisob-kitoblar va to‘lovlar qoladi.",
             ],
           },
         },
@@ -2612,57 +2606,53 @@ export const uz: HelpCopy = {
           id: "card",
           title: "Hamkor kartochkasi: uning mijozlari",
           body: [
-            "«Barcha hamkorlar»da hamkor ismini (yoki «Mijozlar» ustunidagi raqamni) bosing — uning kartochkasi ochiladi. Tepada: uning barcha havolalari bo‘yicha o‘tishlar, nechta mijozi bor va nechta loyiha to‘langan, «Ishlab topilgan» va «Mavjud». Pastda — «Hamkor havolalari»: har bir havola o‘tishlar va arizalar bilan.",
-            "Kartochkada asosiysi — **«Hamkor mijozlari»**: unga hisoblangan har bir ariza, yangilari tepada. Qatorda: qachon kelgan; mijoz — bosilsa [lid kartochkasi](#leads-card) ochiladi; qayerdan — havola belgisi, agentlik yoki biriktirilgan mijoz; «Hozir qayerda» — ariza, ishda, shartnoma, shartnoma imzolangan, to‘langan yoki bo‘lmadi, hamkor o‘z kabinetida ko‘radiganning aynan o‘zi; «Olib boradi» — jamoadan lidni kim olgan; «Loyiha» va «Hamkorga hisoblangan». Pastda — loyiha kartochkasida unga qo‘lda hisoblangan loyihalar, u biriktirgan mijozlar va agentliklari. Hamkor o‘z mijozlarining kontaktlarini ko‘rmaydi, siz esa odatdagidek lid kartochkasida ko‘rasiz.",
+            "«Barcha hamkorlar» da hamkor ismini yoki «Mijozlar» ustunidagi sonni bosing. Uning kartochkasi ochiladi: o‘tishlar, mijozlar, to‘langan loyihalar, «Ishlab topilgan» va «Mavjud».",
+            "U yerda asosiysi «Hamkor mijozlari» bloki. Unda hamkorga hisoblangan har bir buyurtma: qachon kelgan, hozir qayerda, jamoadan kim olib boryapti va qancha hisoblangan. Mijozni bosing, [lid kartochkasi](#leads-card) ochiladi. Hamkor o‘z mijozlarining kontaktlarini ko‘rmaydi, siz esa ko‘rasiz.",
           ],
         },
         {
           id: "percent",
           title: "Foiz",
           body: [
-            "Foiz — shartnoma summasidan, loyiha summasi pog‘onasi bo‘yicha: $2 500 gacha — 6%, $2 501–5 000 — 10%, $5 001–10 000 — 14%, $10 001–30 000 — 17%, $30 001 dan — 20%. Har bir loyihaning pog‘onasi o‘z summasiga qarab. 05.11.2026 dan model bitta: kabinetda «От чистой прибыли» tanlovi endi yo‘q, barcha hamkorlar «С оборота» ga o‘tkazildi (egasining qarori: hamkor qancha olishini darhol ko‘radi, tannarxni kutish shart emas). «Barcha hamkorlar» jadvalida, «Stavka» ustunida model va qachon o‘zgartirilgani ko‘rinadi.",
-            "«Foydadan» modeli bo‘yicha ketayotgan loyiha shu model bo‘yicha oxirigacha hisoblanadi: model mijozga uning so‘rovi kunida biriktiriladi va uni o‘zgartirish ketayotgan loyihalarni qayta hisoblamaydi. Loyiha kartochkasida «Hamkor» yonida — «14 % aylanmadan», bunday eski loyihada — «20 % foydadan»: unga loyiha tannarxini kiriting, usiz ulush soliq ayirilgan summadan hisoblanadi. Loyihadagi foiz hamkorning shaxsiy stavkasidan muhimroq, shaxsiysi — pog‘onadan.",
-            "Mijoz loyihani to‘liq to‘lamaguncha hisoblanma muzlatilgan — xodimlardagi kabi. Agentlikning stavkasi o‘ziga xos: loyiha summasidan 15%, modellarsiz va jamg‘armasiz, $50 000 buyurtmadan keyin esa umrbod 20%; u ro‘yxatda «agentlik · 15%» yoki «agentlik · 20%» belgisi bilan turadi, batafsil — [Agentliklar](/admin/agencies) bo‘limida.",
-            "05.11.2026 dan jamg‘arma yo‘q: «Не забирать в автоматическом режиме» tugmasi kabinetdan olib tashlandi, u yoqilgan hamkorda o‘chirildi. Har bir loyiha o‘z pog‘onasi bo‘yicha hisoblanadi, to‘liq to‘langan loyiha uchun ulushni hamkor so‘rovsiz oladi ([to‘lov](#partners-payout) bandi). Jamg‘armani faqat egasi qaytara oladi.",
-            "Umrbod +5. Hamkorning hamma vaqtdagi buyurtmalari summasi $50 000 ga yetganda, keyingi har bir loyiha stavkasiga 5 qo‘shiladi — umrbod, qayta ko‘rib chiqilmaydi: jadval pog‘onasiga. Shartnomalardagi loyiha summalari hisoblanadi, bekor qilingan va hisobga olinmaganlar kirmaydi; chegaradan o‘tgan loyiha hali eski stavkada. Loyihada qo‘lda berilgan foizga ustama tegmaydi; hamkorning shaxsiy stavkasi ham xuddi shunday oshadi, masalan 10% 15% bo‘ladi. Blogerning 12 oylik darajalari bilan (ularni egasi loyihadagi foiz bilan qo‘yadi) qo‘shilmaydi. Bunday hamkorda «Barcha hamkorlar» jadvalida «+5% umrbod» belgisi, loyiha kartochkasida — «50 000 $ buyurtma uchun umrbod +5». Chegaragacha qancha qolganini hamkor o‘z kabinetida ko‘radi. Egasining 05.11.2026 dagi qarori.",
+            "Hamkor shartnoma summasidan foiz oladi. Loyiha qancha katta bo‘lsa, foiz shuncha yuqori: $2 500 gacha 6%, $5 000 gacha 10%, $10 000 gacha 14%, $30 000 gacha 17%, undan qimmat 20%.",
+            "Loyihadagi foiz hamkorning shaxsiy stavkasidan muhimroq, shaxsiy stavka esa shu jadvaldan muhimroq. Mijoz loyihani to‘liq to‘lamaguncha pul muzlatilgan. Agentliklarning o‘z stavkasi bor, 15%, batafsil [Agentliklar](/admin/agencies) yorlig‘ida.",
+            "Hamkorning butun vaqtdagi buyurtmalari $50 000 ga yetganda, har bir keyingi loyiha stavkasiga umrbod 5% qo‘shiladi. Bunday hamkorda ro‘yxatda «+5% umrbod» belgisi bor.",
+            "«foydadan» belgili eski loyihalar eski qoidalar bo‘yicha hisoblanadi. Ular uchun loyiha kartochkasida tannarxni kiriting.",
           ],
         },
         {
           id: "agencies",
-          title: "Hamkorlarning agentliklari",
+          title: "Hamkorlar agentliklari",
           body: [
-            "05.11.2026 dan hamkor agentlik ulamaydi: kabinetda bu blok endi yo‘q. Agentlikning o‘z shartlari bor — u o‘zi bizning hamkor-agentligimizga aylanadi va har bir loyiha summasidan 15% oladi ([Agentliklar](/admin/agencies)); uni topgan odam ochadi. Bu sahifadagi «Hamkorlar agentliklari» bloki faqat unda avval qilingan yozuvlar bo‘lsa ko‘rinadi; 05.11.2026 holatiga ular yo‘q.",
-            "Bunday eski yozuv avvalgidek ishlaydi: tasdiqlangan agentlik — tasdiqlangandan keyin 12 oy davomida uning barcha buyurtmalari hamkorga, 30 kunlik oynasiz va «mijoz studiyada avval bo‘lgan» tekshiruvisiz. Muddat agentlik qatorida ko‘rinadi: «buyurtmalar hamkorga … gacha». U tugagach, agentlikning yangi buyurtmalari oddiy tartibda o‘tadi, bog‘langanlari esa hamkorda qoladi; **«12 oyga uzaytirish»** tugmasi bugundan boshlab yangi muddatni boshlaydi. Sayt va botdan kelgan so‘rovlar o‘zi taniladi — agentlik kontakti (@nik, telefon, pochta) yoki kompaniya nomi bo‘yicha. Qo‘ng‘iroq yoki menejer shaxsiy xabari orqali kelgan buyurtmani loyiha kartochkasida bog‘lang: «Hamkor» bloki → «Agentlik buyurtmasi».",
-            "Bitta agentlik — bitta hamkorga: xuddi shu agentlikni ikkinchi marta ulab bo‘lmaydi. Ulanganida «o‘chirish» — agentlikning yangi buyurtmalari endi hamkorga bormaydi, bog‘langanlari qoladi. Loyiha kartochkasida «Agentlik buyurtmasi» faqat muddati tugamagan agentliklarni taklif qiladi.",
-            "Hamkor kabinetida yuborish uchun ikkita taqdimot bor — «DevUz Studio» (jamoa, loyihalar, tillar, xizmatlar, boshlang‘ich narxlar, keyslar) va «Программа для агентств и компаний» (loyiha summasidan stavkalar, mijozni qanday olib kelish, tender subpudrati, agentlik shartlariga havola). Havola hamkor promokodini olib yuradi, shuning uchun taqdimotdan kelgan mijoz unga hisoblanadi.",
+            "Hamkor endi agentlik ulamaydi. Agentlik o‘zi bizning hamkorimiz bo‘ladi va 15% oladi. Uni [Agentliklar](/admin/agencies) yorlig‘ida qo‘shishadi.",
+            "«Hamkorlar agentliklari» bloki faqat unda eski yozuvlar qolgan bo‘lsa ko‘rinadi. Bunday yozuv agentlik buyurtmalarini 12 oyga hamkorga beradi. **«12 oyga uzaytirish»** tugmasi muddatni qaytadan boshlaydi, «o‘chirish» yangi buyurtmalarni to‘xtatadi.",
           ],
         },
         {
           id: "claims",
           title: "Qo‘lda biriktirilgan mijozlar",
           body: [
-            "05.11.2026 dan hamkor kabinetda mijoz biriktirmaydi: «Mening mijozlarim» bloki olib tashlandi, uning o‘rniga — mijoz o‘zi aytadigan [promokod](#partners-code). Bu sahifadagi «Hamkorlar biriktirgan mijozlar» bloki faqat unda yozuvlar bo‘lsa ko‘rinadi; 05.11.2026 holatiga ular yo‘q.",
-            "Eski biriktirish avvalgidek ishlaydi: 12 oy mijozning barcha buyurtmalari hamkorga hisoblanadi — «buyurtmalar … gacha hamkorga»; mijoz so‘rovi STIR, nom, telefon yoki Telegram bo‘yicha taniladi. Hamkorning havolasi va promokodi ishlagan bo‘lsa, ular biriktirishdan muhimroq. Bunday liddan ochilgan loyiha hamkorni meros oladi. 12 oy o‘tdi — «muddat tugadi»: yangi buyurtmalar oddiy tartibda o‘tadi, bog‘langanlari hamkorda qoladi.",
-            "Kompaniya aslida bizniki ekanini ko‘rsangiz — u bilan paneldan tashqarida ishlaganmiz, studiya tanishlari, — sababini yozing va **«biriktirishni bekor qilish»** ni bosing. Sababsiz bekor bo‘lmaydi: uni hamkor botda oladi. Bekor qilingandan keyin mijozning yangi so‘rovlari hamkorga hisoblanmaydi; allaqachon bog‘langan lid yoki loyiha loyiha kartochkasida, «Hamkor» blokida o‘tkaziladi.",
+            "Hamkor endi mijozlarni qo‘lda biriktirmaydi. Buning o‘rniga mijoz o‘zi [promokodni](#partners-code) aytadi.",
+            "«Hamkorlar biriktirgan mijozlar» bloki faqat unda eski yozuvlar bo‘lsa ko‘rinadi. Bunday biriktirish 12 oy amal qiladi. Kompaniya aslida bizniki bo‘lsa, sababini yozing va **«biriktirishni bekor qilish»** ni bosing. Sababni hamkor oladi.",
           ],
         },
         {
           id: "code",
-          title: "Hamkor promokodi — mijoz ovoz chiqarib aytadigan so‘z",
+          title: "Hamkor promokodi: mijoz ovoz chiqarib aytadigan so‘z",
           body: [
-            "Har bir hamkorning **promokodi** bor — AZIZ yoki MEDIAPRO kabi lotincha so‘z. U «Barcha hamkorlar» ro‘yxatida ism ostida turadi («Promokod: …»). Hamkor ismidan o‘zi yaratiladi (ism uch harfdan qisqa bo‘lsa, nikdan); yetti belgili eski kod va barcha havolalar avvalgidek ishlaydi. Egasining 05.11.2026 dagi qarori: mijoz menejerga yozsa yoki qo‘ng‘iroq qilsa, havola yo‘qoladi, so‘z esa yo‘qolmaydi.",
-            "Qayerda ishlaydi: havolada (devuz.studio/?ref=AZIZ va botga havola), mijozning so‘zlarida — saytdagi chatda, botda va saytdagi so‘rovda «promokod AZIZ», — va lid kartochkasida, menejer uni «Promokod yoki kim olib kelgan» maydoniga yozganda ([qanday](#leads-partner-code)). Mijoz birinchi yozilgan odamniki; studiyada avval bo‘lgan mijoz hisobga olinmaydi.",
-            "So‘zni o‘zgartirish — hamkor qatorida, **«Promokod»** maydoni, «saqlash» tugmasi: lotin harflari va raqamlar, 12 belgigacha, bitta so‘z — bitta hamkor. Band yoki xizmat so‘zi (ADMIN, DEVUZ va shunga o‘xshash) saqlanmaydi, panel sababini aytadi. O‘zgartirilgandan keyin eski promokod ishlamaydi. Promokod bo‘yicha mijozga chegirmani (birinchi loyihaga 5, 10 yoki 15%) hamkor kabinetda o‘zi tanlaydi: chegirmasiz mijozlar promokodni kamroq aytadi.",
+            "Har bir hamkorning promokodi bor. Bu lotincha so‘z, masalan AZIZ, uni mijoz menejerga aytadi. U «Barcha hamkorlar» da hamkor ismi ostida turadi.",
+            "Promokod havolada, mijozning chatdagi va botdagi so‘zlarida ishlaydi. Uni lid kartochkasidagi «Promokod yoki kim olib kelgan» maydoniga ham yozishadi ([qanday](#leads-partner-code)). Mijoz birinchi yozilgan hamkorga tegadi.",
+            "So‘zni hamkor qatoridagi **«Promokod»** maydonida, «saqlash» tugmasi bilan almashtirish mumkin. Lotin harflari va raqamlar, 12 belgigacha. Almashgandan keyin eski promokod ishlamaydi.",
           ],
         },
         {
           id: "promo",
-          title: "Promo materiallar",
+          title: "Promo-materiallar",
           body: [
-            "Hamkorlar o‘zlarida joylaydigan studiya roliklari va rasmlari ombori: Reels, Shorts, TikTok, stories, kanallar. Bu sahifa tepasidagi «Promo-materiallar» havolasi orqali ochiladi — yoki to‘g‘ridan-to‘g‘ri: [«Promo-materiallar»](/admin/partners/promo). Hamkor ularni saytdagi kabinetida, «Промо-материалы» blokida ko‘radi: prevyu, «Скачать» va «Подпись к посту», yonida «Скопировать подпись» tugmasi. Izohda aynan shu hamkorning qisqa havolasi allaqachon turadi, shuning uchun uning postidan kelgan mijoz unga hisoblanadi — uning har qanday havolasidagi kabi. Materiallar bo‘lmaguncha hamkor bu blokni umuman ko‘rmaydi.",
-            "Yuklash: faylni tanlang — MP4, MOV, WebM rolik yoki PNG, JPG, WebP, GIF rasm, 500 MB gacha. Fayllar Supabase’da emas, bizning serverimiz diskida turadi: u yerda bepul tarifda bitta fayl 50 MB dan, oylik yuklab olish 5 GB dan oshmaydi. Yuklashdan keyin diskda 2 GB dan kam joy qolsa ham server rad etadi — va qancha bo‘sh joy borligini aytadi. Nomni hamkorlar ko‘radi. «Rolikdagi so‘zlar tili» tartibni hal qiladi: hamkorga avval uning tilidagi va «so‘zsiz» materiallar, keyin qolganlari ko‘rsatiladi — boshqa tillarni yashirish shart emas, Toshkentdagi hamkor rus va o‘zbek rolikni ham joylaydi. **«Yuklash»**ni bosing: fayl serverga 4 MB lik bo‘laklar bilan ketadi, chiziq qancha ketganini ko‘rsatadi; aloqa uzilgan bo‘lak o‘zi qayta yuboriladi. «Tayyor» chiqmaguncha sahifani yopmang — tashlab ketilgan yuklash bir kundan keyin serverdan o‘chiriladi.",
-            "Post izohi: matndagi `{link}` har bir hamkorning qisqa havolasiga aylanadi; `{link}` ni unutsangiz — havola oxirgi qatorga qo‘yiladi, havolasiz post hamkorga hech narsa bermaydi. Maydonni bo‘sh qoldirsangiz — hamkor o‘z tilidagi standart izohni oladi (u bo‘sh maydonda kulrang ko‘rinadi). «Hamkorlarga Telegramda yangi material paydo bo‘lgani haqida xabar berish» belgisi — bot barcha faol hamkorlarga yangi material paydo bo‘lganini yozadi. Bir nechta faylni ketma-ket yuklasangiz — belgini faqat oxirgisida qoldiring, aks holda hamkor ketma-ket bir nechta xabar oladi.",
-            "Har bir materialda necha marta yuklab olingani va nechta turli hamkor olgani ko‘rinadi: shundan ularga nima kerakligi, nima bekor yotgani tushunarli. Nom, til va izoh shu yerning o‘zida tahrirlanadi — «saqlash». **«Hamkorlardan yashirish»** materialni kabinetdan olib tashlaydi va yuklab olishni darhol yopadi, lekin fayl qoladi — «Hamkorlarga ko‘rsatish» tugmasi bilan qaytariladi. «o‘chirish» → **«Butunlay o‘chirish»** faylni serverdan ham o‘chiradi; hamkorlar allaqachon yuklab olgan nusxalar ularda qoladi. Rolik fayllari bazaning tungi zaxira nusxasiga kirmaydi — asl fayllarni o‘zingizda saqlang.",
+            "Bu studiyaning roliklari va rasmlari, hamkorlar ularni o‘z sahifalariga joylaydi. Ularni sahifa tepasidagi «Promo-materiallar» havolasi orqali yoki darhol oching: [Promo-materiallar](/admin/partners/promo). Hamkor ularni kabinetda, o‘z havolasi bor izoh bilan birga yuklab oladi.",
+            "Material qo‘shish uchun faylni tanlang: MP4, MOV, WebM rolik yoki rasm, 500 MB gacha. Nomini yozing va «Rolikdagi so‘zlar tili» ni tanlang. **«Yuklash»** ni bosing va yuklash tugaguncha sahifani yopmang.",
+            "«Post uchun izoh» ga {link} yozing: shu joyga hamkorning havolasi qo‘yiladi. Bot hamkorlarga yangi material haqida xabar berishini xohlasangiz, belgi qo‘ying.",
+            "Har bir materialda necha marta yuklab olingani ko‘rinadi. **«Hamkorlardan yashirish»** materialni kabinetdan olib tashlaydi, fayl qoladi. «o‘chirish» va **«Butunlay o‘chirish»** faylni serverdan o‘chiradi, shuning uchun asl fayllarni o‘zingizda saqlang.",
           ],
         },
         {
@@ -2670,16 +2660,14 @@ export const uz: HelpCopy = {
           title: "Hamkorga to‘lov",
           body: {
             head: [
-              "Hamkor kabinetda «Запросить выплату» ni bosadi yoki botga /payout va rekvizitlarini yozadi (USDT TRC-20 yoki matn). Oyning birinchi ish kunidan boshlab, $50 dan, bitta ochiq so‘rov, doim butun mavjud summaga. Egasiga «💸 Заявка на выплату» keladi, bu yerda esa «To‘lov so‘rovlari» blokida qator paydo bo‘ladi.",
-              "Egasi hal qiladi: u pulni o‘tkazadi va «To‘landi» yoki «rad etish» ni bosadi. Sizda qatorda hamkor, summa va rekvizitlar ko‘rinadi, tugmalar o‘rnida esa — «egasi hal qiladi»: to‘lov — begona odamlarga beriladigan pul, va u bo‘yicha qaror egasida.",
-              "Aylanmadan ulush so‘rovni kutmaydi: loyiha bo‘yicha to‘lovlar uning summasiga yetishi bilan — to‘lov [Moliya](/admin/finance) bo‘limida yozilganda yoki shartnoma hisobida «To‘landi» bosilganda — to‘lov so‘rovi o‘zi yaratiladi, hamkorning shu loyihadagi butun ulushiga, oy boshini kutmasdan va $50 minimumisiz. Hamkorga — «✅ … выплата в обработке», egasiga — «💸 Выплата партнёру с оборота: выплатить … за …». «To‘lov so‘rovlari» blokida bunday qatorda «aylanmadan, «…» uchun — loyiha to‘liq to‘langanda o‘zi yaratildi» degan yozuv bor. «Foydadan» eski loyiha — hamkor so‘rovi bo‘yicha: uning ulushi tannarxga bog‘liq.",
-              "05.11.2026 dan jamg‘arma yo‘q: aylanmadan ulush o‘zi ketadi, so‘rov bilan esa hamkor qolganini oladi — «foydadan» eski loyihalar bo‘yicha ulushlar va rad etilgan to‘lovdan keyin qaytgan summalar.",
+              "Hamkor to‘lovni kabinetda yoki botda /payout buyrug‘i bilan so‘raydi. Oyning birinchi ish kunidan, $50 dan, darhol butun mavjud summaga so‘rash mumkin. So‘rov «To‘lov so‘rovlari» blokida paydo bo‘ladi.",
+              "Egasi hal qiladi: u pulni o‘tkazadi va «To‘landi» yoki «rad etish» ni bosadi. Sizning qatoringizda hamkor, summa va rekvizitlar ko‘rinadi, tugmalar o‘rnida esa «egasi hal qiladi» yozilgan.",
+              "Loyihadan ulushni hamkor so‘ramaydi. Mijoz loyihani to‘liq to‘laganda to‘lov so‘rovi o‘zi yaratiladi, minimumsiz va oy boshini kutmasdan.",
             ],
             admin: [
-              "Hamkor kabinetda «Запросить выплату» ni bosadi yoki botga /payout va rekvizitlarini yozadi (USDT TRC-20 yoki matn). Oyning birinchi ish kunidan boshlab, $50 dan, bitta ochiq so‘rov, doim butun mavjud summaga. Sizga «💸 Заявка на выплату» keladi.",
-              "Avval pulni o‘zingiz o‘tkazing, keyin «To‘lov so‘rovlari» blokida **«To‘landi»** tugmasini bosing (izoh bilan ham bo‘ladi). Yoki «rad etish» — summa mavjud pulga qaytadi, hamkor sababini ko‘radi.",
-              "Aylanmadan ulush so‘rovni kutmaydi: loyiha bo‘yicha to‘lovlar uning summasiga yetishi bilan — to‘lov [Moliya](/admin/finance) bo‘limida yozilganda yoki shartnoma hisobida «To‘landi» bosilganda — to‘lov so‘rovi o‘zi yaratiladi, hamkorning shu loyihadagi butun ulushiga, oy boshini kutmasdan va $50 minimumisiz. Hamkorga — «✅ … выплата в обработке» (rekvizitlari bo‘lmasa — ularni kabinetga kiritish iltimosi), sizga — «💸 Выплата партнёру с оборота: выплатить … за …». «To‘lov so‘rovlari» blokida bunday qatorda «aylanmadan, «…» uchun — loyiha to‘liq to‘langanda o‘zi yaratildi» degan yozuv bor; keyin oddiysidek: o‘tkazdingiz — **«To‘landi»**. Bitta loyiha bo‘yicha bunday so‘rov qat’iy bitta yaratiladi: rad etsangiz — summa hamkorning mavjud puliga qaytadi va u uni oddiy so‘rov bilan so‘raydi. To‘lovni yozish yarim yo‘lda uzilib qolsa, svip o‘tkazib yuborilganini bir necha daqiqada yaratadi. «Foydadan» eski loyiha — hamkor so‘rovi bo‘yicha: uning ulushi tannarxga bog‘liq.",
-              "05.11.2026 dan jamg‘arma yo‘q: aylanmadan ulush o‘zi ketadi, so‘rov bilan esa hamkor qolganini oladi — «foydadan» eski loyihalar bo‘yicha ulushlar va rad etilgan to‘lovdan keyin qaytgan summalar.",
+              "Hamkor to‘lovni kabinetda yoki botda /payout buyrug‘i bilan so‘raydi. Oyning birinchi ish kunidan, $50 dan, darhol butun mavjud summaga so‘rash mumkin. So‘rov «To‘lov so‘rovlari» blokida paydo bo‘ladi, sizga xabar keladi.",
+              "Avval pulni o‘tkazing, keyin **«To‘landi»** ni bosing. Yoki «rad etish» ni bosing: summa hamkorga qaytadi va u sababni ko‘radi.",
+              "Loyihadan ulushni hamkor so‘ramaydi. Mijoz loyihani to‘liq to‘laganda so‘rov o‘zi yaratiladi va sizga xabar keladi. Keyin hammasi odatdagidek: pulni o‘tkazdingiz va «To‘landi» ni bosdingiz.",
             ],
           },
         },
@@ -2688,8 +2676,8 @@ export const uz: HelpCopy = {
           title: "Hamkorni o‘chirish",
           roles: ["admin"],
           body: [
-            "«Barcha hamkorlar» jadvalida, «Tahrirlash» ustunida, «saqlash» ostida — «o‘chirish». Ogohlantirish ochiladi: hamkorning havolalari ishlamay qoladi, kabinet va bot orqali kirish yopiladi; uning loyihalari va buyurtmalaridan «kim olib kelgan» olib tashlanadi — ular bo‘yicha hisoblash bo‘lmaydi; agentliklar va biriktirilgan mijozlar o‘chiriladi. **«Butunlay o‘chirish»** tugmasi. Qaytarib bo‘lmaydi — faqat qaytadan qo‘shish mumkin. Hamkorga hech narsa yozilmaydi.",
-            "To‘lovlari bor hamkorni o‘chirib bo‘lmaydi: to‘lov — allaqachon ketgan yoki qaror kutayotgan pul, uning tarixi yo‘qolmasligi kerak. Bunday hamkorda tugma o‘rnida tushuntirish bor; uni faqat bloklash mumkin. O‘chirish [Jurnal](/admin/audit)ga yoziladi. Telegrami xodimniki bo‘lgan hamkorlarni jadval «studiya xodimi» deb belgilaydi — ularni o‘chiring: xodim hamkor bo‘la olmaydi.",
+            "«Barcha hamkorlar» jadvalida, «Tahrirlash» ustunida «o‘chirish» bor. Ogohlantirishni o‘qing va **«Butunlay o‘chirish»** ni bosing. Hamkor havolalari ishlamay qoladi, kabinet yopiladi, uning loyihalari bo‘yicha hisoblash boshqa bo‘lmaydi. Qaytarib bo‘lmaydi.",
+            "To‘lovlari bor hamkorni o‘chirib bo‘lmaydi, uni faqat bloklash mumkin. O‘chirish [jurnalga](/admin/audit) yoziladi.",
           ],
         },
       ],
@@ -2697,82 +2685,74 @@ export const uz: HelpCopy = {
 
     /* ── Агентства ──────────────────────────────────────────────────────── */
     "/admin/agencies": {
-      what: "Agentliklar — studiya hamkorlari: agentlik bizga o‘z mijozlarining buyurtmalarini olib keladi va har bir shunday loyiha summasidan 15% oladi. Jamoadan kim agentlikni olib kelib, uni shu yerda qo‘shgan bo‘lsa, 12 oy davomida agentlik loyihalari summasidan 5% oladi. Agentlikni har kim qo‘sha oladi: bo‘lim «Hamkorlar» bo‘limi yonida turadi, bu bo‘lim yo‘q odamlarda esa menyuning o‘zida turadi.",
+      what: "Agentlik bizga o‘z mijozlarining buyurtmalarini olib keladi va har bir loyiha summasidan 15% oladi. Agentlikni olib kelgan va shu yerda qo‘shgan jamoa a’zosi 12 oy davomida uning loyihalaridan 5% oladi. Agentlikni har kim qo‘sha oladi.",
       items: [
         {
           id: "terms",
           title: "Shartlar: agentlikka 15%, olib kelganga 5%",
           body: [
-            "Agentlikka — har bir loyihasi summasidan doim 15%: havola orqali keladigan hamkorlardagi kabi jadval bosqichlarisiz. Summa — loyihada, boshqacha aytganda shartnomada turgan summa.",
-            "Agentlikni olib kelganga — agentlik shu yerda qo‘shilgan kundan boshlab 12 oy ichida ochilgan har bir loyihasi summasidan 5%. Keyinroq ochilgan loyiha endi 5% siz, muddat ichida ochilgani esa keyin ham unda qoladi. Agentlikdan oldin ochilgan loyiha ham 5% siz: u agentlik orqali kelmagan. Muddat jadvalda, «5% gacha» ustunida ko‘rinadi.",
-            "5% hamma narsaning ustidan tushadi. Agentlik loyihasini o‘zingiz olib borsangiz, olib boruvchi foizingiz odatdagidek hisoblanadi, 5% esa alohida «hamkorni olib kelgan» qatori bo‘lib tushadi. Boshqa odam olib borsa, unda uning foizi, sizda sizning 5%.",
-            "Ikkala ulush ham mijoz loyihani to‘liq to‘lamaguncha muzlatilgan, [Moliya](/admin/finance) bo‘limidagi hamma narsa kabi: qisman to‘lov — muzlatilgan, to‘liq — ishlab topilgan. Bekor qilingan loyiha hech narsa bermaydi.",
+            "Agentlik har doim shartnoma bo‘yicha o‘z loyihasi summasidan 15% oladi. Oddiy hamkorlardagidek pog‘onalar yo‘q.",
+            "Agentlikni olib kelgan odam uning 12 oy ichida qo‘shilgan har bir loyihasidan 5% oladi. Muddat agentlik shu yerda qo‘shilgan kundan hisoblanadi. U «5% gacha» ustunida ko‘rinadi.",
+            "Agentlik loyihasini o‘zingiz olib borsangiz, 5% odatdagi foizingiz ustiga qo‘shiladi. Mijoz loyihani to‘liq to‘lamaguncha ikkala ulush ham muzlatilgan.",
           ],
         },
         {
           id: "partners",
-          title: "Bloger-hamkorlar: xuddi shu 5% va ular qancha olib kelgani",
+          title: "Bloger-hamkorlar: o‘sha 5% va ular qancha olib kelgani",
           body: [
-            "10.11.2026 dan boshlab xuddi shu 5% ni loyihalar summasidan 12 oy davomida faqat agentlikni emas, bloger-hamkorni olib kelgan ham oladi. Hamkorni kim olib kelganini egasi «Kim olib kelgan» ustunida belgilaydi; 12 oy hamkor qo‘shilgan kundan hisoblanadi. Hamkorni olib keldingiz, lekin u yerda yo‘qsiz — egasiga ayting.",
-            "Jadvalda — siz olib kelgan barcha agentliklar va hamkorlar (rahbar va egada — hammasi): har biri nechta loyiha olib kelgani, shartnomalar bo‘yicha «Loyihalar summasi», «Mijozlar to‘lagan» — mijozlar allaqachon qancha to‘lagani va sizning 5% ingiz. Jadval ustida — hammasi bo‘yicha jami.",
+            "O‘sha 5% ni 12 oy davomida bloger-hamkorni olib kelgan odam ham oladi. Kim olib kelganini egasi «Kim olib kelgan» ustunida belgilaydi. Hamkorni olib keldingiz, lekin u yerda yo‘qmisiz? Egasiga ayting.",
+            "Jadvalda har biri nechta loyiha olib kelgani, «Loyihalar summasi», «Mijozlar to‘lagan» va 5% ko‘rinadi. Menejer faqat o‘zi olib kelganlarni ko‘radi. Rahbar va egasi hammasini ko‘radi.",
           ],
         },
         {
           id: "lifetime",
-          title: "Umrbod 20% — agentlik buyurtmalari $50 000 dan oshganda",
+          title: "Umrbod 20%: agentlik buyurtmalari $50 000 dan oshganda",
           body: [
-            "Agentlikning hamma vaqtdagi buyurtmalari summasi $50 000 ga yetganda, uning stavkasi umrbod 20% bo‘ladi: keyingi har bir loyihaga +5, muddatsiz va qayta ko‘rib chiqilmaydi. Shartnomalardagi loyiha summalari hisoblanadi; bekor qilingan va hisobga olinmaganlar kirmaydi. Agentlik $50 000 dan o‘tgan loyiha hali 15% da, keyingisi — 20% da. Egasining 05.11.2026 dagi qarori.",
-            "Qayerda ko‘rinadi: jadvalda, «Loyihalar summasi» ustunida summa ostida — «20% umrbod» yoki «20% gacha: yana …»; «Hamkorlar» bo‘limida agentlikda — «agentlik · 20%» belgisi; loyiha kartochkasida hamkor qatorida — «50 000 $ buyurtma uchun umrbod +5». Agentlik qancha qolganini o‘z kabinetida, saytdagi taqdimotda esa $50 000 buyurtmadan keyin 20% bo‘lishini ko‘radi. Pul o‘zi hisoblanadi: qo‘lda hech narsa qo‘yish shart emas.",
-            "Agentlikni olib kelganning 5% i bundan o‘zgarmaydi: loyiha summasidan o‘sha 5% va o‘sha 12 oy. Agentlikka ustamani studiya o‘z ulushidan to‘laydi.",
+            "Agentlikning butun vaqtdagi buyurtmalari $50 000 ga yetganda, uning stavkasi umrbod 20% bo‘ladi. Chegarani oshirgan loyiha hali 15% bo‘yicha, keyingisi esa 20% bo‘yicha.",
+            "«Loyihalar summasi» ustunida «20% umrbod» yoki 20% gacha qancha qolgani yozilgan. Hammasi o‘zi hisoblanadi, qo‘lda hech narsa qo‘yish kerak emas. Sizning 5% ingiz bundan o‘zgarmaydi.",
           ],
         },
         {
           id: "deck",
           title: "«Qanday ishlaydi» sxemasi va agentlik uchun taqdimot",
           body: [
-            "Bo‘lim tepasida — «Qanday ishlaydi — qisqacha»: buyurtmaning uch qadamli yo‘li va bitta loyihadan kim qancha olishi, $2 000 lik misol bilan: agentlikka $300, olib kelganga $100, qolgani — studiyaga, undan olib boruvchiga foydadan odatdagi foizi. Bu yerda hammasi, bizning 5% ham bor: bu jamoa uchun sxema. «20%» qatori ham shu yerda — $50 000 buyurtmadan keyingi agentlik stavkasi.",
-            "«Taqdimotni ochish» — saytdagi olti tildagi (rus, ingliz, o‘zbek, xitoy, ukrain, polyak) sahifa, agentlikning o‘zi uchun: katta 15% raqami, uch qadam, chiziqli misol, qoidalar, nimalarni olib kelish mumkinligi va Telegram tugmasi. Olib kelgan odamning foizi u yerda yo‘q va bo‘lmaydi: bu ichki ma’lumot, agentlikka ko‘rsatmaymiz. Havolani yuboring yoki sahifani ochib, yuqoridagi PDF tugmasini bosing va faylni yuboring. Jadvalda har bir agentlikning o‘z «taqdimot» havolasi bor: u bilan sahifadagi Telegram tugmasi botga shu agentlik kodi bilan olib boradi.",
+            "Yorliq tepasida bu qanday ishlashining qisqa sxemasi bor. $2 000 lik loyiha misolida: agentlikka $300, olib kelganga $100, qolgani studiyaga.",
+            "«Taqdimotni ochish» tugmasi agentlikning o‘zi uchun olti tildagi sahifani ochadi. U yerda sizning 5% ingiz yo‘q. Agentlikka uning qatoridagi «taqdimot» havolasini yuboring: u bilan Telegram tugmasi agentlik kodi bilan botga olib boradi.",
           ],
         },
         {
           id: "add",
-          title: "Agentlikni qanday qo‘shish kerak",
+          title: "Agentlikni qanday qo‘shish",
           body: {
             manager: [
-              "«Agentlik qo‘shish» bloki: «Agentlik nomi», «Bizga qanday yozadi: @telegram, telefon yoki pochta» — majburiy, «Sayt» va «Izoh» — ixtiyoriy. «Agentlik qo‘shish» tugmasi. Agentlikni siz olib keldingiz: u sizga yoziladi va shu kundan 12 oy davomida uning loyihalari summasidan 5% sizniki.",
-              "Agentlik bilan kelishgan zahoti qo‘shing, birinchi buyurtma kelganda emas: muddat agentlik qo‘shilgan kundan boshlanadi, agentlikdan oldin ochilgan loyiha esa 5% ga kirmaydi.",
-              "Bitta agentlik — bitta yozuv. Xuddi shu kontakt yoki nomdagi agentlikni siz, hamkasbingiz yoki hamkor allaqachon qo‘shgan bo‘lsa, panel «Bu agentlik allaqachon qo‘shilgan…» deb javob beradi va ikkinchi yozuv bo‘lmaydi. Agar bu xato bo‘lsa, egasiga yozing: kim olib kelganini faqat u o‘zgartira oladi.",
+              "«Agentlik qo‘shish» blokini to‘ldiring: «Agentlik nomi» va «Bizga qanday yozadi: @telegram, telefon yoki pochta». «Agentlik qo‘shish» ni bosing, u sizga yoziladi.",
+              "Kelishgan zahoti qo‘shing: 12 oy yozilgan kundan hisoblanadi. Bitta agentlik bir marta qo‘shiladi. Panel u allaqachon borligini aytsa-yu, bu xato bo‘lsa, egasiga yozing.",
             ],
             head: [
-              "«Agentlik qo‘shish» bloki: «Agentlik nomi», «Bizga qanday yozadi: @telegram, telefon yoki pochta» — majburiy, «Sayt» va «Izoh» — ixtiyoriy, hamda «Kim olib kelgan» — 5% kimga tushadi: odatda siz, xodimni yoki «Hech kim, o‘zi kelgan» variantini tanlash mumkin. «Agentlik qo‘shish» tugmasi.",
-              "Agentlik bilan kelishgan zahoti qo‘shing, birinchi buyurtma kelganda emas: muddat agentlik qo‘shilgan kundan boshlanadi, agentlikdan oldin ochilgan loyiha esa 5% ga kirmaydi.",
-              "Bitta agentlik — bitta yozuv: xuddi shu agentlik (kontakt yoki nom bir xil) ikkinchi marta qo‘shilmaydi, hamkor allaqachon ulagan agentlik ham. Keyin kim olib kelganini faqat ega o‘zgartiradi.",
+              "«Agentlik qo‘shish» blokini to‘ldiring: «Agentlik nomi» va «Bizga qanday yozadi: @telegram, telefon yoki pochta». «Kim olib kelgan» da o‘zingizni, boshqa xodimni yoki «Hech kim, o‘zi kelgan» ni tanlang.",
+              "Kelishgan zahoti qo‘shing: 12 oy yozilgan kundan hisoblanadi. Bitta agentlik bir marta qo‘shiladi. Keyin kim olib kelganini faqat egasi o‘zgartira oladi.",
             ],
             admin: [
-              "«Agentlik qo‘shish» bloki: «Agentlik nomi», «Bizga qanday yozadi: @telegram, telefon yoki pochta» — majburiy, «Sayt» va «Izoh» — ixtiyoriy, hamda «Kim olib kelgan» — 5% kimga tushadi: odatda siz, xodimni yoki «Hech kim, o‘zi kelgan» variantini tanlash mumkin. «Agentlik qo‘shish» tugmasi.",
-              "Agentlik bilan kelishgan zahoti qo‘shing, birinchi buyurtma kelganda emas: muddat agentlik qo‘shilgan kundan boshlanadi, agentlikdan oldin ochilgan loyiha esa 5% ga kirmaydi.",
-              "Bitta agentlik — bitta yozuv: xuddi shu agentlik (kontakt yoki nom bir xil) ikkinchi marta qo‘shilmaydi, hamkor allaqachon ulagan agentlik ham. Kim olib kelganini jadvalning o‘zida o‘zgartirasiz: «Kim olib kelgan» ustunida odamni tanlang va «saqlash» tugmasini bosing. 12 oylik muddat bunda surilmaydi — u agentlik qo‘shilgan kundan. Har bir o‘zgarish — [Jurnal](/admin/audit) bo‘limida.",
+              "«Agentlik qo‘shish» blokini to‘ldiring: «Agentlik nomi» va «Bizga qanday yozadi: @telegram, telefon yoki pochta». «Kim olib kelgan» da o‘zingizni, boshqa xodimni yoki «Hech kim, o‘zi kelgan» ni tanlang.",
+              "Kelishgan zahoti qo‘shing: 12 oy yozilgan kundan hisoblanadi. Kim olib kelganini siz jadvalda o‘zgartirasiz, muddat bunda surilmaydi. Almashtirish [jurnalga](/admin/audit) yoziladi.",
             ],
           },
         },
         {
           id: "orders",
-          title: "Agentlik buyurtmalari unga qanday yoziladi",
+          title: "Agentlik buyurtmalari unga qanday tushadi",
           body: {
             manager: [
-              "Agentlik qo‘shilgan zahoti uning o‘z havolasi bor — jadvalda, «agentlik uchun havola». Uni agentlikka yuboring: shu havola orqali saytga yoki botga kelgan mijoz agentlikka yoziladi, havola orqali kelgan hamkor mijozi kabi.",
-              "Agentlik o‘zi yuboradigan arizalarni — saytdan, chatdan yoki botdan — panel uning kontakti yoki nomi bo‘yicha taniydi va agentlikka yozadi, havolasiz va muddatsiz. Bunday arizadan ochilgan loyiha agentlikni meros qilib oladi, 15% va 5% loyihada o‘zi paydo bo‘ladi.",
-              "Buyurtma qo‘ng‘iroq yoki menejerga shaxsiy xabar orqali kelgan bo‘lsa, egasidan loyihani agentlikka bog‘lashni so‘rang: buni u loyiha kartochkasida qiladi.",
+              "Agentlikka jadvaldagi «agentlik uchun havola» sini yuboring. Shu havola bilan kelgan mijozlar va agentlik kontakti bilan kelgan buyurtmalar unga o‘zi yoziladi, 15% va 5% bilan birga.",
+              "Buyurtma qo‘ng‘iroq yoki shaxsiy xabar orqali keldimi? Egasidan loyihani agentlikka bog‘lashni so‘rang.",
             ],
             head: [
-              "Agentlik qo‘shilgan zahoti uning o‘z havolasi bor — jadvalda, «agentlik uchun havola». Uni agentlikka yuboring: shu havola orqali saytga yoki botga kelgan mijoz agentlikka yoziladi, havola orqali kelgan hamkor mijozi kabi.",
-              "Agentlik o‘zi yuboradigan arizalarni — saytdan, chatdan yoki botdan — panel uning kontakti yoki nomi bo‘yicha taniydi va agentlikka yozadi, havolasiz va muddatsiz. Bunday arizadan ochilgan loyiha agentlikni meros qilib oladi, 15% va 5% loyihada o‘zi paydo bo‘ladi.",
-              "Buyurtma qo‘ng‘iroq yoki menejerga shaxsiy xabar orqali kelgan bo‘lsa, egasidan loyihani agentlikka bog‘lashni so‘rang: buni u loyiha kartochkasida qiladi.",
+              "Agentlikka jadvaldagi «agentlik uchun havola» sini yuboring. Shu havola bilan kelgan mijozlar va agentlik kontakti bilan kelgan buyurtmalar unga o‘zi yoziladi, 15% va 5% bilan birga.",
+              "Buyurtma qo‘ng‘iroq yoki shaxsiy xabar orqali keldimi? Egasidan loyihani agentlikka bog‘lashni so‘rang.",
             ],
             admin: [
-              "Agentlik qo‘shilgan zahoti uning o‘z havolasi bor — jadvalda, «agentlik uchun havola». Uni agentlikka yuboring: shu havola orqali saytga yoki botga kelgan mijoz agentlikka yoziladi, havola orqali kelgan hamkor mijozi kabi.",
-              "Agentlik o‘zi yuboradigan arizalarni — saytdan, chatdan yoki botdan — panel uning kontakti yoki nomi bo‘yicha taniydi va agentlikka yozadi, havolasiz va muddatsiz. Bunday arizadan ochilgan loyiha agentlikni meros qilib oladi, 15% va 5% loyihada o‘zi paydo bo‘ladi.",
-              "Buyurtma qo‘ng‘iroq yoki shaxsiy xabar orqali kelgan bo‘lsa, loyihani o‘zingiz bog‘lang: loyiha kartochkasi, «Hamkor» bloki, agentlikni tanlang. Hamkorlar ro‘yxatida agentlik yonida «agentlik · 15%» belgisi bor.",
+              "Agentlikka jadvaldagi «agentlik uchun havola» sini yuboring. Shu havola bilan kelgan mijozlar va agentlik kontakti bilan kelgan buyurtmalar unga o‘zi yoziladi, 15% va 5% bilan birga.",
+              "Buyurtma qo‘ng‘iroq yoki shaxsiy xabar orqali keldimi? Loyihani o‘zingiz bog‘lang: loyiha kartochkasi, «Hamkor» bloki.",
             ],
           },
         },
@@ -2781,16 +2761,16 @@ export const uz: HelpCopy = {
           title: "Pul qayerda ko‘rinadi",
           body: {
             manager: [
-              "«Mening agentliklarim va hamkorlarim — siz olib kelganlar» jadvalida — siz olib kelgan agentliklar: agentlikning nechta loyihasi bor, «Loyihalar summasi» va «Olib kelganga 5%» — qancha ishlab topilgan va qancha muzlatilgan. Xuddi shu 5% — [Moliya](/admin/finance) bo‘limida «hamkorni olib kelgan» qatori: ular balansingizga kiradi va qolgan pul bilan birga to‘lanadi.",
-              "Agentlik qancha olishini ko‘rmaysiz: bu begona odamga pul, uni to‘lashni ega hal qiladi.",
+              "Agentliklaringiz va hamkorlaringiz jadvalida sizning 5% ingiz ko‘rinadi: qancha ishlab topilgan va qancha muzlatilgan. O‘sha pul [Moliyangizda](/admin/finance) alohida qator bo‘lib turadi. U qolgan pul bilan birga to‘lanadi.",
+              "Agentlik qancha olishi sizga ko‘rinmaydi. Uning to‘lovlarini egasi hal qiladi.",
             ],
             head: [
-              "«Barcha agentliklar va hamkorlar» jadvalida — barcha agentliklar, har birini kim olib kelgani, nechta loyihasi bor, «Loyihalar summasi», «Olib kelganga 5%» va «Agentlikka 15%». Sizning 5% va jamoangizning 5% — [Moliya](/admin/finance) bo‘limida, «hamkorni olib kelgan» qatori.",
-              "Agentlik [Hamkorlar](/admin/partners) umumiy ro‘yxatida ham bor, «agentlik · 15%» belgisi bilan: u yerda uning hisoblanmalari va to‘lov so‘rovlari, har qanday hamkordagi kabi. To‘lov bo‘yicha qaror — egada.",
+              "«Barcha agentliklar va hamkorlar» jadvalida barcha agentliklar va ularni kim olib kelgani ko‘rinadi. O‘sha yerda «Loyihalar summasi», «Olib kelganga 5%» va «Hamkor ulushi». Sizning 5% ingiz [Moliyada](/admin/finance) alohida qator bo‘lib turadi.",
+              "Agentlik umumiy [Hamkorlar](/admin/partners) ro‘yxatida ham «agentlik · 15%» belgisi bilan bor. U yerda uning hisob-kitoblari va to‘lov so‘rovlari. To‘lovni egasi hal qiladi.",
             ],
             admin: [
-              "«Barcha agentliklar va hamkorlar» jadvalida — barcha agentliklar, har birini kim olib kelgani, nechta loyihasi bor, «Loyihalar summasi», «Olib kelganga 5%» va «Agentlikka 15%». [Moliya](/admin/finance) bo‘limida 5% — olib kelgan odamda «hamkorni olib kelgan» qatori; ular jamoaga har qanday hisoblanma kabi studiyaga qoladigan puldan ayiriladi.",
-              "Agentlik [Hamkorlar](/admin/partners) umumiy ro‘yxatida ham bor, «agentlik · 15%» belgisi bilan: u yerda uning hisoblanmalari, rekvizitlari va to‘lov so‘rovlari, har qanday hamkordagi kabi. To‘lovni siz hal qilasiz.",
+              "«Barcha agentliklar va hamkorlar» jadvalida barcha agentliklar va ularni kim olib kelgani ko‘rinadi. O‘sha yerda «Loyihalar summasi», «Olib kelganga 5%» va «Hamkor ulushi». [Moliyada](/admin/finance) bu 5% jamoaga har qanday hisoblash kabi studiya ulushidan ayiriladi.",
+              "Agentlik umumiy [Hamkorlar](/admin/partners) ro‘yxatida ham «agentlik · 15%» belgisi bilan bor. U yerda uning hisob-kitoblari, rekvizitlari va to‘lov so‘rovlari. To‘lovni siz hal qilasiz.",
             ],
           },
         },

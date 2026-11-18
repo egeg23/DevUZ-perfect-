@@ -39,21 +39,21 @@ export const moreSections: Record<string, HelpEntry> = {
 
   /* ── Команда ──────────────────────────────────────────────────────── */
   "/admin/team": {
-    what: "Pracownicy: role, poziomy, kto jest czyim kierownikiem, plan kontaktów i które wiadomości bota do kogo przychodzą. Tutaj dodajesz nową osobę i wyłączasz tę, która odeszła. Logowanie do panelu — po numerycznym id w Telegramie: hasła nie ma, username można zmienić w sekundę, a id — nigdy.",
+    what: "Tu są wszyscy pracownicy studia. Tutaj dodajesz nową osobę, ustawiasz jej rolę, kierownika i plan kontaktów oraz wybierasz, co wysyła jej bot. Tu też wyłączasz tego, kto odszedł.",
     items: [
       {
         id: "invite",
         title: "Dodaj pracownika",
         body: {
           head: [
-            "Blok «Dodaj pracownika»: id Telegrama (numeryczne — osoba sprawdza je w dowolnym bocie, np. @userinfobot, i przesyła Tobie), imię w panelu, username opcjonalnie. Masz do wyboru jedną rolę — «menedżer»: drugiego kierownika wyznacza właściciel. Kliknij **«Dodaj»**.",
-            "Dodany przez Ciebie menedżer **od razu jest Twój** — właściciel dostanie powiadomienie. Bot wyśle tej osobie zaproszenie: rolę, do czego ma dostęp, i przycisk «Открыть панель», który loguje jednym kliknięciem.",
-            "«Zaproszenie nie dotarło: bot nie może napisać pierwszy…» — ta osoba jeszcze nie pisała do bota. Niech otworzy [bota](https://t.me/Devuz_studio_bot) i naciśnie «Start», a Ty kliknij «wyślij zaproszenie» w jej wierszu.",
+            "Wypełnij blok «Dodaj pracownika» i kliknij **«Dodaj»**. Potrzebne są id Telegrama i «Imię w panelu». Id Telegrama to liczba: osoba sprawdza je w bocie @userinfobot i przesyła Tobie.",
+            "Dodajesz tylko menedżerów, a oni od razu trafiają do Twojego zespołu. Bot wyśle tej osobie zaproszenie z przyciskiem logowania.",
+            "Zaproszenie nie dotarło? Znaczy, że ta osoba jeszcze nie pisała do bota. Niech otworzy [bota](https://t.me/Devuz_studio_bot) i naciśnie «Start», a Ty kliknij «wyślij zaproszenie» w jej wierszu.",
           ],
           admin: [
-            "«Dodaj pracownika»: id Telegrama (numeryczne, przez @userinfobot), imię, username opcjonalnie i rola — «kierownik projektów» albo «menedżer». Osoba dodana przez Ciebie nie ma kierownika; przypisz ją w kolumnie «Kierownik».",
-            "Bot wysyła zaproszenie z przyciskiem «Открыть панель». Nie dotarło — osoba nie nacisnęła «Start» w bocie; gdy to zrobi — «wyślij zaproszenie» w jej wierszu. Jeśli to id już było i zostało wyłączone — osoba wróci z całą swoją historią.",
-            "«odśwież menu komend bota» — gdy ktoś nie widzi w bocie /login. Menu i tak odświeża się przy każdym wdrożeniu, dodaniu i wyłączeniu pracownika.",
+            "Wypełnij blok «Dodaj pracownika»: id Telegrama, «Imię w panelu» i rolę («kierownik projektów» albo «menedżer»). Kliknij **«Dodaj»**. Id Telegrama osoba sprawdza w bocie @userinfobot.",
+            "Nowa osoba przychodzi bez kierownika, przypisz ją w kolumnie «Kierownik». Zaproszenie nie dotarło? Niech osoba naciśnie «Start» w [bocie](https://t.me/Devuz_studio_bot), a Ty kliknij «wyślij zaproszenie» w jej wierszu.",
+            "Przycisk «odśwież menu komend bota» przydaje się, gdy ktoś nie widzi w bocie komendy /login.",
           ],
         },
       },
@@ -62,14 +62,14 @@ export const moreSections: Record<string, HelpEntry> = {
         title: "Kierownik i jego zespół",
         body: {
           head: [
-            "W kolumnie «Kierownik» menedżer bez kierownika ma przycisk **«przejmij»**. Po jego kliknięciu menedżer jest w Twoim zespole: jego statystyki i «Plan i wykonanie» są u Ciebie, plan kontaktów ustalasz mu Ty, a Tobie nalicza się 5% od jego transakcji. Właściciel dostanie powiadomienie.",
-            "Jeśli dwóch kierowników kliknie jednocześnie, menedżer trafi do jednego z nich.",
-            "Odpiąć menedżera albo przekazać go innemu kierownikowi może tylko właściciel — u siebie zobaczysz «Ty · odpina właściciel».",
+            "Menedżer bez kierownika ma w kolumnie «Kierownik» przycisk **«przejmij»**. Kliknij go, a menedżer trafi do Twojego zespołu.",
+            "Widzisz statystyki swoich menedżerów i «Plan i wykonanie» i ustawiasz im plan kontaktów. Z każdej ich transakcji naliczane jest Ci 5%.",
+            "Odpiąć menedżera może tylko właściciel.",
           ],
           admin: [
-            "Kolumna «Kierownik»: wybierz kierownika i «zapisz» albo «bez kierownika», żeby odpiąć. Osoba dostanie wiadomość.",
-            "Kierownik sam przejmuje nieprzypisanych menedżerów przyciskiem «przejmij», a ci, których sam dodał, od razu są jego. Dostajesz o tym wiadomość z przyciskiem «Команда». Odpinasz tylko Ty.",
-            "Co znaczy „zespół”: statystyki i «Plan i wykonanie» menedżera są u kierownika, plan kontaktów ustala kierownik, a on dostaje 5% od każdej transakcji menedżera (współzałożyciel — 0).",
+            "W kolumnie «Kierownik» wybierz kierownika i kliknij «zapisz». Żeby odpiąć menedżera, wybierz «bez kierownika». Osoba dostanie wiadomość.",
+            "Kierownik może sam przejąć menedżera bez kierownika przyciskiem «przejmij». Menedżerowie, których dodał, od razu są jego. Dostajesz o tym wiadomość, a odpinasz tylko Ty.",
+            "Kierownik widzi statystyki i «Plan i wykonanie» swoich menedżerów i ustawia im plan kontaktów. Z każdej transakcji menedżera dostaje 5%.",
           ],
         },
       },
@@ -78,11 +78,11 @@ export const moreSections: Record<string, HelpEntry> = {
         title: "Plan kontaktów",
         body: {
           head: [
-            "Swoim menedżerom — w kolumnie «Plan kontaktów»: liczba «na tydzień» i «zapisz». Sobie planu nie ustalasz — robi to właściciel.",
-            "Puste pole — «bez planu»: porcja dnia to wtedy 5 firm. 0 — nie ma planu i nie ma porcji. Od planu zależy wielkość [porcji dnia](/admin/prospect): plan ÷ 5, od 2 do 15 dziennie.",
+            "Plan kontaktów mówi, do ilu firm osoba ma napisać w tygodniu. Swoim menedżerom ustawiasz go w kolumnie «Plan kontaktów»: liczba i «zapisz». Twój plan ustawia właściciel.",
+            "Od planu zależy [porcja dnia](/admin/prospect), czyli lista firm na dziś: od 2 do 15 dziennie. Puste pole to «bez planu» i 5 firm dziennie, zero usuwa porcję.",
           ],
           admin: [
-            "Kolumna «Plan kontaktów» — dla każdego oprócz siebie. Kierownik ustala plan tylko swoim ludziom. Puste pole — «bez planu» (porcja 5 dziennie), 0 — ani planu, ani porcji, maksimum 500.",
+            "Ustawiaj plan w kolumnie «Plan kontaktów» komu chcesz, poza sobą. Puste pole to «bez planu» i 5 firm dziennie, zero usuwa i plan, i porcję.",
           ],
         },
       },
@@ -91,11 +91,11 @@ export const moreSections: Record<string, HelpEntry> = {
         title: "Poziom i stawka",
         body: {
           head: [
-            "Poziom i indywidualną stawkę ustala właściciel — widzisz je, ale nie możesz zmieniać. Poziom określa procent od zysku netto transakcji: młodszy menedżer — 10% od nowego klienta, menedżer — 15%, kierownik — 30%. Szczegóły — w sekcji [«Finanse»](/admin/finance).",
+            "Poziom menedżera i stawkę indywidualną ustawia właściciel, Ty je tylko widzisz. Od nowego klienta menedżer dostaje 10%. Jeśli w poprzednim miesiącu miał 3 transakcje, to 15%. Szczegóły w [Finansach](/admin/finance).",
           ],
           admin: [
-            "«młodszy menedżer» (10% od nowego klienta, 0 od dosprzedaży), «menedżer» (15% i 5%), «kierownik» (30% i 30%). «Stawka indywidualna, %» zastępuje poziom tylko przy nowych klientach; puste pole — «wg poziomu».",
-            "Przy zmianie roli poziom zmienia się sam: kierownik dostaje «kierownik», menedżer — «menedżer»; indywidualna stawka zostaje.",
+            "Od nowego klienta menedżer dostaje 10%. Miał 3 transakcje w poprzednim miesiącu, wtedy w tym ma 15%. Za każde 3 transakcje w miesiącu dochodzi premia $200. Transakcja liczy się w miesiącu pierwszej płatności.",
+            "Poziom decyduje o dosprzedaży: «młodszy menedżer» nie dostaje z niej nic, «menedżer» dostaje 5%, «kierownik» 30% ze wszystkich transakcji. «Stawka indywidualna, %» zastępuje 10% od nowego klienta, puste pole to «wg poziomu».",
           ],
         },
       },
@@ -104,56 +104,54 @@ export const moreSections: Record<string, HelpEntry> = {
         title: "Rola",
         roles: ["admin"],
         body: [
-          "«zmień na kierownika» / «zmień na menedżera». Roli administratora nie da się nikomu nadać przez panel.",
-          "Jeśli odbierzesz komuś rolę kierownika, jego zespół zostaje odpięty: panel napisze, ilu menedżerów zostało bez kierownika — przypisz ich do innego. Sami menedżerowie nie dostają o tym wiadomości.",
+          "Przyciski «zmień na kierownika» i «zmień na menedżera» zmieniają rolę. Roli administratora przez panel nie da się nadać.",
+          "Jeśli odbierzesz komuś rolę kierownika, jego menedżerowie zostaną bez kierownika. Panel powie, ilu ich jest. Przypisz ich do innego kierownika.",
           "Nie możesz zdegradować siebie ani ostatniego administratora.",
         ],
       },
       {
         id: "notices",
-        title: "Jakie wiadomości wysyła bot",
+        title: "Jakie wiadomości bota przychodzą",
         roles: ["admin", "head"],
         body: {
           head: [
-            "W ostatniej kolumnie przy każdym Twoim menedżerze i przy Tobie jest wiersz **«Powiadomienia»** — obok napis «przychodzi wszystko» albo «wyłączone: 2 z 8». Kliknij go: rozwiną się pola wyboru. Zaznaczone — bot to wysyła, odznaczone — nie. Zaznacz, co trzeba, i kliknij **«Zapisz»**. Nowi pracownicy mają domyślnie zaznaczone wszystko.",
-            "Pod każdym polem jest opis, co się stanie bez niego — przeczytaj, zanim je odznaczysz. Najważniejsze: **«Nowe zgłoszenia z kolejki»**. Bez niego osoba wypada z [kolejki](#leads-queue) — leady nie są jej proponowane i od razu trafiają do następnej. To wygodne na czas urlopu albo zwolnienia lekarskiego: dostęp zostaje, a zgłoszenia nie czekają po pół godziny.",
-            "Pozostałe pola usuwają tylko wiadomość w Telegramie — sama praca zostaje w panelu: przypomnienie widać w karcie leada, porcję dnia — w sekcji [«Zimne kontakty»](/admin/prospect), odpowiedź klienta na kontakt — tamże. Jeśli odznaczysz «Odpowiedzi klientów na kontakty», klient może czekać na odpowiedź, dopóki menedżer sam nie zajrzy do «Zimnych kontaktów» — odznaczaj tylko wtedy, gdy odpowiedziami zajmuje się ktoś inny. **«Dzień dobry o 9:00»** — co rano bot życzy tej osobie miłego dnia, po imieniu i w języku jej panelu; odznacz, jeśli jej to niepotrzebne. **«Przypomnienie o 12:00, jeśli dzień nie ruszył»** — w południe bot przypomni osobie o porcji, jeśli w ciągu dnia nie ma jeszcze ani kontaktów, ani panelu; nie warto odznaczać — o milczeniu i tak dowiesz się o 15:00.",
-            "Nie da się wyłączyć: zaproszenia do panelu, zmiany roli i kierownika, prośby o potwierdzenie przekazania leada — bez tych wiadomości akcja się nie odbędzie. Pola menedżerów zmieniasz Ty i właściciel; sami menedżerowie ich nie widzą. Kto i kiedy je zmieniał — w dzienniku.",
+            "W ostatniej kolumnie Ty i Twoi menedżerowie macie wiersz **«Powiadomienia»**. Kliknij go, odznacz zbędne pola i kliknij **«Zapisz»**. Menedżerowie nie widzą swoich pól.",
+            "Najważniejsze pole to **«Nowe zgłoszenia z kolejki»**. Bez niego osoba wychodzi z [kolejki](#leads-queue), a leady (zgłoszenia klientów) idą do następnej osoby. Przydaje się na czas urlopu albo choroby.",
+            "Pozostałe pola usuwają tylko wiadomość w Telegramie, praca zostaje w panelu. Nie odznaczaj «Odpowiedzi klientów na kontakty», jeśli odpowiedzi nie prowadzi ktoś inny: klient będzie czekał.",
           ],
           admin: [
-            "W ostatniej kolumnie przy każdym pracowniku (i przy Tobie) jest wiersz **«Powiadomienia»** — obok «przychodzi wszystko» albo «wyłączone: 2 z 8». Kliknij: rozwiną się pola wyboru, zaznaczone — bot wysyła, odznaczone — nie. **«Zapisz»**. Domyślnie wszyscy mają zaznaczone wszystko. Kierownik projektów też zmienia pola — swoim menedżerom i sobie, ale nie innemu kierownikowi i nie Tobie.",
-            "Każda rola ma swój zestaw. Menedżer — zgłoszenia z kolejki i zgłoszenia dla wszystkich, przypomnienia, wiadomości w czacie leada, przekazania, odpowiedzi na kontakty, porcja dnia, rekomendacje na tydzień, zadania i «Dzień dobry o 9:00» — życzenia miłego dnia po imieniu, codziennie rano, także w weekend. Kierownik — do tego jeszcze raporty. Ty — «Kopie propozycji z kolejki» (komu i kiedy kolejka zaproponowała leada), raporty i zadania, bez kolejki i porcji: nie stoisz w kolejce. Porannych życzeń nie dostajesz — są dla pracowników. Menedżer i kierownik mają jeszcze «Przypomnienie o 12:00, jeśli dzień nie ruszył» — osobiste przypomnienie o porcji dla kogoś, kto do południa nic nie zrobił. Wiersz «🔕 К 15:00 молчат» przychodzi do Ciebie i kierowników pod «Raportami».",
-            "Najważniejsze pole — **«Nowe zgłoszenia z kolejki»**: bez niego osoba wypada z [kolejki](#leads-queue), leady trafiają do następnej. Pozostałe usuwają tylko wiadomość w Telegramie, praca zostaje w panelu. Jeśli wszystkim odznaczysz «Zgłoszenia dla wszystkich», nocnych zgłoszeń i «🔥 Нужен прототип» z kontaktów nikt nie zobaczy w Telegramie — tylko w panelu i na czacie sprzedaży, jeśli jest. Autor kontaktu dostaje «🛠 Хотят прототип» zawsze — jako pierwszy i na 30 minut.",
-            "Nie da się wyłączyć: zaproszenia, zmiany roli i kierownika, prośby o potwierdzenie przekazania, wiadomości do Ciebie o pieniądzach i umowach. Kto i kiedy zmieniał pola — w [dzienniku](/admin/audit).",
+            "W ostatniej kolumnie każdy pracownik i Ty macie wiersz **«Powiadomienia»**. Kliknij go, odznacz zbędne pola i kliknij **«Zapisz»**. Kierownik też zmienia pola, ale tylko sobie i swoim menedżerom.",
+            "Najważniejsze pole to **«Nowe zgłoszenia z kolejki»**. Bez niego osoba wychodzi z [kolejki](#leads-queue), a leady (zgłoszenia klientów) idą do następnej osoby. Pozostałe pola usuwają tylko wiadomość w Telegramie.",
+            "Nie stoisz w kolejce, ale masz «Kopie propozycji z kolejki»: komu i kiedy zaproponowano lead. Kto i kiedy zmieniał pola, widać w [dzienniku](/admin/audit).",
           ],
         },
       },
       {
         id: "lead-kinds",
-        title: "«Jakie leady wysyłać» za pracownika",
+        title: "«Jakie leady wysyłać» za daną osobę",
         roles: ["admin", "head"],
         body: [
-          "Pod imieniem osoby, obok «Powiadomień», jest wiersz **«Leady · wszystkie rodzaje»** albo «Leady · 4 z 7 rodzajów». Kliknij: otworzy się siedem pól «Jakie leady wysyłać» — «Zimne kontakty», «Przetargi», «Sygnały z grup (skaut)», «Partnerzy i agencje», «Zgłoszenia ze strony i z bota», «Makieta z bota», «Pomoc z AI (Claudery)». Odznacz zbędne i kliknij **«Zapisz»**. Sam pracownik ustawia te same pola sobie w [Ustawieniach](/admin/settings), więc może je zmienić także po tobie; kto i kiedy zmieniał — w dzienniku.",
-          "Odznaczony rodzaj do osoby nie przychodzi i [kolejka](#leads-queue) go nie proponuje: lead trafia do tych, którzy mają ten rodzaj wybrany. Nie wybrał nikt — lead trafia do wszystkich jak dotąd, a ty dostajesz wiersz «🧭 … nie wybrał nikt», raz na lead (pod «Raportami»). Nocny równy udział i «Leady bez limitu» liczą się jak dotąd, po całej kolejce.",
+          "Pod imieniem osoby jest wiersz **«Leady · wszystkie rodzaje»** albo «Leady · 4 z 7 rodzajów». Kliknij, a otworzą się pola według rodzajów leadów: «Zimne kontakty», «Przetargi», «Partnerzy i agencje» i inne. Odznacz zbędne i kliknij **«Zapisz»**.",
+          "Odznaczony rodzaj do tej osoby nie przychodzi i kolejka go jej nie proponuje. Pracownik może sam zmienić te pola w [Ustawieniach](/admin/settings). Rodzaju nie wybrał nikt? Wtedy lead idzie do wszystkich.",
         ],
       },
       {
         id: "sections",
-        title: "Dostęp do działów: zaznaczenia właściciela",
+        title: "Dostęp do działów: pola właściciela",
         roles: ["admin"],
         body: [
-          "W ostatniej kolumnie przy każdym kierowniku i menedżerze jest wiersz **«Działy»** — obok «jak dla roli» albo ile działów otworzyłeś ponad rolę i ile zamknąłeś. Kliknij — otworzy się lista wszystkich działów panelu z zaznaczeniami: stoją przy tych, które człowiek widzi teraz, a «inaczej niż rola» — tam, gdzie już coś zmieniłeś. Zaznaczysz — dział pojawi się w jego menu i się otworzy; odznaczysz — zniknie z menu, a z bezpośredniego linku panel przeniesie go do «Leady». Kliknij **«Zapisz»**: zmiana działa od razu, człowiek nie musi logować się ponownie. Każde zapisanie trafia do [dziennika](/admin/audit).",
-          "Zaznaczenie daje **podgląd**: człowiek widzi dział, wszystko, co w nim pokazane, i instrukcję do niego — z adnotacją, że dział otworzył mu właściciel. Co może w dziale zmieniać, nadal decyduje rola. Menedżer, któremu otworzyłeś «Partnerzy», zobaczy partnerów, ale decyzje o wypłatach, stawkach i usuwaniu zostają przy Tobie; jeśli kliknie przycisk, którego nie ma jego rola, panel niczego nie zmieni i przeniesie go do «Leady». Żeby człowiek pracował w dziale w pełni, zmień mu rolę.",
-          "«Leady» i «Instrukcje» są zawsze otwarte dla wszystkich, dlatego nie ma ich na liście. Tobie otwarte jest wszystko. Zapisuje się tylko to, co zmieniłeś: jeśli potem zmienisz człowiekowi rolę, działy, których nie ruszałeś, same będą jak dla nowej roli, a Twoje zaznaczenia zostaną.",
+          "W ostatniej kolumnie kierownicy i menedżerowie mają wiersz **«Działy»**. Kliknij, zaznacz potrzebne działy i kliknij **«Zapisz»**. Dział od razu pojawi się w menu tej osoby.",
+          "Pole otwiera dział tylko do podglądu. Co osoba może tam zmieniać, decyduje jej rola. Na przykład menedżer w «Partnerach» zobaczy partnerów, ale wypłaty zostaną przy Tobie.",
+          "«Leady», «Zadania», «Przetargi», «Ustawienia» i «Instrukcje» są otwarte dla wszystkich, nie ma ich na liście. Każdy zapis trafia do [dziennika](/admin/audit).",
         ],
       },
       {
         id: "unlimited",
-        title: "Limit leadów: komu nie potrzeba nocnego udziału",
+        title: "Limit leadów: komu nie jest potrzebny nocny udział",
         roles: ["admin"],
         body: [
-          "Przy menedżerach i kierownikach w ostatniej kolumnie jest wiersz **«Leady: w nocy po równym udziale»** z przyciskiem **«Zdejmij limit»**. W nocy, od 18:00 do 08:00, lead jest otwarty dla wszystkich w kolejce, ale każdy bierze nie więcej niż równą część na miesiąc: tak jedna niespiąca osoba nie zabiera wszystkiego. Po kliknięciu «Zdejmij limit» wiersz zmienia się na **«Leady: bez limitu»** i ta osoba w nocy bierze leady bez ograniczeń. **«Przywróć limit»** przywraca udział. Twoja decyzja z 23.10.2026: bez limitu pracują Dina i Aleksander.",
-          "W dzień nic się nie zmienia: lead nadal trafia na 30 minut do tego, czyja kolej, i cudzego leada w te pół godziny nie da się wziąć. Leady wzięte bez limitu wchodzą do wspólnego licznika miesiąca, więc udział pozostałych od tego tylko rośnie. Zmiana działa od razu, każde kliknięcie trafia do [dziennika](/admin/audit) jako «zdjął lub przywrócił pracownikowi limit leadów». Przycisk widzisz tylko Ty.",
+          "Poza godzinami pracy każdy bierze nie więcej niż równy udział leadów w miesiącu, żeby jedna osoba nie zabrała wszystkiego. Poza godzinami pracy to przed 08:00, po 18:00 i weekend. Jeśli kolegów z mniejszym udziałem nie ma na miejscu albo lead czeka dłużej niż 10 minut, bierze go każdy.",
+          "Przycisk **«Zdejmij limit»** usuwa udział dla tej osoby, wiersz zmieni się na «Leady: bez limitu». **«Przywróć limit»** włącza go z powrotem. Przycisk widzisz tylko Ty.",
         ],
       },
       {
@@ -162,12 +160,12 @@ export const moreSections: Record<string, HelpEntry> = {
         roles: ["admin", "head"],
         body: {
           head: [
-            "U Ciebie i u każdego menedżera w ostatniej kolumnie jest **«Zmień dane»**. Są tam cztery pola: **«Imię i nazwisko»** — w pełnym brzmieniu, do umów; **«Imię w panelu»** — krótkie, podpisane są nim leady i zadania, widzą je wszyscy; **«Username»** — @ w Telegramie; **«Telefon»**. Popraw i kliknij **«Zapisz dane»**. Imię i nazwisko oraz telefon są potem widoczne w wierszu pracownika pod imieniem i pod id Telegrama.",
-            "Nowe imię albo username od razu pojawia się przy wszystkich leadach pracownika — na liście leadów pod statusem. Id Telegrama się tu nie zmienia: przez nie pracownik loguje się do panelu przez bota. Dane drugiego kierownika i właściciela zmienia tylko właściciel; menedżerowie nie zmieniają swoich danych.",
+            "Przycisk **«Zmień dane»** masz Ty i każdy menedżer. Są w nim cztery pola: «Imię i nazwisko» do umów, «Imię w panelu», «Username» i «Telefon». Popraw i kliknij **«Zapisz dane»**.",
+            "Imię w panelu widzą wszyscy, nim podpisane są leady i zadania. Dane drugiego kierownika i właściciela poprawia tylko właściciel.",
           ],
           admin: [
-            "U każdego pracownika, także u Ciebie, w ostatniej kolumnie jest **«Zmień dane»**: **«Imię i nazwisko»** (w pełnym brzmieniu, do umów), **«Imię w panelu»** (krótkie, podpisane są nim leady i zadania), **«Username»** (@ w Telegramie) i **«Telefon»**. Popraw i kliknij **«Zapisz dane»**; imię i nazwisko oraz telefon są widoczne w wierszu pracownika pod imieniem i pod id Telegrama.",
-            "Nowe imię albo username od razu pojawia się przy wszystkich leadach pracownika — na liście pod statusem. Id Telegrama się nie zmienia: przez nie odbywa się logowanie przez bota. Kierownik zmienia dane sobie i menedżerom, menedżerowie — nikomu. Kto co zmienił — w [dzienniku](/admin/audit).",
+            "Przycisk **«Zmień dane»** ma każdy pracownik, Ty też. Są w nim cztery pola: «Imię i nazwisko» do umów, «Imię w panelu», «Username» i «Telefon». Popraw i kliknij **«Zapisz dane»**.",
+            "Id Telegrama się tu nie zmienia. Kierownik poprawia dane sobie i menedżerom. Kto co zmienił, widać w [dzienniku](/admin/audit).",
           ],
         },
       },
@@ -177,16 +175,14 @@ export const moreSections: Record<string, HelpEntry> = {
         roles: ["admin", "head"],
         body: {
           head: [
-            "Swoich i cudzych **menedżerów** możesz wyłączyć sam: w ostatniej kolumnie «Wyłącz» → przeczytaj, co się stanie → **«Rozumiem, wyłącz»**. Kierownika i właściciela wyłącza tylko właściciel, siebie — nikt.",
-            "Od razu: dostęp zamknięty, wszystkie sesje przerwane, linki logowania przestają działać. Dalej system działa sam: leady w toku wracają do kolejki, przypomnienia i prośby o przekazanie są zamykane, niewysłane kontakty wracają do puli, a trwające korespondencje przechodzą do kierownika wyłączonej osoby (czyli do Ciebie, jeśli to Twój menedżer) albo do właściciela.",
-            "Jednego system nie zrobi: **usuń tę osobę ręcznie** z kanału «Devuz Scout» i z czatu sprzedaży — bot nie może nikogo wyrzucić z kanału.",
-            "Wyłączeni nie są usuwani — są na liście «Wyłączeni» z datą: zostają przy nich zamknięte leady, naliczenia i dziennik. Przywrócenie — dodaj osobę ponownie z tym samym id Telegrama, włączy się jej dawny wpis.",
+            "Menedżera, który odszedł, wyłącz przyciskiem «Wyłącz» w ostatniej kolumnie. Przeczytaj, co się stanie, i kliknij **«Rozumiem, wyłącz»**. Kierownika i właściciela wyłącza tylko właściciel.",
+            "Dostęp zamyka się od razu. Jego leady w toku wrócą do kolejki, a rozmowy przejdą do jego kierownika albo do właściciela.",
+            "Usuń tę osobę z kanału sygnałów skauta i ogólnego czatu sprzedaży sam, bot tego nie potrafi. Osobę można przywrócić: dodaj ją ponownie z tym samym id Telegrama.",
           ],
           admin: [
-            "«Wyłącz» → przeczytaj, co się stanie → **«Rozumiem, wyłącz»**. Od razu: dostęp zamknięty, wszystkie sesje przerwane, linki logowania przestają działać. Menedżerów może wyłączać także kierownik projektów; kierownika — tylko Ty.",
-            "Dalej system działa sam: jego leady w toku wracają do kolejki («↩️ Лид вернулся в очередь…»), jego pół godziny w kolejce przepada, przypomnienia i prośby o przekazanie są zamykane, niewysłane kontakty wracają do puli, a trwające korespondencje przechodzą do jego kierownika albo do Ciebie. Gdy ktoś weźmie z kolejki leada z takiej korespondencji, korespondencja przejdzie do tej osoby. Jego zespół (jeśli był kierownikiem) zostaje odpięty, a karty leadów w jego Telegramie są usuwane.",
-            "Jednego system nie zrobi: **usuń tę osobę ręcznie** z kanału «Devuz Scout» i z czatu sprzedaży.",
-            "Wyłączeni nie są usuwani — są na liście «Wyłączeni». Przywrócenie — dodaj ponownie z tym samym id.",
+            "Kliknij «Wyłącz» w ostatniej kolumnie. Przeczytaj, co się stanie, i kliknij **«Rozumiem, wyłącz»**. Menedżerów może wyłączać też kierownik.",
+            "Dostęp zamyka się od razu. Leady w toku wrócą do kolejki, rozmowy przejdą do jego kierownika albo do Ciebie. Jeśli wyłączysz kierownika, jego menedżerowie zostaną bez kierownika.",
+            "Usuń tę osobę z kanału sygnałów skauta i ogólnego czatu sprzedaży sam, bot tego nie potrafi. Osobę można przywrócić: dodaj ją ponownie z tym samym id Telegrama.",
           ],
         },
       },
@@ -195,9 +191,8 @@ export const moreSections: Record<string, HelpEntry> = {
         title: "Aplikacja i powiadomienia: kto ma włączone",
         roles: ["admin", "head"],
         body: [
-          "Pod imieniem każdego pracownika — wiersz «📱 Aplikacja: N urządzeń» albo «📱 Aplikacja: niewłączona». To liczba telefonów i komputerów, na których ta osoba włączyła powiadomienia panelu; najedź myszą — zobaczysz, które («iPhone · app», «Android · Chrome», «Windows · Chrome»). Jak zainstalować aplikację i włączyć powiadomienia — w [instrukcji do «Strony głównej»](/admin/help#hq-app).",
-          "Powiadomienia powtarzają wiadomości bota, więc zaznaczenia powyżej działają też dla nich: odznaczysz — nie przyjdzie ani do Telegrama, ani do aplikacji. Twoje ogłoszenie w karcie «Pracownikom» na [Stronie głównej](/admin/hq) też przychodzi do aplikacji; ogłoszenie «Użytkownikom bota» — nie, pracowników tam nie ma.",
-          "U siebie w ostatniej kolumnie — «To urządzenie: powiadomienia włączone» albo «wyłączone», z przyciskami «Włącz powiadomienia», «Sprawdź» i «Wyłącz». Chodzi o telefon albo komputer, z którego teraz patrzysz: innej osobie nie włączysz stąd powiadomień — tylko ona sama na swoim urządzeniu. Urządzenie, które się wypisało albo usunęło aplikację, samo znika z licznika przy pierwszym powiadomieniu.",
+          "Pod imieniem pracownika jest wiersz «📱 Aplikacja: N urządzeń» albo «📱 Aplikacja: niewłączona». To liczba telefonów i komputerów, na których osoba włączyła powiadomienia panelu.",
+          "Powiadomienia powtarzają wiadomości bota, więc pola «Powiadomienia» działają też na nie. Powiadomienia każdy włącza sam, na swoim urządzeniu. Jak to zrobić, opisuje [instrukcja do «Pulpitu»](/admin/help#hq-app).",
         ],
       },
     ],
@@ -205,16 +200,15 @@ export const moreSections: Record<string, HelpEntry> = {
 
   /* ── Партнёры ─────────────────────────────────────────────────────── */
   "/admin/partners": {
-    what: "Osoby, które przyprowadzają klientów ze swojego linku lub kodu promocyjnego i dostają procent od kwoty projektu. Tutaj są ich linki, klienci, naliczenia, wnioski o wypłatę i materiały promocyjne, które publikują u siebie. Sekcja dla właściciela i kierownika. Decyzja o wypłacie, indywidualna stawka partnera i usunięcie partnera — tylko u właściciela: to pieniądze dla osób spoza studia.",
+    what: "Partner przyprowadza klientów przez swój link albo kod promocyjny i dostaje procent od kwoty projektu. Tu są jego linki, klienci, naliczenia i wnioski o wypłatę. Dział widzą właściciel i kierownik. O wypłatach, stawce indywidualnej i usunięciu partnera decyduje tylko właściciel.",
     items: [
       {
         id: "join",
         title: "Skąd bierze się partner",
         body: [
-          "Sam: na stronie w menu «Зарабатывай с нами» klika «Стать партнёром» albo «Войти в кабинет» — bot go rejestruje i wysyła jednorazowy przycisk logowania do panelu partnera. To samo robią komendy /ref i /cabinet w bocie. Może to być każdy poza pracownikami studia: bot porównuje Telegram z listą pracowników i zamiast rejestracji odpowiada, że program jest zamknięty dla zespołu — klienci pracowników liczą się w panelu. Wpis założony wcześniej też nic pracownikowi nie otwiera: ani linków, ani wypłat, ani panelu partnera.",
-          "Albo Ty: «Dodaj partnera ręcznie» — imię, kod (puste — wymyślimy), Telegram id opcjonalnie, notatka. Bez Telegram id taki partner nie połączy się z osobą, która przyjdzie później przez bota, i nie zaloguje się do panelu partnera. Telegram id pracownika panel nie przyjmie. Partnerów, których Telegram należy do pracownika, tabela «Wszyscy partnerzy» oznacza «pracownik studia».",
-          "Linki: krótki `devuz.studio/r/…` — to ten link partner publikuje, osobny dla każdego kanału (w panelu partnera albo `/ref KOD etykieta`), do 20. W panelu partner wybiera, dokąd prowadzi link (strona główna, usługi, realizacje, bot), i bonus dla odbiorców — rabat 5/10/15% na pierwszy projekt. Stare `?ref=KOD` i `start=ref_KOD` działają jak dotąd. Wejście z linku strona zapamiętuje w cookie przeglądarki na 30 dni (wygrywa pierwszy partner): zgłoszenie w tym czasie to klient partnera, nawet jeśli osoba wróciła już bez linku. W karcie leada przy «Partner» widać, ile dni przed zgłoszeniem było wejście. W bocie obowiązuje te same 30 dni.",
-          "Wejścia liczą się po osobach: robot podglądu w komunikatorze i ponowne otwarcie przez tę samą osobę tego samego dnia się nie liczą. W tabeli poniżej przy linku widać „wejścia / zgłoszenia”; najedź na kod — zobaczysz krótki adres.",
+          "Zwykle partner rejestruje się sam. Na stronie w menu «Зарабатывай с нами» klika «Стать партнёром», a bot wysyła mu logowanie do gabinetu partnera. To samo robią komendy /ref i /cabinet w bocie. Pracownik studia nie może zostać partnerem, bot mu odmówi.",
+          "Partnera możesz też dodać sam w bloku «Dodaj partnera ręcznie»: imię, kod, id Telegrama i notatka. Kod można pominąć, panel wymyśli go sam. Bez id Telegrama partner nie zaloguje się do gabinetu.",
+          "Partner ma do 20 krótkich linków, osobny na każdą platformę. Wejście z linku strona pamięta 30 dni. Zgłoszenie w tym czasie zalicza się partnerowi, nawet jeśli klient wrócił bez linku.",
         ],
       },
       {
@@ -222,14 +216,14 @@ export const moreSections: Record<string, HelpEntry> = {
         title: "Kiedy klient się zalicza",
         body: {
           head: [
-            "Lead z linku zalicza się partnerowi, jeśli to nie on sam, klient nie był u nas wcześniej, a partner nie jest zablokowany. Zaliczony — partner dostaje «🤝 По вашей ссылке пришёл…». Partner zostaje przy kliencie, nawet jeśli ten wszedł na stronę z linku, a napisał już do bota z czatu na stronie.",
-            "Projekt z takiego leada dziedziczy partnera. Zmienić w karcie projektu, kto polecił klienta, procent i «Nie zaliczać, powód» może tylko właściciel. Gdy do projektu zostanie wgrany skan podpisanej umowy, partner od razu dostaje «📝 С клиентом … подписан договор» — z kwotą i przybliżonym udziałem.",
-            "Blokada zatrzymuje tylko nowe zaliczenia: dawne naliczenia i wypłaty zostają.",
+            "Zgłoszenie zalicza się partnerowi, jeśli klient przyszedł z jego linku albo kodu promocyjnego. Są jeszcze dwa warunki: to nie sam partner i klient nie był u nas wcześniej. Wtedy partner dostaje wiadomość w bocie.",
+            "Projekt z takiego zgłoszenia też jest zapisywany na partnera. Zmienić, kto przyprowadził i jaki procent, może tylko właściciel. Gdy wgrywa się podpisaną umowę, partner dostaje wiadomość z kwotą i przybliżonym udziałem.",
+            "Blokada partnera zatrzymuje tylko nowe zaliczenia. Stare naliczenia i wypłaty zostają.",
           ],
           admin: [
-            "Lead z linku zalicza się partnerowi, jeśli to nie on sam, klient nie był u nas wcześniej, a partner nie jest zablokowany. Zaliczony — partner dostaje «🤝 По вашей ссылке пришёл…». Partner zostaje przy kliencie, nawet jeśli ten wszedł na stronę z linku, a napisał już do bota z czatu na stronie.",
-            "Projekt z takiego leada dziedziczy partnera. W karcie projektu, w bloku «Partner», można zmienić, kto polecił klienta, procent i «Nie zaliczać, powód». Gdy do projektu zostanie wgrany skan podpisanej umowy, partner od razu dostaje «📝 С клиентом … подписан договор» — z kwotą i przybliżonym udziałem.",
-            "Blokada zatrzymuje tylko nowe zaliczenia: dawne naliczenia i wypłaty zostają.",
+            "Zgłoszenie zalicza się partnerowi, jeśli klient przyszedł z jego linku albo kodu promocyjnego. Są jeszcze dwa warunki: to nie sam partner i klient nie był u nas wcześniej. Wtedy partner dostaje wiadomość w bocie.",
+            "Projekt z takiego zgłoszenia też jest zapisywany na partnera. Na karcie projektu, w bloku «Partner», możesz zmienić, kto przyprowadził, i procent. Tam też możesz nie zaliczyć projektu, podając powód.",
+            "Blokada partnera zatrzymuje tylko nowe zaliczenia. Stare naliczenia i wypłaty zostają.",
           ],
         },
       },
@@ -237,57 +231,53 @@ export const moreSections: Record<string, HelpEntry> = {
         id: "card",
         title: "Karta partnera: jego klienci",
         body: [
-          "Kliknij imię partnera w «Wszyscy partnerzy» (albo liczbę w kolumnie «Klienci») — otworzy się jego karta. Na górze: wejścia ze wszystkich jego linków, ilu ma klientów i ile projektów opłacono, «Zarobione» i «Dostępne». Niżej — «Linki partnera»: każdy link z wejściami i zgłoszeniami.",
-          "Najważniejsze w karcie — **«Klienci partnera»**: każde zgłoszenie zaliczone partnerowi, nowe na górze. W wierszu: kiedy przyszło; klient — kliknięcie otwiera [kartę leada](#leads-card); skąd — etykieta linku, agencja albo przypięty klient; «Gdzie teraz» — zgłoszenie, w pracy, umowa, umowa podpisana, opłacone albo nie wyszło, dokładnie to, co partner widzi u siebie w panelu; «Prowadzi» — kto z zespołu wziął leada; «Projekt» i «Naliczone partnerowi». Niżej — projekty zaliczone mu ręcznie w karcie projektu, jego przypięci klienci i agencje. Partner nie widzi kontaktów swoich klientów, ty — widzisz w karcie leada, jak zwykle.",
+          "Kliknij imię partnera we «Wszyscy partnerzy» albo liczbę w kolumnie «Klienci». Otworzy się jego karta: wejścia, klienci, opłacone projekty, «Zarobione» i «Dostępne».",
+          "Najważniejszy jest tam blok «Klienci partnera». Jest w nim każde zgłoszenie zaliczone partnerowi: kiedy przyszło, gdzie jest teraz, kto z zespołu je prowadzi i ile naliczono. Kliknij klienta, a otworzy się [karta leada](#leads-card). Partner nie widzi kontaktów swoich klientów, a Ty widzisz.",
         ],
       },
       {
         id: "percent",
         title: "Procent",
         body: [
-          "Procent liczymy od kwoty umowy, według progu kwoty projektu: do $2 500 — 6%, $2 501–5 000 — 10%, $5 001–10 000 — 14%, $10 001–30 000 — 17%, od $30 001 — 20%. Próg każdego projektu zależy od jego własnej kwoty. Od 05.11.2026 model jest jeden: wyboru «Od zysku netto» w panelu partnera już nie ma, wszystkich partnerów przeniesiono na «Od obrotu» (decyzja właściciela: partner od razu widzi, ile dostanie, i nie trzeba czekać na koszt wytworzenia). W tabeli «Wszyscy partnerzy», w kolumnie «Stawka», widać model i kiedy go zmieniono.",
-          "Projekt, który już szedł w modelu „od zysku”, jest dokańczany w nim: model zostaje przy kliencie z dnia jego zgłoszenia, a zmiana nie przelicza projektów, które już trwają. W karcie projektu przy «Partner» — «14 % od obrotu», a przy takim starym projekcie — «20 % od zysku»: wpisz dla niego koszt wytworzenia, bez niego udział liczy się od kwoty pomniejszonej tylko o podatek. Procent ustawiony na projekcie jest ważniejszy niż indywidualna stawka partnera, a indywidualna — ważniejsza niż próg.",
-          "Naliczenie jest zamrożone, dopóki klient nie opłaci projektu w całości — tak jak u pracowników. Agencja ma własną stawkę: 15% od kwoty projektu, bez modeli i skarbonki, a od $50 000 zleceń — 20% na zawsze; jest na liście z oznaczeniem «agencja · 15%» albo «agencja · 20%», szczegóły w zakładce [Agencje](/admin/agencies).",
-          "Od 05.11.2026 skarbonki nie ma: przełącznik «Nie wypłacaj automatycznie» zniknął z panelu partnera, a u partnera, który miał go włączonego, został wyłączony. Każdy projekt liczy się według swojego progu, a udział za projekt opłacony w całości partner dostaje bez wniosku (punkt [wypłata](#partners-payout)). Przywrócić skarbonkę może tylko właściciel.",
-          "Na zawsze +5. Gdy suma zleceń partnera z całego czasu dojdzie do $50 000, do stawki każdego kolejnego projektu dochodzi 5 — na zawsze, bez przeglądu: do progu tabeli. Liczą się kwoty projektów z umów, bez anulowanych i niezaliczonych; projekt, którym przekroczono próg, jest jeszcze po starej stawce. Procentu ustawionego ręcznie na projekcie dodatek nie rusza; indywidualna stawka partnera rośnie tak samo, na przykład 10% staje się 15%. Z poziomami blogera za 12 miesięcy (właściciel ustawia je procentem na projekcie) się nie sumuje. Taki partner ma w «Wszyscy partnerzy» oznaczenie «+5% na zawsze», a w karcie projektu — «+5 na zawsze za 50 000 $ zleceń». Ile zostało do progu, partner widzi w swoim panelu. Decyzja właściciela z 05.11.2026.",
+          "Partner dostaje procent od kwoty umowy. Im większy projekt, tym wyższy procent: do $2 500 to 6%, do $5 000 10%, do $10 000 14%, do $30 000 17%, powyżej 20%.",
+          "Procent na projekcie jest ważniejszy niż stawka indywidualna partnera, a ta jest ważniejsza niż tabela. Pieniądze są zamrożone, dopóki klient nie opłaci projektu w całości. Agencje mają swoją stawkę 15%, szczegóły w zakładce [Agencje](/admin/agencies).",
+          "Gdy zamówienia partnera za cały czas dojdą do $50 000, do stawki każdego kolejnego projektu na zawsze dochodzi 5%. Taki partner ma na liście oznaczenie «+5% na zawsze».",
+          "Stare projekty z oznaczeniem «od zysku» rozlicza się po staremu. Dla nich wpisz koszt własny na karcie projektu.",
         ],
       },
       {
         id: "agencies",
         title: "Agencje partnerów",
         body: [
-          "Od 05.11.2026 partner nie podłącza agencji: w panelu partnera tego bloku już nie ma. Agencja ma własne warunki — sama zostaje naszym partnerem-agencją i dostaje 15% od kwoty każdego projektu ([Agencje](/admin/agencies)); zakłada ją ten, kto ją znalazł. Blok «Agencje partnerów» na tej stronie jest widoczny tylko wtedy, gdy są w nim wcześniejsze wpisy; na 05.11.2026 nie ma żadnego.",
-          "Taki stary wpis działa jak dotąd: zatwierdzona agencja to wszystkie jej zamówienia dla partnera przez 12 miesięcy od zatwierdzenia, bez 30-dniowego okna i bez sprawdzania, czy klient był już w studiu. Termin widać w wierszu agencji: «zamówienia dla partnera do …». Gdy minie, nowe zamówienia agencji idą jak zwykłe, a już przypisane zostają przy partnerze; przycisk **«Przedłuż o 12 miesięcy»** zaczyna nowy termin od dziś. Zgłoszenia ze strony i z bota rozpoznają się same — po danych kontaktowych agencji (@nick, telefon, e-mail) albo po nazwie firmy. Zamówienie, które przyszło telefonicznie albo w prywatnej wiadomości do menedżera, przypisz w karcie projektu: blok «Partner» → «Zlecenie agencji».",
-          "Jedna agencja — jeden partner: tej samej agencji nie da się podłączyć drugi raz. «odłącz» przy podłączonej — nowe zamówienia agencji nie trafiają już do partnera, przypisane zostają. W karcie projektu «Zlecenie agencji» proponuje tylko agencje, którym termin jeszcze nie minął.",
-          "W panelu partnera są dwie prezentacje do wysyłania — «DevUz Studio» (zespół, projekty, języki, usługi, ceny „od”, realizacje) i «Program dla agencji i firm» (stawki od kwoty projektu, jak przyprowadzić klienta, podwykonawstwo w przetargach, link do warunków agencji). Link zawiera kod promocyjny partnera, więc klient, który przyszedł z prezentacji, zalicza się jemu.",
+          "Partner nie podłącza już agencji. Agencja sama zostaje naszym partnerem i dostaje 15%. Dodaje się ją w zakładce [Agencje](/admin/agencies).",
+          "Blok «Agencje partnerów» jest widoczny tylko wtedy, gdy zostały w nim stare wpisy. Taki wpis daje partnerowi zamówienia agencji na 12 miesięcy. Przycisk **«Przedłuż o 12 miesięcy»** zaczyna termin od nowa, «wyłącz» zatrzymuje nowe zamówienia.",
         ],
       },
       {
         id: "claims",
         title: "Klienci przypisani ręcznie",
         body: [
-          "Od 05.11.2026 partner nie przypisuje klientów w swoim panelu: blok «Moi klienci» zniknął, zamiast niego jest [kod promocyjny](#partners-code), który klient podaje sam. Blok «Klienci przypisani przez partnerów» na tej stronie jest widoczny tylko wtedy, gdy są w nim wpisy; na 05.11.2026 nie ma żadnego.",
-          "Stare przypisanie działa jak dotąd: przez 12 miesięcy wszystkie zamówienia klienta zaliczają się partnerowi — «zamówienia dla partnera do …»; zapytanie klienta rozpoznajemy po NIP/INN, nazwie, telefonie albo Telegramie. Link i kod promocyjny partnera, jeśli zadziałały, są ważniejsze niż przypisanie. Projekt utworzony z takiego leada dziedziczy partnera. Minęło 12 miesięcy — «termin minął»: nowe zamówienia idą jak zwykłe, już przypisane zostają przy partnerze.",
-          "Widzisz, że firma tak naprawdę jest nasza — pracowaliśmy z nią poza panelem, to znajomi studia — wpisz powód i kliknij **«anuluj przypisanie»**. Bez powodu anulowanie się nie uda: partner dostanie go w bocie. Po anulowaniu nowe zapytania klienta nie są zaliczane partnerowi; lead albo projekt, który zdążył się już przypisać, przenosisz w karcie projektu, w bloku «Partner».",
+          "Partner nie przypisuje już klientów ręcznie. Zamiast tego klient sam podaje [kod promocyjny](#partners-code).",
+          "Blok «Klienci przypisani przez partnerów» jest widoczny tylko wtedy, gdy są w nim stare wpisy. Takie przypisanie działa 12 miesięcy. Jeśli firma tak naprawdę jest nasza, wpisz powód i kliknij **«anuluj przypisanie»**. Powód dostanie partner.",
         ],
       },
       {
         id: "code",
-        title: "Kod promocyjny partnera — słowo, które klient wypowiada na głos",
+        title: "Kod promocyjny partnera: słowo, które klient mówi na głos",
         body: [
-          "Każdy partner ma **kod promocyjny** — słowo łacińskimi literami, np. AZIZ lub MEDIAPRO. Stoi pod nazwą w «Wszyscy partnerzy» («Kod promocyjny: …»). Tworzy się sam z imienia partnera (z nicka, gdy imię ma mniej niż trzy litery); stary siedmioznakowy kod i wszystkie linki działają jak wcześniej. Decyzja właściciela z 05.11.2026: link ginie, gdy klient pisze do menedżera lub dzwoni, a słowo nie.",
-          "Gdzie działa: w linku (devuz.studio/?ref=AZIZ i link do bota), w słowach klienta — „kod AZIZ” w czacie na stronie, w bocie i w zgłoszeniu ze strony — oraz w karcie leada, gdy menedżer wpisuje go w pole «Kod promocyjny lub kto przyprowadził» ([jak](#leads-partner-code)). Klient należy do tego, kto został zapisany pierwszy; klient, który był już w studiu, nie jest zaliczany.",
-          "Zmiana słowa — w wierszu partnera, pole **«Kod promocyjny»**, przycisk «zapisz»: litery łacińskie i cyfry, do 12 znaków, jedno słowo — jeden partner. Zajęte lub służbowe słowo (ADMIN, DEVUZ i podobne) się nie zapisze, a panel powie dlaczego. Po zmianie stary kod przestaje działać. Rabat dla klienta z kodem (5, 10 lub 15% na pierwszy projekt) partner wybiera sam w swoim panelu: bez rabatu klienci rzadziej podają kod.",
+          "Każdy partner ma kod promocyjny. To słowo alfabetem łacińskim, na przykład AZIZ, które klient mówi menedżerowi. Stoi pod imieniem partnera we «Wszyscy partnerzy».",
+          "Kod działa w linku oraz w słowach klienta na czacie i w bocie. Wpisuje się go też na karcie leada w polu «Kod promocyjny lub kto przyprowadził» ([jak](#leads-partner-code)). Klient trafia do partnera, który został zapisany pierwszy.",
+          "Słowo zmienisz w polu **«Kod promocyjny»** w wierszu partnera, przyciskiem «zapisz». Pasują litery łacińskie i cyfry, do 12 znaków. Po zmianie stary kod przestaje działać.",
         ],
       },
       {
         id: "promo",
         title: "Materiały promocyjne",
         body: [
-          "Magazyn filmów i grafik studia, które partnerzy publikują u siebie: Reels, Shorts, TikTok, relacje, kanały. Otwiera się linkiem «Materiały promocyjne» na górze tej strony — albo bezpośrednio: [Materiały promocyjne](/admin/partners/promo). Partner widzi je w swoim panelu na stronie, w bloku «Materiały promocyjne»: podgląd, «Pobierz» i «Opis do posta» z przyciskiem «Kopiuj opis». W podpisie jest już krótki link właśnie tego partnera, więc klient, który przyszedł z jego posta, zalicza się jemu — tak samo jak z każdego jego linku. Dopóki nie ma materiałów, partner w ogóle nie widzi tego bloku.",
-          "Wgrywanie: wybierz plik — film MP4, MOV, WebM albo grafikę PNG, JPG, WebP, GIF, do 500 MB. Pliki leżą na dysku naszego serwera, nie w Supabase: tam w darmowym planie jest najwyżej 50 MB na plik i 5 GB pobrań miesięcznie. Serwer odmówi także wtedy, gdy po wgraniu na dysku zostałoby mniej niż 2 GB — i poda, ile jest wolnego miejsca. Nazwę widzą partnerzy. «Język słów w filmie» decyduje o kolejności: partner najpierw widzi materiały w swoim języku i «bez słów», potem pozostałe — nie trzeba ukrywać innych języków, partner z Taszkentu publikuje i rosyjski, i uzbecki film. Kliknij **«Wgraj»**: plik idzie na serwer kawałkami po 4 MB, pasek pokazuje postęp; kawałek, przy którym zerwało się połączenie, zostanie dosłany sam. Nie zamykaj strony, dopóki nie pojawi się «Gotowe» — porzucone wgrywanie zostanie usunięte z serwera po dobie.",
-          "Podpis do posta: `{link}` w tekście zamieni się w krótki link każdego partnera; jeśli zapomnisz `{link}` — link trafi do ostatniej linijki, bo post bez linku nic partnerowi nie da. Zostawisz pole puste — partner dostanie domyślny podpis w swoim języku (widać go na szaro w pustym polu). Pole wyboru «Powiadom partnerów w Telegramie, że pojawił się nowy materiał» — bot napisze do wszystkich aktywnych partnerów, że jest nowy materiał. Jeśli wgrywasz kilka plików po kolei, zaznacz je tylko przy ostatnim, inaczej partner dostanie kilka wiadomości z rzędu.",
-          "Przy każdym materiale widać, ile razy go pobrano i przez ilu różnych partnerów: od razu wiadomo, czego potrzebują, a co leży na darmo. Nazwę, język i podpis edytujesz na miejscu — «zapisz». **«Ukryj przed partnerami»** usuwa materiał z panelu partnera i od razu blokuje pobieranie, ale plik zostaje — przywrócisz go przyciskiem «Pokaż partnerom». «usuń» → **«Usuń na stałe»** kasuje także plik z serwera; kopie, które partnerzy już pobrali, zostają u nich. Pliki filmów nie wchodzą do nocnej kopii zapasowej bazy — oryginały trzymaj u siebie.",
+          "To filmy i obrazy studia, które partnerzy publikują u siebie. Otwórz je linkiem «Materiały promocyjne» na górze strony albo od razu: [Materiały promocyjne](/admin/partners/promo). Partner pobiera je w gabinecie razem z podpisem, w którym jest już jego link.",
+          "Żeby dodać materiał, wybierz plik: film MP4, MOV, WebM albo obraz, do 500 MB. Wpisz nazwę i wybierz «Język słów w filmie». Kliknij **«Wgraj»** i nie zamykaj strony, dopóki wgrywanie się nie skończy.",
+          "W «Podpis do posta» wpisz {link}: w tym miejscu stanie link partnera. Zaznacz pole, jeśli chcesz, żeby bot powiadomił partnerów o nowym materiale.",
+          "Przy każdym materiale widać, ile razy go pobrano. **«Ukryj przed partnerami»** usuwa materiał z gabinetu, plik zostaje. «usuń» i **«Usuń na stałe»** kasują plik z serwera, więc oryginały trzymaj u siebie.",
         ],
       },
       {
@@ -295,26 +285,24 @@ export const moreSections: Record<string, HelpEntry> = {
         title: "Wypłata dla partnera",
         body: {
           head: [
-            "Partner klika «Zleć wypłatę» w swoim panelu (w rosyjskiej wersji — «Запросить выплату») albo pisze do bota /payout i dane do przelewu (USDT TRC-20 lub tekst). Można to zrobić od pierwszego dnia roboczego miesiąca, od $50, jeden otwarty wniosek, zawsze na całą dostępną kwotę. Właściciel dostaje «💸 Заявка на выплату», a tutaj pojawia się wiersz w bloku «Wnioski o wypłatę».",
-            "Decyduje właściciel: przelewa pieniądze i klika «Wypłacono» albo «odrzuć». U ciebie w wierszu widać partnera, kwotę i dane do przelewu, a zamiast przycisków — «decyduje właściciel»: wypłata to pieniądze dla osób spoza studia i decyzja o nich należy do właściciela.",
-            "Udział od obrotu nie czeka na wniosek: gdy tylko płatności za projekt osiągną jego kwotę — płatność zapisano w [Finansach](/admin/finance) albo przy fakturze umowy kliknięto «Opłacona» — wniosek o wypłatę tworzy się sam, na cały udział partnera w tym projekcie, bez czekania na początek miesiąca i bez minimum $50. Partner dostaje «✅ … выплата в обработке» (wypłata w realizacji), a właściciel — «💸 Выплата партнёру с оборота: выплатить … за …» (wypłata od obrotu: wypłać … za …). W bloku «Wnioski o wypłatę» taki wiersz ma podpis «od obrotu za „…” — utworzona automatycznie po pełnej opłacie projektu». Stary projekt „od zysku” — na wniosek partnera: jego udział zależy od kosztu wytworzenia.",
-            "Od 05.11.2026 skarbonki nie ma: udział od obrotu idzie sam, a wnioskiem partner odbiera resztę — udziały ze starych projektów „od zysku” i kwoty, które wróciły po odrzuconej wypłacie.",
+            "Partner prosi o wypłatę w gabinecie albo komendą /payout w bocie. Można od pierwszego dnia roboczego miesiąca, od $50, od razu na całą dostępną kwotę. Wniosek pojawia się w bloku «Wnioski o wypłatę».",
+            "Decyduje właściciel: przelewa pieniądze i klika «Wypłacono» albo «odrzuć». W Twoim wierszu widać partnera, kwotę i dane do przelewu, a zamiast przycisków jest napis «decyduje właściciel».",
+            "O udział z projektu partner nie prosi. Gdy klient opłaci projekt w całości, wniosek o wypłatę tworzy się sam, bez minimum i bez czekania na początek miesiąca.",
           ],
           admin: [
-            "Partner klika «Zleć wypłatę» w swoim panelu (w rosyjskiej wersji — «Запросить выплату») albo pisze do bota /payout i dane do przelewu (USDT TRC-20 lub tekst). Można to zrobić od pierwszego dnia roboczego miesiąca, od $50, jeden otwarty wniosek, zawsze na całą dostępną kwotę. Dostajesz «💸 Заявка на выплату».",
-            "Najpierw sam przelej pieniądze, potem w bloku «Wnioski o wypłatę» kliknij **«Wypłacono»** (można z notatką). Albo «odrzuć» — kwota wróci do dostępnych środków, a partner zobaczy powód.",
-            "Udział od obrotu nie czeka na wniosek: gdy tylko płatności za projekt osiągną jego kwotę — płatność zapisano w [Finansach](/admin/finance) albo przy fakturze umowy kliknięto «Opłacona» — wniosek o wypłatę tworzy się sam, na cały udział partnera w tym projekcie, bez czekania na początek miesiąca i bez minimum $50. Partner dostaje «✅ … выплата в обработке» (wypłata w realizacji; jeśli nie ma danych do przelewu — prośbę o wpisanie ich w panelu partnera), a Ty — «💸 Выплата партнёру с оборота: выплатить … за …» (wypłata od obrotu: wypłać … za …). W bloku «Wnioski o wypłatę» taki wiersz ma podpis «od obrotu za „…” — utworzona automatycznie po pełnej opłacie projektu»; dalej jak ze zwykłym: przelałeś — **«Wypłacono»**. Dla jednego projektu taki wniosek tworzy się dokładnie raz: jeśli go odrzucisz, kwota wróci do dostępnych środków partnera i poprosi on o nią zwykłym wnioskiem. Jeśli zapis płatności urwał się w połowie, sweep (przebieg według harmonogramu) utworzy brakujący wniosek w ciągu kilku minut. Stary projekt „od zysku” — na wniosek partnera: jego udział zależy od kosztu wytworzenia.",
-            "Od 05.11.2026 skarbonki nie ma: udział od obrotu idzie sam, a wnioskiem partner odbiera resztę — udziały ze starych projektów „od zysku” i kwoty, które wróciły po odrzuconej wypłacie.",
+            "Partner prosi o wypłatę w gabinecie albo komendą /payout w bocie. Można od pierwszego dnia roboczego miesiąca, od $50, od razu na całą dostępną kwotę. Wniosek pojawia się w bloku «Wnioski o wypłatę», a Ty dostajesz wiadomość.",
+            "Najpierw przelej pieniądze, potem kliknij **«Wypłacono»**. Albo kliknij «odrzuć»: kwota wróci do partnera, a on zobaczy powód.",
+            "O udział z projektu partner nie prosi. Gdy klient opłaci projekt w całości, wniosek tworzy się sam, a Ty dostajesz wiadomość. Dalej wszystko tak samo: przelewasz pieniądze i klikasz «Wypłacono».",
           ],
         },
       },
       {
         id: "delete",
-        title: "Usuwanie partnera",
+        title: "Usuń partnera",
         roles: ["admin"],
         body: [
-          "W tabeli «Wszyscy partnerzy», w kolumnie «Edycja», pod «zapisz» — «usuń». Rozwija się ostrzeżenie: linki partnera przestaną działać, panel i logowanie przez bota zostaną zamknięte; z jego projektów i zgłoszeń zniknie «kto przyprowadził» — naliczeń za nie już nie będzie; agencje i przypisani klienci zostaną usunięci. Przycisk **«Usuń na zawsze»**. Nie da się tego cofnąć — można tylko dodać partnera od nowa. Partner nie dostaje żadnej wiadomości.",
-          "Partnera z wypłatami usunąć nie można: wypłata to pieniądze, które już wyszły albo czekają na decyzję, i ich historia nie może zniknąć. U takiego partnera zamiast przycisku jest wyjaśnienie; można go tylko zablokować. Usunięcie trafia do [Dziennika](/admin/audit). Partnerów z Telegramem pracownika tabela oznacza «pracownik studia» — to ich usuwaj: pracownik nie może być partnerem.",
+          "W tabeli «Wszyscy partnerzy», w kolumnie «Edycja», jest «usuń». Przeczytaj ostrzeżenie i kliknij **«Usuń na zawsze»**. Linki partnera przestaną działać, gabinet się zamknie, naliczeń z jego projektów już nie będzie. Nie da się tego cofnąć.",
+          "Partnera z wypłatami nie da się usunąć, można go tylko zablokować. Usunięcie trafia do [dziennika](/admin/audit).",
         ],
       },
     ],
@@ -322,41 +310,39 @@ export const moreSections: Record<string, HelpEntry> = {
 
   /* ── Агентства ──────────────────────────────────────────────────────── */
   "/admin/agencies": {
-    what: "Agencje to partnerzy studia: agencja przyprowadza nam zlecenia swoich klientów i dostaje 15% od kwoty każdego takiego projektu. Kto z zespołu przyprowadził agencję i dodał ją tutaj, przez 12 miesięcy dostaje 5% od kwoty projektów agencji. Agencję może dodać każdy: zakładka jest przy sekcji «Partnerzy», a kto tej sekcji nie ma, widzi ją od razu w menu.",
+    what: "Agencja przyprowadza nam zamówienia swoich klientów i dostaje 15% od kwoty każdego projektu. Osoba z zespołu, która przyprowadziła agencję i dodała ją tutaj, przez 12 miesięcy dostaje 5% od jej projektów. Agencję może dodać każdy.",
     items: [
       {
         id: "terms",
         title: "Warunki: 15% dla agencji, 5% dla tego, kto przyprowadził",
         body: [
-          "Agencja dostaje zawsze 15% od kwoty każdego swojego projektu: bez progów tabeli, jakie mają partnerzy z linkiem. Kwota to ta, która stoi w projekcie, czyli w umowie.",
-          "Ten, kto przyprowadził agencję, dostaje 5% od kwoty każdego projektu agencji założonego w ciągu 12 miesięcy od dnia, w którym agencję tu dodano. Projekt założony później jest już bez 5%, a założony w terminie zostaje przy nim także potem. Projekt założony wcześniej niż agencja też jest bez 5%: nie przyszedł przez agencję. Termin widać w tabeli, w kolumnie «5% do».",
-          "5% dochodzi ponad wszystko inne. Jeśli projekt agencji prowadzisz Ty, Twój procent prowadzącego liczy się jak zwykle, a 5% idzie osobnym wierszem «przyprowadził partnera». Prowadzi ktoś inny: on ma swój procent, Ty swoje 5%.",
-          "Obie części są zamrożone, dopóki klient nie opłaci projektu w całości, jak wszystko w [Finansach](/admin/finance): częściowa wpłata to zamrożone, pełna to zarobione. Anulowany projekt nie daje nic.",
+          "Agencja zawsze dostaje 15% od kwoty każdego swojego projektu z umowy. Progów, jak u zwykłych partnerów, nie ma.",
+          "Ten, kto przyprowadził agencję, dostaje 5% od każdego jej projektu dodanego w ciągu 12 miesięcy. Termin liczy się od dnia, w którym agencję dodano tutaj. Widać go w kolumnie «5% do».",
+          "Jeśli projekt agencji prowadzisz Ty, 5% dochodzi do Twojego zwykłego procentu. Oba udziały są zamrożone, dopóki klient nie opłaci projektu w całości.",
         ],
       },
       {
         id: "partners",
         title: "Partnerzy-blogerzy: te same 5% i ile przynieśli",
         body: [
-          "Od 10.11.2026 te same 5% od kwoty projektów przez 12 miesięcy dostaje też ten, kto przyprowadził partnera-blogera, nie tylko agencję. Kto przyprowadził partnera, zaznacza właściciel w kolumnie «Kto przyprowadził»; 12 miesięcy liczy się od dnia dodania partnera. Przyprowadziłeś partnera, a ciebie tam nie ma — powiedz właścicielowi.",
-          "W tabeli są wszystkie agencje i partnerzy, których przyprowadziłeś (u kierownika i właściciela — wszyscy): ile projektów przyniósł każdy, «Kwota projektów» z umów, «Zapłacone przez klientów» — ile klienci już zapłacili, i twoje 5%. Nad tabelą — suma dla wszystkich twoich.",
+          "Te same 5% przez 12 miesięcy dostaje ten, kto przyprowadził partnera-blogera. Kto go przyprowadził, zaznacza właściciel w kolumnie «Kto przyprowadził». Przyprowadziłeś partnera, a Ciebie tam nie ma? Powiedz właścicielowi.",
+          "W tabeli widać, ile projektów przyniósł każdy, «Kwota projektów», «Zapłacone przez klientów» i 5%. Menedżer widzi tylko tych, których przyprowadził sam. Kierownik i właściciel widzą wszystkich.",
         ],
       },
       {
         id: "lifetime",
-        title: "20% na zawsze — od $50 000 zleceń agencji",
+        title: "20% na zawsze: od $50 000 zamówień agencji",
         body: [
-          "Gdy suma zleceń agencji z całego czasu dojdzie do $50 000, jej stawka staje się 20% na zawsze: +5 do każdego kolejnego projektu, bez terminu i bez przeglądu. Liczą się kwoty projektów z umów; anulowane i niezaliczone się nie liczą. Projekt, którym agencja przekroczyła $50 000, jest jeszcze po 15%, następny już po 20%. Decyzja właściciela z 05.11.2026.",
-          "Gdzie to widać: w tabeli, w kolumnie «Kwota projektów», pod kwotą — «20% na zawsze» albo «do 20%: jeszcze …»; w «Partnerzy» przy agencji — oznaczenie «agencja · 20%»; w karcie projektu przy wierszu partnera — «+5 na zawsze za 50 000 $ zleceń». Agencja widzi, ile zostało, w swoim panelu, a w prezentacji na stronie — że od $50 000 zleceń będzie 20%. Pieniądze liczą się same: ręcznie niczego nie trzeba ustawiać.",
-          "5% dla tego, kto przyprowadził agencję, się nie zmienia: te same 5% od kwoty projektu i te same 12 miesięcy. Dodatek dla agencji studio płaci ze swojej części.",
+          "Gdy zamówienia agencji za cały czas dojdą do $50 000, jej stawka na zawsze wynosi 20%. Projekt, którym przekroczono próg, jest jeszcze po 15%, kolejny już po 20%.",
+          "W kolumnie «Kwota projektów» jest napisane «20% na zawsze» albo ile zostało do 20%. Wszystko liczy się samo, ręcznie nic nie trzeba ustawiać. Twoje 5% się od tego nie zmienia.",
         ],
       },
       {
         id: "deck",
         title: "Schemat «Jak to działa» i prezentacja dla agencji",
         body: [
-          "Na górze zakładki — «Jak to działa — w skrócie»: droga zlecenia w trzech krokach i kto ile dostaje z jednego projektu, z przykładem na $2 000: agencja $300, osoba, która przyprowadziła, $100, reszta dla studia, a z niej prowadzący dostaje swój zwykły procent od zysku. Tu jest wszystko, łącznie z naszymi 5%: to schemat dla zespołu. Wiersz «20%» też jest tutaj — stawka agencji po $50 000 zleceń.",
-          "«Otwórz prezentację» — strona na stronie internetowej w sześciu językach (rosyjski, angielski, uzbecki, chiński, ukraiński, polski) dla samej agencji: duża liczba 15%, trzy kroki, przykład z paskami, zasady, co można przyprowadzić, i przycisk do Telegrama. Procentu osoby, która przyprowadziła, tam nie ma i nie będzie: to sprawa wewnętrzna, agencji tego nie pokazujemy. Wyślij link albo otwórz stronę, kliknij przycisk PDF u góry i prześlij plik. W tabeli każda agencja ma własny link «prezentacja»: z nim przycisk Telegrama na stronie prowadzi do bota z kodem tej agencji.",
+          "Na górze zakładki jest krótki schemat, jak to działa. Na przykładzie projektu za $2 000: agencji $300, temu, kto przyprowadził, $100, reszta dla studia.",
+          "Przycisk «Otwórz prezentację» otwiera stronę dla samej agencji w sześciu językach. Twoich 5% tam nie ma. Agencji wysyłaj link «prezentacja» z jej wiersza: z nim przycisk Telegrama prowadzi do bota z kodem agencji.",
         ],
       },
       {
@@ -364,40 +350,34 @@ export const moreSections: Record<string, HelpEntry> = {
         title: "Jak dodać agencję",
         body: {
           manager: [
-            "Blok «Dodaj agencję»: «Nazwa agencji», «Jak do nas pisze: @telegram, telefon lub e-mail» (obowiązkowo), «Strona» i «Notatka» (opcjonalnie). Przycisk «Dodaj agencję». Agencję przyprowadziłeś Ty: zapisuje się na Ciebie i przez 12 miesięcy od tego dnia 5% od kwoty jej projektów jest Twoje.",
-            "Dodawaj od razu, gdy umówisz się z agencją, a nie gdy przyjdzie pierwsze zlecenie: termin liczy się od dnia dodania agencji, a projekt założony wcześniej niż agencja nie wchodzi do 5%.",
-            "Jedna agencja to jeden wpis. Jeśli agencja z tym samym kontaktem lub nazwą jest już dodana przez Ciebie, kolegę lub partnera, panel odpowie «Ta agencja jest już dodana…» i drugiego wpisu nie będzie. Jeśli to pomyłka, napisz do właściciela: tylko on może zmienić, kto przyprowadził.",
+            "Wypełnij blok «Dodaj agencję»: «Nazwa agencji» i «Jak do nas pisze: @telegram, telefon lub e-mail». Kliknij «Dodaj agencję», a zostanie zapisana na Ciebie.",
+            "Dodaj ją od razu, gdy się dogadacie: 12 miesięcy liczy się od dnia zapisu. Jedną agencję dodaje się raz. Jeśli panel powie, że już jest, a to pomyłka, napisz do właściciela.",
           ],
           head: [
-            "Blok «Dodaj agencję»: «Nazwa agencji», «Jak do nas pisze: @telegram, telefon lub e-mail» (obowiązkowo), «Strona» i «Notatka» (opcjonalnie) oraz «Kto przyprowadził», czyli komu trafi 5%: domyślnie Ty, można wybrać pracownika albo «Nikt, przyszła sama». Przycisk «Dodaj agencję».",
-            "Dodawaj od razu, gdy umówisz się z agencją, a nie gdy przyjdzie pierwsze zlecenie: termin liczy się od dnia dodania agencji, a projekt założony wcześniej niż agencja nie wchodzi do 5%.",
-            "Jedna agencja to jeden wpis: tej samej agencji (ten sam kontakt lub nazwa) nie da się dodać drugi raz, tak samo jak agencji, którą już podłączył partner. Kto przyprowadził, później zmienia tylko właściciel.",
+            "Wypełnij blok «Dodaj agencję»: «Nazwa agencji» i «Jak do nas pisze: @telegram, telefon lub e-mail». W «Kto przyprowadził» wybierz siebie, innego pracownika albo «Nikt, przyszła sama».",
+            "Dodaj ją od razu, gdy się dogadacie: 12 miesięcy liczy się od dnia zapisu. Jedną agencję dodaje się raz. Zmienić potem, kto przyprowadził, może tylko właściciel.",
           ],
           admin: [
-            "Blok «Dodaj agencję»: «Nazwa agencji», «Jak do nas pisze: @telegram, telefon lub e-mail» (obowiązkowo), «Strona» i «Notatka» (opcjonalnie) oraz «Kto przyprowadził», czyli komu trafi 5%: domyślnie Ty, można wybrać pracownika albo «Nikt, przyszła sama». Przycisk «Dodaj agencję».",
-            "Dodawaj od razu, gdy umówisz się z agencją, a nie gdy przyjdzie pierwsze zlecenie: termin liczy się od dnia dodania agencji, a projekt założony wcześniej niż agencja nie wchodzi do 5%.",
-            "Jedna agencja to jeden wpis: tej samej agencji (ten sam kontakt lub nazwa) nie da się dodać drugi raz, tak samo jak agencji, którą już podłączył partner. Kto przyprowadził, zmieniasz w samej tabeli: w kolumnie «Kto przyprowadził» wybierz osobę i kliknij «zapisz». Termin 12 miesięcy się nie przesuwa — liczy się od dnia dodania agencji. Każda zmiana jest w [Dzienniku](/admin/audit).",
+            "Wypełnij blok «Dodaj agencję»: «Nazwa agencji» i «Jak do nas pisze: @telegram, telefon lub e-mail». W «Kto przyprowadził» wybierz siebie, innego pracownika albo «Nikt, przyszła sama».",
+            "Dodaj ją od razu, gdy się dogadacie: 12 miesięcy liczy się od dnia zapisu. Kto przyprowadził, zmieniasz w tabeli, a termin się przy tym nie przesuwa. Zmiana trafia do [dziennika](/admin/audit).",
           ],
         },
       },
       {
         id: "orders",
-        title: "Jak zlecenia agencji trafiają na nią",
+        title: "Jak zamówienia agencji trafiają do niej",
         body: {
           manager: [
-            "Od razu po dodaniu agencja ma własny link, w tabeli: «link dla agencji». Wyślij go agencji: klient, który przyszedł nim na stronę lub do bota, zapisuje się na agencję tak samo jak klient partnera z linku.",
-            "Zgłoszenia, które agencja wysyła sama — ze strony, z czatu lub z bota — panel rozpoznaje po jej kontakcie lub nazwie i zapisuje na agencję, bez linku i bez terminu. Projekt z takiego zgłoszenia dziedziczy agencję, a 15% i 5% pojawiają się w projekcie same.",
-            "Zlecenie przyszło telefonem albo w prywatnej wiadomości do menedżera: poproś właściciela, żeby przypiął projekt do agencji, robi to w karcie projektu.",
+            "Wyślij agencji jej «link dla agencji» z tabeli. Klienci z tego linku i zgłoszenia z kontaktem agencji zapisują się na nią sami, razem z 15% i 5%.",
+            "Zamówienie przyszło telefonicznie albo w prywatnej wiadomości? Poproś właściciela, żeby przypiął projekt do agencji.",
           ],
           head: [
-            "Od razu po dodaniu agencja ma własny link, w tabeli: «link dla agencji». Wyślij go agencji: klient, który przyszedł nim na stronę lub do bota, zapisuje się na agencję tak samo jak klient partnera z linku.",
-            "Zgłoszenia, które agencja wysyła sama — ze strony, z czatu lub z bota — panel rozpoznaje po jej kontakcie lub nazwie i zapisuje na agencję, bez linku i bez terminu. Projekt z takiego zgłoszenia dziedziczy agencję, a 15% i 5% pojawiają się w projekcie same.",
-            "Zlecenie przyszło telefonem albo w prywatnej wiadomości do menedżera: poproś właściciela, żeby przypiął projekt do agencji, robi to w karcie projektu.",
+            "Wyślij agencji jej «link dla agencji» z tabeli. Klienci z tego linku i zgłoszenia z kontaktem agencji zapisują się na nią sami, razem z 15% i 5%.",
+            "Zamówienie przyszło telefonicznie albo w prywatnej wiadomości? Poproś właściciela, żeby przypiął projekt do agencji.",
           ],
           admin: [
-            "Od razu po dodaniu agencja ma własny link, w tabeli: «link dla agencji». Wyślij go agencji: klient, który przyszedł nim na stronę lub do bota, zapisuje się na agencję tak samo jak klient partnera z linku.",
-            "Zgłoszenia, które agencja wysyła sama — ze strony, z czatu lub z bota — panel rozpoznaje po jej kontakcie lub nazwie i zapisuje na agencję, bez linku i bez terminu. Projekt z takiego zgłoszenia dziedziczy agencję, a 15% i 5% pojawiają się w projekcie same.",
-            "Zlecenie przyszło telefonem albo w prywatnej wiadomości: przypnij projekt sam, w karcie projektu, blok «Partner», wybierz agencję. Na liście partnerów agencja ma oznaczenie «agencja · 15%».",
+            "Wyślij agencji jej «link dla agencji» z tabeli. Klienci z tego linku i zgłoszenia z kontaktem agencji zapisują się na nią sami, razem z 15% i 5%.",
+            "Zamówienie przyszło telefonicznie albo w prywatnej wiadomości? Przypnij projekt sam: karta projektu, blok «Partner».",
           ],
         },
       },
@@ -406,16 +386,16 @@ export const moreSections: Record<string, HelpEntry> = {
         title: "Gdzie widać pieniądze",
         body: {
           manager: [
-            "W tabeli «Moje agencje i partnerzy — ci, których przyprowadziłeś» są agencje, które przyprowadziłeś: ile projektów ma agencja, «Kwota projektów» i «5% dla tego, kto przyprowadził», czyli ile zarobione, a ile zamrożone. Te same 5% widać wierszem «przyprowadził partnera» w Twoich [Finansach](/admin/finance): wchodzą do Twojego salda i są wypłacane razem z resztą.",
-            "Ile dostaje agencja, nie widzisz: to pieniądze dla osoby z zewnątrz, o wypłacie decyduje właściciel.",
+            "W tabeli Twoich agencji i partnerów widać Twoje 5%: ile zarobiono i ile jest zamrożone. Te same pieniądze są osobnym wierszem w Twoich [Finansach](/admin/finance). Wypłaca się je razem z resztą.",
+            "Ile dostaje agencja, nie widzisz. O jej wypłatach decyduje właściciel.",
           ],
           head: [
-            "W tabeli «Wszystkie agencje i partnerzy» są wszystkie agencje, kto przyprowadził każdą, ile ma projektów, «Kwota projektów», «5% dla tego, kto przyprowadził» i «Dla agencji 15%». Twoje 5% i 5% Twojego zespołu są w [Finansach](/admin/finance), wierszem «przyprowadził partnera».",
-            "Agencja jest też na wspólnej liście [Partnerów](/admin/partners), z oznaczeniem «agencja · 15%»: tam są jej naliczenia i wnioski o wypłatę, jak u każdego partnera. O wypłacie decyduje właściciel.",
+            "W tabeli «Wszystkie agencje i partnerzy» widać wszystkie agencje i to, kto je przyprowadził. Są tam też «Kwota projektów», «5% dla tego, kto przyprowadził» i «Udział partnera». Twoje 5% są osobnym wierszem w [Finansach](/admin/finance).",
+            "Agencja jest też na ogólnej liście [Partnerów](/admin/partners) z oznaczeniem «agencja · 15%». Tam są jej naliczenia i wnioski o wypłatę. O wypłacie decyduje właściciel.",
           ],
           admin: [
-            "W tabeli «Wszystkie agencje i partnerzy» są wszystkie agencje, kto przyprowadził każdą, ile ma projektów, «Kwota projektów», «5% dla tego, kto przyprowadził» i «Dla agencji 15%». W [Finansach](/admin/finance) 5% to wiersz «przyprowadził partnera» u tego, kto przyprowadził; odejmuje się od tego, co zostaje studiu, jak każde naliczenie zespołu.",
-            "Agencja jest też na wspólnej liście [Partnerów](/admin/partners), z oznaczeniem «agencja · 15%»: tam są jej naliczenia, dane do przelewu i wnioski o wypłatę, jak u każdego partnera. O wypłacie decydujesz Ty.",
+            "W tabeli «Wszystkie agencje i partnerzy» widać wszystkie agencje i to, kto je przyprowadził. Są tam też «Kwota projektów», «5% dla tego, kto przyprowadził» i «Udział partnera». W [Finansach](/admin/finance) te 5% odejmuje się od udziału studia, jak każde naliczenie dla zespołu.",
+            "Agencja jest też na ogólnej liście [Partnerów](/admin/partners) z oznaczeniem «agencja · 15%». Tam są jej naliczenia, dane do przelewu i wnioski o wypłatę. O wypłacie decydujesz Ty.",
           ],
         },
       },

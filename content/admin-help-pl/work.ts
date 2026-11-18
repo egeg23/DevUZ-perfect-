@@ -268,30 +268,30 @@ export const workSections: Record<string, HelpEntry> = {
 
   /* ── Кандидаты ────────────────────────────────────────────────────── */
   "/admin/candidates": {
-    what: "Analiza CV przed rozmową kwalifikacyjną. Wgrywasz PDF i piszesz, na jakie stanowisko patrzymy — panel pokazuje werdykt, mocne strony, przeszkody i pytania, które warto zadać. Widzą to tylko kierownicy i właściciel: w analizach są cudze dane osobowe i decyzja o człowieku.",
+    what: "Tu analizuje się CV przed rozmową. Wgrywasz PDF, a panel pisze, czy warto zatrudnić osobę i o co ją zapytać. Dział widzą tylko kierownik i właściciel, bo są w nim cudze dane osobowe.",
     items: [
       {
         id: "upload",
         title: "Wgraj CV",
         body: [
-          "Pole «Na jakie stanowisko patrzymy» — wpisz stanowisko (domyślnie menedżer sprzedaży). Potem «CV w PDF» i **«Analizuj»**. Analiza trwa do minuty.",
-          "Potrzebny jest PDF, z którego da się skopiować tekst, do 8 MB; czytanych jest pierwszych 12 stron. Skan ani obrazki nie zostaną odczytane — panel to powie.",
+          "W polu «Na jakie stanowisko patrzymy» wpisz wakat. Wybierz plik w «CV w PDF» i kliknij **«Analizuj»**. Analiza trwa do minuty.",
+          "Potrzebny jest PDF, z którego da się skopiować tekst, do 8 MB. Czytane jest pierwsze 12 stron. Skanu ani zdjęcia panel nie przeczyta i powie o tym.",
         ],
       },
       {
         id: "result",
         title: "Co jest w analizie",
         body: [
-          "Werdykt: «zatrudnić», «zatrudnić warunkowo» albo «nie zatrudniać» — i dlaczego. Dalej: «Mocne strony», «Przeszkody», «Co CV mówi wprost», «Zapytaj na rozmowie» (pytanie do każdej przeszkody) i «Jak sprawdzić w praktyce» — zadanie na jeden płatny dzień próbny.",
-          "Analiza to przygotowanie do rozmowy, a nie wyrok. Decyzja należy do Ciebie.",
+          "Na górze werdykt: «zatrudnić», «zatrudnić warunkowo» albo «nie zatrudniać», i dlaczego. Niżej «Mocne strony», «Przeszkody» (co niepokoi), «Co CV mówi wprost» i «Zapytaj na rozmowie». Na końcu «Jak sprawdzić w praktyce»: zadanie na jeden płatny dzień próbny.",
+          "Analiza pomaga przygotować się do rozmowy. Decyzję podejmujesz Ty.",
         ],
       },
       {
         id: "privacy",
         title: "Dane osobowe",
         body: [
-          "Plik nigdzie nie jest zapisywany — zostają tylko imię, stanowisko, werdykt i sama analiza. Przycisk «Usuń analizę» usuwa ją na zawsze.",
-          "Wiek, płeć, stan cywilny, narodowość, religia, wygląd i miejsce urodzenia nie biorą udziału w ocenie. Jeśli analiza mimo to się na nich oparła, nie zostanie zapisana: «Analiza oparła się na czymś, co nie dotyczy pracy… spróbuj jeszcze raz».",
+          "Sam plik nie jest przechowywany. Zostają imię, stanowisko, werdykt i analiza. Przycisk «Usuń analizę» kasuje ją na stałe.",
+          "Wiek, płeć, stan cywilny, narodowość, religia, wygląd i miejsce urodzenia nie biorą udziału w ocenie. Jeśli analiza mimo to się na nich oparła, nie zostanie zapisana. Panel poprosi, żeby spróbować jeszcze raz.",
           "Każda analiza i każde usunięcie trafiają do dziennika.",
         ],
       },
