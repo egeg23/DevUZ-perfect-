@@ -126,13 +126,22 @@ export function serviceSchema(service: Service, locale: Locale): Json {
  * Услуга на странице под запрос (content/service-landings): цена «от» в
  * сумах — та же, что на странице и в калькуляторе, город — Ташкент.
  */
+/**
+ * Страница услуги под запрос. Регион и валюта — по языку страницы
+ * (`LANDING_AREA`, `LANDING_MONEY` в content/service-landings): русская —
+ * страны СНГ в долларах, узбекская — Ташкент и Узбекистан в сумах.
+ */
 export function landingSchema(input: {
   locale: Locale;
   slug: string;
   name: string;
   serviceType: string;
   description: string;
-  priceUzs: number;
+  /** Страны (английские имена); город — `city`. */
+  areaServed: readonly string[];
+  city?: string;
+  currency: "USD" | "UZS";
+  minPrice: number;
 }): Json {
   return {
     "@type": "Service",
@@ -141,17 +150,17 @@ export function landingSchema(input: {
     serviceType: input.serviceType,
     provider: { "@id": ORG_ID },
     areaServed: [
-      { "@type": "City", name: "Tashkent" },
-      { "@type": "Country", name: "Uzbekistan" },
+      ...(input.city ? [{ "@type": "City", name: input.city }] : []),
+      ...input.areaServed.map((name) => ({ "@type": "Country", name })),
     ],
     url: absoluteUrl(`${input.locale}/services/${input.slug}`),
     offers: {
       "@type": "Offer",
-      priceCurrency: "UZS",
+      priceCurrency: input.currency,
       priceSpecification: {
         "@type": "PriceSpecification",
-        minPrice: input.priceUzs,
-        priceCurrency: "UZS",
+        minPrice: input.minPrice,
+        priceCurrency: input.currency,
       },
     },
   };

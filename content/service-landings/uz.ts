@@ -256,13 +256,13 @@ export const uz: LandingLocale = {
 
     "landing-page": {
       title: "Landing",
-      query: "Toshkentda landing sahifa yaratish",
-      seoTitle: "Toshkentda landing sahifa yaratish, {priceShort} dan, {weeks} haftada | DevUz",
+      query: "Toshkentda landing sayt yaratish",
+      seoTitle: "Toshkentda landing sayt yaratish, {priceShort} dan, {weeks} haftada | DevUz",
       seoDescription:
-        "Toshkentda landing sahifa yaratish reklama va arizalar uchun: taklif, dizayn, Telegram’ga xabar yuboradigan forma, maqsadlar qo‘yilgan Metrica. {priceShort} dan, to‘lovdan oldin maket.",
-      h1: "Toshkentda landing sahifa yaratish",
+        "Toshkentda landing sayt yaratish reklama va arizalar uchun: taklif, dizayn, Telegram’ga xabar yuboradigan forma, maqsadlar qo‘yilgan Metrica. {priceShort} dan, to‘lovdan oldin maket.",
+      h1: "Toshkentda landing sayt yaratish",
       lead:
-        "Toshkentda landing sahifa yaratish bitta vazifa uchun: muayyan xizmat yoki mahsulot bo‘yicha reklamadan arizalar yig‘ish. Bitta sahifa, tushunarli taklif, narxlar, sharhlar va arizani darhol Telegram’ga yuboradigan forma. Landingingiz maketini to‘lovdan oldin ko‘rasiz.",
+        "Toshkentda landing sayt yaratish bitta vazifa uchun: muayyan xizmat yoki mahsulot bo‘yicha reklamadan arizalar yig‘ish. Bitta sahifa, tushunarli taklif, narxlar, sharhlar va arizani darhol Telegram’ga yuboradigan forma. Landingingiz maketini to‘lovdan oldin ko‘rasiz.",
       kinds: [
         { title: "Reklama uchun landing", text: "Instagram, Google va Yandex uchun bitta xizmat yoki aksiya sahifasi. Ariza narxini hisoblash uchun Metrica’da maqsadlar." },
         { title: "Animatsiyali landing", text: "Aylantirganda harakatlanadigan sahna, video, interaktiv. Hayratlantirish va esda qolish kerak bo‘lganda." },
@@ -294,7 +294,7 @@ export const uz: LandingLocale = {
         { title: "Ariza narxi ko‘rinadi", text: "Metrica’dagi maqsadlar reklamadan kelgan har bir ariza qancha turishini ko‘rsatadi." },
       ],
       faq: [
-        { q: "Toshkentda landing sahifa yaratish qancha turadi?", a: "{price} dan (taxminan {usd}). Animatsiyali landing va turli xizmatlar uchun bir nechta sahifa qimmatroq, narxlar yuqoridagi jadvalda." },
+        { q: "Toshkentda landing sayt yaratish qancha turadi?", a: "{price} dan (taxminan {usd}). Animatsiyali landing va turli xizmatlar uchun bir nechta sahifa qimmatroq, narxlar yuqoridagi jadvalda." },
         { q: "Landing necha kunda tayyor bo‘ladi?", a: "{weeks} hafta, maket, matnlar va analitikani ulash bilan birga." },
         { q: "Landing saytdan nimasi bilan farq qiladi?", a: "Landing bitta vazifa uchun bitta sahifa, ko‘pincha reklama uchun. Sayt kompaniya haqida to‘liq gapiradi va xizmatlar ko‘p bo‘lganda kerak." },
         { q: "Matnlarni siz yozasizmi?", a: "Ha, qisqa brif bo‘yicha matnlarni o‘zimiz yozamiz. Sizning matnlaringizni ham olib, pishitamiz." },
