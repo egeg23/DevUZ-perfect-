@@ -2966,11 +2966,11 @@ export const uz: HelpCopy = {
         },
         {
           id: "claudery",
-          title: "Claudery: masofaviy yordam boti va konstruktor",
+          title: "Claudery: obuna sotadigan bot va konstruktor",
           body: [
-            "Claudery SI bo‘yicha pullik yordam arizalarini qabul qiladigan bot. Mijoz nima bo‘lganini yozadi va «Открыть заявку» tugmasini oladi. U saytimizdagi ariza sahifasiga olib boradi, narx va to‘lov o‘sha yerda.",
-            "Botning o‘zida to‘lov va narx haqida bir og‘iz ham yo‘q: Telegram o‘z tizimini chetlab pul oladigan botlarni bloklaydi. Ariza darhol lidlarga (mijoz arizalariga) «SI bo‘yicha yordam (Claudery)» turi bilan tushadi. To‘lov tizimi to‘lovni tasdiqlaganda bot mijozga «4. To‘lovdan keyin» qadamidagi matnni yozadi.",
-            "«Mijoz nimani ko‘radi» blokida bot qadamlari. Siz faqat so‘zlar va summani o‘zgartirasiz va salomlashuv ostiga to‘rttagacha o‘z tugmangizni qo‘sha olasiz. Avval to‘laganlarga narx «Avval to‘laganlarga chegirma, %» qadar past (odatda 30%).",
+            "Claudery neyrotarmoqlarga obuna sotadigan bot. Mijoz qaysi neyrotarmoq kerakligini yozadi va «Открыть заказ» tugmasini oladi. U saytimizdagi buyurtma sahifasiga olib boradi: mijoz o‘sha yerda ro‘yxatdan obunani tanlaydi va to‘laydi. Biz xizmat emas, tovar sotamiz: ulash va savollarga javob xaridorga bepul yordam sifatida beriladi, to‘lov tizimi bilan shunday kelishilgan.",
+            "Botning o‘zida to‘lov va narx haqida bir og‘iz ham yo‘q: Telegram o‘z tizimini chetlab pul oladigan botlarni bloklaydi. Buyurtma darhol lidlarga (mijoz arizalariga) «SI bo‘yicha yordam (Claudery)» turi bilan tushadi. To‘lov tizimi to‘lovni tasdiqlaganda bot mijozga «4. To‘lovdan keyin» qadamidagi matnni yozadi.",
+            "«Mijoz nimani ko‘radi» blokida bot qadamlari. Siz so‘zlarni va «Tovarlar: obunalar va narxlar» ro‘yxatini o‘zgartirasiz (oltitagacha qator: nom, nima kiradi, narx) va salomlashuv ostiga to‘rttagacha o‘z tugmangizni qo‘sha olasiz. Shu ro‘yxat vitrinada («Saytdagi vitrina») va ofertada ham ko‘rinadi. Avval to‘laganlarga istalgan obuna narxi «Avval to‘laganlarga chegirma, %» qadar past (odatda 30%).",
             "«Kalitlar» blokida bot tokeni va ikkita Platega kaliti, «Saqlash va tekshirish» tugmasi. Botni egasi va rahbar o‘zgartira oladi. To‘lovdan keyin [loyiha](/admin/projects) o‘zi ochiladi, lidni olib borganga summaning 40% tushadi.",
           ],
         },

@@ -72,9 +72,14 @@ export default async function AiStaffClauderyPage({ searchParams }: { searchPara
             </li>
             {week ? <li className="text-muted">{t.week(week.leads, week.paid)}</li> : null}
           </ul>
-          <a href={OFFER_PATH} target="_blank" rel="noreferrer" className={`${BTN} mt-3 inline-block`}>
-            {t.offer}
-          </a>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <a href="/claudery" target="_blank" rel="noreferrer" className={BTN}>
+              {t.shop}
+            </a>
+            <a href={OFFER_PATH} target="_blank" rel="noreferrer" className={BTN}>
+              {t.offer}
+            </a>
+          </div>
         </section>
 
         {tune ? (
@@ -144,10 +149,18 @@ export default async function AiStaffClauderyPage({ searchParams }: { searchPara
                   {t.text}
                   <textarea name="pay" rows={3} defaultValue={setup.pay} maxLength={LIMITS.text} className={INPUT} />
                 </label>
-                <label className="block max-w-[12rem] text-xs text-muted">
-                  {t.amount}
-                  <input name="amount" inputMode="numeric" defaultValue={setup.amount} className={INPUT} />
-                </label>
+                <p className="pt-1 text-xs text-faint">{t.products}</p>
+                <p className="text-xs text-muted">{t.productsHint}</p>
+                {Array.from({ length: LIMITS.products }, (_, i) => {
+                  const p = setup.products[i];
+                  return (
+                    <div key={i} className="grid gap-2 sm:grid-cols-[2fr_3fr_1fr]">
+                      <input name={`p${i}.title`} placeholder={t.pTitle} defaultValue={p?.title ?? ""} maxLength={LIMITS.productTitle} className={INPUT} />
+                      <input name={`p${i}.note`} placeholder={t.pNote} defaultValue={p?.note ?? ""} maxLength={LIMITS.productNote} className={INPUT} />
+                      <input name={`p${i}.price`} placeholder={t.pPrice} inputMode="numeric" defaultValue={p?.price ?? ""} className={INPUT} />
+                    </div>
+                  );
+                })}
                 <label className="block max-w-[16rem] text-xs text-muted">
                   {t.repeatDiscount}
                   <input name="repeatDiscount" inputMode="numeric" defaultValue={setup.repeatDiscount} className={INPUT} />

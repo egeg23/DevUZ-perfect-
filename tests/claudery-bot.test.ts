@@ -40,7 +40,7 @@ test("настройки по умолчанию проходят проверк
   assert.deepEqual(setupProblems(DEFAULT_SETUP), []);
   const start = scenarioOf(DEFAULT_SETUP).steps[0];
   assert.equal(start.buttons.length, 1);
-  assert.equal(PAY_PURPOSE, "Claudery: удалённая помощь");
+  assert.equal(PAY_PURPOSE, "Claudery: подписка на нейросеть");
   // Только по-русски (владелец, 17.11.2026: «бот только на рф аудиторию»).
   assert.doesNotMatch(JSON.stringify(DEFAULT_SETUP) + read("lib/claudery/flow.ts"), /uz|O‘zbek|Assalomu/);
 });
@@ -76,7 +76,7 @@ test("оплата на сайте по токену заявки: Platega по�
   assert.match(store, /randomBytes\(16\)/);
   assert.match(store, /async function settle/);
   assert.match(read("app/claudery/z/[token]/page.tsx"), /orderView\(token\)/);
-  assert.match(read("app/claudery/z/[token]/pay/route.ts"), /orderPayUrl\(token\)/);
+  assert.match(read("app/claudery/z/[token]/pay/route.ts"), /orderPayUrl\(token, /);
 });
 
 test("страница заявки не завелась — заявка всё равно лид, клиенту честно", async () => {
@@ -85,7 +85,7 @@ test("страница заявки не завелась — заявка вс�
   await handle(who, { type: "photo", fileId: "F", caption: "помогите" }, f.deps, "o");
   assert.deepEqual(f.leads, [5000]);
   assert.equal(f.flows.get(7)?.photo, "F");
-  assert.match(f.sent.at(-1)!.text, /Заявку мы записали/);
+  assert.match(f.sent.at(-1)!.text, /Заказ мы записали/);
 });
 
 test("своя кнопка отвечает текстом и возвращает назад", async () => {
@@ -99,7 +99,8 @@ test("своя кнопка отвечает текстом и возвраща�
 test("форма настроек: пустая строка кнопки пропускается, ошибки ловит проверка", () => {
   const form = new FormData();
   for (const k of ["greet", "helpLabel", "ask", "pay", "paid"]) form.set(k, "текст");
-  form.set("amount", "5 000");
+  form.set("p0.title", "Подписка");
+  form.set("p0.price", "5 000");
   form.set("x0.label", "Сайт");
   form.set("x0.url", "http://insecure");
   const s = setupFromForm(form);
@@ -185,4 +186,36 @@ test("Platega — напрямую, как AI-юрист; отказ виден 
   assert.match(route, /\?pay=failed/);
   const page = await readFile("app/claudery/z/[token]/page.tsx", "utf8");
   assert.match(page, /Не получилось открыть страницу оплаты/);
+});
+
+test("продаём товар, не услугу: витрина подписок, выбор на странице заказа, в текстах клиенту нет услуг", async () => {
+  const { productAt, repeatAmount, parseSetup } = await import("@/lib/claudery/scenario");
+  // Сохранённое до витрины: одна сумма становится ценой единственного товара.
+  const old = parseSetup({ ...DEFAULT_SETUP, products: undefined, amount: 4000 });
+  assert.equal(old.products.length, 1);
+  assert.equal(old.products[0].price, 4000);
+  assert.equal(old.amount, 4000);
+  // Несколько товаров: цена лида — первого, чужой номер из формы — первый товар.
+  const s: Setup = { ...DEFAULT_SETUP, products: [{ title: "A", price: 3000 }, { title: "B", note: "год", price: 9000 }], amount: 3000 };
+  assert.deepEqual(setupProblems(s), []);
+  assert.equal(productAt(s, 1).title, "B");
+  assert.equal(productAt(s, 7).title, "A");
+  assert.equal(productAt(s, Number.NaN).title, "A");
+  assert.equal(repeatAmount(productAt(s, 1).price, 30), 6300);
+  assert.ok(setupProblems({ ...s, products: [] }).length > 0);
+  assert.ok(setupProblems({ ...s, products: [{ title: "", price: 10 }] }).length >= 2);
+  // Тексты, которые видит клиент и платёжная система: товар, а не услуга.
+  const SERVICE = /помощ|консультац|услуг|специалист/i;
+  const d = DEFAULT_SETUP;
+  assert.doesNotMatch([d.greet, d.helpLabel, d.ask, d.pay, d.paid, PAY_PURPOSE, d.products[0].title].join(" "), SERVICE);
+  const strip = (src: string) => src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\{\/\*[\s\S]*?\*\/\}/g, "");
+  for (const file of ["app/claudery/page.tsx", "app/claudery/z/[token]/page.tsx", "app/claudery/offer/page.tsx"]) {
+    assert.doesNotMatch(strip(read(file)).replace(/оказани\S+ услуг/g, ""), /помощ|консультац|услуг[аиу]? |специалист/i, file);
+  }
+  const page = read("app/claudery/z/[token]/page.tsx");
+  assert.match(page, /name="p"/);
+  assert.match(page, /order\.products\.map/);
+  assert.match(read("app/claudery/page.tsx"), /setup\.products\.map/);
+  assert.match(read("app/claudery/offer/page.tsx"), /цифровой товар/);
+  assert.match(read("lib/claudery/store.ts"), /productAt\(await loadSetup\(\), productIndex\)/);
 });
