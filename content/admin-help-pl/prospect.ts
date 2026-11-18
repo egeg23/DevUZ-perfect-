@@ -54,68 +54,62 @@ export const prospectSections: Record<string, HelpEntry> = {
 
   /* ── Поиск ────────────────────────────────────────────────────────── */
   "/admin/tenders": {
-    what: "Skaut czyta platformy zamówień w Uzbekistanie i zostawia tylko to, co robi studio: strona, aplikacja, bot, AI, CRM, platforma, system informacyjny. Każdy taki lot trafia do bota jako lead, a tutaj jest ich lista z terminem składania ofert, kontaktem zamawiającego i przyciskami. Sekcja jest otwarta dla wszystkich pracowników.",
+    what: "Tutaj są loty z zamówień publicznych, które pasują do studia: strony, aplikacje, boty, CRM. Każdy lot trafia też do bota jako lead (zgłoszenie klienta).",
     items: [
       {
         id: "how",
         title: "Jak skaut szuka przetargów",
         body: [
-          "Co 30 minut skaut czyta otwarte listy lotów na platformach: etender.uzex.uz, xarid.uzex.uz, Hayot Birja (XT-Xarid) i Tender.asia. Tylko to, co platforma pokazuje każdemu odwiedzającemu bez logowania: skaut nie ma loginów ani podpisu elektronicznego i nie obchodzi captchy. Ten sam lot z platformy i z Tender.asia to jedna linijka: kontakt z Tender.asia dopisuje się do lotu platformy.",
-          "Czy lot jest nasz, decyduje kod po nazwie, bez modelu: potrzebny jest temat (strona, aplikacja, bot, system informacyjny, CRM, automatyzacja, platforma, AI) i praca (opracowanie, stworzenie, rozbudowa, utrzymanie). Nawet w kategorii IT platformy lot bez tematu nie jest brany. Nigdy nie nasze: cyberbezpieczeństwo, antywirusy, 1C, licencje, serwery i chmura, monitoring wizyjny, systemy przeciwpożarowe, komputery i kartridże.",
-          "Każdy nowy lot staje się leadem i idzie tą samą [kolejką leadów](#leads-queue), co zgłoszenie ze strony: w dzień — po kolei, w nocy — rano. W karcie w bocie jest platforma, termin, link do lotu, telefon, e-mail i osoba odpowiedzialna zamawiającego, jeśli platforma je pokazuje, oraz obowiązkowy warunek: «Перед подачей заявки — связаться с Егором или Александром и запросить цену». Ten sam lot trafia też linijką na kanał skauta, najwyżej osiem w jednym przejściu. Do uzbeckiej nazwy dochodzi krótkie zdanie po rosyjsku „czego chcą” (pisze je tani model, bez nowych liczb). Brak telefonu w karcie lotu — skaut znajduje go w innych zamówieniach tego samego zamawiającego po numerze NIP.",
-          "Linijka «Ostatnie przejście» na górze pokazuje, kiedy skaut czytał platformy, ile lotów jest na każdej i ile z nich naszych. Platforma nie odpowiedziała — jest podświetlona, pozostałe czytają się normalnie.",
+          "Co 30 minut skaut (program studia) sprawdza platformy etender, xarid, Hayot Birja i Tender.asia. Bierze tylko naszą pracę: tworzenie stron, aplikacji, botów i systemów. 1C, licencje, serwery i monitoring wizyjny pomija.",
+          "Nowy lot trafia do [kolejki leadów](#leads-queue), tak jak zgłoszenie ze strony. W karcie jest termin, link, kontakt do zamawiającego i tłumaczenie nazwy na rosyjski.",
         ],
       },
       {
         id: "work",
         title: "Co zrobić z lotem",
         body: [
-          "**Bez uzgodnionej ceny oferty nie składamy**: wziąłeś lead-przetarg — najpierw napisz do Jegora lub Aleksandra, jaki to lot i w jakim terminie, i uzyskaj cenę. Ten warunek stoi na górze sekcji, w karcie leada w bocie i w pierwszej linijce jego notatek. «Karta leada» przy locie prowadzi do leada, który z niego powstał.",
-          "Otwórz lot przyciskiem «Otwórz lot» — tam jest specyfikacja, warunki i dokumenty. Pasuje — naciśnij **«Biorę»**: lot trafia do zakładki «Biorę» z Twoim imieniem i koledzy widzą, że ktoś już się nim zajmuje. Złożyłeś ofertę na platformie — **«Złożone»**. Nie pasuje — **«Nie nasze»**, lot znika z nowych.",
-          "Nowe są ułożone według terminu: u którego przyjmowanie ofert kończy się wcześniej, ten wyżej. Zostały dwa dni lub mniej — termin jest podświetlony. Loty, w których przyjmowanie skończyło się ponad dobę temu, same znikają z «Nowe».",
-          "Ofertę składa się na samej platformie, podpisem elektronicznym firmy — z panelu się jej nie złoży. Jak czytać specyfikację zamówienia IT — w analizach przetargów na stronie studia.",
+          "**Bez uzgodnionej ceny nie składamy oferty.** Najpierw napisz do Jegora albo Aleksandra, co to za lot i jakie są terminy.",
+          "Pasuje? Kliknij «Biorę», a koledzy zobaczą, że lot jest Twój. Złożyłeś ofertę, kliknij «Złożone». Nie pasuje, kliknij «Nie nasze».",
+          "Na górze są loty z najbliższym terminem. Ofertę składa się na samej platformie, z podpisem elektronicznym firmy.",
         ],
       },
     ],
   },
 
   "/admin/scout": {
-    what: "Robot-skaut całą dobę czyta otwarte czaty w Telegramie i znajduje ludzi, którzy właśnie teraz szukają programisty. Najmocniejsze znaleziska sam zamienia w leady, resztę wysyła na kanał «Devuz Scout». Tutaj widać, co znalazł i czy w ogóle działa.",
+    what: "Skaut (program studia) całą dobę czyta otwarte czaty w Telegramie i szuka ludzi, którzy potrzebują programisty. Tutaj widać, co znalazł.",
     items: [
       {
         id: "how",
         title: "Jak to działa",
         body: [
-          "Skaut czyta czaty z konta firmowego studia. Każda wiadomość przechodzi przez filtr, a to, co zostanie, czyta AI i wystawia ocenę od 0 do 100 oraz kategorię.",
-          "**Poniżej 20** — od razu «pominięte», nie zaśmieca listy. **Od 60** — trafia na kanał «Devuz Scout» w Telegramie. **Od 70** — mocny sygnał: po paru minutach sweep (proces na serwerze, który co kilka minut wykonuje zaplanowane zadania) zakłada z niego lead z gotową pierwszą wiadomością i puszcza go [kolejką leadów](#leads-queue). Kategoria «субподряд» (podwykonawstwo) trafia na kanał przy każdej ocenie.",
-          "Codziennie rano po 09:00 na ten sam kanał przychodzi podsumowanie «☀️ Скаут за сутки»: czy robot działa i co znalazł.",
+          "Skaut ocenia każdą wiadomość od 0 do 100: czy człowiek szuka wykonawcy. Wiadomości z hashtagami pomija, to prawie zawsze reklama.",
+          "Od 60 sygnał trafia na kanał «Devuz Scout». Od 70 po paru minutach sam staje się leadem (zgłoszeniem klienta). Codziennie rano na kanał przychodzi podsumowanie «☀️ Скаут за сутки».",
         ],
       },
       {
         id: "strong",
-        title: "Mocny sygnał (70+) — nie pisz samodzielnie",
+        title: "Mocny sygnał (70+): nie pisz sam",
         body: [
-          "Na kanale ostatni wiersz takiego sygnału brzmi: «Сильный сигнал: через пару минут он уйдёт менеджерам очередью лидов с готовым ответом — сами не пишите» (za parę minut trafi do menedżerów kolejką leadów z gotową odpowiedzią — nie piszcie sami). To ważne: jeśli do człowieka napiszą dwie osoby, wyglądamy jak spam.",
-          "Lead trafi do tego, czyja jest kolej. W jego notatkach jest już napisane, co robić: takie posty żyją kilka godzin, więc pisać w prywatnej wiadomości trzeba teraz. Jeśli autor nie ma username — odpowiedzieć można tylko na samym czacie.",
+          "Taki sygnał przyjdzie jako lead do osoby, której jest kolej, z gotową pierwszą wiadomością. Nie pisz do człowieka wcześniej: dwie wiadomości ze studia wyglądają jak spam.",
+          "Dostałeś taki lead? Pisz od razu, takie wiadomości żyją kilka godzin.",
         ],
       },
       {
         id: "signals",
-        title: "Zwykły sygnał — co robić",
+        title: "Zwykły sygnał: co robić",
         body: [
-          "Sygnałów poniżej 70 nikt poza Tobą nie obsłuży. Pasuje — odpowiedz szybko, ręcznie i ze swojego konta: na tym samym czacie albo w prywatnej wiadomości do autora. Serwis nie pisze na czatach ani słowa.",
-          "Potem zaznacz na karcie sygnału: **«odpowiedziano»** albo **«pominięte»**. «przyszedł sam» ustawia się automatycznie — gdy człowiek napisał do naszego bota albo sygnał stał się leadem.",
-          "Kafelki: «sygnałów» — łącznie, «nieotwarte» — czekają na decyzję, «przyszli sami», «docierają do nas» — jaka część obsłużonych sygnałów dotarła do nas. Sygnał jest przechowywany 90 dni, chyba że stał się częścią leada.",
+          "Sygnałów poniżej 70 nikt poza Tobą nie obsłuży. Pasuje? Odpowiedz sam ze swojego konta, na czacie albo autorowi w prywatnej wiadomości.",
+          "Potem oznacz sygnał: «odpowiedziano» albo «pominięte». «Przyszedł sam» ustawia się samo, gdy człowiek napisze do naszego bota. Sygnał jest przechowywany 90 dni.",
         ],
       },
       {
         id: "groups",
-        title: "Grupy dla skauta — dodaj własną",
+        title: "Grupy dla skauta: dodaj swoją",
         body: [
-          "Blok «Grupy dla skauta» — grupy i kanały w Telegramie, które skaut czyta poza podstawowymi. Dodać może każdy: wklej w pole «Adres grupy lub link z zaproszeniem» adres w rodzaju @group, t.me/group albo link t.me/+…, opcjonalnie notatkę (kraj, o czym jest grupa), i naciśnij «Dodaj grupę». Bota i konta prywatnego skaut nie czyta — pole tego nie przyjmie. Jedna grupa trafia na listę tylko raz.",
-          "Potem skaut sam dołącza do grupy z konta firmowego: nie więcej niż 10 prób dziennie, między próbami godzina-dwie i tylko od 08:00 do 22:00 czasu Taszkentu. Tak dołącza żywy człowiek, a częste dołączanie to dla Telegrama powód, by ograniczyć konto, z którego piszemy też z klientami. Grupy idą w kolejności dodania. Pod formularzem widać, ile było prób dzisiaj, ile grup czeka i kiedy następne dołączenie; jeśli Telegram poprosił o przerwę albo ograniczył konto firmowe — dołączania nie ma, a do kiedy, też jest tam napisane.",
-          "Stan grupy: «czeka na dołączenie»; «czytamy» — z dopiskiem «dołączył skaut» albo «dołączono ręcznie» (dołączyłeś z konta skauta sam — on to zauważy); «prośba u admina» — grupa zamknięta, czekamy na zatwierdzenie; «nie da się dołączyć» — adresu nie ma, link wygasł, konto ma bana w grupie albo grupa każe przejść weryfikację bota, wtedy dołączyć można tylko ręcznie. Powód od Telegrama widać pod stanem. Nową grupę skaut czyta od razu po dołączeniu, bez restartu.",
-          "«Usuń» — przy grupach, które dodałeś Ty; kierownik i właściciel usuwają dowolne. Do usuniętej grupy skaut nie dołącza i przestaje ją czytać po najbliższym restarcie; kto dodał i kto usunął, zostaje zapisane w dzienniku działań.",
+          "Znasz grupę, w której szukają wykonawców? Wklej jej adres w bloku «Grupy dla skauta» i kliknij «Dodaj grupę». Pasuje @group, t.me/group albo link t.me/+….",
+          "Skaut dołączy do grupy sam: do 10 grup dziennie, z przerwą godzinę lub dwie, w godzinach 08:00-22:00. Dzięki temu Telegram nie uzna go za spamera.",
+          "«Prośba u admina» oznacza, że grupa jest zamknięta i czekamy na zgodę. «Nie da się dołączyć» oznacza, że link wygasł albo potrzebna jest weryfikacja, wtedy dołącza się ręcznie. «Usuń» masz przy swoich grupach, kierownik i właściciel usuwają dowolne.",
         ],
       },
       {
@@ -123,15 +117,17 @@ export const prospectSections: Record<string, HelpEntry> = {
         title: "Czy skaut działa",
         body: {
           manager: [
-            "Złoty pasek na górze — coś jest nie tak: skaut milczy, nie czyta żadnego czatu albo AI jest niedostępne. Pasek «Konto czyta 12 z 29 zadanych czatów» — część czatów na razie nie jest czytana: do grup z [«Grupy dla skauta»](#scout-groups) skaut dołączy sam, po jednej co godzinę-dwie. Skaut milczy, AI jest niedostępne albo pasek nie znika przez kilka dni — powiedz właścicielowi: z panelu tego się nie naprawi.",
+            "Złota belka na górze oznacza, że ze skautem coś jest nie tak. Nie znika przez dzień lub dwa? Powiedz właścicielowi.",
+            "Belka «Konto czyta 12 z 29 zadanych czatów» to nie awaria. Do pozostałych grup skaut dołączy sam.",
           ],
           head: [
-            "Złoty pasek na górze — awaria: «Skaut milczy od N min» (proces zatrzymany), «nie czyta żadnego czatu» albo «Model jest niedostępny». «Konto czyta X z Y zadanych czatów» z listą «Nieczytane:» — konto firmowe jeszcze nie dołączyło do tych czatów. Do grup z [«Grupy dla skauta»](#scout-groups) dołączy samo, po jednej co godzinę-dwie; awarie i czaty zadane na serwerze naprawia właściciel.",
+            "Złota belka na górze oznacza awarię: skaut milczy albo nie czyta czatów. Naprawia ją właściciel.",
+            "Belka «Konto czyta 12 z 29 zadanych czatów» to nie awaria. Do grup z [«Grupy dla skauta»](#scout-groups) skaut dołączy sam.",
           ],
           admin: [
-            "«Skaut milczy od N min» — proces na serwerze padł albo został zatrzymany: `systemctl status devuz-scout`. «Model jest niedostępny» — problem z kluczem albo ze środkami na nim.",
-            "«Konto czyta X z Y zadanych czatów» i lista «Nieczytane:» — konto firmowe nie dołączyło do tych czatów albo adres się nie otworzył. Do grup z [«Grupy dla skauta»](#scout-groups) dołącza samo, nie więcej niż 10 dziennie; do czatów z SCOUT_CHATS na serwerze — ręcznie z konta firmowego.",
-            "«Mechanizm jest sprawny: … Zapytań o development jeszcze nie było» — to cisza na czatach, a nie awaria.",
+            "«Skaut milczy od N min.» oznacza, że proces skauta na serwerze stoi: uruchom go ponownie. «Model jest niedostępny» oznacza, że nie działa klucz programu, który ocenia wiadomości.",
+            "«Konto czyta X z Y zadanych czatów» oznacza, że konto nie dołączyło do wszystkich czatów. Do grup z [«Grupy dla skauta»](#scout-groups) dołączy samo, do czatów z serwera dołącza się ręcznie.",
+            "«Mechanizm jest sprawny: …» oznacza, że na czatach jest cisza. To nie awaria.",
           ],
         },
       },
@@ -139,24 +135,24 @@ export const prospectSections: Record<string, HelpEntry> = {
   },
 
   "/admin/markets": {
-    what: "Gdzie szukać klientów poza Uzbekistanem: w każdym kraju — giełdy freelance, katalogi agencji, tablice ogłoszeń, przetargi, mapy i czaty w Telegramie, z linkami i tym, jak pracować na każdej platformie. Studio wchodzi do WNP i USA, a ten dział to ściąga, od czego zacząć w każdym kraju.",
+    what: "Tutaj zebraliśmy, gdzie szukać klientów w innych krajach. Dla każdego kraju są platformy z linkami i wskazówkami.",
     items: [
       {
         id: "start",
         title: "Jak wybrać kraj",
         body: [
-          "Dział «Rynki» otwiera się z menu: w nowym menu — «Więcej» → «Rynki», w menu w jednym wierszu — przyciskiem «Rynki»; to także zakładka działu [«Zimne kontakty»](/admin/prospect). Wyszukiwarka (Ctrl+K) znajdzie go też po słowach «kraje», «platformy». Na pierwszej stronie są karty krajów: flaga, nazwa, etykieta, jak tam szuka się wykonawcy i ile zebrano platform. Kliknij kartę — otworzy się strona kraju.",
-          "Etykieta mówi, dokąd studio idzie w pierwszej kolejności: «rynek główny» (Rosja, Kazachstan, USA) — tu główne siły; «próbujemy» — szukamy, ale mniej; «przy okazji» — wchodzimy, gdy jest powód. Uzbekistan też jest na liście — z etykietą «przy okazji».",
-          "Linki sprawdzone 06.11.2026. Część stron (Upwork, Clutch, Avito, OLX) nie wpuszcza robotów, człowiekowi się otwierają. Platforma się zamknęła albo przeniosła — powiedz kierownikowi: lista jest w kodzie i zostanie poprawiona.",
+          "«Rynki» są w menu i jako zakładka w [«Zimne kontakty»](/admin/prospect). Kliknij kartę kraju, żeby go otworzyć.",
+          "Zacznij od krajów z etykietą «rynek główny»: Rosja, Kazachstan, USA. «próbujemy» też można, «przy okazji» tylko wtedy, gdy jest powód.",
+          "Platforma się nie otwiera albo została zamknięta? Powiedz kierownikowi.",
         ],
       },
       {
         id: "country",
         title: "Strona kraju i przycisk «Do skauta»",
         body: [
-          "Na górze — jak w tym kraju szuka się wykonawcy, w jakim języku pisać i różnica czasu z Taszkentem. Niżej — «Od czego zacząć»: trzy-cztery kroki, od których warto zacząć. Na górze jest przełącznik krajów, żeby nie wracać do listy.",
-          "Dalej platformy według rodzaju: giełdy freelance, katalogi i rankingi agencji, tablice ogłoszeń, przetargi, mapy i katalogi firm, czaty w Telegramie, społeczności. Przy każdej — link, co to za platforma, jak na niej szukać klientów i ile kosztuje: «bezpłatnie», «częściowo płatne» (zamieszczenie za darmo, odpowiedzi albo promocja — płatne) albo «płatne». Rejestrować się na płatnych platformach i płacić — tylko po uzgodnieniu z kierownikiem.",
-          "Przy czatach w Telegramie jest przycisk «Do skauta»: grupa trafia do «Grupy dla skauta» na stronie [«Sygnały skauta»](/admin/scout), a skaut sam do niej dołączy, gdy przyjdzie kolej — nie więcej niż 10 grup dziennie. Sygnały z niej przyjdą jak zwykle. Jeśli grupa jest już u skauta, strona to powie.",
+          "Na górze krótko: jak tam szukają programisty i w jakim języku pisać. W bloku «Od czego zacząć» jest Twój plan: rób kroki po kolei.",
+          "Niżej platformy według rodzaju: giełdy, katalogi, tablice ogłoszeń, czaty w Telegramie. Za platformę można płacić tylko po uzgodnieniu z kierownikiem.",
+          "Przy czatach w Telegramie jest przycisk «Do skauta». Kliknij go, a skaut sam dołączy do grupy i będzie przysyłał stamtąd zlecenia do [«Sygnały skauta»](/admin/scout).",
         ],
       },
       {
@@ -164,16 +160,16 @@ export const prospectSections: Record<string, HelpEntry> = {
         title: "Szkolenie na ekranie",
         body: {
           manager: [
-            "Przycisk **«Pokaż na ekranie, jak korzystać z „Rynków”»** na górze działu to krótkie szkolenie z ośmiu kroków: gdzie jest dział, jak wybrać kraj, co jest na stronie kraju (na przykład Rosja), platforma i przycisk «Do skauta». Potrzebne miejsce jest podświetlone, reszta przyciemniona, a między stronami szkolenie przechodzi samo. «Pomiń» albo Esc — zamknąć.",
-            "Tobie pokazuje się samo raz — zaraz po poznaniu nowego panelu. Obejrzeć ponownie — tym samym przyciskiem albo w [«Ustawienia»](/admin/settings).",
+            "Przycisk **«Pokaż na ekranie, jak korzystać z „Rynków”»** na górze działu uruchamia krótkie szkolenie z ośmiu kroków. Zamkniesz je przyciskiem «Pomiń» albo klawiszem Esc.",
+            "Szkolenie pokaże Ci się samo jeden raz. Ponownie otworzysz je tym przyciskiem albo w [«Ustawienia»](/admin/settings).",
           ],
           head: [
-            "Przycisk **«Pokaż na ekranie, jak korzystać z „Rynków”»** na górze działu to krótkie szkolenie z ośmiu kroków: gdzie jest dział, jak wybrać kraj, co jest na stronie kraju (na przykład Rosja), platforma i przycisk «Do skauta». Potrzebne miejsce jest podświetlone, reszta przyciemniona, a między stronami szkolenie przechodzi samo. «Pomiń» albo Esc — zamknąć.",
-            "Menedżerom pokazuje się samo raz — zaraz po poznaniu nowego panelu; tobie — tylko przyciskiem, tutaj albo w [«Ustawienia»](/admin/settings).",
+            "Przycisk **«Pokaż na ekranie, jak korzystać z „Rynków”»** na górze działu uruchamia krótkie szkolenie z ośmiu kroków. Zamkniesz je przyciskiem «Pomiń» albo klawiszem Esc.",
+            "Menedżerom pokazuje się samo jeden raz, Tobie tylko po kliknięciu. Przycisk jest też w [«Ustawienia»](/admin/settings).",
           ],
           admin: [
-            "Przycisk **«Pokaż na ekranie, jak korzystać z „Rynków”»** na górze działu to krótkie szkolenie z ośmiu kroków: gdzie jest dział, jak wybrać kraj, co jest na stronie kraju (na przykład Rosja), platforma i przycisk «Do skauta». Potrzebne miejsce jest podświetlone, reszta przyciemniona, a między stronami szkolenie przechodzi samo. «Pomiń» albo Esc — zamknąć.",
-            "Menedżerom pokazuje się samo raz — zaraz po poznaniu nowego panelu; tobie — tylko przyciskiem, tutaj albo w [«Ustawienia»](/admin/settings).",
+            "Przycisk **«Pokaż na ekranie, jak korzystać z „Rynków”»** na górze działu uruchamia krótkie szkolenie z ośmiu kroków. Zamkniesz je przyciskiem «Pomiń» albo klawiszem Esc.",
+            "Menedżerom pokazuje się samo jeden raz, Tobie tylko po kliknięciu. Przycisk jest też w [«Ustawienia»](/admin/settings).",
           ],
         },
       },
