@@ -3,11 +3,10 @@ import type { HelpEntry } from "@/lib/admin/help";
 
 /** Zadania w Telegramie — wspólne dla wszystkich ról; ostatni akapit każda rola ma swój. */
 const TASKS_BOT = [
-  "Gdy ktoś zleca Ci zadanie, bot wysyła wiadomość: od kogo, co zrobić, termin — i przycisk **«✅ Взять в работу»** (przyjmij do realizacji). Po kliknięciu w tej samej wiadomości pojawiają się **«✅ Сделано»** (zrobione), **«✖ Не сделано»** (niezrobione) i **«🕑 Перенести срок»** (przesuń termin). To, co klikniesz w Telegramie, od razu widać w panelu, i odwrotnie: przyjmiesz zadanie w panelu — przyciski w Telegramie zmienią się same.",
-  "«🕑 Перенести срок» proponuje «+1 час», «Завтра 18:00», «+3 дня», «Неделя» i «✏️ Своя дата» (+1 godzina, jutro 18:00, +3 dni, tydzień, własna data). Po «✏️ Своя дата» napisz botowi termin w jednej wiadomości — dzień, miesiąc i godzinę czasu taszkenckiego, na przykład `05.10 15:00`. Bot czeka na taką wiadomość 30 minut. Po przesunięciu — przyciskiem, własną datą albo w panelu — termin w samej wiadomości o zadaniu zmieni się na nowy.",
-  "Osobie, która zleciła zadanie, bot pisze o każdym kroku: przyjął(ęła) do realizacji, zrobione, niezrobione, przesunął(ęła) termin na taki a taki dzień i godzinę. Do wykonawcy bot pisze, jeśli zlecający przesunął termin, zmienił zadanie (co dokładnie — nazwę, opis albo projekt) albo je anulował. Jeśli zadanie przekazano komuś innemu, poprzedni wykonawca dostaje wiadomość, że mu je zdjęto, a jego wiadomość o zadaniu zmienia się na «↪️ Задача передана» (zadanie przekazane): nie ma już pod nią przycisków.",
-  "Przypomnienia: jeśli nowe zadanie nie zostanie przyjęte w ciągu 30 minut od wiadomości bota — bot przypomni; godzinę przed terminem — przypomni jeszcze raz; gdy termin minie — raz napisze i do wykonawcy, i do zlecającego. Po przesunięciu terminu «za godzinę termin» i «po terminie» przyjdą od nowa — już do nowego terminu.",
-  "Wiadomości o działaniach — nowe zadanie, przyjęcie, zrobione, przesunięcie, anulowanie — przychodzą od razu, w każdy dzień, poza nocą: od 21:00 do 08:00 czasu taszkenckiego bot milczy, a to, co przyszło w nocy, dotrze o 08:00. Przypomnienia — «nie przyjęto», «za godzinę termin», «po terminie» — tylko w dni robocze od 09:00 do 19:00, jak porcja dnia. W panelu wszystko widać od razu, a odpowiedź na kliknięty przycisk przychodzi o każdej porze.",
+  "Gdy ktoś zleca Ci zadanie, bot wysyła wiadomość z przyciskiem «✅ Взять в работу» (przyjmij). Potem pojawią się «✅ Сделано», «✖ Не сделано» i «🕑 Перенести срок». To, co klikniesz w Telegramie, od razu widać w panelu.",
+  "«🕑 Перенести срок» proponuje «+1 час», «Завтра 18:00», «+3 дня», «Неделя» i «✏️ Своя дата». Własną datę napisz botowi jedną wiadomością, na przykład `05.10 15:00`.",
+  "Bot przypomni, jeśli nikt nie przyjmie zadania w 30 minut, i jeszcze raz godzinę przed terminem. Gdy termin minie, napisze i do Ciebie, i do zlecającego.",
+  "W nocy, od 21:00 do 08:00 czasu taszkenckiego, bot milczy. Przypomnienia przychodzą tylko w dni robocze od 09:00 do 19:00.",
 ];
 
 /**
@@ -25,7 +24,7 @@ export const head: Pick<
   "title" | "lead" | "contentsTitle" | "sectionsTitle" | "openSection" | "viewAs" | "roleNames" | "ownerOnly" | "granted" | "search" | "video"
 > = {
   title: "Instrukcje",
-  lead: "Jak działa panel i jak z niego korzystać — sekcja po sekcji, prostymi słowami. Znajdziesz tu tylko to, do czego masz dostęp. Z każdej sekcji prowadzi tu przycisk «Jak korzystać z sekcji» w nagłówku, a «?» przy blokach otwiera właściwy punkt.",
+  lead: "Tu opisujemy, jak działa panel i co w nim klikać. Widzisz tylko to, do czego masz dostęp. Przycisk «Jak korzystać z sekcji» w nagłówku każdej sekcji prowadzi tutaj, a znak «?» przy bloku otwiera właściwy punkt.",
   contentsTitle: "Spis treści",
   sectionsTitle: "Sekcje",
   openSection: "otwórz sekcję",
@@ -398,66 +397,68 @@ export const leadsSections: Record<string, HelpEntry> = {
 
   /* ── Zadania ─────────────────────────────────────────────────────── */
   "/admin/inbox": {
-    what: "Wszystko, co czeka na odpowiedź człowieka, w jednej kolejce: kto dłużej czeka — wyżej. Odpowiedzieć można stąd, tą samą drogą co z karty leada.",
+    what: "Tu są klienci, którzy czekają na odpowiedź człowieka. Kto czeka dłużej, jest wyżej.",
     items: [
       {
         id: "queue",
         title: "Co tu trafia",
         body: {
           manager: [
-            "Od 25.10.2026 — **«Skrzynka»** obok «Zadania». Tu są Twoje kontakty, w których klient odpisał, a odpowiedzieć musi człowiek: AI oddało rozmowę albo kliknąłeś «Odpowiadam osobiście». Czyje — jak na [Pulpit](/admin/hq): kontakt z leadem — osoby, u której jest lead, bez leada — osoby, która prowadzi kontakt. Autoodpowiedzi („odpowiemy w godzinach pracy”) tu nie trafiają.",
-            "Na górze — ile nowych zgłoszeń nikt jeszcze nie wziął, z linkiem do nich w [Leady](/admin). Wiersz, który czeka godzinę i dłużej, jest podświetlony na żółto. Rozmów prowadzonych przez AI tu nie ma: jej nie trzeba odpowiadać.",
+            "Tu są Twoje rozmowy, w których klient czeka na odpowiedź właśnie od Ciebie. Na przykład kliknąłeś «Odpowiadam osobiście» w karcie leada (zgłoszenia klienta). Rozmowy, które bot prowadzi sam, tu nie trafiają.",
+            "Na górze widać, ile nowych zgłoszeń nikt jeszcze nie wziął. Jeśli klient czeka godzinę lub dłużej, czas przy wierszu świeci na żółto.",
           ],
           head: [
-            "Od 25.10.2026 — **«Skrzynka»** obok «Zadania». Tu są kontakty całego zespołu, w których klient odpisał, a odpowiedzieć musi człowiek: AI oddało rozmowę albo przejęto ją przyciskiem «Odpowiadam osobiście», — oraz **wiadomości do bota**, gdzie rozmowę prowadzi człowiek, a klient napisał po jego odpowiedzi. Przy każdym wierszu — kto prowadzi. Autoodpowiedzi tu nie trafiają.",
-            "Na górze — ile nowych zgłoszeń nikt jeszcze nie wziął, z linkiem do nich w [Leady](/admin). Wiersz, który czeka godzinę i dłużej, jest podświetlony na żółto. Rozmów prowadzonych przez AI tu nie ma: jej nie trzeba odpowiadać. Każda wiadomość klienta do bota jak dawniej przychodzi do Ciebie na Telegram jako «📩 Обращение в бота».",
+            "Tu są rozmowy całego zespołu, w których klient czeka na odpowiedź człowieka. Przy każdej widać, kto ją prowadzi. Rozmowy, które bot prowadzi sam, tu nie trafiają.",
+            "Są tu też klienci bota studia, którym ktoś z nas już odpisał sam, a oni napisali znowu. Jeśli klient czeka godzinę lub dłużej, czas przy wierszu świeci na żółto.",
           ],
           admin: [
-            "Od 25.10.2026 — **«Skrzynka»** obok «Zadania». Tu są kontakty całego zespołu, w których klient odpisał, a odpowiedzieć musi człowiek: AI oddało rozmowę albo przejęto ją przyciskiem «Odpowiadam osobiście», — oraz **wiadomości do bota**, gdzie rozmowę prowadzi człowiek, a klient napisał po jego odpowiedzi. Przy każdym wierszu — kto prowadzi. Autoodpowiedzi tu nie trafiają.",
-            "Na górze — ile nowych zgłoszeń nikt jeszcze nie wziął, z linkiem do nich w [Leady](/admin). Wiersz, który czeka godzinę i dłużej, jest podświetlony na żółto. Rozmów prowadzonych przez AI tu nie ma: jej nie trzeba odpowiadać. Każda wiadomość klienta do bota jak dawniej przychodzi do Ciebie na Telegram jako «📩 Обращение в бота».",
+            "Tu są rozmowy całego zespołu, w których klient czeka na odpowiedź człowieka. Przy każdej widać, kto ją prowadzi. Rozmowy, które bot prowadzi sam, tu nie trafiają.",
+            "Są tu też klienci bota studia, którym ktoś z nas już odpisał sam, a oni napisali znowu. Jeśli klient czeka godzinę lub dłużej, czas przy wierszu świeci na żółto.",
           ],
         },
       },
       {
         id: "layout",
-        title: "Trzy kolumny: rozmowy, wątek, klient",
+        title: "Jak wygląda ekran",
         body: [
-          "Od 03.11.2026 «Skrzynka» wygląda jak «DevUz Biuro». **Po lewej** — rozmowy, które czekają na ciebie: kto dłużej czeka — wyżej, po prawej w wierszu — ile klient czeka, na żółto — godzinę i dłużej. Niebieskie kółko — kontakt z konta firmowego, fioletowe — zgłoszenie do bota studia. Kliknij wiersz — **pośrodku** otworzy się wątek: słowa klienta po lewej, nasze po prawej na niebiesko, przy naszym — «czeka na wysłanie» albo «nie wysłano», jeśli tak jest. Przy bocie jest tu tylko ostatnia wiadomość klienta: cała rozmowa — w Telegramie.",
-          "**Po prawej** — klient: strona, z którego konta piszemy i kto prowadzi, niżej — **«Przebieg transakcji»**: te same etapy co na [Pulpicie](/admin/hq) i tablicy leadów, przebyte — zielonym ptaszkiem z datą, następny — na niebiesko. Przebyty etap zaznaczony przez pomyłkę zdejmuje się kliknięciem ([jak to działa](#leads-sales-marks)). Nad polem odpowiedzi czasem pojawia się **«Podpowiedź odpowiedzi»**: jeśli w słowach klienta rozpoznano zarzut («drogo», «jaka strona?», «przekażę szefowi»), to gotowa odpowiedź z «Odpowiedzi na zastrzeżenia». «Wstaw do odpowiedzi» wkłada tekst do pola — popraw pod klienta i wyślij; sam nie wychodzi. Na telefonie najpierw lista, kliknięcie otwiera wątek, «← Wszystkie rozmowy» wraca; karta klienta — pod wątkiem.",
+          "Po lewej lista rozmów, pośrodku rozmowa. Po prawej karta klienta i «Przebieg transakcji», czyli kroki sprzedaży, które już za nami.",
+          "Czasem nad polem odpowiedzi pojawia się «Podpowiedź odpowiedzi». To gotowy tekst na częsty zarzut klienta, na przykład «drogo». «Wstaw do odpowiedzi» wkleja go do pola, a wysyłasz sam.",
+          "Na telefonie najpierw widać listę. «← Wszystkie rozmowy» wraca do niej.",
         ],
       },
       {
         id: "reply",
-        title: "Odpowiedz z wiersza",
+        title: "Jak odpowiedzieć",
         body: {
           manager: [
-            "Pole odpowiedzi jest pod wątkiem, od razu otwarte; Ctrl+Enter — wyślij. Kontaktowi odpowiedź idzie z konta firmowego kontaktu, jak z pola pod [«Oś zdarzeń»](#leads-timeline) w karcie, a AI potem milczy. Nasze linki do makiet i realizacji są sprawdzane przed wysłaniem.",
-            "Potrzebna cała rozmowa — **«Otwórz kartę»**: oś otworzy się na korespondencji. Kontakt bez leada otwiera się w [Zimne kontakty](/admin/prospect). Gdy odpowiedź wyszła, wiersz znika: wiadomość ma odpowiedź.",
+            "Wpisz odpowiedź w pole pod rozmową i kliknij «Wyślij» albo Ctrl+Enter. Pójdzie z tego samego konta roboczego, z którego szła rozmowa. Potem bot w tej rozmowie milczy.",
+            "Potrzebujesz całej historii? Kliknij «Otwórz kartę». Gdy odpowiedź wyjdzie, wiersz znika.",
           ],
           head: [
-            "Pole odpowiedzi jest pod wątkiem, od razu otwarte; Ctrl+Enter — wyślij. Kontaktowi odpowiedź idzie z konta firmowego kontaktu, jak z pola pod [«Oś zdarzeń»](#leads-timeline) w karcie; klientowi bota — od bota studia, jak odpowiedź na «📩 Обращение в бота», a AI milczy jeszcze 7 dni. Nasze linki do makiet i realizacji są sprawdzane przed wysłaniem.",
-            "Potrzebna cała rozmowa — **«Otwórz kartę»**: oś otworzy się na korespondencji. Kontakt bez leada otwiera się w [Zimne kontakty](/admin/prospect). Gdy odpowiedź wyszła, wiersz znika: wiadomość ma odpowiedź.",
+            "Wpisz odpowiedź w pole pod rozmową i kliknij «Wyślij» albo Ctrl+Enter. Pójdzie z tego samego konta roboczego, z którego szła rozmowa. Potem bot w tej rozmowie milczy.",
+            "Klientowi bota studia odpowiedź pójdzie od bota, a przez 7 dni bot nie będzie mu odpowiadał sam. Potrzebujesz całej historii? Kliknij «Otwórz kartę».",
           ],
           admin: [
-            "Pole odpowiedzi jest pod wątkiem, od razu otwarte; Ctrl+Enter — wyślij. Kontaktowi odpowiedź idzie z konta firmowego kontaktu, jak z pola pod [«Oś zdarzeń»](#leads-timeline) w karcie; klientowi bota — od bota studia, jak odpowiedź na «📩 Обращение в бота», a AI milczy jeszcze 7 dni. Nasze linki do makiet i realizacji są sprawdzane przed wysłaniem.",
-            "Potrzebna cała rozmowa — **«Otwórz kartę»**: oś otworzy się na korespondencji. Kontakt bez leada otwiera się w [Zimne kontakty](/admin/prospect). Gdy odpowiedź wyszła, wiersz znika: wiadomość ma odpowiedź.",
+            "Wpisz odpowiedź w pole pod rozmową i kliknij «Wyślij» albo Ctrl+Enter. Pójdzie z tego samego konta roboczego, z którego szła rozmowa. Potem bot w tej rozmowie milczy.",
+            "Klientowi bota studia odpowiedź pójdzie od bota, a przez 7 dni bot nie będzie mu odpowiadał sam. Potrzebujesz całej historii? Kliknij «Otwórz kartę».",
           ],
         },
       },
     ],
   },
   "/admin/tasks": {
-    what: "Nasz wewnętrzny CRM: wszystko, co obiecujemy klientom i sobie nawzajem, jest zadaniem z terminem i osobą odpowiedzialną. Na górze — zadania dla ciebie («Dla mnie»), zadania zlecone przez ciebie («Zleciłem») i formularz «Zleć zadanie». Niżej na tej samej stronie — «Historia zadań»: co zrobione, niezrobione, anulowane i ile razy przesuwano termin. Sekcja jest otwarta dla wszystkich i nie zamyka się znacznikami: zadanie może dostać każdy, a przycisk bota przy zadaniu prowadzi tutaj.",
+    what: "Tu są polecenia zespołu: co zrobić, kto to robi i do kiedy. Na górze zadania dla Ciebie i od Ciebie, niżej historia.",
     items: [
       {
         id: "board",
-        title: "Zadania: zlecanie, przyjmowanie, zamykanie",
+        title: "Zlecić, przyjąć i zamknąć zadanie",
         body: [
-          "Zadania to osobna sekcja: przycisk **«Zadania»** w menu, zaraz za «Pulpit». Blok **«Zadania»** jest na górze strony, pod nim — «Historia zadań». Zadanie może zlecić każdy pracownik każdemu, także sobie: menedżer — kierownikowi, kierownik — właścicielowi, ktokolwiek — komukolwiek. Zadanie widzą zlecający i wykonawca; jeśli dotyczy projektu — także wszyscy, którzy otwierają kartę tego projektu.",
-          "**«Dla mnie»** — zadania dla Ciebie: na górze najbliższy termin, niżej dalsze, zadania bez terminu — na samym końcu. Nowe jest oznaczone «nowe» i czeka na przycisk **«Przyjmij do realizacji»**: dzięki temu zlecający widzi, że zadanie zobaczyłeś i przyjąłeś. Przyjęte jest «w toku», a pod nim są **«Zrobione»** i **«Niezrobione»**. Zadanie, którego termin minął, jest podświetlone na czerwono i oznaczone «po terminie».",
-          "**«Przesuń termin»** otwiera warianty: «+1 godz.», «Jutro 18:00», «+3 dni», «Tydzień» — albo własna data i godzina z przyciskiem «Przesuń na». «+1 godz.», «+3 dni» i «Tydzień» liczą się od terminu, a jeśli już minął albo terminu nie było — od bieżącej chwili, żeby nowy termin nie wypadł w przeszłości. Zadanie bez terminu ma w tym miejscu **«Ustal termin»** z tymi samymi wariantami. Termin przesuwa i wykonawca, i zlecający — drugiej stronie bot od razu pisze nowy termin. Każde przesunięcie zostaje w historii zadania: stary termin, nowy i kto przesunął.",
-          "**«Zleciłem»** — zadania, które zleciłeś innym, i co się z nimi teraz dzieje: «nowe» (jeszcze nieprzyjęte), «w toku», «zrobione», «niezrobione», «po terminie». Zamknięte są tu widoczne jeszcze przez tydzień. «Zrobione» i «Niezrobione» klika tylko wykonawca — dlatego «zrobione» zawsze znaczy, że zrobił to sam wykonawca. Możesz przesunąć termin albo kliknąć **«Anuluj zadanie»**, jeśli zlecono je przez pomyłkę albo nie jest już potrzebne: zadanie stanie się «anulowane», wykonawca dostanie wiadomość, a przyciski w jego Telegramie zmienią się na «🚫 Задача отменена» (zadanie anulowane).",
-          "**«Zleć zadanie»** — na dole bloku: «Komu» (pola wyboru: jedna osoba albo kilka), «Co zrobić», «Szczegóły (opcjonalnie)», «Projekt (opcjonalnie)» i «Termin» — «dziś do 18:00», «jutro» i «za 3 dni» (oba do 18:00), «bez terminu» albo «własna data». Czas wszędzie taszkencki. Projekt wybiera się z otwartych projektów sekcji [«Projekty»](/admin/projects): najpierw zakłada się tam projekt klienta, potem można przypisywać do niego zadania. Ani projekt, ani termin nie są obowiązkowe. Jeśli zaznaczysz kilka osób, każda dostaje własne zadanie z tym samym tekstem, terminem i projektem: każdy sam je przyjmuje i zamyka, termin przesuwa się każdemu osobno, a w «Zleciłem» widać, kto już zaczął, a kto jeszcze nie. Ty sam jesteś na liście zaznaczony od razu — odznacz się, jeśli zadanie nie jest dla ciebie. Nad przyciskiem widać po imionach, do kogo trafi zadanie; jeśli zaznaczony jesteś ty i współpracownik, jest tam też ostrzeżenie, że ty też dostaniesz własną kopię. Na stronie jednego zadania, do której prowadzi przycisk bota i powiadomienie na telefonie, są te same przyciski co na liście: «Przyjmij do realizacji», «Zrobione», «Niezrobione», przesunięcie terminu, a temu, kto zlecił, — «Edytuj». Gdy tylko zadanie zostanie zlecone, bot od razu pisze do wykonawcy na Telegramie — do każdej zaznaczonej osoby. Zadanie dla siebie od razu jest «w toku» — nie trzeba go przyjmować i bot o nim nie pisze. Kto co zlecił, przyjął, zamknął, przesunął i anulował, zapisuje się w dzienniku działań.",
+          "Zadanie to polecenie z terminem. Może je zlecić każdy pracownik każdemu, także sobie. Zadanie widzą dwie osoby: kto zlecił i komu.",
+          "W bloku «Dla mnie» są zadania dla Ciebie, najpilniejsze na górze. Nowe przyjmij przyciskiem «Przyjmij do realizacji», żeby zlecający widział, że je masz. Skończone? Kliknij «Zrobione» albo «Niezrobione».",
+          "Nie zdążysz? Kliknij «Przesuń termin» i wybierz nowy. Zadanie po terminie świeci na czerwono.",
+          "W bloku «Zleciłem» są zadania, które dałeś innym. Jeśli zadanie nie jest już potrzebne, kliknij «Anuluj zadanie».",
+          "Żeby zlecić zadanie, wypełnij formularz «Zleć zadanie»: «Komu», «Co zrobić» i «Termin». Możesz zaznaczyć kilka osób, każda dostanie własną kopię. Panel od razu zaznacza Ciebie, odznacz, jeśli zadanie nie jest dla Ciebie.",
+          "Bot od razu wyśle zadanie wykonawcy w Telegramie. Czas wszędzie jest taszkencki.",
         ],
       },
       {
@@ -465,72 +466,70 @@ export const leadsSections: Record<string, HelpEntry> = {
         title: "«Zlecenie makiety» w zadaniu",
         body: {
           manager: [
-            "**«Zlecenie makiety»** — pytanie w formularzu «Zleć zadanie»: «Tak» lub «Nie». Jeśli w «Komu» zaznaczona jest osoba, która buduje makiety (właściciel), odpowiedź jest obowiązkowa — obok pytania pojawi się «obowiązkowo», a bez odpowiedzi zadanie nie zostanie zlecone. W zadaniach dla innych osób pytanie nie jest potrzebne i można je pominąć.",
-            "«Tak» oznacza, że zlecasz makietę. W polu «Dla jakiego klienta» zacznij wpisywać firmę, numer zgłoszenia, stronę lub @nick i wybierz lead albo kontakt z listy — wyszukiwanie jest takie samo jak w «Znajdź sekcję lub firmę» i pokazuje tylko tych, których widzisz. «Strona klienta» przy kontakcie wpisze się sama, przy leadzie wpisz ją, na przykład tirex.uz. Wykonawca zobaczy pod zadaniem «Zlecenie makiety», dla kogo i stronę, a bot poda mu stronę w wiadomości o zadaniu.",
-            "Gdy makieta powstanie i zostanie powiązana ze zleceniem, osobą odpowiedzialną za nią w [Makietach](/admin/mockups) zostaniesz ty — z dopiskiem «według zlecenia»: prowadzisz klienta przy tej makiecie, bot pisze do ciebie, gdy makieta zamyka się na hasło, i jest ona w twoich makietach na «Pulpicie». Zadanie zamknie się jako «Zrobione», pojawi się przy nim link «Makieta gotowa». Jeśli kierownik lub właściciel wyznaczył osobę odpowiedzialną ręcznie, ważniejsza jest osoba wyznaczona.",
+            "W formularzu zadania jest pytanie «Zlecenie makiety». Jeśli zadanie idzie do właściciela (on składa makiety), odpowiedź «Tak» albo «Nie» jest obowiązkowa.",
+            "Odpowiedziałeś «Tak»? W polu «Dla jakiego klienta» znajdź lead (zgłoszenie) albo kontakt (firmę, do której napisaliśmy pierwsi). Jeśli strona nie wpisała się sama, wpisz ją w «Strona klienta».",
+            "Gdy makieta będzie gotowa, zadanie się zamknie. Odpowiedzialnym za makietę w sekcji [«Makiety»](/admin/mockups) zostaniesz Ty.",
           ],
           head: [
-            "**«Zlecenie makiety»** — pytanie w formularzu «Zleć zadanie» i w [szybkim zadaniu](#hq-task) na «Pulpicie»: «Tak» lub «Nie». Jeśli zaznaczona jest osoba, która buduje makiety (właściciel), odpowiedź jest obowiązkowa — bez niej zadanie nie zostanie zlecone. W zadaniach dla innych osób pytanie nie jest potrzebne.",
-            "«Tak» — zlecenie makiety: w «Dla jakiego klienta» wybierz lead lub kontakt wyszukiwaniem (tym samym co w «Znajdź sekcję lub firmę»), w «Strona klienta» — stronę, przy kontakcie wpisze się sama. Wykonawca widzi pod zadaniem «Zlecenie makiety», dla kogo i stronę; bot podaje mu stronę w wiadomości o zadaniu.",
-            "Makieta zbudowana i powiązana ze zleceniem dostaje osobę odpowiedzialną «według zlecenia» — tego, kto zlecił zadanie; zadanie zamyka się jako «Zrobione», pojawia się przy nim «Makieta gotowa». Gotową makietę możesz sam powiązać z dowolnym otwartym zleceniem w [Makietach](/admin/mockups): wiersz «Zlecenie» przy makiecie, wybór zlecenia i «Powiąż». Osoba wyznaczona przez ciebie ręcznie jest ważniejsza niż zlecenie.",
+            "W formularzu zadania i w [szybkim zadaniu](#hq-task) na stronie «Pulpit» jest pytanie «Zlecenie makiety». Jeśli zadanie idzie do właściciela, odpowiedź jest obowiązkowa.",
+            "«Tak» oznacza zlecenie makiety: wybierz klienta wyszukiwarką i sprawdź «Strona klienta».",
+            "Gotowa makieta dostaje odpowiedzialnego «według zlecenia», czyli tego, kto zlecił zadanie. Gotową makietę możesz powiązać ze zleceniem także w sekcji [«Makiety»](/admin/mockups): wiersz «Zlecenie», potem «Powiąż».",
           ],
           admin: [
-            "**«Zlecenie makiety»** — pytanie w formularzu «Zleć zadanie» i w [szybkim zadaniu](#hq-task) na «Pulpicie»: «Tak» lub «Nie». Jeśli w «Komu» jesteś ty (budujesz makiety), odpowiedź jest obowiązkowa — bez niej zadanie nie zostanie ci zlecone. Dzięki temu każde zlecenie makiety przychodzi do ciebie z klientem i stroną, a nie jako prośba w czacie.",
-            "Zlecenie widać pod zadaniem w «Dla mnie»: «Zlecenie makiety», dla kogo (link do leada lub kontaktu) i strona. **«Zbuduj prototyp»** otwiera [Prototypy](/admin/proto) z wpisaną stroną i wybranym zleceniem w polu «Według zlecenia z zadania». Zbudowany prototyp jest powiązany ze zleceniem, zadanie zamknięte jako «Zrobione», bot napisał do zlecającego. Szkic wiąże się ze zleceniem, ale zadanie zostaje otwarte: makiety dla klienta jeszcze nie ma.",
-            "Makietę zbudowaną ręcznie (witryna) powiąż w [Makietach](/admin/mockups): przy makiecie jest wiersz «Zlecenie» — wybierz zlecenie (zlecenie z tą samą stroną jest wybrane od razu) i naciśnij «Powiąż». Osobą odpowiedzialną za makietę zostanie ten, kto ją zlecił, z dopiskiem «według zlecenia». Osoba wyznaczona ręcznie jest ważniejsza niż zlecenie.",
+            "W formularzu zadania i w [szybkim zadaniu](#hq-task) na stronie «Pulpit» jest pytanie «Zlecenie makiety». Jeśli zadanie jest dla Ciebie, odpowiedź jest obowiązkowa, a zlecenie przychodzi od razu z klientem i stroną.",
+            "Przycisk «Zbuduj prototyp» pod zadaniem otworzy sekcję [«Prototypy»](/admin/proto) z tą stroną. Zbudujesz prototyp, a zadanie zamknie się samo. Szkic go nie zamyka.",
+            "Makietę zrobioną ręcznie powiąż w sekcji [«Makiety»](/admin/mockups): wiersz «Zlecenie», potem «Powiąż». Odpowiedzialnym zostanie ten, kto zlecił.",
           ],
         },
       },
       {
         id: "history",
-        title: "Edycja zadania i historia zadań",
+        title: "Zmienić zadanie i zobaczyć historię",
         body: {
           manager: [
-            "**«Edytuj»** — pod zadaniem, które zleciłeś, dopóki jest otwarte. Możesz poprawić «Co zrobić», «Szczegóły», «Wykonawca» i projekt, potem **«Zapisz»**. Termin się tu nie zmienia: służy do tego «Przesuń termin», który ma własną historię przesunięć. Zadania zleconego tobie nie edytujesz: jeśli się nie zgadzasz — «Niezrobione» albo przesunięcie terminu, a resztę ustal ze zlecającym.",
-            "Zmieniłeś wykonawcę — u nowego zadanie zacznie się od nowa: «nowe», bot wyśle mu je jako nowe, przypomnienia od zera. Poprzedniemu zadanie zostanie zdjęte i dostanie o tym wiadomość. Zmieniłeś tekst albo projekt — bot napisze wykonawcy, co dokładnie się zmieniło, a wiadomość o zadaniu w jego Telegramie się zaktualizuje.",
-            "Zadanie, z którym coś się działo, ma na dole **«Historia»**: kto zlecił, kto przyjął, kiedy i z jakiego terminu na jaki przesuwano, co zmieniano (było → jest), jak się skończyło. Czas taszkencki. Obok terminu widać, ile razy go przesuwano.",
-            "**«Historia zadań»** — niżej na tej samej stronie (link «Historia zadań ↓» w nagłówku bloku przewija do niej). Są tam twoje zadania — zlecone przez ciebie i dla ciebie — z którymi w danym okresie coś się działo: zrobione, niezrobione, anulowane, przesunięty termin, zmienione. «Co» zostawia jeden rodzaj kroków, «Za» — 7, 30 albo 90 dni. Na górze — ile jest każdego rodzaju. To tylko podgląd: zadania zmienia się wyżej, w bloku «Zadania».",
+            "Zadanie, które zleciłeś, poprawisz przyciskiem «Edytuj», potem «Zapisz». Termin zmienia się przyciskiem «Przesuń termin». Zadania, które dostałeś, zmienić nie możesz.",
+            "Zmieniłeś wykonawcę? Nowa osoba dostanie zadanie jako nowe, a poprzedniej bot napisze, że zadanie z niej zdjęto.",
+            "Każde zadanie ma «Historia»: kto przyjął, kto przesuwał termin, co zmieniano. Niżej na stronie jest «Historia zadań» za 7, 30 albo 90 dni.",
           ],
           head: [
-            "**«Edytuj»** — pod zadaniem, które zleciłeś, dopóki jest otwarte: «Co zrobić», «Szczegóły», «Wykonawca», projekt, potem **«Zapisz»**. Termin — przyciskiem «Przesuń termin», ma własną historię. Cudze zadania edytuje tylko ten, kto je zlecił: dzięki temu w historii zawsze widać, kto co zlecił.",
-            "Zmieniłeś wykonawcę — u nowego zadanie zacznie się od nowa: «nowe», bot wyśle je jako nowe, przypomnienia od zera; poprzedni dostanie wiadomość, że zadanie mu zdjęto. Zmieniłeś tekst albo projekt — bot napisze wykonawcy, co dokładnie się zmieniło, i zaktualizuje wiadomość o zadaniu.",
-            "Zadanie, z którym coś się działo, ma na dole **«Historia»**: kto zlecił, przyjął, przesuwał termin (z jakiego na jaki), co zmieniano (było → jest), jak się skończyło. Obok terminu — ile razy go przesuwano.",
-            "**«Historia zadań»** — niżej na tej samej stronie (link «Historia zadań ↓» w nagłówku bloku przewija do niej). Są tam zadania całego zespołu, z którymi w danym okresie coś się działo: zrobione, niezrobione, anulowane, przesunięty termin, zmienione. Filtry: «Co» — rodzaj kroków, «Czyje» — jedna osoba (jej zadania i zlecone przez nią), «Za» — 7, 30 albo 90 dni. Na górze — podsumowanie, niżej — **«Według osób»**: ile zadań kto zrobił, nie zrobił, ile anulowano i ile razy przesuwano ich termin; liczone według wykonawcy, imię otwiera jego zadania. Częste przesunięcia i «niezrobione» u jednej osoby — powód do rozmowy. Zadań, które właściciel zlecił sam sobie, tu nie ma.",
+            "Zadanie, które zleciłeś, poprawisz przyciskiem «Edytuj», potem «Zapisz». Termin zmienia się przyciskiem «Przesuń termin». Cudze zadanie edytuje tylko ten, kto je zlecił.",
+            "Zmieniłeś wykonawcę? Nowa osoba dostanie zadanie jako nowe, a poprzedniej bot napisze, że zadanie z niej zdjęto.",
+            "Każde zadanie ma «Historia». Niżej na stronie jest «Historia zadań» całego zespołu, a filtr «Czyje» zostawia jedną osobę.",
+            "Tabela «Według osób» pokazuje, kto ma ile zadań zrobionych, niezrobionych i przesuniętych. Częste przesunięcia u jednej osoby to powód do rozmowy. Zadania, które właściciel zlecił sam sobie, tu nie trafiają.",
           ],
           admin: [
-            "**«Edytuj»** — pod zadaniem, które zleciłeś, dopóki jest otwarte: «Co zrobić», «Szczegóły», «Wykonawca», projekt, potem **«Zapisz»**. Termin — przyciskiem «Przesuń termin», ma własną historię. Cudze zadania edytuje tylko ten, kto je zlecił: dzięki temu w historii zawsze widać, kto co zlecił.",
-            "Zmieniłeś wykonawcę — u nowego zadanie zacznie się od nowa: «nowe», bot wyśle je jako nowe, przypomnienia od zera; poprzedni dostanie wiadomość, że zadanie mu zdjęto. Zmieniłeś tekst albo projekt — bot napisze wykonawcy, co dokładnie się zmieniło, i zaktualizuje wiadomość o zadaniu.",
-            "Zadanie, z którym coś się działo, ma na dole **«Historia»**: kto zlecił, przyjął, przesuwał termin (z jakiego na jaki), co zmieniano (było → jest), jak się skończyło. Obok terminu — ile razy go przesuwano.",
-            "**«Historia zadań»** — niżej na tej samej stronie (link «Historia zadań ↓» w nagłówku bloku przewija do niej). Są tam wszystkie zadania studia, z którymi w danym okresie coś się działo: zrobione, niezrobione, anulowane, przesunięty termin, zmienione. Filtry: «Co» — rodzaj kroków, «Czyje» — jedna osoba (jej zadania i zlecone przez nią), «Za» — 7, 30 albo 90 dni. Na górze — podsumowanie, niżej — **«Według osób»**: ile zadań kto zrobił, nie zrobił, ile anulowano i ile razy przesuwano ich termin; liczone według wykonawcy, imię otwiera jego zadania. Kierownik widzi to samo, poza zadaniami, które zleciłeś sam sobie.",
+            "Zadanie, które zleciłeś, poprawisz przyciskiem «Edytuj», potem «Zapisz». Termin zmienia się przyciskiem «Przesuń termin». Cudze zadanie edytuje tylko ten, kto je zlecił.",
+            "Zmieniłeś wykonawcę? Nowa osoba dostanie zadanie jako nowe, a poprzedniej bot napisze, że zadanie z niej zdjęto.",
+            "Każde zadanie ma «Historia». Niżej na stronie jest «Historia zadań» całego studia, a filtr «Czyje» zostawia jedną osobę.",
+            "Tabela «Według osób» pokazuje, kto ma ile zadań zrobionych, niezrobionych i przesuniętych. Częste przesunięcia u jednej osoby to powód do rozmowy. Kierownik nie widzi tu tylko zadań, które zleciłeś sam sobie.",
           ],
         },
       },
       {
         id: "filter",
-        title: "Kolejność, grupy i projekty w zadaniach",
+        title: "Kolejność, grupy i projekty",
         body: [
-          "Domyślnie zadania idą od najbliższego terminu do najdalszego: co się pali, jest na górze. Zadania bez terminu — na końcu, najnowsze pierwsze. W «Zleciłem» najpierw są otwarte, niżej — zamknięte w ciągu tygodnia.",
-          "Nad listami jest filtr. **«Grupuj»**: «bez grupowania» (po prostu według terminu), «według terminu» — grupy «Po terminie», «Termin dziś», «Termin jutro», «W ciągu 7 dni», «Później», «Bez terminu»; «według projektu» — zadania każdego projektu razem, «Bez projektu» na końcu; «według osoby» — w «Dla mnie» według zlecającego, w «Zleciłem» — według wykonawcy. Wewnątrz grupy kolejność jest ta sama — od najbliższego terminu.",
-          "**«Projekt»** zostawia zadania jednego projektu albo «Bez projektu». Wybierz i kliknij **«Pokaż»**. Wybór zapisuje się w adresie strony: nie resetuje się po kliknięciu przycisków w zadaniach, a stronę z nim możesz dodać do zakładek przeglądarki.",
-          "Zadanie z projektem ma w wierszu jego nazwę — kliknij, a otworzy się karta projektu. W karcie projektu są wszystkie jego zadania i link «Zleć zadanie»: otwiera sekcję [«Zadania»](/admin/tasks) z tym projektem już wybranym w formularzu.",
+          "Zadania idą według terminu: co pali się najbardziej, jest na górze. Zadania bez terminu są na końcu.",
+          "«Grupuj» zbiera je «według terminu», «według projektu» albo «według osoby». «Projekt» zostawia zadania jednego projektu. Wybierz i kliknij «Pokaż».",
+          "Nazwa projektu przy zadaniu otwiera kartę projektu. Jest tam «Zleć zadanie», a projekt w formularzu jest już wybrany.",
         ],
       },
       {
         id: "bot",
         title: "Zadania w Telegramie i przypomnienia",
         body: {
-          manager: [...TASKS_BOT, "Jeśli nie potrzebujesz wiadomości o zadaniach w Telegramie, wyłącza je kierownik albo właściciel — polem «Zadania» w Twoich powiadomieniach. Zadania zostają przy tym w sekcji «Zadania», a dźwięk w przeglądarce działa jak wcześniej."],
-          head: [...TASKS_BOT, "Wiadomości o zadaniach wyłącza się polem «Zadania» w [powiadomieniach](#team-notices) danej osoby — u siebie i u swoich menedżerów zmieniasz je w sekcji «Zespół». Zadania zostają przy tym w sekcji «Zadania», a dźwięk w przeglądarce działa."],
-          admin: [...TASKS_BOT, "Wiadomości o zadaniach wyłącza się polem «Zadania» w [powiadomieniach](#team-notices) — u każdego pracownika, w sekcji «Zespół». Zadania zostają przy tym w sekcji «Zadania», a dźwięk w przeglądarce działa."],
+          manager: [...TASKS_BOT, "Te wiadomości może wyłączyć kierownik albo właściciel polem «Zadania». Zadania w panelu i tak zostaną."],
+          head: [...TASKS_BOT, "Wyłączysz je polem «Zadania» w [powiadomieniach](#team-notices) danej osoby w sekcji «Zespół». Zadania w panelu i tak zostaną."],
+          admin: [...TASKS_BOT, "Wyłączysz je polem «Zadania» w [powiadomieniach](#team-notices) danej osoby w sekcji «Zespół». Zadania w panelu i tak zostaną."],
         },
       },
       {
         id: "alerts",
         title: "Dźwięk i powiadomienia w przeglądarce",
         body: [
-          "Dopóki panel jest otwarty — w dowolnej sekcji — co 45 sekund pyta serwer, czy jest coś nowego: zadanie zlecone Tobie, przesunięcie terminu albo anulowanie Twojego zadania przez zlecającego lub krok w zadaniu, które Ty zleciłeś (przyjęte, zrobione, niezrobione, przesunięty termin). Jeśli tak — rozlega się krótkie «ding-dong», w prawym dolnym rogu pojawia się okienko z przyciskiem «Otwórz zadania», a sekcja «Zadania», jeśli jest otwarta, odświeża się sama.",
-          "Żeby dodatkowo wyskakiwało powiadomienie systemowe — nawet gdy karta przeglądarki jest zwinięta — kliknij **«Włącz powiadomienia»** w bloku zadań i zezwól na nie w oknie przeglądarki. Przeglądarka pyta o zgodę dopiero po kliknięciu — dlatego jest przycisk. Po wyrażeniu zgody w jego miejscu pojawia się «Powiadomienia włączone».",
-          "Jeśli przeglądarka odmówiła, zamiast przycisku zobaczysz podpowiedź: na powiadomienia można zezwolić w ustawieniach strony (ikona po lewej stronie adresu). Dźwięk przeglądarka włącza po pierwszym kliknięciu w panelu — wcześniej strona nie może odtwarzać dźwięku, tak działają wszystkie przeglądarki. Twoje własne działania nie są oznaczane dźwiękiem. Panel zamknięty — w przeglądarce nic się nie pojawia, zostaje Telegram.",
+          "Gdy panel jest otwarty, co 45 sekund sprawdza zadania. Jeśli jest coś nowego, słychać sygnał i pojawia się okienko «Otwórz zadania».",
+          "Żeby widzieć powiadomienie także przy zwiniętej karcie, kliknij «Włącz powiadomienia» i zezwól na nie w przeglądarce. Zablokowałeś je przez pomyłkę? Zezwól w ustawieniach strony, to ikona po lewej od adresu.",
+          "Dźwięk zadziała po pierwszym kliknięciu w panelu. Gdy panel jest zamknięty, o zadaniach pisze tylko Telegram.",
         ],
       },
     ],
