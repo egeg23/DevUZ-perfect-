@@ -40,7 +40,7 @@ import { HERO_SLOTS, heroStyle } from "./app/lib/hero.mjs";
 const DIR = new URL(".", import.meta.url).pathname;
 const IMG = "/protos/chechfarm";
 const strip = (s) => s.replace(/\/\*[\s\S]*?\*\//g, "");
-const CSS = strip(readFileSync(DIR + "site.css", "utf8") + readFileSync(DIR + "premium.css", "utf8") + readFileSync(DIR + "launch.css", "utf8") + (process.env.CF_PROD === "1" ? readFileSync(DIR + "strategy.css", "utf8") : "")).replace(/\n\s*/g, "");
+const CSS = strip(readFileSync(DIR + "site.css", "utf8") + readFileSync(DIR + "premium.css", "utf8") + readFileSync(DIR + "launch.css", "utf8") + (process.env.CF_PROD === "1" ? readFileSync(DIR + "strategy.css", "utf8") + readFileSync(DIR + "prod.css", "utf8") : "")).replace(/\n\s*/g, "");
 /* Движок сцены первого экрана: пролёт Nek и салона красоты как есть, срезом из nek/land.js. */
 function nekScene() {
   const land = readFileSync(DIR + "../nek/land.js", "utf8");

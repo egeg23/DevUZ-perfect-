@@ -681,6 +681,8 @@ test("czechfarm: первый круг правок — стратегия ко�
   assert.ok(/[\u0600-\u06ff]{4}/.test(page("ar", "about")) && !page("ar", "about").includes("Our system"), "арабская страница не на арабском");
   assert.ok(page("ar", "about").includes('<bdi dir="ltr">20 000</bdi>'), "числа KPI в арабском не по порядку");
   for (const l of ["ru", "uz", "en"]) assert.doesNotMatch(page(l, "about").replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/g, ""), /—/, `${l}: длинное тире в тексте`);
+  /* Шапка в один ряд (владелец, 19.11.2026: «шапка ровная должна быть, текст ровный сделай, в один ряд»). */
+  assert.ok(page("uz", "about").includes(".top .nav a,.top-acc,.top-cta{white-space:nowrap}"), "пункты шапки переносятся");
   /* Макет не меняется: там прежняя колба и прежняя миссия. */
   const bundle = readFileSync(new URL("../../../content/proto-bundles/chechfarm.json", ROOT), "utf8");
   assert.ok(bundle.includes("flask-1200") && !bundle.includes("Brand Growth Engine"), "стратегия попала в макет");

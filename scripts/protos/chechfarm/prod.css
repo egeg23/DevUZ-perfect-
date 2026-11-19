@@ -1,0 +1,10 @@
+/* Боевой сайт CZECHFARM (CF_PROD=1): шапка в один ряд (владелец DevUz,
+   19.11.2026: «шапка ровная должна быть, текст ровный сделай, в один ряд»).
+   Пункты меню не переносятся; где тесно, у пунктов меньше поля. */
+.top .nav a,.top-acc,.top-cta{white-space:nowrap}
+.top .nav{flex:0 1 auto;min-width:0}
+@media (min-width:1080px) and (max-width:1279px){.top .nav{gap:0}.top .nav a{padding:8px 8px;font-size:13px}}
+/* 1080-1199: всё меню в один ряд не помещается (узбекский длиннее) —
+   как на планшете: кнопка меню, разделы и языки в выпадающем меню. */
+@media (min-width:1080px) and (max-width:1199px){.top .nav,.top .lang{display:none}#menu-btn{display:grid}}
+@media (min-width:1500px){.top .nav{gap:0}.top .nav a{padding:8px 10px}}
