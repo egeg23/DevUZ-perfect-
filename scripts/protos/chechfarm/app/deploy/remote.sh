@@ -10,6 +10,7 @@
 # Окружение (передаёт задача): CF_APP, CF_CADDY — образы с хешем коммита;
 # CF_DOMAIN; CF_COMMIT; CF_SETUP — код установки (может быть пустым);
 # CF_SCENE — ключ кадров сцены первого экрана (может быть пустым);
+# CF_TR — пропуск к переводу в панели от devuz.studio (может быть пустым);
 # GH_TOKEN, GH_ACTOR — вход в ghcr.io на время задачи; CF_FRONT — auto|caddy|nginx|none.
 #
 # Репозиторий открытый, журнал задачи видят все: ключи и код установки сюда
@@ -69,6 +70,12 @@ case "${CF_SCENE:-}" in
   *) if [ "${#CF_SCENE}" -eq 64 ]; then
        $SUDO sed -i '/^SCENE_KEY=/d' "$D/.env"; printf 'SCENE_KEY=%s\n' "$CF_SCENE" | $SUDO tee -a "$D/.env" >/dev/null; say "✓ ключ сцены записан"
      else say "· CZECHFARM_SCENE_KEY не 64 знака: сцена — картинкой"; fi ;;
+esac
+# Пропуск к переводу в панели (devuz.studio, до 19.01.2027). Нет — прежний остаётся.
+case "${CF_TR:-}" in
+  "") ;;
+  *[!A-Za-z0-9_-]*) say "· пропуск к переводу с лишними знаками: не пишу" ;;
+  *) $SUDO sed -i '/^DEVUZ_TRANSLATE_TOKEN=/d' "$D/.env"; printf 'DEVUZ_TRANSLATE_TOKEN=%s\n' "$CF_TR" | $SUDO tee -a "$D/.env" >/dev/null; say "✓ перевод в панели подключён" ;;
 esac
 
 say "════ Образы ════"

@@ -126,10 +126,22 @@ jobs:
     permissions:
       contents: read
       packages: read
+      # Пропуск GitHub (OIDC): по нему devuz.studio выдаёт серверу компании
+      # пропуск к переводу в панели (наш ключ модели, до 19.01.2027).
+      id-token: write
     steps:
       - uses: actions/checkout@v4
         with:
           sparse-checkout: scripts/protos/chechfarm/app/deploy
+      - name: Пропуск к переводу
+        id: tr
+        run: |
+          set +e
+          ID="$(curl -fsS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=devuz-czechfarm" | jq -r .value)"
+          R="$(curl -sS -m 30 -X POST -H "Authorization: Bearer $ID" https://devuz.studio/api/czechfarm/translate/token)"
+          T="$(printf '%s' "$R" | jq -r '.token // empty' 2>/dev/null)"
+          if [ -n "$T" ]; then echo "::add-mask::$T"; echo "token=$T" >> "$GITHUB_OUTPUT"; echo "✓ пропуск к переводу получен"
+          else echo "· перевода не будет: $(printf '%s' "$R" | jq -r '.why // "нет ответа"' 2>/dev/null)"; fi
       - name: Скрипт выкатки
         id: script
         run: echo "b64=$(base64 -w0 scripts/protos/chechfarm/app/deploy/remote.sh)" >> "$GITHUB_OUTPUT"
@@ -144,6 +156,7 @@ jobs:
           CF_COMMIT: ${{ github.sha }}
           CF_SETUP: ${{ secrets.CZECHFARM_SETUP_CODE }}
           CF_SCENE: ${{ secrets.CZECHFARM_SCENE_KEY }}
+          CF_TR: ${{ steps.tr.outputs.token }}
           CF_FRONT: ${{ inputs.front || 'auto' }}
           GH_TOKEN: ${{ github.token }}
           GH_ACTOR: ${{ github.actor }}
@@ -153,7 +166,7 @@ jobs:
           key: ${{ secrets.CZECHFARM_SSH_KEY }}
           password: ${{ secrets.CZECHFARM_PASSWORD }}
           port: ${{ secrets.CZECHFARM_PORT || 22 }}
-          envs: CF_SCRIPT,CF_APP,CF_CADDY,CF_DOMAIN,CF_PORT,CF_COMMIT,CF_SETUP,CF_SCENE,CF_FRONT,GH_TOKEN,GH_ACTOR
+          envs: CF_SCRIPT,CF_APP,CF_CADDY,CF_DOMAIN,CF_PORT,CF_COMMIT,CF_SETUP,CF_SCENE,CF_TR,CF_FRONT,GH_TOKEN,GH_ACTOR
           command_timeout: 25m
           script: |
             set -euo pipefail

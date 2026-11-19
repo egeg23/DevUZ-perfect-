@@ -37,7 +37,9 @@ export function cleanBlocks(list) {
       return { src: p.src, cap };
     });
     if (!t.ru?.title && !t.ru?.text && !photos.length) throw new Error("У своего блока нужен заголовок или текст на русском, или фото");
-    return { id, t, photos, layout: LAYOUTS.includes(b?.layout) ? b.layout : "side", btn: !!b?.btn, dark: !!b?.dark, menu: !!b?.menu };
+    /* Какие языки переведены автоматически (translate.mjs): true — перевод, false — поправили руками. */
+    const auto = Object.fromEntries(CB_LANGS.filter((l) => typeof b?.auto?.[l] === "boolean").map((l) => [l, b.auto[l]]));
+    return { id, t, photos, layout: LAYOUTS.includes(b?.layout) ? b.layout : "side", btn: !!b?.btn, dark: !!b?.dark, menu: !!b?.menu, ...(Object.keys(auto).length ? { auto } : {}) };
   });
 }
 

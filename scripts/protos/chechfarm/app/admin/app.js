@@ -158,7 +158,7 @@
   function products(main) {
     return api("/products").then(function (j) {
       var b = head(main, "Продукты", '<button class="btn pri" id="padd">Добавить продукт</button>');
-      b.innerHTML = '<div id="phero"></div><p class="note">Карточка появляется в каталоге на сайте после «Опубликовать». Названия и вещества — как в инструкции, на всех языках сайта одинаково. Портфель из таблицы компании уже здесь и на сайте: карточку можно править, снять или удалить, удалённая сама не вернётся.</p><div id="pe"></div>' + (j.products.length ? '<table class="resp"><thead><tr><th></th><th>Название</th><th>Вещество</th><th>Направление</th><th>На сайте</th><th></th></tr></thead><tbody>' + j.products.map(function (p) {
+      b.innerHTML = '<div id="phero"></div><p class="note">Карточка появляется в каталоге на сайте после «Опубликовать». Названия и вещества — как в инструкции. ' + (j.translate && j.translate.on ? "Пишите по-русски: при сохранении карточка сама переводится на узбекский, английский и арабский. " : "") + 'Портфель из таблицы компании уже здесь и на сайте: карточку можно править, снять или удалить, удалённая сама не вернётся.</p><div id="pe"></div>' + (j.products.length ? '<table class="resp"><thead><tr><th></th><th>Название</th><th>Вещество</th><th>Направление</th><th>На сайте</th><th></th></tr></thead><tbody>' + j.products.map(function (p) {
         return "<tr><td>" + (p.img ? '<img class="thumb" src="' + h(p.img) + '" alt="">' : "") + "</td><td><b>" + h(p.name) + "</b></td><td>" + h(p.inn) + "</td><td>" + h(AREA_NAME[p.area] || p.dir) + '</td><td><span class="pill ' + (p.pub ? "done" : "off") + '">' + (p.pub ? "опубликован" : "черновик") + '</span></td><td class="row"><button class="btn" data-e="' + p.id + '">Изменить</button><button class="btn" data-p="' + p.id + '">' + (p.pub ? "Снять" : "Опубликовать") + '</button><button class="btn warn" data-d="' + p.id + '">Удалить</button></td></tr>';
       }).join("") + "</tbody></table>" : '<div class="card note">Продуктов пока нет.</div>');
       $("#padd").addEventListener("click", function () { editProduct(main, null); });
@@ -227,7 +227,7 @@
       if ($("#pdoc").files.length) jobs.push(upload($("#pdoc")).then(function (u) { d.doc = u; }));
       if ($("#pimg").files.length) jobs.push(cut ? api("/upload", { data: cut.data(cutOpts()) }).then(function (j) { d.img = j.url; }) : upload($("#pimg")).then(function (u) { d.img = u; }));
       $("#psave").disabled = true;
-      Promise.all(jobs).then(function () { return api("/products" + (p.id ? "/" + p.id : ""), d); }).then(function () { toast("Сохранено. Чтобы карточка появилась на сайте, нажмите «Опубликовать»"); products(main); }).catch(function (e) { $("#psave").disabled = false; fail(e); });
+      Promise.all(jobs).then(function () { return api("/products" + (p.id ? "/" + p.id : ""), d); }).then(function (r) { toast("Сохранено." + trSaid(r.tr) + " Чтобы карточка появилась на сайте, нажмите «Опубликовать»", !!(r.tr && r.tr.failed)); products(main); }).catch(function (e) { $("#psave").disabled = false; fail(e); });
     });
   }
 
@@ -235,7 +235,8 @@
   function news(main) {
     return api("/news").then(function (j) {
       var b = head(main, "Новости", '<button class="btn pri" id="nadd">Написать новость</button>');
-      b.innerHTML = '<p class="note">Текст пишется на каждом языке сайта отдельно; где перевода нет, показываем русский.</p><div id="ne"></div>' + (j.news.length ? '<table class="resp"><thead><tr><th>Дата</th><th>Заголовок</th><th>Языки</th><th>На сайте</th><th></th></tr></thead><tbody>' + j.news.map(function (n) {
+      NEWS_TR = j.translate;
+      b.innerHTML = (j.translate && j.translate.on ? '<p class="note">Пишите на русском: при сохранении новость сама переводится на узбекский, английский и арабский. Перевод можно поправить на вкладке языка, поправленное перевод больше не трогает.</p>' : '<p class="note">Текст пишется на каждом языке сайта отдельно; где перевода нет, показываем русский.</p>') + '<div id="ne"></div>' + (j.news.length ? '<table class="resp"><thead><tr><th>Дата</th><th>Заголовок</th><th>Языки</th><th>На сайте</th><th></th></tr></thead><tbody>' + j.news.map(function (n) {
         return "<tr><td>" + dt(n.ts) + "</td><td><b>" + h(n.ru.title) + "</b></td><td>" + M.langs.filter(function (l) { return n[l] && n[l].title; }).join(", ") + '</td><td><span class="pill ' + (n.pub ? "done" : "off") + '">' + (n.pub ? "опубликована" : "черновик") + '</span></td><td class="row"><button class="btn" data-e="' + n.id + '">Изменить</button><button class="btn" data-p="' + n.id + '">' + (n.pub ? "Снять" : "Опубликовать") + '</button><button class="btn warn" data-d="' + n.id + '">Удалить</button></td></tr>';
       }).join("") + "</tbody></table>" : '<div class="card note">Новостей пока нет.</div>');
       $("#nadd").addEventListener("click", function () { editNews(main, null); });
@@ -244,10 +245,11 @@
       $$("[data-d]", b).forEach(function (x) { x.addEventListener("click", function () { if (confirm("Удалить новость совсем?")) api("/news/" + x.getAttribute("data-d") + "/del", {}).then(function () { news(main); }).catch(fail); }); });
     });
   }
+  var NEWS_TR = null;
   function editNews(main, n) {
     n = n || {}; var box = $("#ne"), cur = "ru", d = {}; M.langs.forEach(function (l) { d[l] = { title: (n[l] && n[l].title) || "", body: (n[l] && n[l].body) || "" }; });
     var day = new Date(n.ts || Date.now()); var iso = day.getFullYear() + "-" + String(day.getMonth() + 1).padStart(2, "0") + "-" + String(day.getDate()).padStart(2, "0");
-    box.innerHTML = '<div class="card grid"><h2>' + (n.id ? "Изменить новость" : "Новая новость") + '</h2><div class="lang-tabs">' + M.langs.map(function (l) { return '<button class="btn" data-l="' + l + '" aria-pressed="' + (l === cur) + '">' + LANG_NAME[l] + "</button>"; }).join("") + '</div><label class="f">Заголовок<input id="nt"></label><label class="f">Текст<textarea id="nb" rows="8"></textarea></label><div class="grid g2"><label class="f">Дата<input type="date" id="nd" value="' + iso + '"></label><label class="f">Картинка ' + (n.img ? "(загружена)" : "") + '<input type="file" accept="image/jpeg,image/png,image/webp" id="ni"></label></div><div class="row"><button class="btn pri" id="nsave">Сохранить</button><button class="btn" id="ncan">Отмена</button></div></div>';
+    box.innerHTML = '<div class="card grid"><h2>' + (n.id ? "Изменить новость" : "Новая новость") + '</h2><div class="lang-tabs">' + M.langs.map(function (l) { return '<button class="btn" data-l="' + l + '" aria-pressed="' + (l === cur) + '">' + LANG_NAME[l] + (n.auto && n.auto[l] ? " · перевод" : "") + "</button>"; }).join("") + '</div><label class="f">Заголовок<input id="nt"></label><label class="f">Текст<textarea id="nb" rows="8"></textarea></label><div class="grid g2"><label class="f">Дата<input type="date" id="nd" value="' + iso + '"></label><label class="f">Картинка ' + (n.img ? "(загружена)" : "") + '<input type="file" accept="image/jpeg,image/png,image/webp" id="ni"></label></div><div class="row"><button class="btn pri" id="nsave">Сохранить</button><button class="btn" id="ncan">Отмена</button></div></div>';
     function show() { $("#nt").value = d[cur].title; $("#nb").value = d[cur].body; $("#nt").dir = $("#nb").dir = cur === "ar" ? "rtl" : "ltr"; $$("[data-l]", box).forEach(function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-l") === cur ? "true" : "false"); }); }
     function keep() { d[cur] = { title: $("#nt").value.trim(), body: $("#nb").value.trim() }; }
     $$("[data-l]", box).forEach(function (b) { b.addEventListener("click", function () { keep(); cur = b.getAttribute("data-l"); show(); }); });
@@ -257,7 +259,8 @@
       keep(); var body = { img: n.img || "", ts: new Date($("#nd").value + "T12:00:00").getTime() }; M.langs.forEach(function (l) { body[l] = d[l]; });
       var job = $("#ni").files.length ? upload($("#ni")).then(function (u) { body.img = u; }) : Promise.resolve();
       $("#nsave").disabled = true;
-      job.then(function () { return api("/news" + (n.id ? "/" + n.id : ""), body); }).then(function () { toast("Сохранено. Чтобы новость появилась на сайте, нажмите «Опубликовать»"); news(main); }).catch(function (e) { $("#nsave").disabled = false; fail(e); });
+      if (NEWS_TR && NEWS_TR.on) toast("Сохраняем и переводим…");
+      job.then(function () { return api("/news" + (n.id ? "/" + n.id : ""), body); }).then(function (r) { toast("Сохранено." + trSaid(r.tr) + " Чтобы новость появилась на сайте, нажмите «Опубликовать»", !!(r.tr && r.tr.failed)); news(main); }).catch(function (e) { $("#nsave").disabled = false; fail(e); });
     });
   }
 
@@ -283,6 +286,14 @@
   var PAGE_NAME = { "*": "Шапка, меню и подвал (все страницы)", home: "Главная", about: "О компании", products: "Продукты", partners: "Партнёрам", investors: "Инвесторам", news: "Новости", contacts: "Контакты", privacy: "Политика данных", account: "Кабинет" };
   var LANG_NAME = { ru: "Русский", uz: "Узбекский", en: "Английский", ar: "Арабский" };
   var pgSel = { lang: "ru", page: "home" };
+  /* Перевод при сохранении (lib/translate.mjs на сервере). */
+  var LANG_IN = { ru: "русский", uz: "узбекский", en: "английский", ar: "арабский" };
+  function trSaid(tr) {
+    if (!tr) return "";
+    if (tr.langs && tr.langs.length) return " Переведено: " + tr.langs.map(function (l) { return LANG_IN[l]; }).join(", ") + "." + (tr.failed ? " Часть перевода не вышла, там текст прежний." : "");
+    return tr.failed ? " Перевод не вышел, на других языках текст прежний." : "";
+  }
+  function trHint(st) { return st && st.on ? '<p class="note">Перевод сам: при сохранении текст переводится на остальные языки сайта (до ' + new Date(st.until).toLocaleDateString("ru-RU", { timeZone: "Asia/Tashkent" }) + '). Язык, поправленный руками, перевод больше не трогает.</p>' : ""; }
   var CB_LAY = { side: "Фото рядом с текстом", grid: "Фото сеткой под текстом", none: "Без фото" };
   function cbPhoto(p, L) { return '<div class="cbp" data-src="' + h(p.src) + '"><img src="' + h(p.src) + '" alt="" loading="lazy"><input class="i" placeholder="Подпись к фото (можно пусто)" value="' + h((p.cap && p.cap[L]) || "") + '"' + (L === "ar" ? ' dir="rtl"' : "") + '><button type="button" class="btn" data-pup title="Выше" aria-label="Поднять фото выше">↑</button><button type="button" class="btn" data-pdel>Убрать</button></div>'; }
   function cbCard(bl, j, off, fresh) {
@@ -291,7 +302,8 @@
     return '<details class="card pgb cbx" data-cb data-b="' + h(bl.id) + '"' + (bl.canMove ? " data-mv" : "") + (fresh ? " open" : "") + '><summary><b>' + h(fresh ? "Новый блок" : bl.name) + '</b> <span class="note">свой блок' + (c.photos && c.photos.length ? ", фото: " + c.photos.length : "") + (off ? ", скрыт" : "") + "</span>" +
       (bl.canMove ? '<span class="sp"></span><button type="button" class="btn pgm" data-up aria-label="Поднять блок выше" title="Выше">↑</button><button type="button" class="btn pgm" data-down aria-label="Опустить блок ниже" title="Ниже">↓</button>' : "") + "</summary>" +
       (fresh ? "" : '<label class="chk"><input type="checkbox" data-show="' + h(bl.id) + '"' + (off ? "" : " checked") + "> Показывать блок на странице</label>") +
-      '<p class="note">Тексты — для языка «' + h(LANG_NAME[L] || L) + '». Пока на другом языке поле пустое, там стоит русский текст. Фото и настройки — общие для всех языков.</p>' +
+      '<p class="note">Тексты — для языка «' + h(LANG_NAME[L] || L) + '». ' + (j.translate && j.translate.on ? "При сохранении блок сам переводится на остальные языки сайта; язык, поправленный руками, перевод больше не трогает." : "Пока на другом языке поле пустое, там стоит русский текст.") + ' Фото и настройки — общие для всех языков.</p>' +
+      (c.auto && c.auto[L] ? '<p class="note"><b>Этот язык переведён автоматически.</b> Поправьте текст и сохраните: дальше перевод его не тронет.</p>' : "") +
       '<div class="grid g2">' + f("sub", "Подзаголовок (маленькая строка над заголовком)", false, 80) + f("title", "Заголовок", false, 160) + "</div>" +
       f("text", "Текст: каждая строка — абзац, строка с «- » — пункт списка", true, 4000) +
       '<div class="grid g2">' + f("btn", "Подпись кнопки (пусто — «Связаться»)", false, 40) + '<label class="f">Фото в блоке<select data-cl>' + Object.keys(CB_LAY).map(function (k) { return '<option value="' + k + '"' + (c.layout === k ? " selected" : "") + ">" + CB_LAY[k] + "</option>"; }).join("") + "</select></label></div>" +
@@ -339,7 +351,9 @@
     function cbSave(drop) {
       var list = $$(".pgb[data-cb]", b).filter(function (d) { return d !== drop; }).map(cbRead);
       var hide = []; $$("[data-show]", b).forEach(function (c) { if (!c.checked) hide.push(c.getAttribute("data-show")); });
-      return api("/pages/custom", { lang: j.lang, page: j.page, blocks: list }).then(function () { return api("/pages", { lang: j.lang, page: j.page, hide: hide }); }).then(function (n) { toast(drop ? "Блок удалён" : "Блок сохранён, на сайте уже видно"); drawPages(main, n); }).catch(fail);
+      var btn = drop ? null : $("[data-csave]", b), tr = null;
+      $$("[data-csave]", b).forEach(function (x) { x.disabled = true; }); if (btn && j.translate && j.translate.on) toast("Сохраняем и переводим…");
+      return api("/pages/custom", { lang: j.lang, page: j.page, blocks: list }).then(function (r) { tr = r.tr; return api("/pages", { lang: j.lang, page: j.page, hide: hide }); }).then(function (n) { toast(drop ? "Блок удалён" : "Блок сохранён, на сайте уже видно." + trSaid(tr), !!(tr && tr.failed)); drawPages(main, n); }).catch(function (e) { $$("[data-csave]", b).forEach(function (x) { x.disabled = false; }); fail(e); });
     }
     function cbWire(d) {
       $("[data-csave]", d).addEventListener("click", function () { cbSave(); });
