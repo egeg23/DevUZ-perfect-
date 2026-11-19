@@ -8,7 +8,7 @@ import { clauderyDict } from "@/content/admin-panel/ai-staff-claudery";
 import { requireSection } from "@/lib/admin/guard";
 import { helpAnchor } from "@/lib/admin/help";
 import { pick } from "@/lib/admin/i18n";
-import { LIMITS } from "@/lib/claudery/scenario";
+import { LIMITS, SHOP_LIMITS } from "@/lib/claudery/scenario";
 import { OFFER_PATH, botState, clauderyWeek, loadSetup } from "@/lib/claudery/store";
 
 export const dynamic = "force-dynamic";
@@ -193,6 +193,67 @@ export default async function AiStaffClauderyPage({ searchParams }: { searchPara
                   {t.support}
                   <input name="support" defaultValue={setup.support} maxLength={LIMITS.support} placeholder="support@… / @username" className={INPUT} />
                 </label>
+              </div>
+              <div className={STEP}>
+                <p className={STEP_TITLE}>{t.s7}</p>
+                <p className="mb-2 text-xs text-muted">{t.s7Hint}</p>
+                <div className="grid gap-2 sm:grid-cols-3">
+                  <label className="block text-xs text-muted">
+                    {t.shopKicker}
+                    <input name="shop.kicker" defaultValue={setup.shop.kicker} maxLength={SHOP_LIMITS.short} className={INPUT} />
+                  </label>
+                  <label className="block text-xs text-muted">
+                    {t.shopTitle}
+                    <input name="shop.title" defaultValue={setup.shop.title} maxLength={SHOP_LIMITS.short} className={INPUT} />
+                  </label>
+                  <label className="block text-xs text-muted">
+                    {t.shopAccent}
+                    <input name="shop.accent" defaultValue={setup.shop.accent} maxLength={SHOP_LIMITS.short} className={INPUT} />
+                  </label>
+                </div>
+                <label className="block text-xs text-muted">
+                  {t.shopLead}
+                  <textarea name="shop.lead" rows={2} defaultValue={setup.shop.lead} maxLength={SHOP_LIMITS.long} className={INPUT} />
+                </label>
+                <p className="pt-1 text-xs text-faint">{t.shopPills}</p>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {Array.from({ length: SHOP_LIMITS.pills }, (_, i) => (
+                    <input key={i} name={`shop.pill${i}`} defaultValue={setup.shop.pills[i] ?? ""} maxLength={SHOP_LIMITS.short} className={INPUT} />
+                  ))}
+                </div>
+                <p className="pt-1 text-xs text-faint">{t.shopPerks}</p>
+                <div className="grid gap-2 sm:grid-cols-3">
+                  {Array.from({ length: SHOP_LIMITS.perks }, (_, i) => (
+                    <input key={i} name={`shop.perk${i}`} defaultValue={setup.shop.perks[i] ?? ""} maxLength={SHOP_LIMITS.short} className={INPUT} />
+                  ))}
+                </div>
+                {(
+                  [
+                    ["step", t.shopSteps, SHOP_LIMITS.steps, setup.shop.steps.map((c) => [c.t, c.d]), t.cardTitle, t.cardText],
+                    ["trust", t.shopTrust, SHOP_LIMITS.trust, setup.shop.trust.map((c) => [c.t, c.d]), t.cardTitle, t.cardText],
+                    ["faq", t.shopFaq, SHOP_LIMITS.faq, setup.shop.faq.map((c) => [c.q, c.a]), t.faqQ, t.faqA],
+                  ] as const
+                ).map(([key, title, max, rows, aLabel, bLabel]) => (
+                  <div key={key} className="space-y-2">
+                    <p className="pt-1 text-xs text-faint">{title}</p>
+                    {Array.from({ length: max }, (_, i) => (
+                      <div key={i} className="grid gap-2 sm:grid-cols-[1fr_2fr]">
+                        <input name={`shop.${key}${i}.a`} placeholder={aLabel} defaultValue={rows[i]?.[0] ?? ""} maxLength={SHOP_LIMITS.short} className={INPUT} />
+                        <input name={`shop.${key}${i}.b`} placeholder={bLabel} defaultValue={rows[i]?.[1] ?? ""} maxLength={SHOP_LIMITS.long} className={INPUT} />
+                      </div>
+                    ))}
+                  </div>
+                ))}
+                <div className="grid gap-2 sm:grid-cols-[1fr_2fr]">
+                  <label className="block text-xs text-muted">
+                    {t.shopCtaTitle}
+                    <input name="shop.ctaTitle" defaultValue={setup.shop.ctaTitle} maxLength={SHOP_LIMITS.short} className={INPUT} />
+                  </label>
+                  <label className="block text-xs text-muted">
+                    {t.shopCtaText}
+                    <input name="shop.ctaText" defaultValue={setup.shop.ctaText} maxLength={SHOP_LIMITS.long} className={INPUT} />
+                  </label>
+                </div>
               </div>
             </fieldset>
             {tune ? <SubmitButton base={`${BTN} font-semibold`}>{t.save}</SubmitButton> : <p className="text-xs text-muted">{t.onlyHeads}</p>}

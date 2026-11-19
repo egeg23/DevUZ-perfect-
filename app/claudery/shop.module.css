@@ -390,3 +390,11 @@
     transform: none;
   }
 }
+.docs {
+  margin: 14px 0 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+.docs a {
+  color: var(--ink);
+}

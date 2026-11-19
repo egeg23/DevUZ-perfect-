@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
 
-import { supportLink, type Setup } from "@/lib/claudery/scenario";
+import { supportLinks, type Setup } from "@/lib/claudery/scenario";
 import { OFFER_PATH, botState, loadSetup } from "@/lib/claudery/store";
 import { appSecret } from "@/lib/secrets";
 
@@ -40,10 +40,20 @@ export function Doc({ title, children }: { title: string; children: ReactNode })
   );
 }
 
-/** Контакт поддержки строкой со ссылкой; не задан — бот. */
+/** Контакты поддержки ссылками через запятую; не заданы — бот. */
 export function Support({ s }: { s: Seller }) {
-  const link = supportLink(s.setup.support);
-  if (link) return <a href={link.href}>{link.text}</a>;
+  const links = supportLinks(s.setup.support);
+  if (links.length)
+    return (
+      <>
+        {links.map((l, i) => (
+          <span key={l.href}>
+            {i ? ", " : ""}
+            <a href={l.href}>{l.text}</a>
+          </span>
+        ))}
+      </>
+    );
   return s.bot ? <a href={`https://t.me/${s.bot}`}>@{s.bot}</a> : <>Telegram-бот Claudery</>;
 }
 

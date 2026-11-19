@@ -242,6 +242,14 @@ test("документы для банка Platega: соглашение, пол
   assert.deepEqual(urls, ["https://devuz.studio/claudery/terms", "https://devuz.studio/claudery/privacy"]);
   const withSupport = docRows(scenarioOf({ ...DEFAULT_SETUP, support: "help@example.com" }), "https://devuz.studio/claudery/offer").flat();
   assert.equal(withSupport.at(-1)?.url, "https://devuz.studio/claudery#support");
+  // Несколько контактов (владелец, 19.11.2026: «@maximov_tech и Siberian_2»): на сайте рядом, в боте по кнопке.
+  const { supportLinks } = await import("@/lib/claudery/scenario");
+  assert.deepEqual(supportLinks("@maximov_tech и Siberian_2").map((l) => l.text), ["@maximov_tech", "@Siberian_2"]);
+  assert.deepEqual(setupProblems({ ...DEFAULT_SETUP, support: "@maximov_tech, @Siberian_2" }), []);
+  assert.ok(setupProblems({ ...DEFAULT_SETUP, support: "@maximov_tech, группа" }).length > 0);
+  const two = docRows(scenarioOf({ ...DEFAULT_SETUP, support: "@maximov_tech, @Siberian_2" }), "https://devuz.studio/claudery/offer").flat();
+  assert.deepEqual(two.slice(2).map((b) => b.url), ["https://t.me/maximov_tech", "https://t.me/Siberian_2"]);
+  assert.match(read("app/claudery/docs.tsx"), /supportLinks\(s\.setup\.support\)/);
   // Документы есть кнопками и на первом шаге, и рядом с заказом.
   const f = fake();
   await handle(who, { type: "text", text: "/start" }, f.deps, "https://x/claudery/offer");
@@ -285,4 +293,35 @@ test("«Купить» на витрине: ссылка в бот с номер
   const page = read("app/claudery/page.tsx");
   assert.match(page, /\?start=\$\{buyStart\(i\)\}/);
   assert.match(read("lib/claudery/store.ts"), /if \(flow\.pick\) row\.product = productAt\(await loadSetup\(\), flow\.pick\.index\)\.title/);
+});
+
+test("витрина: тексты из конструктора, старое сохранение получает прежние слова, услуга не сохраняется", async () => {
+  const { DEFAULT_SHOP, parseShop, shopProblems, shopText, setupFromForm: fromForm, parseSetup } = await import("@/lib/claudery/scenario");
+  // Владелец, 19.11.2026: «редактировать эту информацию у нас через дашборд… тексты на сайте».
+  assert.deepEqual(shopProblems(DEFAULT_SHOP), []);
+  assert.doesNotMatch(shopText(DEFAULT_SHOP), /помощ|консультац|услуг|специалист/i);
+  // Сохранённое до витрины: shop нет — прежние тексты страницы, остальное не сбрасывается.
+  const old = parseSetup({ ...DEFAULT_SETUP, shop: undefined, greet: "Привет" });
+  assert.equal(old.greet, "Привет");
+  assert.deepEqual(old.shop, DEFAULT_SHOP);
+  assert.equal(parseShop({ title: "Своё" }).title, "Своё");
+  assert.deepEqual(parseShop({ title: "Своё" }).faq, DEFAULT_SHOP.faq);
+  assert.ok(shopProblems({ ...DEFAULT_SHOP, lead: "Окажем услугу" }).length > 0);
+  assert.ok(shopProblems({ ...DEFAULT_SHOP, title: "" }).length > 0);
+  // Форма: пустые строки списков пропадают, пары собираются.
+  const form = new FormData();
+  form.set("shop.title", "Заголовок");
+  form.set("shop.pill0", "Раз");
+  form.set("shop.pill2", "Три");
+  form.set("shop.faq1.a", "Вопрос?");
+  form.set("shop.faq1.b", "Ответ.");
+  const h = fromForm(form).shop;
+  assert.deepEqual(h.pills, ["Раз", "Три"]);
+  assert.deepEqual(h.faq, [{ q: "Вопрос?", a: "Ответ." }]);
+  // Страница рисует слова из настроек, а конструктор их правит.
+  const page = read("app/claudery/page.tsx");
+  assert.match(page, /seller\.setup\.shop/);
+  assert.match(page, /t\.faq\.map/);
+  assert.match(page, /PRICE_MARK/);
+  assert.match(read("app/admin/ai-staff/claudery/page.tsx"), /name="shop\.title"/);
 });
