@@ -1158,15 +1158,15 @@ export const uz: HelpCopy = {
           body: {
             manager: [
               "Aloqalar rejasi hafta davomida nechta kompaniyaga yozishingiz kerakligini ko‘rsatadi. Uni rahbar yoki ega qo‘yadi. Natija bo‘lim tepasida va «Bosh sahifa» da ko‘rinadi, masalan «30 tadan 18 tasi bajarildi».",
-              "Dushanbadan beri yozgan kompaniyalaringiz hisoblanadi: «Yuborish» yoki «O‘zim bog‘landim» ni bosgansiz. Bitta kompaniya, bitta aloqa. «Bog‘lanish» hali aloqa emas, bu faqat xatni tayyorlash. Ketmagan xat ham hisoblanmaydi.",
+              "Dushanbadan beri yozgan kompaniyalaringiz hisoblanadi: «Yuborish» yoki «O‘zim bog‘landim» ni bosgansiz. Bitta kompaniya, bitta aloqa. «Bog‘lanish» hali aloqa emas, bu faqat xatni tayyorlash. Ketmagan xat ham hisoblanmaydi. «Lidni qo‘lda qo‘shish» orqali qo‘shilgan lid ham aloqa hisoblanadi: uni qo‘shgan odamga.",
             ],
             head: [
               "Menejerlaringizga rejani [«Jamoa»](/admin/team) bo‘limida, «Aloqalar rejasi» ustunida qo‘yasiz. Bo‘sh maydon «rejasiz» degani, unda to‘plam kuniga 5 ta. Nol esa to‘plam umuman bo‘lmasligini bildiradi. O‘z rejangizni ega qo‘yadi.",
-              "Odam dushanbadan beri yozgan kompaniyalar hisoblanadi: «Yuborish» yoki «O‘zim bog‘landim». Ketmagan xat hisoblanmaydi.",
+              "Odam dushanbadan beri yozgan kompaniyalar hisoblanadi: «Yuborish» yoki «O‘zim bog‘landim». Ketmagan xat hisoblanmaydi. «Lidni qo‘lda qo‘shish» orqali qo‘shilgan lid ham aloqa hisoblanadi: uni qo‘shgan odamga.",
             ],
             admin: [
               "Reja [«Jamoa»](/admin/team) bo‘limida, «Aloqalar rejasi» ustunida qo‘yiladi. Siz uni istalgan odamga qo‘yasiz, rahbar faqat o‘z odamlariga. Bo‘sh maydon «rejasiz» degani, unda to‘plam kuniga 5 ta. Nol to‘plam yo‘qligini bildiradi.",
-              "Odam dushanbadan beri yozgan kompaniyalar hisoblanadi: «Yuborish» yoki «O‘zim bog‘landim». Ketmagan xat hisoblanmaydi.",
+              "Odam dushanbadan beri yozgan kompaniyalar hisoblanadi: «Yuborish» yoki «O‘zim bog‘landim». Ketmagan xat hisoblanmaydi. «Lidni qo‘lda qo‘shish» orqali qo‘shilgan lid ham aloqa hisoblanadi: uni qo‘shgan odamga.",
             ],
           },
         },

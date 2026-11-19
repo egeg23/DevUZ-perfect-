@@ -279,15 +279,15 @@ export const prospectSections: Record<string, HelpEntry> = {
         body: {
           manager: [
             "Plan kontaktów pokazuje, do ilu firm masz napisać w tym tygodniu. Ustawia go kierownik albo właściciel. Postęp widać na górze sekcji i na «Pulpit», np. «zrobione 18 z 30».",
-            "Liczą się firmy, do których napisałeś od poniedziałku: kliknąłeś «Wyślij do @adres» albo «Skontaktowano samodzielnie». Jedna firma to jeden kontakt. «Skontaktuj się» to jeszcze nie kontakt, tylko przygotowanie wiadomości. Wiadomość, która nie wyszła, też się nie liczy.",
+            "Liczą się firmy, do których napisałeś od poniedziałku: kliknąłeś «Wyślij do @adres» albo «Skontaktowano samodzielnie». Jedna firma to jeden kontakt. «Skontaktuj się» to jeszcze nie kontakt, tylko przygotowanie wiadomości. Wiadomość, która nie wyszła, też się nie liczy. Lead dodany przez «Dodaj leada ręcznie» też jest kontaktem: osoby, która go dodała.",
           ],
           head: [
             "Plan swoim menedżerom ustawiasz w [«Zespół»](/admin/team), kolumna «Plan kontaktów». Puste pole to «bez planu», wtedy porcja to 5 dziennie. Zero znaczy, że porcji nie będzie wcale. Twój własny plan ustawia właściciel.",
-            "Liczą się firmy, do których człowiek napisał od poniedziałku: «Wyślij do @adres» albo «Skontaktowano samodzielnie». Wiadomość, która nie wyszła, się nie liczy.",
+            "Liczą się firmy, do których człowiek napisał od poniedziałku: «Wyślij do @adres» albo «Skontaktowano samodzielnie». Wiadomość, która nie wyszła, się nie liczy. Lead dodany przez «Dodaj leada ręcznie» też jest kontaktem: osoby, która go dodała.",
           ],
           admin: [
             "Plan ustawia się w [«Zespół»](/admin/team), kolumna «Plan kontaktów». Ty ustawiasz go komu chcesz, kierownik tylko swoim ludziom. Puste pole to «bez planu», wtedy porcja to 5 dziennie. Zero znaczy brak porcji.",
-            "Liczą się firmy, do których człowiek napisał od poniedziałku: «Wyślij do @adres» albo «Skontaktowano samodzielnie». Wiadomość, która nie wyszła, się nie liczy.",
+            "Liczą się firmy, do których człowiek napisał od poniedziałku: «Wyślij do @adres» albo «Skontaktowano samodzielnie». Wiadomość, która nie wyszła, się nie liczy. Lead dodany przez «Dodaj leada ręcznie» też jest kontaktem: osoby, która go dodała.",
           ],
         },
       },

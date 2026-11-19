@@ -41,7 +41,7 @@ import { pendingContracts } from "@/lib/admin/pulse-store";
 import { isInWork, todayInTashkent } from "@/lib/admin/pulse";
 import type { Role } from "@/lib/admin/roles";
 import type { Staff } from "@/lib/admin/session";
-import { touchesOnDay } from "@/lib/admin/touch-store";
+import { manualLeadStamps, touchesOnDay } from "@/lib/admin/touch-store";
 import { approves, pendingTransfers } from "@/lib/admin/transfers";
 import { MAIN_ACCOUNT } from "@/lib/admin/work-accounts";
 import { readHealth } from "@/lib/admin/sweep-health";
@@ -283,12 +283,15 @@ export async function loadHq(viewer: Pick<Staff, "role">, now: Date = new Date()
   const ids = team.map((s) => s.id);
   // Касания, где вместо кружка ушло письмо, — подписи компаний.
   const fallbackIds = [...new Set(((circleFallbackRes.data ?? []) as { prospect_id: string }[]).map((r) => String(r.prospect_id)))];
-  const [touchesBy, idle, fallbackRes] = await Promise.all([
+  // Лиды, добавленные вручную, — касания по дням (touch-store → manualLeadStamps).
+  const weekAgo = new Date(now.getTime() - 8 * 24 * 3600_000);
+  const [touchesBy, idle, fallbackRes, manual] = await Promise.all([
     touchesOnDay(ids, day).catch(() => new Map<string, number>()),
     memo(`hq:idle:${ids.join(",")}`, SLOW_MS, () => loadIdle(ids)).catch(() => [] as IdleLead[]),
     fallbackIds.length
       ? db.from("prospects").select("id, host, label").in("id", fallbackIds)
       : Promise.resolve({ data: [] as Record<string, unknown>[] }),
+    manualLeadStamps(ids, weekAgo, new Date(now.getTime() + 1)).catch(() => [] as { actor: string; at: string }[]),
   ]);
   const staleLeads = idle.filter((l) => isStale(l, now));
   const stale = new Map<string, number>();
@@ -331,7 +334,10 @@ export async function loadHq(viewer: Pick<Staff, "role">, now: Date = new Date()
           lastAction: lastOf(acts.filter((a) => a.actor_staff_id === s.id).map((a) => ({ at: a.created_at }))),
           touches: touchesBy.get(s.id) ?? 0,
           touchDays: dailyCounts(
-            prospects.filter((p) => p.touched_by === s.id && p.status !== "failed").map((p) => p.touched_at),
+            [
+              ...prospects.filter((p) => p.touched_by === s.id && p.status !== "failed").map((p) => p.touched_at),
+              ...manual.filter((m) => m.actor === s.id).map((m) => m.at),
+            ],
             now,
           ),
           portion: portions.filter((p) => p.staff_id === s.id),

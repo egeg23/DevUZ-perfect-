@@ -3,6 +3,45 @@ import { dayStartUtc } from "@/lib/admin/portion";
 import { touchProgress, weekWindow, type TouchProgress } from "@/lib/admin/touch-plan";
 
 /**
+ * Лиды, добавленные вручную, — тоже касания (владелец, 19.11.2026, со слов
+ * Эльдара: «Доработать добавление лида непосредственно, чтобы как касание
+ * считалось… а у меня 1 касание»). Менеджер пишет агентствам и клиентам сам
+ * — с личного номера, в почту, на звонке — и заводит лид в «Добавить лид
+ * вручную»: строки в «Холодных касаниях» у такого разговора нет. Считаем по
+ * журналу «lead.added»: одна запись на лид и тому, кто добавил, — тот и писал.
+ * Отметки ступеней («Назвал цену») касанием не считаются: это шаг уже
+ * засчитанного разговора, иначе один клиент давал бы два касания.
+ */
+export async function manualLeadStamps(
+  staffIds: readonly string[],
+  from: Date,
+  to: Date,
+): Promise<{ actor: string; at: string }[]> {
+  if (!staffIds.length) return [];
+  const db = serviceClient();
+  if (!db) return [];
+  const { data } = await db
+    .from("audit_events")
+    .select("actor_staff_id, created_at")
+    .eq("action", MANUAL_LEAD_ACTION)
+    .in("actor_staff_id", [...staffIds])
+    .gte("created_at", from.toISOString())
+    .lt("created_at", to.toISOString())
+    .limit(5000);
+  return (data ?? [])
+    .filter((r) => r.actor_staff_id && r.created_at)
+    .map((r) => ({ actor: String(r.actor_staff_id), at: String(r.created_at) }));
+}
+
+/** Действие журнала «добавил лид вручную» (lib/admin/lead-add.ts). */
+export const MANUAL_LEAD_ACTION = "lead.added";
+
+function addManual(counts: Map<string, number>, stamps: readonly { actor: string }[]): Map<string, number> {
+  for (const s of stamps) counts.set(s.actor, (counts.get(s.actor) ?? 0) + 1);
+  return counts;
+}
+
+/**
  * Касания за неделю — по тому, кто написал, а не по тому, кто взял.
  *
  * Считаем строки касаний, а не события журнала: журнал пишет и подготовку, и
@@ -38,7 +77,7 @@ export async function touchesThisWeek(
     if (!id) continue;
     counts.set(id, (counts.get(id) ?? 0) + 1);
   }
-  return counts;
+  return addManual(counts, await manualLeadStamps(staffIds, week.from, week.to));
 }
 
 /**
@@ -69,7 +108,7 @@ export async function touchesOnDay(staffIds: readonly string[], day: string): Pr
     if (!id) continue;
     counts.set(id, (counts.get(id) ?? 0) + 1);
   }
-  return counts;
+  return addManual(counts, await manualLeadStamps(staffIds, from, to));
 }
 
 /**
