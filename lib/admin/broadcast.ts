@@ -59,11 +59,82 @@ export function audienceFrom(kind: string, roles: readonly string[], ids: readon
 
 export type TextProblem = "empty" | "long";
 
-export function textProblem(text: string): TextProblem | null {
+/** С вложением текст необязателен: картинка сама по себе сообщение. */
+export function textProblem(text: string, hasMedia = false): TextProblem | null {
   const clean = text.trim();
-  if (!clean) return "empty";
+  if (!clean && !hasMedia) return "empty";
   if (clean.length > BROADCAST_MAX) return "long";
   return null;
+}
+
+/* ── Вложение: фото, GIF, видео, файл ─────────────────────────────────────── */
+
+/**
+ * Владелец, 19.11.2026: «Нужно добавить возможность добавлять фото / гиф /
+ * видео / файлы к рассылкам через бота». Файл загружается в Telegram один
+ * раз (автору в личку — так он сразу видит, как придёт), дальше рассылка
+ * шлёт его по file_id: ни на сервере, ни в базе сам файл не лежит.
+ */
+export type MediaKind = "photo" | "animation" | "video" | "document";
+
+export type BroadcastMedia = { kind: MediaKind; fileId: string; name: string };
+
+/** Больше — не пропустит сервер панели (bodySizeLimit 22 МБ, nginx /admin 25 МБ). */
+export const MEDIA_MAX_BYTES = 20 * 1024 * 1024;
+/** Фото больше 10 МБ Telegram не примет — такое уходит файлом. */
+export const PHOTO_MAX_BYTES = 10 * 1024 * 1024;
+/** Подпись под вложением — до 1024 знаков; длиннее — текст уходит отдельным сообщением. */
+export const CAPTION_MAX = 1024;
+
+/** Что выбирать в форме: картинки, GIF, видео и обычные файлы. */
+export const MEDIA_ACCEPT = "image/*,video/*,.gif,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.txt";
+
+/**
+ * Как Telegram покажет файл: GIF — анимацией, jpg/png/webp до 10 МБ — фото,
+ * mp4 — видео со встроенным плеером, остальное — файлом (в том числе
+ * большие фото и видео не в mp4: так Telegram их не пережимает).
+ */
+export function mediaKindOf(file: { type: string; name: string; size: number }): MediaKind {
+  const type = file.type.toLowerCase();
+  const name = file.name.toLowerCase();
+  if (type === "image/gif" || name.endsWith(".gif")) return "animation";
+  if (/^image\/(jpeg|png|webp)$/.test(type) && file.size <= PHOTO_MAX_BYTES) return "photo";
+  if (type === "video/mp4" || name.endsWith(".mp4")) return "video";
+  return "document";
+}
+
+export type MediaProblem = "media_big" | "media_empty";
+
+export function mediaProblem(file: { size: number }): MediaProblem | null {
+  if (file.size <= 0) return "media_empty";
+  if (file.size > MEDIA_MAX_BYTES) return "media_big";
+  return null;
+}
+
+/** Имя файла для показа: без пути и не длиннее разумного. */
+export function mediaName(name: string): string {
+  const base = name.split(/[\\/]/).pop()?.trim() || "file";
+  return base.length > 80 ? `${base.slice(0, 77)}…` : base;
+}
+
+/** Длина текста, как её считает Telegram: без разметки, сущность — один знак. */
+export function plainLength(html: string): number {
+  return html.replace(/<[^>]+>/g, "").replace(/&(amp|lt|gt|quot);/g, "x").length;
+}
+
+/** Влезает ли текст подписью под вложение или пойдёт отдельным сообщением. */
+export function fitsCaption(html: string): boolean {
+  return plainLength(html) <= CAPTION_MAX;
+}
+
+/** Строка — в вид вложения; мусор — null. */
+export function asMediaKind(value: unknown): MediaKind | null {
+  return value === "photo" || value === "animation" || value === "video" || value === "document" ? value : null;
+}
+
+export function mediaOf(row: Pick<BroadcastRow, "media_kind" | "media_file_id" | "media_name">): BroadcastMedia | null {
+  const kind = asMediaKind(row.media_kind);
+  return kind && row.media_file_id ? { kind, fileId: row.media_file_id, name: row.media_name ?? "" } : null;
 }
 
 /**
@@ -117,6 +188,10 @@ export type BroadcastRow = {
   night_ok: boolean;
   cancelled_at: string | null;
   done_at: string | null;
+  /** Вложение (миграция 0190): вид, file_id в Telegram и имя файла. */
+  media_kind?: string | null;
+  media_file_id?: string | null;
+  media_name?: string | null;
 };
 
 export type BroadcastStatus = "scheduled" | "night" | "sending" | "done" | "cancelled";

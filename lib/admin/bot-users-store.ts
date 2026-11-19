@@ -1,5 +1,6 @@
 import { record } from "@/lib/admin/audit";
-import { GIVE_UP_H, sendableNow, sendsBroadcasts, textProblem, type TextProblem } from "@/lib/admin/broadcast";
+import { GIVE_UP_H, mediaOf, sendableNow, sendsBroadcasts, textProblem, type TextProblem } from "@/lib/admin/broadcast";
+import { mediaColumns, prepareMedia, type MediaFailure, type MediaFile } from "@/lib/admin/broadcast-media-store";
 import {
   BROADCAST_CONTEXT_MS,
   GAP_MS,
@@ -103,15 +104,15 @@ export async function loadBotMockups(now: Date = new Date()): Promise<BotMockups
 
 export type CreateUserBroadcast =
   | { ok: true; id: string; recipients: number }
-  | { ok: false; reason: "forbidden" | "offline" | "nobody" | "changed" | "failed" | TextProblem };
+  | { ok: false; reason: "forbidden" | "offline" | "nobody" | "changed" | "failed" | TextProblem | MediaFailure };
 
 export async function createUserBroadcast(
-  input: { text: string; segment: Segment; sendAt: Date; nightOk: boolean; expected: number },
+  input: { text: string; segment: Segment; sendAt: Date; nightOk: boolean; expected: number; file?: MediaFile | null },
   actor: Staff,
   ip: string,
 ): Promise<CreateUserBroadcast> {
   if (!sendsBroadcasts(actor.role)) return { ok: false, reason: "forbidden" };
-  const problem = textProblem(input.text);
+  const problem = textProblem(input.text, Boolean(input.file));
   if (problem) return { ok: false, reason: problem };
   const db = serviceClient();
   if (!db) return { ok: false, reason: "offline" };
@@ -124,9 +125,14 @@ export async function createUserBroadcast(
     return { ok: false, reason: "changed" };
   }
 
+  // Вложение — последним, когда проверки прошли (prepareMedia, broadcast-store.ts).
+  const media = input.file ? await prepareMedia(input.file, actor) : null;
+  if (typeof media === "string") return { ok: false, reason: media };
+
   const { data, error } = await db
     .from("staff_broadcasts")
     .insert({
+      ...mediaColumns(media),
       kind: "users",
       author_id: actor.id,
       text: input.text.trim(),
@@ -148,13 +154,29 @@ export async function createUserBroadcast(
     targetType: "broadcast",
     targetId: id,
     ip,
-    meta: { kind: "users", segment: input.segment, recipients: chats.length, send_at: input.sendAt.toISOString(), text: input.text.trim().slice(0, 200) },
+    meta: {
+      kind: "users",
+      segment: input.segment,
+      recipients: chats.length,
+      send_at: input.sendAt.toISOString(),
+      text: input.text.trim().slice(0, 200),
+      media: media ? { kind: media.kind, name: media.name } : undefined,
+    },
   });
   forget("hq:broadcast:");
   return { ok: true, id, recipients: chats.length };
 }
 
-type Row = { id: string; text: string; chats: (number | string)[]; send_at: string; night_ok: boolean };
+type Row = {
+  id: string;
+  text: string;
+  chats: (number | string)[];
+  send_at: string;
+  night_ok: boolean;
+  media_kind: string | null;
+  media_file_id: string | null;
+  media_name: string | null;
+};
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -169,7 +191,7 @@ export async function sendUserBroadcasts(now: Date = new Date(), onlyId?: string
   if (!db) return 0;
   let query = db
     .from("staff_broadcasts")
-    .select("id, text, chats, send_at, night_ok")
+    .select("id, text, chats, send_at, night_ok, media_kind, media_file_id, media_name")
     .eq("kind", "users")
     .is("cancelled_at", null)
     .is("done_at", null)
@@ -197,6 +219,7 @@ export async function sendUserBroadcasts(now: Date = new Date(), onlyId?: string
         return !row || (row.status === "failed" && row.attempts < MAX_ATTEMPTS);
       });
     const text = userMessage(b.text);
+    const media = mediaOf(b);
 
     for (const chat of todo) {
       if (budget <= 0) break;
@@ -217,7 +240,7 @@ export async function sendUserBroadcasts(now: Date = new Date(), onlyId?: string
             .select("chat_id");
       if (!claim.data?.length) continue;
       budget -= 1;
-      const outcome = await sendBroadcastMessage(chat, text);
+      const outcome = await sendBroadcastMessage(chat, text, media);
       await db.from("bot_broadcast_sent").update({ status: outcome, at: new Date().toISOString() }).eq("broadcast_id", b.id).eq("chat_id", chat);
       if (outcome === "sent") sent += 1;
       if (outcome === "blocked") await db.from("bot_users").update({ blocked_at: new Date().toISOString() }).eq("chat_id", chat);

@@ -214,9 +214,47 @@ export const broadcastDict = defineDict({
   usersNone: { ru: "Пока никто не писал боту.", uz: "Hali hech kim botga yozmagan.", pl: "Nikt jeszcze nie pisał do bota." },
   repeat: { ru: "Повторить", uz: "Takrorlash", pl: "Powtórz" },
   repeatNote: {
-    ru: "Текст и получатели — как в прошлый раз. Проверьте и откройте предпросмотр.",
-    uz: "Matn va oluvchilar — o‘tgan safargidek. Tekshirib, oldindan ko‘rishni oching.",
-    pl: "Treść i odbiorcy jak poprzednio. Sprawdź i otwórz podgląd.",
+    ru: "Текст и получатели — как в прошлый раз. Вложение, если было, прикрепите заново. Проверьте и откройте предпросмотр.",
+    uz: "Matn va oluvchilar — o‘tgan safargidek. Ilova bo‘lgan bo‘lsa, uni qayta biriktiring. Tekshirib, oldindan ko‘rishni oching.",
+    pl: "Treść i odbiorcy jak poprzednio. Załącznik, jeśli był, dodaj ponownie. Sprawdź i otwórz podgląd.",
+  },
+  // Вложение (lib/admin/broadcast.ts, 19.11.2026): фото, GIF, видео, файл.
+  media: { ru: "Вложение", uz: "Ilova", pl: "Załącznik" },
+  mediaPick: {
+    ru: "📎 Прикрепить фото, GIF, видео или файл",
+    uz: "📎 Rasm, GIF, video yoki fayl biriktirish",
+    pl: "📎 Dołącz zdjęcie, GIF, wideo lub plik",
+  },
+  mediaRemove: { ru: "Убрать", uz: "Olib tashlash", pl: "Usuń" },
+  mediaHint: {
+    ru: "До 20 МБ. GIF придёт анимацией, mp4 — видео с плеером, jpg и png до 10 МБ — фото, остальное — файлом. Перед рассылкой вложение придёт вам в бот: так его увидят получатели.",
+    uz: "20 MB gacha. GIF animatsiya bo‘lib, mp4 pleerli video bo‘lib, 10 MB gacha jpg va png rasm bo‘lib, qolgani fayl bo‘lib boradi. Yuborishdan oldin ilova sizga botda keladi: oluvchilar uni shunday ko‘radi.",
+    pl: "Do 20 MB. GIF przyjdzie jako animacja, mp4 jako wideo z odtwarzaczem, jpg i png do 10 MB jako zdjęcie, reszta jako plik. Przed wysyłką załącznik przyjdzie do Ciebie w bocie: tak zobaczą go odbiorcy.",
+  },
+  kindPhoto: { ru: "фото", uz: "rasm", pl: "zdjęcie" },
+  kindAnimation: { ru: "GIF", uz: "GIF", pl: "GIF" },
+  kindVideo: { ru: "видео", uz: "video", pl: "wideo" },
+  kindDocument: { ru: "файл", uz: "fayl", pl: "plik" },
+  captionApart: {
+    ru: "Текст длиннее 1024 знаков: он придёт отдельным сообщением сразу за вложением.",
+    uz: "Matn 1024 belgidan uzun: u ilovadan keyin alohida xabar bo‘lib keladi.",
+    pl: "Tekst dłuższy niż 1024 znaki: przyjdzie osobną wiadomością zaraz po załączniku.",
+  },
+  errMediaBig: {
+    ru: "Файл больше 20 МБ — бот такой не отправит. Сожмите или пришлите ссылку текстом.",
+    uz: "Fayl 20 MB dan katta — bot uni yubora olmaydi. Siqing yoki havolani matn bilan yuboring.",
+    pl: "Plik większy niż 20 MB — bot go nie wyśle. Zmniejsz go albo wyślij link w tekście.",
+  },
+  errMediaEmpty: { ru: "Файл пустой — выберите другой.", uz: "Fayl bo‘sh — boshqasini tanlang.", pl: "Plik jest pusty — wybierz inny." },
+  errNochat: {
+    ru: "Чтобы прикрепить вложение, привяжите свой Telegram к панели: файл сначала уходит вам в бот.",
+    uz: "Ilova biriktirish uchun Telegramingizni panelga ulang: fayl avval sizga botda boradi.",
+    pl: "Aby dodać załącznik, połącz swój Telegram z panelem: plik najpierw trafia do Ciebie w bocie.",
+  },
+  errMediaFailed: {
+    ru: "Telegram не принял файл. Попробуйте ещё раз или другой формат.",
+    uz: "Telegram faylni qabul qilmadi. Qayta urinib ko‘ring yoki boshqa formatni tanlang.",
+    pl: "Telegram nie przyjął pliku. Spróbuj ponownie albo w innym formacie.",
   },
 });
 

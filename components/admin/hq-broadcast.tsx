@@ -1,12 +1,22 @@
 "use client";
 
-import { useActionState, useEffect, useState, type ReactNode } from "react";
+import { useActionState, useEffect, useRef, useState, type ReactNode } from "react";
 
 import { broadcastAction, type BroadcastState } from "@/app/admin/hq/actions";
 import { CHIP, FIELD, PRIMARY } from "@/components/admin/hq-task";
 import { usePanelDict } from "@/components/admin/panel-locale";
 import { broadcastDict } from "@/content/admin-panel/hq-actions";
-import { reachable, recipientsOf, type Audience, type BroadcastPerson } from "@/lib/admin/broadcast";
+import {
+  CAPTION_MAX,
+  MEDIA_ACCEPT,
+  MEDIA_MAX_BYTES,
+  mediaKindOf,
+  reachable,
+  recipientsOf,
+  type Audience,
+  type BroadcastPerson,
+  type MediaKind,
+} from "@/lib/admin/broadcast";
 import { SEGMENTS, type Segment } from "@/lib/admin/bot-users";
 import type { Role } from "@/lib/admin/roles";
 
@@ -22,6 +32,15 @@ const ROLE_KEYS: readonly [Role, "roleAdmin" | "roleHead" | "roleManager"][] = [
   ["head", "roleHead"],
   ["manager", "roleManager"],
 ];
+
+const KIND_KEY: Record<MediaKind, "kindPhoto" | "kindAnimation" | "kindVideo" | "kindDocument"> = {
+  photo: "kindPhoto",
+  animation: "kindAnimation",
+  video: "kindVideo",
+  document: "kindDocument",
+};
+
+const mb = (bytes: number) => `${(bytes / 1024 / 1024).toFixed(bytes < 1024 * 1024 ? 2 : 1)} MB`;
 
 const SEGMENT_KEY: Record<Segment, "segAll" | "segPartners" | "segBuyers" | "segClients"> = {
   all: "segAll",
@@ -72,12 +91,30 @@ export function HqBroadcast({
   const [sendAt, setSendAt] = useState("");
   const [night, setNight] = useState(false);
   const [preview, setPreview] = useState(false);
+  // Вложение: сам файл живёт в поле формы (fileRef), здесь — что показать.
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [fileUrl, setFileUrl] = useState<string | null>(null);
+  const mediaKind = file ? mediaKindOf(file) : null;
+  const tooBig = Boolean(file && file.size > MEDIA_MAX_BYTES);
+  const clearFile = () => {
+    if (fileRef.current) fileRef.current.value = "";
+    setFile(null);
+  };
+  useEffect(() => {
+    // Картинку и видео показываем в предпросмотре из самого файла, без загрузки.
+    if (!file || !/^(image|video)\//.test(file.type)) return setFileUrl(null);
+    const url = URL.createObjectURL(file);
+    setFileUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
 
   const done = state?.ok ? state.at : 0;
   useEffect(() => {
     if (!done) return;
     setText("");
     setPreview(false);
+    clearFile();
   }, [done]);
 
   const audience: Audience = kind === "all" ? { kind } : kind === "roles" ? { kind, roles } : { kind, ids: picked };
@@ -87,7 +124,7 @@ export function HqBroadcast({
   const others = people.filter((p) => p.id !== selfId);
   const users = target === "users";
   const count = users ? userCounts[segment] : reach.length;
-  const ready = text.trim().length > 0 && count > 0 && (when === "now" || Boolean(sendAt));
+  const ready = (text.trim().length > 0 || Boolean(file)) && !tooBig && count > 0 && (when === "now" || Boolean(sendAt));
   const toggle = <T,>(list: T[], value: T) => (list.includes(value) ? list.filter((x) => x !== value) : [...list, value]);
 
   const message = !state
@@ -110,6 +147,10 @@ export function HqBroadcast({
           changed: t.errChanged,
           offline: t.errFailed,
           failed: t.errFailed,
+          media_big: t.errMediaBig,
+          media_empty: t.errMediaEmpty,
+          nochat: t.errNochat,
+          media_failed: t.errMediaFailed,
         }[state.error];
 
   return (
@@ -126,6 +167,16 @@ export function HqBroadcast({
       <input type="hidden" name="send_at" value={sendAt} />
       {night ? <input type="hidden" name="night" value="on" /> : null}
       <input type="hidden" name="expected" value={count} />
+      {/* Поле файла — всегда в форме, и в предпросмотре тоже: иначе файл пропал бы при переходе. */}
+      <input
+        ref={fileRef}
+        type="file"
+        name="media"
+        accept={MEDIA_ACCEPT}
+        className="sr-only"
+        id="broadcast-media"
+        onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+      />
 
       <div role="tablist" className="grid grid-cols-2 gap-1 rounded-2xl bg-surface-2/70 p-1">
         {(
@@ -165,6 +216,25 @@ export function HqBroadcast({
               className={`${FIELD} resize-y`}
             />
           </label>
+
+          <div className="flex flex-col gap-2">
+            <span className="text-xs font-medium uppercase tracking-wider text-faint">{t.media}</span>
+            {file ? (
+              <div className={`flex flex-wrap items-center gap-3 rounded-2xl px-3 py-2 text-sm ${tooBig ? "bg-gold/10 text-gold" : "bg-surface-2 text-text"}`}>
+                <span className="min-w-0 flex-1 truncate">
+                  📎 {file.name} · {mediaKind ? t[KIND_KEY[mediaKind]] : ""} · {mb(file.size)}
+                </span>
+                <button type="button" onClick={clearFile} className="min-h-11 rounded-xl px-3 text-xs text-muted transition hover:bg-line hover:text-text">
+                  {t.mediaRemove}
+                </button>
+              </div>
+            ) : (
+              <label htmlFor="broadcast-media" className={`${CHIP} cursor-pointer self-start`}>
+                {t.mediaPick}
+              </label>
+            )}
+            {tooBig ? <p className="text-xs text-gold">{t.errMediaBig}</p> : <p className="text-xs text-faint">{t.mediaHint}</p>}
+          </div>
 
           {users ? (
             <fieldset>
@@ -258,10 +328,25 @@ export function HqBroadcast({
         <>
           <p className="text-xs font-medium uppercase tracking-wider text-faint">{t.previewTitle}</p>
           {/* Пузырь как в Telegram: так сообщение и придёт. */}
-          <div className="max-w-md rounded-3xl rounded-bl-md bg-surface-2 px-4 py-3 text-sm leading-relaxed text-text">
-            {users ? null : <p className="mb-2 font-semibold">📣 …</p>}
-            <p className="whitespace-pre-wrap break-words">{text.trim()}</p>
+          <div className="max-w-md overflow-hidden rounded-3xl rounded-bl-md bg-surface-2 text-sm leading-relaxed text-text">
+            {file && fileUrl && mediaKind !== "document" ? (
+              file.type.startsWith("video/") ? (
+                <video src={fileUrl} muted loop autoPlay playsInline className="block max-h-72 w-full object-cover" />
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element -- локальный файл из поля формы, не картинка сайта
+                <img src={fileUrl} alt="" className="block max-h-72 w-full object-cover" />
+              )
+            ) : file ? (
+              <p className="flex items-center gap-2 px-4 pt-3 font-medium">📎 {file.name}</p>
+            ) : null}
+            {text.trim() || !users ? (
+              <div className="px-4 py-3">
+                {users ? null : <p className="mb-2 font-semibold">📣 …</p>}
+                <p className="whitespace-pre-wrap break-words">{text.trim()}</p>
+              </div>
+            ) : null}
           </div>
+          {file && text.trim().length + (users ? 0 : 40) > CAPTION_MAX ? <p className="text-xs text-faint">{t.captionApart}</p> : null}
           {users ? (
             <div className="rounded-2xl bg-green/5 px-4 py-3 text-sm">
               <p className="font-semibold text-green">{t.willGetUsers(count)}</p>

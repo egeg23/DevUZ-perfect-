@@ -89,7 +89,22 @@ export type BroadcastState =
   | { ok: true; n: number; scheduled: boolean; night: boolean; at: number }
   | {
       ok: false;
-      error: "forbidden" | "empty" | "long" | "audience" | "bad" | "past" | "far" | "nobody" | "changed" | "offline" | "failed";
+      error:
+        | "forbidden"
+        | "empty"
+        | "long"
+        | "audience"
+        | "bad"
+        | "past"
+        | "far"
+        | "nobody"
+        | "changed"
+        | "offline"
+        | "failed"
+        | "media_big"
+        | "media_empty"
+        | "nochat"
+        | "media_failed";
       at: number;
     }
   | null;
@@ -102,6 +117,13 @@ export async function broadcastAction(_prev: BroadcastState, formData: FormData)
   const now = new Date();
   const sendAtUsers = sendAtFrom(String(formData.get("when") ?? "now"), String(formData.get("send_at") ?? ""), now);
   const nightUsers = formData.get("night") === "on";
+  // Вложение (фото, GIF, видео, файл): пустое поле файла браузер шлёт
+  // пустым File — это «без вложения».
+  const raw = formData.get("media");
+  const file =
+    raw instanceof File && raw.size > 0
+      ? { bytes: new Uint8Array(await raw.arrayBuffer()), name: raw.name || "file", type: raw.type, size: raw.size }
+      : null;
 
   // Пользователям бота — своя ветка: сегмент вместо ролей, доставка порциями
   // (lib/admin/bot-users-store.ts). Модели нет ни там, ни здесь.
@@ -110,7 +132,7 @@ export async function broadcastAction(_prev: BroadcastState, formData: FormData)
     if (!isSegment(segment)) return { ok: false, error: "audience", at };
     if (!(sendAtUsers instanceof Date)) return { ok: false, error: sendAtUsers, at };
     const result = await createUserBroadcast(
-      { text: String(formData.get("text") ?? ""), segment, sendAt: sendAtUsers, nightOk: nightUsers, expected: Number(formData.get("expected") ?? -1) },
+      { text: String(formData.get("text") ?? ""), segment, sendAt: sendAtUsers, nightOk: nightUsers, expected: Number(formData.get("expected") ?? -1), file },
       staff,
       await requestIp(),
     );
@@ -139,6 +161,7 @@ export async function broadcastAction(_prev: BroadcastState, formData: FormData)
       sendAt,
       nightOk,
       expected: Number(formData.get("expected") ?? -1),
+      file,
     },
     staff,
     await requestIp(),

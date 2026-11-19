@@ -17,6 +17,7 @@ const MODULES = [
   "lib/admin/broadcast-store.ts",
   "lib/admin/bot-users.ts",
   "lib/admin/bot-users-store.ts",
+  "lib/admin/broadcast-media-store.ts",
   "app/admin/hq/actions.ts",
   "components/admin/hq-broadcast.tsx",
 ];
@@ -30,7 +31,8 @@ test("рассылка без модели: ни один модуль не тя
   }
   // Путь — прямо в Bot API.
   assert.match(read("lib/admin/bot-users-store.ts"), /import \{ sendBroadcastMessage \} from "@\/lib\/qualify\/telegram";/);
-  assert.match(read("lib/admin/broadcast-store.ts"), /import \{ sendMessage \} from "@\/lib\/qualify\/telegram";/);
+  assert.match(read("lib/admin/broadcast-store.ts"), /import \{ sendBroadcastMessage, sendMessage \} from "@\/lib\/qualify\/telegram";/);
+  assert.match(read("lib/admin/broadcast-media-store.ts"), /import \{ uploadBroadcastMedia \} from "@\/lib\/qualify\/telegram";/);
 });
 
 const marks: Marks = { staff: new Set([1]), partners: new Set([2]), buyers: new Set([3, 2]) };
@@ -63,7 +65,7 @@ test("лимит Telegram: не быстрее 25 в секунду, порци�
   assert.match(read("lib/qualify/telegram.ts"), /"error_code"\\s\*:\\s\*403/);
   // Отметка — до сообщения.
   const claim = store.indexOf('.upsert({ broadcast_id: b.id, chat_id: chat }, { onConflict: "broadcast_id,chat_id", ignoreDuplicates: true })');
-  assert.ok(claim > 0 && claim < store.indexOf("await sendBroadcastMessage(chat, text)"));
+  assert.ok(claim > 0 && claim < store.indexOf("await sendBroadcastMessage(chat, text, media)"));
   // Снова написал боту — разблокировал.
   assert.match(store, /last_at: now\.toISOString\(\),\s*blocked_at: null,/);
   assert.match(read("app/api/telegram/webhook/route.ts"), /noteBotUser\(/);
