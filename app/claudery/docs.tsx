@@ -12,6 +12,14 @@ import { appSecret } from "@/lib/secrets";
  * репозитории их нет. Подвал со ссылками — на каждой странице Claudery.
  */
 export const DOCS_DATE = "19.11.2026";
+
+/**
+ * Кодовое слово для банка Platega на время согласования (Platega, 19.11.2026:
+ * «На время согласования с банком просьба добавить кодовое слово "money" в
+ * проект (в футер сайта, к примеру), после одобрения можно будет убрать»).
+ * Банк одобрил — поставить "" (строка в подвале пропадёт).
+ */
+export const BANK_WORD = "money";
 export const TERMS_PATH = "/claudery/terms";
 export const PRIVACY_PATH = "/claudery/privacy";
 export const SHOP_PATH = "/claudery";
@@ -65,6 +73,7 @@ export function Footer({ s }: { s: Seller }) {
         Поддержка: <Support s={s} />
       </p>
       <p style={{ margin: "0 0 4px" }}>Продавец: {sellerLine(s)}.</p>
+      {BANK_WORD ? <p style={{ margin: "0 0 4px" }}>{BANK_WORD}</p> : null}
       <nav>
         <a href={SHOP_PATH} style={a}>
           Каталог
