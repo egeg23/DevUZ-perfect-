@@ -7,6 +7,7 @@ import { TRASH_BUTTON, trashCallback } from "@/lib/admin/lead-trash";
 import { siteUrl } from "@/lib/seo";
 import { roadFetch } from "@/lib/egress.mjs";
 import { mirrorToPush } from "@/lib/admin/push-mirror";
+import { fitsCaption, type MediaKind } from "@/lib/admin/broadcast";
 
 /**
  * Адрес Bot API.
@@ -454,15 +455,96 @@ export async function sendPhotoFile(
  * заблокировал бота или удалил аккаунт) больше не повторяем, «failed» —
  * повторим следующим проходом (lib/admin/bot-users.ts).
  */
-export async function sendBroadcastMessage(chatId: number, text: string): Promise<"sent" | "blocked" | "failed"> {
-  const result = await callRaw("sendMessage", {
-    chat_id: chatId,
-    text,
-    parse_mode: "HTML",
-    link_preview_options: { is_disabled: true },
-  });
-  if (result.ok) return "sent";
-  return /"error_code"\s*:\s*403/.test(result.description ?? "") ? "blocked" : "failed";
+export async function sendBroadcastMessage(
+  chatId: number,
+  text: string,
+  media: { kind: MediaKind; fileId: string } | null = null,
+): Promise<"sent" | "blocked" | "failed"> {
+  const outcome = (r: CallResult) => (r.ok ? "sent" : /"error_code"\s*:\s*403/.test(r.description ?? "") ? "blocked" : "failed");
+  const textCall = () =>
+    callRaw("sendMessage", { chat_id: chatId, text, parse_mode: "HTML", link_preview_options: { is_disabled: true } });
+  if (!media) return outcome(await textCall());
+
+  // Вложение уходит по file_id: Telegram уже хранит файл, ничего не грузим
+  // заново. Текст влезает подписью — одним сообщением; длиннее 1024 знаков —
+  // подпись пустая, текст следом отдельным сообщением.
+  const caption = text.trim() && fitsCaption(text) ? text : "";
+  const first = outcome(
+    await callRaw(MEDIA_METHOD[media.kind], {
+      chat_id: chatId,
+      [MEDIA_FIELD[media.kind]]: media.fileId,
+      ...(caption ? { caption, parse_mode: "HTML" } : {}),
+    }),
+  );
+  if (first !== "sent" || caption || !text.trim()) return first;
+  // Вложение дошло — рассылка доставлена: сбой хвоста не повод слать заново.
+  if (!(await textCall()).ok) console.error("telegram рассылка: текст после вложения не ушёл", chatId);
+  return "sent";
+}
+
+const MEDIA_METHOD: Record<MediaKind, string> = {
+  photo: "sendPhoto",
+  animation: "sendAnimation",
+  video: "sendVideo",
+  document: "sendDocument",
+};
+const MEDIA_FIELD: Record<MediaKind, string> = { photo: "photo", animation: "animation", video: "video", document: "document" };
+
+/**
+ * Загрузить вложение рассылки в Telegram — один раз, автору в личку с
+ * подписью: он видит, как придёт, а мы получаем file_id, по которому
+ * рассылка шлёт файл всем. Пуша нет: это служебная копия. Не вышло — null.
+ */
+export async function uploadBroadcastMedia(
+  chatId: number,
+  file: { bytes: Uint8Array<ArrayBuffer>; name: string; type: string },
+  kind: MediaKind,
+  caption: string,
+): Promise<string | null> {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  if (!token) return null;
+  const form = new FormData();
+  form.append("chat_id", String(chatId));
+  form.append(MEDIA_FIELD[kind], new Blob([file.bytes], { type: file.type || "application/octet-stream" }), file.name);
+  if (caption) {
+    form.append("caption", caption);
+    form.append("parse_mode", "HTML");
+  }
+  try {
+    const response = await roadFetch(`${API}${token}/${MEDIA_METHOD[kind]}`, {
+      method: "POST",
+      body: form,
+      // Двадцать мегабайт из Ташкента — не мгновенно.
+      signal: AbortSignal.timeout(CALL_TIMEOUT_MS * 12),
+    });
+    if (!response.ok) {
+      console.error("telegram", MEDIA_METHOD[kind], response.status, await response.text());
+      return null;
+    }
+    const data = (await response.json().catch(() => null)) as { result?: Record<string, unknown> } | null;
+    return fileIdOf(data?.result, kind);
+  } catch (error) {
+    console.error("telegram", MEDIA_METHOD[kind], error);
+    return null;
+  }
+}
+
+/**
+ * file_id из ответа Telegram: у фото — самый крупный размер, у остального —
+ * своё поле. GIF Telegram иногда возвращает документом — берём и его.
+ */
+export function fileIdOf(result: Record<string, unknown> | undefined, kind: MediaKind): string | null {
+  if (!result) return null;
+  if (kind === "photo") {
+    const sizes = Array.isArray(result.photo) ? (result.photo as { file_id?: unknown }[]) : [];
+    const id = sizes.at(-1)?.file_id;
+    return typeof id === "string" ? id : null;
+  }
+  for (const field of [MEDIA_FIELD[kind], "document", "animation", "video"]) {
+    const id = (result[field] as { file_id?: unknown } | undefined)?.file_id;
+    if (typeof id === "string") return id;
+  }
+  return null;
 }
 
 /**

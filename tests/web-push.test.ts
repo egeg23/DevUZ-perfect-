@@ -162,7 +162,10 @@ test("зеркало висит у отправки в Telegram и не ждёт
   }
   assert.doesNotMatch(tg, /await mirrorToPush/);
   // Рассылка сотрудникам с «Главной» идёт через sendMessage — значит, и пушем.
-  assert.match(read("lib/admin/broadcast-store.ts"), /import \{ sendMessage \} from "@\/lib\/qualify\/telegram"/);
+  // С вложением — sendBroadcastMessage, а пуш текста — рядом руками.
+  const store = read("lib/admin/broadcast-store.ts");
+  assert.match(store, /import \{ sendBroadcastMessage, sendMessage \} from "@\/lib\/qualify\/telegram"/);
+  assert.match(store, /media \? \(mirrorToPush\(chat, text\), \(await sendBroadcastMessage\(chat, text, media\)\) === "sent"\) : await sendMessage\(chat, text\)/);
   assert.match(read("lib/admin/bot-users-store.ts"), /sendBroadcastMessage/);
   // Код входа в приложение в пуш не уходит.
   assert.match(read("app/api/telegram/webhook/route.ts"), /sendMessage\(chat\.id, codeMessage\(code\), \{ mirror: false \}\)/);

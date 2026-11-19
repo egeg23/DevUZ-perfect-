@@ -87,6 +87,7 @@ function History({
                       </span>
                     </div>
                     <p className="mt-1 line-clamp-3 whitespace-pre-wrap break-words text-sm text-text">{b.text}</p>
+                    {b.media_name ? <p className="mt-1 truncate text-xs text-muted">📎 {b.media_name}</p> : null}
                     <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
                       <p className="text-xs text-muted">
                         {b.kind === "users" && b.tally

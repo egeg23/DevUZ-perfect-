@@ -3,6 +3,7 @@ import {
   GIVE_UP_H,
   broadcastKey,
   broadcastMessage,
+  mediaOf,
   recipientsOf,
   reachable,
   sendableNow,
@@ -17,7 +18,9 @@ import type { UserTally } from "@/lib/admin/bot-users";
 import { userTallies } from "@/lib/admin/bot-users-store";
 import type { Role } from "@/lib/admin/roles";
 import type { Staff } from "@/lib/admin/session";
-import { sendMessage } from "@/lib/qualify/telegram";
+import { mirrorToPush } from "@/lib/admin/push-mirror";
+import { mediaColumns, prepareMedia, type MediaFailure, type MediaFile } from "@/lib/admin/broadcast-media-store";
+import { sendBroadcastMessage, sendMessage } from "@/lib/qualify/telegram";
 import { forget } from "@/lib/memo";
 import { serviceClient } from "@/lib/supabase";
 
@@ -32,7 +35,8 @@ import { serviceClient } from "@/lib/supabase";
  */
 
 const COLUMNS =
-  "id, created_at, kind, segment, chats, author_id, text, audience, roles, recipients, send_at, night_ok, cancelled_at, done_at";
+  "id, created_at, kind, segment, chats, author_id, text, audience, roles, recipients, send_at, night_ok, cancelled_at, done_at, media_kind, media_file_id, media_name";
+
 
 /** Кому можно разослать: все активные, с отметкой, есть ли у человека Telegram. */
 export async function broadcastPeople(): Promise<BroadcastPerson[]> {
@@ -54,7 +58,7 @@ export async function broadcastPeople(): Promise<BroadcastPerson[]> {
 
 export type CreateBroadcast =
   | { ok: true; id: string; recipients: number; sendAt: string }
-  | { ok: false; reason: "forbidden" | "offline" | "nobody" | "changed" | "failed" | TextProblem };
+  | { ok: false; reason: "forbidden" | "offline" | "nobody" | "changed" | "failed" | TextProblem | MediaFailure };
 
 /**
  * Записать рассылку. `expected` — сколько получателей человек видел в
@@ -62,12 +66,12 @@ export type CreateBroadcast =
  * другому числу людей, а просим посмотреть ещё раз.
  */
 export async function createBroadcast(
-  input: { text: string; audience: Audience; sendAt: Date; nightOk: boolean; expected: number },
+  input: { text: string; audience: Audience; sendAt: Date; nightOk: boolean; expected: number; file?: MediaFile | null },
   actor: Staff,
   ip: string,
 ): Promise<CreateBroadcast> {
   if (!sendsBroadcasts(actor.role)) return { ok: false, reason: "forbidden" };
-  const problem = textProblem(input.text);
+  const problem = textProblem(input.text, Boolean(input.file));
   if (problem) return { ok: false, reason: problem };
   const db = serviceClient();
   if (!db) return { ok: false, reason: "offline" };
@@ -82,9 +86,14 @@ export async function createBroadcast(
     return { ok: false, reason: "changed" };
   }
 
+  // Вложение грузим последним: проверки прошли, рассылка точно запишется.
+  const media = input.file ? await prepareMedia(input.file, actor) : null;
+  if (typeof media === "string") return { ok: false, reason: media };
+
   const { data, error } = await db
     .from("staff_broadcasts")
     .insert({
+      ...mediaColumns(media),
       author_id: actor.id,
       text: input.text.trim(),
       audience: input.audience.kind,
@@ -112,6 +121,7 @@ export async function createBroadcast(
       send_at: input.sendAt.toISOString(),
       night_ok: input.nightOk,
       text: input.text.trim().slice(0, 200),
+      media: media ? { kind: media.kind, name: media.name } : undefined,
     },
   });
   // История рассылок на «Главной» — из памяти: новая видна сразу.
@@ -236,6 +246,7 @@ export async function sendBroadcasts(now: Date = new Date(), onlyId?: string): P
     const already = new Set((done ?? []).map((r) => String(r.staff_id)));
     const author = b.author_id ? String(byId.get(b.author_id)?.display_name ?? "DevUz") : "DevUz";
     const text = broadcastMessage(author, b.text);
+    const media = mediaOf(b);
 
     let failed = 0;
     for (const id of b.recipients) {
@@ -249,7 +260,9 @@ export async function sendBroadcasts(now: Date = new Date(), onlyId?: string): P
         .upsert({ news_id: key, staff_id: id }, { onConflict: "news_id,staff_id", ignoreDuplicates: true })
         .select("staff_id");
       if (!claimed?.length) continue;
-      if (await sendMessage(chat, text)) sent += 1;
+      // С вложением — фото, GIF, видео или файл по file_id; пушем — текст, как всегда.
+      const ok = media ? (mirrorToPush(chat, text), (await sendBroadcastMessage(chat, text, media)) === "sent") : await sendMessage(chat, text);
+      if (ok) sent += 1;
       else {
         failed += 1;
         await db.from("team_news_sent").delete().eq("news_id", key).eq("staff_id", id);
