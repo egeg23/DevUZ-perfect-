@@ -45,7 +45,7 @@ import { nextStrikes, shouldExit } from "@/lib/scout/watchdog";
 import { markDelivered, markFailed, markSent, markUnreachable, nextQueued } from "@/lib/admin/outreach-queue";
 import { unreachableText, verdictForHandle, verdictForPhone } from "@/lib/admin/outreach-peer";
 import { markCircleSkipped, markReplyFailed, markReplySent, nextReply, recordInbound } from "@/lib/admin/outreach-talk-store";
-import { noCircle } from "@/lib/admin/hello-first";
+import { CIRCLES, CIRCLES_OFF, noCircle } from "@/lib/admin/hello-first";
 import { hasMockupLink } from "@/lib/admin/mockup-offer";
 import { claimMockupScan, finishMockupScan, recordMockupOut } from "@/lib/admin/mockup-offer-store";
 import { SCAN_DIALOGS, SCAN_MS, SCAN_PAGE, SCAN_PAUSE_MS, inScan, scanSlot } from "@/lib/admin/mockup-scan";
@@ -1077,6 +1077,13 @@ function startWorker({ client, Api, NewMessage, key, label, cap, paused, othersA
         // (markCircleSkipped).
         // Кружок ниши компании (половина «new», sales-after-reply), нет его —
         // общий на языке ответа.
+        // Кружки выключены (hello-first → CIRCLES): стоявший в очереди не
+        // шлём, вместо него письмо на языке ответа.
+        if (!CIRCLES) {
+          await markCircleSkipped(reply.id, CIRCLES_OFF);
+          console.log(`переписка${tag}: кружки выключены — ${reply.target} уйдёт письмо`);
+          return;
+        }
         const saved = await savedCircles();
         const circle = circleFor(saved, saved.niche, { lang: reply.lang, niche: reply.niche ?? "general" });
         if (!circle) {

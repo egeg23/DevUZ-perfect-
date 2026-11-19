@@ -97,8 +97,24 @@ export function replyLang(body: string, helloLang: HelloLang): HelloLang {
  */
 export const CIRCLE_LANG: HelloLang = "ru";
 
-/** Есть ли кружок на языке ответа: русский и узбекский — да, остальным письмо. */
-export function circleLangFor(lang: HelloLang): CircleLang | null {
+/**
+ * Кружки в касаниях выключены (владелец, 19.11.2026: «Кружков не будет
+ * совсем, касания идут по spin»). Ответившему на «Здравствуйте» сразу
+ * уходит письмо с разбором на языке ответа, дальше переписку ведёт модель
+ * вопросами SPIN (lib/admin/spin.ts). Кружок, уже стоявший в очереди, скаут
+ * не шлёт: вместо него письмо (CIRCLES_OFF). Вернуть кружки — true.
+ */
+export const CIRCLES = false;
+
+/** Почему кружок из очереди не ушёл, когда кружки выключены. */
+export const CIRCLES_OFF = "Кружок не отправлен: кружки в касаниях выключены — вместо него письмо";
+
+/**
+ * Есть ли кружок на языке ответа: русский и узбекский — да, остальным письмо.
+ * Кружки выключены (CIRCLES) — никому.
+ */
+export function circleLangFor(lang: HelloLang, on: boolean = CIRCLES): CircleLang | null {
+  if (!on) return null;
   return lang === "ru" || lang === "uz" ? lang : null;
 }
 

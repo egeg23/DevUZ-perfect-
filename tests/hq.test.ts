@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { CIRCLES } from "@/lib/admin/hello-first";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { createElement } from "react";
@@ -250,7 +251,9 @@ test("«Требует внимания»: пусто, когда всё спо�
   );
   const kinds = items.map((a) => a.kind);
   assert.deepEqual(kinds.slice(0, 3), ["sweep", "model", "ban"], "красное первым");
-  assert.ok(kinds.includes("circle") && kinds.includes("burned") && kinds.includes("stale") && kinds.includes("firecrawl"));
+  // Кружки выключены (hello-first → CIRCLES) — тревоги о них нет.
+  assert.equal(kinds.includes("circle"), CIRCLES);
+  assert.ok(kinds.includes("burned") && kinds.includes("stale") && kinds.includes("firecrawl"));
   assert.ok(!kinds.includes("contracts"), "договоры — деньги, руководителю не показываем");
   assert.equal(kinds.filter((k) => k === "ban").length, 1, "снятое ограничение не горит");
   assert.ok(attentionOf(baseAttention({ role: "admin", contracts: [{ id: "c1", label: "№12" }] })).some((a) => a.kind === "contracts"));
