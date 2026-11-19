@@ -30,6 +30,8 @@ export type Flow = {
   requestNo?: string;
   /** Страница заявки на сайте: там цена и оплата. */
   order?: { token: string; url: string; amount: number };
+  /** Подписка, выбранная кнопкой «Купить» на витрине (`/start buy<номер>`). */
+  pick?: { index: number; price: number };
   /** Ставит сервер, когда Platega подтвердила оплату на сайте. */
   pay?: { status: "pending" | "paid" | "failed" };
 };
@@ -63,6 +65,10 @@ export const T = {
 /** `check` — кнопка прежних сообщений («Я оплатил»): теперь просто показывает заявку. */
 export const CB = { step: "s:", check: "p:check" } as const;
 
+/** Параметр ссылки кнопки «Купить» на витрине: номер подписки в списке. */
+export const BUY_START = /^\/start\s+buy(\d)$/;
+export const buyStart = (index: number) => `buy${index}`;
+
 function rows(step: Step): Row[] {
   return step.buttons.map((b) => [b.url ? { text: b.label, url: b.url } : { text: b.label, data: CB.step + b.to }]);
 }
@@ -92,7 +98,7 @@ export async function show(who: Who, flow: Flow, s: Scenario, deps: Deps, offerU
   flow.step = step.id;
 
   if (step.kind === "pay") {
-    const full = step.amount ?? 5000;
+    const full = flow.pick?.price ?? step.amount ?? 5000;
     const discount = step.discount ?? 0;
     const amount = discount > 0 && (await deps.paidBefore(who)) ? repeatAmount(full, discount) : full;
     if (flow.pay?.status === "paid" && step.next && depth < 3) {
@@ -133,6 +139,16 @@ export type Incoming =
 export async function handle(who: Who, input: Incoming, deps: Deps, offerUrl: string): Promise<void> {
   const s = scenarioOf(await deps.setup());
   const flow: Flow = (await deps.flowOf(who.chatId)) ?? { step: s.start };
+
+  // «Купить» на витрине: t.me/<бот>?start=buy<номер> — сразу заказ на эту подписку.
+  const buy = input.type === "text" ? BUY_START.exec(input.text.trim()) : null;
+  if (buy) {
+    const setup = await deps.setup();
+    const index = Number(buy[1]);
+    const product = setup.products[index];
+    const pay = s.steps.find((x) => x.kind === "pay");
+    if (product && pay) return show(who, { step: pay.id, pick: { index, price: product.price }, problem: `Выбрано на сайте: ${product.title}` }, s, deps, offerUrl);
+  }
 
   if (input.type === "text" && /^\/start\b/.test(input.text.trim())) {
     // Новый круг: оплаченный счёт и заявка остаются в базе, разговор — заново.
