@@ -35,7 +35,7 @@ const IS_MAIN = !!process.argv[1] && import.meta.url === pathToFileURL(process.a
 const RENDER_ONLY = process.env.SY_RENDER === "1";
 const { dzIntroSolo } = PROD || RENDER_ONLY ? { dzIntroSolo: () => "" } : await import("../../../lib/proto/dz-video.mjs");
 /* Рабочий сайт — свои врачи (catalog.mjs), макет — прежние (data.mjs). */
-let D = PROD ? { ...DATA, DOCTORS: CAT.DOCTORS } : DATA, B = DATA.BRAND, TX = {}, LIVE = {}, LAYOUT = null;
+let D = PROD ? { ...DATA, DOCTORS: CAT.DOCTORS } : DATA, B = PROD ? { ...DATA.BRAND, ...CAT.CONTACTS } : DATA.BRAND, TX = {}, LIVE = {}, LAYOUT = null;
 const strip = (s) => s.replace(/\/\*[\s\S]*?\*\//g, "");
 const min = (s) => strip(s).replace(/\n\s*/g, "");
 const IMG = "/protos/syanie";
@@ -764,11 +764,11 @@ function livePages() {
 export function renderLive(over = {}, live = {}) {
   const keep = [PROD, D, B, TX, LIVE, tel, LAYOUT];
   PROD = true; LIVE = live; TX = over.texts || {}; LAYOUT = over.blocks || null;
-  D = { ...DATA, DOCTORS: CAT.DOCTORS, ...(over.data || {}) }; B = { ...DATA.BRAND, ...(over.brand || {}) }; tel = `tel:${B.phoneRaw}`;
+  D = { ...DATA, DOCTORS: CAT.DOCTORS, ...(over.data || {}) }; B = { ...DATA.BRAND, ...CAT.CONTACTS, ...(over.brand || {}) }; tel = `tel:${B.phoneRaw}`;
   try { return livePages(); } finally { [PROD, D, B, TX, LIVE, tel, LAYOUT] = keep; }
 }
 /* Значения по умолчанию для админки: data.mjs макета и catalog.mjs рабочего сайта. */
-export const DEFAULTS = { ...DATA, CATALOG: CAT.SERVICES, ORG: CAT.ORG, AUTHORITIES: CAT.AUTHORITIES, DOCS: [], DOCTORS: CAT.DOCTORS };
+export const DEFAULTS = { ...DATA, BRAND: { ...DATA.BRAND, ...CAT.CONTACTS }, CATALOG: CAT.SERVICES, ORG: CAT.ORG, AUTHORITIES: CAT.AUTHORITIES, DOCS: [], DOCTORS: CAT.DOCTORS };
 /** Тексты разделов по умолчанию: { ключ: { kick, h, p } }. */
 export function textDefaults() { renderLive({}); return JSON.parse(JSON.stringify(SEEN)); }
 
