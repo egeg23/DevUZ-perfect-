@@ -15,6 +15,7 @@
  * сравнение «0 против 34» ничего не говорит.
  */
 
+import { CIRCLES } from "@/lib/admin/hello-first";
 import { activeNow, latest } from "@/lib/admin/lead-queue";
 import { tallyPortion, type PortionOutcome } from "@/lib/admin/portion";
 import { TASHKENT_OFFSET_MS, isInWork, tashkentMidnight, todayInTashkent } from "@/lib/admin/pulse";
@@ -681,13 +682,14 @@ export function attentionOf(input: AttentionInput): Attention[] {
   }
   if (input.overdue.length) out.push({ kind: "overdue", level: "red", n: input.overdue.length, links: linksOf(input.overdue, hrefTo.task) });
 
-  for (const lang of ["ru", "uz"] as const) {
+  // Кружки выключены (hello-first → CIRCLES) — их отсутствие не тревога.
+  for (const lang of CIRCLES ? (["ru", "uz"] as const) : []) {
     const missing = input.circlesMissing[lang];
     if (missing.length) {
       out.push({ kind: "circle", level: "gold", lang, accounts: missing.map((a) => a.label), links: linksOf(missing, hrefTo.account) });
     }
   }
-  if (input.circleFallback.length) {
+  if (CIRCLES && input.circleFallback.length) {
     out.push({ kind: "circleFallback", level: "gold", n: input.circleFallback.length, links: linksOf(input.circleFallback, hrefTo.prospect) });
   }
   if (input.burned.length) out.push({ kind: "burned", level: "gold", n: input.burned.length, links: linksOf(input.burned, hrefTo.lead) });

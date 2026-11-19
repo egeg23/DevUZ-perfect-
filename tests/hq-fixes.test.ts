@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
+import { CIRCLES } from "@/lib/admin/hello-first";
+
 import { SYSTEM_HREF, attentionHref, attentionOf, hrefTo, leadsPulse, type AttentionInput, type AttentionKind } from "@/lib/admin/hq";
 
 /**
@@ -50,8 +52,8 @@ function everything(n: number): AttentionInput {
 test("каждая строка с сущностью ведёт в конкретную карточку; несколько — список, каждый пункт в свою", () => {
   const entityKinds = new Set<AttentionKind>([
     "ban",
-    "circle",
-    "circleFallback",
+    // Кружки выключены (hello-first → CIRCLES) — их строк нет.
+    ...(CIRCLES ? (["circle", "circleFallback"] as const) : []),
     "unowned",
     "burned",
     "overdue",

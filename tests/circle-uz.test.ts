@@ -23,6 +23,8 @@ import {
   NO_CIRCLE,
   NO_CIRCLE_UZ,
   circleBody,
+  CIRCLES,
+  CIRCLES_OFF,
   circleLangFor,
   circleLangOf,
   noCircle,
@@ -32,14 +34,28 @@ import {
 const read = (file: string) => readFileSync(new URL(`../${file}`, import.meta.url), "utf8");
 
 test("ответ по-русски — русский кружок, по-узбекски — узбекский, иначе письмо", () => {
-  assert.equal(circleLangFor(replyLang("Здравствуйте", "ru")), "ru");
-  assert.equal(circleLangFor(replyLang("Assalomu alaykum", "ru")), "uz");
-  assert.equal(circleLangFor(replyLang("Ассалому алайкум", "ru")), "uz");
+  assert.equal(circleLangFor(replyLang("Здравствуйте", "ru"), true), "ru");
+  assert.equal(circleLangFor(replyLang("Assalomu alaykum", "ru"), true), "uz");
+  assert.equal(circleLangFor(replyLang("Ассалому алайкум", "ru"), true), "uz");
   // Стикер на узбекское приветствие — узбекский кружок.
-  assert.equal(circleLangFor(replyLang("👍", "uz")), "uz");
+  assert.equal(circleLangFor(replyLang("👍", "uz"), true), "uz");
   // Английский — письмо, кружка нет.
-  assert.equal(circleLangFor(replyLang("Hello, who is this?", "ru")), null);
-  assert.equal(circleLangFor("en"), null);
+  assert.equal(circleLangFor(replyLang("Hello, who is this?", "ru"), true), null);
+  assert.equal(circleLangFor("en", true), null);
+});
+
+test("кружки выключены (19.11.2026): никому кружка, стоявший в очереди — письмом, тревоги нет", () => {
+  assert.equal(CIRCLES, false);
+  assert.equal(circleLangFor("ru"), null);
+  assert.equal(circleLangFor("uz"), null);
+  const scout = read("scout/runner.mjs");
+  assert.match(scout, /if \(!CIRCLES\) \{\s*await markCircleSkipped\(reply\.id, CIRCLES_OFF\)/);
+  assert.ok(scout.indexOf("if (!CIRCLES)") < scout.indexOf("const saved = await savedCircles()"), "до поиска кружка");
+  // В отчёте 18:00 это не «нет кружка в Избранном».
+  assert.doesNotMatch(CIRCLES_OFF, /нет кружка/);
+  const hq = read("lib/admin/hq.ts");
+  assert.match(hq, /CIRCLES \? \(\["ru", "uz"\] as const\) : \[\]/);
+  assert.match(hq, /CIRCLES && input\.circleFallback\.length/);
 });
 
 test("язык кружка записан в ленте и доходит до скаута", () => {
