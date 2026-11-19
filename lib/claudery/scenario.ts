@@ -46,6 +46,67 @@ export type Setup = {
    */
   support: string;
   extras: Extra[];
+  /** Тексты витрины /claudery (владелец, 19.11.2026: «редактировать… тексты на сайте»). */
+  shop: Shop;
+};
+
+/** Карточка с заголовком и строкой: шаги «Как купить», «Почему с нами спокойно». */
+export type Card = { t: string; d: string };
+export type Faq = { q: string; a: string };
+
+/**
+ * Тексты витрины. Владелец, 19.11.2026: «сделай возможность редактировать эту
+ * информацию у нас через дашборд, чтобы мы могли менять тексты на сайте (как
+ * сделали… для чехфарм)». Товары и цены — `products`, здесь только слова.
+ * В заголовке призыва `{price}` — цена самой дешёвой подписки.
+ */
+export type Shop = {
+  kicker: string;
+  title: string;
+  accent: string;
+  lead: string;
+  pills: string[];
+  perks: string[];
+  steps: Card[];
+  trust: Card[];
+  faq: Faq[];
+  ctaTitle: string;
+  ctaText: string;
+};
+
+export const PRICE_MARK = "{price}";
+export const SHOP_LIMITS = { short: 120, long: 600, pills: 4, perks: 3, steps: 4, trust: 3, faq: 6 } as const;
+/** Слова услуги клиенту не показываем: Platega согласует продажу товара. */
+export const SERVICE_WORDS = /помощ|консультац|услуг|специалист/i;
+
+export const DEFAULT_SHOP: Shop = {
+  kicker: "Подписки на нейросети",
+  title: "Нужная нейросеть,",
+  accent: "с готовым доступом",
+  lead: "Выберите подписку, оплатите по СБП и получите доступ в Telegram. Подключение и ответы на вопросы бесплатно.",
+  pills: ["Оплата по СБП", "Доступ в Telegram", "Возврат, если доступ не передан"],
+  perks: ["Доступ в Telegram после оплаты", "Подключение бесплатно"],
+  steps: [
+    { t: "Нажмите «Купить»", d: "Откроется бот Claudery в Telegram, он сразу соберёт заказ на выбранную подписку." },
+    { t: "Оплатите по СБП", d: "Бот пришлёт ссылку на страницу заказа. Оплата через Platega, в пару нажатий." },
+    { t: "Получите доступ", d: "Как только оплата подтвердится, бот пришлёт данные доступа и поможет подключиться." },
+  ],
+  trust: [
+    { t: "Оплата через Platega", d: "По СБП, без ввода данных карты на нашем сайте." },
+    { t: "Возврат полностью", d: "Если доступ не передан. Подробности в оферте." },
+    { t: "Документы открыто", d: "Пользовательское соглашение и политика конфиденциальности внизу страницы." },
+  ],
+  faq: [
+    {
+      q: "Как я получу доступ?",
+      a: "После того как платёжная система подтвердит оплату, бот Claudery пришлёт вам данные доступа и поможет подключиться. Подключение и ответы на вопросы по подписке бесплатно.",
+    },
+    { q: "Сколько ждать?", a: "Доступ передаём с 06:00 до 19:00 по московскому времени. Обычно в течение часа после оплаты." },
+    { q: "Что если доступ не передали?", a: "Вернём оплату полностью. Напишите в поддержку, контакты внизу страницы." },
+    { q: "Как оплатить?", a: "По СБП через платёжный сервис Platega, на странице заказа. Данные карты мы не видим и не храним." },
+  ],
+  ctaTitle: "Подписка от {price}",
+  ctaText: "Откройте бота и выберите нейросеть: заказ соберётся за минуту.",
 };
 
 /** Шаг бота — внутреннее устройство, собирается из Setup (`scenarioOf`). */
@@ -90,6 +151,7 @@ export const DEFAULT_SETUP: Setup = {
   terms: "",
   support: "",
   extras: [],
+  shop: DEFAULT_SHOP,
 };
 
 /** Путь клиента из настроек: приветствие → вопрос → счёт → после оплаты. */
@@ -148,7 +210,9 @@ export function setupProblems(s: Setup): string[] {
   });
   if (!Number.isInteger(s.repeatDiscount) || s.repeatDiscount < REPEAT_DISCOUNT.min || s.repeatDiscount > REPEAT_DISCOUNT.max)
     out.push(`Скидка повторным: от ${REPEAT_DISCOUNT.min} до ${REPEAT_DISCOUNT.max}%.`);
-  if (s.support && !supportLink(s.support)) out.push("Поддержка: e-mail, @username или ссылка https://…");
+  if (s.support.length > LIMITS.support || splitSupport(s.support).some((v) => !supportLink(v)))
+    out.push("Поддержка: e-mail, @username или ссылка https://…, несколько — через запятую.");
+  out.push(...shopProblems(s.shop));
   if (s.terms.length > LIMITS.terms) out.push(`Условия длиннее ${LIMITS.terms} знаков.`);
   if (s.extras.length > LIMITS.extras) out.push(`Своих кнопок больше ${LIMITS.extras}.`);
   s.extras.forEach((e, i) => {
@@ -183,6 +247,7 @@ export function parseSetup(raw: unknown): Setup {
     terms: typeof r.terms === "string" ? r.terms : "",
     support: typeof r.support === "string" ? r.support : "",
     extras: Array.isArray(r.extras) ? (r.extras as Extra[]) : [],
+    shop: parseShop(r.shop),
   };
   return setupProblems(s).length ? DEFAULT_SETUP : s;
 }
@@ -221,6 +286,96 @@ export function setupFromForm(form: FormData): Setup {
     terms: str(form.get("terms")),
     support: str(form.get("support")),
     extras,
+    shop: shopFromForm(form),
+  };
+}
+
+/** Что не так с текстами витрины: длина и слова услуги. */
+export function shopProblems(h: Shop): string[] {
+  const out: string[] = [];
+  const short: [string, string][] = [
+    ["Витрина: подзаголовок", h.kicker],
+    ["Витрина: заголовок", h.title],
+    ["Витрина: выделенная часть заголовка", h.accent],
+    ["Витрина: заголовок призыва", h.ctaTitle],
+  ];
+  if (!h.title.trim()) out.push("Витрина: заголовок пустой.");
+  for (const [n, v] of short) if (v.length > SHOP_LIMITS.short) out.push(`${n}: длиннее ${SHOP_LIMITS.short} знаков.`);
+  for (const [n, v] of [["Витрина: описание", h.lead], ["Витрина: текст призыва", h.ctaText]] as const)
+    if (v.length > SHOP_LIMITS.long) out.push(`${n}: длиннее ${SHOP_LIMITS.long} знаков.`);
+  const lists: [string, string[], number][] = [
+    ["плашки", h.pills, SHOP_LIMITS.pills],
+    ["строки карточки", h.perks, SHOP_LIMITS.perks],
+  ];
+  for (const [n, list, max] of lists) {
+    if (list.length > max) out.push(`Витрина: ${n} — не больше ${max}.`);
+    if (list.some((v) => !v.trim() || v.length > SHOP_LIMITS.short)) out.push(`Витрина: ${n} — от 1 до ${SHOP_LIMITS.short} знаков.`);
+  }
+  const cards: [string, { a: string; b: string }[], number][] = [
+    ["шаги", h.steps.map((c) => ({ a: c.t, b: c.d })), SHOP_LIMITS.steps],
+    ["карточки доверия", h.trust.map((c) => ({ a: c.t, b: c.d })), SHOP_LIMITS.trust],
+    ["вопросы", h.faq.map((c) => ({ a: c.q, b: c.a })), SHOP_LIMITS.faq],
+  ];
+  for (const [n, list, max] of cards) {
+    if (list.length > max) out.push(`Витрина: ${n} — не больше ${max}.`);
+    if (list.some((c) => !c.a.trim() || c.a.length > SHOP_LIMITS.short || !c.b.trim() || c.b.length > SHOP_LIMITS.long))
+      out.push(`Витрина: ${n} — нужны и заголовок (до ${SHOP_LIMITS.short}), и текст (до ${SHOP_LIMITS.long}).`);
+  }
+  if (SERVICE_WORDS.test(shopText(h))) out.push("Витрина: без слов «помощь», «консультация», «услуга», «специалист» — продаём подписку, не услугу.");
+  return out;
+}
+
+/** Все слова витрины одной строкой — для проверки. */
+export function shopText(h: Shop): string {
+  return [
+    h.kicker, h.title, h.accent, h.lead, h.ctaTitle, h.ctaText, ...h.pills, ...h.perks,
+    ...h.steps.flatMap((c) => [c.t, c.d]), ...h.trust.flatMap((c) => [c.t, c.d]), ...h.faq.flatMap((c) => [c.q, c.a]),
+  ].join(" \n ");
+}
+
+/** Сохранённое без витрины (или с частью полей) — недостающее из `DEFAULT_SHOP`. */
+export function parseShop(raw: unknown): Shop {
+  if (!raw || typeof raw !== "object") return DEFAULT_SHOP;
+  const r = raw as Record<string, unknown>;
+  const text = (k: keyof Shop) => (typeof r[k] === "string" ? (r[k] as string) : (DEFAULT_SHOP[k] as string));
+  const strs = (k: "pills" | "perks") => (Array.isArray(r[k]) ? (r[k] as unknown[]).map(String) : DEFAULT_SHOP[k]);
+  const cards = (k: "steps" | "trust") =>
+    Array.isArray(r[k]) ? (r[k] as Card[]).map((c) => ({ t: String(c?.t ?? ""), d: String(c?.d ?? "") })) : DEFAULT_SHOP[k];
+  return {
+    kicker: text("kicker"),
+    title: text("title"),
+    accent: text("accent"),
+    lead: text("lead"),
+    pills: strs("pills"),
+    perks: strs("perks"),
+    steps: cards("steps"),
+    trust: cards("trust"),
+    faq: Array.isArray(r.faq) ? (r.faq as Faq[]).map((c) => ({ q: String(c?.q ?? ""), a: String(c?.a ?? "") })) : DEFAULT_SHOP.faq,
+    ctaTitle: text("ctaTitle"),
+    ctaText: text("ctaText"),
+  };
+}
+
+/** Витрина из формы конструктора: пустая строка списка — её нет. */
+export function shopFromForm(form: FormData): Shop {
+  // Форма без полей витрины (открыта до выкатки) — прежние тексты страницы.
+  if (!form.has("shop.title")) return DEFAULT_SHOP;
+  const list = (name: string, max: number) =>
+    Array.from({ length: max }, (_, i) => str(form.get(`${name}${i}`))).filter(Boolean);
+  const pairs = (name: string, max: number) =>
+    Array.from({ length: max }, (_, i) => ({ a: str(form.get(`${name}${i}.a`)), b: str(form.get(`${name}${i}.b`)) })).filter((c) => c.a || c.b);
+  return {
+    kicker: str(form.get("shop.kicker")),
+    title: str(form.get("shop.title")),
+    accent: str(form.get("shop.accent")),
+    lead: str(form.get("shop.lead")),
+    pills: list("shop.pill", SHOP_LIMITS.pills),
+    perks: list("shop.perk", SHOP_LIMITS.perks),
+    steps: pairs("shop.step", SHOP_LIMITS.steps).map((c) => ({ t: c.a, d: c.b })),
+    trust: pairs("shop.trust", SHOP_LIMITS.trust).map((c) => ({ t: c.a, d: c.b })),
+    faq: pairs("shop.faq", SHOP_LIMITS.faq).map((c) => ({ q: c.a, a: c.b })),
+    ctaTitle: str(form.get("shop.ctaTitle")),
+    ctaText: str(form.get("shop.ctaText")),
   };
 }
 
@@ -242,6 +397,16 @@ export function payText(text: string, amount: number): string {
 /** Сумма в тексте: «5 000 ₽». */
 export function rub(amount: number): string {
   return `${String(amount).replace(/\B(?=(\d{3})+(?!\d))/g, " ")} ₽`;
+}
+
+/** Контакты поддержки по одному: через запятую, точку с запятой, пробел или «и». */
+export function splitSupport(raw: string): string[] {
+  return raw.split(/[,;\s]+/).map((v) => v.trim()).filter((v) => v && !/^(и|или|and)$/i.test(v));
+}
+
+/** Все контакты поддержки ссылками (владелец, 19.11.2026: «@maximov_tech и Siberian_2»). */
+export function supportLinks(raw: string): { text: string; href: string; web: string | null }[] {
+  return splitSupport(raw).map((v) => supportLink(v)).filter((l): l is NonNullable<typeof l> => !!l);
 }
 
 /**

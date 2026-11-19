@@ -18,7 +18,7 @@
  * Здесь только решения; Telegram, база и Platega — в зависимостях
  * (lib/claudery/store.ts), чтобы ход бота проверялся тестом без сети.
  */
-import { payText, repeatAmount, scenarioOf, stepOf, supportLink, type Scenario, type Setup, type Step } from "@/lib/claudery/scenario";
+import { payText, repeatAmount, scenarioOf, stepOf, supportLinks, type Scenario, type Setup, type Step } from "@/lib/claudery/scenario";
 
 export type Row = { text: string; data?: string; url?: string }[];
 
@@ -82,13 +82,14 @@ function rows(step: Step): Row[] {
  */
 export function docRows(s: Scenario, offerUrl: string): Row[] {
   const base = offerUrl.replace(/\/offer$/, "");
-  const link = supportLink(s.support);
+  const links = supportLinks(s.support);
   return [
     [
       { text: T.agreement, url: `${base}/terms` },
       { text: T.privacy, url: `${base}/privacy` },
     ],
-    ...(link ? [[{ text: T.support, url: link.web ?? `${base}#support` }]] : []),
+    // Один контакт — «Поддержка», несколько — кнопка на каждого с его именем.
+    ...links.map((l) => [{ text: links.length > 1 ? `${T.support} ${l.text}` : T.support, url: l.web ?? `${base}#support` }]),
   ];
 }
 
