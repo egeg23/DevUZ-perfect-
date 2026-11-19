@@ -134,7 +134,8 @@ test("ключи — только из хранилища, поллер став
   assert.match(read("app/api/claudery/tg/[secret]/route.ts"), /secretOk\(header, expected\)/);
   assert.match(read("app/api/reminders/sweep/route.ts"), /checkClauderyPayments/);
   // Реквизиты ИП — из хранилища, в коде оферты их нет.
-  assert.match(read("app/claudery/offer/page.tsx"), /appSecret\("INVOICE_RU_PAYEE"\)/);
+  assert.match(read("app/claudery/offer/page.tsx"), /sellerData\(\)/);
+  assert.match(read("app/claudery/docs.tsx"), /appSecret\("INVOICE_RU_PAYEE"\)/);
 });
 
 test("повторное обращение: кто уже оплачивал — скидка 30%, 3 500 ₽ вместо 5 000 ₽ на странице заявки", async () => {
@@ -218,4 +219,47 @@ test("продаём товар, не услугу: витрина подпис�
   assert.match(read("app/claudery/page.tsx"), /setup\.products\.map/);
   assert.match(read("app/claudery/offer/page.tsx"), /цифровой товар/);
   assert.match(read("lib/claudery/store.ts"), /productAt\(await loadSetup\(\), productIndex\)/);
+});
+
+test("документы для банка Platega: соглашение, политика, поддержка — на сайте и кнопками в боте; почта покупателя в платеже", async () => {
+  const { supportLink } = await import("@/lib/claudery/scenario");
+  const { docRows } = await import("@/lib/claudery/flow");
+  const { buyerId } = await import("@/lib/claudery/store");
+  // Контакт поддержки: почта, @username, t.me или https; группа словами — нет.
+  assert.deepEqual(supportLink("help@example.com"), { text: "help@example.com", href: "mailto:help@example.com", web: null });
+  assert.equal(supportLink("@someone")?.web, "https://t.me/someone");
+  assert.equal(supportLink("https://t.me/someone")?.text, "@someone");
+  assert.equal(supportLink("напишите в группу"), null);
+  assert.equal(supportLink(""), null);
+  assert.ok(setupProblems({ ...DEFAULT_SETUP, support: "группа поддержки" }).length > 0);
+  assert.deepEqual(setupProblems({ ...DEFAULT_SETUP, support: "@someone" }), []);
+  const form = new FormData();
+  form.set("support", " @someone ");
+  assert.equal(setupFromForm(form).support, "@someone");
+  // Кнопки в боте: соглашение и политика всегда, «Поддержка» — когда контакт задан.
+  const sc = scenarioOf(DEFAULT_SETUP);
+  const urls = docRows(sc, "https://devuz.studio/claudery/offer").flat().map((b) => b.url);
+  assert.deepEqual(urls, ["https://devuz.studio/claudery/terms", "https://devuz.studio/claudery/privacy"]);
+  const withSupport = docRows(scenarioOf({ ...DEFAULT_SETUP, support: "help@example.com" }), "https://devuz.studio/claudery/offer").flat();
+  assert.equal(withSupport.at(-1)?.url, "https://devuz.studio/claudery#support");
+  // Документы есть кнопками и на первом шаге, и рядом с заказом.
+  const f = fake();
+  await handle(who, { type: "text", text: "/start" }, f.deps, "https://x/claudery/offer");
+  assert.ok(f.sent[0].rows!.flat().some((b) => b.url === "https://x/claudery/privacy"));
+  await handle(who, btn(CB.step + "ask"), f.deps, "https://x/claudery/offer");
+  await handle(who, { type: "text", text: "Нужен ChatGPT" }, f.deps, "https://x/claudery/offer");
+  assert.ok(f.sent.at(-1)!.rows!.flat().some((b) => b.url === "https://x/claudery/terms"));
+  // Страницы: дата редакции, поддержка, продавец из хранилища, без услуг.
+  const strip = (src: string) => src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\{\/\*[\s\S]*?\*\/\}/g, "");
+  for (const file of ["app/claudery/terms/page.tsx", "app/claudery/privacy/page.tsx", "app/claudery/docs.tsx"]) {
+    assert.doesNotMatch(strip(read(file)), /помощ|консультац|услуг|специалист/i, file);
+  }
+  assert.match(read("app/claudery/docs.tsx"), /DOCS_DATE = "\d\d\.\d\d\.\d{4}"/);
+  assert.match(read("app/claudery/docs.tsx"), /INVOICE_RU_PAYEE/);
+  for (const file of ["app/claudery/page.tsx", "app/claudery/z/[token]/page.tsx", "app/claudery/offer/page.tsx", "app/claudery/terms/page.tsx", "app/claudery/privacy/page.tsx"]) {
+    assert.match(read(file), /<Footer s=/, file);
+  }
+  // Почта покупателя в платеже (памятка Platega): Telegram ID@telegram.org.
+  assert.equal(buyerId(42), "42@telegram.org");
+  assert.match(read("lib/claudery/store.ts"), /metadata: \{ user_email: buyerId\(order\.chatId\) \}/);
 });

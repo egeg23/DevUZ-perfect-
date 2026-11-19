@@ -627,6 +627,7 @@ export const moreSections: Record<string, HelpEntry> = {
           "W samym bocie nie ma ani słowa o płatności i cenie: Telegram blokuje boty, które biorą pieniądze z pominięciem jego systemu. Zamówienie od razu trafia do leadów (zgłoszeń klientów) jako «Pomoc z AI (Claudery)». Gdy system płatności potwierdzi wpłatę, bot wysyła klientowi tekst z kroku «4. Po płatności».",
           "W bloku «Co widzi klient» są kroki bota. Zmieniasz słowa i listę «Towary: subskrypcje i ceny» (do sześciu wierszy: nazwa, co zawiera, cena) i możesz dodać do czterech własnych przycisków pod powitaniem. Tę samą listę widać na witrynie («Witryna na stronie») i w ofercie. Kto już płacił, dostaje cenę dowolnej subskrypcji niższą o «Zniżka dla tych, którzy już płacili, %» (zwykle 30%).",
           "W bloku «Klucze» jest token bota i dwa klucze Platega, przycisk «Zapisz i sprawdź». Bota mogą zmieniać właściciel i kierownik. Po płatności sam zakłada się [projekt](/admin/projects), a prowadzący lead dostaje 40% kwoty.",
+          "Bank systemu płatności wymaga dokumentów i kontaktu do wsparcia. «Regulamin» i «Polityka prywatności» otwierają się przyciskami obok witryny, są na dole każdej strony Claudery i jako przyciski w bocie. W kroku «6. Wsparcie kupujących» wpisz e-mail lub @username osoby w Telegramie: grupa nie wystarczy. Puste: w dokumentach podany jest sam bot. Do rachunku Platega trafia numer kupującego w Telegramie, dzięki temu system płatności rozpoznaje powracającego kupującego.",
         ],
       },
       {

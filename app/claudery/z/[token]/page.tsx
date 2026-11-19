@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { rub } from "@/lib/claudery/scenario";
 import { OFFER_PATH, orderView } from "@/lib/claudery/store";
 
+import { Footer, sellerData } from "../../docs";
+
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Claudery — ваш заказ" };
 
@@ -18,7 +20,7 @@ export const metadata: Metadata = { title: "Claudery — ваш заказ" };
 export default async function ClauderyOrder({ params, searchParams }: { params: Promise<{ token: string }>; searchParams: Promise<{ pay?: string }> }) {
   const { token } = await params;
   const failed = (await searchParams).pay === "failed";
-  const order = await orderView(token);
+  const [order, seller] = await Promise.all([orderView(token), sellerData()]);
   if (!order) notFound();
   const box = { border: "1px solid #e5e5e5", borderRadius: 14, padding: 16, margin: "16px 0" } as const;
   return (
@@ -76,6 +78,7 @@ export default async function ClauderyOrder({ params, searchParams }: { params: 
           </p>
         </form>
       )}
+      <Footer s={seller} />
     </main>
   );
 }

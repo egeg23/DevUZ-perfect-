@@ -39,6 +39,12 @@ export type Setup = {
   repeatDiscount: number;
   paid: string;
   terms: string;
+  /**
+   * Контакт поддержки: e-mail, @username или https-ссылка (Platega,
+   * 19.11.2026: «Контакты поддержки (группа не подходит — можно тикет-систему,
+   * юзернейм или почту)»). Стоит в боте, на витрине и в документах.
+   */
+  support: string;
   extras: Extra[];
 };
 
@@ -46,9 +52,9 @@ export type Setup = {
 export type NodeKind = "message" | "ask" | "pay";
 export type Button = { label: string; to?: string; url?: string };
 export type Step = { id: string; kind: NodeKind; text: string; buttons: Button[]; next?: string; amount?: number; discount?: number };
-export type Scenario = { start: string; terms: string; steps: Step[] };
+export type Scenario = { start: string; terms: string; support: string; steps: Step[] };
 
-export const LIMITS = { text: 3500, label: 60, terms: 6000, extras: 4, products: 6, productTitle: 80, productNote: 200 } as const;
+export const LIMITS = { text: 3500, label: 60, terms: 6000, extras: 4, products: 6, productTitle: 80, productNote: 200, support: 120 } as const;
 export const AMOUNT = { min: 100, max: 1_000_000, default: 5000 } as const;
 /**
  * Повторное обращение — скидка (владелец, 17.11.2026: «Повторное обращение
@@ -82,6 +88,7 @@ export const DEFAULT_SETUP: Setup = {
   repeatDiscount: REPEAT_DISCOUNT.default,
   paid: "Спасибо за покупку! В ближайшее время пришлём доступ сюда, в Telegram.",
   terms: "",
+  support: "",
   extras: [],
 };
 
@@ -94,6 +101,7 @@ export function scenarioOf(s: Setup): Scenario {
   return {
     start: "start",
     terms: s.terms,
+    support: s.support,
     steps: [
       {
         id: "start",
@@ -140,6 +148,7 @@ export function setupProblems(s: Setup): string[] {
   });
   if (!Number.isInteger(s.repeatDiscount) || s.repeatDiscount < REPEAT_DISCOUNT.min || s.repeatDiscount > REPEAT_DISCOUNT.max)
     out.push(`Скидка повторным: от ${REPEAT_DISCOUNT.min} до ${REPEAT_DISCOUNT.max}%.`);
+  if (s.support && !supportLink(s.support)) out.push("Поддержка: e-mail, @username или ссылка https://…");
   if (s.terms.length > LIMITS.terms) out.push(`Условия длиннее ${LIMITS.terms} знаков.`);
   if (s.extras.length > LIMITS.extras) out.push(`Своих кнопок больше ${LIMITS.extras}.`);
   s.extras.forEach((e, i) => {
@@ -172,6 +181,7 @@ export function parseSetup(raw: unknown): Setup {
     repeatDiscount: typeof r.repeatDiscount === "number" ? r.repeatDiscount : DEFAULT_SETUP.repeatDiscount,
     paid: typeof r.paid === "string" ? r.paid : DEFAULT_SETUP.paid,
     terms: typeof r.terms === "string" ? r.terms : "",
+    support: typeof r.support === "string" ? r.support : "",
     extras: Array.isArray(r.extras) ? (r.extras as Extra[]) : [],
   };
   return setupProblems(s).length ? DEFAULT_SETUP : s;
@@ -209,6 +219,7 @@ export function setupFromForm(form: FormData): Setup {
     repeatDiscount: Number.isFinite(discount) ? Math.round(discount) : -1,
     paid: str(form.get("paid")),
     terms: str(form.get("terms")),
+    support: str(form.get("support")),
     extras,
   };
 }
@@ -231,4 +242,18 @@ export function payText(text: string, amount: number): string {
 /** Сумма в тексте: «5 000 ₽». */
 export function rub(amount: number): string {
   return `${String(amount).replace(/\B(?=(\d{3})+(?!\d))/g, " ")} ₽`;
+}
+
+/**
+ * Контакт поддержки ссылкой: e-mail → mailto, @username → t.me, https как
+ * есть. Не разобрался — null (такой контакт конструктор не сохранит).
+ */
+export function supportLink(raw: string): { text: string; href: string; web: string | null } | null {
+  const v = raw.trim();
+  if (!v || v.length > LIMITS.support) return null;
+  if (/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(v)) return { text: v, href: `mailto:${v}`, web: null };
+  const user = /^@?([a-z][a-z0-9_]{3,31})$/i.exec(v) ?? /^https:\/\/t\.me\/([a-z][a-z0-9_]{3,31})\/?$/i.exec(v);
+  if (user) return { text: `@${user[1]}`, href: `https://t.me/${user[1]}`, web: `https://t.me/${user[1]}` };
+  if (/^https:\/\/\S+$/.test(v)) return { text: v, href: v, web: v };
+  return null;
 }
