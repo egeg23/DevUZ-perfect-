@@ -188,6 +188,11 @@ async function plategaCall(path: string, init: RequestInit = {}): Promise<Record
   }
 }
 
+/** Идентификатор покупателя для Platega: `<Telegram ID>@telegram.org`. */
+export function buyerId(chatId: number): string {
+  return `${chatId}@telegram.org`;
+}
+
 /** Платёжная ссылка на сумму (СБП), назначение — купленный товар. */
 async function invoice(token: string, order: Order): Promise<{ txn: string; url: string } | null> {
   const txn = crypto.randomUUID();
@@ -202,6 +207,10 @@ async function invoice(token: string, order: Order): Promise<{ txn: string; url:
       return: back,
       failedUrl: back,
       payload: JSON.stringify({ claudery: order.requestNo }),
+      // Покупатель для Platega (их памятка «Как передавать e-mail покупателя»,
+      // магазин в Telegram): числовой Telegram ID с доменом telegram.org,
+      // один и тот же в каждом платеже этого человека.
+      metadata: { user_email: buyerId(order.chatId) },
     }),
   });
   const url = typeof data?.redirect === "string" ? data.redirect : null;

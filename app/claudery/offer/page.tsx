@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 import { rub } from "@/lib/claudery/scenario";
-import { loadSetup } from "@/lib/claudery/store";
-import { appSecret } from "@/lib/secrets";
+
+import { Footer, PRIVACY_PATH, TERMS_PATH, sellerData } from "../docs";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Claudery — оферта на продажу подписок" };
@@ -16,7 +16,8 @@ export const metadata: Metadata = { title: "Claudery — оферта на пр�
  * условия и гарантию владелец пишет в конструкторе.
  */
 export default async function ClauderyOffer() {
-  const [payee, taxId, setup] = await Promise.all([appSecret("INVOICE_RU_PAYEE"), appSecret("INVOICE_RU_TAX_ID"), loadSetup()]);
+  const seller = await sellerData();
+  const { payee, taxId, setup } = seller;
   const h2 = { fontSize: 20 } as const;
   let n = 4;
   return (
@@ -57,9 +58,13 @@ export default async function ClauderyOffer() {
         </>
       ) : null}
       <h2 style={h2}>{n++}. Возврат</h2>
-      <p>Если доступ не был передан, Продавец возвращает оплату полностью по обращению Покупателя в Telegram-боте Claudery.</p>
+      <p>Если доступ не был передан, Продавец возвращает оплату полностью по обращению Покупателя в поддержку (контакты ниже).</p>
       <h2 style={h2}>{n++}. Персональные данные</h2>
-      <p>Продавец обрабатывает имя пользователя Telegram и текст заказа, только чтобы передать товар и ответить Покупателю.</p>
+      <p>
+        Продавец обрабатывает данные Покупателя по <a href={PRIVACY_PATH}>политике конфиденциальности</a>. Порядок пользования ботом и сайтом — в{" "}
+        <a href={TERMS_PATH}>пользовательском соглашении</a>.
+      </p>
+      <Footer s={seller} />
     </main>
   );
 }

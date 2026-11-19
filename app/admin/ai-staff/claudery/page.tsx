@@ -79,6 +79,12 @@ export default async function AiStaffClauderyPage({ searchParams }: { searchPara
             <a href={OFFER_PATH} target="_blank" rel="noreferrer" className={BTN}>
               {t.offer}
             </a>
+            <a href="/claudery/terms" target="_blank" rel="noreferrer" className={BTN}>
+              {t.terms}
+            </a>
+            <a href="/claudery/privacy" target="_blank" rel="noreferrer" className={BTN}>
+              {t.privacy}
+            </a>
           </div>
         </section>
 
@@ -178,6 +184,14 @@ export default async function AiStaffClauderyPage({ searchParams }: { searchPara
                 <label className="block text-xs text-muted">
                   {t.text}
                   <textarea name="terms" rows={4} defaultValue={setup.terms} maxLength={LIMITS.terms} className={INPUT} />
+                </label>
+              </div>
+              <div className={STEP}>
+                <p className={STEP_TITLE}>{t.s6}</p>
+                <p className="mb-2 text-xs text-muted">{t.supportHint}</p>
+                <label className="block text-xs text-muted">
+                  {t.support}
+                  <input name="support" defaultValue={setup.support} maxLength={LIMITS.support} placeholder="support@… / @username" className={INPUT} />
                 </label>
               </div>
             </fieldset>

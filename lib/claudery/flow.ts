@@ -18,7 +18,7 @@
  * Здесь только решения; Telegram, база и Platega — в зависимостях
  * (lib/claudery/store.ts), чтобы ход бота проверялся тестом без сети.
  */
-import { payText, repeatAmount, scenarioOf, stepOf, type Scenario, type Setup, type Step } from "@/lib/claudery/scenario";
+import { payText, repeatAmount, scenarioOf, stepOf, supportLink, type Scenario, type Setup, type Step } from "@/lib/claudery/scenario";
 
 export type Row = { text: string; data?: string; url?: string }[];
 
@@ -53,6 +53,9 @@ export type Deps = {
 export const T = {
   open: "📋 Открыть заказ",
   offer: "📄 Оферта",
+  agreement: "📜 Пользовательское соглашение",
+  privacy: "🔒 Политика конфиденциальности",
+  support: "💬 Поддержка",
   noOrder: "Заказ мы записали. Напишем вам здесь, в Telegram.",
   needText: "Напишите, пожалуйста, текстом, какая нейросеть нужна (можно со скриншотом).",
 } as const;
@@ -62,6 +65,25 @@ export const CB = { step: "s:", check: "p:check" } as const;
 
 function rows(step: Step): Row[] {
   return step.buttons.map((b) => [b.url ? { text: b.label, url: b.url } : { text: b.label, data: CB.step + b.to }]);
+}
+
+/**
+ * Документы и поддержка — кнопками в боте всегда под рукой (Platega,
+ * 19.11.2026: «документация должна быть постоянно доступна пользователю,
+ * поэтому добавьте ее отдельными кнопками в бот или на сайт»). Адреса — рядом
+ * с офертой: /claudery/terms, /claudery/privacy; поддержка — контакт из
+ * конструктора, а e-mail (в кнопке Telegram mailto нельзя) — на витрине.
+ */
+export function docRows(s: Scenario, offerUrl: string): Row[] {
+  const base = offerUrl.replace(/\/offer$/, "");
+  const link = supportLink(s.support);
+  return [
+    [
+      { text: T.agreement, url: `${base}/terms` },
+      { text: T.privacy, url: `${base}/privacy` },
+    ],
+    ...(link ? [[{ text: T.support, url: link.web ?? `${base}#support` }]] : []),
+  ];
 }
 
 /** Показать шаг. Шаг «pay» заводит заявку и выставляет счёт здесь же. */
@@ -93,12 +115,13 @@ export async function show(who: Who, flow: Flow, s: Scenario, deps: Deps, offerU
     await deps.send(who.chatId, payText(step.text, amount), [
       [{ text: T.open, url: flow.order.url }],
       [{ text: T.offer, url: offerUrl }],
+      ...docRows(s, offerUrl),
     ]);
     return;
   }
 
   await deps.saveFlow(who.chatId, flow);
-  await deps.send(who.chatId, step.text, rows(step));
+  await deps.send(who.chatId, step.text, step.id === s.start ? [...rows(step), ...docRows(s, offerUrl)] : rows(step));
 }
 
 export type Incoming =

@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 
 import { rub } from "@/lib/claudery/scenario";
-import { OFFER_PATH, botState, loadSetup } from "@/lib/claudery/store";
-import { appSecret } from "@/lib/secrets";
+import { OFFER_PATH } from "@/lib/claudery/store";
+
+import { Footer, sellerData } from "./docs";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Claudery — подписки на нейросети" };
@@ -15,9 +16,10 @@ export const metadata: Metadata = { title: "Claudery — подписки на �
  * из хранилища. Заказ оформляется в боте: на странице заказа — выбор и оплата.
  */
 export default async function ClauderyShop() {
-  const [setup, bot, payee, taxId] = await Promise.all([loadSetup(), botState(), appSecret("INVOICE_RU_PAYEE"), appSecret("INVOICE_RU_TAX_ID")]);
+  const seller = await sellerData();
+  const setup = seller.setup;
   const card = { border: "1px solid #e5e5e5", borderRadius: 14, padding: 16 } as const;
-  const botUrl = bot.username ? `https://t.me/${bot.username}` : null;
+  const botUrl = seller.bot ? `https://t.me/${seller.bot}` : null;
   return (
     <main style={{ maxWidth: 760, margin: "0 auto", padding: "32px 16px" }}>
       <p style={{ color: "#666", margin: 0 }}>Claudery</p>
@@ -56,10 +58,7 @@ export default async function ClauderyShop() {
         Оплата через платёжный сервис Platega (СБП). Если доступ не был передан, оплата возвращается полностью. Подробности — в <a href={OFFER_PATH}>оферте</a>.
       </p>
 
-      <p style={{ margin: "28px 0 0", fontSize: 14, color: "#666" }}>
-        Продавец: {payee ?? "индивидуальный предприниматель"}
-        {taxId ? `, ИНН ${taxId}` : ""}. {botUrl ? "Связь: Telegram-бот Claudery." : ""}
-      </p>
+      <Footer s={seller} />
     </main>
   );
 }
