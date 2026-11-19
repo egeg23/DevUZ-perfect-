@@ -12,6 +12,7 @@ import { makeCore, ROLES, STATUS, KINDS, LANGS, PAGES, CONTACT_KEYS, SEGMENTS, A
 import { sameSecret } from "./lib/crypt.mjs";
 import { HERO_SLOTS, heroStyle, imageSize } from "./lib/hero.mjs";
 import { blocksOf, applyTexts, applyImages, orderBlocks, hideBlocks } from "./lib/site-text.mjs";
+import { addCustom, titleOf } from "./lib/custom-blocks.mjs";
 
 const MIME = {
   ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8",
@@ -117,9 +118,13 @@ export function createApp({ core, siteDir, adminDir, dataDir = "", setupCode = "
     const star = pg === "*";
     if (!star && !PAGES.includes(pg)) throw new HttpError(400, "Нет такой страницы");
     const f = pageFile(lang, star || pg === "home" ? "" : pg);
-    const html = existsSync(f) ? readFileSync(f, "utf8").split("__SITE_URL__").join(publicUrl) : "";
+    const custom = star ? [] : core.site.custom(pg);
+    let html = existsSync(f) ? readFileSync(f, "utf8").split("__SITE_URL__").join(publicUrl) : "";
+    if (html) html = addCustom(html, custom, lang);
     const { blocks, chrome } = blocksOf(html);
     const list = star ? (chrome ? [chrome] : []) : blocks;
+    /* Свои блоки правятся своей формой, не по текстам. */
+    for (const b of list) { const c = custom.find((x) => x.id === b.id); if (c) { b.custom = c; b.name = "Свой блок · " + titleOf(c, lang); b.texts = []; b.images = []; b.canHide = true; } }
     const own = Object.fromEntries(core.site.own(lang, pg).map((r) => [r.h, r]));
     const known = new Set();
     for (const b of list) { for (const t of b.texts) { known.add(t.h); t.val = own[t.h]?.v || ""; } for (const i of b.images) { known.add(i.h); i.val = own[i.h]?.v || ""; } }
@@ -128,7 +133,7 @@ export function createApp({ core, siteDir, adminDir, dataDir = "", setupCode = "
     if (order.length) { const rank = (b) => { const i = order.indexOf(b.id); return b.canMove ? (i < 0 ? 500 + list.indexOf(b) : i) : (b.id === "data" ? 9999 : -1); }; list.sort((x, y) => rank(x) - rank(y)); }
     /* Правки, исходный текст которых в новой версии сайта уже другой. */
     const stale = Object.values(own).filter((r) => !known.has(r.h)).map((r) => ({ h: r.h, def: r.def, val: r.v, img: r.h[0] === "i" }));
-    return { lang, page: pg, blocks: list, hidden: star ? [] : core.site.hidden(pg), order, stale };
+    return { lang, page: pg, blocks: list, hidden: star ? [] : core.site.hidden(pg), order, stale, customMax: 12, customCount: custom.length };
   }
   /* Шапка «Продуктов»: на подиум встаёт упаковка, выбранная в панели;
      ширина — по её пропорциям в рамке места (hero.mjs). */
@@ -162,6 +167,7 @@ export function createApp({ core, siteDir, adminDir, dataDir = "", setupCode = "
       if (html) {
         html = html.split("__SITE_URL__").join(publicUrl);
         const own = core.site.texts(lang, pg || "home");
+        html = addCustom(html, core.site.custom(pg || "home"), lang);
         html = hideBlocks(orderBlocks(applyImages(applyTexts(html, own), own), core.site.order(pg || "home")), core.site.hidden(pg || "home"));
         html = html.replace('"live":null', '"live":' + JSON.stringify(core.live(lang)).replace(/</g, "\\u003c"));
         if (pg === "products") html = heroPacks(html, lang);
@@ -248,8 +254,11 @@ export function createApp({ core, siteDir, adminDir, dataDir = "", setupCode = "
     if (M === "POST" && path === "/site/seo") { lead(); core.seo.save(await body(req), who); return { seo: core.seo.all() }; }
     if (M === "POST" && path === "/site/bot") { lead(); return { bot: await core.botProfile.save(await body(req), who) }; }
     /* Страницы сайта: тексты каждого блока и какие блоки показывать — руководитель и владелец. */
-    if (M === "GET" && path === "/pages") { lead(); const q = new URL(req.url, "http://x").searchParams; return pagesView(q.get("lang") || "ru", q.get("page") || "home"); }
-    if (M === "POST" && path === "/pages") { lead(); const b = await body(req, 512 * 1024); core.site.save(b, who); return pagesView(b.lang, b.page); }
+    /* Страницы сайта — всем ролям (владелец DevUz, 19.11.2026: «полное
+       управление сайтом внутри», открыть и менеджерам). */
+    if (M === "GET" && path === "/pages") { const q = new URL(req.url, "http://x").searchParams; return pagesView(q.get("lang") || "ru", q.get("page") || "home"); }
+    if (M === "POST" && path === "/pages") { const b = await body(req, 512 * 1024); core.site.save(b, who); return pagesView(b.lang, b.page); }
+    if (M === "POST" && path === "/pages/custom") { const b = await body(req, 256 * 1024); try { core.site.saveCustom(b.page, b.blocks, who); } catch (e) { throw new HttpError(400, e.message); } return pagesView(b.lang, b.page); }
     if (M === "POST" && path === "/site/counters") { lead(); core.connect.counters(await body(req), who); return { ok: true }; }
     if (M === "POST" && path === "/site/faq") { const b = await body(req, 256 * 1024); if (b.texts) core.faq.setTexts(b.texts, who); return { faq: core.faq.save(b.faq, who), botTexts: core.faq.texts() }; }
 

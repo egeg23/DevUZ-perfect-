@@ -11,6 +11,7 @@ import { UPLOADED } from "./site-text.mjs";
 import { CATALOG, AREAS, CATALOG_FIXES } from "./catalog.mjs";
 import { CATALOG_TR, packImg } from "./catalog-tr.mjs";
 import { HERO_SLOTS } from "./hero.mjs";
+import { cleanBlocks, titleOf } from "./custom-blocks.mjs";
 
 export const STATUS = { new: "Новое", work: "В работе", meet: "Назначена встреча", done: "Ответ отправлен", spam: "Спам" };
 export const ROLES = { owner: "Владелец", head: "Руководитель", manager: "Менеджер" };
@@ -653,6 +654,17 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
     own: (lang, page) => db.all("select h, v, def from site_text where lang in ('*', ?) and page = ?", lang, page),
     hidden: (page) => getS("site.hide." + page).split(",").filter(Boolean),
     order: (page) => getS("site.order." + page).split(",").filter(Boolean),
+    /* Свои блоки страницы (custom-blocks.mjs), на все языки сразу. */
+    custom(page) { try { const v = JSON.parse(getS("site.custom." + page) || "[]"); return Array.isArray(v) ? v : []; } catch { return []; } },
+    saveCustom(page, list, by) {
+      if (!PAGES.includes(page)) throw new Error("Нет такой страницы");
+      const before = site.custom(page), next = cleanBlocks(list);
+      setS("site.custom." + page, JSON.stringify(next));
+      const was = new Set(before.map((b) => b.id)), now_ = new Set(next.map((b) => b.id));
+      const add = next.filter((b) => !was.has(b.id)).map((b) => titleOf(b)), del = before.filter((b) => !now_.has(b.id)).map((b) => titleOf(b));
+      changed(); note(by, `Свои блоки страницы «${page}»: ${add.length ? "добавил «" + add.join("», «") + "»" : del.length ? "убрал «" + del.join("», «") + "»" : "поменял"}`);
+      return next;
+    },
     /* texts: { отпечаток: { v, def } }; пустое v — вернуть как в сборке. */
     save({ lang, page, texts, hide, images, order }, by) {
       if (!LANGS.includes(lang) || !pageOk(page)) throw new Error("Нет такой страницы");
