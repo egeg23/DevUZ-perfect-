@@ -263,6 +263,8 @@ test("документы для банка Platega: соглашение, пол
     assert.doesNotMatch(strip(read(file)), /помощ|консультац|услуг|специалист/i, file);
   }
   assert.match(read("app/claudery/docs.tsx"), /DOCS_DATE = "\d\d\.\d\d\.\d{4}"/);
+  // Кодовое слово Platega в подвале каждой страницы, пока банк согласует.
+  assert.match(read("app/claudery/docs.tsx"), /\{BANK_WORD \? <p/);
   assert.match(read("app/claudery/docs.tsx"), /INVOICE_RU_PAYEE/);
   for (const file of ["app/claudery/page.tsx", "app/claudery/z/[token]/page.tsx", "app/claudery/offer/page.tsx", "app/claudery/terms/page.tsx", "app/claudery/privacy/page.tsx"]) {
     assert.match(read(file), /<Footer s=/, file);
