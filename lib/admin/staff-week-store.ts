@@ -1,3 +1,4 @@
+import { MANUAL_LEAD_ACTION } from "@/lib/admin/touch-store";
 import { QUEUE_ROLES } from "@/lib/admin/lead-queue";
 import { staleCounts } from "@/lib/admin/lead-tidy-store";
 import { wants } from "@/lib/admin/notify-prefs";
@@ -88,7 +89,16 @@ export async function loadStaffWeek(range: WeekRange, now: Date = new Date()): P
       .lt(column, iso(to));
     if (column === "touched_at") query = query.neq("status", "failed");
     const { count: n } = await query;
-    return n ?? 0;
+    if (column !== "touched_at") return n ?? 0;
+    // Лиды, добавленные вручную, — тоже касания (touch-store → manualLeadStamps).
+    const { count: manual } = await db
+      .from("audit_events")
+      .select("id", { count: "exact", head: true })
+      .eq("action", MANUAL_LEAD_ACTION)
+      .eq("actor_staff_id", id)
+      .gte("created_at", iso(from))
+      .lt("created_at", iso(to));
+    return (n ?? 0) + (manual ?? 0);
   };
 
   const [counts, { data: presence }, { data: taken }, { data: burned }, stale, deals] = await Promise.all([

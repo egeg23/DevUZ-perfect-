@@ -4,6 +4,7 @@ import { dayStartUtc, outcomeOf } from "@/lib/admin/portion";
 import { todayInTashkent } from "@/lib/admin/pulse";
 import { esc } from "@/lib/qualify/telegram";
 import { serviceClient } from "@/lib/supabase";
+import { manualLeadStamps } from "@/lib/admin/touch-store";
 
 /**
  * Отчёт по касаниям за две недели — из базы, на момент отправки.
@@ -55,10 +56,16 @@ export async function periodReport(now: Date = new Date(), days: number = PERIOD
     });
   }
 
-  for (const t of touched ?? []) {
-    const row = rows.get(t.touched_by as string);
+  // Лиды, добавленные вручную, — тоже касания (touch-store → manualLeadStamps).
+  const manual = await manualLeadStamps([...rows.keys()], start, end).catch(() => []);
+  const stamps = [
+    ...(touched ?? []).map((t) => ({ who: t.touched_by as string, at: t.touched_at as string })),
+    ...manual.map((m) => ({ who: m.actor, at: m.at })),
+  ];
+  for (const t of stamps) {
+    const row = rows.get(t.who);
     if (!row) continue;
-    if (Date.parse(t.touched_at as string) < split.getTime()) row.first += 1;
+    if (Date.parse(t.at) < split.getTime()) row.first += 1;
     else row.second += 1;
   }
 
