@@ -55,7 +55,7 @@
   }
 
   /* ── Каркас ────────────────────────────────────────────────────── */
-  var NAV = [["home", "Сводка"], ["leads", "Обращения"], ["accounts", "Партнёры и клиенты"], ["bc", "Рассылки в бот", "head"], ["products", "Продукты"], ["news", "Новости"], ["ir", "Комната инвестора", "head"], ["pages", "Страницы сайта", "head"], ["site", "Сайт и бот"], ["connect", "Подключения"], ["team", "Команда"], ["log", "История", "head"]];
+  var NAV = [["home", "Сводка"], ["leads", "Обращения"], ["accounts", "Партнёры и клиенты"], ["bc", "Рассылки в бот", "head"], ["products", "Продукты"], ["news", "Новости"], ["ir", "Комната инвестора", "head"], ["pages", "Страницы сайта"], ["site", "Сайт и бот"], ["connect", "Подключения"], ["team", "Команда"], ["log", "История", "head"]];
   /* Значки разделов — свои контуры, как в панели Agora (Glassy V7 + CRM). */
   var IC = {
     home: '<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
@@ -283,17 +283,34 @@
   var PAGE_NAME = { "*": "Шапка, меню и подвал (все страницы)", home: "Главная", about: "О компании", products: "Продукты", partners: "Партнёрам", investors: "Инвесторам", news: "Новости", contacts: "Контакты", privacy: "Политика данных", account: "Кабинет" };
   var LANG_NAME = { ru: "Русский", uz: "Узбекский", en: "Английский", ar: "Арабский" };
   var pgSel = { lang: "ru", page: "home" };
+  var CB_LAY = { side: "Фото рядом с текстом", grid: "Фото сеткой под текстом", none: "Без фото" };
+  function cbPhoto(p, L) { return '<div class="cbp" data-src="' + h(p.src) + '"><img src="' + h(p.src) + '" alt="" loading="lazy"><input class="i" placeholder="Подпись к фото (можно пусто)" value="' + h((p.cap && p.cap[L]) || "") + '"' + (L === "ar" ? ' dir="rtl"' : "") + '><button type="button" class="btn" data-pup title="Выше" aria-label="Поднять фото выше">↑</button><button type="button" class="btn" data-pdel>Убрать</button></div>'; }
+  function cbCard(bl, j, off, fresh) {
+    var c = bl.custom, L = j.lang, t = (c.t && c.t[L]) || {}, ru = (c.t && c.t.ru) || {}, rtl = L === "ar" ? ' dir="rtl"' : "";
+    var f = function (k, name, big, max) { var ph = L !== "ru" && ru[k] ? "по-русски: " + ru[k] : ""; return '<label class="f">' + name + (big ? '<textarea rows="6" maxlength="' + max + '" data-cf="' + k + '"' + rtl + ' placeholder="' + h(ph.slice(0, 160)) + '">' + h(t[k] || "") + "</textarea>" : '<input maxlength="' + max + '" data-cf="' + k + '"' + rtl + ' placeholder="' + h(ph) + '" value="' + h(t[k] || "") + '">') + "</label>"; };
+    return '<details class="card pgb cbx" data-cb data-b="' + h(bl.id) + '"' + (bl.canMove ? " data-mv" : "") + (fresh ? " open" : "") + '><summary><b>' + h(fresh ? "Новый блок" : bl.name) + '</b> <span class="note">свой блок' + (c.photos && c.photos.length ? ", фото: " + c.photos.length : "") + (off ? ", скрыт" : "") + "</span>" +
+      (bl.canMove ? '<span class="sp"></span><button type="button" class="btn pgm" data-up aria-label="Поднять блок выше" title="Выше">↑</button><button type="button" class="btn pgm" data-down aria-label="Опустить блок ниже" title="Ниже">↓</button>' : "") + "</summary>" +
+      (fresh ? "" : '<label class="chk"><input type="checkbox" data-show="' + h(bl.id) + '"' + (off ? "" : " checked") + "> Показывать блок на странице</label>") +
+      '<p class="note">Тексты — для языка «' + h(LANG_NAME[L] || L) + '». Пока на другом языке поле пустое, там стоит русский текст. Фото и настройки — общие для всех языков.</p>' +
+      '<div class="grid g2">' + f("sub", "Подзаголовок (маленькая строка над заголовком)", false, 80) + f("title", "Заголовок", false, 160) + "</div>" +
+      f("text", "Текст: каждая строка — абзац, строка с «- » — пункт списка", true, 4000) +
+      '<div class="grid g2">' + f("btn", "Подпись кнопки (пусто — «Связаться»)", false, 40) + '<label class="f">Фото в блоке<select data-cl>' + Object.keys(CB_LAY).map(function (k) { return '<option value="' + k + '"' + (c.layout === k ? " selected" : "") + ">" + CB_LAY[k] + "</option>"; }).join("") + "</select></label></div>" +
+      '<div class="row"><label class="chk"><input type="checkbox" data-cbtn' + (c.btn ? " checked" : "") + '> Кнопка «Связаться» (ведёт на форму в «Контактах»)</label><label class="chk"><input type="checkbox" data-cdark' + (c.dark ? " checked" : "") + '> Тёмный фон</label><label class="chk"><input type="checkbox" data-cmenu' + (c.menu ? " checked" : "") + "> Пункт в меню страницы</label></div>" +
+      '<div class="cbps">' + (c.photos || []).map(function (p) { return cbPhoto(p, L); }).join("") + "</div>" +
+      '<div class="row"><label class="btn">+ Фото<input type="file" accept="image/jpeg,image/png,image/webp" data-cadd hidden></label><span class="note">До 8 фото, JPG, PNG или WebP до 15 МБ</span><span class="sp"></span><button type="button" class="btn" data-cdel>' + (fresh ? "Отменить" : "Удалить блок") + '</button><button type="button" class="btn pri" data-csave>Сохранить блок</button></div></details>';
+  }
   function pages(main) {
     return api("/pages?lang=" + pgSel.lang + "&page=" + encodeURIComponent(pgSel.page)).then(function (j) { drawPages(main, j); });
   }
   function drawPages(main, j) {
     var b = head(main, "Страницы сайта"), hidden = j.hidden.slice(), rtl = j.lang === "ar" ? ' dir="rtl"' : "";
     var site = "/" + (j.lang === "ru" ? "" : j.lang + "/") + (j.page === "home" || j.page === "*" ? "" : j.page);
-    b.innerHTML = '<p class="note">Здесь правится любой текст сайта: выберите страницу и язык, поменяйте текст в нужном блоке и нажмите «Сохранить». Пустое поле — текст как был. Блок можно убрать со страницы галочкой «Показывать», переставить стрелками и заменить в нём картинку. Продукты, новости, контакты и заголовки для поиска правятся в своих разделах.</p>' +
+    b.innerHTML = '<p class="note">Здесь правится любой текст сайта: выберите страницу и язык, поменяйте текст в нужном блоке и нажмите «Сохранить». Пустое поле — текст как был. Блок можно убрать со страницы галочкой «Показывать», переставить стрелками и заменить в нём картинку. Внизу — «Добавить свой блок»: свой раздел с заголовком, текстом, фото и кнопкой. Продукты, новости, контакты и заголовки для поиска правятся в своих разделах.</p>' +
       '<div class="card grid"><div class="grid g2"><label class="f">Страница<select id="pgp">' + ["*"].concat(M.pages).map(function (p) { return '<option value="' + p + '"' + (p === j.page ? " selected" : "") + ">" + h(PAGE_NAME[p] || p) + "</option>"; }).join("") + '</select></label>' +
       '<label class="f">Язык<select id="pgl">' + M.langs.map(function (l) { return '<option value="' + l + '"' + (l === j.lang ? " selected" : "") + ">" + h(LANG_NAME[l] || l) + "</option>"; }).join("") + '</select></label></div>' +
       '<div class="row"><input class="i" id="pgq" placeholder="Найти текст на странице"><span class="sp"></span><a class="btn" href="' + site + '" target="_blank" rel="noopener">Открыть страницу</a><button class="btn pri" id="pgs">Сохранить</button></div></div>' +
       (j.blocks.length ? j.blocks.map(function (bl) {
+        if (bl.custom) return cbCard(bl, j, hidden.indexOf(bl.id) >= 0);
         var off = hidden.indexOf(bl.id) >= 0, ch = bl.texts.filter(function (t) { return t.val; }).length + bl.images.filter(function (t) { return t.val; }).length;
         return '<details class="card pgb" data-b="' + h(bl.id) + '"' + (bl.canMove ? " data-mv" : "") + (ch || j.blocks.length === 1 ? " open" : "") + '><summary><b>' + h(bl.name) + '</b> <span class="note">текстов: ' + bl.texts.length + (bl.images.length ? ", картинок: " + bl.images.length : "") + (ch ? ", изменено: " + ch : "") + (off ? ", скрыт" : "") + "</span>" +
           (bl.canMove ? '<span class="sp"></span><button type="button" class="btn pgm" data-up aria-label="Поднять блок «' + h(bl.name) + '» выше" title="Выше">↑</button><button type="button" class="btn pgm" data-down aria-label="Опустить блок «' + h(bl.name) + '» ниже" title="Ниже">↓</button>' : "") + "</summary>" +
@@ -306,8 +323,44 @@
             return '<label class="f pgt" data-find="' + h((t.def + " " + t.val).toLowerCase()) + '"><span class="pgd"' + rtl + ">" + h(t.def) + "</span>" + (big ? '<textarea rows="' + Math.min(6, Math.ceil(t.def.length / 80) + 1) + '"' : '<input') + rtl + ' data-h="' + t.h + '" data-def="' + h(t.def) + '" placeholder="как на сайте сейчас"' + (big ? ">" + h(t.val) + "</textarea>" : ' value="' + h(t.val) + '">') + "</label>";
           }).join("") + "</div></details>";
       }).join("") : '<div class="card note">На этой странице нет текстов для правки.</div>') +
+      (j.page === "*" ? "" : '<div id="cbnew"></div><div class="row"><button type="button" class="btn" id="cbadd"' + (j.customCount >= j.customMax ? " disabled" : "") + '>+ Добавить свой блок</button><span class="note">' + (j.customCount >= j.customMax ? "Своих блоков уже " + j.customMax + ", больше нельзя" : "Свой раздел: заголовок, текст, фото, кнопка. Встанет в конец страницы, дальше его можно поднять стрелками.") + "</span></div>") +
       (j.stale.length ? '<h2>Правки, которые больше не применяются</h2><div class="card grid"><p class="note">Исходный текст на сайте изменился после обновления, поэтому эти правки не видны. Перенесите нужное в блок выше, затем уберите.</p>' + j.stale.map(function (t) { return '<div class="row"><span><span class="note">' + h(t.def) + "</span><br>" + (t.img ? "своя картинка" : h(t.val)) + '</span><span class="sp"></span><button class="btn" data-drop="' + t.h + '" data-def="' + h(t.def) + '">Убрать</button></div>'; }).join("") + "</div>" : "");
     function go() { pgSel = { lang: $("#pgl").value, page: $("#pgp").value }; pages(main).catch(fail); }
+    /* Свои блоки: форма у каждого, сохраняется весь список страницы. */
+    var cbs = {}; j.blocks.forEach(function (bl) { if (bl.custom) cbs[bl.id] = bl.custom; });
+    function cbRead(d) {
+      var c = JSON.parse(JSON.stringify(cbs[d.getAttribute("data-b")] || { t: {}, photos: [] })), L = j.lang;
+      c.t = c.t || {}; c.t[L] = {}; $$("[data-cf]", d).forEach(function (i) { c.t[L][i.getAttribute("data-cf")] = i.value; });
+      c.photos = $$(".cbp", d).map(function (x) { var old = (c.photos || []).filter(function (p) { return p.src === x.getAttribute("data-src"); })[0], cap = old && old.cap ? old.cap : {}; cap[L] = $("input", x).value; return { src: x.getAttribute("data-src"), cap: cap }; });
+      c.layout = $("[data-cl]", d).value; c.btn = $("[data-cbtn]", d).checked; c.dark = $("[data-cdark]", d).checked; c.menu = $("[data-cmenu]", d).checked;
+      if (!d.getAttribute("data-b")) delete c.id;
+      return c;
+    }
+    function cbSave(drop) {
+      var list = $$(".pgb[data-cb]", b).filter(function (d) { return d !== drop; }).map(cbRead);
+      var hide = []; $$("[data-show]", b).forEach(function (c) { if (!c.checked) hide.push(c.getAttribute("data-show")); });
+      return api("/pages/custom", { lang: j.lang, page: j.page, blocks: list }).then(function () { return api("/pages", { lang: j.lang, page: j.page, hide: hide }); }).then(function (n) { toast(drop ? "Блок удалён" : "Блок сохранён, на сайте уже видно"); drawPages(main, n); }).catch(fail);
+    }
+    function cbWire(d) {
+      $("[data-csave]", d).addEventListener("click", function () { cbSave(); });
+      $("[data-cdel]", d).addEventListener("click", function () { if (!d.getAttribute("data-b")) { d.remove(); return; } if (confirm("Удалить этот блок со всех языков сайта?")) cbSave(d); });
+      var inp = $("[data-cadd]", d);
+      inp.addEventListener("change", function () {
+        if ($$(".cbp", d).length >= 8) { toast("В блоке до 8 фото", true); return; }
+        upload(inp).then(function (url) { var w = document.createElement("div"); w.innerHTML = cbPhoto({ src: url, cap: {} }, j.lang); var x = w.firstChild; $(".cbps", d).appendChild(x); cbPhotoWire(x); inp.value = ""; toast("Фото загружено. Нажмите «Сохранить блок»"); }).catch(fail);
+      });
+      $$(".cbp", d).forEach(cbPhotoWire);
+    }
+    function cbPhotoWire(x) {
+      $("[data-pdel]", x).addEventListener("click", function () { x.remove(); });
+      $("[data-pup]", x).addEventListener("click", function () { var p = x.previousElementSibling; if (p) x.parentNode.insertBefore(x, p); });
+    }
+    $$(".pgb[data-cb]", b).forEach(cbWire);
+    var add = $("#cbadd", b);
+    if (add) add.addEventListener("click", function () {
+      var w = document.createElement("div"); w.innerHTML = cbCard({ id: "", custom: { t: {}, photos: [], layout: "side", btn: true } }, j, false, true);
+      var d = w.firstChild; $("#cbnew", b).appendChild(d); cbWire(d); d.open = true; $("[data-cf=title]", d).focus();
+    });
     $("#pgp").addEventListener("change", go); $("#pgl").addEventListener("change", go);
     $("#pgq").addEventListener("input", function (e) { var q = e.target.value.trim().toLowerCase(); $$(".pgt", b).forEach(function (x) { x.hidden = !!q && x.getAttribute("data-find").indexOf(q) < 0; }); if (q) $$(".pgb", b).forEach(function (d) { d.open = !!$(".pgt:not([hidden])", d); }); });
     /* Порядок: стрелка меняет блок местами с соседним; на сайт уходит по «Сохранить». */

@@ -572,8 +572,9 @@ test("czechfarm: страницы сайта из панели — текст л
     await a.adminPost("/users", { name: "Менеджер", login: "manager1", pass: "длинный-пароль", role: "manager" });
     await a.adminPost("/logout", {}); a.setCookie("");
     await a.adminPost("/login", { login: "manager1", pass: "длинный-пароль" });
-    assert.equal((await a.call("/api/admin/pages?lang=ru&page=home")).status, 403);
-    assert.equal((await a.adminPost("/pages", { lang: "ru", page: "home", texts: {} })).status, 403);
+    /* Страницы сайта открыты и менеджеру (владелец, 19.11.2026: «открыть всем»), бот — нет. */
+    assert.equal((await a.call("/api/admin/pages?lang=ru&page=home")).status, 200);
+    assert.equal((await a.adminPost("/pages", { lang: "ru", page: "home", texts: {} })).status, 200);
     assert.equal((await a.adminPost("/site/bot", { name: "Чужой бот" })).status, 403);
   } finally { await a.close(); }
 });
@@ -620,6 +621,45 @@ test("czechfarm: страницы сайта из панели — замена 
     }
     await a.adminPost("/pages", { lang: "ru", page: "home", texts: {}, hide: [], order: [] });
     assert.equal((await a.call("/")).text, before, "порядок сборки не вернулся");
+  } finally { await a.close(); }
+});
+
+test("czechfarm: свои блоки страницы — текст, фото, кнопка, меню, на всех языках, двигаются и прячутся", async () => {
+  /* Владелец, 19.11.2026: «такой же раздел управления сайтом как у стоматологии… полное управление сайтом внутри». */
+  const a = await boot();
+  try {
+    await owner(a);
+    const png = "data:image/png;base64," + Buffer.from("89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d49444154789c6360606060000000050001a5f645400000000049454e44ae426082", "hex").toString("base64");
+    const up = (await a.adminPost("/upload", { data: png })).json.url;
+    const before = (await a.call("/about")).text;
+    /* Без заголовка, текста и фото — не сохраняется; чужая картинка не проходит. */
+    assert.equal((await a.adminPost("/pages/custom", { lang: "ru", page: "about", blocks: [{ t: { ru: { sub: "Только подзаголовок" } } }] })).status, 400);
+    const one = { t: { ru: { sub: "Новое", title: "Наша <лаборатория>", text: "Первый абзац.\n- Пункт один\n- Пункт два", btn: "Написать" }, en: { title: "Our lab" } }, photos: [{ src: up, cap: { ru: "Цех" } }, { src: "https://evil.example/x.png" }], layout: "grid", btn: true, dark: true, menu: true };
+    const v = (await a.adminPost("/pages/custom", { lang: "ru", page: "about", blocks: [one] })).json;
+    const cb = v.blocks.find((b: any) => b.custom);
+    assert.ok(cb && /^cb-[0-9a-f]{6}$/.test(cb.id) && cb.canMove && cb.canHide && !cb.texts.length, "свой блок не в списке блоков");
+    assert.equal(cb.custom.photos.length, 1, "чужая картинка прошла");
+    const ru = (await a.call("/about")).text;
+    assert.ok(ru.includes(`<section class="sec cfx grid dark" id="${cb.id}">`) && ru.includes("Наша &lt;лаборатория&gt;") && !ru.includes("<лаборатория>"), "блок не на странице или не экранирован");
+    assert.ok(ru.includes("<li>Пункт один</li>") && ru.includes(`<img src="${up}"`) && ru.includes('href="/contacts#form"><span>Написать</span>'));
+    assert.ok(ru.includes(`<a href="#${cb.id}">Наша &lt;лаборатория&gt;</a>`), "нет пункта меню");
+    const en = (await a.call("/en/about")).text;
+    assert.ok(en.includes("Our lab") && en.includes("Первый абзац.") && en.includes('href="/en/contacts#form"'), "английский: свой заголовок, остальное — русское");
+    /* Двигается и прячется, как встроенные. */
+    const first = v.blocks.find((b: any) => b.canMove && !b.custom).id;
+    await a.adminPost("/pages", { lang: "ru", page: "about", hide: [], order: [cb.id, first] });
+    const moved = (await a.call("/about")).text;
+    assert.ok(moved.indexOf(`id="${cb.id}"`) < moved.indexOf(`id="${first}"`), "свой блок не поднялся");
+    await a.adminPost("/pages", { lang: "ru", page: "about", hide: [cb.id] });
+    assert.match((await a.call("/about")).text, new RegExp(`#${cb.id}[^{]*\\{display:none`));
+    /* Менеджер тоже правит свои блоки; удаление возвращает страницу как была. */
+    await a.adminPost("/users", { name: "Менеджер", login: "manager2", pass: "длинный-пароль", role: "manager" });
+    await a.adminPost("/logout", {}); a.setCookie("");
+    await a.adminPost("/login", { login: "manager2", pass: "длинный-пароль" });
+    assert.equal((await a.adminPost("/pages/custom", { lang: "ru", page: "about", blocks: [] })).status, 200);
+    await a.adminPost("/pages", { lang: "ru", page: "about", hide: [], order: [] });
+    assert.equal((await a.call("/about")).text, before, "после удаления страница не та");
+    assert.equal((await a.adminPost("/pages/custom", { lang: "ru", page: "about", blocks: Array.from({ length: 13 }, () => ({ t: { ru: { title: "x" } } })) })).status, 400);
   } finally { await a.close(); }
 });
 
