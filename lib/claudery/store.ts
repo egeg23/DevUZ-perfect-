@@ -229,6 +229,8 @@ async function order(who: Who, flow: Flow, price: { amount: number; full: number
   if (!serviceClient()) return null;
   const token = randomBytes(16).toString("hex");
   const row: Order = { chatId: who.chatId, leadId: flow.leadId ?? null, requestNo: flow.requestNo ?? "", ...price, problem: (flow.problem ?? "").slice(0, 2000), at: new Date().toISOString() };
+  // Подписка, выбранная на витрине: на странице заказа она уже отмечена.
+  if (flow.pick) row.product = productAt(await loadSetup(), flow.pick.index).title;
   await putSnapshot(ORDER_PREFIX + token, row);
   return { token, url: `${siteUrl}${ORDER_PATH}/${token}` };
 }

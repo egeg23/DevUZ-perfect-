@@ -216,7 +216,7 @@ test("продаём товар, не услугу: витрина подпис�
   const page = read("app/claudery/z/[token]/page.tsx");
   assert.match(page, /name="p"/);
   assert.match(page, /order\.products\.map/);
-  assert.match(read("app/claudery/page.tsx"), /setup\.products\.map/);
+  assert.match(read("app/claudery/page.tsx"), /products\.map/);
   assert.match(read("app/claudery/offer/page.tsx"), /цифровой товар/);
   assert.match(read("lib/claudery/store.ts"), /productAt\(await loadSetup\(\), productIndex\)/);
 });
@@ -262,4 +262,27 @@ test("документы для банка Platega: соглашение, пол
   // Почта покупателя в платеже (памятка Platega): Telegram ID@telegram.org.
   assert.equal(buyerId(42), "42@telegram.org");
   assert.match(read("lib/claudery/store.ts"), /metadata: \{ user_email: buyerId\(order\.chatId\) \}/);
+});
+
+test("«Купить» на витрине: ссылка в бот с номером подписки, заказ сразу на её цену", async () => {
+  const { buyStart, BUY_START } = await import("@/lib/claudery/flow");
+  const setup: Setup = { ...DEFAULT_SETUP, products: [{ title: "Claude Pro", price: 4000 }, { title: "ChatGPT Plus", price: 6000 }], amount: 4000 };
+  const f = fake({ setup });
+  await handle(who, { type: "text", text: `/start ${buyStart(1)}` }, f.deps, "https://x/claudery/offer");
+  // Шаг «что нужно» пропущен: заказ на выбранную подписку, по её цене.
+  assert.deepEqual(f.invoices, [{ amount: 6000, full: 6000, discount: 30 }]);
+  assert.equal(f.flows.get(7)?.pick?.index, 1);
+  assert.match(f.flows.get(7)?.problem ?? "", /ChatGPT Plus/);
+  const last = f.sent.at(-1)!;
+  assert.ok(last.rows!.flat().some((b) => b.url === "https://devuz.studio/claudery/z/t1"));
+  assert.doesNotMatch([last.text, ...last.rows!.flat().map((b) => b.text)].join(" "), /оплат|₽|руб/i);
+  // Чужой номер — обычное приветствие, без заказа.
+  const g = fake({ setup });
+  await handle(who, { type: "text", text: "/start buy7" }, g.deps, "https://x/claudery/offer");
+  assert.equal(g.invoices.length, 0);
+  assert.ok(BUY_START.test("/start buy0"));
+  // Витрина: кнопка «Купить» у каждой подписки ведёт в бот с этим номером; заказ помнит товар.
+  const page = read("app/claudery/page.tsx");
+  assert.match(page, /\?start=\$\{buyStart\(i\)\}/);
+  assert.match(read("lib/claudery/store.ts"), /if \(flow\.pick\) row\.product = productAt\(await loadSetup\(\), flow\.pick\.index\)\.title/);
 });
