@@ -15,7 +15,7 @@ import type { OidcExpect } from "@/lib/admin/github-oidc";
  */
 
 export const CF_TRANSLATE_UNTIL = "2027-01-19T00:00:00+05:00";
-export const CF_TRANSLATE_MODEL = process.env.CZECHFARM_TRANSLATE_MODEL || "claude-haiku-4-5";
+export const CF_TRANSLATE_MODEL = "claude-haiku-4-5";
 export const CF_LANGS = ["ru", "uz", "en", "ar"] as const;
 export type CfLang = (typeof CF_LANGS)[number];
 export const CF_ITEMS_MAX = 40;
