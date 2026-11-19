@@ -640,6 +640,20 @@ test("сияние на сервере клиники: многостранич�
     assert.match((await a.call("/svedeniya")).text, /<dt>Руководство<\/dt><dd>Кадиев Рамазан Курбанович, главный врач<\/dd>/);
     await a.adminPost("/site/org", { value: { ...view.defaults.org, chief: "Иванов Иван Иванович, главный врач" } });
     assert.match((await a.call("/svedeniya")).text, /<dt>Руководство<\/dt><dd>Иванов Иван Иванович, главный врач<\/dd>/);
+    /* Номер клиники (владелец, 19.11.2026: «+73822734858 - вот этот номер актуальный на сайте должен быть»): на каждой странице рабочего сайта, прежний — только в макете. */
+    assert.equal(view.defaults.contacts.phone, "+7 (382) 273-48-58");
+    for (const path of ["/", "/kontakty", "/svedeniya", "/ceny", "/vrachi"]) {
+      const t = (await a.call(path)).text;
+      assert.match(t, /href="tel:\+73822734858"/, path);
+      assert.ok(t.includes("+7 (382) 273-48-58"), path);
+      assert.doesNotMatch(t, /227-00-77|73822270077/, path);
+    }
+    /* Сохранённые контакты с прежним номером по умолчанию — на сайте нынешний; свой номер клиники — как есть. */
+    await a.adminPost("/site/contacts", { value: { ...view.defaults.contacts, phone: "+7 (382) 227-00-77" } });
+    assert.match((await a.call("/kontakty")).text, /href="tel:\+73822734858"/);
+    await a.adminPost("/site/contacts", { value: { ...view.defaults.contacts, phone: "+7 (382) 255-55-55" } });
+    assert.match((await a.call("/kontakty")).text, /href="tel:\+73822555555"/);
+    await a.adminPost("/site/contacts", { value: view.defaults.contacts });
     await a.adminPost("/site/org", { value: { ...view.defaults.org, licBy: "Департамент здравоохранения Томской области", pdEmail: "pd@clinic.ru" } });
     /* Документ клиники — PDF: имя по хешу, отдаётся сайтом как PDF, ссылка в «Документах». */
     const pdf = "data:application/pdf;base64," + Buffer.from("%PDF-1.4\n% test\n").toString("base64");
