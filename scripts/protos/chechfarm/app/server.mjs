@@ -12,7 +12,8 @@ import { makeCore, ROLES, STATUS, KINDS, LANGS, PAGES, CONTACT_KEYS, SEGMENTS, A
 import { sameSecret } from "./lib/crypt.mjs";
 import { HERO_SLOTS, heroStyle, imageSize } from "./lib/hero.mjs";
 import { blocksOf, applyTexts, applyImages, orderBlocks, hideBlocks } from "./lib/site-text.mjs";
-import { addCustom, titleOf } from "./lib/custom-blocks.mjs";
+import { addCustom, titleOf, cleanBlocks } from "./lib/custom-blocks.mjs";
+import { translate, trState, fillLangs, productPlan, TR_LANGS } from "./lib/translate.mjs";
 
 const MIME = {
   ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8",
@@ -77,7 +78,49 @@ export function visitorLang(accept, ua = "") {
   return l === "ru" ? "" : l;
 }
 
-export function createApp({ core, siteDir, adminDir, dataDir = "", setupCode = "", publicUrl = "", trustProxy = false, commit = "", sceneKey = "" }) {
+export function createApp({ core, siteDir, adminDir, dataDir = "", setupCode = "", publicUrl = "", trustProxy = false, commit = "", sceneKey = "", tr = translate, trOn = () => trState() }) {
+  /* Перевод в панели (lib/translate.mjs): свои блоки, новости, продукты.
+     Не вышел — сохраняется как есть, панель пишет почему. */
+  const trCall = (from, to, items) => (trOn().on ? tr(from, to, items) : Promise.resolve(null));
+  async function trBlocks(page, lang, list) {
+    const before = new Map(core.site.custom(page).map((b) => [b.id, b])), done = new Set();
+    let failed = false;
+    const next = cleanBlocks(list);
+    for (const b of next) {
+      const prev = before.get(b.id);
+      /* Подписи к фото — полями того же перевода: c0, c1, … */
+      const v = (x) => { const o = {}; for (const l of TR_LANGS) { o[l] = { ...(x?.t?.[l] || {}) }; (x?.photos || []).forEach((p, i) => { if (p.cap?.[l]) o[l]["c" + i] = p.cap[l]; }); } o.auto = x?.auto; return o; };
+      const n = v(b), pv = prev ? v(prev) : null;
+      const fields = Object.keys(n[lang] || {});
+      const r = await fillLangs(n, pv, lang, fields, trCall);
+      failed = failed || r.failed;
+      r.langs.forEach((l) => done.add(l));
+      for (const l of TR_LANGS) {
+        const one = {}; for (const k of ["sub", "title", "text", "btn"]) if (n[l]?.[k]) one[k] = n[l][k];
+        if (Object.keys(one).length) b.t[l] = one; else delete b.t[l];
+        b.photos.forEach((p, i) => { if (n[l]?.["c" + i]) p.cap[l] = n[l]["c" + i]; });
+      }
+      if (Object.keys(n.auto || {}).length) b.auto = n.auto;
+    }
+    return { next, tr: { langs: [...done], failed } };
+  }
+  async function trNews(id, d) {
+    const prev = id ? core.news.list().find((x) => x.id === id) : null;
+    const n = { ...d }; for (const l of TR_LANGS) n[l] = { title: String(d?.[l]?.title || "").trim(), body: String(d?.[l]?.body || "").trim() };
+    const r = await fillLangs(n, prev ? { ...prev, auto: prev.auto } : null, "ru", ["title", "body"].filter((k) => n.ru[k]), trCall);
+    return { d: n, tr: r };
+  }
+  async function trProduct(id, d) {
+    const prev = id ? core.products.list().find((x) => x.id === id) : null;
+    const { tr: t, items } = productPlan(d, prev, core.catTr(prev?.key || ""));
+    let r = { langs: [], failed: false };
+    if (Object.keys(items).length) {
+      const to = TR_LANGS.slice(1), out = await trCall("ru", to, items);
+      if (!out) r.failed = true;
+      else for (const l of to) { const got = out[l] || {}; if (!Object.keys(items).every((k) => got[k])) { r.failed = true; continue; } t[l] = { ...(t[l] || {}), ...got }; r.langs.push(l); }
+    }
+    return { d: { ...d, tr: t }, tr: r };
+  }
   const allow = limiter();
   const uploadsDir = dataDir ? join(dataDir, "uploads") : "", irDir = dataDir ? join(dataDir, "ir") : "";
   const ipOf = (req) => (trustProxy && String(req.headers["x-forwarded-for"] || "").split(",")[0].trim()) || req.socket.remoteAddress || "?";
@@ -133,7 +176,7 @@ export function createApp({ core, siteDir, adminDir, dataDir = "", setupCode = "
     if (order.length) { const rank = (b) => { const i = order.indexOf(b.id); return b.canMove ? (i < 0 ? 500 + list.indexOf(b) : i) : (b.id === "data" ? 9999 : -1); }; list.sort((x, y) => rank(x) - rank(y)); }
     /* Правки, исходный текст которых в новой версии сайта уже другой. */
     const stale = Object.values(own).filter((r) => !known.has(r.h)).map((r) => ({ h: r.h, def: r.def, val: r.v, img: r.h[0] === "i" }));
-    return { lang, page: pg, blocks: list, hidden: star ? [] : core.site.hidden(pg), order, stale, customMax: 12, customCount: custom.length };
+    return { lang, page: pg, blocks: list, hidden: star ? [] : core.site.hidden(pg), order, stale, customMax: 12, customCount: custom.length, translate: trOn() };
   }
   /* Шапка «Продуктов»: на подиум встаёт упаковка, выбранная в панели;
      ширина — по её пропорциям в рамке места (hero.mjs). */
@@ -238,13 +281,13 @@ export function createApp({ core, siteDir, adminDir, dataDir = "", setupCode = "
     if (M === "POST" && /^\/leads\/\d+\/reply$/.test(path)) { await core.leads.reply(user, id, (await body(req)).text); return core.leads.get(user, id); }
 
     /* Продукты и новости — любой сотрудник. */
-    if (M === "GET" && path === "/products") return { products: core.products.list(), hero: core.hero.get(), heroSlots: HERO_SLOTS.map((x) => ({ key: x.key, where: x.where })) };
+    if (M === "GET" && path === "/products") return { translate: trOn(), products: core.products.list(), hero: core.hero.get(), heroSlots: HERO_SLOTS.map((x) => ({ key: x.key, where: x.where })) };
     /* Упаковки на подиумах шапки «Продуктов» — руководитель и владелец. */
     if (M === "POST" && path === "/hero") { lead(); return { hero: core.hero.save((await body(req)).slots, who) }; }
-    if (M === "POST" && (path === "/products" || /^\/products\/\d+$/.test(path))) { const nid = core.products.save(id, await body(req), who); return { id: nid, products: core.products.list() }; }
+    if (M === "POST" && (path === "/products" || /^\/products\/\d+$/.test(path))) { const x = await trProduct(id, await body(req)); const nid = core.products.save(id, x.d, who); return { id: nid, products: core.products.list(), tr: trOn().on ? x.tr : null }; }
     if (M === "POST" && /^\/products\/\d+\/(pub|unpub|del)$/.test(path)) { const a = path.split("/")[3]; if (a === "del") core.products.remove(id, who); else core.products.publish(id, a === "pub", who); return { products: core.products.list() }; }
-    if (M === "GET" && path === "/news") return { news: core.news.list() };
-    if (M === "POST" && (path === "/news" || /^\/news\/\d+$/.test(path))) { const nid = core.news.save(id, await body(req, 256 * 1024), who); return { id: nid, news: core.news.list() }; }
+    if (M === "GET" && path === "/news") return { translate: trOn(), news: core.news.list() };
+    if (M === "POST" && (path === "/news" || /^\/news\/\d+$/.test(path))) { const x = await trNews(id, await body(req, 256 * 1024)); const nid = core.news.save(id, x.d, who); return { id: nid, news: core.news.list(), tr: trOn().on ? x.tr : null }; }
     if (M === "POST" && /^\/news\/\d+\/(pub|unpub|del)$/.test(path)) { const a = path.split("/")[3]; if (a === "del") core.news.remove(id, who); else core.news.publish(id, a === "pub", who); return { news: core.news.list() }; }
     if (M === "POST" && path === "/upload") { const b = await body(req, 22 * 1024 * 1024); const f = saveFile(b.data, uploadsDir, ["jpg", "png", "webp", "pdf"], 15 * 1048576); return { url: "/uploads/" + f.name }; }
 
@@ -258,7 +301,12 @@ export function createApp({ core, siteDir, adminDir, dataDir = "", setupCode = "
        управление сайтом внутри», открыть и менеджерам). */
     if (M === "GET" && path === "/pages") { const q = new URL(req.url, "http://x").searchParams; return pagesView(q.get("lang") || "ru", q.get("page") || "home"); }
     if (M === "POST" && path === "/pages") { const b = await body(req, 512 * 1024); core.site.save(b, who); return pagesView(b.lang, b.page); }
-    if (M === "POST" && path === "/pages/custom") { const b = await body(req, 256 * 1024); try { core.site.saveCustom(b.page, b.blocks, who); } catch (e) { throw new HttpError(400, e.message); } return pagesView(b.lang, b.page); }
+    if (M === "POST" && path === "/pages/custom") {
+      const b = await body(req, 256 * 1024);
+      if (!PAGES.includes(b.page) || !LANGS.includes(b.lang)) throw new HttpError(400, "Нет такой страницы");
+      let x; try { x = await trBlocks(b.page, b.lang, b.blocks); core.site.saveCustom(b.page, x.next, who); } catch (e) { throw new HttpError(400, e.message); }
+      return { ...pagesView(b.lang, b.page), tr: trOn().on ? x.tr : null };
+    }
     if (M === "POST" && path === "/site/counters") { lead(); core.connect.counters(await body(req), who); return { ok: true }; }
     if (M === "POST" && path === "/site/faq") { const b = await body(req, 256 * 1024); if (b.texts) core.faq.setTexts(b.texts, who); return { faq: core.faq.save(b.faq, who), botTexts: core.faq.texts() }; }
 

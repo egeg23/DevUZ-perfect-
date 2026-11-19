@@ -12,6 +12,7 @@ import { CATALOG, AREAS, CATALOG_FIXES } from "./catalog.mjs";
 import { CATALOG_TR, packImg } from "./catalog-tr.mjs";
 import { HERO_SLOTS } from "./hero.mjs";
 import { cleanBlocks, titleOf } from "./custom-blocks.mjs";
+import { cleanTr } from "./translate.mjs";
 
 export const STATUS = { new: "Новое", work: "В работе", meet: "Назначена встреча", done: "Ответ отправлен", spam: "Спам" };
 export const ROLES = { owner: "Владелец", head: "Руководитель", manager: "Менеджер" };
@@ -525,6 +526,8 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
     if (!o.name) throw new Error("Укажите название продукта");
     if (o.rx && o.rx !== "rx" && o.rx !== "otc") o.rx = "";
     for (const k of ["doc", "img"]) if (o[k] && !/^(https:\/\/|\/uploads\/|\/protos\/chechfarm\/products\/[\w-]+\.webp$)/.test(o[k])) throw new Error("Файл — загрузкой или ссылкой https://");
+    const tr = cleanTr(d?.tr);
+    if (Object.keys(tr).length) o.tr = tr;
     return o;
   };
   const products = {
@@ -585,6 +588,8 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
   const cleanNews = (d) => {
     const o = { img: cut(d?.img, 300) };
     for (const l of LANGS) o[l] = { title: cut(d?.[l]?.title, 200), body: cut(d?.[l]?.body, 20000) };
+    const auto = Object.fromEntries(LANGS.filter((l) => typeof d?.auto?.[l] === "boolean").map((l) => [l, d.auto[l]]));
+    if (Object.keys(auto).length) o.auto = auto;
     if (!o.ru.title) throw new Error("Заголовок на русском обязателен");
     if (o.img && !/^(https:\/\/|\/uploads\/)/.test(o.img)) throw new Error("Картинка — загрузкой или ссылкой https://");
     return o;
@@ -629,11 +634,16 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
      трогали (оно как в catalog.mjs), берёт перевод из catalog-tr.mjs,
      исходный снимок упаковки — отрисованную на этом языке. */
   const CAT = new Map(CATALOG.map((c) => [c.key, c]));
-  function localProduct(p, key, lang) {
-    const c = key && CAT.get(key), tr = c && CATALOG_TR[key]?.[lang];
-    if (!tr) return p;
+  /* У поля портфеля, которого в панели не трогали, перевод уже есть. */
+  const catTr = (key) => (k, v) => { const c = key && CAT.get(key); return !!(c && c[k] === v && CATALOG_TR[key]?.uz?.[k]); };
+  function localProduct({ tr: auto, ...p }, key, lang) {
+    const c = key && CAT.get(key), tr = c && CATALOG_TR[key]?.[lang], own = auto?.[lang];
+    if (!tr && !own) return p;
     const o = { ...p };
-    for (const [k, v] of Object.entries(tr)) if (v && o[k] === c[k]) o[k] = v;
+    if (tr) for (const [k, v] of Object.entries(tr)) if (v && o[k] === c[k]) o[k] = v;
+    /* Перевод из панели (translate.mjs) — для полей, которые там правили. */
+    if (own) for (const [k, v] of Object.entries(own)) if (v) o[k] = v;
+    if (!c) return o;
     const base = c.img ? `/protos/chechfarm/products/${key}-960.webp` : "";
     if (base && o.img === base) o.img = packImg(key, lang, base);
     return o;
@@ -747,7 +757,7 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
   const log = () => db.all("select l.at, l.who, l.t, l.lead_id, ld.no from log l left join leads ld on ld.id = l.lead_id order by l.id desc limit 300");
 
   return {
-    aud, users, auth, connect, settingsView, leads, faq, products, hero, news, seo, contacts, ir, summary, log, live, seoFor, site, botProfile,
+    aud, users, auth, connect, settingsView, leads, faq, products, hero, news, seo, contacts, ir, summary, log, live, seoFor, site, botProfile, catTr,
     hook, tgSecret: () => getS("tg.secret"), counters: () => ({ metrika: getS("seo.metrika"), yandex: getS("seo.yandex"), google: getS("seo.google") }),
     version: () => version, leadText,
   };

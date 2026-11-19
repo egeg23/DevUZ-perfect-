@@ -56,7 +56,7 @@ function fakeNet() {
   return { calls, fetchImpl };
 }
 
-async function boot() {
+async function boot(opts: Record<string, unknown> = {}) {
   const { openDb } = await load("lib/db.mjs");
   const { makeCore } = await load("lib/core.mjs");
   const { createApp } = await load("server.mjs");
@@ -65,7 +65,7 @@ async function boot() {
   const publicUrl = "https://czechfarm.test";
   const core = makeCore({ db, secret: "test-secret-0123456789", publicUrl, fetchImpl: net.fetchImpl });
   const dataDir = mkdtempSync(join(tmpdir(), "cf-data-"));
-  const handle = createApp({ core, siteDir: site(), adminDir: new URL("admin/", APP).pathname, dataDir, setupCode: "setup-42", publicUrl, commit: "abc", sceneKey: "ab".repeat(32) });
+  const handle = createApp({ core, siteDir: site(), adminDir: new URL("admin/", APP).pathname, dataDir, setupCode: "setup-42", publicUrl, commit: "abc", sceneKey: "ab".repeat(32), ...opts });
   const server: Server = createServer(handle);
   await new Promise<void>((r) => server.listen(0, "127.0.0.1", r));
   const port = (server.address() as { port: number }).port;
@@ -734,5 +734,68 @@ test("czechfarm: оформление Telegram-бота — имя, описан
     assert.equal(sent("sendPhoto").length, 0);
     assert.ok(sent("sendMessage")[0].body.reply_markup.keyboard);
     for (const f of ["hello.jpg", "avatar.jpg"]) assert.ok(existsSync(`public/protos/chechfarm/bot/${f}`), `нет ${f}`);
+  } finally { await a.close(); }
+});
+
+test("czechfarm: перевод в панели — свой блок, новость и продукт сами на всех языках, правленое руками не трогается", async () => {
+  /* Владелец, 19.11.2026: «если они делают блок на 1 языке, он сразу делался на всех языках»; «Бери наш ключ пока что, через 2 месяца убери его». */
+  const calls: { from: string; to: string[]; items: Record<string, string> }[] = [];
+  let on = true;
+  const tr = async (from: string, to: string[], items: Record<string, string>) => {
+    calls.push({ from, to, items });
+    return Object.fromEntries(to.map((l) => [l, Object.fromEntries(Object.entries(items).map(([k, v]) => [k, `[${l}] ${v}`]))]));
+  };
+  const a = await boot({ tr, trOn: () => (on ? { on: true, until: "2027-01-19T00:00:00+05:00" } : { on: false, why: "expired" }) });
+  try {
+    await owner(a);
+    const png = "data:image/png;base64," + Buffer.from("89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d49444154789c6360606060000000050001a5f645400000000049454e44ae426082", "hex").toString("base64");
+    const up = (await a.adminPost("/upload", { data: png })).json.url;
+    /* Свой блок по-русски — сразу на узбекском, английском, арабском, с подписью к фото. */
+    let r = (await a.adminPost("/pages/custom", { lang: "ru", page: "about", blocks: [{ t: { ru: { title: "Лаборатория", text: "Мы проверяем каждую серию." } }, photos: [{ src: up, cap: { ru: "Цех" } }] }] })).json;
+    assert.deepEqual(r.tr.langs.sort(), ["ar", "en", "uz"]);
+    assert.equal(r.translate.on, true);
+    let cb = r.blocks.find((b: any) => b.custom).custom;
+    assert.equal(cb.t.uz.title, "[uz] Лаборатория");
+    assert.equal(cb.photos[0].cap.ar, "[ar] Цех");
+    assert.deepEqual(cb.auto, { uz: true, en: true, ar: true });
+    assert.ok((await a.call("/uz/about")).text.includes("[uz] Мы проверяем каждую серию."), "перевод не на узбекской странице");
+    /* Английский поправили руками — он свой, перевод его больше не трогает. */
+    const fixed = { ...cb, t: { ...cb.t, en: { title: "Our laboratory", text: "We test every batch." } } };
+    const n0 = calls.length;
+    r = (await a.adminPost("/pages/custom", { lang: "en", page: "about", blocks: [fixed] })).json;
+    assert.equal(calls.length, n0, "правка перевода руками ушла на перевод");
+    cb = r.blocks.find((b: any) => b.custom).custom;
+    assert.equal(cb.auto.en, false);
+    /* Снова русский — переводятся только автоматические языки. */
+    r = (await a.adminPost("/pages/custom", { lang: "ru", page: "about", blocks: [{ ...cb, t: { ...cb.t, ru: { title: "Лаборатория качества", text: "Мы проверяем каждую серию." } } }] })).json;
+    assert.deepEqual(calls.at(-1)!.to.sort(), ["ar", "uz"]);
+    cb = r.blocks.find((b: any) => b.custom).custom;
+    assert.equal(cb.t.en.title, "Our laboratory");
+    assert.equal(cb.t.uz.title, "[uz] Лаборатория качества");
+    /* Новость по-русски — на всех языках, вкладка помнит, что это перевод. */
+    const nw = (await a.adminPost("/news", { ru: { title: "Новый препарат", body: "Вышел в аптеках." } })).json;
+    assert.deepEqual(nw.tr.langs.sort(), ["ar", "en", "uz"]);
+    const item = nw.news.find((x: any) => x.id === nw.id);
+    assert.equal(item.en.title, "[en] Новый препарат");
+    assert.equal(item.auto.uz, true);
+    /* Новый продукт — переводятся его поля; на сайте у посетителя свой язык. */
+    const pr = (await a.adminPost("/products", { name: "Тестин", form: "Таблетки, 10 мг", area: "neuro" })).json;
+    assert.deepEqual(pr.tr.langs.sort(), ["ar", "en", "uz"]);
+    await a.adminPost(`/products/${pr.id}/pub`, {});
+    const live = a.core.live("uz").prod.find((p: any) => p.name === "[uz] Тестин");
+    assert.ok(live && live.form === "[uz] Таблетки, 10 мг" && !("tr" in live), "продукт на узбекском не переведён");
+    /* У продукта портфеля нетронутые поля не переводятся: у них перевод уже есть. */
+    const cat = pr.products.find((p: any) => p.key);
+    const n1 = calls.length;
+    await a.adminPost(`/products/${cat.id}`, { ...cat, about: "Новое описание." });
+    assert.deepEqual(Object.keys(calls.at(-1)!.items), ["about"]);
+    assert.ok(calls.length === n1 + 1);
+    /* Срок вышел — сохраняется без перевода. */
+    on = false;
+    const n2 = calls.length;
+    const off = (await a.adminPost("/news", { ru: { title: "Без перевода", body: "Текст." } })).json;
+    assert.equal(calls.length, n2);
+    assert.equal(off.tr, null);
+    assert.equal(off.news.find((x: any) => x.id === off.id).uz.title, "");
   } finally { await a.close(); }
 });
