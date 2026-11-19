@@ -584,26 +584,26 @@ test("czechfarm: страницы сайта из панели — замена 
   const a = await boot();
   try {
     await owner(a);
-    const v = (await a.call("/api/admin/pages?lang=ru&page=about")).json;
+    const v = (await a.call("/api/admin/pages?lang=ru&page=partners")).json;
     const withImg = v.blocks.find((b: any) => b.images.length);
-    assert.ok(withImg, "картинки страницы «О компании» нет в панели");
+    assert.ok(withImg, "картинки страницы «Партнёрам» нет в панели");
     const im = withImg.images[0];
-    assert.match(im.src, /^\/protos\/chechfarm\/flask-/);
+    assert.match(im.src, /^\/protos\/chechfarm\/globe-/);
     assert.ok(!(await a.call("/api/admin/pages?lang=ru&page=home")).json.blocks.some((b: any) => b.images.length), "кадры сцены предлагаются к замене");
     /* Чужой адрес картинкой не становится: только файл, загруженный через панель. */
-    assert.equal((await a.adminPost("/pages", { lang: "ru", page: "about", images: { [im.h]: { v: "https://evil.example/x.png", def: im.src } } })).status, 400);
+    assert.equal((await a.adminPost("/pages", { lang: "ru", page: "partners", images: { [im.h]: { v: "https://evil.example/x.png", def: im.src } } })).status, 400);
     const png = "data:image/png;base64," + Buffer.from("89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d49444154789c6360606060000000050001a5f645400000000049454e44ae426082", "hex").toString("base64");
     const up = await a.adminPost("/upload", { data: png });
     assert.match(up.json.url, /^\/uploads\/[0-9a-f]{32}\.png$/);
-    const saved = await a.adminPost("/pages", { lang: "ru", page: "about", images: { [im.h]: { v: up.json.url, def: im.src } } });
+    const saved = await a.adminPost("/pages", { lang: "ru", page: "partners", images: { [im.h]: { v: up.json.url, def: im.src } } });
     assert.equal(saved.json.blocks.find((b: any) => b.id === withImg.id).images[0].val, up.json.url);
-    for (const path of ["/about", "/uz/about", "/ar/about"]) {
+    for (const path of ["/partners", "/uz/partners", "/ar/partners"]) {
       const html = (await a.call(path)).text;
-      assert.ok(html.includes(`<img src="${up.json.url}"`) && !/<img[^>]*flask-/.test(html), `${path}: картинка не заменена`);
+      assert.ok(html.includes(`<img src="${up.json.url}"`) && !/<img[^>]*globe-/.test(html), `${path}: картинка не заменена`);
       assert.doesNotMatch(html, new RegExp(`<img src="${up.json.url}"[^>]*srcset=`), `${path}: остались размеры прежней картинки`);
     }
-    await a.adminPost("/pages", { lang: "ru", page: "about", images: { [im.h]: { v: "", def: im.src } } });
-    assert.match((await a.call("/about")).text, /<img[^>]*flask-1200\.webp/, "исходная картинка не вернулась");
+    await a.adminPost("/pages", { lang: "ru", page: "partners", images: { [im.h]: { v: "", def: im.src } } });
+    assert.match((await a.call("/partners")).text, /<img[^>]*globe-2000\.webp/, "исходная картинка не вернулась");
 
     /* Порядок: первый экран на месте, остальные — как сказано, на всех языках. */
     const home = (await a.call("/api/admin/pages?lang=ru&page=home")).json;
@@ -661,6 +661,29 @@ test("czechfarm: свои блоки страницы — текст, фото, 
     assert.equal((await a.call("/about")).text, before, "после удаления страница не та");
     assert.equal((await a.adminPost("/pages/custom", { lang: "ru", page: "about", blocks: Array.from({ length: 13 }, () => ({ t: { ru: { title: "x" } } })) })).status, 400);
   } finally { await a.close(); }
+});
+
+test("czechfarm: первый круг правок — стратегия компании, BHAG и KPI на четырёх языках, без фото колбы", () => {
+  /* Владелец, 19.11.2026: «Помят убрать фото из этого раздела, оно не к месту», «Все + kpi», «разложи красиво по сайту где надо». */
+  const dir = site();
+  const page = (l: string, p: string) => readFileSync(join(dir, ...(l === "ru" ? [] : [l]), ...(p ? [p] : []), "index.html"), "utf8");
+  for (const l of ["ru", "uz", "en", "ar"]) {
+    const about = page(l, "about");
+    assert.doesNotMatch(about, /flask-/, `${l}: фото колбы осталось на «О компании»`);
+    for (const id of ["story", "philosophy", "assets", "engine", "bhag", "kpi"]) assert.ok(about.includes(`id="${id}"`), `${l}: нет блока ${id}`);
+    assert.equal((about.match(/<tr class="mv/g) || []).length, 6, `${l}: в KPI не шесть строк`);
+    assert.ok(about.includes("20 000") && about.includes("≥80%") && about.includes("2035"), `${l}: цифры KPI`);
+    assert.ok(page(l, "investors").includes('id="bhag"') && page(l, "investors").includes('id="kpi"'), `${l}: нет цели и KPI у инвесторов`);
+    assert.ok(page(l, "partners").includes('id="promise"') && /90/.test(page(l, "partners")), `${l}: нет обещания 90 дней`);
+  }
+  assert.ok(page("ru", "about").includes("Мы создаём бренды") && page("ru", "about").includes("С 2011 года мы развиваем"));
+  assert.ok(page("ru", "").replace(/<[^>]+>/g, "").includes("Создавать успешные фармацевтические"), "миссия на главной прежняя");
+  assert.ok(/[\u0600-\u06ff]{4}/.test(page("ar", "about")) && !page("ar", "about").includes("Our system"), "арабская страница не на арабском");
+  assert.ok(page("ar", "about").includes('<bdi dir="ltr">20 000</bdi>'), "числа KPI в арабском не по порядку");
+  for (const l of ["ru", "uz", "en"]) assert.doesNotMatch(page(l, "about").replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/g, ""), /—/, `${l}: длинное тире в тексте`);
+  /* Макет не меняется: там прежняя колба и прежняя миссия. */
+  const bundle = readFileSync(new URL("../../../content/proto-bundles/chechfarm.json", ROOT), "utf8");
+  assert.ok(bundle.includes("flask-1200") && !bundle.includes("Brand Growth Engine"), "стратегия попала в макет");
 });
 
 test("czechfarm: оформление Telegram-бота — имя, описания, меню, приветствие с картинкой и кнопками", async () => {

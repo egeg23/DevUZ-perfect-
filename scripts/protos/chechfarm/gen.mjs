@@ -8,6 +8,7 @@ import { tr, withAr, arMissing } from "./ar.mjs";
 import { PANEL_UI } from "./panel-ui.mjs";
 import { makeBlocks, SCENE } from "./blocks.mjs";
 import { makeLaunch } from "./launch.mjs";
+import { makeStrategy } from "./strategy.mjs";
 import { CATALOG, AREAS as AREA_KEYS } from "./app/lib/catalog.mjs";
 import { PACK_LANGS } from "./app/lib/catalog-tr.mjs";
 import { HERO_SLOTS, heroStyle } from "./app/lib/hero.mjs";
@@ -39,7 +40,7 @@ import { HERO_SLOTS, heroStyle } from "./app/lib/hero.mjs";
 const DIR = new URL(".", import.meta.url).pathname;
 const IMG = "/protos/chechfarm";
 const strip = (s) => s.replace(/\/\*[\s\S]*?\*\//g, "");
-const CSS = strip(readFileSync(DIR + "site.css", "utf8") + readFileSync(DIR + "premium.css", "utf8") + readFileSync(DIR + "launch.css", "utf8")).replace(/\n\s*/g, "");
+const CSS = strip(readFileSync(DIR + "site.css", "utf8") + readFileSync(DIR + "premium.css", "utf8") + readFileSync(DIR + "launch.css", "utf8") + (process.env.CF_PROD === "1" ? readFileSync(DIR + "strategy.css", "utf8") : "")).replace(/\n\s*/g, "");
 /* Движок сцены первого экрана: пролёт Nek и салона красоты как есть, срезом из nek/land.js. */
 function nekScene() {
   const land = readFileSync(DIR + "../nek/land.js", "utf8");
@@ -136,6 +137,8 @@ const navName = (p, l) => (NAV.find((n) => n[0] === p) || [p, EXTRA_NAV[p] || EX
 const L3 = (o, l) => o[l];
 const PB = makeBlocks({ T, href, ICON, IMG, L3, CHAIN, pad, BASE_URL });
 const LB = makeLaunch({ T, href, ICON, pad, img: IMG });
+/* Стратегия компании — только боевой сайт (strategy.mjs). */
+const SB = makeStrategy({ href });
 
 /* ── Шапка, меню, подвал ───────────────────────────────────────────── */
 function headerHtml(l, p) {
@@ -260,8 +263,8 @@ function pageHead(l, p, h1, lead, o = {}) {
 /* ── Блоки ─────────────────────────────────────────────────────────── */
 function missionBlock(l) {
   const t = T(l);
-  const text = t("Высшая цель CZECHFARM: улучшать здоровье и качество жизни людей через доступ к современным решениям.", "CZECHFARM oliy maqsadi: zamonaviy yechimlardan foydalanish imkoni orqali odamlarning salomatligi va hayot sifatini yaxshilash.", "CZECHFARM’s highest purpose is to improve people’s health and quality of life through access to modern solutions.");
-  const keys = t(["здоровье", "качество", "жизни", "доступ"], ["salomatligi", "hayot", "sifatini", "foydalanish"], ["health", "quality", "life", "access"]);
+  const text = PROD ? SB.mission(l) : t("Высшая цель CZECHFARM: улучшать здоровье и качество жизни людей через доступ к современным решениям.", "CZECHFARM oliy maqsadi: zamonaviy yechimlardan foydalanish imkoni orqali odamlarning salomatligi va hayot sifatini yaxshilash.", "CZECHFARM’s highest purpose is to improve people’s health and quality of life through access to modern solutions.");
+  const keys = PROD ? SB.missionKeys(l) : t(["здоровье", "качество", "жизни", "доступ"], ["salomatligi", "hayot", "sifatini", "foydalanish"], ["health", "quality", "life", "access"]);
   const words = text.split(" ").map((w) => `<span class="wd${keys.some((k) => w.toLowerCase().startsWith(k)) ? " k" : ""}">${w}</span>`).join(" ");
   return `<section class="sec mission" id="mission"><div class="wrap"><div class="sec-h"><p class="kicker">${t("Миссия", "Missiya", "Mission")}</p></div><p class="big">${words}</p></div></section>`;
 }
@@ -308,6 +311,14 @@ function home(l) {
 
 function about(l) {
   const t = T(l);
+  /* Боевой сайт: стратегия компании (первый круг правок, 19.11.2026), без фото колбы. */
+  if (PROD) return [pageHead(l, "about", SB.h1(l), SB.lead(l), { act: `<a class="btn btn-pri" href="${href(l, "contacts")}#form">${t("Связаться", "Bog‘lanish", "Get in touch")}${ICON.arrow}</a>` }),
+    SB.story(l), SB.philosophy(l), SB.assets(l), SB.engine(l), SB.goal(l), SB.kpi(l), pillarsBlock(l),
+    chainBlock(l, {
+      k: t("Модель создания стоимости", "Qiymat yaratish modeli", "Value creation model"),
+      h: t("Продукты, рынок, <b>повторный спрос</b>", "Mahsulotlar, bozor, <b>takroriy talab</b>", "Products, market, <b>repeat demand</b>"),
+      p: t("Продукт, которому доверяют, выбирают снова. Повторный спрос даёт денежный поток, а он идёт в новые продукты и масштабирование.", "Ishonchli mahsulot yana tanlanadi. Takroriy talab pul oqimini beradi, u esa yangi mahsulotlar va kengayishga yo‘naltiriladi.", "A trusted product gets chosen again. Repeat demand brings cash flow, which goes into new products and growth."),
+    })].join("\n");
   return [pageHead(l, "about", t("Здоровье и качество жизни: <b>с этого всё начинается</b>", "Salomatlik va hayot sifati: <b>hammasi shundan boshlanadi</b>", "Health and quality of life: <b>where it all begins</b>"), t("CZECHFARM связывает людей с современными решениями для здоровья. Ниже: цель, принципы и модель компании.", "CZECHFARM odamlarni salomatlik uchun zamonaviy yechimlar bilan bog‘laydi. Quyida: maqsad, tamoyillar va kompaniya modeli.", "CZECHFARM connects people with modern health solutions. Below: the company’s purpose, principles and model."), { act: `<a class="btn btn-pri" href="${href(l, "contacts")}#form">${t("Связаться", "Bog‘lanish", "Get in touch")}${ICON.arrow}</a>` }),
   `<section class="sec" id="purpose"><div class="wrap split"><div class="sec-h mv mv-left" style="margin:0"><p class="kicker">${t("Цель и миссия", "Maqsad va missiya", "Purpose and mission")}</p><h2 class="h2">${t("Доступ к современным решениям <b>для здоровья</b>", "Salomatlik uchun <b>zamonaviy yechimlardan</b> foydalanish", "Access to modern <b>health solutions</b>")}</h2></div>
 <div class="mv mv-right" style="display:grid;gap:20px"><p class="lead">${t("Высшая цель компании: улучшать здоровье и качество жизни людей. Работа CZECHFARM связана с этим напрямую: компания приводит на рынок современные решения и делает их доступными для пациентов, врачей и аптек.", "Kompaniyaning oliy maqsadi: odamlarning salomatligi va hayot sifatini yaxshilash. CZECHFARM ishi bunga bevosita bog‘liq: kompaniya bozorga zamonaviy yechimlarni olib keladi va ularni bemorlar, shifokorlar va dorixonalar uchun ochiq qiladi.", "The company’s highest purpose is to improve people’s health and quality of life. CZECHFARM’s work ties straight into that: it brings modern solutions to the market and makes them available to patients, doctors and pharmacies.")}</p>
@@ -384,6 +395,7 @@ function partners(l) {
     t("Маркетинг: о бренде узнают те, кто его выбирает и назначает.", "Marketing: brend haqida uni tanlaydigan va tavsiya qiladiganlar bilib oladi.", "Marketing: the people who choose and recommend the product learn the brand."),
     t("Точки сбыта: у CZECHFARM они уже налажены, искать их самому не нужно.", "Sotuv nuqtalari: CZECHFARMda ular allaqachon yo‘lga qo‘yilgan, o‘zingiz qidirishingiz shart emas.", "Points of sale: CZECHFARM already has them in place, so you do not need to find them yourself."),
   ].map((x) => `<li>${ICON.check}<span>${x}</span></li>`).join("")}</ul></div></section>`,
+  PROD ? SB.promise(l) : "",
   PB.globeBlock(l),
   `<section class="sec dark" id="steps"><div class="wrap"><div class="sec-h mv mv-up"><p class="kicker">${t("Как идёт запуск", "Ishga tushirish qanday o‘tadi", "How a launch goes")}</p><h2 class="h2">${t("Пять шагов <b>от заявки до запуска</b>", "Arizadan ishga tushirishgacha <b>besh qadam</b>", "Five steps <b>from request to launch</b>")}</h2></div>
 <ol class="steps">${PARTNER_STEPS.map((s, i) => `<li class="glass-d mv mv-up" style="--d:${i * 90}ms"><h3>${L3(s, l)[0]}</h3><p>${L3(s, l)[1]}</p></li>`).join("")}</ol></div></section>`,
@@ -400,6 +412,7 @@ function investors(l) {
   const t = T(l);
   return [pageHead(l, "investors", t("Фармацевтическая платформа, <b>где здоровье создаёт стоимость</b>", "Salomatlik <b>qiymat yaratadigan</b> farmatsevtika platformasi", "A pharmaceutical platform <b>where health creates value</b>"), t("Инвестиционное позиционирование CZECHFARM: улучшение здоровья создаёт устойчивую стоимость.", "CZECHFARM investitsiya pozitsiyasi: salomatlikni yaxshilash barqaror qiymat yaratadi.", "CZECHFARM’s investment positioning: improving health creates sustainable value."), { dark: true, img: "steps", act: `<a class="btn btn-gold" href="#form">${t("Запросить материалы", "Materiallarni so‘rash", "Request materials")}${ICON.arrow}</a>` }),
   `<section class="sec" id="thesis"><div class="wrap"><p class="kicker mv mv-up">${t("Почему это работает", "Nega bu ishlaydi", "Why it works")}</p><p class="quote mv mv-up" style="margin-top:16px;color:var(--ink)">${t("Когда продукт <b style=\"color:var(--teal)\">помогает людям</b>, ему доверяют. Доверие даёт повторный спрос, а повторный спрос <b style=\"color:var(--teal)\">даёт стоимость</b>.", "Mahsulot <b style=\"color:var(--teal)\">odamlarga yordam bersa</b>, unga ishonishadi. Ishonch takroriy talab beradi, takroriy talab esa <b style=\"color:var(--teal)\">qiymat yaratadi</b>.", "When a product <b style=\"color:var(--teal)\">helps people</b>, they trust it. Trust brings repeat demand, and repeat demand <b style=\"color:var(--teal)\">creates value</b>.")}</p></div></section>`,
+  PROD ? SB.goal(l) : "", PROD ? SB.kpi(l) : "",
   chainBlock(l, {
     k: t("Логика роста стоимости", "Qiymat o‘sish mantig‘i", "How value grows"),
     h: t("От здоровья <b>до масштабирования</b>", "Salomatlikdan <b>kengayishgacha</b>", "From health <b>to scale</b>"),
