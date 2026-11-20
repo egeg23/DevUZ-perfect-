@@ -1,6 +1,6 @@
-// Версия кадров врачей для адресов (?v=…): отпечаток всех tm-*.webp. Файлы лежат под теми же
-// именами, а сайт отдаёт их с кэшем на неделю: без версии телефон, который уже был на сайте,
-// показал бы прежнюю ленту с новой разметкой. Поменяли любой tm-*.webp:
+// Версия кадров и роликов врачей для адресов (?v=…): отпечаток всех tm-*.webp и tm-*.mp4.
+// Файлы лежат под теми же именами, а сайт отдаёт их с кэшем на неделю: без версии телефон,
+// который уже был на сайте, показал бы прежний ролик с новой разметкой. Поменяли любой файл:
 //   node scripts/protos/syanie/figures/version.mjs        — печатает отпечаток
 //   node scripts/protos/syanie/figures/version.mjs write  — вписывает его в FIG_V (catalog.mjs)
 // Что FIG_V совпадает с файлами, держит tests/syanie-app.test.ts.
@@ -10,7 +10,7 @@ import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 const PUB = new URL("../../../../public/protos/syanie/", import.meta.url);
 export function figVersion() {
   const h = createHash("sha1");
-  for (const f of readdirSync(PUB).filter((x) => /^tm-[a-z-]+\.webp$/.test(x)).sort()) { h.update(f); h.update(readFileSync(new URL(f, PUB))); }
+  for (const f of readdirSync(PUB).filter((x) => /^tm-[a-z-]+\.(webp|mp4)$/.test(x)).sort()) { h.update(f); h.update(readFileSync(new URL(f, PUB))); }
   return h.digest("hex").slice(0, 8);
 }
 

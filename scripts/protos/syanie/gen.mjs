@@ -331,13 +331,29 @@ function yearsOf(d) {
 }
 /* Кадр шире или уже кадра врача лицом — по высоте тот же, по центру (ширина и сдвиг в % от него). */
 const wide = (ar, fig) => { const k = ar / (fig.w / 1200); return Math.abs(k - 1) < 0.005 ? "" : ` style="width:${(k * 100).toFixed(2)}%;left:${((1 - k) * 50).toFixed(2)}%"`; };
-/* Кадры врачей лежат под теми же именами, а кэш у них на неделю: в адресе версия (FIG_V). */
+/* Кадры и ролики врачей лежат под теми же именами, а кэш у них на неделю: в адресе версия (FIG_V). */
 const FV = CAT.FIG_V ? `?v=${CAT.FIG_V}` : "";
-/* Лента кадров движения врача: сетка c×r, кадр шире кадра врача (руки и ноги при шаге). */
-const tape = (fig, k) => {
-  const t = fig[k]; if (!t) return "";
-  const q = t.tw / CAT.FIG_H / (fig.w / 1200);
-  return `<span class="tm-w tm-${k}" data-src="${IMG}/tm-${fig.id}-${k}.webp${FV}" data-n="${t.n}" data-c="${t.c}" data-ms="${t.ms}"${t.p ? ` data-p="${t.p.join(",")}"` : t.go ? ` data-go="${t.go.join(",")}"` : ""} style="--c:${t.c};--r:${Math.ceil(t.n / t.c)};width:${(q * 100).toFixed(2)}%;left:${((1 - q) * 50).toFixed(2)}%"><img alt="" aria-hidden="true" decoding="async"></span>`;
+/* Ролики движения врача (владелец, 20.11.2026: «Киношные походки, плавные, будто это видео»):
+   у врача с полем v в FIGS вместо лент кадров — холст и видео (team.js складывает половины кадра:
+   сверху цвет, снизу прозрачность). Два файла: wf — подход, out — разворот, уход и разворот
+   обратно подряд (at — где в ролике начинается часть). Рамка ролика — по высоте рамка врача и
+   поле сверху и снизу (белый контур и свечение), по ширине — tw от высоты рамки, по центру. */
+const reel = (fig) => {
+  if (!fig.v) return "";
+  const clips = {}, box = (c) => { const q = c.tw / c.th / (fig.w / 1200), e = (c.hf / c.th - 1) / 2; return [+((1 - q) * 50).toFixed(2), +(-e * 100).toFixed(2), +(q * 100).toFixed(2), +((1 + 2 * e) * 100).toFixed(2)]; };
+  for (const [file, f] of Object.entries(fig.v)) {
+    const src = `${IMG}/tm-${fig.id}-${file}.mp4${FV}`, w = { src, w: f.tw, h: f.hf, b: box(f) };
+    const parts = f.fps ? { [file]: { at: 0, fps: f.fps, n: f.n, p: f.p } } : { t: f.t, wb: f.wb, tb: f.tb };
+    for (const [k, c] of Object.entries(parts)) if (c) clips[k] = { ...w, at: c.at, fps: c.fps, n: c.n, ...(c.p ? { p: c.p } : {}) };
+  }
+  return `<span class="tm-v" data-clips='${JSON.stringify(clips)}'><canvas aria-hidden="true"></canvas><video muted playsinline preload="none" aria-hidden="true" tabindex="-1"></video></span>`;
+};
+/* Кадр врача с полем под белый контур (e точек при высоте 1200 со всех сторон): картинка шире и
+   выше рамки врача на это поле, рамка (место в ряду) прежняя. */
+const pad = (fig, w) => {
+  const e = fig.e || 0; if (!e) return w === fig.w ? "" : wide(w / 1200, fig);
+  const L = ((1 - w / fig.w) / 2 - e / fig.w) * 100;
+  return ` style="left:${L.toFixed(2)}%;top:${(-e / 12).toFixed(3)}%;width:${((w + 2 * e) / fig.w * 100).toFixed(2)}%;height:${((1200 + 2 * e) / 12).toFixed(3)}%"`;
 };
 const figOf = (d) => { const m = /^dr-([a-z-]+)$/.exec(d.img || ""); return m && CAT.FIGS[m[1]] ? { id: m[1], ...CAT.FIGS[m[1]] } : null; };
 export function teamBlock({ page = false, crumbs = "" } = {}) {
@@ -349,7 +365,7 @@ export function teamBlock({ page = false, crumbs = "" } = {}) {
     const fig = figOf(d), y = yearsOf(d), dirs = dirsOf(d), surname = plain(d.name).split(/\s+/)[0];
     const alt = esc(`${plain(d.name)}, ${plain(d.role).toLowerCase()}`);
     const body = fig
-      ? `<img class="tm-f" src="${IMG}/tm-${fig.id}.webp${FV}" width="${fig.w}" height="1200" alt="${alt}" loading="lazy" decoding="async"><img class="tm-k" src="${IMG}/tm-${fig.id}-b.webp${FV}" width="${fig.bw}" height="1200" alt="" aria-hidden="true" loading="lazy" decoding="async"${wide(fig.bw / 1200, fig)}>${["wf", "wb", "t"].map((k) => tape(fig, k)).join("")}`
+      ? `<img class="tm-f" src="${IMG}/tm-${fig.id}.webp${FV}" width="${fig.w + 2 * (fig.e || 0)}" height="${1200 + 2 * (fig.e || 0)}" alt="${alt}" loading="lazy" decoding="async"${pad(fig, fig.w)}><img class="tm-k" src="${IMG}/tm-${fig.id}-b.webp${FV}" width="${fig.bw + 2 * (fig.e || 0)}" height="${1200 + 2 * (fig.e || 0)}" alt="" aria-hidden="true" loading="lazy" decoding="async"${pad(fig, fig.bw)}>${reel(fig)}`
       : `<span class="tm-ph">${docPic(d)}</span>`;
     const other = d.facts.filter((f) => !y || !plain(f).includes(y.t.replace(/^более /, "")));
     const seg = y ? Math.max(1, Math.min(10, Math.round(y.n))) : 0;
