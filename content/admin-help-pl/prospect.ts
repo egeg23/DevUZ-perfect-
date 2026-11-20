@@ -60,7 +60,7 @@ export const prospectSections: Record<string, HelpEntry> = {
         id: "how",
         title: "Jak skaut szuka przetargów",
         body: [
-          "Co 30 minut skaut (program studia) sprawdza platformy etender, xarid, Hayot Birja i Tender.asia. Bierze tylko naszą pracę: tworzenie stron, aplikacji, botów i systemów. 1C, licencje, serwery i monitoring wizyjny pomija.",
+          "Co 30 minut skaut (program studia) sprawdza platformy etender, xarid, Hayot Birja i Tender.asia. Bierze tylko naszą pracę: tworzenie stron, aplikacji, botów i systemów. 1C, licencje, serwery, monitoring wizyjny i zakupy sprzętu (laptopy, urządzenia, „baza techniczna”, nawet ze słowem „AI” w nazwie) pomija.",
           "Nowy lot trafia do [kolejki leadów](#leads-queue), tak jak zgłoszenie ze strony. W karcie jest termin, link, kontakt do zamawiającego i tłumaczenie nazwy na rosyjski.",
         ],
       },

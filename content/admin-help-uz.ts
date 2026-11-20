@@ -939,7 +939,7 @@ export const uz: HelpCopy = {
           id: "how",
           title: "Skaut tenderlarni qanday qidiradi",
           body: [
-            "Skaut (studiya dasturi) har 30 daqiqada etender, xarid, Hayot Birja va Tender.asia maydonchalarini tekshiradi. U faqat bizning ishimizni oladi: sayt, ilova, bot va tizim yaratish. 1C, litsenziyalar, serverlar va videokuzatuvni o‘tkazib yuboradi.",
+            "Skaut (studiya dasturi) har 30 daqiqada etender, xarid, Hayot Birja va Tender.asia maydonchalarini tekshiradi. U faqat bizning ishimizni oladi: sayt, ilova, bot va tizim yaratish. 1C, litsenziyalar, serverlar, videokuzatuv va texnika xaridlarini (noutbuk, jihozlar, «texnik baza», nomida «sun’iy intellekt» bo‘lsa ham) o‘tkazib yuboradi.",
             "Yangi lot saytdagi ariza kabi [lidlar navbati](#leads-queue)ga tushadi. Kartada muddat, havola, buyurtmachi kontakti va nomning ruscha tarjimasi bor.",
           ],
         },
