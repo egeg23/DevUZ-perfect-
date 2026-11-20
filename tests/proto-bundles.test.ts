@@ -3281,3 +3281,50 @@ test("Qiyos: сайт 1 000 $ вместо 3 900 $, допы 1 950 $, с сай�
   for (const a of plan.ADDONS) for (const l of ["ru", "uz"] as const) assert.ok(a[l].t && a[l].e && a[l].who, `${a.id}: нет текста на ${l}`);
   for (const a of plan.ADDONS) assert.doesNotMatch(a.uz.t + a.uz.e + a.uz.who, /[А-Яа-яЁё]/, `${a.id}: кириллица в узбекском`);
 });
+
+test("ASAPHARM Academy: лендинг и панель на ru и uz — условия, noindex, видео DevUz, шапка, высота пикселями, только их данные", () => {
+  const site = bundlePages("asapharm")!;
+  assert.ok(site, "сборка не подключена");
+  const all: Record<string, string> = { "": site.html, ...site.pages };
+  assert.deepEqual(Object.keys(all).sort(), ["", "panel", "uz", "uz/panel"]);
+  for (const [path, page] of Object.entries(all)) {
+    const uz = path.startsWith("uz");
+    assert.ok(page.includes(`devuz.studio/${uz ? "uz" : "ru"}/mockup-terms`), `${path}: нет условий макета на языке страницы`);
+    assert.match(page, /<meta name="robots" content="noindex/, `${path}: нет noindex`);
+    assert.ok(page.includes('id="dzi"'), `${path}: нет видео DevUz`);
+    assert.match(page, new RegExp(`<html lang="${uz ? "uz" : "ru"}"`));
+    assert.doesNotMatch(page, /[—–]/, `${path}: длинное тире`);
+  }
+  for (const path of ["", "uz"]) {
+    const page = all[path];
+    /* Шапка — по правилу 15.10.2026: прячется при любой прокрутке, обратно через 3 с. */
+    assert.ok(page.includes("IDLE=3000") && page.includes("function headIdle()"), `${path}: шапка не по правилу`);
+    /* Браузер Telegram: длинная секция — от первой высоты окна в пикселях. */
+    assert.ok(page.includes("--vh1") && page.includes("height:calc(var(--vh1)*300)"), `${path}: «Путь досье» в vh`);
+    /* Только их данные: телефон, Telegram администратора, курсы, старты. */
+    for (const s of ["+998 97 407 11 40", "t.me/a_zakirova", "info@asapharmacademy.uz", "2026-11-24", "2026-11-26"]) assert.ok(page.includes(s), `${path}: нет ${s}`);
+    /* Цен академии на их сайте нет — в макете их тоже нет. */
+    assert.doesNotMatch(page.replace(/<aside class="kd"[\s\S]*?<\/aside>/, "").replace(/<script type="application\/json" id="i18n">[\s\S]*?<\/script>/, ""), /\d[\d\s]*(сум|so‘m|\$)/, `${path}: цена академии, которой нет у них`);
+    for (const id of ["dossier", "podbor", "webinar", "cert", "otzyv", "admin"]) assert.ok(page.includes(`data-addon="${id}"`), `${path}: нет блока допа ${id}`);
+  }
+  /* Отзывы и сертификат подписаны примерами, имена в образце — ловушки. */
+  assert.ok(all[""].includes("пример отзыва") && all["uz"].includes("fikr namunasi"));
+  assert.ok(all[""].includes("Образец оформления"));
+  assert.doesNotMatch(all["uz"].replace(/<script[\s\S]*?<\/script>/g, "").replace(/<style[\s\S]*?<\/style>/g, "").replace(/lang="ru"[^>]*>RU/, ""), /[А-Яа-яЁё]{3,}/, "в узбекской странице кириллица");
+  const stamped = stampedBundle("asapharm", SEED)!;
+  assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
+  assert.doesNotMatch(stamped.html + stamped.pages["uz"], /\[\[t:\d+\]\]|\/\*~\*\//, "ловушки не заменены");
+});
+
+test("ASAPHARM Academy: лендинг 500 $ вместо 1 700 $, допы ровно 1 500 $", async () => {
+  const plan = await import("../scripts/protos/asapharm/plan.mjs");
+  /* Владелец, 20.11.2026: «лендинг 500$; допы не дороже 1500$». */
+  assert.equal(plan.BASE.promo, 500);
+  assert.equal(plan.BASE.price, 1700);
+  const addons = plan.ADDONS.reduce((s: number, a: { price: number }) => s + a.price, 0);
+  assert.ok(addons <= 1500, "допы дороже 1 500 $");
+  assert.equal(plan.ALL, 2000);
+  for (const a of plan.ADDONS) for (const l of ["ru", "uz"] as const) assert.ok(a[l].t && a[l].e && a[l].who, `${a.id}: нет текста на ${l}`);
+  const site = bundlePages("asapharm")!;
+  assert.ok(site.html.includes("1\u00a0700\u00a0$") && site.html.includes("500\u00a0$"), "в конструкторе не та цена");
+});
