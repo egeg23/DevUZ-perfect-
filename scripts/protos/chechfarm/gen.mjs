@@ -52,7 +52,12 @@ function nekScene() {
 }
 const PREMIUM = readFileSync(DIR + "premium.js", "utf8");
 if (!PREMIUM.includes("__NEK_SCENE__;")) throw new Error("premium.js: нет места для движка сцены");
-const JS = strip(readFileSync(DIR + "site.js", "utf8") + "\n" + PREMIUM.replace("__NEK_SCENE__;", () => nekScene() + ";") + "\n" + readFileSync(DIR + "launch.js", "utf8")).replace(/\n\s*\n/g, "\n");
+/* Боевой сайт: на телефоне шапка возвращается через 1 с после прокрутки
+   (владелец DevUz, 20.11.2026: «Сделай появление меню через 1 секунду»);
+   у макета — прежние 3 с. */
+const SITE_JS = readFileSync(DIR + "site.js", "utf8");
+if (!SITE_JS.includes("IDLE=3000")) throw new Error("site.js: нет IDLE=3000");
+const JS = strip((process.env.CF_PROD === "1" ? SITE_JS.replace("IDLE=3000", "IDLE=1000") : SITE_JS) + "\n" + PREMIUM.replace("__NEK_SCENE__;", () => nekScene() + ";") + "\n" + readFileSync(DIR + "launch.js", "utf8")).replace(/\n\s*\n/g, "\n");
 /* CF_PROD=1 — боевой сайт на сервере компании (app/): без видео DevUz,
    условий макета, демо-панели и блока цены; формы идут на сервер, продукты,
    новости, контакты и заголовки — из базы (K.live, подставляет сервер). */
