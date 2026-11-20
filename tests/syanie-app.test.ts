@@ -755,16 +755,25 @@ test("сияние на сервере клиники: «Наши врачи» �
       assert.match(html, /<section class="tm" id="vrachi" data-tone="ink" data-tm>/);
       assert.equal(html.match(/<button type="button" class="tm-d"/g)?.length, 4);
       assert.match(html, /Нажмите на врача, чтобы посмотреть/);
-      assert.match(html, /<img class="tm-f" src="\/protos\/syanie\/tm-kadiev\.webp\?v=[0-9a-f]{8}" width="341" height="1200" alt="Кадиев Рамазан Курбанович, стоматолог-хирург, ортопед"/);
+      /* Кадр врача — с полем под белый контур (36 точек при высоте 1200 со всех сторон), рамка в ряду прежняя. */
+      assert.match(html, /<img class="tm-f" src="\/protos\/syanie\/tm-kadiev\.webp\?v=[0-9a-f]{8}" width="413" height="1272" alt="Кадиев Рамазан Курбанович, стоматолог-хирург, ортопед" loading="lazy" decoding="async" style="left:-10\.56%;top:-3\.000%;width:121\.11%;height:106\.000%">/);
       assert.match(html, /<img class="tm-k" src="\/protos\/syanie\/tm-kadiev-b\.webp\?v=[0-9a-f]{8}"[^>]*alt="" aria-hidden="true"/);
-      /* Подход — лента с путём по каждому кадру (data-p: от 0 до 1000, кадров столько же, сколько в ленте). */
-      const wf = /<span class="tm-w tm-wf" data-src="\/protos\/syanie\/tm-kadiev-wf\.webp\?v=[0-9a-f]{8}" data-n="(\d+)" data-c="8" data-ms="\d+" data-p="([\d,]+)" style="--c:8;--r:\d;width:[\d.]+%;left:-[\d.]+%"><img alt="" aria-hidden="true" decoding="async"><\/span>/.exec(html);
-      assert.ok(wf, "нет ленты подхода Кадиева");
-      const path = wf[2].split(",").map(Number);
-      assert.equal(path.length, Number(wf[1]));
-      assert.ok(path[0] === 0 && path[path.length - 1] === 1000 && path.every((v, i) => !i || v >= path[i - 1]), "путь ленты не растёт от 0 до 1000");
-      /* Разворот — своя лента кадров (лицо, профиль, спина), без отрезка пути. */
-      assert.match(html, /<span class="tm-w tm-t" data-src="\/protos\/syanie\/tm-kadiev-t\.webp\?v=[0-9a-f]{8}" data-n="18" data-c="6" data-ms="\d+" style="--c:6;--r:3;width:[\d.]+%;left:-[\d.]+%"><img alt="" aria-hidden="true" decoding="async"><\/span>/);
+      /* Движение — роликами (владелец, 20.11.2026: «Киношные походки, плавные, будто это видео»):
+         подход (wf) и «уход» одним файлом — разворот (t), уход (wb), разворот обратно (tb) подряд. */
+      const reels = [...html.matchAll(/<span class="tm-v" data-clips='([^']+)'><canvas aria-hidden="true"><\/canvas><video muted playsinline preload="none" aria-hidden="true" tabindex="-1"><\/video><\/span>/g)].map((m) => JSON.parse(m[1]));
+      assert.equal(reels.length, 4, "ролики у каждого врача");
+      const clips = reels.find((c) => c.wf.src.includes("/tm-kadiev-"))!;
+      assert.deepEqual(Object.keys(clips).sort(), ["t", "tb", "wb", "wf"]);
+      assert.match(clips.wf.src, /^\/protos\/syanie\/tm-kadiev-wf\.mp4\?v=[0-9a-f]{8}$/);
+      for (const k of ["t", "wb", "tb"]) assert.match(clips[k].src, /^\/protos\/syanie\/tm-kadiev-out\.mp4\?v=[0-9a-f]{8}$/);
+      assert.ok(clips.wf.at === 0 && clips.t.at === 0 && clips.t.at < clips.wb.at && clips.wb.at < clips.tb.at, "части «ухода» идут подряд");
+      /* Шаги не скользят: у ходьбы путь по каждому кадру ролика (0…1000), у разворота пути нет. */
+      for (const k of ["wf", "wb"]) {
+        const p = clips[k].p;
+        assert.equal(p.length, clips[k].n);
+        assert.ok(p[0] === 0 && p[p.length - 1] === 1000 && p.every((v: number, i: number) => !i || v >= p[i - 1]), "путь ролика не растёт от 0 до 1000: " + k);
+      }
+      assert.ok(clips.t.p === undefined && clips.tb.p === undefined);
     }
     assert.match(home, /<h2>Наши врачи<\/h2>/);
     assert.match(vr, /<h1>Наши врачи<\/h1>/);
@@ -808,40 +817,44 @@ test("сияние на сервере клиники: «Наши врачи» �
   const css = read("site/team.css"), js = read("site/team.js");
   /* visibility — не движение: лента кадров, которая не играет, снята с отрисовки (память телефона). */
   for (const m of css.matchAll(/transition:([^;}]+)/g)) for (const part of m[1].split(",")) assert.match(part.trim(), /^(transform|opacity|border-color|color|transition-duration|none)\b|^visibility 0s|^\.01s/, "анимация не transform/opacity: " + part);
-  /* Кадры движения (владелец, 16.11.2026: «можешь сделать прям походку, чтобы он шел?», потом
-     «шаги сделай будто бы это шаги настоящие. Когда разворачивается — они становятся тонкими,
-     будто бы толщиной врач 1 мм»): у каждого врача три ленты — к нам, от нас и разворот; лента —
-     сетка кадров по FIGS, обе стороны не больше 4096 (предел картинки на телефонах). */
-  const { imageSize } = await import("node:module").then(() => ({ imageSize: (f: string) => { const b = readFileSync(f); const i = b.indexOf("VP8X"); return i > 0 ? { w: 1 + b.readUIntLE(i + 12, 3), h: 1 + b.readUIntLE(i + 15, 3) } : null; } }));
-  for (const [id, f] of Object.entries(CAT.FIGS) as Array<[string, any]>) for (const k of ["wf", "wb", "t"]) {
-    const file = new URL(`tm-${id}-${k}.webp`, PUB).pathname;
-    assert.ok(existsSync(file), "нет ленты кадров " + file);
-    const size = imageSize(file)!, t = f[k];
-    assert.equal(size.w, t.c * t.tw, "ширина ленты не c × tw: " + file);
-    assert.equal(size.h, Math.ceil(t.n / t.c) * CAT.FIG_H, "высота ленты не рядов × FIG_H: " + file);
-    assert.ok(size.w <= 4096 && size.h <= 4096, "лента больше 4096: " + file);
-    assert.ok(statSync(file).size < 480_000, "лента тяжелее 480 КБ: " + file);
-    /* Шаги не скользят: у ходьбы записан путь (по каждому кадру — p, или отрезок, где идут ноги, — go); у разворота пути нет. */
-    if (k === "t") assert.ok(t.go === undefined && t.p === undefined);
-    else if (t.p) assert.ok(t.p.length === t.n && t.p[0] === 0 && t.p[t.n - 1] === 1000 && t.p.every((v: number, i: number) => !i || v >= t.p[i - 1]), "путь по кадрам: " + id + " " + k);
-    else assert.ok(t.go[0] >= 0 && t.go[0] < 0.3 && t.go[1] > 0.7 && t.go[1] <= 1, "отрезок шага: " + id + " " + k);
-    /* Подход каждого врача снят стоящей камерой (владелец про Намазова: «У этого врача нет проходки»): путь по кадрам обязателен. */
-    if (k === "wf") assert.ok(Array.isArray(t.p), "подход без пути по кадрам: " + id);
-    assert.ok(t.ms >= 600 && t.ms <= 2800, "время ленты: " + id + " " + k);
+  /* Ролики движения (владелец, 16.11.2026: «шаги сделай будто бы это шаги настоящие»; 20.11.2026:
+     «Киношные походки, плавные, будто это видео… вокруг контура врача белый контур»): у каждого
+     врача подход (wf) и «уход» (out: разворот, уход, разворот обратно). Кадр ролика — сверху цвет,
+     снизу прозрачность: размер файла — tw × 2·hf, лёгкие для телефона. Лент кадров больше нет. */
+  const mp4Size = (f: string) => { const b = readFileSync(f), i = b.indexOf("tkhd"), v = b[i + 4], o = i + 4 + (v === 1 ? 88 : 76); return { w: b.readUInt32BE(o) / 65536, h: b.readUInt32BE(o + 4) / 65536 }; };
+  const webpSize = (f: string) => { const b = readFileSync(f); const i = b.indexOf("VP8X"); return i > 0 ? { w: 1 + b.readUIntLE(i + 12, 3), h: 1 + b.readUIntLE(i + 15, 3) } : null; };
+  for (const [id, f] of Object.entries(CAT.FIGS) as Array<[string, any]>) {
+    assert.ok(f.e > 0 && f.v?.wf && f.v?.out, "нет роликов или поля под контур: " + id);
+    for (const k of ["wf", "wb", "t"]) assert.ok(!existsSync(new URL(`tm-${id}-${k}.webp`, PUB)), "осталась лента кадров: " + id + " " + k);
+    /* Кадр лицом и спиной — с полем под контур со всех сторон. */
+    assert.deepEqual(webpSize(new URL(`tm-${id}.webp`, PUB).pathname), { w: f.w + 2 * f.e, h: 1200 + 2 * f.e }, "кадр лицом: " + id);
+    assert.deepEqual(webpSize(new URL(`tm-${id}-b.webp`, PUB).pathname), { w: f.bw + 2 * f.e, h: 1200 + 2 * f.e }, "кадр спиной: " + id);
+    for (const [file, c] of Object.entries(f.v) as Array<[string, any]>) {
+      const mp4 = new URL(`tm-${id}-${file}.mp4`, PUB).pathname;
+      assert.ok(existsSync(mp4), "нет ролика " + mp4);
+      assert.deepEqual(mp4Size(mp4), { w: c.tw, h: 2 * c.hf }, "размер ролика: " + mp4);
+      assert.ok(statSync(mp4).size < 1_200_000, "ролик тяжелее 1,2 МБ: " + mp4);
+    }
+    const { wf, out } = f.v;
+    assert.ok(wf.p.length === wf.n && wf.n / wf.fps >= 1.6 && wf.n / wf.fps <= 3.2, "подход: " + id);
+    assert.ok(out.t.at === 0 && Math.abs(out.wb.at - out.t.n / out.t.fps) < 1e-4 && Math.abs(out.tb.at - out.wb.at - out.wb.n / out.wb.fps) < 1e-4 && out.tb.n === out.t.n, "части «ухода» не подряд: " + id);
+    assert.ok(out.wb.p.length === out.wb.n && out.t.n / out.t.fps <= 1.4, "уход и разворот: " + id);
   }
-  /* «К нам» грузится, когда блок на экране, «от нас» и разворот — когда врач вышел. */
-  assert.match(js, /load\(b\.parentNode,'wf'\)/);
-  assert.match(js, /load\(s,'wb t'\)/);
-  /* Кадр ленты выбирает сдвиг сетки; по экрану врача ведёт скрипт по тем же кадрам. */
-  assert.match(css, /\.tm-z \.tm-w img\{[^}]*transform:translate\(calc\(-100% \* var\(--fx,0\) \/ var\(--c,1\)\),calc\(-100% \* var\(--fy,0\) \/ var\(--r,1\)\)\)/);
-  assert.match(js, /path\(i,HOME,to,w\)/);
-  assert.match(js, /path\(i,from,HOME,w\)/);
-  assert.match(js, /getAttribute\('data-p'\)/);
+  /* Подход скачивается, когда блок на экране, «уход» — когда врач вышел; запуск — в самом нажатии. */
+  assert.match(js, /fetchClip\(b\.parentNode,'wf'\)/);
+  assert.match(js, /fetchClip\(s,'wf t'\)/);
+  /* Половины кадра складывает WebGL: цвет сверху, прозрачность снизу. */
+  assert.match(js, /texture2D\(s,vec2\(t\.x,t\.y\*\.5\)\)\.rgb;float a=texture2D\(s,vec2\(t\.x,\.5\+t\.y\*\.5\)\)\.g/);
+  /* По экрану врача ведёт скрипт по пути ролика; не запустился ролик — врач переезжает без шагов. */
+  assert.match(js, /path\(i,HOME,to,c\)/);
+  assert.match(js, /path\(i,from,HOME,c\)/);
+  assert.match(js, /p\.then\(null,function\(\)\{fin\(false\)\}\)/);
+  assert.match(css, /\.tm-vs \.tm-z>img\{opacity:0\}/);
   /* Кадры лежат под теми же именами с кэшем на неделю: версия в адресе — отпечаток файлов. */
   const { figVersion } = await import(new URL("../figures/version.mjs", APP).href);
   assert.equal(CAT.FIG_V, figVersion(), "поменялись tm-*.webp: node scripts/protos/syanie/figures/version.mjs write");
-  /* Разворот — кадрами, туда и обратно; сжатия по ширине («толщиной 1 мм») нет нигде. */
-  assert.match(js, /run\(s,'t',w,!back,null,/);
+  /* Разворот — роликом, туда и обратно; сжатия по ширине («толщиной 1 мм») нет нигде. */
+  assert.match(js, /vrun\(s,back\?'t':'tb',/);
   assert.doesNotMatch(css + js, /tm-turn|rotateY/);
   assert.doesNotMatch(css, /\.tm-(z|g|d|s)[^{}]*\{[^}]*scaleX/);
   assert.match(css, /@media \(prefers-reduced-motion:reduce\)/);

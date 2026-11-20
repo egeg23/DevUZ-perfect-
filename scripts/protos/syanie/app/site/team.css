@@ -1,9 +1,9 @@
 /* «Наши врачи» — ряд врачей в полный рост, как выбор героя (gen.mjs,
    teamBlock; движение — team.js). Владелец, 16.11.2026. Только рабочий сайт.
    Движется только transform и opacity: врач выходит из строя (--tx, --ty,
-   --sc у .tm-g), шагает и разворачивается кадрами из видео (ленты .tm-w,
-   их листает team.js). При «меньше движения» и в версии для слабовидящих —
-   без шагов. */
+   --sc у .tm-g), шагает и разворачивается роликом (.tm-v, холст WebGL,
+   team.js). Белый контур врача врисован в кадры и ролики (figures/outline.py).
+   При «меньше движения» и в версии для слабовидящих — без шагов. */
 .tm{position:relative;overflow:hidden;padding:56px 0 0;background:radial-gradient(90% 60% at 50% 96%,rgb(var(--onyx-rgb) / .12),transparent 62%),radial-gradient(60% 50% at 50% 30%,rgb(var(--frost-rgb) / .06),transparent 70%),var(--ink)}
 .tm-h{position:relative;z-index:3;text-align:center;transition:opacity .5s var(--ease)}
 @media (min-width:760px){.tm-on .tm-h{opacity:.22}}
@@ -96,19 +96,19 @@ html.vi .tm-c{position:static;transform:none;margin:10px auto 0;max-width:none}
 html.vi .tm-d{cursor:default}
 html.vi .tm-i,html.vi .tm-i[hidden]{display:block;position:static;width:auto;max-height:none;margin:24px var(--gut) 0;opacity:1;transform:none}
 html.vi .tm-esc,html.vi .tm-tip{display:none}
-/* Кадры движения: ленты поверх кадра врача (team.js) — идёт к нам (.tm-wf), уходит (.tm-wb),
-   разворот лицом → спиной (.tm-t). Лента — сетка кадров (--c в ряд, --r рядов), кадр
-   выбирает сдвиг (--fx, --fy). Кадр ленты шире кадра врача: при шаге и развороте руки и
-   ноги выходят за силуэт стоящего; ширину и сдвиг ставит gen.mjs. Кадр спиной — так же
-   по высоте, а не «вписать». Разворот — настоящий, с профилем: сжатия по ширине нет
-   (владелец, 16.11.2026: «будто бы толщиной врач 1 мм»). Лента в конце гаснет поверх
-   кадра врача: её кадр мельче, резкость приходит плавно. */
-.tm-w{position:absolute;top:0;bottom:0;left:0;width:100%;overflow:hidden;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .16s linear,visibility 0s .16s}
+/* Кадр врача лицом и спиной (.tm-f, .tm-k) шире и выше рамки врача на поле под белый контур:
+   место и размер ставит gen.mjs (pad), рамка в ряду прежняя. */
 .tm-z .tm-k[style]{right:auto}
-.tm-z .tm-w img{inset:auto;left:0;top:0;width:calc(100% * var(--c,1));height:calc(100% * var(--r,1));object-fit:fill;transform-origin:0 0;transform:translate(calc(-100% * var(--fx,0) / var(--c,1)),calc(-100% * var(--fy,0) / var(--r,1)))}
-.tm-wf-on .tm-wf,.tm-wb-on .tm-wb,.tm-t-on .tm-t{opacity:1;visibility:visible;transition:none}
-.tm-ws .tm-z>img{opacity:0}
-/* Пока врач идёт по кадрам, по экрану его ведёт team.js (шаг в шаг с ногами), не переход. */
+/* Пока врач идёт роликом, по экрану его ведёт team.js (шаг в шаг с ногами), не переход. */
 .tm-mv .tm-g{transition:opacity .5s var(--ease);will-change:transform}
-/* Лента разворота не загрузилась: кадр лицом перетекает в кадр спиной. */
+/* Ролик не запустился: кадр лицом перетекает в кадр спиной. */
 .tm-xf .tm-z>img{transition:opacity .3s linear}
+/* Ролики (team.js, vrun; владелец, 20.11.2026: «Киношные походки, плавные, будто это видео»):
+   холст поверх кадра врача, пока играет ролик, кадр врача под ним гаснет. Рамку холста ставит
+   team.js по ролику (она выше рамки врача на поле под белый контур). Видео почти невидимо, но
+   на экране: невидимое Safari не играет. */
+.tm-v{position:absolute;display:block;pointer-events:none}
+.tm-v canvas{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:0}
+.tm-v video{position:absolute;left:0;top:0;width:2px;height:2px;opacity:.01;pointer-events:none}
+.tm-vs .tm-v canvas{opacity:1}
+.tm-vs .tm-z>img{opacity:0}
