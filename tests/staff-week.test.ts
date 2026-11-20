@@ -87,6 +87,21 @@ test("разовый отчёт владельца: 30.10 в 15:00 — эта н
   assert.equal(monday.until, null);
 });
 
+test("каждую пятницу в 16:00 — неделя с понедельника до 16:00", () => {
+  // Владелец, 20.11.2026: «Где мой отчет по сотрудникам за неделю? Пятница же».
+  assert.equal(extraReportAt(tk("2026-11-20T15:59:00")), null, "до 16:00 — рано");
+  const at = extraReportAt(tk("2026-11-20T17:05:00"));
+  assert.equal(at, tk("2026-11-20T16:00:00").getTime(), "выкатка доехала позже — уходит");
+  assert.equal(extraReportAt(tk("2026-11-20T20:00:00")), null, "окно кончилось");
+  assert.equal(extraReportAt(tk("2026-11-27T16:30:00")), tk("2026-11-27T16:00:00").getTime(), "и в следующую пятницу");
+  assert.equal(extraReportAt(tk("2026-11-13T16:30:00")), null, "до правила — не задним числом");
+  assert.equal(extraReportAt(tk("2026-11-21T16:30:00")), null, "суббота — нет");
+  const range = weekRangeUntil(at!);
+  assert.equal(range.from, tk("2026-11-16T00:00:00").getTime());
+  assert.equal(range.until, "16:00");
+  assert.equal(weekReportKey(range), "staff-week:2026-11-16:2026-11-20-16:00");
+});
+
 test("отчёт ждёт и разовый час владельца, понедельник — главнее", () => {
   const store = read("lib/admin/staff-week-store.ts");
   assert.match(store, /extraReportAt\(now\)/);

@@ -47,12 +47,34 @@ export const EXTRA_WEEK_REPORTS: readonly string[] = ["2026-10-30 15:00", "2026-
 /** Сколько ждать разовый отчёт, если свип или сервер в его час молчали. */
 export const EXTRA_REPORT_WINDOW_MS = 4 * 3600_000;
 
-/** Час разового отчёта, который настал и ещё не прошёл (мс); null — нет такого. */
+/**
+ * Каждую пятницу в 16:00 по Ташкенту — неделя с понедельника до этого часа
+ * (владелец, 20.11.2026: «Где мой отчет по сотрудникам за неделю? Пятница
+ * же»). До этого пятничные были разовыми (30.10, 06.11), 13.11 его не было.
+ * Понедельничный за всю прошлую неделю остаётся.
+ */
+export const FRIDAY_REPORT_HOUR = 16;
+/** С какой пятницы пятничный отчёт идёт сам, «ГГГГ-ММ-ДД». */
+export const FRIDAY_REPORT_FROM = "2026-11-20";
+
+/** Пятница 16:00 этого дня по Ташкенту (мс), если сегодня пятница с FRIDAY_REPORT_FROM. */
+function fridaySlot(now: Date): number | null {
+  const day = todayInTashkent(now);
+  if (tashkentDate(now).weekday !== 5 || day < FRIDAY_REPORT_FROM) return null;
+  const [y, mo, d] = day.split("-").map(Number);
+  return Date.UTC(y, mo - 1, d, FRIDAY_REPORT_HOUR, 0) - TASHKENT_OFFSET_MS;
+}
+
+/** Час разового или пятничного отчёта, который настал и ещё не прошёл (мс); null — нет такого. */
 export function extraReportAt(now: Date, slots: readonly string[] = EXTRA_WEEK_REPORTS): number | null {
+  const times: number[] = [];
   for (const slot of slots) {
     const m = slot.match(/^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})$/);
-    if (!m) continue;
-    const at = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]) - TASHKENT_OFFSET_MS;
+    if (m) times.push(Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]) - TASHKENT_OFFSET_MS);
+  }
+  const friday = fridaySlot(now);
+  if (friday !== null) times.push(friday);
+  for (const at of times) {
     if (now.getTime() >= at && now.getTime() < at + EXTRA_REPORT_WINDOW_MS) return at;
   }
   return null;
