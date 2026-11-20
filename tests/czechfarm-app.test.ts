@@ -683,6 +683,8 @@ test("czechfarm: первый круг правок — стратегия ко�
   for (const l of ["ru", "uz", "en"]) assert.doesNotMatch(page(l, "about").replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/g, ""), /—/, `${l}: длинное тире в тексте`);
   /* Шапка в один ряд (владелец, 19.11.2026: «шапка ровная должна быть, текст ровный сделай, в один ряд»). */
   assert.ok(page("uz", "about").includes(".top .nav a,.top-acc,.top-cta{white-space:nowrap}"), "пункты шапки переносятся");
+  /* Телевизор (владелец, 20.11.2026: «На телевизор когда вывожу сайт - адаптивности нет»): от 2200 px сайт увеличен целиком, как экран 1920. */
+  assert.ok(page("ru", "about").includes("@media (min-width:3700px){:root{--tvz:2}}") && page("ru", "about").includes(".top,main>:not(.hs),.foot,.hs-cap"), "нет увеличения для телевизора");
   /* Макет не меняется: там прежняя колба и прежняя миссия. */
   const bundle = readFileSync(new URL("../../../content/proto-bundles/chechfarm.json", ROOT), "utf8");
   assert.ok(bundle.includes("flask-1200") && !bundle.includes("Brand Growth Engine"), "стратегия попала в макет");

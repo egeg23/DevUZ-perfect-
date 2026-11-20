@@ -8,3 +8,19 @@
    как на планшете: кнопка меню, разделы и языки в выпадающем меню. */
 @media (min-width:1080px) and (max-width:1199px){.top .nav,.top .lang{display:none}#menu-btn{display:grid}}
 @media (min-width:1500px){.top .nav{gap:0}.top .nav a{padding:8px 10px}}
+/* Телевизор и большие экраны (владелец DevUz, 20.11.2026: «На телевизор когда
+   вывожу сайт - адаптивности нет»): на 4K сайт стоял колонкой 1200 px с
+   мелким текстом. От 2200 px шапка, разделы, подвал и подписи сцены
+   увеличиваются целиком (zoom), как будто экран 1920; видео сцены остаётся
+   во весь экран. Высоты от экрана (svh) внутри увеличенного делятся на тот
+   же коэффициент, иначе они вырастают вдвое. */
+@media (min-width:2200px){:root{--tvz:1.2}}
+@media (min-width:2700px){:root{--tvz:1.45}}
+@media (min-width:3300px){:root{--tvz:1.75}}
+@media (min-width:3700px){:root{--tvz:2}}
+@media (min-width:2200px){
+  .top,main>:not(.hs),.foot,.hs-cap,.hs-load,.hs-steps,.hs-skip,.hs-hint,.dlg-in{zoom:var(--tvz)}
+  .hero{min-height:calc(100svh / var(--tvz))}
+  .hero-in{padding-bottom:calc(clamp(96px,12svh,140px) / var(--tvz))}
+  .dlg-in{max-height:calc(92svh / var(--tvz))}
+}
