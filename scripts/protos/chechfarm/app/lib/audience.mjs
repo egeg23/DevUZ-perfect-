@@ -135,7 +135,9 @@ export function makeAudience({ db, note, tg, now, publicUrl = "", onLead = null 
     },
     logout: (sid) => sid && db.run("delete from account_sessions where id = ?", sha(sid)),
     me(a) {
-      const rows = db.all("select no, at, kind, status, msg from leads where account_id = ? or (account_id is null and email != '' and lower(email) = ?) order by id desc limit 30", a.id, a.email);
+      /* Только обращения, отправленные из этого кабинета: почту при регистрации никто не проверяет,
+         и по ней чужой человек увидел бы чужие запросы. */
+      const rows = db.all("select no, at, kind, status, msg from leads where account_id = ? order by id desc limit 30", a.id);
       return { ...view(a), leads: rows.map((l) => ({ no: l.no, at: l.at, kind: l.kind, status: l.status === "spam" ? "done" : l.status, msg: l.msg.slice(0, 300) })) };
     },
     tgLink(a, bot) {

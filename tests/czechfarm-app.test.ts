@@ -532,6 +532,35 @@ test("czechfarm: регистрация партнёров и клиентов, 
   } finally { await a.close(); }
 });
 
+test("czechfarm: безопасность — значки страницы не правятся, поля посетителя в панели текстом, кабинет не видит чужих обращений по почте", async () => {
+  const a = await boot();
+  try {
+    await owner(a);
+    const { hashOf } = await load("lib/site-text.mjs");
+    const home0 = (await a.call("/")).text;
+    const K = JSON.parse(/<script type="application\/json" id="cf-data">([\s\S]*?)<\/script>/.exec(home0)![1]);
+    assert.ok(K.icPlay && K.icInfo, "значков нет в данных страницы");
+    const data = (await a.call("/api/admin/pages?lang=ru&page=home")).json.blocks.find((b: any) => b.id === "data");
+    assert.ok(!data.texts.some((t: any) => /[<>]/.test(t.def)), "разметка значков попала в редактор");
+    /* Подделанный отпечаток значка и правка с «<» не попадают в страницу. */
+    const txt = data.texts[0];
+    await a.adminPost("/pages", { lang: "ru", page: "*", texts: { [hashOf(K.icPlay)]: { v: '<img src=x onerror="alert(1)">', def: K.icPlay }, [txt.h]: { v: 'Текст <img src=x onerror="alert(2)">', def: txt.def } } });
+    const home = (await a.call("/")).text;
+    const K2 = JSON.parse(/<script type="application\/json" id="cf-data">([\s\S]*?)<\/script>/.exec(home)![1]);
+    assert.equal(K2.icPlay, K.icPlay, "значок подменили из панели");
+    assert.ok(!JSON.stringify(K2).includes("<img"), "разметка из панели в данных страницы");
+    /* Карточка обращения в панели: имя посетителя только текстом. */
+    const app = readFileSync(new URL("app/admin/app.js", ROOT), "utf8");
+    assert.ok(!app.includes("/^</.test(x[1])"), "панель вставляет поле, начинающееся с «<», как разметку");
+    /* Обращение, отправленное до кабинета, по одной почте не открывается. */
+    a.setCookie("");
+    await a.call("/api/lead", { kind: "investor", name: "Victim", email: "victim@corp.uz", msg: "Конфиденциально" });
+    assert.equal((await a.call("/api/acc/register", { kind: "client", name: "X", email: "VICTIM@corp.uz", pass: "long-password" })).status, 200);
+    const me = (await a.call("/api/acc/me")).json;
+    assert.ok(!JSON.stringify(me.leads).includes("Конфиденциально"), "чужое обращение открылось по почте");
+  } finally { await a.close(); }
+});
+
 test("czechfarm: страницы сайта из панели — текст любого блока, скрытие блока, шапка на всех страницах", async () => {
   const a = await boot();
   try {
