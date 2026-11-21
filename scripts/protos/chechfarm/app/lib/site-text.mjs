@@ -43,9 +43,10 @@ function eachText(html, fn) {
 /* Данные скрипта страницы (подписи, которые ставит JS): строки со словами. */
 const DATA = /(<script type="application\/json" id="cf-data">)([\s\S]*?)(<\/script>)/;
 const SKIP_KEYS = new Set(["lang", "page", "base", "img", "panel", "live", "scene", "id", "h", "to", "href", "k", "ic"]);
-const dataWorth = (s) => worth(s) && !/^(\/|https?:|#|[a-z0-9_.-]+$)/i.test(s) && (/\s/.test(s) || /[^\u0000-\u007f]/.test(s));
+/* Разметку (значки ic*, всё с «<» или «>») скрипт сайта кладёт в innerHTML как есть: её в редактор не даём. */
+const dataWorth = (s) => worth(s) && !/[<>]/.test(s) && !/^(\/|https?:|#|[a-z0-9_.-]+$)/i.test(s) && (/\s/.test(s) || /[^\u0000-\u007f]/.test(s));
 function walkData(v, fn, key = "") {
-  if (typeof v === "string") return !SKIP_KEYS.has(key) && dataWorth(v) ? (fn(v) ?? v) : v;
+  if (typeof v === "string") return !SKIP_KEYS.has(key) && !/^ic[A-Z]/.test(key) && dataWorth(v) ? (fn(v) ?? v) : v;
   if (Array.isArray(v)) return v.map((x) => walkData(x, fn, key));
   if (v && typeof v === "object") return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, SKIP_KEYS.has(k) ? x : walkData(x, fn, k)]));
   return v;
@@ -128,7 +129,9 @@ export function applyTexts(html, map) {
   const pick = (t) => { const v = map[hashOf(t)]; return v == null || v === "" ? null : v; };
   let out = eachText(html, pick);
   out = out.replace(DATA, (m, a, body, z) => {
-    try { return a + JSON.stringify(walkData(JSON.parse(body), pick)).replace(/</g, "\\u003c") + z; } catch { return m; }
+    /* В данные скрипта правка идёт без «<» и «>»: часть подписей сайт ставит через innerHTML. */
+    const plain = (t) => { const v = pick(t); return v == null ? null : v.replace(/[<>]/g, ""); };
+    try { return a + JSON.stringify(walkData(JSON.parse(body), plain)).replace(/</g, "\\u003c") + z; } catch { return m; }
   });
   return out;
 }
