@@ -158,6 +158,24 @@ test("czechfarm: обращение с сайта → панель → стат�
   } finally { await a.close(); }
 });
 
+test("czechfarm: робот с данными кошелька — в спам, чужие поля в карточку не идут", async () => {
+  const a = await boot();
+  try {
+    const junk = (await a.call("/api/lead", { kind: "other", name: "John Smith", email: "victim-9prvae4e@example.com", phone: "+17953487841", wallet: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266", mnemonic: "eat eat eat eat eat eat eat eat eat eat eat junk", private_key: "0xdfe6", message: "Please verify my wallet" })).json;
+    assert.match(junk.no, /^CF-/, "робот получает обычный ответ");
+    const ok = (await a.call("/api/lead", { kind: "investor", name: "Fund", email: "f@fund.com", want: "meet", foo: "лишнее" })).json;
+    await owner(a);
+    const list = (await a.call("/api/admin/leads")).json.leads;
+    const j = list.find((l: any) => l.no === junk.no), o = list.find((l: any) => l.no === ok.no);
+    assert.equal(j.status, "spam");
+    assert.deepEqual(j.extra, {}, "поля робота попали в карточку");
+    assert.equal(o.status, "new");
+    assert.deepEqual(o.extra, { want: "meet" });
+    const sum = (await a.call("/api/admin/summary")).json;
+    assert.ok(!JSON.stringify(sum).includes("John Smith"), "спам в сводке");
+  } finally { await a.close(); }
+});
+
 test("czechfarm: роли — менеджер не видит инвесторов, ключи вводит только владелец", async () => {
   const a = await boot();
   try {
