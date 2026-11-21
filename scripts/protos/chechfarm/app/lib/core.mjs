@@ -14,6 +14,19 @@ import { HERO_SLOTS } from "./hero.mjs";
 import { cleanBlocks, titleOf } from "./custom-blocks.mjs";
 import { cleanTr } from "./translate.mjs";
 
+/* Поля форм сайта сверх основных: «Масштаб запуска» производителя и «Что нужно» инвестора. */
+export const LEAD_EXTRA = ["scale", "want"];
+/* Признаки робота, который рассылает учебные данные кошелька по формам сайтов. */
+const JUNK_KEY = /mnemonic|seed|private[_ -]?key|wallet|passw|otp|chain_?id|network|username|amount/i;
+const JUNK_TEXT = /\b(?:mnemonic|seed phrase|private[_ ]key|verify my wallet)\b|@example\.(?:com|org|net)\b|\/\/example\.(?:com|org|net)\b|\b0x[0-9a-f]{40,}\b/i;
+export function junkLead(b) {
+  if (!b || typeof b !== "object") return false;
+  for (const [k, v] of Object.entries(b)) {
+    if (JUNK_KEY.test(k) && !LEAD_EXTRA.includes(k)) return true;
+    if (typeof v === "string" && JUNK_TEXT.test(v)) return true;
+  }
+  return false;
+}
 export const STATUS = { new: "Новое", work: "В работе", meet: "Назначена встреча", done: "Ответ отправлен", spam: "Спам" };
 export const ROLES = { owner: "Владелец", head: "Руководитель", manager: "Менеджер" };
 export const KINDS = KIND_NAME;
@@ -208,14 +221,18 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
       if (!l.name && !l.org) throw new Error("Напишите, как к вам обращаться");
       if (src === "site" && !l.email && !l.phone) throw new Error("Оставьте почту или телефон, чтобы мы ответили");
       if (l.email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(l.email)) throw new Error("Проверьте почту");
-      /* Остальные поля формы (масштаб, что нужно, препарат из «Пути бренда») — как есть, коротко. */
+      /* Лишние поля — только те, что есть в формах сайта (масштаб запуска, что нужно инвестору).
+         Чужие ключи робот присылает сам (wallet, mnemonic…), в карточку они не идут. */
       const extra = {};
-      for (const [k, v] of Object.entries(b)) if (!["name", "org", "email", "phone", "country", "msg", "page", "lang", "kind", "id", "ts", "website", "agree", "accountId", "tgChat"].includes(k) && typeof v === "string" && v.trim() && Object.keys(extra).length < 12) extra[cut(k, 30)] = cut(v, 300);
+      for (const k of LEAD_EXTRA) if (typeof b[k] === "string" && b[k].trim()) extra[k] = cut(b[k], 300);
+      /* Робот, проверяющий формы на пересылку данных: тихо в спам, без карточки в Telegram и CRM. */
+      const spam = src === "site" && junkLead(b);
       let no; do no = leadNo(); while (db.get("select 1 from leads where no = ?", no));
       const key = token(12);
-      const r = db.run("insert into leads(no, key, at, kind, src, page, lang, name, org, email, phone, country, msg, extra, tg_chat, account_id) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        no, key, now(), kind, src, l.page, l.lang, l.name, l.org, l.email, l.phone, l.country, l.msg, JSON.stringify(extra), cut(b.tgChat, 40), Number(b.accountId) || null);
+      const r = db.run("insert into leads(no, key, at, kind, src, page, lang, name, org, email, phone, country, msg, extra, tg_chat, account_id, status) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        no, key, now(), kind, src, l.page, l.lang, l.name, l.org, l.email, l.phone, l.country, l.msg, JSON.stringify(extra), cut(b.tgChat, 40), Number(b.accountId) || null, spam ? "spam" : "new");
       const id = Number(r.lastInsertRowid);
+      if (spam) { note("сайт", `Обращение ${no} отсеяно как спам-робот`, id); return { no, key, id }; }
       note(src === "bot" ? "Telegram-бот" : "сайт", `Новое обращение ${no}: ${KINDS[kind]}`, id);
       await notifyStaff(id).catch((e) => console.error("tg notify", e.message));
       if (crmCfg().kind && getS("crm.auto") !== "0") await leads.toCrm(id, "система").catch(() => {});
