@@ -84,6 +84,7 @@ export const ACTION_LABEL: Record<AuditAction, Tr> = {
   "outside.postiz_key_saved": { ru: "сохранил или проверил ключ Postiz", uz: "Postiz kalitini saqladi yoki tekshirdi", pl: "zapisał albo sprawdził klucz Postiz" },
   "outside.tg_channel_saved": { ru: "сохранил или проверил канал Telegram для статей", uz: "Maqolalar uchun Telegram kanalini saqladi yoki tekshirdi", pl: "zapisał albo sprawdził kanał Telegram dla artykułów" },
   "outside.vk_key_saved": { ru: "сохранил или проверил ключ сообщества ВКонтакте", uz: "VKontakte hamjamiyat kalitini saqladi yoki tekshirdi", pl: "zapisał albo sprawdził klucz społeczności VKontakte" },
+  "outside.vcru_saved": { ru: "сохранил или проверил вход vc.ru", uz: "vc.ru kirishini saqladi yoki tekshirdi", pl: "zapisał albo sprawdził logowanie vc.ru" },
   "scout.tender_status": { ru: "отметил тендер: беру, подали или не наше", uz: "tenderni belgiladi: olaman, topshirildi yoki bizniki emas", pl: "oznaczył przetarg: biorę, złożone albo nie nasze" },
   "ads.app_keys_saved": { ru: "вставил ключи приложения Google", uz: "Google ilovasi kalitlarini kiritdi", pl: "wkleił klucze aplikacji Google" },
   "ads.planner_set": { ru: "выбрал кабинет для планировщика ключевых слов", uz: "kalit so‘zlar rejalashtiruvchisi uchun kabinet tanladi", pl: "wybrał konto dla planera słów kluczowych" },

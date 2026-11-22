@@ -42,7 +42,7 @@ export type Platform = (typeof PLATFORMS)[number];
  */
 export type Via = "hand" | "telegraph" | "tgbot" | "vk";
 /** Чем статья на деле ушла: пишется в `outside_posts.via`. */
-export type SentVia = "telegraph" | "postiz" | "tgbot" | "vk";
+export type SentVia = "telegraph" | "postiz" | "tgbot" | "vk" | "vcru";
 
 export type PlatformSpec = {
   name: string;

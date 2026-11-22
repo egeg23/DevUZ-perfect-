@@ -119,6 +119,15 @@ export const outsideDict = defineDict({
     uz: "Telegramda: «Yangi kanal», nom bering, masalan, «DevUz Studio».\nKanal turi — «Ommaviy», manzil o‘ylab toping: t.me/nom. Shuni bu yerga qo‘ying.\nKanalda: «Kanalni boshqarish» → «Administratorlar» → «Administrator qo‘shish», studiya boti @Devuz_studio_bot ni toping va «Xabarlarni e’lon qilish»ni yoqing.\nBu yerga qayting, @nomni qo‘ying va «Saqlash va tekshirish»ni bosing: bot o‘zi administrator ekanini tekshiradi.",
     pl: "W Telegramie: „Nowy kanał”, nazwij go np. „DevUz Studio”.\nTyp kanału: „Publiczny”, wymyśl adres t.me/nazwa. Ten adres wklej tutaj.\nW kanale: „Zarządzaj kanałem” → „Administratorzy” → „Dodaj administratora”, znajdź bota studia @Devuz_studio_bot i włącz „Publikowanie wiadomości”.\nWróć tutaj, wklej @nazwa i naciśnij „Zapisz i sprawdź”: bot sprawdzi, że jest administratorem.",
   },
+  vcruTitle: { ru: "Вход vc.ru", uz: "vc.ru kirishi", pl: "Logowanie vc.ru" },
+  vcruEmail: { ru: "Почта аккаунта студии на vc.ru", uz: "Studiyaning vc.ru akkaunt pochtasi", pl: "E-mail konta studia na vc.ru" },
+  vcruPassword: { ru: "Пароль. Пусто — проверить сохранённый", uz: "Parol. Bo‘sh — saqlanganini tekshirish", pl: "Hasło. Puste — sprawdzić zapisane" },
+  vcruSteps: {
+    ru: "Зарегистрируйте аккаунт студии на vc.ru почтой и паролем (не через Яндекс или VK: так у аккаунта есть пароль).\nОформите профиль: имя DevUz Studio, аватар, описание и ссылка на сайт.\nВставьте сюда почту и пароль и нажмите «Сохранить и проверить»: панель войдёт и покажет имя аккаунта. Пароль уходит в хранилище секретов, на экране его больше нет.\nДальше статья для vc.ru выходит сама раз в неделю, а у черновика vc.ru в «Ждут публикации» появится кнопка «Опубликовать на vc.ru».",
+    uz: "vc.ru’da studiya akkauntini pochta va parol bilan ro‘yxatdan o‘tkazing (Yandex yoki VK orqali emas: shunda akkauntda parol bo‘ladi).\nProfilni to‘ldiring: DevUz Studio nomi, avatar, tavsif va sayt havolasi.\nPochta va parolni shu yerga qo‘ying va «Saqlash va tekshirish»ni bosing: panel kirib, akkaunt nomini ko‘rsatadi. Parol sirlar omboriga ketadi, ekranda boshqa ko‘rinmaydi.\nKeyin vc.ru uchun maqola haftada bir marta o‘zi chiqadi, «E’lon qilinishini kutmoqda»dagi vc.ru qoralamasida «vc.ru’da e’lon qilish» tugmasi paydo bo‘ladi.",
+    pl: "Załóż konto studia na vc.ru e-mailem i hasłem (nie przez Yandex ani VK: wtedy konto ma hasło).\nUzupełnij profil: nazwa DevUz Studio, awatar, opis i link do strony.\nWklej tu e-mail i hasło i kliknij „Zapisz i sprawdź”: panel zaloguje się i pokaże nazwę konta. Hasło trafia do sejfu sekretów, na ekranie go już nie ma.\nPotem artykuł na vc.ru wychodzi sam raz w tygodniu, a przy szkicu vc.ru w „Czekają na publikację” pojawi się przycisk „Opublikuj na vc.ru”.",
+  },
+  vcruPublish: { ru: "Опубликовать на vc.ru", uz: "vc.ru’da e’lon qilish", pl: "Opublikuj na vc.ru" },
   vkTitle: { ru: "Ключ сообщества ВКонтакте", uz: "VKontakte hamjamiyat kaliti", pl: "Klucz społeczności VKontakte" },
   vkSteps: {
     ru: "ВКонтакте: «Сообщества» → «Создать сообщество», тип — «Бизнес» или «Тематическое», название — «DevUz Studio».\nВ сообществе: «Управление» → «Работа с API» → «Ключи доступа» → «Создать ключ».\nОтметьте право «Доступ к стене сообщества» (стена) и создайте ключ, ВКонтакте попросит подтвердить кодом.\nСкопируйте ключ, вставьте сюда и нажмите «Сохранить и проверить». Ключ уходит в хранилище секретов, на экране его больше нет.",
@@ -196,6 +205,18 @@ export const outsideDict = defineDict({
     ru: "ВКонтакте не принял ключ: ниже написано почему. Сохранённый ключ не менялся.",
     uz: "VKontakte kalitni qabul qilmadi: sababi pastda yozilgan. Saqlangan kalit o‘zgarmadi.",
     pl: "VKontakte nie przyjął klucza: niżej jest napisane dlaczego. Zapisany klucz się nie zmienił.",
+  },
+  r_vcruok: { ru: "Статья вышла на vc.ru: она уже в «Опубликованных».", uz: "Maqola vc.ru’da chiqdi: u allaqachon «E’lon qilinganlar»da.", pl: "Artykuł wyszedł na vc.ru: jest już w „Opublikowane”." },
+  r_vcrubad: {
+    ru: "vc.ru не опубликовал: причина — у черновика. Его можно опубликовать руками, как раньше.",
+    uz: "vc.ru e’lon qilmadi: sababi qoralamada. Uni avvalgidek qo‘lda e’lon qilish mumkin.",
+    pl: "vc.ru nie opublikował: powód jest przy szkicu. Można go opublikować ręcznie, jak wcześniej.",
+  },
+  r_vcruloginok: { ru: "Вход vc.ru проверен: статьи пойдут туда сами.", uz: "vc.ru kirishi tekshirildi: maqolalar u yerga o‘zi boradi.", pl: "Logowanie vc.ru sprawdzone: artykuły będą tam trafiać same." },
+  r_vcruloginbad: {
+    ru: "vc.ru не пустил: ниже написано почему. Сохранённый вход не менялся.",
+    uz: "vc.ru kiritmadi: sababi pastda yozilgan. Saqlangan kirish o‘zgarmadi.",
+    pl: "vc.ru nie wpuścił: niżej jest napisane dlaczego. Zapisane logowanie się nie zmieniło.",
   },
   r_ok: { ru: "Готово.", uz: "Tayyor.", pl: "Gotowe." },
   r_bad: {

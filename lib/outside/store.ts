@@ -61,7 +61,7 @@ function asPost(row: Record<string, unknown>): OutsidePost | null {
     link_checked_at: typeof row.link_checked_at === "string" ? row.link_checked_at : null,
     link_state: state,
     link_rel: typeof row.link_rel === "string" ? row.link_rel : null,
-    via: row.via === "telegraph" || row.via === "postiz" || row.via === "tgbot" || row.via === "vk" ? row.via : null,
+    via: row.via === "telegraph" || row.via === "postiz" || row.via === "tgbot" || row.via === "vk" || row.via === "vcru" ? row.via : null,
     external_id: typeof row.external_id === "string" ? row.external_id : null,
     sent_at: typeof row.sent_at === "string" ? row.sent_at : null,
     publish_error: typeof row.publish_error === "string" ? row.publish_error : null,
@@ -152,7 +152,7 @@ export async function sentPosts(limit = 20): Promise<OutsidePost[]> {
   return (data ?? []).map((r) => asPost(r as Record<string, unknown>)).filter((p): p is OutsidePost => Boolean(p));
 }
 
-async function readyPost(id: string): Promise<OutsidePost | null> {
+export async function readyPost(id: string): Promise<OutsidePost | null> {
   const db = serviceClient();
   if (!db || !/^[0-9a-f-]{36}$/i.test(id)) return null;
   const { data } = await db.from("outside_posts").select(COLUMNS).eq("id", id).maybeSingle();

@@ -524,6 +524,7 @@ export const workSections: Record<string, HelpEntry> = {
           "W bloku «Czekają na publikację» przy szkicu są przyciski. «Kopiuj tytuł» i «Kopiuj» wkładają tekst do schowka. Wkleił się krzywo? Kliknij «Kopiuj bez formatowania».",
           "Przycisk «Otwórz vc.ru» (albo innej platformy) otwiera ją w nowej karcie. Zaloguj się na konto studia, wklej tytuł i tekst, dodaj obrazek i opublikuj. Szkic przeczytasz wcześniej przyciskiem «Pokaż tekst».",
           "Skopiuj adres opublikowanego artykułu, wklej go w «Link do opublikowanego artykułu» i kliknij «Opublikowałem». Szkic się nie nadaje? Kliknij «Pomiń», za tydzień przyjdzie nowy.",
+          "Przy szkicu vc.ru, gdy logowanie vc.ru jest podłączone, jest przycisk «Opublikuj na vc.ru»: artykuł wychodzi sam i od razu pojawia się w «Opublikowane». Nie wyszło? Przy szkicu pojawi się powód i można go opublikować ręcznie, jak zwykle.",
         ],
       },
       {
@@ -544,6 +545,7 @@ export const workSections: Record<string, HelpEntry> = {
           "«Kanał Telegram». Załóż publiczny kanał studia, dodaj do niego bota studia @Devuz_studio_bot jako administratora z prawem publikowania wiadomości, wklej @nazwę kanału i kliknij «Zapisz i sprawdź». Bot sprawdzi, że jest administratorem; adres zapisze się tylko, gdy kontrola przeszła. Posty na kanale publikuje bot.",
           "«Klucz społeczności VKontakte». Załóż społeczność studia, w niej «Zarządzanie» → «Praca z API» → «Klucze dostępu» → «Utwórz klucz» z prawem do ściany. Wklej klucz i kliknij «Zapisz i sprawdź»: klucz zapisze się tylko, gdy VKontakte go przyjął. Klucz leży w sejfie sekretów, na ekranie tylko «ustawiony» albo «pusty».",
           "Postiz to zapasowa droga: potrzebny tylko, jeśli kanał albo społeczność wyżej nie są podłączone. W nim kanały podłącza się przyciskiem «Add Channel», klucz jest w Settings → Developers → Public API i wkleja się go w «Klucz API Postiz».",
+          "«Logowanie vc.ru». Załóż konto studia na vc.ru e-mailem i hasłem, wklej je i kliknij «Zapisz i sprawdź»: panel zaloguje się i pokaże nazwę konta, hasło trafia do sejfu sekretów. Potem artykuł na vc.ru raz w tygodniu wychodzi sam, tą samą drogą, którą publikuje ich strona. vc.ru nie ma oficjalnej drogi: jeśli ją zmienią, szkic wróci do «Czekają na publikację» z powodem.",
         ],
       },
       {

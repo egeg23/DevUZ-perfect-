@@ -2010,6 +2010,7 @@ export const uz: HelpCopy = {
             "«E’lon qilinishini kutmoqda» blokida qoralama yonida tugmalar bor. «Sarlavhadan nusxa olish» va «Nusxa olish» matnni buferga qo‘yadi. Qiyshiq qo‘yildimi? «Bezaksiz nusxa olish» tugmasini bosing.",
             "«vc.runi ochish» tugmasi (yoki boshqa platformaniki) uni yangi oynada ochadi. Studiya akkauntiga kiring, sarlavha va matnni qo‘ying, rasm qo‘shing va e’lon qiling. Qoralamani oldindan «Matnni ko‘rsatish» tugmasi bilan o‘qish mumkin.",
             "Chiqqan maqola manzilidan nusxa oling, uni «E’lon qilingan maqola havolasi» maydoniga qo‘ying va «E’lon qildim» tugmasini bosing. Qoralama mos emasmi? «O‘tkazib yuborish» tugmasini bosing, bir haftadan keyin yangisi keladi.",
+            "vc.ru kirishi ulangan bo‘lsa, vc.ru qoralamasida «vc.ru’da e’lon qilish» tugmasi bor: maqola o‘zi chiqadi va darhol «E’lon qilinganlar»da paydo bo‘ladi. Chiqmadimi? Qoralamada sababi paydo bo‘ladi, uni odatdagidek qo‘lda e’lon qilish mumkin.",
           ],
         },
         {
@@ -2030,6 +2031,7 @@ export const uz: HelpCopy = {
             "«Telegram kanal». Studiyaning ommaviy kanalini oching, unga studiya boti @Devuz_studio_bot ni xabarlarni e’lon qilish huquqi bilan administrator qilib qo‘shing, kanalning @nomini qo‘ying va «Saqlash va tekshirish» tugmasini bosing. Bot o‘zi administrator ekanini tekshiradi; manzil faqat tekshiruv o‘tsa saqlanadi. Kanalga postlarni bot e’lon qiladi.",
             "«VKontakte hamjamiyat kaliti». Studiya hamjamiyatini oching, unda «Boshqaruv» → «API bilan ishlash» → «Kirish kalitlari» → «Kalit yaratish», devor huquqi bilan. Kalitni qo‘ying va «Saqlash va tekshirish» tugmasini bosing: kalit faqat VKontakte qabul qilsa saqlanadi. Kalit sirlar omborida turadi, ekranda faqat «kiritilgan» yoki «bo‘sh».",
             "Postiz — zaxira yo‘l: faqat yuqoridagi kanal yoki hamjamiyat ulanmagan bo‘lsa kerak. Unda kanallar «Add Channel» tugmasi bilan ulanadi, kalit Settings → Developers → Public API’da, «Postiz API kaliti» maydoniga qo‘yiladi.",
+            "«vc.ru kirishi». vc.ru’da studiya akkauntini pochta va parol bilan ro‘yxatdan o‘tkazing, ularni qo‘ying va «Saqlash va tekshirish»ni bosing: panel kirib, akkaunt nomini ko‘rsatadi, parol sirlar omboriga ketadi. Keyin vc.ru uchun maqola haftada bir marta o‘zi chiqadi, ularning sayti e’lon qiladigan yo‘l bilan. vc.ru’da rasmiy yo‘l yo‘q: uni o‘zgartirsalar, qoralama sababi bilan «E’lon qilinishini kutmoqda»ga qaytadi.",
           ],
         },
         {

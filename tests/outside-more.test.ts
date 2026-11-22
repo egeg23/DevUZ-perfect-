@@ -152,3 +152,34 @@ test("«Требует внимания»: ручной черновик ждё�
   assert.equal(OUTSIDE_STALE_DAYS, 7);
   assert.ok(!attentionOf({ ...base, role: "manager" }).some((a) => a.kind === "outside"), "менеджеру — нет");
 });
+
+test("vc.ru: черновик — блоками их редактора, вход ключами в заголовке, пароль только в хранилище", async () => {
+  const { vcruBlocks, vcruEntry, vcruRequest, vcruAnswer, parseLogin, entryUrl, VCRU_AUTH } = await import("@/lib/outside/vcru");
+  const body = `Абзац <b> и **жирный**.\n\n## Подзаголовок\n\n• один\n• два\n\nСмотрите [работы DevUz](${siteUrl}/ru/cases).`;
+  const blocks = vcruBlocks(body, "vcru", "art:x");
+  assert.deepEqual(blocks.map((b) => b.type), ["text", "header", "list", "text"]);
+  assert.equal(blocks[0].data.text, "<p>Абзац &lt;b&gt; и <b>жирный</b>.</p>");
+  assert.equal(blocks[1].data.style, "h2");
+  assert.deepEqual(blocks[2].data.items, ["один", "два"]);
+  assert.match(blocks[3].data.text ?? "", /<a href="[^"]+utm_source=vc\.ru[^"]*" target="_blank">работы DevUz<\/a>/);
+  const entry = vcruEntry(7, "Заголовок", body, "vcru", "art:x");
+  assert.equal(entry.subsite_id, 7);
+  assert.equal(entry.is_published, false, "сначала черновик, публикация отдельным запросом");
+  const { url, init } = vcruRequest("editor", { entry: JSON.stringify(entry) }, "ACCESS");
+  assert.equal(url, "https://api.vc.ru/v2.1/editor");
+  assert.equal((init.headers as Record<string, string>).JWTAuthorization, "Bearer ACCESS");
+  assert.ok(init.body instanceof FormData);
+  assert.equal(vcruRequest(`${VCRU_AUTH}/email/login`, {}).url, "https://api.vc.ru/v3.4/auth/email/login");
+  assert.ok("error" in vcruAnswer(200, { message: "Invalid login or password", code: 104, data: null }));
+  assert.deepEqual(vcruAnswer(200, { message: "", data: { id: 5 } }), { data: { id: 5 } });
+  assert.equal(parseLogin('{"email":"a@b.ru","password":"p"}')?.email, "a@b.ru");
+  assert.equal(parseLogin("мусор"), null);
+  assert.equal(entryUrl({}, 123), "https://vc.ru/123");
+  const src = read("lib/outside/vcru.ts");
+  assert.doesNotMatch(src, /console\./, "ключи и пароль не печатаются");
+  const store = read("lib/outside/auto-store.ts");
+  const save = store.slice(store.indexOf("export async function saveVcruLogin"));
+  assert.ok(save.indexOf("vcruSignIn(") < save.indexOf("saveAppSecret(VCRU_LOGIN_KEY"), "пароль — только после входа");
+  assert.match(save, /if \(!mayChoosePublisher\(staff\)\) return "forbidden";/);
+  assert.match(read("lib/outside/run.ts"), /platform === "vcru" && vcruOn/);
+});

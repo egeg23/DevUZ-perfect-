@@ -73,7 +73,7 @@ test("раздел «Статьи на площадках» — владельц
   assert.ok(opens({ role: "manager", section_access: { "/admin/outside": true } }, "/admin/outside"));
   assert.match(read("app/admin/outside/page.tsx"), /requireSection\("\/admin\/outside"\)/);
   const actions = read("app/admin/outside/actions.ts");
-  assert.equal(actions.match(/requireSection\("\/admin\/outside"\)/g)?.length, 6);
+  assert.equal(actions.match(/requireSection\("\/admin\/outside"\)/g)?.length, 8);
   // «Кто публикует» — руководитель и владелец, проверяет сервер.
   assert.match(read("lib/outside/store.ts"), /if \(!mayChoosePublisher\(staff\)\) return "forbidden";/);
 });

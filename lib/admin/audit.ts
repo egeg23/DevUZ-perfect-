@@ -68,6 +68,7 @@ export const AUDIT_ACTIONS = [
   "outside.postiz_key_saved",
   "outside.tg_channel_saved",
   "outside.vk_key_saved",
+  "outside.vcru_saved",
   "scout.tender_status",
   // «Реклама»: ключи приложения Google (только имена полей) и кабинет планировщика ключевых слов.
   "ads.app_keys_saved",

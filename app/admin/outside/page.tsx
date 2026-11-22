@@ -2,6 +2,7 @@ import { AdminShell } from "@/components/admin/shell";
 import { OutsideView } from "@/components/admin/outside-view";
 import { requireSection } from "@/lib/admin/guard";
 import { readAuto } from "@/lib/outside/auto-store";
+import { vcruReady } from "@/lib/outside/vcru";
 import { listPosts, mayChoosePublisher, outsidePeople, readPublisher } from "@/lib/outside/store";
 
 export const dynamic = "force-dynamic";
@@ -17,13 +18,14 @@ export const dynamic = "force-dynamic";
 export default async function OutsidePage({ searchParams }: { searchParams: Promise<{ r?: string }> }) {
   const staff = await requireSection("/admin/outside");
   const canChoose = mayChoosePublisher(staff);
-  const [{ r }, posts, people, publisher, auto] = await Promise.all([
+  const [{ r }, posts, people, publisher, auto, vcruOn] = await Promise.all([
     searchParams,
     listPosts(),
     outsidePeople(),
     readPublisher(),
     // Ключи и каналы Postiz — только тем, кто их вставляет.
     canChoose ? readAuto() : Promise.resolve(null),
+    vcruReady(),
   ]);
   return (
     <AdminShell staff={staff}>
@@ -34,6 +36,7 @@ export default async function OutsidePage({ searchParams }: { searchParams: Prom
         publisher={publisher}
         canChoose={canChoose}
         auto={auto}
+        vcruOn={vcruOn}
         result={r}
         now={Date.now()}
       />

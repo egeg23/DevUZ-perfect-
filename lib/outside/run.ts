@@ -34,6 +34,7 @@ import {
 } from "@/lib/outside/store";
 import { channelPublish, savedChannel } from "@/lib/outside/tgchannel";
 import { VK_KEY, vkPublish } from "@/lib/outside/vk";
+import { vcruPublish, vcruReady } from "@/lib/outside/vcru";
 import { telegraphPublish } from "@/lib/outside/telegraph";
 import { appSecret } from "@/lib/secrets";
 import { OUTSIDE_MODEL, writeDraft } from "@/lib/outside/write";
@@ -142,6 +143,7 @@ export async function runOutsidePosts(now = new Date()): Promise<OutsideRun> {
   const waiting = posts.filter((p) => p.status === "ready" || p.status === "sent");
   const active = PLATFORMS.filter((p) => ready(p) && (isAuto(p) ? autoOn : hand));
   const site = await siteSources();
+  const vcruOn = await vcruReady();
   // Одна тема в один проход разным площадкам — разная (pickTopics).
   const topics = pickTopics(
     posts.map((p) => ({ platform: p.platform, topic_key: p.topic_key })),
@@ -173,6 +175,18 @@ export async function runOutsidePosts(now = new Date()): Promise<OutsideRun> {
       if ("error" in saved) {
         run.errors.push(`${platform}: не сохранилась: ${saved.error}`);
         continue;
+      }
+      // vc.ru — сам, если заведён вход (их редакторский API, lib/outside/vcru.ts); нет или не вышло — человеку.
+      if (platform === "vcru" && vcruOn) {
+        const post = await vcruPublish(draft.title, draft.body, platform, topic.key);
+        if ("url" in post && (await markAutoPublished(saved.id, platform, "vcru", post.url, now))) {
+          run.auto.push(platform);
+          auto.push({ platform, title: draft.title });
+          continue;
+        }
+        const reason = "error" in post ? post.error : `адрес не vc.ru: ${post.url.slice(0, 80)}`;
+        await markAutoFailed(saved.id, reason);
+        run.errors.push(`${platform}: сама не вышла: ${reason}`);
       }
       if (PLATFORM[platform].via === "hand") {
         run.made.push(platform);
