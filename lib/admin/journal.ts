@@ -82,6 +82,8 @@ export const ACTION_LABEL: Record<AuditAction, Tr> = {
   "outside.skipped": { ru: "пропустил черновик статьи на площадку", uz: "platforma uchun maqola qoralamasini o‘tkazib yubordi", pl: "pominął szkic artykułu na platformę" },
   "outside.publisher_set": { ru: "выбрал, кто публикует статьи на площадках", uz: "platformalarda maqolalarni kim e’lon qilishini tanladi", pl: "wybrał, kto publikuje artykuły na platformach" },
   "outside.postiz_key_saved": { ru: "сохранил или проверил ключ Postiz", uz: "Postiz kalitini saqladi yoki tekshirdi", pl: "zapisał albo sprawdził klucz Postiz" },
+  "outside.tg_channel_saved": { ru: "сохранил или проверил канал Telegram для статей", uz: "Maqolalar uchun Telegram kanalini saqladi yoki tekshirdi", pl: "zapisał albo sprawdził kanał Telegram dla artykułów" },
+  "outside.vk_key_saved": { ru: "сохранил или проверил ключ сообщества ВКонтакте", uz: "VKontakte hamjamiyat kalitini saqladi yoki tekshirdi", pl: "zapisał albo sprawdził klucz społeczności VKontakte" },
   "scout.tender_status": { ru: "отметил тендер: беру, подали или не наше", uz: "tenderni belgiladi: olaman, topshirildi yoki bizniki emas", pl: "oznaczył przetarg: biorę, złożone albo nie nasze" },
   "ads.app_keys_saved": { ru: "вставил ключи приложения Google", uz: "Google ilovasi kalitlarini kiritdi", pl: "wkleił klucze aplikacji Google" },
   "ads.planner_set": { ru: "выбрал кабинет для планировщика ключевых слов", uz: "kalit so‘zlar rejalashtiruvchisi uchun kabinet tanladi", pl: "wybrał konto dla planera słów kluczowych" },

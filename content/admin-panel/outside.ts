@@ -98,9 +98,9 @@ export const outsideDict = defineDict({
   },
   autoTitle: { ru: "Публикуется само", uz: "O‘zi e’lon qilinadi", pl: "Publikuje się samo" },
   autoLead: {
-    ru: "Telegraph, ВКонтакте и Telegram-канал студии получают свой черновик раз в неделю и публикуются без человека: у них есть официальный способ публиковать программой. Не вышло — черновик появится выше, в «Ждут публикации», с причиной.",
-    uz: "Telegraph, VKontakte va studiyaning Telegram-kanali haftada bir marta o‘z qoralamasini oladi va odamsiz e’lon qilinadi: ularda dastur orqali e’lon qilishning rasmiy yo‘li bor. Chiqmasa, qoralama yuqorida, «E’lon qilinishini kutmoqda»da sababi bilan paydo bo‘ladi.",
-    pl: "Telegraph, VKontakte i kanał Telegram studia dostają swój szkic raz w tygodniu i publikują się bez człowieka: mają oficjalny sposób publikowania programem. Jeśli się nie uda, szkic pojawi się wyżej, w „Czekają na publikację”, z powodem.",
+    ru: "Telegraph, Telegram-канал и ВКонтакте получают свою статью по понедельникам, средам и пятницам и публикуются без человека: у них есть официальный способ публиковать программой. Telegram-канал публикует бот студии, ВКонтакте — ключ сообщества; Postiz — запасной путь, если их не завели. Не вышло — черновик появится выше, в «Ждут публикации», с причиной.",
+    uz: "Telegraph, Telegram-kanal va VKontakte dushanba, chorshanba va juma kunlari o‘z maqolasini oladi va odamsiz e’lon qilinadi: ularda dastur orqali e’lon qilishning rasmiy yo‘li bor. Telegram-kanalga studiya boti, VKontaktega hamjamiyat kaliti e’lon qiladi; Postiz — ular ulanmagan bo‘lsa, zaxira yo‘l. Chiqmasa, qoralama yuqorida, «E’lon qilinishini kutmoqda»da sababi bilan paydo bo‘ladi.",
+    pl: "Telegraph, kanał Telegram i VKontakte dostają swój artykuł w poniedziałki, środy i piątki i publikują się bez człowieka: mają oficjalny sposób publikowania programem. Na kanale Telegram publikuje bot studia, na VKontakte klucz społeczności; Postiz to zapasowa droga, jeśli ich nie podłączono. Jeśli się nie uda, szkic pojawi się wyżej, w „Czekają na publikację”, z powodem.",
   },
   telegraph: {
     ru: (ready: boolean) => `Telegraph: публикуется сам, регистрация не нужна. Аккаунт студии: ${ready ? "заведён" : "заведётся с первой статьёй"}.`,
@@ -108,6 +108,38 @@ export const outsideDict = defineDict({
     pl: (ready: boolean) => `Telegraph: publikuje się sam, rejestracja nie jest potrzebna. Konto studia: ${ready ? "założone" : "założy się przy pierwszym artykule"}.`,
   },
   postizKey: { ru: "Ключ API Postiz", uz: "Postiz API kaliti", pl: "Klucz API Postiz" },
+  tgTitle: { ru: "Канал Telegram", uz: "Telegram kanal", pl: "Kanał Telegram" },
+  tgPlaceholder: {
+    ru: "@имя канала. Пусто — проверить сохранённый",
+    uz: "@kanal nomi. Bo‘sh — saqlanganini tekshirish",
+    pl: "@nazwa kanału. Puste — sprawdzić zapisany",
+  },
+  tgSteps: {
+    ru: "В Telegram: «Новый канал», назовите его, например, «DevUz Studio».\nТип канала — «Публичный», придумайте адрес: t.me/имя. Его и вставьте сюда.\nВ канале: «Управление каналом» → «Администраторы» → «Добавить администратора», найдите бота студии @Devuz_studio_bot и включите «Публикация сообщений».\nВернитесь сюда, вставьте @имя и нажмите «Сохранить и проверить»: бот проверит, что он администратор.",
+    uz: "Telegramda: «Yangi kanal», nom bering, masalan, «DevUz Studio».\nKanal turi — «Ommaviy», manzil o‘ylab toping: t.me/nom. Shuni bu yerga qo‘ying.\nKanalda: «Kanalni boshqarish» → «Administratorlar» → «Administrator qo‘shish», studiya boti @Devuz_studio_bot ni toping va «Xabarlarni e’lon qilish»ni yoqing.\nBu yerga qayting, @nomni qo‘ying va «Saqlash va tekshirish»ni bosing: bot o‘zi administrator ekanini tekshiradi.",
+    pl: "W Telegramie: „Nowy kanał”, nazwij go np. „DevUz Studio”.\nTyp kanału: „Publiczny”, wymyśl adres t.me/nazwa. Ten adres wklej tutaj.\nW kanale: „Zarządzaj kanałem” → „Administratorzy” → „Dodaj administratora”, znajdź bota studia @Devuz_studio_bot i włącz „Publikowanie wiadomości”.\nWróć tutaj, wklej @nazwa i naciśnij „Zapisz i sprawdź”: bot sprawdzi, że jest administratorem.",
+  },
+  vkTitle: { ru: "Ключ сообщества ВКонтакте", uz: "VKontakte hamjamiyat kaliti", pl: "Klucz społeczności VKontakte" },
+  vkSteps: {
+    ru: "ВКонтакте: «Сообщества» → «Создать сообщество», тип — «Бизнес» или «Тематическое», название — «DevUz Studio».\nВ сообществе: «Управление» → «Работа с API» → «Ключи доступа» → «Создать ключ».\nОтметьте право «Доступ к стене сообщества» (стена) и создайте ключ, ВКонтакте попросит подтвердить кодом.\nСкопируйте ключ, вставьте сюда и нажмите «Сохранить и проверить». Ключ уходит в хранилище секретов, на экране его больше нет.",
+    uz: "VKontakte: «Hamjamiyatlar» → «Hamjamiyat yaratish», turi — «Biznes» yoki «Mavzuli», nomi — «DevUz Studio».\nHamjamiyatda: «Boshqaruv» → «API bilan ishlash» → «Kirish kalitlari» → «Kalit yaratish».\n«Hamjamiyat devoriga kirish» (devor) huquqini belgilang va kalit yarating, VKontakte kod bilan tasdiqlashni so‘raydi.\nKalitni nusxalang, shu yerga qo‘ying va «Saqlash va tekshirish»ni bosing. Kalit sirlar omboriga ketadi, ekranda boshqa ko‘rinmaydi.",
+    pl: "VKontakte: „Społeczności” → „Utwórz społeczność”, typ „Biznes” albo „Tematyczna”, nazwa „DevUz Studio”.\nW społeczności: „Zarządzanie” → „Praca z API” → „Klucze dostępu” → „Utwórz klucz”.\nZaznacz prawo „Dostęp do ściany społeczności” (ściana) i utwórz klucz, VKontakte poprosi o potwierdzenie kodem.\nSkopiuj klucz, wklej tutaj i naciśnij „Zapisz i sprawdź”. Klucz trafia do sejfu sekretów, na ekranie go już nie ma.",
+  },
+  directOk: {
+    ru: (name: string, date: string) => `Проверено ${date}: «${name}», публикуется само.`,
+    uz: (name: string, date: string) => `${date} tekshirildi: «${name}», o‘zi e’lon qilinadi.`,
+    pl: (name: string, date: string) => `Sprawdzono ${date}: „${name}”, publikuje się samo.`,
+  },
+  directFail: {
+    ru: (reason: string, date: string) => `Проверка ${date} не прошла: ${reason}. Ничего не сохранено.`,
+    uz: (reason: string, date: string) => `${date} tekshiruv o‘tmadi: ${reason}. Hech narsa saqlanmadi.`,
+    pl: (reason: string, date: string) => `Sprawdzenie ${date} nie przeszło: ${reason}. Nic nie zapisano.`,
+  },
+  postizSpare: {
+    ru: "Postiz — запасной путь: нужен, только если канал или сообщество выше не заведены.",
+    uz: "Postiz — zaxira yo‘l: faqat yuqoridagi kanal yoki hamjamiyat ulanmagan bo‘lsa kerak.",
+    pl: "Postiz to zapasowa droga: potrzebny tylko, jeśli kanał albo społeczność wyżej nie są podłączone.",
+  },
   keySet: { ru: "задано", uz: "kiritilgan", pl: "ustawiony" },
   keyEmpty: { ru: "пусто", uz: "bo‘sh", pl: "pusty" },
   keyPlaceholder: {
@@ -152,6 +184,18 @@ export const outsideDict = defineDict({
     ru: "Postiz не принял ключ или не ответил: ниже написано почему. Сохранённый ключ не менялся.",
     uz: "Postiz kalitni qabul qilmadi yoki javob bermadi: sababi pastda yozilgan. Saqlangan kalit o‘zgarmadi.",
     pl: "Postiz nie przyjął klucza albo nie odpowiedział: niżej jest napisane dlaczego. Zapisany klucz się nie zmienił.",
+  },
+  r_tgok: { ru: "Канал Telegram проверен: статьи пойдут туда сами.", uz: "Telegram kanal tekshirildi: maqolalar u yerga o‘zi boradi.", pl: "Kanał Telegram sprawdzony: artykuły będą tam trafiać same." },
+  r_tgbad: {
+    ru: "Канал не прошёл проверку: ниже написано почему. Сохранённый адрес не менялся.",
+    uz: "Kanal tekshiruvdan o‘tmadi: sababi pastda yozilgan. Saqlangan manzil o‘zgarmadi.",
+    pl: "Kanał nie przeszedł sprawdzenia: niżej jest napisane dlaczego. Zapisany adres się nie zmienił.",
+  },
+  r_vkok: { ru: "Ключ ВКонтакте проверен: посты пойдут на стену сообщества сами.", uz: "VKontakte kaliti tekshirildi: postlar hamjamiyat devoriga o‘zi boradi.", pl: "Klucz VKontakte sprawdzony: posty będą trafiać na ścianę społeczności same." },
+  r_vkbad: {
+    ru: "ВКонтакте не принял ключ: ниже написано почему. Сохранённый ключ не менялся.",
+    uz: "VKontakte kalitni qabul qilmadi: sababi pastda yozilgan. Saqlangan kalit o‘zgarmadi.",
+    pl: "VKontakte nie przyjął klucza: niżej jest napisane dlaczego. Zapisany klucz się nie zmienił.",
   },
   r_ok: { ru: "Готово.", uz: "Tayyor.", pl: "Gotowe." },
   r_bad: {

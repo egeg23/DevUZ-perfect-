@@ -505,15 +505,16 @@ export const workSections: Record<string, HelpEntry> = {
   /* ── Договоры ─────────────────────────────────────────────────────── */
   /* ── Reklamy ──────────────────────────────────────────────────────── */
   "/admin/outside": {
-    what: "Tu są szkice artykułów o studiu dla vc.ru, Dzen i Tenchat. Raz w tygodniu program pisze po jednym na każdą platformę. Publikujesz go z konta studia i wklejasz tu link. Dzięki temu dowiadują się o nas właściciele firm w Rosji i WNP, a strona dostaje linki.",
+    what: "Tu są artykuły o studiu na cudzych platformach. Dla vc.ru, Dzen i Tenchat program raz w tygodniu pisze szkic, publikujesz go z konta studia i wklejasz tu link. Telegraph, kanał Telegram i VKontakte dostają artykuł w poniedziałki, środy i piątki i publikują się same. Dzięki temu dowiadują się o nas właściciele firm w Rosji i WNP, a strona dostaje linki.",
     items: [
       {
         id: "how",
         title: "Jak to działa",
         body: [
-          "Raz w tygodniu, w dzień czasu Taszkentu, każda platforma dostaje szkic. Temat dobiera się według tego, czego szukają w Rosji. Fakty pochodzą z naszych case studies na stronie.",
+          "vc.ru, Dzen i Tenchat dostają szkic raz w tygodniu, w poniedziałek w dzień czasu Taszkentu. Telegraph, kanał Telegram i VKontakte dostają artykuł w poniedziałek, środę i piątek. Temat dobiera się według tego, czego szukają w Rosji. Fakty pochodzą z naszych case studies na stronie.",
+          "Tematy się nie kończą. Najpierw idą gotowe tematy studia, potem nasze artykuły ze strony: artykuły o marketingu i analizy, najnowsze najpierw. Platforma dostaje to samo pytanie, ale własnymi słowami i z innej strony, z linkiem do artykułu na naszej stronie. Jednego dnia różne platformy mają różne tematy.",
           "Zanim szkic tu trafi, przechodzi kontrolę. Nie ma w nim cen, procentów ani zmyślonych liczb, a linki prowadzą tylko na naszą stronę. Nie przeszedł w czterech próbach? Szkicu nie będzie, a właściciel i kierownik dostaną linijkę w raporcie.",
-          "Nowy szkic platforma dostaje, gdy poprzedni jest opublikowany albo pominięty. Publikuje człowiek. Robot, który sam loguje się na konto, łamie zasady platform, a konto dostaje bana.",
+          "Nowy szkic platforma dostaje, gdy poprzedni jest opublikowany albo pominięty. Na vc.ru, Dzen i Tenchat publikuje człowiek: robot, który sam loguje się na konto, łamie zasady platform, a konto dostaje bana. Szkic czeka dłużej niż 7 dni? Właściciel i kierownik zobaczą linijkę w «Wymaga uwagi» na [Pulpicie](/admin/hq).",
         ],
       },
       {
@@ -535,12 +536,14 @@ export const workSections: Record<string, HelpEntry> = {
       },
       {
         id: "auto",
-        title: "Publikuje się samo: Telegraph, VK, kanał Telegram",
+        title: "Publikuje się samo: Telegraph, kanał Telegram, VK",
         roles: ["admin", "head"],
         body: [
-          "W bloku «Publikuje się samo» są platformy, na których artykuł wychodzi bez człowieka. Szkic przechodzi tę samą kontrolę i od razu pojawia się w «Opublikowane». Nie wyszło? Wróci do «Czekają na publikację» z powodem i opublikuje się go ręcznie.",
+          "W bloku «Publikuje się samo» są platformy, na których artykuł wychodzi bez człowieka, w poniedziałki, środy i piątki. Szkic przechodzi tę samą kontrolę i od razu pojawia się w «Opublikowane». Nie wyszło? Wróci do «Czekają na publikację» z powodem i opublikuje się go ręcznie.",
           "Telegraph niczego nie wymaga. Konto studia zakłada się tam samo przy pierwszym artykule.",
-          "VK i kanał Telegram idą przez serwis Postiz. Raz zarejestruj się tam, podłącz kanały przyciskiem «Add Channel» i weź klucz w Settings → Developers → Public API. Wklej go w «Klucz API Postiz» i kliknij «Zapisz i sprawdź»: klucz zapisze się tylko wtedy, gdy Postiz go przyjął.",
+          "«Kanał Telegram». Załóż publiczny kanał studia, dodaj do niego bota studia @Devuz_studio_bot jako administratora z prawem publikowania wiadomości, wklej @nazwę kanału i kliknij «Zapisz i sprawdź». Bot sprawdzi, że jest administratorem; adres zapisze się tylko, gdy kontrola przeszła. Posty na kanale publikuje bot.",
+          "«Klucz społeczności VKontakte». Załóż społeczność studia, w niej «Zarządzanie» → «Praca z API» → «Klucze dostępu» → «Utwórz klucz» z prawem do ściany. Wklej klucz i kliknij «Zapisz i sprawdź»: klucz zapisze się tylko, gdy VKontakte go przyjął. Klucz leży w sejfie sekretów, na ekranie tylko «ustawiony» albo «pusty».",
+          "Postiz to zapasowa droga: potrzebny tylko, jeśli kanał albo społeczność wyżej nie są podłączone. W nim kanały podłącza się przyciskiem «Add Channel», klucz jest w Settings → Developers → Public API i wkleja się go w «Klucz API Postiz».",
         ],
       },
       {

@@ -561,6 +561,7 @@ export type Attention = Base &
     | { kind: "contracts"; n: number }
     | { kind: "ending"; n: number }
     | { kind: "firecrawl"; remaining: number }
+    | { kind: "outside"; n: number; days: number }
   );
 
 export type AttentionKind = Attention["kind"];
@@ -591,7 +592,15 @@ export const hrefTo = {
   mockup: (ref: string) => `/admin/mockups#mockup-${ref.replace(/[^a-z0-9-]/gi, "-")}`,
   contract: (id: string) => `/admin/contracts/${id}`,
   prospect: (id: string) => `/admin/prospect?open=${id}#p-${id}`,
+  outside: () => "/admin/outside",
 };
+
+/**
+ * Черновик для vc.ru, Дзена или Tenchat ждёт человека дольше стольких дней —
+ * строка в «Требует внимания» владельцу и руководителю (владелец,
+ * 22.11.2026: «Мы вроде делали, но ты не напомнил»).
+ */
+export const OUTSIDE_STALE_DAYS = 7;
 
 /** Больше стольких лидов без ответа боту — строка в «Требует внимания» (lib/admin/lead-tidy.ts). */
 export const BOT_SILENT_ALERT = 5;
@@ -636,6 +645,8 @@ export type AttentionInput = {
   /** Макеты, у которых акция кончается: ссылка — ref макета. */
   ending: readonly Named[];
   firecrawlRemaining: number | null;
+  /** Ручные черновики статей на площадках, которые ждут публикации: label — площадка и заголовок, at — когда готов. */
+  outsideWaiting?: readonly (Named & { at: string })[];
 };
 
 const linksOf = (items: readonly Named[], to: (id: string) => string): AttentionLink[] =>
@@ -705,6 +716,13 @@ export function attentionOf(input: AttentionInput): Attention[] {
   }
   if (input.contracts.length && seesHqMoney(input.role)) {
     out.push({ kind: "contracts", level: "gold", n: input.contracts.length, links: linksOf(input.contracts, hrefTo.contract) });
+  }
+  if (input.role === "admin" || input.role === "head") {
+    const old = (input.outsideWaiting ?? []).filter((p) => now - Date.parse(p.at) > OUTSIDE_STALE_DAYS * 86_400_000);
+    if (old.length) {
+      const days = Math.max(...old.map((p) => Math.floor((now - Date.parse(p.at)) / 86_400_000)));
+      out.push({ kind: "outside", level: "gold", n: old.length, days, links: old.slice(0, ATTENTION_LIST_MAX).map((p) => ({ label: p.label, href: hrefTo.outside() })) });
+    }
   }
   if (input.firecrawlRemaining !== null && input.firecrawlRemaining < FIRECRAWL_LOW) {
     out.push({ kind: "firecrawl", level: "gold", remaining: Math.max(0, Math.floor(input.firecrawlRemaining)), links: [] });

@@ -73,7 +73,7 @@ test("раздел «Статьи на площадках» — владельц
   assert.ok(opens({ role: "manager", section_access: { "/admin/outside": true } }, "/admin/outside"));
   assert.match(read("app/admin/outside/page.tsx"), /requireSection\("\/admin\/outside"\)/);
   const actions = read("app/admin/outside/actions.ts");
-  assert.equal(actions.match(/requireSection\("\/admin\/outside"\)/g)?.length, 4);
+  assert.equal(actions.match(/requireSection\("\/admin\/outside"\)/g)?.length, 6);
   // «Кто публикует» — руководитель и владелец, проверяет сервер.
   assert.match(read("lib/outside/store.ts"), /if \(!mayChoosePublisher\(staff\)\) return "forbidden";/);
 });
@@ -156,8 +156,9 @@ test("неделя: у каждой площадки своя тема, тема
 
 test("неделя забирается до модели, черновики не копятся, без таблицы — неделя не сгорает", () => {
   const run = read("lib/outside/run.ts");
-  assert.ok(run.indexOf("if (!posts) return run;") < run.indexOf("await claimWeek(week)"), "сначала таблица, потом неделя");
-  assert.ok(run.indexOf("await claimWeek(week)") < run.indexOf("writeDraft("), "неделя — до модели");
+  assert.ok(run.indexOf("if (!posts) return run;") < run.indexOf("await claim(OUTSIDE_SHIFT, week)"), "сначала таблица, потом неделя");
+  assert.ok(run.indexOf("await claim(OUTSIDE_SHIFT, week)") < run.indexOf("writeDraft("), "неделя — до модели");
+  assert.ok(run.indexOf("await claim(OUTSIDE_AUTO_SHIFT, slot)") < run.indexOf("writeDraft("), "день «сами» — до модели");
   assert.match(run, /waiting\.map\(\(p\) => p\.platform\)/);
   assert.match(read("app/api/reminders/sweep/route.ts"), /runOutsidePosts\(new Date\(\)\)/);
   // Отчёт о сбое — строкой владельцу, со своим заголовком.
@@ -250,10 +251,12 @@ test("миграция, журнал и инструкция на трёх яз�
 
 /* ── Публикуется само: Telegraph, ВКонтакте и Telegram через Postiz (09.11.2026) ── */
 
-test("сами публикуются только площадки с официальным способом: Telegraph — своим API, ВКонтакте и Telegram — через Postiz", () => {
+test("сами публикуются только площадки с официальным способом: Telegraph — своим API, Telegram — ботом, ВКонтакте — ключом сообщества, Postiz — запасной", () => {
   assert.deepEqual([...AUTO_PLATFORMS], ["telegraph", "vk", "telegram"]);
   for (const p of ["vcru", "dzen", "tenchat"] as const) assert.equal(PLATFORM[p].via, "hand", p);
   assert.equal(PLATFORM.telegraph.via, "telegraph");
+  assert.equal(PLATFORM.telegram.via, "tgbot");
+  assert.equal(PLATFORM.vk.via, "vk");
   assert.equal(PLATFORM.vk.postiz, "vk");
   assert.equal(PLATFORM.telegram.postiz, "telegram");
   // Посты — без подзаголовков и с одной ссылкой, как Tenchat.
@@ -265,7 +268,7 @@ test("сами публикуются только площадки с офиц�
   const only = pickTopics([], [], undefined, ["vcru", "telegraph"]);
   assert.deepEqual(Object.keys(only).sort(), ["telegraph", "vcru"]);
   const run = read("lib/outside/run.ts");
-  assert.match(run, /via === "postiz" && channelFor\(channels, p\)/);
+  assert.match(run, /Boolean\(routes\[p\]\)/);
   assert.match(run, /for \(const platform of active\)/);
 });
 

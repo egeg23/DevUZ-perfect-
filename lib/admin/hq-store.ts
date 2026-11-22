@@ -55,6 +55,24 @@ import type { Grade } from "@/lib/admin/finance";
 import { firecrawlBalance, firecrawlKey } from "@/lib/firecrawl";
 import { SLOW_MS, memo } from "@/lib/memo";
 import { serviceClient } from "@/lib/supabase";
+import { HAND_PLATFORMS, PLATFORM, isPlatform } from "@/lib/outside/posts";
+
+/** Ручные черновики статей на площадках, которые ждут человека (vc.ru, Дзен, Tenchat). Таблицы нет — пусто. */
+async function outsideWaiting(): Promise<{ id: string; label: string; at: string }[]> {
+  const db = serviceClient();
+  if (!db) return [];
+  const { data, error } = await db
+    .from("outside_posts")
+    .select("id, platform, title, created_at")
+    .eq("status", "ready")
+    .in("platform", HAND_PLATFORMS as unknown as string[])
+    .order("created_at", { ascending: true })
+    .limit(20);
+  if (error) return [];
+  return ((data ?? []) as Record<string, unknown>[]).flatMap((r) =>
+    isPlatform(r.platform) ? [{ id: String(r.id), label: `${PLATFORM[r.platform].name}: ${String(r.title ?? "").slice(0, 80)}`, at: String(r.created_at ?? "") }] : [],
+  );
+}
 
 /**
  * «Главная» — всё одним заходом (Promise.all), с лимитами, без вычислений:
@@ -235,6 +253,7 @@ export async function loadHq(viewer: Pick<Staff, "role">, now: Date = new Date()
   ]);
 
   if (staffRes.error && leadsRes.error) return empty;
+  const outside = role === "admin" || role === "head" ? await memo("hq:outside", SLOW_MS, outsideWaiting).catch(() => []) : [];
 
   const staffRows = ((staffRes.data ?? []) as Record<string, unknown>[]).map((r) => ({
     id: String(r.id),
@@ -406,6 +425,7 @@ export async function loadHq(viewer: Pick<Staff, "role">, now: Date = new Date()
       .filter((m) => liveOffer(m, now) && Date.parse(m.expires_at) - now.getTime() <= ENDING_SOON_H * 3600_000 && m.mockup_ref)
       .map((m) => ({ id: m.mockup_ref as string, label: m.client || m.mockup_name })),
     firecrawlRemaining: firecrawl,
+    outsideWaiting: outside,
   });
 
   return {

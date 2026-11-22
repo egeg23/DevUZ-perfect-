@@ -15,9 +15,16 @@
  * на vc.ru — история с разбором, в Дзене — простым языком, в Tenchat —
  * заметка. В одну неделю у трёх площадок три разные темы. Ключ темы
  * (`key`) после первой статьи не меняется: по нему помнится, что уже писали.
+ *
+ * Темы без конца (владелец, 22.11.2026: «нам до сих пор очень нужны статьи на
+ * внешних источниках… чтобы было максимальное число упоминаний нас»): после
+ * этих тем идут наши опубликованные статьи сайта — статьи о маркетинге
+ * (`art:<slug>`) и разборы (`rz:<slug>`), новые раньше. Площадке — тот же
+ * вопрос своими словами и с другого угла, со ссылкой на статью на сайте
+ * (`siteTopics` в lib/outside/posts.ts).
  */
 
-export type OutsideTopicKind = "case" | "guide" | "mistake";
+export type OutsideTopicKind = "case" | "guide" | "mistake" | "article";
 
 export type OutsideTopic = {
   key: string;
@@ -28,6 +35,12 @@ export type OutsideTopic = {
   query: string;
   /** Кейсы, на которые статья опирается и ссылается: первый — главный у «case». */
   cases: readonly string[];
+  /**
+   * Наша статья на сайте, по которой написана тема (`art:` и `rz:` —
+   * lib/outside/posts.ts, `siteTopics`): на неё можно ссылаться, текстом
+   * ссылки с «DevUz».
+   */
+  link?: { url: string; about: string };
 };
 
 export const OUTSIDE_TOPICS: readonly OutsideTopic[] = [

@@ -200,6 +200,8 @@ function attentionText(a: Attention, t: T, now: Date): string {
       return t.attEnding(a.n);
     case "firecrawl":
       return t.attFirecrawl(a.remaining);
+    case "outside":
+      return t.attOutside(a.n, a.days);
   }
 }
 

@@ -294,6 +294,36 @@ async function callResult<T>(method: string, payload: unknown): Promise<T | null
   }
 }
 
+/**
+ * Get-метод Bot API целиком (getMe, getChat, getChatMember) — для проверки
+ * канала студии в «Статьях на площадках» (lib/outside/tgchannel.ts).
+ */
+export async function botApiResult<T>(method: "getMe" | "getChat" | "getChatMember", payload: unknown): Promise<T | null> {
+  return callResult<T>(method, payload);
+}
+
+/**
+ * Пост в канал студии (@username): не личка сотрудника, поэтому ни в пуш, ни
+ * в колокольчик не зеркалится. Превью ссылки — первой нашей ссылки поста.
+ * Номер поста или текст ошибки Telegram.
+ */
+export async function postToChannel(channel: string, html: string, previewUrl: string | null): Promise<{ id: number } | { error: string }> {
+  const result = await callRaw("sendMessage", {
+    chat_id: channel,
+    text: html,
+    parse_mode: "HTML",
+    link_preview_options: previewUrl ? { url: previewUrl, prefer_large_media: true } : { is_disabled: true },
+  });
+  if (result.ok && result.messageId) return { id: result.messageId };
+  if (!process.env.TELEGRAM_BOT_TOKEN) return { error: "у сервера нет ключа бота студии" };
+  let reason = "Telegram не опубликовал пост";
+  try {
+    const d = JSON.parse(result.description ?? "") as { description?: unknown };
+    if (typeof d.description === "string") reason = `Telegram: ${d.description.slice(0, 160)}`;
+  } catch {}
+  return { error: reason };
+}
+
 /** Имя, описание и короткое описание бота — для одного языка или по умолчанию. */
 export type BotProfileField = "name" | "description" | "short_description";
 

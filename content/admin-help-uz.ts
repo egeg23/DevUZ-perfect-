@@ -137,7 +137,7 @@ export const uz: HelpCopy = {
           title: "«E’tibor talab qiladi»",
           body: [
             "Bu yerda hozir yonayotgan narsalar. Qizil nuqta nosozlik yoki egasiz mijozni bildiradi. Sariq nuqta bugun shug‘ullanmasangiz yonib ketishini bildiradi. Qatorni bosing, nima haqida bo‘lsa, o‘sha ochiladi: lid, vazifa, akkaunt yoki maket.",
-            "Bu yerga nimalar tushadi: eslatmalar boti 30 daqiqadan ko‘p jim, avtoyurishda nosozlik, Telegram ishchi akkauntni cheklagan, «Избранное»da kruglyak yo‘q. Yana egasiz issiq lidlar, muddati o‘tgan vazifalar va 7 kun va undan ko‘p harakatsiz lidlar. Va tugashiga 6 soatdan kam qolgan aksiyalar.",
+            "Bu yerga nimalar tushadi: eslatmalar boti 30 daqiqadan ko‘p jim, avtoyurishda nosozlik, Telegram ishchi akkauntni cheklagan, «Избранное»da kruglyak yo‘q. Yana egasiz issiq lidlar, muddati o‘tgan vazifalar va 7 kun va undan ko‘p harakatsiz lidlar. Va tugashiga 6 soatdan kam qolgan aksiyalar, hamda vc.ru, Dzen yoki Tenchat uchun 7 kundan ortiq e’lon qilinishini kutayotgan maqola: u [«Platformalardagi maqolalar»](/admin/outside)ga olib boradi.",
             "«Ism: N ta lid botga javobsiz» qatori bot odamdan osilib qolgan lidlari haqida so‘raganini, javob esa yo‘qligini bildiradi. Ro‘yxat bo‘shmi? Demak, o‘chiradigan yong‘in yo‘q.",
             "Egasiz issiq lidni shu yerning o‘zidan topshirish mumkin. «Issiq lidni xodimga topshirish» blokida kimga ekanini tanlang va «Topshirish»ni bosing. Odamga bot xabari va 4 soatdan keyin eslatma keladi.",
           ],
@@ -1991,15 +1991,16 @@ export const uz: HelpCopy = {
 
     /* ── Reklama ──────────────────────────────────────────────────────── */
     "/admin/outside": {
-      what: "Bu yerda vc.ru, Dzen va Tenchat uchun studiya haqidagi maqolalar qoralamalari. Haftada bir marta dastur har bir platformaga bittadan yozadi. Siz uni studiya akkauntidan e’lon qilasiz va havolani bu yerga qo‘yasiz. Shunda Rossiya va MDHdagi biznes egalari bizni biladi, sayt esa havolalar oladi.",
+      what: "Bu yerda boshqa platformalardagi studiya haqidagi maqolalar. vc.ru, Dzen va Tenchat uchun dastur haftada bir marta qoralama yozadi, siz uni studiya akkauntidan e’lon qilasiz va havolani bu yerga qo‘yasiz. Telegraph, Telegram-kanal va VKontakte dushanba, chorshanba va juma kunlari maqola oladi va o‘zi e’lon qilinadi. Shunda Rossiya va MDHdagi biznes egalari bizni biladi, sayt esa havolalar oladi.",
       items: [
         {
           id: "how",
           title: "Qanday ishlaydi",
           body: [
-            "Haftada bir marta, Toshkent vaqti bilan kunduzi, har bir platforma qoralama oladi. Mavzu Rossiyada nimani qidirishiga qarab tanlanadi. Faktlar saytdagi keyslarimizdan olinadi.",
+            "vc.ru, Dzen va Tenchat haftada bir marta, dushanba kuni Toshkent vaqti bilan kunduzi qoralama oladi. Telegraph, Telegram-kanal va VKontakte dushanba, chorshanba va juma kunlari maqola oladi. Mavzu Rossiyada nimani qidirishiga qarab tanlanadi. Faktlar saytdagi keyslarimizdan olinadi.",
+            "Mavzular tugamaydi. Avval studiyaning tayyor mavzulari, keyin saytdagi maqolalarimiz keladi: marketing haqidagi maqolalar va tahlillar, yangilari birinchi. Platforma o‘sha savolni o‘z so‘zlari bilan va boshqa tomondan oladi, saytimizdagi maqolaga havola bilan. Bir kunda turli platformalarda mavzular turlicha.",
             "Bu yerga tushishdan oldin qoralama tekshiruvdan o‘tadi. Unda narxlar, foizlar va o‘ylab topilgan raqamlar yo‘q, havolalar faqat bizning saytga olib boradi. To‘rt urinishda o‘tmadimi? Qoralama bo‘lmaydi, egasi va rahbarga hisobotda qator keladi.",
-            "Platforma yangi qoralamani oldingisi e’lon qilingan yoki o‘tkazib yuborilganda oladi. E’lonni odam qiladi. Akkauntga o‘zi kiradigan robot platformalar qoidalarini buzadi va akkaunt bloklanadi.",
+            "Platforma yangi qoralamani oldingisi e’lon qilingan yoki o‘tkazib yuborilganda oladi. vc.ru, Dzen va Tenchat’da e’lonni odam qiladi: akkauntga o‘zi kiradigan robot platformalar qoidalarini buzadi va akkaunt bloklanadi. Qoralama 7 kundan ortiq kutyaptimi? Egasi va rahbarga [Bosh sahifa](/admin/hq)da «E’tibor talab qiladi» blokida qator chiqadi.",
           ],
         },
         {
@@ -2021,12 +2022,14 @@ export const uz: HelpCopy = {
         },
         {
           id: "auto",
-          title: "O‘zi e’lon qilinadi: Telegraph, VKontakte, Telegram-kanal",
+          title: "O‘zi e’lon qilinadi: Telegraph, Telegram-kanal, VKontakte",
           roles: ["admin", "head"],
           body: [
-            "«O‘zi e’lon qilinadi» blokida maqola odamsiz chiqadigan platformalar. Qoralama xuddi shu tekshiruvdan o‘tadi va darhol «E’lon qilinganlar»da paydo bo‘ladi. Chiqmadimi? U sababi bilan «E’lon qilinishini kutmoqda»ga qaytadi va qo‘lda e’lon qilinadi.",
+            "«O‘zi e’lon qilinadi» blokida maqola odamsiz chiqadigan platformalar, dushanba, chorshanba va juma kunlari. Qoralama xuddi shu tekshiruvdan o‘tadi va darhol «E’lon qilinganlar»da paydo bo‘ladi. Chiqmadimi? U sababi bilan «E’lon qilinishini kutmoqda»ga qaytadi va qo‘lda e’lon qilinadi.",
             "Telegraph hech narsa talab qilmaydi. Studiya akkaunti u yerda birinchi maqola bilan o‘zi ochiladi.",
-            "VKontakte va Telegram-kanal Postiz xizmati orqali ishlaydi. Bir marta u yerda ro‘yxatdan o‘ting, kanallarni «Add Channel» tugmasi bilan ulang va kalitni Settings → Developers → Public API’dan oling. Uni «Postiz API kaliti» maydoniga qo‘ying va «Saqlash va tekshirish» tugmasini bosing: kalit faqat Postiz qabul qilsa saqlanadi.",
+            "«Telegram kanal». Studiyaning ommaviy kanalini oching, unga studiya boti @Devuz_studio_bot ni xabarlarni e’lon qilish huquqi bilan administrator qilib qo‘shing, kanalning @nomini qo‘ying va «Saqlash va tekshirish» tugmasini bosing. Bot o‘zi administrator ekanini tekshiradi; manzil faqat tekshiruv o‘tsa saqlanadi. Kanalga postlarni bot e’lon qiladi.",
+            "«VKontakte hamjamiyat kaliti». Studiya hamjamiyatini oching, unda «Boshqaruv» → «API bilan ishlash» → «Kirish kalitlari» → «Kalit yaratish», devor huquqi bilan. Kalitni qo‘ying va «Saqlash va tekshirish» tugmasini bosing: kalit faqat VKontakte qabul qilsa saqlanadi. Kalit sirlar omborida turadi, ekranda faqat «kiritilgan» yoki «bo‘sh».",
+            "Postiz — zaxira yo‘l: faqat yuqoridagi kanal yoki hamjamiyat ulanmagan bo‘lsa kerak. Unda kanallar «Add Channel» tugmasi bilan ulanadi, kalit Settings → Developers → Public API’da, «Postiz API kaliti» maydoniga qo‘yiladi.",
           ],
         },
         {

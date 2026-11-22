@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { requestIp, requireSection } from "@/lib/admin/guard";
-import { savePostizKey } from "@/lib/outside/auto-store";
+import { savePostizKey, saveTgChannel, saveVkKey } from "@/lib/outside/auto-store";
 import { markPublished, setPublisher, skipPost } from "@/lib/outside/store";
 
 /** Результат — `?r=` на странице раздела; экран остаётся на месте (KeepPlace). */
@@ -37,4 +37,18 @@ export async function postizKeyOutsideAction(formData: FormData) {
   const staff = await requireSection("/admin/outside");
   const result = await savePostizKey(staff, String(formData.get("key") ?? ""), await requestIp());
   back(result === "ok" ? "keyok" : result === "bad" ? "keybad" : result);
+}
+
+/** «Сохранить и проверить» канал Telegram — руководитель и владелец (проверка в saveTgChannel). */
+export async function tgChannelOutsideAction(formData: FormData) {
+  const staff = await requireSection("/admin/outside");
+  const result = await saveTgChannel(staff, String(formData.get("channel") ?? ""), await requestIp());
+  back(result === "ok" ? "tgok" : result === "bad" ? "tgbad" : result);
+}
+
+/** «Сохранить и проверить» ключ сообщества ВКонтакте — руководитель и владелец (проверка в saveVkKey). */
+export async function vkKeyOutsideAction(formData: FormData) {
+  const staff = await requireSection("/admin/outside");
+  const result = await saveVkKey(staff, String(formData.get("key") ?? ""), await requestIp());
+  back(result === "ok" ? "vkok" : result === "bad" ? "vkbad" : result);
 }
