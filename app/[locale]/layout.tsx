@@ -12,6 +12,7 @@ import { Header } from "@/components/layout/header";
 import { company } from "@/content/company";
 import { getDictionary } from "@/content/dictionaries";
 import { hreflang, isLocale, locales, t, type Locale } from "@/lib/i18n";
+import { ZEN_VERIFICATION } from "@/lib/outside/dzen-feed";
 import { jsonLdGraph, organizationSchema, websiteSchema } from "@/lib/schema";
 import { siteUrl } from "@/lib/seo";
 
@@ -48,6 +49,8 @@ export async function generateMetadata({
     verification: {
       google: process.env.GOOGLE_SITE_VERIFICATION,
       yandex: process.env.YANDEX_VERIFICATION,
+      // Права на сайт для Дзена (лента статей — lib/outside/dzen-feed.ts).
+      ...(ZEN_VERIFICATION ? { other: { "zen-verification": ZEN_VERIFICATION } } : {}),
     },
     robots: {
       index: true,
