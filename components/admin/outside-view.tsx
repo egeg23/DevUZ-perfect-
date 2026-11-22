@@ -1,11 +1,20 @@
-import { postizKeyOutsideAction, publishOutsideAction, publisherOutsideAction, skipOutsideAction } from "@/app/admin/outside/actions";
+import {
+  postizKeyOutsideAction,
+  publishOutsideAction,
+  publisherOutsideAction,
+  skipOutsideAction,
+  tgChannelOutsideAction,
+  vcruLoginOutsideAction,
+  vcruPublishOutsideAction,
+  vkKeyOutsideAction,
+} from "@/app/admin/outside/actions";
 import { CopyRich } from "@/components/admin/copy-rich";
 import { HelpHint } from "@/components/admin/help-link";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { outsideDict, platformDict } from "@/content/admin-panel/outside";
 import { helpAnchor } from "@/lib/admin/help";
-import { pick, type PanelLocale } from "@/lib/admin/i18n";
-import type { AutoState } from "@/lib/outside/auto-store";
+import { pick, type PanelLocale, type Picked } from "@/lib/admin/i18n";
+import type { AutoState, DirectCheck } from "@/lib/outside/auto-store";
 import { PLATFORM, toHtml, toPlain, type LinkState } from "@/lib/outside/posts";
 import type { OutsidePost } from "@/lib/outside/store";
 
@@ -21,7 +30,7 @@ function when(iso: string | null): string {
   }).format(new Date(iso));
 }
 
-const RESULTS = ["ok", "bad", "missing", "failed", "forbidden", "keyok", "keybad"] as const;
+const RESULTS = ["ok", "bad", "missing", "failed", "forbidden", "keyok", "keybad", "tgok", "tgbad", "vkok", "vkbad", "vcruok", "vcrubad", "vcruloginok", "vcruloginbad"] as const;
 type Result = (typeof RESULTS)[number];
 
 const STATE_TONE: Record<LinkState | "unchecked", string> = {
@@ -45,6 +54,7 @@ export function OutsideView({
   publisher,
   canChoose,
   auto,
+  vcruOn = false,
   result,
   now,
 }: {
@@ -57,6 +67,8 @@ export function OutsideView({
   canChoose: boolean;
   /** Ключи и проверка Postiz — только тем, кто выбирает «Кто публикует». */
   auto: AutoState | null;
+  /** Вход vc.ru заведён — у черновика vc.ru кнопка «Опубликовать на vc.ru». */
+  vcruOn?: boolean;
   result: string | undefined;
   now: number;
 }) {
@@ -101,7 +113,7 @@ export function OutsideView({
 
       {shown ? (
         <p
-          data-result={shown === "ok" || shown === "keyok" ? "ok" : "warn"}
+          data-result={shown === "ok" || shown === "keyok" || shown === "tgok" || shown === "vkok" || shown === "vcruok" || shown === "vcruloginok" ? "ok" : "warn"}
           className={`rounded-lg border px-3 py-2 text-sm ${shown === "ok" || shown === "keyok" ? "border-green/30 bg-green/10 text-green" : "border-gold/30 bg-gold/10 text-gold"}`}
         >
           {t[`r_${shown}`]}
@@ -133,6 +145,12 @@ export function OutsideView({
               <h3 className="text-base font-semibold leading-snug">{post.title}</h3>
               {post.publish_error ? (
                 <p className="rounded-lg border border-gold/30 bg-gold/10 px-3 py-2 text-xs text-gold">{t.autoFailed(post.publish_error)}</p>
+              ) : null}
+              {post.platform === "vcru" && vcruOn ? (
+                <form action={vcruPublishOutsideAction}>
+                  <input type="hidden" name="post" value={post.id} />
+                  <SubmitButton base="rounded-lg px-3 py-2 text-xs font-semibold">{t.vcruPublish}</SubmitButton>
+                </form>
               ) : null}
               <div className="flex flex-wrap gap-2">
                 <CopyRich text={post.title} label={t.copyTitle} done={t.copied} />
@@ -229,6 +247,65 @@ export function OutsideView({
           </div>
           <p className="text-xs text-muted">{t.autoLead}</p>
           <p className="text-sm">{t.telegraph(auto.telegraphKey)}</p>
+          <DirectForm
+            action={tgChannelOutsideAction}
+            name="channel"
+            secret={false}
+            title={t.tgTitle}
+            set={auto.tgChannel}
+            placeholder={t.tgPlaceholder}
+            steps={t.tgSteps}
+            check={auto.tgCheck}
+            t={t}
+          />
+          <DirectForm
+            action={vkKeyOutsideAction}
+            name="key"
+            secret
+            title={t.vkTitle}
+            set={auto.vkKey}
+            placeholder={t.keyPlaceholder}
+            steps={t.vkSteps}
+            check={auto.vkCheck}
+            t={t}
+          />
+          <div className="space-y-2 rounded-lg border border-line p-3">
+            <form action={vcruLoginOutsideAction} className="flex flex-wrap items-end gap-2">
+              <label className="min-w-0 flex-1 text-xs text-muted">
+                {t.vcruTitle}: <span className={auto.vcruLogin ? "text-green" : "text-faint"}>{auto.vcruLogin ? t.keySet : t.keyEmpty}</span>
+                <input
+                  name="email"
+                  type="email"
+                  autoComplete="off"
+                  spellCheck={false}
+                  placeholder={t.vcruEmail}
+                  className="mt-1 w-full rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm text-text"
+                />
+              </label>
+              <label className="min-w-0 flex-1 text-xs text-muted">
+                &nbsp;
+                <input
+                  name="password"
+                  type="password"
+                  autoComplete="new-password"
+                  placeholder={t.vcruPassword}
+                  className="mt-1 w-full rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm text-text"
+                />
+              </label>
+              <SubmitButton base="rounded-lg px-3 py-2 text-xs font-semibold">{t.saveCheck}</SubmitButton>
+            </form>
+            <ol className="list-decimal space-y-1 pl-5 text-xs text-faint">
+              {t.vcruSteps.split("\n").map((step) => (
+                <li key={step}>{step}</li>
+              ))}
+            </ol>
+            {auto.vcruCheck ? (
+              <p className={`text-xs ${auto.vcruCheck.ok ? "text-green" : "text-gold"}`}>
+                {auto.vcruCheck.ok ? t.directOk(auto.vcruCheck.name ?? "", when(auto.vcruCheck.at)) : t.directFail(auto.vcruCheck.reason ?? "", when(auto.vcruCheck.at))}
+              </p>
+            ) : null}
+          </div>
+          <p className="pt-2 text-xs text-muted">{t.postizSpare}</p>
           <form action={postizKeyOutsideAction} className="flex flex-wrap items-end gap-2">
             <label className="min-w-0 flex-1 text-xs text-muted">
               {t.postizKey}: <span className={auto.postizKey ? "text-green" : "text-faint"}>{auto.postizKey ? t.keySet : t.keyEmpty}</span>
@@ -287,6 +364,66 @@ export function OutsideView({
             <SubmitButton base="rounded-lg px-3 py-2 text-xs font-semibold">{t.save}</SubmitButton>
           </form>
         </section>
+      ) : null}
+    </div>
+  );
+}
+
+/** Поле канала Telegram или ключа ВКонтакте: «Сохранить и проверить», шаги, итог проверки. */
+function DirectForm({
+  action,
+  name,
+  secret,
+  title,
+  set,
+  placeholder,
+  steps,
+  check,
+  t,
+}: {
+  action: (formData: FormData) => Promise<void>;
+  name: string;
+  secret: boolean;
+  title: string;
+  set: boolean;
+  placeholder: string;
+  steps: string;
+  check: DirectCheck | null;
+  t: Picked<typeof outsideDict>;
+}) {
+  return (
+    <div className="space-y-2 rounded-lg border border-line p-3">
+      <form action={action} className="flex flex-wrap items-end gap-2">
+        <label className="min-w-0 flex-1 text-xs text-muted">
+          {title}: <span className={set ? "text-green" : "text-faint"}>{set ? t.keySet : t.keyEmpty}</span>
+          <input
+            name={name}
+            type={secret ? "password" : "text"}
+            autoComplete="off"
+            spellCheck={false}
+            placeholder={placeholder}
+            className="mt-1 w-full rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm text-text"
+          />
+        </label>
+        <SubmitButton base="rounded-lg px-3 py-2 text-xs font-semibold">{t.saveCheck}</SubmitButton>
+      </form>
+      <ol className="list-decimal space-y-1 pl-5 text-xs text-faint">
+        {steps.split("\n").map((step) => (
+          <li key={step}>{step}</li>
+        ))}
+      </ol>
+      {check ? (
+        <p className={`text-xs ${check.ok ? "text-green" : "text-gold"}`}>
+          {check.ok ? t.directOk(check.name ?? "", when(check.at)) : t.directFail(check.reason ?? "", when(check.at))}
+          {check.ok && check.url ? (
+            <>
+              {" "}
+              <a href={check.url} target="_blank" rel="noopener noreferrer" className="underline">
+                {check.url.replace("https://", "")} ↗
+              </a>
+            </>
+          ) : null}
+        </p>
       ) : null}
     </div>
   );

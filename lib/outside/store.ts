@@ -1,7 +1,7 @@
 import { record } from "@/lib/admin/audit";
 import { opens } from "@/lib/admin/roles";
 import type { Staff } from "@/lib/admin/session";
-import { LINK_STATES, isPlatform, publishedUrl, type LinkState, type Platform, type Via } from "@/lib/outside/posts";
+import { LINK_STATES, articleQuery, isPlatform, publishedUrl, type LinkState, type Platform, type SentVia, type SiteArticle, type SiteRazbor } from "@/lib/outside/posts";
 import { serviceClient } from "@/lib/supabase";
 
 /**
@@ -31,8 +31,8 @@ export type OutsidePost = {
   link_checked_at: string | null;
   link_state: LinkState | null;
   link_rel: string | null;
-  /** Как ушла сама: Telegraph или Postiz; null — руками. */
-  via: Exclude<Via, "hand"> | null;
+  /** Как ушла сама: Telegraph, бот в канал, ключ ВКонтакте или Postiz; null — руками. */
+  via: SentVia | null;
   external_id: string | null;
   sent_at: string | null;
   /** Почему сама не вышла — черновик тогда публикует человек. */
@@ -61,7 +61,7 @@ function asPost(row: Record<string, unknown>): OutsidePost | null {
     link_checked_at: typeof row.link_checked_at === "string" ? row.link_checked_at : null,
     link_state: state,
     link_rel: typeof row.link_rel === "string" ? row.link_rel : null,
-    via: row.via === "telegraph" || row.via === "postiz" ? row.via : null,
+    via: row.via === "telegraph" || row.via === "postiz" || row.via === "tgbot" || row.via === "vk" || row.via === "vcru" ? row.via : null,
     external_id: typeof row.external_id === "string" ? row.external_id : null,
     sent_at: typeof row.sent_at === "string" ? row.sent_at : null,
     publish_error: typeof row.publish_error === "string" ? row.publish_error : null,
@@ -105,7 +105,7 @@ export async function savePost(post: NewPost): Promise<{ id: string } | { error:
 /* ── Сами: Telegraph и Postiz ──────────────────────────────────────────── */
 
 /** Telegraph ответил ссылкой — статья вышла. Ссылка — только с адреса площадки. */
-export async function markAutoPublished(id: string, platform: Platform, via: "telegraph" | "postiz", raw: string, now = new Date()): Promise<boolean> {
+export async function markAutoPublished(id: string, platform: Platform, via: SentVia, raw: string, now = new Date()): Promise<boolean> {
   const url = publishedUrl(platform, raw);
   const db = serviceClient();
   if (!url || !db) return false;
@@ -152,7 +152,7 @@ export async function sentPosts(limit = 20): Promise<OutsidePost[]> {
   return (data ?? []).map((r) => asPost(r as Record<string, unknown>)).filter((p): p is OutsidePost => Boolean(p));
 }
 
-async function readyPost(id: string): Promise<OutsidePost | null> {
+export async function readyPost(id: string): Promise<OutsidePost | null> {
   const db = serviceClient();
   if (!db || !/^[0-9a-f-]{36}$/i.test(id)) return null;
   const { data } = await db.from("outside_posts").select(COLUMNS).eq("id", id).maybeSingle();
@@ -270,4 +270,50 @@ export async function setPublisher(staff: Staff, chosen: string | null, ip: stri
   if (error) return "failed";
   await record("outside.publisher_set", { actorStaffId: staff.id, targetType: "staff", targetId: chosen, meta: { publisher: chosen }, ip });
   return "ok";
+}
+
+/* ── Темы из наших статей сайта ────────────────────────────────────────── */
+
+function textOf(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" ? (value as Record<string, unknown>) : {};
+}
+
+/**
+ * Опубликованные статьи о маркетинге и разборы — для тем площадок
+ * (`siteTopics` в posts.ts). База не ответила — пусто: идут статичные темы.
+ */
+export async function siteSources(limit = 500): Promise<{ articles: SiteArticle[]; razbors: SiteRazbor[] }> {
+  const db = serviceClient();
+  if (!db) return { articles: [], razbors: [] };
+  const [art, rz] = await Promise.all([
+    db.from("marketing_articles").select("slug, published_at, ru, research").eq("status", "published").order("published_at", { ascending: false }).limit(limit),
+    db.from("razbors").select("slug_ru, title_ru, description_ru, query_ru, published_at, created_at").eq("status", "published").order("created_at", { ascending: false }).limit(limit),
+  ]);
+  const articles: SiteArticle[] = ((art.data ?? []) as Record<string, unknown>[]).flatMap((row) => {
+    const ru = textOf(row.ru);
+    const title = typeof ru.title === "string" ? ru.title : "";
+    if (!title) return [];
+    const tips = Array.isArray(ru.tips) ? ru.tips.filter((t): t is string => typeof t === "string") : [];
+    return [{
+      slug: String(row.slug ?? ""),
+      title,
+      description: typeof ru.description === "string" ? ru.description : "",
+      tips,
+      query: articleQuery(row.research, title),
+      at: String(row.published_at ?? ""),
+    }];
+  });
+  const razbors: SiteRazbor[] = ((rz.data ?? []) as Record<string, unknown>[]).flatMap((row) => {
+    const title = typeof row.title_ru === "string" ? row.title_ru : "";
+    const query = typeof row.query_ru === "string" ? row.query_ru : "";
+    if (!title || !query || typeof row.slug_ru !== "string") return [];
+    return [{
+      slug: row.slug_ru,
+      title,
+      description: typeof row.description_ru === "string" ? row.description_ru : "",
+      query,
+      at: String(row.published_at ?? row.created_at ?? ""),
+    }];
+  });
+  return { articles, razbors };
 }

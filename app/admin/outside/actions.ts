@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { requestIp, requireSection } from "@/lib/admin/guard";
-import { savePostizKey } from "@/lib/outside/auto-store";
+import { publishVcruNow, savePostizKey, saveTgChannel, saveVcruLogin, saveVkKey } from "@/lib/outside/auto-store";
 import { markPublished, setPublisher, skipPost } from "@/lib/outside/store";
 
 /** Результат — `?r=` на странице раздела; экран остаётся на месте (KeepPlace). */
@@ -37,4 +37,31 @@ export async function postizKeyOutsideAction(formData: FormData) {
   const staff = await requireSection("/admin/outside");
   const result = await savePostizKey(staff, String(formData.get("key") ?? ""), await requestIp());
   back(result === "ok" ? "keyok" : result === "bad" ? "keybad" : result);
+}
+
+/** «Сохранить и проверить» канал Telegram — руководитель и владелец (проверка в saveTgChannel). */
+export async function tgChannelOutsideAction(formData: FormData) {
+  const staff = await requireSection("/admin/outside");
+  const result = await saveTgChannel(staff, String(formData.get("channel") ?? ""), await requestIp());
+  back(result === "ok" ? "tgok" : result === "bad" ? "tgbad" : result);
+}
+
+/** «Сохранить и проверить» ключ сообщества ВКонтакте — руководитель и владелец (проверка в saveVkKey). */
+export async function vkKeyOutsideAction(formData: FormData) {
+  const staff = await requireSection("/admin/outside");
+  const result = await saveVkKey(staff, String(formData.get("key") ?? ""), await requestIp());
+  back(result === "ok" ? "vkok" : result === "bad" ? "vkbad" : result);
+}
+
+/** «Сохранить и проверить» вход vc.ru — руководитель и владелец (проверка в saveVcruLogin). */
+export async function vcruLoginOutsideAction(formData: FormData) {
+  const staff = await requireSection("/admin/outside");
+  const result = await saveVcruLogin(staff, String(formData.get("email") ?? ""), String(formData.get("password") ?? ""), await requestIp());
+  back(result === "ok" ? "vcruloginok" : result === "bad" ? "vcruloginbad" : result);
+}
+
+/** «Опубликовать на vc.ru» у черновика — любой, кому открыт раздел (проверка в publishVcruNow). */
+export async function vcruPublishOutsideAction(formData: FormData) {
+  const staff = await requireSection("/admin/outside");
+  back(await publishVcruNow(staff, String(formData.get("post") ?? ""), await requestIp()));
 }

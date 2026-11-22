@@ -136,7 +136,7 @@ export const leadsSections: Record<string, HelpEntry> = {
         title: "«Wymaga uwagi»",
         body: [
           "Tu jest to, co pali się właśnie teraz. Czerwona kropka to awaria albo klient bez opiekuna. Żółta znaczy, że coś się spali, jeśli dziś się tym nie zajmiesz. Kliknij wiersz, a otworzy się to, czego dotyczy: lead, zadanie, konto albo makieta.",
-          "Co tu trafia: bot przypomnień milczy dłużej niż 30 minut, awaria autopilota, Telegram ograniczył konto robocze, brak kółka w «Избранное». Do tego ciepłe leady bez opiekuna, zadania po terminie i leady bez ruchu od 7 dni i dłużej. I promocje, którym zostało mniej niż 6 godzin.",
+          "Co tu trafia: bot przypomnień milczy dłużej niż 30 minut, awaria autopilota, Telegram ograniczył konto robocze, brak kółka w «Избранное». Do tego ciepłe leady bez opiekuna, zadania po terminie i leady bez ruchu od 7 dni i dłużej. I promocje, którym zostało mniej niż 6 godzin, oraz artykuł na vc.ru, Dzen albo Tenchat, który czeka na publikację dłużej niż 7 dni: prowadzi do [«Artykuły na platformach»](/admin/outside).",
           "Wiersz «Imię: N leadów bez odpowiedzi botowi» znaczy, że bot zapytał osobę o jej zawieszone leady, a odpowiedzi nie ma. Lista jest pusta? Znaczy, że nie ma czego gasić.",
           "Ciepłego leada bez opiekuna możesz przekazać od razu tutaj. W bloku «Przekaż ciepłego leada osobie» wybierz, komu, i kliknij «Przekaż». Ta osoba dostanie wiadomość od bota i przypomnienie po 4 godzinach.",
         ],

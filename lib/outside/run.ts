@@ -4,11 +4,15 @@ import {
   OUTSIDE_REGION,
   PLATFORM,
   PLATFORMS,
+  allTopics,
+  autoSlotOf,
   checkDue,
+  isAuto,
   generationHour,
   ourLinkOn,
   pickTopics,
   postizContent,
+  siteTopics,
   toTelegraphNodes,
   weekCardText,
   weekOf,
@@ -26,7 +30,11 @@ import {
   saveLinkCheck,
   savePost,
   sentPosts,
+  siteSources,
 } from "@/lib/outside/store";
+import { channelPublish, savedChannel } from "@/lib/outside/tgchannel";
+import { VK_KEY, vkPublish } from "@/lib/outside/vk";
+import { vcruPublish, vcruReady } from "@/lib/outside/vcru";
 import { telegraphPublish } from "@/lib/outside/telegraph";
 import { appSecret } from "@/lib/secrets";
 import { OUTSIDE_MODEL, writeDraft } from "@/lib/outside/write";
@@ -37,9 +45,15 @@ import { serviceClient } from "@/lib/supabase";
 /**
  * Неделя статей на площадках — из свипа.
  *
- * Раз в неделю, с 11:00 до 20:00 по Ташкенту: неделя забирается отметкой в
- * daily_claims (job «outside-posts», день — понедельник недели) до вызова
- * модели, поэтому второй проход свипа ту же неделю не начнёт. Каждой
+ * Ручные площадки (vc.ru, Дзен, Tenchat) — раз в неделю, с 11:00 до 20:00 по
+ * Ташкенту: неделя забирается отметкой в daily_claims (job «outside-posts»,
+ * день — понедельник недели) до вызова модели, поэтому второй проход свипа
+ * ту же неделю не начнёт. Площадки, которые публикуются сами (Telegraph,
+ * Telegram-канал, ВКонтакте), — по понедельникам, средам и пятницам: свой
+ * claim на день слота (job «outside-auto», день — сам день). Владелец,
+ * 22.11.2026: «На всех открытых чтобы было максимальное число упоминаний нас».
+ * Темы — статичные (content/outside-topics.ts), потом наши статьи сайта,
+ * новые раньше (siteTopics): темы не кончаются. Каждой
  * площадке, у которой нет неопубликованного черновика, — тема (pickTopics),
  * запросы по России (Вордстат и Trends), черновик (writeDraft). Потом
  * карточка тому, кто публикует. Что не вышло — строкой владельцу через
@@ -59,6 +73,8 @@ import { serviceClient } from "@/lib/supabase";
  */
 
 export const OUTSIDE_SHIFT = "outside-posts";
+/** Claim дня «сами» (Telegraph, Telegram, ВКонтакте): день — сам понедельник, среда или пятница. */
+export const OUTSIDE_AUTO_SHIFT = "outside-auto";
 
 /** Сколько опубликованных статей проверять за проход свипа. */
 const CHECKS_PER_PASS = 2;
@@ -69,15 +85,23 @@ export type OutsideRun = { week: string | null; made: Platform[]; auto: Platform
 /** Telegraph публикуется всегда: регистрации нет, ключ заводится сам. */
 export const TELEGRAPH_ON = true;
 
-async function claimWeek(week: string): Promise<"ok" | "taken" | string> {
+async function claim(job: string, day: string): Promise<"ok" | "taken" | string> {
   const db = serviceClient();
   if (!db) return "база недоступна";
   const { data, error } = await db
     .from("daily_claims")
-    .upsert({ job: OUTSIDE_SHIFT, day: week }, { onConflict: "job,day", ignoreDuplicates: true })
+    .upsert({ job, day }, { onConflict: "job,day", ignoreDuplicates: true })
     .select("job");
-  if (error) return `неделя не взята: ${error.message}`;
+  if (error) return `${job} ${day} не взят: ${error.message}`;
   return data?.length ? "ok" : "taken";
+}
+
+/** Как сегодня уйдёт Telegram-канал или ВКонтакте: напрямую, через Postiz или никак. */
+type Route = "direct" | "postiz" | null;
+
+export function routeOf(platform: Platform, direct: boolean, channels: readonly PostizChannel[]): Route {
+  if (direct) return "direct";
+  return channelFor(channels, platform) ? "postiz" : null;
 }
 
 export async function runOutsidePosts(now = new Date()): Promise<OutsideRun> {
@@ -88,27 +112,43 @@ export async function runOutsidePosts(now = new Date()): Promise<OutsideRun> {
   if (!generationHour(now)) return run;
 
   // Таблицы нет — неделю не забираем: заработает сразу, как применят миграцию.
-  const posts = await listPosts();
+  const posts = await listPosts(1000);
   if (!posts) return run;
+
+  const channels = await connectedChannels();
+  const [tgDirect, vkDirect] = await Promise.all([savedChannel(), appSecret(VK_KEY)]);
+  const routes: Partial<Record<Platform, Route>> = {
+    telegram: routeOf("telegram", Boolean(tgDirect), channels),
+    vk: routeOf("vk", Boolean(vkDirect), channels),
+  };
+  const ready = (p: Platform) => {
+    const via = PLATFORM[p].via;
+    return via === "hand" || (via === "telegraph" && TELEGRAPH_ON) || Boolean(routes[p]);
+  };
+
+  // Ручные — неделя, сами — день слота. Каждый claim до модели.
   const week = weekOf(now);
-  const claim = await claimWeek(week);
-  if (claim === "taken") return run;
-  if (claim !== "ok") {
-    run.errors.push(claim);
+  const slot = autoSlotOf(now);
+  const handWeek = await claim(OUTSIDE_SHIFT, week);
+  const autoDay = slot && PLATFORMS.some((p) => isAuto(p) && ready(p)) ? await claim(OUTSIDE_AUTO_SHIFT, slot) : "taken";
+  for (const c of [handWeek, autoDay]) if (c !== "ok" && c !== "taken") run.errors.push(c);
+  const hand = handWeek === "ok";
+  const autoOn = autoDay === "ok";
+  if (!hand && !autoOn) {
+    if (run.errors.length) await report(`Не все черновики готовы. ${run.errors.slice(0, 3).join("; ")}`);
     return run;
   }
-  run.week = week;
+  run.week = hand ? week : slot;
 
   const waiting = posts.filter((p) => p.status === "ready" || p.status === "sent");
-  const channels = await connectedChannels();
-  const active = PLATFORMS.filter((p) => {
-    const via = PLATFORM[p].via;
-    return via === "hand" || (via === "telegraph" && TELEGRAPH_ON) || (via === "postiz" && channelFor(channels, p));
-  });
+  const active = PLATFORMS.filter((p) => ready(p) && (isAuto(p) ? autoOn : hand));
+  const site = await siteSources();
+  const vcruOn = await vcruReady();
+  // Одна тема в один проход разным площадкам — разная (pickTopics).
   const topics = pickTopics(
     posts.map((p) => ({ platform: p.platform, topic_key: p.topic_key })),
     waiting.map((p) => p.platform),
-    undefined,
+    allTopics(siteTopics(site.articles, site.razbors)),
     active,
   );
   const made: CardLine[] = [];
@@ -136,12 +176,24 @@ export async function runOutsidePosts(now = new Date()): Promise<OutsideRun> {
         run.errors.push(`${platform}: не сохранилась: ${saved.error}`);
         continue;
       }
+      // vc.ru — сам, если заведён вход (их редакторский API, lib/outside/vcru.ts); нет или не вышло — человеку.
+      if (platform === "vcru" && vcruOn) {
+        const post = await vcruPublish(draft.title, draft.body, platform, topic.key);
+        if ("url" in post && (await markAutoPublished(saved.id, platform, "vcru", post.url, now))) {
+          run.auto.push(platform);
+          auto.push({ platform, title: draft.title });
+          continue;
+        }
+        const reason = "error" in post ? post.error : `адрес не vc.ru: ${post.url.slice(0, 80)}`;
+        await markAutoFailed(saved.id, reason);
+        run.errors.push(`${platform}: сама не вышла: ${reason}`);
+      }
       if (PLATFORM[platform].via === "hand") {
         run.made.push(platform);
         made.push({ platform, title: draft.title });
         continue;
       }
-      const failed = await publishAuto(saved.id, platform, topic.key, draft, channels, now);
+      const failed = await publishAuto(saved.id, platform, topic.key, draft, channels, routes[platform] ?? null, now);
       if (failed) {
         run.errors.push(`${platform}: сама не вышла: ${failed}`);
         made.push({ platform, title: draft.title });
@@ -157,10 +209,11 @@ export async function runOutsidePosts(now = new Date()): Promise<OutsideRun> {
   // Темы кончились у всех площадок без черновика — сказать, а не молчать.
   const free = active.filter((p) => !waiting.some((w) => w.platform === p));
   if (free.length && free.every((p) => !topics[p])) {
-    await report("Темы кончились: все темы из content/outside-topics.ts уже написаны для площадок. Добавьте новые — черновики пойдут со следующей недели.");
+    await report("Темы кончились: все темы из content/outside-topics.ts и все статьи сайта уже написаны для площадок. Новые появятся с новыми статьями сайта.");
   }
 
-  const stuck = waiting.filter((p) => p.status === "ready");
+  // Ждущие ручные — в карточке раз в неделю, не каждый слот «сами».
+  const stuck = hand ? waiting.filter((p) => p.status === "ready") : [];
   if (made.length || stuck.length || auto.length) {
     await sendCard(made, stuck.map((p) => ({ platform: p.platform, title: p.title })), auto);
   }
@@ -206,6 +259,7 @@ async function publishAuto(
   topicKey: string,
   draft: { title: string; body: string },
   channels: readonly PostizChannel[],
+  route: Route,
   now: Date,
 ): Promise<string | null> {
   const spec = PLATFORM[platform];
@@ -214,6 +268,10 @@ async function publishAuto(
     const page = await telegraphPublish(draft.title, toTelegraphNodes(draft.body, platform, topicKey));
     if ("url" in page && (await markAutoPublished(id, platform, "telegraph", page.url, now))) return null;
     reason = "error" in page ? page.error : `Telegraph дал адрес не своей площадки: ${page.url.slice(0, 80)}`;
+  } else if (route === "direct") {
+    const post = spec.via === "vk" ? await vkPublish(draft.title, draft.body, platform, topicKey) : await channelPublish(draft.title, draft.body, platform, topicKey);
+    if ("url" in post && (await markAutoPublished(id, platform, spec.via === "vk" ? "vk" : "tgbot", post.url, now))) return null;
+    reason = "error" in post ? post.error : `адрес не площадки: ${post.url.slice(0, 80)}`;
   } else {
     const channel = channelFor(channels, platform);
     if (!channel) reason = `в Postiz нет канала ${spec.name}`;

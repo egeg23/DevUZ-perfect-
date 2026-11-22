@@ -35,13 +35,19 @@ import { siteUrl } from "@/lib/seo";
 export const PLATFORMS = ["vcru", "dzen", "tenchat", "telegraph", "vk", "telegram"] as const;
 export type Platform = (typeof PLATFORMS)[number];
 
-/** Как черновик попадает на площадку: человеком, открытым API Telegraph или через Postiz. */
-export type Via = "hand" | "telegraph" | "postiz";
+/**
+ * Как черновик попадает на площадку: человеком, открытым API Telegraph, ботом
+ * студии в канал (`tgbot`), ключом сообщества ВКонтакте (`vk`). Postiz — запасной
+ * путь у `tgbot` и `vk`: если прямой не заведён, а канал в Postiz есть.
+ */
+export type Via = "hand" | "telegraph" | "tgbot" | "vk";
+/** Чем статья на деле ушла: пишется в `outside_posts.via`. */
+export type SentVia = "telegraph" | "postiz" | "tgbot" | "vk" | "vcru";
 
 export type PlatformSpec = {
   name: string;
   via: Via;
-  /** Площадка в Postiz (`__type` и `identifier` канала) — у тех, что идут через него. */
+  /** Площадка в Postiz (`__type` и `identifier` канала) — запасной путь, когда прямой не заведён. */
   postiz?: "vk" | "telegram";
   /** Куда ведёт «Открыть площадку» — главная, редактор открывается оттуда после входа. */
   home: string;
@@ -129,7 +135,7 @@ export const PLATFORM: Record<Platform, PlatformSpec> = {
   },
   vk: {
     name: "ВКонтакте",
-    via: "postiz",
+    via: "vk",
     postiz: "vk",
     home: "https://vk.com",
     hosts: ["vk.com", "m.vk.com"],
@@ -145,7 +151,7 @@ export const PLATFORM: Record<Platform, PlatformSpec> = {
   },
   telegram: {
     name: "Telegram-канал",
-    via: "postiz",
+    via: "tgbot",
     postiz: "telegram",
     home: "https://t.me",
     hosts: ["t.me"],
@@ -163,6 +169,8 @@ export const PLATFORM: Record<Platform, PlatformSpec> = {
 
 /** Площадки, которые публикуются сами (без человека). */
 export const AUTO_PLATFORMS = PLATFORMS.filter((p) => PLATFORM[p].via !== "hand");
+/** Площадки, которые публикует человек: vc.ru, Дзен, Tenchat. */
+export const HAND_PLATFORMS = PLATFORMS.filter((p) => PLATFORM[p].via === "hand");
 
 export function isAuto(platform: Platform): boolean {
   return PLATFORM[platform].via !== "hand";
@@ -194,13 +202,94 @@ export function caseFacts(item: Case): string[] {
 
 export type AllowedLink = { url: string; about: string; names: readonly string[] };
 
-/** Куда статье можно ссылаться: наш сайт, все работы, кейсы темы. Только эти адреса. */
+/** Куда статье можно ссылаться: наш сайт, все работы, кейсы темы, статья темы на сайте. Только эти адреса. */
 export function allowedLinks(topic: OutsideTopic): AllowedLink[] {
   return [
     { url: `${siteUrl}/ru`, about: "сайт студии DevUz Studio", names: [] },
     { url: `${siteUrl}/ru/cases`, about: "все работы студии", names: [] },
     ...topicCases(topic).map((c) => ({ url: `${siteUrl}/ru/cases/${c.slug}`, about: `кейс ${c.name}`, names: [c.name] })),
+    // Своя статья — текстом ссылки только «DevUz…»: «[разбор DevUz](адрес)».
+    ...(topic.link ? [{ url: topic.link.url.replace(/\/+$/, ""), about: topic.link.about, names: [] }] : []),
   ];
+}
+
+/* ── Темы из наших статей сайта ────────────────────────────────────────── */
+
+/** Статья о маркетинге с сайта — то, что нужно теме (marketing_articles). */
+export type SiteArticle = {
+  slug: string;
+  title: string;
+  description: string;
+  tips: readonly string[];
+  /** Запрос статьи — research.ru.query, нет — заголовок. */
+  query: string;
+  at: string;
+};
+
+/** Разбор с сайта (razbors). */
+export type SiteRazbor = { slug: string; title: string; description: string; query: string; at: string };
+
+const SLUG = /^[a-z0-9-]{3,120}$/;
+
+/** Запрос статьи о маркетинге: из research (ru.query или query), иначе заголовок. */
+export function articleQuery(research: unknown, title: string): string {
+  const r = (research ?? {}) as { ru?: { query?: unknown }; query?: unknown };
+  const q = typeof r.ru?.query === "string" ? r.ru.query : typeof r.query === "string" ? r.query : "";
+  return (q || title).replace(/\s+/g, " ").trim().slice(0, 120);
+}
+
+function clean(text: string, max: number): string {
+  return text.replace(/\s+/g, " ").trim().slice(0, max);
+}
+
+/**
+ * Темы из наших опубликованных статей: тот же вопрос, что в статье, но
+ * своими словами и с другого угла, и ссылка на неё. Новые — первыми.
+ * Ключ стабильный (`art:<slug>`, `rz:<slug>`): по нему помнится, что площадке
+ * уже писали. Чисел из статьи в тему не берём: проверка пропустит только
+ * числа из `proof`, и модель это знает.
+ */
+export function siteTopics(articles: readonly SiteArticle[], razbors: readonly SiteRazbor[]): OutsideTopic[] {
+  const art = articles
+    .filter((a) => SLUG.test(a.slug) && a.title && a.query)
+    .map((a) => ({
+      at: a.at,
+      topic: {
+        key: `art:${a.slug}`,
+        kind: "article" as const,
+        brief: [
+          `Своими словами и с другого угла, не пересказом: наша статья на сайте «${clean(a.title, 160)}». О чём она: ${clean(a.description, 300)}`,
+          a.tips.length ? `Главные советы из неё (возьми один-два и раскрой по-своему): ${a.tips.slice(0, 4).map((t) => clean(t, 160)).join("; ")}.` : "",
+          "Чисел и примеров из статьи не переноси: только свои мысли и здравый смысл.",
+        ].filter(Boolean).join(" "),
+        query: a.query,
+        cases: [],
+        link: { url: `${siteUrl}/ru/marketing/articles/${a.slug}`, about: `наша статья «${clean(a.title, 120)}», подробнее на сайте` },
+      } satisfies OutsideTopic,
+    }));
+  const rz = razbors
+    .filter((r) => SLUG.test(r.slug) && r.title && r.query)
+    .map((r) => ({
+      at: r.at,
+      topic: {
+        key: `rz:${r.slug}`,
+        kind: "article" as const,
+        brief: [
+          `Своими словами и с другого угла: наш разбор на сайте «${clean(r.title, 160)}». О чём он: ${clean(r.description, 300)}`,
+          "Не пересказывай разбор и не называй разобранную компанию: возьми из него общий вывод для любого бизнеса этой сферы, что проверить у себя и что исправить первым. Чисел из разбора не переноси.",
+        ].join(" "),
+        query: clean(r.query, 120),
+        cases: [],
+        link: { url: `${siteUrl}/ru/razbor/${r.slug}`, about: `наш разбор «${clean(r.title, 120)}», подробнее на сайте` },
+      } satisfies OutsideTopic,
+    }));
+  return [...art, ...rz].sort((a, b) => Date.parse(b.at) - Date.parse(a.at)).map((x) => x.topic);
+}
+
+/** Все темы по порядку: сначала статичные (content/outside-topics.ts), потом статьи сайта, новые раньше. */
+export function allTopics(site: readonly OutsideTopic[], fixed: readonly OutsideTopic[] = OUTSIDE_TOPICS): OutsideTopic[] {
+  const seen = new Set(fixed.map((t) => t.key));
+  return [...fixed, ...site.filter((t) => !seen.has(t.key) && (seen.add(t.key), true))];
 }
 
 const LINK = /\[([^\]\n]{1,120})\]\((https?:\/\/[^)\s]+)\)/g;
@@ -437,6 +526,55 @@ export function postizContent(title: string, body: string, platform: Platform, t
   return [head, ...paragraphs].join("\n");
 }
 
+/** Строка с разметкой → HTML Telegram: только <b> и <a>, остальное экранировано. */
+function tgInline(text: string, platform: Platform, topicKey: string): string {
+  let out = "";
+  let at = 0;
+  const plain = (chunk: string) => escHtml(chunk).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
+  for (const m of text.matchAll(LINK)) {
+    out += plain(text.slice(at, m.index));
+    out += `<a href="${escHtml(withUtm(m[2], platform, topicKey))}">${escHtml(m[1])}</a>`;
+    at = (m.index ?? 0) + m[0].length;
+  }
+  return out + plain(text.slice(at));
+}
+
+/**
+ * Пост в канал ботом (sendMessage, parse_mode HTML). Bot API не берёт <p>,
+ * <h2>, <ul>: заголовок жирной первой строкой, абзацы через пустую строку,
+ * пункты — «• ». Предел Telegram — 4096 знаков, у поста — до 2000.
+ */
+export function telegramPostHtml(title: string, body: string, platform: Platform, topicKey: string): string {
+  const parts = [`<b>${escHtml(title)}</b>`];
+  for (const b of blocksOf(body)) {
+    const line = tgInline(b.text, platform, topicKey);
+    parts.push(b.kind === "li" ? `• ${line}` : b.kind === "h" ? `<b>${line}</b>` : line);
+  }
+  return parts.join("\n\n");
+}
+
+/** Первая наша ссылка поста — с метками: превью в Telegram и вложение ВКонтакте. */
+export function firstLink(body: string, platform: Platform, topicKey: string): string | null {
+  const link = linksIn(body)[0];
+  return link ? withUtm(link.url, platform, topicKey) : null;
+}
+
+/**
+ * Параметры wall.post ВКонтакте (без ключа: он идёт отдельно, в теле POST).
+ * Пост от имени сообщества, текст простой — ВКонтакте разметку не берёт,
+ * ссылка адресом в скобках, вложение — первая наша ссылка (карточка ссылки).
+ */
+export function vkWallParams(groupId: number, title: string, body: string, platform: Platform, topicKey: string): Record<string, string> {
+  const params: Record<string, string> = {
+    owner_id: `-${groupId}`,
+    from_group: "1",
+    message: `${title}\n\n${toPlain(body, platform, topicKey)}`,
+  };
+  const link = firstLink(body, platform, topicKey);
+  if (link) params.attachments = link;
+  return params;
+}
+
 /** Тело запроса Postiz «опубликовать сейчас» (POST /public/v1/posts). */
 export function postizRequest(platform: Platform, channelId: string, content: string, now: Date) {
   const type = PLATFORM[platform].postiz;
@@ -470,6 +608,19 @@ export function weekOf(now: Date): string {
 export function generationHour(now: Date): boolean {
   const hour = tashkentHour(now);
   return hour >= OUTSIDE_FROM_HOUR && hour < OUTSIDE_TO_HOUR;
+}
+
+/**
+ * Дни площадок, которые публикуются сами (Telegraph, Telegram-канал,
+ * ВКонтакте): понедельник, среда, пятница по Ташкенту (0 — воскресенье).
+ * Ручные (vc.ru, Дзен, Tenchat) — раз в неделю, как было.
+ */
+export const AUTO_DAYS: readonly number[] = [1, 3, 5];
+
+/** День слота «сами» по Ташкенту (ГГГГ-ММ-ДД) или null, если сегодня не их день. */
+export function autoSlotOf(now: Date): string | null {
+  const local = new Date(now.getTime() + TASHKENT_OFFSET_MS);
+  return AUTO_DAYS.includes(local.getUTCDay()) ? local.toISOString().slice(0, 10) : null;
 }
 
 export type Written = { platform: Platform; topic_key: string };

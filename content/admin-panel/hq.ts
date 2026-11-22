@@ -193,6 +193,11 @@ export const hqDict = defineDict({
     uz: (n: number) => `${n} ta 48 soatlik aksiyaning tugashiga 6 soatdan kam qoldi`,
     pl: (n: number) => `Kończy się ${pl(n, "promocja", "promocje", "promocji")} 48 h: zostało mniej niż 6 godzin`,
   },
+  attOutside: {
+    ru: (n: number, days: number) => `${n === 1 ? "Статья для площадки ждёт" : `Статей для площадок ждут: ${n},`} публикации ${days} дн.: опубликуйте или пропустите`,
+    uz: (n: number, days: number) => `Platformalar uchun ${n} ta maqola ${days} kundan beri e’lon qilinishini kutmoqda: e’lon qiling yoki o‘tkazib yuboring`,
+    pl: (n: number, days: number) => `Artykuły na platformy (${n}) czekają na publikację ${days} dni: opublikuj albo pomiń`,
+  },
   mainAccount: { ru: "Главный аккаунт", uz: "Asosiy akkaunt", pl: "Konto główne" },
   attFirecrawl: {
     ru: (n: number) => `Firecrawl: осталось ${n} кредитов — поиск компаний скоро встанет`,
