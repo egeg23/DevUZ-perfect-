@@ -515,6 +515,10 @@ export function partnerAccrualOf(
   history: readonly LifetimeProject[],
 ): PartnerAccrual | null {
   if (project.partner_id !== partner.id) return null;
+  // «Приведи друга» (lib/partners/friend.ts): награда — подарочный сайт, не
+  // деньги. Денег и процента у него нет нигде: ни в «Финансах», ни в
+  // выплатах, ни в котле соучредителей.
+  if (partner.kind === "friend") return null;
   // Агентство — всегда с оборота, какая бы модель ни записалась на заявке.
   const agency = partner.kind === "agency";
   const model = agency ? "turnover" : isPayoutModel(project.partner_model) ? project.partner_model : DEFAULT_MODEL;
@@ -871,7 +875,7 @@ export function agencyMatches(
  * Не путать с «агентствами партнёров» выше (partner_agencies): там человек
  * по ссылке подключает агентство, и заказы агентства идут ему по его ставке.
  */
-export const PARTNER_KINDS = ["person", "agency"] as const;
+export const PARTNER_KINDS = ["person", "agency", "friend"] as const;
 export type PartnerKind = (typeof PARTNER_KINDS)[number];
 
 export function isPartnerKind(value: unknown): value is PartnerKind {
@@ -911,6 +915,8 @@ export function agencyFinder(
   partner: { id: string; kind?: PartnerKind; brought_by?: string | null; brought_at?: string | null } | null | undefined,
 ): string | null {
   if (!partner || !partner.brought_by) return null;
+  // Участник «Приведи друга» — клиент, а не партнёр, которого кто-то привёл: 5% нет.
+  if (partner.kind === "friend") return null;
   if (project.partner_id !== partner.id || !project.created_at || !partner.brought_at) return null;
   const at = new Date(project.created_at).getTime();
   const from = new Date(partner.brought_at).getTime();

@@ -24,6 +24,7 @@ import {
   summarize,
   type Attribution,
 } from "@/lib/partners/store";
+import { tellFriendCame } from "@/lib/partners/friend-store";
 import { esc } from "@/lib/qualify/telegram";
 import { serviceClient } from "@/lib/supabase";
 
@@ -102,6 +103,11 @@ export async function attributeAndNotify(
 
   if (result && !result.reason) {
     const who = lead.company?.trim() ? `«${lead.company.trim()}»` : "новый клиент";
+    // «Приведи друга»: денег нет, награда — сайт; сообщение — на языке участника.
+    if (result.partner.kind === "friend") {
+      await tellFriendCame(result.partner, lead.company?.trim() ? `«${esc(lead.company.trim())}»` : null);
+      return result;
+    }
     const perk = result.link && result.link.perk !== "none" ? `\nОбещанный бонус: ${PERK_TITLE[result.link.perk]}.` : "";
     await notifyPartner(
       result.partner,
@@ -136,7 +142,9 @@ export async function assignAndNotify(
   ip: string,
 ): ReturnType<typeof assignLeadPartner> {
   const result = await assignLeadPartner(leadId, raw, staff, ip);
-  if (result.ok && !result.attribution.reason) {
+  if (result.ok && !result.attribution.reason && result.attribution.partner.kind === "friend") {
+    await tellFriendCame(result.attribution.partner, null);
+  } else if (result.ok && !result.attribution.reason) {
     const db = serviceClient();
     const { data } = db ? await db.from("leads").select("company").eq("id", leadId).maybeSingle() : { data: null };
     const company = String(data?.company ?? "").trim();
@@ -197,6 +205,8 @@ export async function tellPartnerContractSigned(projectId: string, amountUsd: nu
 
   const partner = await partnerById(String(project.partner_id));
   if (!partner || partner.status !== "active" || !partner.telegram_user_id) return;
+  // Участнику «Приведи друга» доли нет: о подарке он узнает, когда друг оплатит (friend-store).
+  if (partner.kind === "friend") return;
 
   const [summary] = await summarize([partner]);
   const accrual = summary?.accruals.find((a) => a.project_id === projectId) ?? null;

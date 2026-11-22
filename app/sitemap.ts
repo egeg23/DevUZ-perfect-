@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 
 import { cases } from "@/content/cases";
 import { BOX_PATH } from "@/content/box";
+import { FRIEND_PATH } from "@/content/friend-site";
 import { MOCKUP_TERMS_PATH } from "@/content/mockup-terms";
 import { LANDING_LOCALES, LANDING_PATH } from "@/content/ai-staff/landing";
 import { serviceEnabled } from "@/lib/ai-staff/store";
@@ -78,6 +79,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Условия на макеты — тоже: клиент, получивший прототип, должен находить
     // их по названию студии.
     { path: MOCKUP_TERMS_PATH, priority: 0.3, changeFrequency: "yearly" as const },
+    { path: FRIEND_PATH, priority: 0.5, changeFrequency: "monthly" as const },
     ...services.map((s) => ({
       path: `services/${s.slug}`,
       priority: (LANDING_SLUGS as readonly string[]).includes(s.slug) ? 0.95 : 0.8,

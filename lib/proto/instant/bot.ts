@@ -19,9 +19,12 @@
  * и здесь не тронуто: макет собирается только по просьбе самого клиента.
  */
 import { cases } from "@/content/cases";
+import { company } from "@/content/company";
+import { friendCopy } from "@/content/friend-bot";
 import { OFFER_MS, announceText } from "@/lib/admin/mockup-offer";
 import { PROTOTYPE_HOURS } from "@/lib/admin/outreach";
 import { CIRCLE_NICHES, CIRCLE_NICHE_RU, circleNicheOf, isCircleNiche, type CircleNiche } from "@/lib/admin/sales-after-reply";
+import { FRIEND_START } from "@/lib/partners/friend";
 import { buildInstant, type InstantBuild } from "@/lib/proto/instant/build";
 import { limitVerdict, mayUseInstant, siteUrlOf } from "@/lib/proto/instant/limits";
 import { addonTitle, announceExtra, offerAddons } from "@/lib/proto/instant/offer";
@@ -811,7 +814,10 @@ export async function runBuild(ctx: Ctx, flow: Flow, deps: Deps): Promise<void> 
     admin ? [[{ text: T[locale].openBtn, url: link }], [{ text: T[locale].adminBtn, url: `${link}/admin` }]] : [[{ text: T[locale].openBtn, url: link }]],
   );
   // КП на бланке рядом с макетом: та же цена и те же допы, выбрать и посчитать.
-  await deps.send(ctx.chatId, `${priceText(locale, deps.now(), build.site.niche)}\n\n${T[locale].kp}`, [[{ text: T[locale].kpBtn, url: `${link}/kp` }]]);
+  // «🎁 Приведи друга — сайт бесплатно» (lib/partners/friend): клиенту, сотруднику — нет (он не участвует).
+  const kpRows: Btn[][] = [[{ text: T[locale].kpBtn, url: `${link}/kp` }]];
+  if (!ctx.staffId) kpRows.push([{ text: friendCopy(locale).button, url: `${company.telegramUrl}?start=${FRIEND_START}` }]);
+  await deps.send(ctx.chatId, `${priceText(locale, deps.now(), build.site.niche)}\n\n${T[locale].kp}`, kpRows);
   // Сборка сотрудника: лида в очередь менеджерам нет.
   if (ctx.staffId) return;
   const leadId = await deps.lead({ ctx, name, niche, site: flow.url, link, phone: build.site.phone, why: "built" });

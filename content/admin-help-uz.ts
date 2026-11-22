@@ -2748,6 +2748,62 @@ export const uz: HelpCopy = {
       ],
     },
 
+    /* ── Do‘stlar ───────────────────────────────────────────────────────── */
+    "/admin/friends": {
+      what: "«Do‘stni olib keling — sayt bepul» dasturi. Mijoz yoki bot obunachisi do‘stini olib keladi. Do‘st sayt buyurtma qilib to‘lasa, olib kelgan odam saytni bepul oladi. Bu yerda barcha ishtirokchilar va ularning do‘stlari ko‘rinadi.",
+      items: [
+        {
+          id: "terms",
+          title: "Shartlar: bitta to‘lagan do‘st, bitta sayt",
+          body: [
+            "Studiya xodimlaridan tashqari istalgan mijoz va bot obunachisi qatnashadi. Xodim rad javobini oladi: panel uni [Jamoa](/admin/team)dagi Telegram orqali taniydi.",
+            "Do‘st $500 dan (maket bo‘yicha landing narxi) loyiha buyurtma qilib, uni to‘liq to‘lasa hisoblanadi. Shunda olib kelgan odamga maketimiz bo‘yicha landing bepul, qo‘shimchalarsiz. Agar u allaqachon mijozimiz bo‘lsa, sayt o‘rniga $500 uning buyurtmasi hisobiga o‘tadi.",
+            "Ishtirokchida pul va foiz yo‘q: u [Moliya](/admin/finance)da va hamkorlar to‘lovlarida yo‘q. Sovg‘a menejer bitimi emas, grade va mukofotga kirmaydi.",
+            "O‘zini o‘zi olib kelib bo‘lmaydi. Do‘stning Telegrami, telefoni, sayti yoki kompaniyasi ishtirokchinikiga mos kelsa, ariza hisoblanmaydi. Studiyada avval bo‘lgan mijoz ham hisoblanmaydi.",
+          ],
+        },
+        {
+          id: "bot",
+          title: "Odam dasturga qanday kiradi",
+          body: [
+            "O‘zi, bitta tugma bilan, qo‘lda tekshiruvsiz. Botda maket va tijorat taklifidan keyin «🎁 Do‘stni olib keling — sayt bepul» tugmasi bor. Yana /friend buyrug‘i va saytda sahifa bor.",
+            "Bot saytga shaxsiy havola, botga havola va so‘z yuboradi. Do‘st havola orqali o‘tadi yoki menejerga so‘zni aytadi, ariza ishtirokchiga yoziladi. Bu hamkorlardagi bilan bir xil mexanika.",
+            "Agar odam allaqachon foizli hamkor bo‘lsa, u hamkor bo‘lib qoladi: bot unga /ref ni eslatadi.",
+          ],
+        },
+        {
+          id: "table",
+          title: "Jadvalda nima bor",
+          body: [
+            "«Keldi»: havola yoki so‘z orqali nechta hisoblangan ariza kelgani. «Buyurtma qildi»: ulardan nechtasi loyiha bo‘lgani. «To‘ladi = saytlar»: nechta do‘st $500 dan loyihani to‘liq to‘lagani. Ishtirokchi shuncha sayt ishlab topgan.",
+            "Hammasi loyihalar va to‘lovlar bo‘yicha o‘zi hisoblanadi. Do‘st hisoblanishi uchun uning loyihasi hamkorlardagi kabi ishtirokchiga bog‘langan bo‘lishi kerak.",
+          ],
+        },
+        {
+          id: "gift",
+          title: "Do‘st to‘ladi: keyin nima bo‘ladi",
+          body: [
+            "Do‘stning loyihasi to‘liq to‘lanishi bilan sizga va rahbarga bot «🎁 Друг оплатил — подарочный сайт» deb yozadi. Ishtirokchiga bot sayt ishlab topilgani va menejer bog‘lanishini yozadi.",
+            "Darhol «Подарочный сайт для …» [vazifasi](/admin/tasks) qo‘yiladi. Uni ishtirokchining o‘z lidini olib borgan odam oladi. Bunday odam bo‘lmasa, vazifani egasi oladi. Kechasi, 21:00 dan 08:00 gacha, hech narsa ketmaydi: hammasi ertalab keladi.",
+          ],
+        },
+        {
+          id: "broadcast",
+          title: "Aksiya haqida xabar matni",
+          body: {
+            head: [
+              "Yorliq pastida bot obunachilari uchun tayyor xabar matni bor. U yuborilmagan.",
+              "Qachon yuborishni egasi hal qiladi. O‘zingiz yubormang.",
+            ],
+            admin: [
+              "Yorliq pastida bot obunachilari uchun tayyor xabar matni bor. U yuborilmagan va o‘zi ketmaydi.",
+              "«Yubor» desangiz, u [Bosh sahifa](/admin/hq)dagi «Bot foydalanuvchilariga» xabari bilan yuboriladi.",
+            ],
+          },
+        },
+      ],
+    },
+
     /* ── Прототипы ────────────────────────────────────────────────────── */
     "/admin/proto": {
       what: "Bu yerda prototip yig‘iladi: mijozning bo‘lajak sayti sahifasi. Uni birinchi suhbatdan keyin havola qilib yuborishadi va mijoz o‘z biznesini telefonda ko‘radi. Bo‘lim faqat egasida bor.",

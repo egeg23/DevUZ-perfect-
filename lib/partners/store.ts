@@ -62,6 +62,7 @@ import {
   type Perk,
   type VoidReason,
 } from "@/lib/partners/rules";
+import { friendSelf, hostInText } from "@/lib/partners/friend";
 import { sendMessage } from "@/lib/qualify/telegram";
 import { serviceClient } from "@/lib/supabase";
 
@@ -161,7 +162,7 @@ function shapePartner(row: Record<string, unknown>): Partner {
     model_changed_at: (row.model_changed_at as string | null) ?? null,
     // Копилка выключена программой (rules.ts, POOL): её как будто нет — и автовыплаты идут.
     accumulate: POOL && row.accumulate === true,
-    kind: row.kind === "agency" ? "agency" : "person",
+    kind: row.kind === "agency" ? "agency" : row.kind === "friend" ? "friend" : "person",
     contact: (row.contact as string | null) ?? null,
     website: (row.website as string | null) ?? null,
     brought_by: (row.brought_by as string | null) ?? null,
@@ -593,7 +594,7 @@ async function freeSlug(db: NonNullable<ReturnType<typeof serviceClient>>): Prom
  * команда /ref. Если владелец завёл человека руками без Telegram, а тот
  * потом написал боту — записи не сливаются: у ручной нет id, чтобы узнать.
  */
-export async function ensurePartner(from: TelegramIdentity): Promise<Partner | null> {
+export async function ensurePartner(from: TelegramIdentity, kind: PartnerKind = "person"): Promise<Partner | null> {
   const db = serviceClient();
   if (!db) return null;
   // Сотрудник партнёром не становится — и запись, заведённая до запрета,
@@ -624,6 +625,8 @@ export async function ensurePartner(from: TelegramIdentity): Promise<Partner | n
       code,
       promo,
       payout_model: NEW_MODEL,
+      // «Приведи друга» (lib/partners/friend.ts) — та же запись и ссылка, но награда сайтом, не деньгами.
+      ...(kind === "friend" ? { kind: "friend" } : {}),
     })
     .select(PARTNER_COLUMNS)
     .maybeSingle();
@@ -1103,7 +1106,7 @@ export async function attributeLead(
     leadTelegramId: ctx.telegramId ?? null,
     leadHandle: ctx.contactHandle,
     existingClient: await existingClient(leadId, ctx.contactHandle, ctx.company),
-  });
+  }) ?? (partner.kind === "friend" && (await friendBroughtSelf(partner, leadId)) ? "self" : null);
 
   const { error } = await db
     .from("leads")
@@ -1129,6 +1132,67 @@ export async function attributeLead(
   if (ctx.chatId) await clearTouch(ctx.chatId);
 
   return { partner, link, reason };
+}
+
+/**
+ * Участник «Приведи друга» привёл сам себя? Самого себя привести нельзя: тот
+ * же Telegram, телефон, сайт или компания (владелец, 22.11.2026). Telegram и
+ * ник уже проверил `voidReason`; здесь — его собственные заявки и макеты из
+ * бота против приведённой заявки (`friendSelf`, тем же `sameCompany`).
+ */
+async function friendBroughtSelf(partner: Partner, leadId: string): Promise<boolean> {
+  const db = serviceClient();
+  if (!db) return false;
+  const { data: lead } = await db
+    .from("leads")
+    .select("company, contact_handle, tg_username, notes, summary")
+    .eq("id", leadId)
+    .maybeSingle();
+  if (!lead) return false;
+  const own = await friendOwnFacts(partner, leadId);
+  return friendSelf(own, {
+    name: (lead.company as string | null) ?? null,
+    contacts: [lead.contact_handle as string | null, lead.tg_username ? `@${lead.tg_username as string}` : null],
+    host: hostInText(`${(lead.notes as string | null) ?? ""} ${(lead.summary as string | null) ?? ""}`),
+  });
+}
+
+/** Что известно об участнике: его ник, его заявки и сайт из его макетов в боте. */
+export async function friendOwnFacts(partner: Partner, exceptLeadId: string | null = null): Promise<CompanyFacts[]> {
+  const db = serviceClient();
+  const facts: CompanyFacts[] = [];
+  const handle = partner.username ? `@${partner.username}` : null;
+  if (handle) facts.push({ contacts: [handle] });
+  if (!db) return facts;
+  if (partner.username) {
+    const name = partner.username.replace(/[%_,()]/g, "");
+    let query = db
+      .from("leads")
+      .select("id, company, contact_handle, notes, summary")
+      .or(`tg_username.ilike.${name},contact_handle.ilike.@${name},contact_handle.ilike.${name}`)
+      .limit(20);
+    if (exceptLeadId) query = query.neq("id", exceptLeadId);
+    const { data } = await query;
+    for (const row of data ?? []) {
+      facts.push({
+        name: (row.company as string | null) ?? null,
+        contacts: [row.contact_handle as string | null],
+        host: hostInText(`${(row.notes as string | null) ?? ""} ${(row.summary as string | null) ?? ""}`),
+      });
+    }
+  }
+  if (partner.telegram_user_id) {
+    const { data } = await db
+      .from("protos")
+      .select("facts")
+      .eq("facts->instant->>tg", String(partner.telegram_user_id))
+      .limit(5);
+    for (const row of data ?? []) {
+      const f = (row.facts ?? {}) as { source?: string; name?: string; phone?: string };
+      facts.push({ name: f.name ?? null, host: f.source ?? null, contacts: [f.phone ?? null] });
+    }
+  }
+  return facts;
 }
 
 /* ── Выплаты ────────────────────────────────────────────────────────────── */
@@ -1583,6 +1647,8 @@ export async function setPayoutModel(partner: Partner, model: string, now: Date 
   if (!CHOOSABLE_MODELS.includes(model)) return { ok: false, reason: "invalid" };
   // Агентство — 15% с суммы проекта всегда: модели у него не выбирают.
   if (partner.kind === "agency") return { ok: false, reason: "invalid" };
+  // У участника «Приведи друга» денег нет — и модели тоже.
+  if (partner.kind === "friend") return { ok: false, reason: "invalid" };
   if (model === partner.payout_model) return { ok: false, reason: "same" };
   if (!canSwitchModel(partner.model_changed_at, now)) return { ok: false, reason: "too_soon" };
 
@@ -1959,7 +2025,8 @@ export async function setAgencyFinder(
 export async function foundPartners(broughtBy: "all" | string): Promise<Partner[]> {
   const db = serviceClient();
   if (!db) return [];
-  let query = db.from("partners").select(PARTNER_COLUMNS).order("created_at", { ascending: false });
+  // Участники «Приведи друга» — клиенты, не партнёры: их здесь нет.
+  let query = db.from("partners").select(PARTNER_COLUMNS).neq("kind", "friend").order("created_at", { ascending: false });
   if (broughtBy !== "all") query = query.eq("brought_by", broughtBy);
   const { data, error } = await query.limit(500);
   if (error) {

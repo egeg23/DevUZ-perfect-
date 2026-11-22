@@ -63,6 +63,7 @@ export const ACTION_LABEL: Record<AuditAction, Tr> = {
   "partner.agency_decided": { ru: "решил по агентству партнёра", uz: "hamkor agentligi bo‘yicha qaror qildi", pl: "zdecydował w sprawie agencji partnera" },
   "partner.agency_created": { ru: "завёл агентство", uz: "agentlik qo‘shdi", pl: "dodał agencję" },
   "partner.agency_finder": { ru: "поменял, кто привёл агентство", uz: "agentlikni kim olib kelganini o‘zgartirdi", pl: "zmienił, kto przyprowadził agencję" },
+  "partner.friend_gift": { ru: "подарочный сайт за оплатившего друга", uz: "to‘lagan do‘st uchun sovg‘a sayt", pl: "strona w prezencie za płacącego znajomego" },
   "partner.promo": { ru: "поменял промокод партнёра", uz: "hamkor promokodini o‘zgartirdi", pl: "zmienił kod promocyjny partnera" },
   "partner.promo_perk": { ru: "партнёр выбрал скидку по промокоду", uz: "hamkor promokod chegirmasini tanladi", pl: "partner wybrał rabat z kodu promocyjnego" },
   "lead.partner_set": { ru: "записал, кто привёл клиента", uz: "mijozni kim olib kelganini yozdi", pl: "zapisał, kto przyprowadził klienta" },
