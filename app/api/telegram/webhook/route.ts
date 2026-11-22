@@ -15,6 +15,8 @@ import {
 } from "@/lib/qualify/handoff";
 import { loginCommand } from "@/lib/qualify/commands";
 import { handlePartnerCommand, partnerCommand } from "@/lib/partners/bot";
+import { FRIEND_START, friendCommand } from "@/lib/partners/friend";
+import { handleFriend } from "@/lib/partners/friend-bot";
 import { codeFromStart } from "@/lib/partners/rules";
 import { countClick, touchChat, touchFor, type TelegramIdentity } from "@/lib/partners/store";
 import { BIND_PREFIX, bindBuyer, buyerMessage } from "@/lib/store/buyer";
@@ -389,6 +391,11 @@ async function route(update: Update): Promise<void> {
       // Партнёрская программа — тоже раньше клиентского разговора: /ref и
       // /payout шлёт человек из лички, и для остального кода он клиент.
       const partnerIdentity = identityOf(update.message.from);
+      // «Приведи друга — сайт бесплатно» (lib/partners/friend-bot): /friend.
+      if (chat.type === "private" && friendCommand(update.message.text) && partnerIdentity) {
+        await handleFriend(chat.id, partnerIdentity);
+        return;
+      }
       if (chat.type === "private" && partnerCommand(update.message.text) && partnerIdentity) {
         await handlePartnerCommand(
           chat.id,
@@ -891,6 +898,11 @@ async function handleClient(message: NonNullable<Update["message"]>) {
     // Кнопка «Получить ссылку» на странице программы ведёт сюда с payload
     // «partner»: это тот же /ref, только с сайта.
     const identity = identityOf(message.from);
+    // Кнопка «🎁 Приведи друга» после макета и на странице программы на сайте.
+    if (payload === FRIEND_START && identity) {
+      await handleFriend(chat.id, identity);
+      return;
+    }
     if (payload === "partner" && identity) {
       await handlePartnerCommand(chat.id, identity, "/ref", locale);
       return;

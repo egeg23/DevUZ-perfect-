@@ -402,6 +402,62 @@ export const moreSections: Record<string, HelpEntry> = {
     ],
   },
 
+  /* ── Znajomi ─────────────────────────────────────────────────────────── */
+  "/admin/friends": {
+    what: "Program «Poleć znajomego, strona za darmo». Klient albo subskrybent bota przyprowadza znajomego. Znajomy zamówił i opłacił stronę, a ten, kto go przyprowadził, dostaje stronę za darmo. Tu widać wszystkich uczestników i ich znajomych.",
+    items: [
+      {
+        id: "terms",
+        title: "Warunki: jeden płacący znajomy, jedna strona",
+        body: [
+          "Bierze udział każdy klient i subskrybent bota, oprócz pracowników studia. Pracownik dostaje odmowę: panel rozpoznaje go po Telegramie z [Zespołu](/admin/team).",
+          "Znajomy się liczy, gdy zamówił projekt od $500 (cena landing page na makiecie) i opłacił go w całości. Wtedy temu, kto go przyprowadził, należy się landing page na naszej makiecie za darmo, bez dodatków. Jeśli to już nasz klient, zamiast strony $500 idzie na poczet jego zamówienia.",
+          "Uczestnik nie ma pieniędzy ani procentu: nie ma go w [Finansach](/admin/finance) ani w wypłatach partnerom. Prezent to nie transakcja menedżera, nie liczy się do gradu ani premii.",
+          "Nie można przyprowadzić samego siebie. Jeśli znajomy ma ten sam Telegram, telefon, stronę lub firmę co uczestnik, zgłoszenie się nie liczy. Klient, który już był w studiu, też się nie liczy.",
+        ],
+      },
+      {
+        id: "bot",
+        title: "Jak ktoś trafia do programu",
+        body: [
+          "Sam, jednym przyciskiem, bez ręcznej weryfikacji. W bocie po makiecie i ofercie handlowej jest przycisk «🎁 Poleć znajomego, strona za darmo». Jest też komenda /friend i strona na stronie studia.",
+          "Bot wysyła osobisty link do strony, link do bota i słowo. Znajomy wchodzi z linku albo podaje słowo menedżerowi i zgłoszenie zapisuje się na uczestnika. To ta sama mechanika co u partnerów.",
+          "Jeśli ktoś już jest partnerem z procentem, zostaje partnerem: bot przypomina mu o /ref.",
+        ],
+      },
+      {
+        id: "table",
+        title: "Co jest w tabeli",
+        body: [
+          "«Przyszli»: ile zaliczonych zgłoszeń przyszło z linku lub słowa. «Zamówili»: ile z nich stało się projektami. «Zapłacili = stron»: ilu znajomych opłaciło projekt od $500 w całości. Tyle stron zdobył uczestnik.",
+          "Wszystko liczy się samo z projektów i płatności. Żeby znajomy się liczył, jego projekt musi być przypisany do uczestnika, jak u partnerów.",
+        ],
+      },
+      {
+        id: "gift",
+        title: "Znajomy zapłacił: co dalej",
+        body: [
+          "Gdy projekt znajomego jest opłacony w całości, bot pisze do Ciebie i do kierownika «🎁 Друг оплатил — подарочный сайт». Uczestnikowi bot pisze, że strona jest zdobyta i menedżer się odezwie.",
+          "Od razu powstaje [zadanie](/admin/tasks) «Подарочный сайт для …». Dostaje je ten, kto prowadził lead samego uczestnika. Jeśli nikogo takiego nie ma, zadanie dostaje właściciel. W nocy, od 21:00 do 08:00, nic nie wychodzi: wszystko przyjdzie rano.",
+        ],
+      },
+      {
+        id: "broadcast",
+        title: "Tekst wysyłki o akcji",
+        body: {
+          head: [
+            "Na dole zakładki leży gotowy tekst wysyłki do subskrybentów bota. Nie został wysłany.",
+            "O terminie decyduje właściciel. Nie wysyłaj sam.",
+          ],
+          admin: [
+            "Na dole zakładki leży gotowy tekst wysyłki do subskrybentów bota. Nie został wysłany i sam nie wyjdzie.",
+            "Powiedz «wysyłaj», a pójdzie wysyłką «Użytkownikom bota» na [Pulpicie](/admin/hq).",
+          ],
+        },
+      },
+    ],
+  },
+
   /* ── Прототипы ────────────────────────────────────────────────────── */
   "/admin/proto": {
     what: "Tu składasz prototyp, czyli stronę przyszłej witryny klienta. Wysyła się ją linkiem po pierwszej rozmowie, a klient widzi swój biznes na telefonie. Sekcja jest tylko u właściciela.",

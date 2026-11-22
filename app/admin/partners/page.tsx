@@ -81,7 +81,8 @@ export default async function PartnersPage({
     : null;
   const money = (value: number | null) => usd(value, locale);
 
-  const summaries = await summarize(await listPartners());
+  // Участники «Приведи друга» — во вкладке «Друзья»: денег у них нет.
+  const summaries = await summarize((await listPartners()).filter((p) => p.kind !== "friend"));
   const [agencies, clients, promo, staffIds] = await Promise.all([
     agenciesOf("all"),
     clientsOf("all"),

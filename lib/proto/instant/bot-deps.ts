@@ -18,6 +18,8 @@ import { salesRecipients } from "@/lib/qualify/brief";
 import { newRequestNo } from "@/lib/qualify/engine";
 import { saveSession, sessionFor, startSession } from "@/lib/qualify/handoff";
 import { scoreLead } from "@/lib/qualify/scoring";
+import { attributeAndNotify } from "@/lib/partners/attribute";
+import { touchFor } from "@/lib/partners/store";
 import { saveLead } from "@/lib/qualify/store";
 import { editCaption, editText, editWidgetData, sendRowsForId, sendForId, sendWidget } from "@/lib/qualify/telegram";
 import type { QualifyToolInput } from "@/lib/qualify/types";
@@ -107,6 +109,15 @@ async function lead(input: LeadInput): Promise<string | null> {
     leadId = await saveLead(scored, [], source, { requestNo, origin });
   } catch (error) {
     console.error("макет в боте: лид не записался", error);
+  }
+  // Пришёл по ссылке партнёра или «Приведи друга» (код запомнен за чатом при
+  // /start) — лид его, как в чате и в форме (lib/partners/attribute).
+  if (leadId) {
+    await attributeAndNotify(
+      leadId,
+      { code: await touchFor(input.ctx.chatId).catch(() => null), telegramId: input.ctx.tgId, chatId: input.ctx.chatId },
+      { contact_handle: scored.contact_handle, company: scored.company },
+    ).catch((error) => console.error("макет в боте: партнёр не привязался", error));
   }
   await routeNewLead({
     leadId: leadId ?? "unsaved",

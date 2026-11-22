@@ -2,7 +2,9 @@ import { company } from "@/content/company";
 import { partnerCopy, type PartnerStats } from "@/content/partner-bot";
 import type { Locale } from "@/lib/i18n";
 import { botLink, linkUrl, promoOf, shortUrl, withdrawOpens } from "@/lib/partners/rules";
+import { sendFriendView } from "@/lib/partners/friend-bot";
 import { LOGIN_TOKEN_MINUTES, loginLink } from "@/lib/partners/session";
+import { botLangOf } from "@/lib/proto/instant/store";
 import {
   createLink,
   ensurePartner,
@@ -100,6 +102,11 @@ export async function handlePartnerCommand(
   }
 
   const existed = await partnerByTelegram(from.id);
+  // Участник «Приведи друга»: денег и выплат у него нет — ему его прогресс и ссылка.
+  if (existed?.kind === "friend") {
+    await sendFriendView(chatId, existed, await botLangOf(chatId).catch(() => null));
+    return;
+  }
   const partner = await ensurePartner(from);
   if (!partner) {
     await sendMessage(chatId, copy.unavailable);

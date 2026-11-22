@@ -254,6 +254,9 @@ export const SECTIONS: readonly Section[] = [
   // Вкладкой «Партнёров»; у менеджера «Партнёров» нет — вкладка встаёт в
   // меню сама.
   { href: "/admin/agencies", label: { ru: "Агентства", uz: "Agentliklar", pl: "Agencje" }, roles: EVERYONE, group: "marketing", parent: "/admin/partners" },
+  // «Приведи друга — сайт бесплатно» (владелец, 22.11.2026): участники и их
+  // прогресс. Как «Партнёры» — владельцу и руководителю, вкладкой.
+  { href: "/admin/friends", label: { ru: "Друзья", uz: "Do‘stlar", pl: "Znajomi" }, roles: WITH_HEAD, group: "marketing", parent: "/admin/partners" },
   // Прототипы — временно только владельцу, и причина не в доступе к данным,
   // а в деньгах. Сборка прототипа — самый дорогой вызов модели из всех:
   // на выходе целая страница, и платится она за каждый черновик, включая
