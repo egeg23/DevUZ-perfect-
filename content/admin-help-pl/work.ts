@@ -848,6 +848,7 @@ export const workSections: Record<string, HelpEntry> = {
           admin: [
             "Kafelki dla całego studia, od «Z umów» do «Zostaje właścicielowi».",
             "«Udziały współzałożycieli» pokazują, co wpłynęło, co odjęto (partnerzy, agencje, wydatki) i ile komu wypłacić.",
+            "Generowanie leadów to Twój kierunek, nie studia: prowadzący dostaje 20% dochodu z projektu, reszta w całości dla Ciebie, nie wchodzi do «Do podziału». To kafelek «Generowanie leadów — dla Ciebie» i wiersz «+ generowanie leadów» przy Twoim udziale.",
           ],
         },
       },

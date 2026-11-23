@@ -48,7 +48,7 @@ export type ManualLead = {
   need: string;
   from: string;
   party: LeadParty;
-  /** Лид лидогенерации: источник `leadgen`, его проект — 25% ведущему (lib/admin/finance.ts). */
+  /** Лид лидогенерации: источник `leadgen`, его проект — 20% ведущему (lib/admin/finance.ts). */
   leadgen: boolean;
 };
 

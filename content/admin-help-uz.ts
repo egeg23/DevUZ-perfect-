@@ -681,7 +681,7 @@ export const uz: HelpCopy = {
             "Mijoz qo‘ng‘iroq qildimi, tavsiya bilan keldimi yoki shaxsan uchrashdingizmi? Uni ro‘yxat ostidagi «Lidni qo‘lda qo‘shish» tugmasi bilan yozing. «Mijoz ismi» va «Telefon, Telegram yoki pochta» majburiy, qolgani ixtiyoriy.",
             "Lid darhol ishda, navbatsiz, 4 soatdan keyin bot keyin nima bo‘lishini so‘raydi. Menejer lidni o‘ziga qo‘shadi. Rahbar va egasi «Lid kimga»da istalgan xodimni tanlaydi, unga «Вам добавили лид» keladi.",
             "Forma tepasida «Bu kim» bor: «Mijoz», «Agentlik» yoki «Bloger». Agentlikni [«Agentliklar»](/admin/agencies) bo‘limida oching, uning 15% shu yerda hisoblanadi. Blogerni hamkor qilib rahbar va egasi ochadi.",
-            "Undan ham yuqorida «Yo‘nalish»: «Ishlab chiqish» yoki «Lidogeneratsiya». Lidogeneratsiya mijozi (bizdan qo‘ng‘iroqli lidlar oqimini buyurtma qilgan) bo‘lsa, «Lidogeneratsiya»ni tanlang. Bunday liddan loyiha 7% soliq bilan ochiladi va olib boruvchiga qolgan summaning 25% i tushadi: summa minus tannarx minus 7% soliq. Misol: 200 000 ₽ keldi, tannarx 100 000 ₽, soliq 14 000 ₽, qoldiq 86 000 ₽, olib boruvchiga 21 500 ₽. Mijoz to‘lamaguncha bunday lidning holati va bosqichlarini menejer o‘zi qo‘yadi. Birinchi to‘lovdan keyin ularni faqat rahbar va egasi o‘zgartiradi.",
+            "Undan ham yuqorida «Yo‘nalish»: «Ishlab chiqish» yoki «Lidogeneratsiya». Lidogeneratsiya mijozi (bizdan qo‘ng‘iroqli lidlar oqimini buyurtma qilgan) bo‘lsa, «Lidogeneratsiya»ni tanlang. Bunday liddan loyiha 7% soliq bilan ochiladi va olib boruvchiga qolgan summaning 20% i tushadi: summa minus tannarx minus 7% soliq. Misol: 200 000 ₽ keldi, tannarx 135 000 ₽, soliq 14 000 ₽, qoldiq 51 000 ₽, olib boruvchiga 10 200 ₽. Foiz mijoz biz bilan ishlagan vaqt davomida har bir to‘lovdan tushadi: uzaytirishni o‘sha liddan yangi loyiha qilib oching. Mijoz to‘lamaguncha bunday lidning holati va bosqichlarini menejer o‘zi qo‘yadi. Birinchi to‘lovdan keyin ularni faqat rahbar va egasi o‘zgartiradi.",
           ],
         },
         {
@@ -2336,6 +2336,7 @@ export const uz: HelpCopy = {
             admin: [
               "Plitkalar butun studiya bo‘yicha, «Shartnomalar bo‘yicha»dan «Egasiga qoladi»gacha.",
               "«Hammuassislar ulushlari» nima kelgani, nima ayirilgani (hamkorlar, agentliklar, xarajatlar) va kimga qancha to‘lashni ko‘rsatadi.",
+              "Lidogeneratsiya — studiyaning emas, sizning yo‘nalishingiz: olib boruvchiga loyiha daromadining 20% i, qolgani to‘liq sizga, «Bo‘linadi»ga kirmaydi. Bu «Lidogeneratsiya — sizga» plitkasi va ulushingiz yonidagi «+ lidogeneratsiya» qatori.",
             ],
           },
         },

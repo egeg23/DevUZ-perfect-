@@ -1,5 +1,5 @@
 /**
- * Лидогенерация в панели: 25% ведущему от дохода студии, ручной лид
+ * Лидогенерация в панели: 20% ведущему от дохода, остальное владельцу мимо котла, ручной лид
  * «Лидогенерация», статус и ступени после оплаты — только владелец и
  * руководитель.
  *
@@ -8,7 +8,8 @@
  * менеджеру»; на «7% от всей пришедшей суммы» — «Да, верно, и в финансах
  * тоже пропиши и сделай добавление Лида в ручную "лидогенерации", этапы и
  * статусы они могут проставлять до оплаты, после оплаты уже я или Александр
- * меняем».
+ * меняем». Следом: «20% от дохода. Так как это отдельный проект мой…
+ * Александру ничего не падает с этого в виде %, так как это уже мое».
  */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -17,6 +18,8 @@ import { test } from "node:test";
 import { leadAddDict } from "@/content/admin-panel/lead-add";
 import {
   LEADGEN_MANAGER_PERCENT,
+  founderPayouts,
+  foundersPool,
   LEADGEN_TAX_PERCENT,
   accrualsOf,
   isLeadgen,
@@ -51,15 +54,15 @@ function project(over: Partial<ProjectMoney> = {}): ProjectMoney {
   };
 }
 
-test("лидогенерация: 25% ведущему от суммы минус себестоимость и 7% налога, без строки руководителя", () => {
-  assert.equal(LEADGEN_MANAGER_PERCENT, 25);
+test("лидогенерация: 20% ведущему от суммы минус себестоимость и 7% налога, без строки руководителя", () => {
+  assert.equal(LEADGEN_MANAGER_PERCENT, 20);
   assert.equal(LEADGEN_TAX_PERCENT, 7);
-  // 2 000 − 140 налога − 1 000 себестоимости = 860; 25% = 215.
+  // 2 000 − 140 налога − 1 000 себестоимости = 860; 20% = 172.
   const lines = accrualsOf(project(), [], earners);
   assert.equal(lines.length, 1, "руководителю строки нет — остальное соучредителям");
   assert.equal(lines[0].staff_id, MANAGER);
-  assert.equal(lines[0].percent, 25);
-  assert.equal(lines[0].amount_usd, 215);
+  assert.equal(lines[0].percent, 20);
+  assert.equal(lines[0].amount_usd, 172);
   assert.equal(lines[0].state, "frozen", "до полной оплаты заморожено, как у всех");
   const paid = accrualsOf(project(), [{ project_id: "lg1", amount_usd: 2_000 }], earners);
   assert.equal(paid[0].state, "earned");
@@ -127,4 +130,38 @@ test("после оплаты статус и ступени лида лидог
   assert.match(read("lib/admin/sales-stages-store.ts"), /lockedAfterPay\(ownLeadId, staff\)\) return "paid"/);
   assert.match(read("components/admin/sales-stages.tsx"), /case "paid":/);
   assert.match(read("content/admin-panel/lead-card.ts"), /paid: \{/);
+});
+
+test("лидогенерация: остаток после ведущего — владельцу целиком, в «К делению» не идёт", () => {
+  const EGOR = "egor";
+  const lg = project();
+  const web: ProjectMoney = { ...project({ id: "web1", product: null, tax_percent: 0, dev_cost_usd: 0 }), amount_usd: 1_000 };
+  const people = new Map<string, Earner>([
+    ...earners,
+    [EGOR, { id: EGOR, grade: "head", rate_percent: null, head_staff_id: null, founder_percent: 70 }],
+  ]);
+  const payments = [
+    { project_id: "lg1", amount_usd: 2_000 },
+    { project_id: "web1", amount_usd: 1_000 },
+  ];
+  const accruals = [lg, web].flatMap((p) => accrualsOf(p, payments, people));
+  const pool = foundersPool([lg, web], payments, accruals, []);
+  // 860 прибыли − 172 ведущему = 688 — владельцу; веб-проект идёт в котёл как раньше.
+  assert.equal(pool.own, 688);
+  assert.equal(pool.ownFrozen, 0);
+  assert.ok(pool.pool > 0 && pool.pool < 1_000, "в котле только веб-проект");
+  const founders = [
+    { id: EGOR, founder_percent: 70 },
+    { id: HEAD, founder_percent: 30 },
+  ];
+  const [egor, alex] = founderPayouts(pool.pool, founders, [], { staff_id: EGOR, amount_usd: pool.own });
+  assert.equal(egor?.own, 688);
+  assert.equal(alex?.own, 0, "Александру с лидогенерации ничего");
+  assert.equal(egor!.total + alex!.total, pool.pool + pool.own);
+  // Не оплачено целиком — ждёт отдельно и тоже мимо котла.
+  const half = [{ project_id: "lg1", amount_usd: 500 }];
+  const frozen = foundersPool([lg], half, accrualsOf(lg, half, people), []);
+  assert.equal(frozen.own, 0);
+  assert.equal(frozen.ownFrozen, 688);
+  assert.equal(frozen.frozen, 0);
 });

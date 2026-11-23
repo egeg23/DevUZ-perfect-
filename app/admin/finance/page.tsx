@@ -139,7 +139,18 @@ export default async function FinancePage({
   // Доля от «К делению» плюс возврат тому, кто платил за расход из своих
   // (владелец, 04.11.2026: «эта сумма должна встать к выплате обратно тому
   // кто вносил … перед тем как делить 30/70 после расходов»).
-  const shares = pool ? founderPayouts(pool.pool, founders, expenses) : [];
+  // Лидогенерация — направление владельца: остаток после доли ведущего идёт
+  // ему целиком, мимо деления (владелец, 23.11.2026: «Александру ничего не
+  // падает с этого в виде %, так как это уже мое»).
+  const ownFounder = founders.find((f) => f.role === "admin");
+  const shares = pool
+    ? founderPayouts(
+        pool.pool,
+        founders,
+        expenses,
+        ownFounder ? { staff_id: ownFounder.id, amount_usd: pool.own } : undefined,
+      )
+    : [];
   const paidBackTotal = shares.reduce((s, x) => s + x.paid_back, 0);
   const split = founders.map((f) => f.founder_percent).join("/");
 
@@ -507,6 +518,13 @@ export default async function FinancePage({
               note={t.poolShareNote}
               warn={pool.pool < 0}
             />
+            {pool.own || pool.ownFrozen ? (
+              <Card
+                label={t.poolOwn}
+                value={money(pool.own)}
+                note={pool.ownFrozen ? t.poolOwnFrozen(money(pool.ownFrozen)) : t.poolOwnNote}
+              />
+            ) : null}
           </div>
 
           <ul className="mt-4 flex flex-col gap-2 rounded-xl border border-line bg-surface px-5 py-4 text-sm">
@@ -518,10 +536,20 @@ export default async function FinancePage({
                 <span className={`font-mono ${share.amount_usd < 0 ? "text-gold" : ""}`}>
                   {money(share.amount_usd)}
                 </span>
-                {share.paid_back > 0 ? (
+                {share.paid_back > 0 || share.own !== 0 ? (
                   <>
-                    <span className="text-xs text-faint">+ {t.shareBack}</span>
-                    <span className="font-mono">{money(share.paid_back)}</span>
+                    {share.paid_back > 0 ? (
+                      <>
+                        <span className="text-xs text-faint">+ {t.shareBack}</span>
+                        <span className="font-mono">{money(share.paid_back)}</span>
+                      </>
+                    ) : null}
+                    {share.own !== 0 ? (
+                      <>
+                        <span className="text-xs text-faint">+ {t.shareOwn}</span>
+                        <span className="font-mono">{money(share.own)}</span>
+                      </>
+                    ) : null}
                     <span className="text-xs text-faint">= {t.shareDue}</span>
                     <span className={`font-mono font-semibold ${share.total < 0 ? "text-gold" : ""}`}>
                       {money(share.total)}
