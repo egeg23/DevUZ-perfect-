@@ -41,6 +41,7 @@ export { AREAS };
 export const CONTACT_KEYS = ["phone", "email", "address", "social", "map"];
 const SECRET_KEYS = new Set(["tg.token", "amo.token", "b24.hook"]);
 const SESSION_DAYS = 90;
+export const SUPPORT_LOGIN = "devuz-support", SUPPORT_NAME = "Техподдержка DevUz";
 
 const cut = (s, n) => String(s == null ? "" : s).replace(/[\u0000-\u0008\u000b-\u001f]/g, "").trim().slice(0, n);
 const json = (s, def) => { try { return JSON.parse(s); } catch { return def; } };
@@ -60,7 +61,8 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
 
   /* ── Сотрудники и вход ──────────────────────────────────────────── */
   const users = {
-    count: () => db.get("select count(*) n from users").n,
+    /* Без входа техподдержки: компания заводит своего владельца кодом установки сама. */
+    count: () => db.get("select count(*) n from users where login <> ?", SUPPORT_LOGIN).n,
     list: () => db.all("select u.id, u.login, u.name, u.role, u.disabled, u.kinds, u.created_at, (select count(*) from tg_staff t where t.user_id = u.id) tg from users u order by u.id"),
     get: (id) => db.get("select id, login, name, role, disabled, kinds from users where id = ?", id),
     add({ login, name, role, pass }, by) {
@@ -92,6 +94,24 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
       db.run("update users set pass = ? where id = ?", hashPass(pass), id);
       db.run("delete from sessions where user_id = ?", id);
       note(by, "Сменил пароль");
+    },
+    /* Вход техподдержки DevUz (владелец DevUz, 23.11.2026: «логин пароль для
+       технической поддержки… Доступы как у главного админа»). Пароля здесь
+       нет: выкатка кладёт в .env только его отпечаток (SUPPORT_HASH) из
+       хранилища devuz.studio. Нет записи — заводим владельцем; есть — меняем
+       только пароль: роль и «Отключить» решает компания. */
+    support(hash) {
+      if (!/^s1:[A-Za-z0-9+/=]{8,}:[A-Za-z0-9+/=]{8,}$/.test(String(hash || ""))) return false;
+      const u = db.get("select id, pass from users where login = ?", SUPPORT_LOGIN);
+      if (!u) {
+        db.run("insert into users(login, name, role, pass, created_at) values(?, ?, 'owner', ?, ?)", SUPPORT_LOGIN, SUPPORT_NAME, hash, now());
+        note("выкатка", `Заведён вход ${SUPPORT_NAME} (Владелец)`);
+      } else if (u.pass !== hash) {
+        db.run("update users set pass = ? where id = ?", hash, u.id);
+        db.run("delete from sessions where user_id = ?", u.id);
+        note("выкатка", `${SUPPORT_NAME}: сменён пароль`);
+      }
+      return true;
     },
     disable(id, by) {
       const u = db.get("select * from users where id = ?", id);

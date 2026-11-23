@@ -850,3 +850,35 @@ test("czechfarm: перевод в панели — свой блок, ново�
     assert.equal(off.news.find((x: any) => x.id === off.id).uz.title, "");
   } finally { await a.close(); }
 });
+
+test("czechfarm: вход техподдержки DevUz — владелец по отпечатку, пароля в репозитории нет", async () => {
+  const { openDb } = await load("lib/db.mjs");
+  const { makeCore, SUPPORT_LOGIN } = await load("lib/core.mjs");
+  const { hashPass } = await load("lib/crypt.mjs");
+  const db = openDb(":memory:");
+  const core = makeCore({ db, secret: "test-secret-0123456789" });
+  assert.equal(core.users.support("не отпечаток"), false);
+  const h1 = hashPass("pass-one-123456");
+  assert.equal(core.users.support(h1), true);
+  const u = db.get("select * from users where login = ?", SUPPORT_LOGIN);
+  assert.equal(u.role, "owner");
+  /* Компания всё равно заводит своего владельца кодом установки. */
+  assert.equal(core.users.count(), 0);
+  assert.ok(core.auth.login(SUPPORT_LOGIN, "pass-one-123456"));
+  /* Новый отпечаток — новый пароль, сессии сброшены; отключение компанией не снимаем. */
+  db.run("update users set disabled = 1 where id = ?", u.id);
+  core.users.support(hashPass("pass-two-123456"));
+  assert.ok(!core.auth.login(SUPPORT_LOGIN, "pass-two-123456"));
+  db.run("update users set disabled = 0 where id = ?", u.id);
+  assert.ok(core.auth.login(SUPPORT_LOGIN, "pass-two-123456"));
+  assert.ok(!core.auth.login(SUPPORT_LOGIN, "pass-one-123456"));
+  /* Выкатка: отпечаток — из хранилища devuz.studio по пропуску GitHub, в .env — только SUPPORT_HASH. */
+  const wf = readFileSync(".github/workflows/czechfarm-app.yml", "utf8");
+  assert.match(wf, /api\/czechfarm\/support/);
+  assert.match(wf, /::add-mask::\$H/);
+  assert.match(readFileSync(new URL("deploy/remote.sh", APP), "utf8"), /SUPPORT_HASH=/);
+  assert.match(readFileSync(new URL("server.mjs", APP), "utf8"), /core\.users\.support\(env\.SUPPORT_HASH\)/);
+  const route = readFileSync("app/api/czechfarm/support/route.ts", "utf8");
+  assert.match(route, /verifyGithubOidc/);
+  assert.doesNotMatch(route, /CZECHFARM_SUPPORT_PASS"\)/);
+});

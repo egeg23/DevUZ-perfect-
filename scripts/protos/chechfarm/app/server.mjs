@@ -504,6 +504,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const db = openDb(join(dataDir, "czechfarm.db"));
   const core = makeCore({ db, secret: env.APP_SECRET, publicUrl });
   const handle = createApp({ core, siteDir: env.SITE_DIR || join(dir, "site"), adminDir: join(dir, "admin"), dataDir, setupCode: env.SETUP_CODE || "", publicUrl, trustProxy: env.TRUST_PROXY === "1", commit: env.COMMIT || "", sceneKey: env.SCENE_KEY || "" });
+  if (env.SUPPORT_HASH) core.users.support(env.SUPPORT_HASH);
   const port = Number(env.PORT || 3000);
   /* Рассылки уходят порциями в фоне. */
   setInterval(() => { if (core.aud.bc.pending()) core.aud.bc.tick().catch((e) => console.error("рассылка", e.message)); }, 3000).unref();
