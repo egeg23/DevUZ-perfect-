@@ -39,6 +39,26 @@ export async function translate(from, to, items, { env = process.env, fetchFn = 
   }
 }
 
+/* Какие столбцы таблицы партнёров что значат: заголовки и до 5 строк уходят
+   на devuz.studio (тот же пропуск и срок, Haiku). Не вышло — null. */
+export async function columns(headers, sample, { env = process.env, fetchFn = fetch } = {}) {
+  if (!trState(env).on) return null;
+  try {
+    const r = await fetchFn(URL_.replace(/\/translate$/, "/columns"), {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: "Bearer " + env.DEVUZ_TRANSLATE_TOKEN },
+      body: JSON.stringify({ headers, sample: sample.slice(0, 5) }),
+      signal: AbortSignal.timeout(30_000),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.ok || !j.map) { console.error("столбцы: devuz ответил", r.status, j.why || ""); return null; }
+    return j.map;
+  } catch (e) {
+    console.error("столбцы: devuz не ответил —", e?.name || e);
+    return null;
+  }
+}
+
 const same = (a, b) => JSON.stringify(a || {}) === JSON.stringify(b || {});
 const filled = (o) => Object.values(o || {}).some((v) => String(v || "").trim());
 

@@ -270,7 +270,7 @@
     return api("/ir").then(function (j) {
       var b = head(main, "Комната инвестора");
       b.innerHTML = '<p class="note">Инвестор получает личную ссылку и видит в ней документы ниже. Каждое открытие пишется в журнал: кто и когда. Закрытая ссылка больше не открывается.</p>' +
-        '<h2>Документы</h2><div class="card grid"><div class="grid g2"><label class="f">Название (например, «Презентация компании»)<input id="dt"></label><label class="f">PDF до 25 МБ<input type="file" accept="application/pdf" id="df"></label></div><div class="row"><button class="btn pri" id="dadd">Добавить документ</button></div>' +
+        '<h2>Документы</h2><div class="card grid"><div class="grid g2"><label class="f">Название (например, «Презентация компании»)<input id="dt"></label><label class="f">Файл до 50 МБ: PDF, Word, Excel, PowerPoint, OpenDocument, CSV, TXT или фото<input type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.odt,.ods,.odp,.rtf,.csv,.txt,.jpg,.jpeg,.png,.webp" id="df"></label></div><div class="row"><button class="btn pri" id="dadd">Добавить документ</button></div>' +
         (j.docs.length ? '<table class="resp"><tbody>' + j.docs.map(function (d) { return "<tr><td><b>" + h(d.title) + '</b><br><span class="note">' + h(d.name) + " · " + (d.size / 1048576).toFixed(1) + " МБ · " + dt(d.at) + '</span></td><td><button class="btn warn" data-dd="' + d.id + '">Удалить</button></td></tr>'; }).join("") + "</tbody></table>" : '<p class="note">Документов пока нет.</p>') + "</div>" +
         '<h2>Ссылки инвесторам</h2><div class="card grid"><div class="grid g4"><label class="f">Кому *<input id="ln"></label><label class="f">Фонд или компания<input id="lo"></label><label class="f">Язык комнаты<select id="ll">' + M.langs.map(function (l) { return '<option value="' + l + '">' + LANG_NAME[l] + "</option>"; }).join("") + '</select></label><div class="row"><button class="btn pri" id="ladd">Выдать ссылку</button></div></div><p id="lnew"></p>' +
         (j.links.length ? '<table class="resp"><thead><tr><th>Кому</th><th>Выдал</th><th>Открывали</th><th></th></tr></thead><tbody>' + j.links.map(function (l) { return "<tr><td><b>" + h(l.name) + "</b>" + (l.org ? ", " + h(l.org) : "") + '<br><span class="note">' + h(l.url) + '</span></td><td>' + h(l.created_by) + "<br>" + dt(l.created_at) + "</td><td>" + l.views + " раз" + (l.last_at ? "<br>последний — " + dt(l.last_at) : "") + '</td><td class="row">' + (l.revoked ? '<span class="pill off">закрыта</span>' : '<button class="btn" data-cp="' + h(l.url) + '">Скопировать</button><button class="btn warn" data-rv="' + h(l.token) + '">Закрыть</button>') + '<button class="btn" data-vw="' + h(l.token) + '">Журнал</button></td></tr>'; }).join("") + "</tbody></table>" : '<p class="note">Ссылок пока нет.</p>') + '<div id="vw"></div></div>';
@@ -396,7 +396,8 @@
       var hide = []; $$("[data-show]", b).forEach(function (c) { if (!c.checked) hide.push(c.getAttribute("data-show")); });
       var images = {}, order = null;
       if (!only) { $$(".pgi", b).forEach(function (x) { images[x.getAttribute("data-ih")] = { v: x.getAttribute("data-v"), def: x.getAttribute("data-def") }; }); if (moved || j.order.length) order = $$(".pgb[data-mv]", b).map(function (d) { return d.getAttribute("data-b"); }); }
-      return api("/pages", { lang: j.lang, page: j.page, texts: texts, hide: hide, images: images, order: order }).then(function (n) { toast("Сохранено, на сайте уже видно"); drawPages(main, n); }).catch(fail);
+      if (texts && j.translate && j.translate.on) toast("Сохраняем и переводим…");
+      return api("/pages", { lang: j.lang, page: j.page, texts: texts, hide: hide, images: images, order: order }).then(function (n) { toast("Сохранено, на сайте уже видно." + trSaid(n.tr), !!(n.tr && n.tr.failed)); drawPages(main, n); }).catch(fail);
     }
     $("#pgs").addEventListener("click", function () { var t = {}; $$("[data-h]", b).forEach(function (i) { t[i.getAttribute("data-h")] = { v: i.value.trim(), def: i.getAttribute("data-def") }; }); send(t); });
     $$("[data-drop]", b).forEach(function (x) { x.addEventListener("click", function () { var t = {}; var k = x.getAttribute("data-drop"), o = { v: "", def: x.getAttribute("data-def") };
@@ -495,6 +496,41 @@
           return "<tr><td><b>" + h(a.name) + "</b>" + (a.org ? ", " + h(a.org) : "") + '<br><span class="note">' + (a.kind === "partner" ? "партнёр" : "клиент") + (a.country ? " · " + h(a.country) : "") + "</span></td><td>" + h(a.email) + (a.phone ? "<br>" + h(a.phone) : "") + (a.tg ? '<br><span class="pill">Telegram</span>' : "") + "</td><td>" + dt(a.created_at) + '</td><td><span class="pill ' + (a.status === "pending" ? "new" : a.status === "active" ? "done" : "spam") + '">' + h(a.statusName) + "</span>" + (a.approved_by ? '<br><span class="note">' + h(a.approved_by) + "</span>" : "") + '</td><td class="row">' + (staff() ? (a.status !== "active" ? '<button class="btn pri" data-st="active" data-id="' + a.id + '">' + (a.status === "pending" ? "Одобрить" : "Разблокировать") + "</button>" : "") + (a.status !== "blocked" ? '<button class="btn warn" data-st="blocked" data-id="' + a.id + '">Заблокировать</button>' : "") : "") + "</td></tr>";
         }).join("") + "</tbody></table>" : '<div class="card note">Регистраций пока нет.</div>');
       $$("[data-st]", b).forEach(function (x) { x.addEventListener("click", function () { var st = x.getAttribute("data-st"); if (st === "blocked" && !confirm("Заблокировать кабинет? Человек сразу выйдет и не сможет войти.")) return; api("/accounts/" + x.getAttribute("data-id"), { status: st }).then(function () { toast("Сохранено"); accounts(main); }).catch(fail); }); });
+      var pw = document.createElement("div"); b.appendChild(pw);
+      return api("/partners").then(function (p) { partnerList(pw, p.partners, main); });
+    });
+  }
+  /* Партнёры из таблицы: загрузка Excel или CSV, столбцы разбирает Haiku (нет — по заголовкам),
+     в рассылке — когда партнёр сам нажал /start в боте. */
+  var PL_F = [["name", "Имя"], ["org", "Компания"], ["phone", "Телефон"], ["email", "Почта"], ["country", "Страна"], ["city", "Город"], ["tg", "Telegram"], ["note", "Заметка"]];
+  var PL_ST = { "in": ["в боте", "done"], out: ["не в боте", "new"], blocked: ["заблокировал бота", "spam"] };
+  function partnerList(box, list, main) {
+    var n = { "in": 0, out: 0, blocked: 0 }; list.forEach(function (p) { n[p.state]++; });
+    box.innerHTML = '<h2>Партнёры из таблицы</h2><p class="note">Загрузите таблицу партнёров из Excel (.xlsx) или CSV: столбцы разберутся сами, их можно поправить перед загрузкой. Партнёр попадает в рассылку «Партнёрам», когда сам нажмёт «Старт» в боте: по своей личной ссылке, по нику Telegram из таблицы или поделившись номером. «В боте» — нажал и не заблокировал бота.</p>' +
+      (staff() ? '<div class="card grid"><label class="f">Таблица Excel (.xlsx) или CSV<input type="file" accept=".xlsx,.csv,.txt" id="plf"></label><div class="row"><button class="btn pri" id="plread">Прочитать таблицу</button></div><div id="plprev"></div></div>' : "") +
+      (list.length ? '<p><b>Всего ' + list.length + '</b> · в боте ' + n["in"] + ' · не в боте ' + n.out + (n.blocked ? " · заблокировали " + n.blocked : "") + '</p><table class="resp"><thead><tr><th>Партнёр</th><th>Контакт</th><th>Бот</th><th></th></tr></thead><tbody>' + list.map(function (p) {
+        var st = PL_ST[p.state];
+        return "<tr><td><b>" + h(p.name || p.org) + "</b>" + (p.name && p.org ? ", " + h(p.org) : "") + ((p.country || p.city) ? '<br><span class="note">' + h([p.country, p.city].filter(Boolean).join(", ")) + "</span>" : "") + "</td><td>" + [p.phone, p.email, p.tg].filter(Boolean).map(h).join("<br>") + '</td><td><span class="pill ' + st[1] + '">' + st[0] + "</span>" + (p.joined_at ? '<br><span class="note">с ' + dt(p.joined_at) + "</span>" : "") + '</td><td class="row">' + (p.link && p.state === "out" ? '<button class="btn" data-plcp="' + h(p.link) + '">Ссылка в бот</button>' : "") + (staff() ? '<button class="btn warn" data-pldel="' + p.id + '">Убрать</button>' : "") + "</td></tr>";
+      }).join("") + "</tbody></table>" : '<div class="card note">Партнёров из таблицы пока нет.</div>');
+    $$("[data-plcp]", box).forEach(function (x) { x.addEventListener("click", function () { navigator.clipboard.writeText(x.getAttribute("data-plcp")).then(function () { toast("Ссылка скопирована: отправьте её партнёру"); }, function () { toast("Не скопировалось", true); }); }); });
+    $$("[data-pldel]", box).forEach(function (x) { x.addEventListener("click", function () { if (confirm("Убрать партнёра из списка?")) api("/partners/" + x.getAttribute("data-pldel") + "/del", {}).then(function (r) { partnerList(box, r.partners, main); }).catch(fail); }); });
+    var rd = $("#plread", box); if (!rd) return;
+    rd.addEventListener("click", function () {
+      rd.disabled = true; toast("Читаем таблицу…");
+      readFile($("#plf", box)).then(function (f) { return api("/partners/read", { data: f.data, name: f.name }); }).then(function (t) {
+        rd.disabled = false;
+        var opts = function (sel) { return '<option value="-1">— нет —</option>' + t.headers.map(function (hh, i) { return '<option value="' + i + '"' + (sel === i ? " selected" : "") + ">" + h(hh || "Столбец " + (i + 1)) + "</option>"; }).join(""); };
+        var pv = $("#plprev", box);
+        pv.innerHTML = '<p class="note">' + (t.by === "ai" ? "Столбцы разобрал Haiku" : "Столбцы подобраны по заголовкам") + ". Строк в таблице: " + t.rows.length + ". Проверьте, что где лежит:</p>" +
+          '<div class="grid g4">' + PL_F.map(function (f) { return '<label class="f">' + f[1] + '<select class="i" data-plf="' + f[0] + '">' + opts(t.map[f[0]]) + "</select></label>"; }).join("") + "</div>" +
+          '<table class="resp"><tbody>' + t.rows.slice(0, 3).map(function (r) { return "<tr>" + r.slice(0, 8).map(function (c) { return "<td>" + h(c) + "</td>"; }).join("") + "</tr>"; }).join("") + "</tbody></table>" +
+          '<div class="row"><button class="btn pri" id="plgo">Добавить партнёров: ' + t.rows.length + "</button></div>";
+        $("#plgo", pv).addEventListener("click", function () {
+          var map = {}; $$("[data-plf]", pv).forEach(function (s) { map[s.getAttribute("data-plf")] = Number(s.value); });
+          $("#plgo", pv).disabled = true;
+          api("/partners/import", { rows: t.rows, map: map }).then(function (r) { toast("Добавлено: " + r.added + (r.dup ? ", уже были в списке: " + r.dup : "") + (r.empty ? ", без имени или контакта: " + r.empty : "")); partnerList(box, r.partners, main); }).catch(function (e) { $("#plgo", pv).disabled = false; fail(e); });
+        });
+      }).catch(function (e) { rd.disabled = false; fail(e); });
     });
   }
 

@@ -48,7 +48,21 @@ function nekScene() {
   const b = land.indexOf("/* ── Конструктор DevUz");
   if (a < 0 || b < a) throw new Error("nek/land.js изменился: не нашлась сцена пролёта");
   const helpers = "var d=document,w=window,$=function(s,r){return(r||d).querySelector(s)},$$=function(s,r){return[].slice.call((r||d).querySelectorAll(s))};var D={root:K.base,img:K.img,n:K.scene.n,vn:K.scene.vn,fps:K.scene.fps,ch:[]};var RM=REDUCED;function cl(x){return x<0?0:x>1?1:x}function pad(n,k){n=String(n);while(n.length<(k||2))n='0'+n;return n}";
-  return `(function(){${helpers}\n${land.slice(a, b)}\n})()`;
+  let body = land.slice(a, b);
+  /* Боевой сайт: сцена оживает только когда загружены все кадры, до того —
+     постеры и счётчик загрузки по центру (владелец DevUz, 23.11.2026: «Видео
+     лагает при скроле на моменте насыпания таблеток и дальше… Может сначала
+     прогрузить видео, сделать загрузку и потом только его показывать? Кадры
+     не все грузятся видимо»). Раньше сцена шла с двух кадров, и пока
+     остальные качались, прокрутка показывала ближний загруженный — рывками.
+     Кадры качаются по 10 разом, не по 6. Макет — как был. */
+  if (process.env.CF_PROD === "1") {
+    for (const [from, to] of [["if(got>=2&&!ready)", "if(done>=F&&!ready)"], ["for(i=0;i<6;i++)next()", "for(i=0;i<10;i++)next()"]]) {
+      if (!body.includes(from)) throw new Error("nek/land.js изменился: нет " + from);
+      body = body.replace(from, to);
+    }
+  }
+  return `(function(){${helpers}\n${body}\n})()`;
 }
 const PREMIUM = readFileSync(DIR + "premium.js", "utf8");
 if (!PREMIUM.includes("__NEK_SCENE__;")) throw new Error("premium.js: нет места для движка сцены");

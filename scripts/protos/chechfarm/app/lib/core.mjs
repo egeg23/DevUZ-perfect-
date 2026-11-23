@@ -457,7 +457,13 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
       }
       if (f) { const q = db.get("select a from faq where id = ?", Number(f[1])); await bot.answer(u.id, ""); if (q) await bot.send(u.chat, q.a); return; }
       const k = /^kind:(partner|client)$/.exec(u.data);
-      if (k && !staffRow) { aud.subs.setKind(u.chat, k[1]); await bot.answer(u.id, "Спасибо!"); return sendFaq(u.chat, k[1] === "partner" ? botText("kindPartner") : botText("kindClient")); }
+      if (k && !staffRow) {
+        aud.subs.setKind(u.chat, k[1]); await bot.answer(u.id, "Спасибо!");
+        /* Партнёр, которого нет в списке: просим номер — по нему найдём его в загруженной таблице. */
+        if (k[1] === "partner" && !db.get("select 1 from partner_list where chat = ?", u.chat) && db.get("select 1 from partner_list where chat = '' limit 1"))
+          await bot.send(u.chat, "Если ваша компания уже работает с CZECHFARM, поделитесь номером: найдём вас в списке партнёров.", { reply_markup: { keyboard: [[{ text: "Поделиться номером", request_contact: true }]], resize_keyboard: true, one_time_keyboard: true } });
+        return sendFaq(u.chat, k[1] === "partner" ? botText("kindPartner") : botText("kindClient"));
+      }
       const b = /^bc:(all|partner|client|no)$/.exec(u.data);
       if (b && staffRow && staffRow.role !== "manager") {
         const d = db.get("select * from bc_drafts where chat = ?", u.chat);
@@ -514,6 +520,18 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
       return bot.send(u.chat, staffRow.role === "manager" ? "Это бот для обращений. Чтобы ответить клиенту, ответьте (Reply) на его обращение." : "Это бот для обращений. Ответ клиенту — Reply на его обращение. Рассылка подписчикам — команда /рассылка.");
     }
 
+    /* Партнёр из таблицы находит себя: личная ссылка, ник Telegram или номер. */
+    if (u.kind === "message") {
+      const code = u.start && /^p\w{6,}$/.test(u.start) ? u.start : "";
+      const hit = aud.pl.find({ chat: u.chat, code, username: u.username, phone: u.contact });
+      const off = u.contact ? { reply_markup: { remove_keyboard: true } } : {};
+      if (hit?.fresh) {
+        await bot.send(u.chat, `Готово${hit.p.name ? ", " + hit.p.name : ""}: вы в списке партнёров CZECHFARM. Новости и рассылки для партнёров будут приходить сюда.`, off);
+        if (code || u.contact || u.start !== null) return sendFaq(u.chat, "");
+      } else if (u.contact) {
+        return bot.send(u.chat, "Спасибо! Этого номера пока нет в нашем списке партнёров. Напишите название компании, и команда добавит вас.", off);
+      }
+    }
     /* Клиент. */
     if (u.start !== null) {
       await sendHello(u.chat);
@@ -698,7 +716,18 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
   const pageOk = (p) => p === "*" || PAGES.includes(p);
   const site = {
     texts: (lang, page) => Object.fromEntries(db.all("select h, v from site_text where lang in ('*', ?) and page in ('*', ?)", lang, page).map((r) => [r.h, r.v])),
-    own: (lang, page) => db.all("select h, v, def from site_text where lang in ('*', ?) and page = ?", lang, page),
+    own: (lang, page) => db.all("select h, v, def, auto from site_text where lang in ('*', ?) and page = ?", lang, page),
+    /* Перевод правки на другой язык (сервер, translateTexts): пишется с auto = 1,
+       ручную правку этого языка не трогает. v пустое — убрать прежний перевод. */
+    setAuto(lang, page, h, v, def) {
+      if (!LANGS.includes(lang) || !pageOk(page) || !/^[0-9a-f]{12}$/.test(h)) return false;
+      const was = db.get("select auto from site_text where lang = ? and page = ? and h = ?", lang, page, h);
+      if (was && !was.auto) return false;
+      v = cut(v, 1200).replace(/\s+/g, " ");
+      if (v && v !== def) db.run("insert into site_text(lang, page, h, v, def, auto) values(?, ?, ?, ?, ?, 1) on conflict(lang, page, h) do update set v = excluded.v, def = excluded.def, auto = 1", lang, page, h, v, cut(def, 1200));
+      else if (was) db.run("delete from site_text where lang = ? and page = ? and h = ?", lang, page, h);
+      changed(); return true;
+    },
     hidden: (page) => getS("site.hide." + page).split(",").filter(Boolean),
     order: (page) => getS("site.order." + page).split(",").filter(Boolean),
     /* Свои блоки страницы (custom-blocks.mjs), на все языки сразу. */
@@ -719,7 +748,10 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
       db.tx(() => { for (const [h, x] of Object.entries(texts || {})) {
         if (!/^[0-9a-f]{12}$/.test(h)) continue;
         const v = cut(x?.v, 1200).replace(/\s+/g, " "), def = cut(x?.def, 1200);
-        if (v && v !== def) db.run("insert into site_text(lang, page, h, v, def) values(?, ?, ?, ?, ?) on conflict(lang, page, h) do update set v = excluded.v, def = excluded.def", lang, page, h, v, def);
+        const was = db.get("select v, auto from site_text where lang = ? and page = ? and h = ?", lang, page, h);
+        /* Панель шлёт все тексты блока: нетронутый перевод (тот же текст) остаётся переводом. */
+        if (was?.auto && was.v === v) continue;
+        if (v && v !== def) db.run("insert into site_text(lang, page, h, v, def, auto) values(?, ?, ?, ?, ?, 0) on conflict(lang, page, h) do update set v = excluded.v, def = excluded.def, auto = 0", lang, page, h, v, def);
         else db.run("delete from site_text where lang = ? and page = ? and h = ?", lang, page, h);
         n++;
       }
@@ -794,7 +826,7 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
   const log = () => db.all("select l.at, l.who, l.t, l.lead_id, ld.no from log l left join leads ld on ld.id = l.lead_id order by l.id desc limit 300");
 
   return {
-    aud, users, auth, connect, settingsView, leads, faq, products, hero, news, seo, contacts, ir, summary, log, live, seoFor, site, botProfile, catTr,
+    botName: () => getS("tg.bot"), aud, users, auth, connect, settingsView, leads, faq, products, hero, news, seo, contacts, ir, summary, log, live, seoFor, site, botProfile, catTr,
     hook, tgSecret: () => getS("tg.secret"), counters: () => ({ metrika: getS("seo.metrika"), yandex: getS("seo.yandex"), google: getS("seo.google") }),
     version: () => version, leadText,
   };

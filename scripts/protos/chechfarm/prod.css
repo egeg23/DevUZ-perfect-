@@ -24,3 +24,9 @@
   .hero-in{padding-bottom:calc(clamp(96px,12svh,140px) / var(--tvz))}
   .dlg-in{max-height:calc(92svh / var(--tvz))}
 }
+/* Сцена первого экрана оживает, только когда загружены все кадры (владелец
+   DevUz, 23.11.2026: «сначала прогрузить видео, сделать загрузку и потом
+   только его показывать»): пока качается, счётчик заметен — тёмная плашка,
+   полоса шире. */
+.hs-load:not(.ok){padding:12px 16px;border-radius:14px;background:rgb(7 26 24 / .62);box-shadow:0 8px 24px rgb(0 0 0 / .25)}
+.hs-load:not(.ok) i{width:180px;height:4px}
