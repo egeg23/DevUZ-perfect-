@@ -27,6 +27,7 @@ import { localeHref, t, type Locale } from "@/lib/i18n";
 import { CardVideo } from "./card-video";
 import { HeroVideo } from "./hero-video";
 import { InstantMaker } from "./instant-maker";
+import { LeadgenBlock } from "./leadgen-block";
 import { ProtoForm } from "./proto-form";
 import s from "./glass.module.css";
 
@@ -333,6 +334,13 @@ export function GlassHome({ locale, dict }: { locale: Locale; dict: Dictionary }
       </section>
 
       </CodeBoot>
+
+      {/* Лидогенерация — только русская главная (content/leadgen.ts). */}
+      {locale === "ru" ? (
+        <CodeBoot code={"leads.filter((l) => l.called && l.ready)"} calmIfVisible>
+          <LeadgenBlock />
+        </CodeBoot>
+      ) : null}
 
       {/* Прежние блоки главной — обратно (владелец, 13.11.2026: «Верни те
           блоки, которые были раньше, а те новые которые сделали — оставь на
