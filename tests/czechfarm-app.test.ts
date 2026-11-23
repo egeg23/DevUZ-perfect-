@@ -1084,6 +1084,8 @@ test("czechfarm: правка текста страницы — своё «Со�
     const js = readFileSync(new URL("admin/app.js", APP), "utf8");
     assert.match(js, /data-sv disabled>Сохранить</); assert.doesNotMatch(js, /id="pgs"/);
   } finally { await a.close(); }
+});
+
 test("czechfarm: «Наши партнёры» — настоящие логотипы бегущей строкой на главной и «Партнёрам»", async () => {
   /* Владелец DevUz, 23.11.2026: «партнеры (логотипы их), надо сделать бегущей строкой», «Найди лого и вставь тоже». */
   const list = JSON.parse(readFileSync(new URL("partners.json", ROOT), "utf8"));
