@@ -78,6 +78,15 @@ case "${CF_TR:-}" in
   *) $SUDO sed -i '/^DEVUZ_TRANSLATE_TOKEN=/d' "$D/.env"; printf 'DEVUZ_TRANSLATE_TOKEN=%s\n' "$CF_TR" | $SUDO tee -a "$D/.env" >/dev/null; say "✓ перевод в панели подключён" ;;
 esac
 
+# Вход техподдержки DevUz: отпечаток пароля (scrypt) из хранилища devuz.studio, пароля здесь нет.
+case "${CF_SUP:-}" in
+  "") ;;
+  s1:*) if printf '%s' "$CF_SUP" | grep -Eq '^s1:[A-Za-z0-9+/=]{8,}:[A-Za-z0-9+/=]{8,}$'; then
+         $SUDO sed -i '/^SUPPORT_HASH=/d' "$D/.env"; printf 'SUPPORT_HASH=%s\n' "$CF_SUP" | $SUDO tee -a "$D/.env" >/dev/null; say "✓ вход техподдержки DevUz"
+       else say "· отпечаток техподдержки не того вида: не пишу"; fi ;;
+  *) say "· отпечаток техподдержки не того вида: не пишу" ;;
+esac
+
 say "════ Образы ════"
 if [ -n "${GH_TOKEN:-}" ]; then printf '%s' "$GH_TOKEN" | $DK login ghcr.io -u "${GH_ACTOR:-x}" --password-stdin >/dev/null; fi
 $DK pull -q "$CF_APP" >/dev/null && say "✓ сайт: ${CF_APP##*/}"
