@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 
 import { cases } from "@/content/cases";
 import { BOX_PATH } from "@/content/box";
+import { LEADGEN_PATH } from "@/content/leadgen";
 import { FRIEND_PATH } from "@/content/friend-site";
 import { MOCKUP_TERMS_PATH } from "@/content/mockup-terms";
 import { LANDING_LOCALES, LANDING_PATH } from "@/content/ai-staff/landing";
@@ -164,7 +165,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }))
     : [];
 
-  return [...aiStaff, ...razborEntries, ...articleEntries, ...paths.flatMap((entry) =>
+  // Лидогенерация — только по-русски (Россия, Беларусь, Казахстан).
+  const leadgen: MetadataRoute.Sitemap = [
+    { url: absoluteUrl(`ru/${LEADGEN_PATH}`), changeFrequency: "monthly", priority: 0.85 },
+  ];
+
+  return [...leadgen, ...aiStaff, ...razborEntries, ...articleEntries, ...paths.flatMap((entry) =>
     locales.map((locale) => {
       const languages: Record<string, string> = {};
       for (const alt of locales) {

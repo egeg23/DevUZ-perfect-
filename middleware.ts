@@ -38,6 +38,7 @@ export const LOCALE_SECTIONS = [
   "contract",
   "friend",
   "google-app",
+  "leadgen",
   "licence",
   "marketing",
   "mockup-terms",

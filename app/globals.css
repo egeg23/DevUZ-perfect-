@@ -2035,3 +2035,11 @@ html[data-menu="open"] .chat-launch {
   transform: translateY(1.5rem);
   pointer-events: none;
 }
+
+/* Лидогенерация (/ru/leadgen): мягкое свечение первого экрана, без движения. */
+.leadgen-glow {
+  background:
+    radial-gradient(60% 50% at 80% 30%, rgb(233 199 127 / 0.12), transparent 70%),
+    radial-gradient(50% 45% at 15% 70%, rgb(63 214 200 / 0.12), transparent 70%);
+  pointer-events: none;
+}
