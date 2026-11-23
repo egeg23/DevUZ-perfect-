@@ -999,3 +999,89 @@ test("czechfarm: в комнату инвестора — любые докум�
     assert.equal(r.docs[0].name, "deck.pptx");
   } finally { await a.close(); }
 });
+
+test("czechfarm: группы рассылки — сеть аптек и направление врачей, из таблицы и руками, с телефона кнопкой", async () => {
+  /* Владелец DevUz, 23.11.2026: «надо группировать рассылки (аптеки одной сети к примеру, врачи по направлениям и тд)». */
+  const a = await boot();
+  try {
+    await owner(a);
+    await a.adminPost("/connect/tg", { token: "123456:" + "A".repeat(35) });
+    const rows = [["Али", "Арзон 1", "+998 90 111 22 33", "@ali_pharma", "Аптеки Арзон"], ["Бек", "Арзон 2", "+998 91 222 33 44", "", "Аптеки Арзон; Неврологи"], ["Дана", "Клиника", "+998 93 333 44 55", "", ""]];
+    const guess = a.core.aud.pl.guess(["ФИО", "Аптека", "Телефон", "Telegram", "Сеть аптек"]);
+    assert.equal(guess.org, 1); assert.equal(guess.group, 4, "столбец «Сеть аптек» — группа, не компания");
+    let r = (await a.adminPost("/partners/import", { rows, map: { name: 0, org: 1, phone: 2, tg: 3, group: 4 } })).json;
+    assert.equal(r.added, 3); assert.equal(r.groups, 2);
+    assert.deepEqual(r.partners.find((p: any) => p.name === "Бек").groups, ["Аптеки Арзон", "Неврологи"]);
+    let au = (await a.call("/api/admin/audience")).json;
+    const arzon = au.groups.find((g: any) => g.name === "Аптеки Арзон");
+    assert.equal(arzon.total, 2); assert.equal(arzon.inBot, 0, "пока никто не пришёл в бота");
+    assert.equal((await a.adminPost("/broadcasts", { text: "Скидка сети", seg: "g:" + arzon.id })).status, 400);
+    /* Али пришёл в бота — в рассылке группы; посторонний подписчик — нет, пока его не добавили руками. */
+    await a.tg({ message: { message_id: 1, date: 1, chat: { id: 701, type: "private" }, from: { id: 701, first_name: "Али", username: "Ali_Pharma" }, text: "/start" } });
+    await a.tg({ message: { message_id: 2, date: 1, chat: { id: 801, type: "private" }, from: { id: 801, first_name: "Фарход", username: "farhod_apteka" }, text: "/start" } });
+    assert.deepEqual(a.core.aud.subs.recipients("g:" + arzon.id), ["701"]);
+    const found = (await a.call(`/api/admin/groups/${arzon.id}/find?q=${encodeURIComponent("фар")}`)).json.found;
+    assert.equal(found.length, 1); assert.equal(found[0].ref, "c:801");
+    r = (await a.adminPost(`/groups/${arzon.id}/add`, { refs: ["c:801", "c:nope", "p:99999"] })).json;
+    assert.equal(r.added, 1);
+    assert.deepEqual(a.core.aud.subs.recipients("g:" + arzon.id).sort(), ["701", "801"]);
+    const id = (await a.adminPost("/broadcasts", { text: "Скидка сети", seg: "g:" + arzon.id })).json.id;
+    await a.core.aud.bc.tick(100, null);
+    const sent = a.net.calls.filter((c: any) => c.url.endsWith("/sendMessage") && c.body.text === "Скидка сети").map((c: any) => String(c.body.chat_id)).sort();
+    assert.deepEqual(sent, ["701", "801"]);
+    assert.equal((await a.call("/api/admin/audience")).json.broadcasts.find((b: any) => b.id === id).segName, "Группа «Аптеки Арзон»");
+    /* Новая группа руками, переименование, убрать участника, убрать группу. */
+    const g2 = (await a.adminPost("/groups", { name: "  Кардиологи  " })).json.group;
+    assert.equal(g2.name, "Кардиологи");
+    assert.equal((await a.adminPost("/groups", { name: "кардиологи" })).json.group.id, g2.id, "второй такой же группы нет");
+    assert.equal((await a.adminPost(`/groups/${g2.id}/rename`, { name: "Аптеки Арзон" })).status, 400);
+    await a.adminPost(`/groups/${arzon.id}/drop`, { ref: "c:801" });
+    assert.deepEqual(a.core.aud.subs.recipients("g:" + arzon.id), ["701"]);
+    await a.adminPost(`/groups/${g2.id}/del`, {});
+    assert.equal((await a.call(`/api/admin/groups/${g2.id}`)).status, 404);
+    /* С телефона: кнопка группы, где кто-то уже в боте, и рассылка по ней. */
+    const staffChat = 555;
+    a.db.run("insert into tg_staff(chat_id, user_id, at) values(?, 1, 1)", String(staffChat));
+    await a.tg({ message: { message_id: 3, date: 1, chat: { id: staffChat, type: "private" }, from: { id: staffChat, first_name: "Владелец" }, text: "/рассылка Новинка для сети" } });
+    const ask = a.net.calls.filter((c: any) => c.url.endsWith("/sendMessage") && String(c.body.chat_id) === String(staffChat)).pop();
+    const btns = ask.body.reply_markup.inline_keyboard.flat().map((b: any) => b.callback_data);
+    assert.ok(btns.includes("bc:g" + arzon.id)); assert.ok(!btns.some((d: string) => d.startsWith("bc:g") && d !== "bc:g" + arzon.id), "группа без людей в боте кнопкой не показывается");
+    await a.tg({ callback_query: { id: "q1", from: { id: staffChat }, message: { message_id: 50, chat: { id: staffChat, type: "private" } }, data: "bc:g" + arzon.id } });
+    const last = (await a.call("/api/admin/audience")).json.broadcasts[0];
+    assert.equal(last.seg, "g:" + arzon.id); assert.equal(last.total, 1); assert.equal(last.via, "telegram");
+  } finally { await a.close(); }
+});
+
+test("czechfarm: правка текста страницы — своё «Сохранить» у поля, на сайте сразу, перевод следом", async () => {
+  /* Владелец DevUz, 23.11.2026: «когда меняем текст на сайте через панель — почему-то не сразу видно изменение. И кнопку "сохранить" сделать рядом с каждым полем». */
+  let release: () => void = () => {};
+  const gate = new Promise<void>((r) => (release = r));
+  const tr = async (from: string, to: string[], items: Record<string, string>) => { await gate; return Object.fromEntries(to.map((l) => [l, Object.fromEntries(Object.entries(items).map(([k, v]) => [k, `[${l}] ${v}`]))])); };
+  const a = await boot({ tr, trOn: () => ({ on: true, until: "2027-01-19T00:00:00+05:00" }) });
+  try {
+    await owner(a);
+    const uz = (await a.call("/api/admin/pages?lang=uz&page=home")).json;
+    const blk = uz.blocks.find((b: any) => b.texts.length > 1), t = blk.texts[1];
+    /* Перевод ещё не вернулся, а ответ и страница — уже. */
+    const r = (await a.adminPost("/pages", { lang: "uz", page: "home", quick: true, texts: { [t.h]: { v: "Yangi matn", def: t.def } } })).json;
+    assert.equal(r.ok, true); assert.ok(r.job > 0); assert.equal(r.blocks, undefined, "быстрое сохранение не тянет всю страницу");
+    const page = await a.call("/uz/");
+    assert.ok(page.text.includes("Yangi matn"), "правка не на сайте сразу");
+    assert.equal(page.headers.get("cache-control"), "no-store", "страница из памяти телефона показала бы старое");
+    assert.equal((await a.call("/api/admin/pages/tr/" + r.job)).json.pending, true);
+    release();
+    let done: any = null;
+    for (let i = 0; i < 50 && !done?.done; i++) { await new Promise((s) => setTimeout(s, 20)); done = (await a.call("/api/admin/pages/tr/" + r.job)).json; }
+    assert.ok(done.done); assert.ok(done.tr.langs.includes("en"));
+    assert.ok((await a.call("/en/")).text.includes("[en] Yangi matn"));
+    /* Галочка и порядок — без текстов и без перевода; остальные правки на месте. */
+    const hideId = uz.blocks.find((b: any) => b.canHide).id;
+    const h2 = (await a.adminPost("/pages", { lang: "uz", page: "home", quick: true, hide: [hideId] })).json;
+    assert.equal(h2.job, 0);
+    assert.ok((await a.call("/uz/")).text.includes(`#${hideId},`));
+    assert.ok((await a.call("/uz/")).text.includes("Yangi matn"), "сохранение галочки стёрло правку текста");
+    /* В панели у каждого поля своя кнопка, общей «Сохранить» наверху нет. */
+    const js = readFileSync(new URL("admin/app.js", APP), "utf8");
+    assert.match(js, /data-sv disabled>Сохранить</); assert.doesNotMatch(js, /id="pgs"/);
+  } finally { await a.close(); }
+});

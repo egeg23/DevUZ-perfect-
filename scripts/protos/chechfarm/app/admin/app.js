@@ -318,10 +318,10 @@
   function drawPages(main, j) {
     var b = head(main, "Страницы сайта"), hidden = j.hidden.slice(), rtl = j.lang === "ar" ? ' dir="rtl"' : "";
     var site = "/" + (j.lang === "ru" ? "" : j.lang + "/") + (j.page === "home" || j.page === "*" ? "" : j.page);
-    b.innerHTML = '<p class="note">Здесь правится любой текст сайта: выберите страницу и язык, поменяйте текст в нужном блоке и нажмите «Сохранить». Пустое поле — текст как был. Блок можно убрать со страницы галочкой «Показывать», переставить стрелками и заменить в нём картинку. Внизу — «Добавить свой блок»: свой раздел с заголовком, текстом, фото и кнопкой. Продукты, новости, контакты и заголовки для поиска правятся в своих разделах.</p>' +
+    b.innerHTML = '<p class="note">Здесь правится любой текст сайта: выберите страницу и язык, поменяйте текст и нажмите «Сохранить» рядом с этим полем (или Enter) — на сайте он сразу. Пустое поле — текст как был. Галочка «Показывать», стрелки порядка и замена картинки сохраняются сами, сразу. Внизу — «Добавить свой блок»: свой раздел с заголовком, текстом, фото и кнопкой. Продукты, новости, контакты и заголовки для поиска правятся в своих разделах.</p>' +
       '<div class="card grid"><div class="grid g2"><label class="f">Страница<select id="pgp">' + ["*"].concat(M.pages).map(function (p) { return '<option value="' + p + '"' + (p === j.page ? " selected" : "") + ">" + h(PAGE_NAME[p] || p) + "</option>"; }).join("") + '</select></label>' +
       '<label class="f">Язык<select id="pgl">' + M.langs.map(function (l) { return '<option value="' + l + '"' + (l === j.lang ? " selected" : "") + ">" + h(LANG_NAME[l] || l) + "</option>"; }).join("") + '</select></label></div>' +
-      '<div class="row"><input class="i" id="pgq" placeholder="Найти текст на странице"><span class="sp"></span><a class="btn" href="' + site + '" target="_blank" rel="noopener">Открыть страницу</a><button class="btn pri" id="pgs">Сохранить</button></div></div>' +
+      '<div class="row"><input class="i" id="pgq" placeholder="Найти текст на странице"><span class="sp"></span><a class="btn" href="' + site + '" target="_blank" rel="noopener">Открыть страницу</a></div></div>' +
       (j.blocks.length ? j.blocks.map(function (bl) {
         if (bl.custom) return cbCard(bl, j, hidden.indexOf(bl.id) >= 0);
         var off = hidden.indexOf(bl.id) >= 0, ch = bl.texts.filter(function (t) { return t.val; }).length + bl.images.filter(function (t) { return t.val; }).length;
@@ -333,7 +333,7 @@
           (bl.canHide ? '<label class="chk"><input type="checkbox" data-show="' + h(bl.id) + '"' + (off ? "" : " checked") + "> Показывать блок на странице</label>" : "") +
           '<div class="grid">' + bl.texts.map(function (t) {
             var big = t.def.length > 70;
-            return '<label class="f pgt" data-find="' + h((t.def + " " + t.val).toLowerCase()) + '"><span class="pgd"' + rtl + ">" + h(t.def) + "</span>" + (big ? '<textarea rows="' + Math.min(6, Math.ceil(t.def.length / 80) + 1) + '"' : '<input') + rtl + ' data-h="' + t.h + '" data-def="' + h(t.def) + '" placeholder="как на сайте сейчас"' + (big ? ">" + h(t.val) + "</textarea>" : ' value="' + h(t.val) + '">') + "</label>";
+            return '<div class="f pgt" data-find="' + h((t.def + " " + t.val).toLowerCase()) + '"><span class="pgd"' + rtl + ">" + h(t.def) + '</span><div class="pgr">' + (big ? '<textarea rows="' + Math.min(6, Math.ceil(t.def.length / 80) + 1) + '"' : '<input') + rtl + ' aria-label="' + h(t.def.slice(0, 80)) + '" data-h="' + t.h + '" data-def="' + h(t.def) + '" data-was="' + h(t.val) + '" placeholder="как на сайте сейчас"' + (big ? ">" + h(t.val) + "</textarea>" : ' value="' + h(t.val) + '">') + '<button type="button" class="btn pri pgsv" data-sv disabled>Сохранить</button></div></div>';
           }).join("") + "</div></details>";
       }).join("") : '<div class="card note">На этой странице нет текстов для правки.</div>') +
       (j.page === "*" ? "" : '<div id="cbnew"></div><div class="row"><button type="button" class="btn" id="cbadd"' + (j.customCount >= j.customMax ? " disabled" : "") + '>+ Добавить свой блок</button><span class="note">' + (j.customCount >= j.customMax ? "Своих блоков уже " + j.customMax + ", больше нельзя" : "Свой раздел: заголовок, текст, фото, кнопка. Встанет в конец страницы, дальше его можно поднять стрелками.") + "</span></div>") +
@@ -379,30 +379,57 @@
     $("#pgp").addEventListener("change", go); $("#pgl").addEventListener("change", go);
     $("#pgq").addEventListener("input", function (e) { var q = e.target.value.trim().toLowerCase(); $$(".pgt", b).forEach(function (x) { x.hidden = !!q && x.getAttribute("data-find").indexOf(q) < 0; }); if (q) $$(".pgb", b).forEach(function (d) { d.open = !!$(".pgt:not([hidden])", d); }); });
     /* Порядок: стрелка меняет блок местами с соседним; на сайт уходит по «Сохранить». */
-    var moved = false;
     $$(".pgm", b).forEach(function (x) { x.addEventListener("click", function (e) {
       e.preventDefault();
       var d = x.closest(".pgb"), up = x.hasAttribute("data-up"), o = up ? d.previousElementSibling : d.nextElementSibling;
       if (!o || !o.hasAttribute("data-mv")) { toast(up ? "Выше некуда: первый блок страницы стоит на месте" : "Это последний блок", true); return; }
-      d.parentNode.insertBefore(up ? d : o, up ? o : d); moved = true; x.focus();
-      toast("Порядок поменяется на сайте после «Сохранить»");
+      d.parentNode.insertBefore(up ? d : o, up ? o : d); x.focus();
+      quick({ order: $$(".pgb[data-mv]", b).map(function (e) { return e.getAttribute("data-b"); }) }, "Порядок блоков сохранён, на сайте уже видно.");
     }); });
     $$(".pgi", b).forEach(function (x) {
       var inp = $("input[type=file]", x), back = $("[data-iback]", x);
-      inp.addEventListener("change", function () { upload(inp).then(function (url) { x.setAttribute("data-v", url); $("img", x).src = url; back.hidden = false; toast("Картинка загружена. Нажмите «Сохранить»"); }).catch(fail); });
-      back.addEventListener("click", function () { x.setAttribute("data-v", ""); $("img", x).src = x.getAttribute("data-def"); back.hidden = true; toast("Исходная картинка вернётся после «Сохранить»"); });
+      var put = function (v, said) { var im = {}; im[x.getAttribute("data-ih")] = { v: v, def: x.getAttribute("data-def") }; return quick({ images: im }, said); };
+      inp.addEventListener("change", function () { upload(inp).then(function (url) { return put(url, "Картинка заменена, на сайте уже видно.").then(function () { x.setAttribute("data-v", url); $("img", x).src = url; back.hidden = false; inp.value = ""; }); }).catch(fail); });
+      back.addEventListener("click", function () { put("", "Вернули исходную картинку.").then(function () { x.setAttribute("data-v", ""); $("img", x).src = x.getAttribute("data-def"); back.hidden = true; }).catch(fail); });
     });
-    function send(texts, only) {
-      var hide = []; $$("[data-show]", b).forEach(function (c) { if (!c.checked) hide.push(c.getAttribute("data-show")); });
-      var images = {}, order = null;
-      if (!only) { $$(".pgi", b).forEach(function (x) { images[x.getAttribute("data-ih")] = { v: x.getAttribute("data-v"), def: x.getAttribute("data-def") }; }); if (moved || j.order.length) order = $$(".pgb[data-mv]", b).map(function (d) { return d.getAttribute("data-b"); }); }
-      if (texts && j.translate && j.translate.on) toast("Сохраняем и переводим…");
-      return api("/pages", { lang: j.lang, page: j.page, texts: texts, hide: hide, images: images, order: order }).then(function (n) { toast("Сохранено, на сайте уже видно." + trSaid(n.tr), !!(n.tr && n.tr.failed)); drawPages(main, n); }).catch(fail);
+    /* Сохранение сразу, без перерисовки: правки в соседних полях не теряются. Перевод — следом. */
+    function quick(part, said) {
+      var d = { lang: j.lang, page: j.page, quick: true }; Object.keys(part).forEach(function (k) { d[k] = part[k]; });
+      return api("/pages", d).then(function (r) {
+        toast(said + (r.job ? " Переводим на другие языки…" : ""));
+        if (r.job) trWait(r.job, said);
+        return r;
+      }, function (e) { fail(e); throw e; });
     }
-    $("#pgs").addEventListener("click", function () { var t = {}; $$("[data-h]", b).forEach(function (i) { t[i.getAttribute("data-h")] = { v: i.value.trim(), def: i.getAttribute("data-def") }; }); send(t); });
+    function trWait(job, said) {
+      var n = 0;
+      (function ask() { setTimeout(function () {
+        api("/pages/tr/" + job).then(function (r) { if (r.pending && ++n < 45) return ask(); if (r.done && r.tr && (r.tr.langs.length || r.tr.failed)) toast(said + trSaid(r.tr), !!r.tr.failed); }).catch(function () {});
+      }, 2000); })();
+    }
+    function send(texts) {
+      return api("/pages", { lang: j.lang, page: j.page, texts: texts }).then(function (n) { toast("Сохранено, на сайте уже видно." + trSaid(n.tr), !!(n.tr && n.tr.failed)); drawPages(main, n); }).catch(fail);
+    }
+    $$("[data-h]", b).forEach(function (i) {
+      var btn = i.parentNode.querySelector("[data-sv]");
+      var dirty = function () { return i.value.trim() !== i.getAttribute("data-was"); };
+      i.addEventListener("input", function () { btn.disabled = !dirty(); });
+      var save = function () {
+        if (!dirty()) return;
+        var t = {}, v = i.value.trim(); t[i.getAttribute("data-h")] = { v: v, def: i.getAttribute("data-def") };
+        btn.disabled = true;
+        quick({ texts: t }, v ? "Сохранено, на сайте уже видно." : "Вернули текст как был.").then(function () { i.setAttribute("data-was", v); btn.textContent = "Сохранено ✓"; setTimeout(function () { btn.textContent = "Сохранить"; btn.disabled = !dirty(); }, 1800); }, function () { btn.disabled = false; });
+      };
+      btn.addEventListener("click", save);
+      i.addEventListener("keydown", function (e) { if (e.key === "Enter" && (i.tagName === "INPUT" || e.ctrlKey || e.metaKey)) { e.preventDefault(); save(); } });
+    });
+    $$("[data-show]", b).forEach(function (c) { if (c.closest("[data-cb]")) return; c.addEventListener("change", function () {
+      var hide = []; $$("[data-show]", b).forEach(function (x) { if (!x.checked) hide.push(x.getAttribute("data-show")); });
+      quick({ hide: hide }, c.checked ? "Блок снова на странице." : "Блок убран со страницы.").catch(function () { c.checked = !c.checked; });
+    }); });
     $$("[data-drop]", b).forEach(function (x) { x.addEventListener("click", function () { var t = {}; var k = x.getAttribute("data-drop"), o = { v: "", def: x.getAttribute("data-def") };
       if (k.charAt(0) === "i") { var im = {}; im[k] = o; api("/pages", { lang: j.lang, page: j.page, images: im }).then(function (n) { toast("Убрано"); drawPages(main, n); }).catch(fail); }
-      else { t[k] = o; send(t, true); } }); });
+      else { t[k] = o; send(t); } }); });
   }
 
   /* ── Сайт и бот ────────────────────────────────────────────────── */
@@ -502,7 +529,7 @@
   }
   /* Партнёры из таблицы: загрузка Excel или CSV, столбцы разбирает Haiku (нет — по заголовкам),
      в рассылке — когда партнёр сам нажал /start в боте. */
-  var PL_F = [["name", "Имя"], ["org", "Компания"], ["phone", "Телефон"], ["email", "Почта"], ["country", "Страна"], ["city", "Город"], ["tg", "Telegram"], ["note", "Заметка"]];
+  var PL_F = [["name", "Имя"], ["org", "Компания"], ["phone", "Телефон"], ["email", "Почта"], ["country", "Страна"], ["city", "Город"], ["tg", "Telegram"], ["group", "Группа (сеть, направление)"], ["note", "Заметка"]];
   var PL_ST = { "in": ["в боте", "done"], out: ["не в боте", "new"], blocked: ["заблокировал бота", "spam"] };
   function partnerList(box, list, main) {
     var n = { "in": 0, out: 0, blocked: 0 }; list.forEach(function (p) { n[p.state]++; });
@@ -510,7 +537,7 @@
       (staff() ? '<div class="card grid"><label class="f">Таблица Excel (.xlsx) или CSV<input type="file" accept=".xlsx,.csv,.txt" id="plf"></label><div class="row"><button class="btn pri" id="plread">Прочитать таблицу</button></div><div id="plprev"></div></div>' : "") +
       (list.length ? '<p><b>Всего ' + list.length + '</b> · в боте ' + n["in"] + ' · не в боте ' + n.out + (n.blocked ? " · заблокировали " + n.blocked : "") + '</p><table class="resp"><thead><tr><th>Партнёр</th><th>Контакт</th><th>Бот</th><th></th></tr></thead><tbody>' + list.map(function (p) {
         var st = PL_ST[p.state];
-        return "<tr><td><b>" + h(p.name || p.org) + "</b>" + (p.name && p.org ? ", " + h(p.org) : "") + ((p.country || p.city) ? '<br><span class="note">' + h([p.country, p.city].filter(Boolean).join(", ")) + "</span>" : "") + "</td><td>" + [p.phone, p.email, p.tg].filter(Boolean).map(h).join("<br>") + '</td><td><span class="pill ' + st[1] + '">' + st[0] + "</span>" + (p.joined_at ? '<br><span class="note">с ' + dt(p.joined_at) + "</span>" : "") + '</td><td class="row">' + (p.link && p.state === "out" ? '<button class="btn" data-plcp="' + h(p.link) + '">Ссылка в бот</button>' : "") + (staff() ? '<button class="btn warn" data-pldel="' + p.id + '">Убрать</button>' : "") + "</td></tr>";
+        return "<tr><td><b>" + h(p.name || p.org) + "</b>" + (p.name && p.org ? ", " + h(p.org) : "") + ((p.country || p.city) ? '<br><span class="note">' + h([p.country, p.city].filter(Boolean).join(", ")) + "</span>" : "") + (p.groups && p.groups.length ? '<br><span class="note">Группы: ' + h(p.groups.join(", ")) + "</span>" : "") + "</td><td>" + [p.phone, p.email, p.tg].filter(Boolean).map(h).join("<br>") + '</td><td><span class="pill ' + st[1] + '">' + st[0] + "</span>" + (p.joined_at ? '<br><span class="note">с ' + dt(p.joined_at) + "</span>" : "") + '</td><td class="row">' + (p.link && p.state === "out" ? '<button class="btn" data-plcp="' + h(p.link) + '">Ссылка в бот</button>' : "") + (staff() ? '<button class="btn warn" data-pldel="' + p.id + '">Убрать</button>' : "") + "</td></tr>";
       }).join("") + "</tbody></table>" : '<div class="card note">Партнёров из таблицы пока нет.</div>');
     $$("[data-plcp]", box).forEach(function (x) { x.addEventListener("click", function () { navigator.clipboard.writeText(x.getAttribute("data-plcp")).then(function () { toast("Ссылка скопирована: отправьте её партнёру"); }, function () { toast("Не скопировалось", true); }); }); });
     $$("[data-pldel]", box).forEach(function (x) { x.addEventListener("click", function () { if (confirm("Убрать партнёра из списка?")) api("/partners/" + x.getAttribute("data-pldel") + "/del", {}).then(function (r) { partnerList(box, r.partners, main); }).catch(fail); }); });
@@ -528,7 +555,7 @@
         $("#plgo", pv).addEventListener("click", function () {
           var map = {}; $$("[data-plf]", pv).forEach(function (s) { map[s.getAttribute("data-plf")] = Number(s.value); });
           $("#plgo", pv).disabled = true;
-          api("/partners/import", { rows: t.rows, map: map }).then(function (r) { toast("Добавлено: " + r.added + (r.dup ? ", уже были в списке: " + r.dup : "") + (r.empty ? ", без имени или контакта: " + r.empty : "")); partnerList(box, r.partners, main); }).catch(function (e) { $("#plgo", pv).disabled = false; fail(e); });
+          api("/partners/import", { rows: t.rows, map: map }).then(function (r) { toast("Добавлено: " + r.added + (r.dup ? ", уже были в списке: " + r.dup : "") + (r.empty ? ", без имени или контакта: " + r.empty : "") + (r.groups ? ". По группам рассылки: " + r.groups + " (в «Рассылки в бот»)" : "")); partnerList(box, r.partners, main); }).catch(function (e) { $("#plgo", pv).disabled = false; fail(e); });
         });
       }).catch(function (e) { rd.disabled = false; fail(e); });
     });
@@ -538,21 +565,54 @@
   var BC_ST = { queued: "в очереди", sending: "идёт", done: "готово", canceled: "остановлена" };
   function broadcasts(main) {
     return api("/audience").then(function (j) {
-      var c = j.counts, b = head(main, "Рассылки в бот");
-      b.innerHTML = '<div class="grid g4">' + [["Подписчиков сейчас", c.all], ["Партнёров", c.partner], ["Клиентов", c.client], ["Новых за 7 дней", c.week]].map(function (x) { return '<div class="card stat"><b>' + x[1] + "</b><span>" + x[0] + "</span></div>"; }).join("") + '</div><p class="note">Подписчик — тот, кто сам писал боту и не заблокировал его (сотрудники не считаются). Заблокировали бота: ' + c.blocked + '. С телефона: напишите боту /рассылка, пришлите текст или фото с подписью и выберите, кому.</p>' +
-        '<h2>Новая рассылка</h2><div class="card grid"><label class="f">Текст (до 4000 знаков, с фото — до 1024)<textarea id="bt" rows="6"></textarea></label><div class="grid g2"><label class="f">Кому<select id="bs">' + Object.keys(j.segments).map(function (k) { return '<option value="' + k + '">' + h(j.segments[k]) + " · " + c[k] + "</option>"; }).join("") + '</select></label><label class="f">Фото (необязательно)<input type="file" accept="image/jpeg,image/png,image/webp" id="bp"></label></div><div class="row"><button class="btn pri" id="bgo">Отправить</button><span class="note">Уходит не быстрее 25 сообщений в секунду; отменить можно, пока идёт.</span></div></div>' +
+      var c = j.counts, b = head(main, "Рассылки в бот"), gs = j.groups || [];
+      var who = Object.keys(j.segments).map(function (k) { return { k: k, t: j.segments[k], n: c[k] }; }).concat(gs.map(function (g) { return { k: "g:" + g.id, t: "Группа «" + g.name + "»", n: g.inBot }; }));
+      b.innerHTML = '<div class="grid g4">' + [["Подписчиков сейчас", c.all], ["Партнёров", c.partner], ["Клиентов", c.client], ["Новых за 7 дней", c.week]].map(function (x) { return '<div class="card stat"><b>' + x[1] + "</b><span>" + x[0] + "</span></div>"; }).join("") + '</div><p class="note">Подписчик — тот, кто сам писал боту и не заблокировал его (сотрудники не считаются). Заблокировали бота: ' + c.blocked + '. С телефона: напишите боту /рассылка, пришлите текст или фото с подписью и выберите, кому — там же кнопки ваших групп.</p>' +
+        '<h2>Новая рассылка</h2><div class="card grid"><label class="f">Текст (до 4000 знаков, с фото — до 1024)<textarea id="bt" rows="6"></textarea></label><div class="grid g2"><label class="f">Кому<select id="bs">' + who.map(function (x) { return '<option value="' + h(x.k) + '">' + h(x.t) + " · " + x.n + "</option>"; }).join("") + '</select></label><label class="f">Фото (необязательно)<input type="file" accept="image/jpeg,image/png,image/webp" id="bp"></label></div><div class="row"><button class="btn pri" id="bgo">Отправить</button><span class="note">Уходит не быстрее 25 сообщений в секунду; отменить можно, пока идёт.</span></div></div>' +
+        '<h2>Группы рассылки</h2><p class="note">Группа — свой список получателей: аптеки одной сети, врачи одного направления, дистрибьюторы страны. В группу добавляются подписчики бота и партнёры из таблицы; партнёр получает рассылку группы, когда сам пришёл в бота. Группы заводятся и сами — столбцом «Группа» при загрузке таблицы партнёров («Партнёры и клиенты»).</p>' +
+        '<div class="card grid"><div class="row"><input class="i" id="gnew" maxlength="60" placeholder="Название новой группы, например «Аптеки Арзон»"><button class="btn" id="gadd">+ Завести группу</button></div>' +
+        (gs.length ? '<table class="resp"><thead><tr><th>Группа</th><th>Участников</th><th>В боте</th><th></th></tr></thead><tbody>' + gs.map(function (g) { return '<tr><td><b>' + h(g.name) + '</b></td><td>' + g.total + "</td><td>" + g.inBot + '</td><td><button class="btn" data-gopen="' + g.id + '">Открыть</button> <button class="btn" data-gsend="' + g.id + '"' + (g.inBot ? "" : " disabled") + '>Написать группе</button></td></tr>'; }).join("") + "</tbody></table>" : '<p class="note">Групп пока нет.</p>') + '<div id="gbox"></div></div>' +
         "<h2>История</h2>" + (j.broadcasts.length ? '<table class="resp"><thead><tr><th>Когда</th><th>Текст</th><th>Кому</th><th>Итог</th><th></th></tr></thead><tbody>' + j.broadcasts.map(function (r) {
-          return "<tr><td>" + dt(r.at) + '<br><span class="note">' + h(r.by) + (r.via === "telegram" ? " · с телефона" : "") + "</span></td><td>" + (r.photo ? "🖼 " : "") + h(r.text.slice(0, 160)) + "</td><td>" + h(j.segments[r.seg]) + "</td><td>" + h(BC_ST[r.state] || r.state) + "<br>" + r.sent + " из " + r.total + (r.blocked ? ", заблокировали " + r.blocked : "") + (r.failed ? ", не дошло " + r.failed : "") + "</td><td>" + (r.state === "queued" || r.state === "sending" ? '<button class="btn warn" data-cx="' + r.id + '">Остановить</button>' : "") + "</td></tr>";
+          return "<tr><td>" + dt(r.at) + '<br><span class="note">' + h(r.by) + (r.via === "telegram" ? " · с телефона" : "") + "</span></td><td>" + (r.photo ? "🖼 " : "") + h(r.text.slice(0, 160)) + "</td><td>" + h(r.segName || j.segments[r.seg] || r.seg) + "</td><td>" + h(BC_ST[r.state] || r.state) + "<br>" + r.sent + " из " + r.total + (r.blocked ? ", заблокировали " + r.blocked : "") + (r.failed ? ", не дошло " + r.failed : "") + "</td><td>" + (r.state === "queued" || r.state === "sending" ? '<button class="btn warn" data-cx="' + r.id + '">Остановить</button>' : "") + "</td></tr>";
         }).join("") + "</tbody></table>" : '<div class="card note">Рассылок ещё не было.</div>');
       $("#bgo").addEventListener("click", function () {
-        var text = $("#bt").value.trim(), seg = $("#bs").value; if (!text) return toast("Напишите текст", true);
-        if (!confirm("Отправить рассылку: " + j.segments[seg].toLowerCase() + ", " + c[seg] + " получателей?")) return;
+        var text = $("#bt").value.trim(), seg = $("#bs").value, x = who.filter(function (w) { return w.k === seg; })[0]; if (!text) return toast("Напишите текст", true);
+        if (!confirm("Отправить рассылку: " + x.t.toLowerCase() + ", " + x.n + " получателей?")) return;
         $("#bgo").disabled = true;
         var job = $("#bp").files.length ? upload($("#bp")) : Promise.resolve("");
         job.then(function (photo) { return api("/broadcasts", { text: text, seg: seg, photo: photo }); }).then(function () { toast("Рассылка запущена"); broadcasts(main); }).catch(function (e) { $("#bgo").disabled = false; fail(e); });
       });
       $$("[data-cx]", b).forEach(function (x) { x.addEventListener("click", function () { api("/broadcasts/" + x.getAttribute("data-cx") + "/cancel", {}).then(function () { broadcasts(main); }).catch(fail); }); });
+      $("#gadd").addEventListener("click", function () { var n = $("#gnew").value.trim(); if (!n) return toast("Напишите название группы", true); api("/groups", { name: n }).then(function (r) { toast("Группа заведена: добавьте в неё участников"); broadcasts(main).then(function () { groupBox(main, r.group.id); }); }).catch(fail); });
+      $$("[data-gopen]", b).forEach(function (x) { x.addEventListener("click", function () { groupBox(main, +x.getAttribute("data-gopen")); }); });
+      $$("[data-gsend]", b).forEach(function (x) { x.addEventListener("click", function () { $("#bs").value = "g:" + x.getAttribute("data-gsend"); $("#bt").focus(); $("#bt").scrollIntoView({ block: "center" }); }); });
     });
+  }
+  /* Одна группа: кто в ней, добавить поиском, убрать, переименовать. */
+  function groupBox(main, gid) {
+    var box = $("#gbox"); if (!box) return;
+    function draw(r) {
+      var g = r.group, n = { "in": 0, out: 0, blocked: 0 }; r.members.forEach(function (m) { n[m.state]++; });
+      box.innerHTML = '<div class="card grid gbx"><div class="row"><input class="i" id="gname" maxlength="60" value="' + h(g.name) + '"><button class="btn" id="gren">Переименовать</button><span class="sp"></span><button class="btn warn" id="gdel">Убрать группу</button></div>' +
+        '<p><b>' + h(g.name) + "</b>: участников " + r.members.length + " · в боте " + n["in"] + " · не в боте " + n.out + (n.blocked ? " · заблокировали " + n.blocked : "") + '</p>' +
+        '<label class="f">Добавить: имя, компания, город, телефон или @ник<input class="i" id="gq" placeholder="Начните писать — ниже появятся партнёры из таблицы и подписчики бота"></label><div id="gfound"></div>' +
+        (r.members.length ? '<table class="resp"><tbody>' + r.members.map(function (m) { var st = PL_ST[m.state]; return "<tr><td><b>" + h(m.name) + '</b>' + (m.sub ? '<br><span class="note">' + h(m.sub) + "</span>" : "") + '</td><td><span class="pill ' + st[1] + '">' + st[0] + '</span></td><td><button class="btn" data-gdrop="' + h(m.ref) + '">Убрать</button></td></tr>'; }).join("") + "</tbody></table>" : '<p class="note">В группе пока никого: найдите участников поиском выше.</p>') + "</div>";
+      $("#gren", box).addEventListener("click", function () { api("/groups/" + gid + "/rename", { name: $("#gname", box).value }).then(function () { toast("Переименовано"); broadcasts(main).then(function () { groupBox(main, gid); }); }).catch(fail); });
+      $("#gdel", box).addEventListener("click", function () { if (confirm("Убрать группу «" + g.name + "»? Участники останутся в боте и в списке партнёров.")) api("/groups/" + gid + "/del", {}).then(function () { toast("Группа убрана"); broadcasts(main); }).catch(fail); });
+      $$("[data-gdrop]", box).forEach(function (x) { x.addEventListener("click", function () { api("/groups/" + gid + "/drop", { ref: x.getAttribute("data-gdrop") }).then(function (r2) { draw(r2); refreshCounts(r2.groups); }).catch(fail); }); });
+      var q = $("#gq", box), t = 0;
+      q.addEventListener("input", function () { clearTimeout(t); t = setTimeout(function () {
+        var v = q.value.trim(), out = $("#gfound", box); if (v.length < 2) { out.innerHTML = ""; return; }
+        api("/groups/" + gid + "/find?q=" + encodeURIComponent(v)).then(function (f) {
+          out.innerHTML = f.found.length ? '<div class="row"><button class="btn" id="gall">Добавить всех найденных: ' + f.found.length + '</button></div><table class="resp"><tbody>' + f.found.map(function (m) { var st = PL_ST[m.state]; return "<tr><td><b>" + h(m.name) + '</b><br><span class="note">' + h(m.sub) + '</span></td><td><span class="pill ' + st[1] + '">' + st[0] + '</span></td><td><button class="btn pri" data-gput="' + h(m.ref) + '">Добавить</button></td></tr>'; }).join("") + "</tbody></table>" : '<p class="note">Никого не нашли.</p>';
+          var put = function (refs) { api("/groups/" + gid + "/add", { refs: refs }).then(function (r2) { toast("Добавлено: " + r2.added); draw(r2); refreshCounts(r2.groups); }).catch(fail); };
+          $$("[data-gput]", out).forEach(function (x) { x.addEventListener("click", function () { put([x.getAttribute("data-gput")]); }); });
+          var all = $("#gall", out); if (all) all.addEventListener("click", function () { put(f.found.map(function (m) { return m.ref; })); });
+        }).catch(fail);
+      }, 250); });
+    }
+    function refreshCounts(groups) { groups.forEach(function (g) { var o = $('#bs option[value="g:' + g.id + '"]'); if (o) o.textContent = "Группа «" + g.name + "» · " + g.inBot; }); }
+    return api("/groups/" + gid).then(function (r) { draw(r); box.scrollIntoView({ block: "start", behavior: "smooth" }); }).catch(fail);
   }
 
   /* ── История ───────────────────────────────────────────────────── */

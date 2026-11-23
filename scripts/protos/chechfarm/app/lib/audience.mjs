@@ -10,6 +10,10 @@
 import { hashPass, checkPass, token, sha } from "./crypt.mjs";
 
 export const SEGMENTS = { all: "Всем", partner: "Партнёрам", client: "Клиентам" };
+/* Сегмент «g:<номер>» — своя группа рассылки (владелец DevUz, 23.11.2026: «надо
+   группировать рассылки (аптеки одной сети к примеру, врачи по направлениям и тд)»). */
+const GROUP_SEG = /^g:(\d{1,9})$/;
+const GROUPS_MAX = 200, GROUP_NAME = 60;
 export const ACC_STATUS = { pending: "На проверке", active: "Активен", blocked: "Заблокирован" };
 const ACC_KINDS = ["partner", "client"];
 const SESSION_DAYS = 90;
@@ -28,6 +32,8 @@ export function makeAudience({ db, note, tg, now, publicUrl = "", onLead = null 
     },
     setKind(chat, kind) { if (ACC_KINDS.includes(kind)) db.run("update bot_users set kind = ? where chat = ?", kind, chat); },
     recipients(seg) {
+      const g = GROUP_SEG.exec(seg);
+      if (g) return grp.chats(Number(g[1]));
       const rows = db.all("select b.chat, coalesce(a.kind, b.kind) kind from bot_users b left join accounts a on a.id = b.account_id where b.blocked_at is null and b.chat not in (select chat_id from tg_staff)");
       return rows.filter((r) => seg === "all" || r.kind === seg).map((r) => r.chat);
     },
@@ -46,20 +52,20 @@ export function makeAudience({ db, note, tg, now, publicUrl = "", onLead = null 
     create({ text, photo = "", seg = "all", via = "panel" }, by) {
       text = cut(text, photo ? 1024 : 4000);
       if (!text) throw new Error("Напишите текст рассылки");
-      if (!SEGMENTS[seg]) throw new Error("Нет такого сегмента");
+      if (!SEGMENTS[seg] && !(GROUP_SEG.test(seg) && grp.get(Number(seg.slice(2))))) throw new Error("Нет такой группы получателей");
       if (photo && photo.startsWith("/uploads/") && !publicUrl.startsWith("https://")) throw new Error("Фото в рассылке работает, когда у сайта есть адрес https");
       const to = subs.recipients(seg);
-      if (!to.length) throw new Error("В этом сегменте пока нет подписчиков бота");
+      if (!to.length) throw new Error(GROUP_SEG.test(seg) ? "В этой группе пока никого нет в боте" : "В этом сегменте пока нет подписчиков бота");
       const id = db.tx(() => {
         const r = db.run("insert into broadcasts(at, by, text, photo, seg, via, total) values(?, ?, ?, ?, ?, ?, ?)", now(), by, text, cut(photo, 300), seg, via, to.length);
         const bid = Number(r.lastInsertRowid);
         for (const c of to) db.run("insert or ignore into broadcast_q(broadcast_id, chat) values(?, ?)", bid, c);
         return bid;
       });
-      note(by, `Рассылка № ${id}: ${SEGMENTS[seg].toLowerCase()}, ${to.length} получателей`);
+      note(by, `Рассылка № ${id}: ${segName(seg).toLowerCase()}, ${to.length} получателей`);
       return id;
     },
-    list: () => db.all("select id, at, by, text, photo, seg, via, total, sent, failed, blocked, state, done_at from broadcasts order by id desc limit 50"),
+    list: () => db.all("select id, at, by, text, photo, seg, via, total, sent, failed, blocked, state, done_at from broadcasts order by id desc limit 50").map((r) => ({ ...r, segName: segName(r.seg) })),
     cancel(id, by) {
       const b = db.get("select state from broadcasts where id = ?", id);
       if (!b || b.state === "done") throw new Error("Рассылка уже закончилась");
@@ -178,11 +184,11 @@ export function makeAudience({ db, note, tg, now, publicUrl = "", onLead = null 
   const phoneKey = (s) => { const d = digits(s); return d.length >= 9 ? d.slice(-9) : ""; };
   const nick = (s) => (/(?:t\.me\/|@)?([A-Za-z][\w]{3,31})\b/.exec(String(s || "").trim()) || [])[1]?.toLowerCase() || "";
   const pl = {
-    FIELDS: ["name", "org", "phone", "email", "country", "city", "tg", "note"],
+    FIELDS: ["name", "org", "phone", "email", "country", "city", "tg", "group", "note"],
     /* Запасной разбор столбцов по заголовкам, если модель недоступна. */
     guess(headers) {
-      const has = (h, re) => re.test(String(h).toLowerCase());
-      const RULES = { tg: /telegram|телеграм|tg\b|ник|username/, email: /e-?mail|почт|pochta/, phone: /тел|phone|моб|номер|raqam|telefon/,
+      const has = (h, re) => re.test(String(h).toLowerCase()) && !(re === RULES.org && /сеть|chain|network|tarmoq/.test(String(h).toLowerCase()));
+      const RULES = { group: /групп|сеть|направлен|специальн|категор|сегмент|group|chain|network|specialt|guruh|tarmoq|yo.nalish/, tg: /telegram|телеграм|tg\b|ник|username/, email: /e-?mail|почт|pochta/, phone: /тел|phone|моб|номер|raqam|telefon/,
         org: /компан|организац|фирм|аптек|company|organi[sz]|kompaniya|tashkilot|юр/, country: /стран|country|davlat|mamlakat/,
         city: /город|регион|область|city|region|shahar|viloyat/, name: /фио|имя|контакт|name|ism|ф\.и\.о|представ/, note: /коммент|примеч|note|izoh|заметк/ };
       const map = {}, used = new Set();
@@ -192,31 +198,41 @@ export function makeAudience({ db, note, tg, now, publicUrl = "", onLead = null 
     /* rows — строки таблицы, map — { поле: номер столбца }. */
     import(rows, map, by) {
       const at = (r, f) => (map[f] >= 0 ? cut(r[map[f]], f === "note" ? 500 : 160) : "");
-      const have = db.all("select phone, email, tg from partner_list");
-      const seen = new Set(have.flatMap((x) => [phoneKey(x.phone) && "p" + phoneKey(x.phone), x.email && "e" + x.email.toLowerCase(), nick(x.tg) && "t" + nick(x.tg)]).filter(Boolean));
+      const have = db.all("select id, phone, email, tg from partner_list");
+      const keysOf = (x) => [phoneKey(x.phone) && "p" + phoneKey(x.phone), x.email && "e" + x.email.toLowerCase(), nick(x.tg) && "t" + nick(x.tg)].filter(Boolean);
+      const seen = new Map(have.flatMap((x) => keysOf(x).map((k) => [k, x.id])));
+      /* Столбец «Группа» (сеть аптек, направление врача): значение — группа рассылки,
+         несколько через запятую или «;». Повтор партнёра тоже встаёт в свою группу. */
+      const groups = new Map(), inGroup = new Set();
+      const toGroups = (pid, v) => { for (const nm of String(v || "").split(/[;,|]/).map(gname).filter(Boolean).slice(0, 5)) {
+        const k = nm.toLowerCase(); if (!groups.has(k)) groups.set(k, grp.create(nm, by));
+        if (db.run("insert or ignore into bc_group_members(group_id, ref) values(?, ?)", groups.get(k), "p:" + pid).changes) inGroup.add(pid);
+      } };
       let added = 0, dup = 0, empty = 0;
       db.tx(() => { for (const r of rows.slice(0, 5000)) {
         const o = Object.fromEntries(pl.FIELDS.map((f) => [f, at(r, f)]));
         if (!o.name && !o.org) { empty++; continue; }
         if (!o.phone && !o.email && !o.tg) { empty++; continue; }
-        const keys = [phoneKey(o.phone) && "p" + phoneKey(o.phone), o.email && "e" + o.email.toLowerCase(), nick(o.tg) && "t" + nick(o.tg)].filter(Boolean);
-        if (keys.some((k) => seen.has(k))) { dup++; continue; }
-        keys.forEach((k) => seen.add(k));
-        db.run("insert into partner_list(name, org, phone, email, country, city, tg, note, code, created_at, by) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-          o.name, o.org, o.phone, o.email.toLowerCase(), o.country, o.city, o.tg, o.note, "p" + token(8).replace(/[^\w]/g, "x"), now(), by);
+        const keys = keysOf(o), old = keys.map((k) => seen.get(k)).find(Boolean);
+        if (old) { dup++; toGroups(old, o.group); continue; }
+        const pid = Number(db.run("insert into partner_list(name, org, phone, email, country, city, tg, note, code, created_at, by) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+          o.name, o.org, o.phone, o.email.toLowerCase(), o.country, o.city, o.tg, o.note, "p" + token(8).replace(/[^\w]/g, "x"), now(), by).lastInsertRowid);
+        keys.forEach((k) => seen.set(k, pid));
+        toGroups(pid, o.group);
         added++;
       } });
-      note(by, `Загрузил партнёров таблицей: добавлено ${added}${dup ? `, уже были ${dup}` : ""}${empty ? `, без имени или контакта ${empty}` : ""}`);
-      return { added, dup, empty };
+      note(by, `Загрузил партнёров таблицей: добавлено ${added}${dup ? `, уже были ${dup}` : ""}${empty ? `, без имени или контакта ${empty}` : ""}${groups.size ? `, по группам: ${groups.size}` : ""}`);
+      return { added, dup, empty, groups: groups.size, grouped: inGroup.size };
     },
     list(bot) {
+      const gs = grp.ofPartners();
       return db.all(`select p.*, b.blocked_at, b.last_at from partner_list p left join bot_users b on b.chat = p.chat and p.chat != '' order by p.id desc limit 5000`).map((p) => ({
         id: p.id, name: p.name, org: p.org, phone: p.phone, email: p.email, country: p.country, city: p.city, tg: p.tg, note: p.note,
         state: !p.chat ? "out" : p.blocked_at ? "blocked" : "in", joined_at: p.joined_at, last_at: p.last_at || null,
-        link: bot ? `https://t.me/${bot}?start=${p.code}` : "",
+        link: bot ? `https://t.me/${bot}?start=${p.code}` : "", groups: gs[p.id] || [],
       }));
     },
-    remove(id, by) { const p = db.get("select name, org from partner_list where id = ?", id); db.run("delete from partner_list where id = ?", id); note(by, `Убрал партнёра из списка: ${p?.name || p?.org || id}`); },
+    remove(id, by) { const p = db.get("select name, org from partner_list where id = ?", id); db.run("delete from partner_list where id = ?", id); db.run("delete from bc_group_members where ref = ?", "p:" + id); note(by, `Убрал партнёра из списка: ${p?.name || p?.org || id}`); },
     join(p, chat) {
       db.run("update partner_list set chat = ?, joined_at = coalesce(joined_at, ?) where id = ?", chat, now(), p.id);
       db.run("update bot_users set kind = 'partner' where chat = ?", chat);
@@ -235,5 +251,93 @@ export function makeAudience({ db, note, tg, now, publicUrl = "", onLead = null 
     },
   };
 
-  return { subs, bc, acc, pl };
+  /* ── Группы рассылки ─────────────────────────────────────────────
+     Участник — подписчик бота (c:<чат>) или партнёр из таблицы (p:<номер>):
+     партнёр получает рассылку группы, когда сам пришёл в бота. */
+  const gname = (s) => cut(s, GROUP_NAME).replace(/\s+/g, " ");
+  const grp = {
+    get: (id) => db.get("select * from bc_groups where id = ?", id) || null,
+    /* Без учёта регистра: lower() в SQLite кириллицу не понимает. */
+    byName: (name) => { const k = gname(name).toLowerCase(); return db.all("select id, name from bc_groups").find((g) => g.name.toLowerCase() === k) || null; },
+    /* Чаты для рассылки: живые подписчики группы и пришедшие в бота партнёры, без сотрудников. */
+    chats(id) {
+      return db.all(`select b.chat from bc_group_members m join bot_users b on m.ref = 'c:' || b.chat where m.group_id = ? and b.blocked_at is null
+        union select p.chat from bc_group_members m join partner_list p on m.ref = 'p:' || p.id left join bot_users b on b.chat = p.chat
+        where m.group_id = ? and p.chat != '' and b.blocked_at is null`, id, id).map((r) => r.chat).filter((c) => !isStaff(c));
+    },
+    list() {
+      return db.all("select g.id, g.name, g.created_at, g.by, (select count(*) from bc_group_members m where m.group_id = g.id) total from bc_groups g order by g.name collate nocase")
+        .map((g) => ({ ...g, inBot: grp.chats(g.id).length }));
+    },
+    create(name, by) {
+      name = gname(name);
+      if (!name) throw new Error("Напишите название группы");
+      const same = grp.byName(name);
+      if (same) return same.id;
+      if (db.get("select count(*) n from bc_groups").n >= GROUPS_MAX) throw new Error(`Групп уже ${GROUPS_MAX}, уберите ненужные`);
+      const id = Number(db.run("insert into bc_groups(name, created_at, by) values(?, ?, ?)", name, now(), by).lastInsertRowid);
+      note(by, `Завёл группу рассылки «${name}»`);
+      return id;
+    },
+    rename(id, name, by) {
+      const g = grp.get(id); name = gname(name);
+      if (!g) throw new Error("Нет такой группы");
+      if (!name) throw new Error("Напишите название группы");
+      const same = grp.byName(name); if (same && same.id !== id) throw new Error("Группа с таким названием уже есть");
+      db.run("update bc_groups set name = ? where id = ?", name, id); note(by, `Группа «${g.name}» теперь «${name}»`);
+    },
+    remove(id, by) {
+      const g = grp.get(id); if (!g) return;
+      db.tx(() => { db.run("delete from bc_group_members where group_id = ?", id); db.run("delete from bc_groups where id = ?", id); });
+      note(by, `Убрал группу рассылки «${g.name}»`);
+    },
+    /* Кто в группе: имя, кто это и есть ли в боте. */
+    members(id) {
+      const subs_ = db.all("select m.ref, b.name, b.username, b.kind, b.blocked_at from bc_group_members m join bot_users b on m.ref = 'c:' || b.chat where m.group_id = ?", id)
+        .map((r) => ({ ref: r.ref, name: r.name || (r.username ? "@" + r.username : "подписчик бота"), sub: [r.username && "@" + r.username, r.kind === "partner" ? "партнёр" : r.kind === "client" ? "клиент" : ""].filter(Boolean).join(" · "), state: r.blocked_at ? "blocked" : "in" }));
+      const parts = db.all("select m.ref, p.name, p.org, p.phone, p.city, p.chat, b.blocked_at from bc_group_members m join partner_list p on m.ref = 'p:' || p.id left join bot_users b on b.chat = p.chat and p.chat != '' where m.group_id = ?", id)
+        .map((r) => ({ ref: r.ref, name: r.name || r.org, sub: [r.name && r.org, r.city, r.phone].filter(Boolean).join(" · "), state: !r.chat ? "out" : r.blocked_at ? "blocked" : "in" }));
+      return [...parts, ...subs_].sort((a, b) => a.name.localeCompare(b.name, "ru"));
+    },
+    add(id, refs, by) {
+      const g = grp.get(id); if (!g) throw new Error("Нет такой группы");
+      let n = 0;
+      db.tx(() => { for (const r of (Array.isArray(refs) ? refs : []).slice(0, 5000)) {
+        const m = /^(c|p):([\w-]{1,40})$/.exec(String(r)); if (!m) continue;
+        const ok = m[1] === "c" ? db.get("select 1 from bot_users where chat = ?", m[2]) : db.get("select 1 from partner_list where id = ?", Number(m[2]) || 0);
+        if (ok && db.run("insert or ignore into bc_group_members(group_id, ref) values(?, ?)", id, r).changes) n++;
+      } });
+      if (n && by) note(by, `Добавил в группу «${g.name}»: ${n}`);
+      return n;
+    },
+    drop(id, ref, by) {
+      const g = grp.get(id); if (!g) return;
+      if (db.run("delete from bc_group_members where group_id = ? and ref = ?", id, String(ref)).changes) note(by, `Убрал из группы «${g.name}» одного участника`);
+    },
+    /* Кого можно добавить: партнёры из таблицы и подписчики бота по имени, компании, городу, телефону, нику. */
+    find(q, id) {
+      q = cut(q, 60).toLowerCase(); if (q.length < 2) return [];
+      /* Поиск в JS: LIKE и lower() в SQLite кириллицу без учёта регистра не находят. */
+      const hit = (...xs) => xs.join(" ").toLowerCase().includes(q), have = new Set(id ? db.all("select ref from bc_group_members where group_id = ?", id).map((r) => r.ref) : []);
+      const parts = db.all("select id, name, org, city, phone, tg, note, chat from partner_list").filter((p) => hit(p.name, p.org, p.city, p.phone, p.tg, p.note)).slice(0, 30)
+        .map((p) => ({ ref: "p:" + p.id, name: p.name || p.org, sub: ["из таблицы", p.name && p.org, p.city, p.phone].filter(Boolean).join(" · "), state: p.chat ? "in" : "out" }));
+      const subs_ = db.all("select chat, name, username from bot_users where blocked_at is null and chat not in (select chat_id from tg_staff)").filter((b) => hit(b.name, b.username, "@" + b.username)).slice(0, 30)
+        .map((b) => ({ ref: "c:" + b.chat, name: b.name || "@" + b.username, sub: ["подписчик бота", b.username && "@" + b.username].filter(Boolean).join(" · "), state: "in" }));
+      return [...parts, ...subs_].filter((x) => !have.has(x.ref)).slice(0, 40);
+    },
+    /* Группы партнёров из таблицы: { номер партнёра: [названия] }. */
+    ofPartners() {
+      const out = {};
+      for (const r of db.all("select m.ref, g.name from bc_group_members m join bc_groups g on g.id = m.group_id where m.ref like 'p:%' order by g.name collate nocase")) (out[r.ref.slice(2)] ||= []).push(r.name);
+      return out;
+    },
+  };
+  function segName(seg) {
+    const g = GROUP_SEG.exec(seg);
+    if (!g) return SEGMENTS[seg] || seg;
+    const x = grp.get(Number(g[1]));
+    return x ? "Группа «" + x.name + "»" : "Группа (убрана)";
+  }
+
+  return { subs, bc, acc, pl, grp, segName };
 }

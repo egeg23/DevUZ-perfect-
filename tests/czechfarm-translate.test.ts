@@ -39,5 +39,5 @@ test("czechfarm: столбцы таблицы партнёров — Haiku ви
   assert.ok(typeof req !== "string");
   if (typeof req !== "string") { assert.equal(req.sample.length, CF_SAMPLE_MAX); assert.deepEqual(req.sample[0], ["Али", "+998"]); }
   /* Чужой номер столбца, повтор и не число — «нет». */
-  assert.deepEqual(cfMapOf({ name: 0, phone: 1, org: 1, email: 7, tg: "x" }, 2), { name: 0, org: 1, phone: -1, email: -1, country: -1, city: -1, tg: -1, note: -1 });
+  assert.deepEqual(cfMapOf({ name: 0, phone: 1, org: 1, email: 7, tg: "x" }, 2), { name: 0, org: 1, phone: -1, email: -1, country: -1, city: -1, tg: -1, group: -1, note: -1 });
 });

@@ -464,15 +464,16 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
           await bot.send(u.chat, "Если ваша компания уже работает с CZECHFARM, поделитесь номером: найдём вас в списке партнёров.", { reply_markup: { keyboard: [[{ text: "Поделиться номером", request_contact: true }]], resize_keyboard: true, one_time_keyboard: true } });
         return sendFaq(u.chat, k[1] === "partner" ? botText("kindPartner") : botText("kindClient"));
       }
-      const b = /^bc:(all|partner|client|no)$/.exec(u.data);
+      const b = /^bc:(all|partner|client|no|g\d{1,9})$/.exec(u.data);
       if (b && staffRow && staffRow.role !== "manager") {
         const d = db.get("select * from bc_drafts where chat = ?", u.chat);
         db.run("delete from bc_drafts where chat = ?", u.chat);
         if (b[1] === "no" || !d || !d.text) { await bot.answer(u.id, "Отменено"); return bot.edit(u.chat, u.messageId, "Рассылка отменена.").catch(() => {}); }
         try {
-          const id = aud.bc.create({ text: d.text, photo: d.photo, seg: b[1], via: "telegram" }, staffRow.name);
+          const seg = b[1][0] === "g" ? "g:" + b[1].slice(1) : b[1];
+          const id = aud.bc.create({ text: d.text, photo: d.photo, seg, via: "telegram" }, staffRow.name);
           await bot.answer(u.id, "Рассылка запущена");
-          return bot.edit(u.chat, u.messageId, `Рассылка № ${id} запущена: ${SEGMENTS[b[1]].toLowerCase()}. Итог — в панели, «Рассылки».`).catch(() => {});
+          return bot.edit(u.chat, u.messageId, `Рассылка № ${id} запущена: ${aud.segName(seg).toLowerCase()}. Итог — в панели, «Рассылки».`).catch(() => {});
         } catch (e) { await bot.answer(u.id, e.message); return; }
       }
       return bot.answer(u.id, "");
@@ -511,9 +512,12 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
           db.run("insert into bc_drafts(chat, text, photo, at) values(?, ?, ?, ?) on conflict(chat) do update set text = excluded.text, photo = excluded.photo, at = excluded.at", u.chat, cut(text, 4000), cmd ? "" : u.photo || "", now());
           if (!text) return bot.send(u.chat, "Пришлите текст рассылки одним сообщением. Можно фото с подписью.");
           const c = aud.subs.counts();
+          /* Свои группы (сеть аптек, направление врачей) — кнопками, где кто-то уже в боте, до 10. */
+          const gs = aud.grp.list().filter((g) => g.inBot).slice(0, 10).map((g) => [{ text: `${g.name.slice(0, 40)} · ${g.inBot}`, callback_data: "bc:g" + g.id }]);
           return bot.send(u.chat, `Рассылка подписчикам бота:\n\n${text.slice(0, 1500)}\n\nКому отправить?`, { reply_markup: { inline_keyboard: [
             [{ text: `Всем · ${c.all}`, callback_data: "bc:all" }],
             [{ text: `Партнёрам · ${c.partner}`, callback_data: "bc:partner" }, { text: `Клиентам · ${c.client}`, callback_data: "bc:client" }],
+            ...gs,
             [{ text: "Отмена", callback_data: "bc:no" }]] } });
         }
       }
