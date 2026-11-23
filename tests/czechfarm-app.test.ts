@@ -1044,7 +1044,7 @@ test("czechfarm: группы рассылки — сеть аптек и нап
     a.db.run("insert into tg_staff(chat_id, user_id, at) values(?, 1, 1)", String(staffChat));
     await a.tg({ message: { message_id: 3, date: 1, chat: { id: staffChat, type: "private" }, from: { id: staffChat, first_name: "Владелец" }, text: "/рассылка Новинка для сети" } });
     const ask = a.net.calls.filter((c: any) => c.url.endsWith("/sendMessage") && String(c.body.chat_id) === String(staffChat)).pop();
-    const btns = ask.body.reply_markup.inline_keyboard.flat().map((b: any) => b.callback_data);
+    const btns = ask!.body.reply_markup.inline_keyboard.flat().map((b: any) => b.callback_data);
     assert.ok(btns.includes("bc:g" + arzon.id)); assert.ok(!btns.some((d: string) => d.startsWith("bc:g") && d !== "bc:g" + arzon.id), "группа без людей в боте кнопкой не показывается");
     await a.tg({ callback_query: { id: "q1", from: { id: staffChat }, message: { message_id: 50, chat: { id: staffChat, type: "private" } }, data: "bc:g" + arzon.id } });
     const last = (await a.call("/api/admin/audience")).json.broadcasts[0];
