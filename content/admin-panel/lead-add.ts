@@ -18,6 +18,10 @@ export const leadAddDict = defineDict({
     uz: "Mijoz sayt va botni chetlab keldi — qo‘ng‘iroq qildi, tavsiya bo‘yicha keldi yoki shaxsan uchrashdingiz. Uni shu yerda yozib qo‘ying: lid darhol siz tanlagan odamda ishda bo‘ladi, ariza raqami va 4 soatdan keyin «keyin nima?» eslatmasi bilan. Boshqaga bersangiz — unga darhol Telegramga xabar keladi.",
     pl: "Klient przyszedł z pominięciem strony i bota — zadzwonił, przyszedł z polecenia albo spotkaliście się osobiście. Zapisz go tutaj: lead od razu jest w pracy u osoby, którą wybierzesz, z numerem zgłoszenia i przypomnieniem za 4 godziny „co dalej?”. Jeśli przekażesz go komuś innemu, ta osoba od razu dostanie wiadomość w Telegramie.",
   },
+  // Направление лида (владелец, 23.11.2026): лидогенерация — источник leadgen, свои 25% в «Финансах».
+  line: { ru: "Направление", uz: "Yo‘nalish", pl: "Kierunek" },
+  lineDev: { ru: "Разработка", uz: "Ishlab chiqish", pl: "Tworzenie" },
+  lineLeadgen: { ru: "Лидогенерация", uz: "Lidogeneratsiya", pl: "Generowanie leadów" },
   name: { ru: "Имя клиента", uz: "Mijoz ismi", pl: "Imię klienta" },
   namePlaceholder: { ru: "Как к нему обращаться", uz: "Unga qanday murojaat qilish", pl: "Jak się do niego zwracać" },
   company: { ru: "Компания", uz: "Kompaniya", pl: "Firma" },

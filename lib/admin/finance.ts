@@ -135,6 +135,29 @@ export function isClaudery(project: { product?: string | null }): boolean {
   return project.product === "claudery";
 }
 
+/**
+ * Лидогенерация (content/leadgen.ts): тому, кто ведёт сделку, 25% от дохода
+ * студии — пришедшая сумма минус себестоимость и налог 7% с этой суммы;
+ * руководителю строки нет, остальное — соучредителям в их пропорции.
+ * Владелец, 23.11.2026: «Менеджеры получают 25% от дохода студии (пришла
+ * сумма = себестоимость и налоги 7%), от оставшейся суммы 25% идет
+ * менеджеру»; на «7% от всей пришедшей суммы» — «Да, верно». Налог проекта
+ * лидогенерации при заведении — LEADGEN_TAX_PERCENT (lib/admin/projects.ts),
+ * в грейд и премию за 3 сделки он не идёт (lib/admin/grade-month.ts): у него
+ * своя ставка, как у Claudery.
+ */
+export const LEADGEN_MANAGER_PERCENT = 25;
+export const LEADGEN_TAX_PERCENT = 7;
+
+export function isLeadgen(project: { product?: string | null }): boolean {
+  return project.product === "leadgen";
+}
+
+/** Продукт со своей ставкой ведущего: в грейд и премию за сделки не идёт. */
+export function ownRate(project: { product?: string | null }): boolean {
+  return isClaudery(project) || isLeadgen(project);
+}
+
 /** Налог по умолчанию для нового проекта; правится в каждом. */
 export const DEFAULT_TAX_PERCENT = 4;
 
@@ -173,7 +196,10 @@ export type ProjectMoney = {
    * нет — строки «за агентство» нет.
    */
   agency_finder?: string | null;
-  /** Продукт со своими правилами денег: «claudery» — CLAUDERY_MANAGER_PERCENT. */
+  /**
+   * Продукт со своими правилами денег: «claudery» — CLAUDERY_MANAGER_PERCENT
+   * с суммы, «leadgen» — LEADGEN_MANAGER_PERCENT с прибыли.
+   */
   product?: string | null;
 };
 
@@ -304,6 +330,27 @@ export function accrualsOf(
   }
 
   const base = Math.max(0, profit);
+
+  if (isLeadgen(project)) {
+    // 25% от прибыли (сумма − себестоимость − налог) ведущему; руководителю
+    // строки нет — остальное соучредителям.
+    const manual = shares.get(owner.id);
+    const percent = manual ?? LEADGEN_MANAGER_PERCENT;
+    const out: Accrual[] = [
+      {
+        project_id: project.id,
+        staff_id: owner.id,
+        share: "owner",
+        percent,
+        manual: manual !== undefined,
+        amount_usd: state === "void" ? 0 : Math.round((base * percent) / 100),
+        state,
+      },
+    ];
+    if (fromAgency) out.push(fromAgency);
+    return out;
+  }
+
   const line = (staffId: string, share: Accrual["share"], byRule: number): Accrual => {
     const manual = shares.get(staffId);
     const percent = manual ?? byRule;

@@ -241,6 +241,8 @@ export function markResultText(mk: string | undefined, s: S): { ok: boolean; tex
       return { ok: true, text: s.rUndone };
     case "forbidden":
       return { ok: false, text: s.rForbidden };
+    case "paid":
+      return { ok: false, text: s.rPaid };
     case "bad":
       return { ok: false, text: s.rBad };
     case "gone":

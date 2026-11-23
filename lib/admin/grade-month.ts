@@ -51,6 +51,9 @@ export function nextMonth(m: Month): Month {
   return mo === 12 ? `${y + 1}-01` : `${y}-${String(mo + 1).padStart(2, "0")}`;
 }
 
+/** Продукты со своей ставкой ведущего — те же, что ownRate в finance.ts. */
+const OWN_RATE: ReadonlySet<string> = new Set(["claudery", "leadgen"]);
+
 type DealProject = Pick<ProjectMoney, "id" | "owner_staff_id" | "stage" | "product">;
 type DealPayment = PaymentMoney & { paid_on: string };
 
@@ -74,8 +77,10 @@ export function gradeBook(projects: readonly DealProject[], payments: readonly D
   const counts = new Map<string, Map<Month, number>>();
   for (const project of projects) {
     const day = first.get(project.id);
-    // Claudery — своя ставка (CLAUDERY_MANAGER_PERCENT), в грейд и премию не идёт.
-    if (!day || project.stage === "cancelled" || !project.owner_staff_id || project.product === "claudery") continue;
+    // Claudery и лидогенерация — своя ставка (CLAUDERY_MANAGER_PERCENT,
+    // LEADGEN_MANAGER_PERCENT), в грейд и премию не идут. Без импорта ownRate:
+    // finance.ts сам берёт отсюда gradeRate.
+    if (!day || project.stage === "cancelled" || !project.owner_staff_id || OWN_RATE.has(project.product ?? "")) continue;
     const month = day.slice(0, 7);
     dealMonth.set(project.id, month);
     const byMonth = counts.get(project.owner_staff_id) ?? new Map<Month, number>();

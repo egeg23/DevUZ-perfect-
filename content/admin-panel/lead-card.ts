@@ -55,6 +55,12 @@ export const leadResultDict = defineDict({
     uz: "Siz oylik teng ulushingizni allaqachon oldingiz. Bu lid ish vaqtidan tashqari kelgan, joyida esa kamroq olgan hamkasb bor. 10 daqiqada hech kim olmasa, siz olishingiz mumkin.",
     pl: "Twoja równa część leadów na ten miesiąc jest już wykorzystana. Ten lead przyszedł poza godzinami pracy, a na miejscu jest kolega, który ma mniej. Jeśli w 10 minut nikt go nie weźmie, możesz go wziąć ty.",
   },
+  // Лидогенерация после оплаты (lib/admin/leadgen-lock.ts).
+  paid: {
+    ru: "Клиент лидогенерации уже оплатил: статус и ступени теперь меняют владелец или руководитель.",
+    uz: "Lidogeneratsiya mijozi allaqachon to‘lagan: endi holat va bosqichlarni egasi yoki rahbar o‘zgartiradi.",
+    pl: "Klient generowania leadów już zapłacił: status i etapy zmienia teraz właściciel lub kierownik.",
+  },
   forbidden: {
     ru: "Лид закреплён не за вами.",
     uz: "Lid sizga biriktirilmagan.",

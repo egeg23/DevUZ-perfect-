@@ -66,6 +66,21 @@ export function LeadAdd({
             ))}
           </div>
         </fieldset>
+        {/* Направление: лидогенерация — источник leadgen (lib/admin/lead-add.ts). */}
+        <fieldset className="sm:col-span-2">
+          <legend className="text-xs text-faint">{t.line}</legend>
+          <div className="mt-1 flex flex-wrap gap-2" data-lead-line>
+            {(["dev", "leadgen"] as const).map((line) => (
+              <label
+                key={line}
+                className="cursor-pointer rounded-lg border border-line px-3 py-1.5 text-sm text-muted transition has-[:checked]:border-green/60 has-[:checked]:bg-green/10 has-[:checked]:text-text"
+              >
+                <input type="radio" name="line" value={line} defaultChecked={line === "dev"} className="sr-only" />
+                {line === "dev" ? t.lineDev : t.lineLeadgen}
+              </label>
+            ))}
+          </div>
+        </fieldset>
         <label className="block text-xs text-faint">
           {t.name}
           <input name="name" required maxLength={120} placeholder={t.namePlaceholder} className={INPUT} />
