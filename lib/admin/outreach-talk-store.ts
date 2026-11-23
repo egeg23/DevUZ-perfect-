@@ -1292,6 +1292,16 @@ export async function nextReply(
     return live.has(other);
   };
 
+  // Касания всей пачки — одним запросом. Раньше каждый проход каждого
+  // аккаунта спрашивал касание отдельно на каждую строку, и две строки,
+  // застрявшие за чужим аккаунтом, давали 25 тысяч запросов в сутки: так
+  // 22.11.2026 кончился трафик базы (exceed_egress_quota).
+  const ids = [...new Set(queued.map((r) => String(r.prospect_id)).filter(Boolean))];
+  const { data: rows } = ids.length
+    ? await db.from("prospects").select("id, target, host, target_kind, target_user_id, sent_via").in("id", ids)
+    : { data: [] };
+  const prospectsById = new Map(((rows ?? []) as Record<string, unknown>[]).map((r) => [String(r.id), r]));
+
   // Письмо одного разговора не обгоняет его же кружок, который ещё ждёт.
   const waiting = new Set<string>();
   for (const row of queued) {
@@ -1302,11 +1312,7 @@ export async function nextReply(
       continue;
     }
     if (waiting.has(String(row.prospect_id))) continue;
-    const { data: p } = await db
-      .from("prospects")
-      .select("target, host, target_kind, target_user_id, sent_via")
-      .eq("id", row.prospect_id)
-      .maybeSingle();
+    const p = prospectsById.get(String(row.prospect_id));
     if (!p?.target) continue;
     // Чужой разговор — его отправит тот аккаунт, которому клиент отвечал.
     // Ответ с другого номера для клиента — незнакомец в его переписке.
