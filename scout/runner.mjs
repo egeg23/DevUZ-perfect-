@@ -92,17 +92,21 @@ const DRY_RUN = process.argv.includes("--dry-run");
  * сразу, а в тихом сообщение не лежит до вечера.
  */
 const FLUSH_MS = Number(process.env.SCOUT_FLUSH_MS || 60_000);
+// Трафик базы (22.11.2026 кончился лимит, exceed_egress_quota): каждый
+// аккаунт опрашивает очереди сам, поэтому опросы — реже: касания 2 минуты,
+// ответы минута (ответ модели и так ждёт 40-120 с «как человек»), правки 2
+// минуты (окно Telegram — 48 часов).
 // Как часто заглядывать в очередь касаний. Сама пауза между отправками
 // живёт в lib/admin/outreach-queue.ts: предел общий для аккаунта.
-const OUTREACH_MS = Number(process.env.SCOUT_OUTREACH_MS || 45_000);
+const OUTREACH_MS = Number(process.env.SCOUT_OUTREACH_MS || 120_000);
 // Как часто отдавать ответы модели по уже начатым разговорам. Чаще, чем
 // касания: это ответ человеку, который сам нам написал, и он ждёт. Предел
 // на рассылку сюда не относится — ограничивают за первые письма незнакомым,
 // а не за ответы в своей же переписке.
-const REPLY_MS = Number(process.env.SCOUT_REPLY_MS || 30_000);
+const REPLY_MS = Number(process.env.SCOUT_REPLY_MS || 60_000);
 // Как часто смотреть в очередь правок отправленных писем. Правка — дело
 // ручное и редкое, но окно на неё у Telegram 48 часов, так что не медлим.
-const EDIT_MS = Number(process.env.SCOUT_EDIT_MS || 20_000);
+const EDIT_MS = Number(process.env.SCOUT_EDIT_MS || 120_000);
 const MAX_BATCH = Number(process.env.SCOUT_MAX_BATCH || 20);
 
 /** Как часто сторож смотрит на соединение. Два промаха подряд — выход. */

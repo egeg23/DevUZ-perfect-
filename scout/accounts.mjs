@@ -38,7 +38,7 @@ import { canSend, loginErrorOf } from "@/lib/admin/work-accounts";
 import { isFrozenError } from "@/lib/admin/tg-frozen";
 
 /** Как часто смотреть, не ввёл ли владелец номер, код или пароль. */
-const LOGIN_MS = 5_000;
+const LOGIN_MS = 15_000;
 /** Как часто сверять список аккаунтов с панелью и отмечаться «на связи». */
 const SYNC_MS = 60_000;
 
