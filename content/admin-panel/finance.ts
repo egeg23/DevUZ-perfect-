@@ -203,6 +203,18 @@ export const financeDict = defineDict({
   },
   shareOfPool: { ru: "доля", uz: "ulush", pl: "udział" },
   shareBack: { ru: "вернуть за расходы", uz: "xarajatlar uchun qaytarish", pl: "zwrot za wydatki" },
+  shareOwn: { ru: "лидогенерация", uz: "lidogeneratsiya", pl: "generowanie leadów" },
+  poolOwn: { ru: "Лидогенерация — вам", uz: "Lidogeneratsiya — sizga", pl: "Generowanie leadów — dla Ciebie" },
+  poolOwnNote: {
+    ru: "ваше направление: после доли ведущего, без деления",
+    uz: "sizning yo‘nalishingiz: olib boruvchi ulushidan keyin, bo‘linmaydi",
+    pl: "Twój kierunek: po udziale prowadzącego, bez podziału",
+  },
+  poolOwnFrozen: {
+    ru: (sum: string) => `ещё ${sum} ждут полной оплаты; в «К делению» не входит`,
+    uz: (sum: string) => `yana ${sum} to‘liq to‘lovni kutmoqda; «Bo‘linadi»ga kirmaydi`,
+    pl: (sum: string) => `jeszcze ${sum} czeka na pełną wpłatę; nie wchodzi do «Do podziału»`,
+  },
   shareDue: { ru: "к выплате", uz: "to‘lanadi", pl: "do wypłaty" },
   colPayer: { ru: "Кто вносил", uz: "Kim to‘lagan", pl: "Kto zapłacił" },
   together: {

@@ -229,7 +229,7 @@ export async function createProject(
   let partnerAgencyId: string | null = null;
   let partnerClientId: string | null = null;
   // Проект из лида лидогенерации — свой продукт и налог 7% (lib/admin/finance.ts,
-  // LEADGEN_MANAGER_PERCENT): так «Финансы» сразу считают 25% ведущему.
+  // LEADGEN_MANAGER_PERCENT): так «Финансы» сразу считают 20% ведущему.
   let leadgen = false;
   if (fields.leadId) {
     const { data: lead } = await db

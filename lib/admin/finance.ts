@@ -136,17 +136,21 @@ export function isClaudery(project: { product?: string | null }): boolean {
 }
 
 /**
- * Лидогенерация (content/leadgen.ts): тому, кто ведёт сделку, 25% от дохода
+ * Лидогенерация (content/leadgen.ts): тому, кто ведёт сделку, 20% от дохода
  * студии — пришедшая сумма минус себестоимость и налог 7% с этой суммы;
- * руководителю строки нет, остальное — соучредителям в их пропорции.
- * Владелец, 23.11.2026: «Менеджеры получают 25% от дохода студии (пришла
- * сумма = себестоимость и налоги 7%), от оставшейся суммы 25% идет
- * менеджеру»; на «7% от всей пришедшей суммы» — «Да, верно». Налог проекта
+ * руководителю строки нет. Остальное — не в котёл соучредителей, а владельцу
+ * целиком (`foundersPool` → `own`, `founderPayouts`): владелец, 23.11.2026,
+ * «20% от дохода. Так как это отдельный проект мой… Александру ничего не
+ * падает с этого в виде %, так как это уже мое и приносит мне деньги». До
+ * этого в тот же день: «Менеджеры получают 25% от дохода студии (пришла
+ * сумма = себестоимость и налоги 7%)…»; на «7% от всей пришедшей суммы» —
+ * «Да, верно». Процент идёт с каждого проекта лидогенерации, пока клиент с
+ * нами: продление — новый проект из того же лида. Налог проекта
  * лидогенерации при заведении — LEADGEN_TAX_PERCENT (lib/admin/projects.ts),
  * в грейд и премию за 3 сделки он не идёт (lib/admin/grade-month.ts): у него
  * своя ставка, как у Claudery.
  */
-export const LEADGEN_MANAGER_PERCENT = 25;
+export const LEADGEN_MANAGER_PERCENT = 20;
 export const LEADGEN_TAX_PERCENT = 7;
 
 export function isLeadgen(project: { product?: string | null }): boolean {
@@ -332,8 +336,8 @@ export function accrualsOf(
   const base = Math.max(0, profit);
 
   if (isLeadgen(project)) {
-    // 25% от прибыли (сумма − себестоимость − налог) ведущему; руководителю
-    // строки нет — остальное соучредителям.
+    // 20% от прибыли (сумма − себестоимость − налог) ведущему; руководителю
+    // строки нет — остальное владельцу, мимо котла (foundersPool).
     const manual = shares.get(owner.id);
     const percent = manual ?? LEADGEN_MANAGER_PERCENT;
     const out: Accrual[] = [
@@ -465,6 +469,13 @@ export type FoundersPool = {
   expenses: number;
   /** Что делится: пришедшее минус потраченное. Может быть отрицательным. */
   pool: number;
+  /**
+   * Лидогенерация — направление владельца, не студии: остаток после доли
+   * ведущего идёт ему целиком, в «К делению» не входит.
+   */
+  own: number;
+  /** То же по проектам лидогенерации, которые ещё не оплачены целиком. */
+  ownFrozen: number;
 };
 
 /**
@@ -497,6 +508,8 @@ export function foundersPool(
 ): FoundersPool {
   let earned = 0;
   let frozen = 0;
+  let own = 0;
+  let ownFrozen = 0;
   const toPartners = new Map<string, number>();
   for (const line of partners) toPartners.set(line.project_id, (toPartners.get(line.project_id) ?? 0) + line.amount_usd);
 
@@ -508,13 +521,18 @@ export function foundersPool(
     if (remainder === null) continue;
     const left = remainder - (toPartners.get(project.id) ?? 0);
 
+    if (isLeadgen(project)) {
+      if (state === "earned") own += left;
+      else ownFrozen += left;
+      continue;
+    }
     if (state === "earned") earned += left;
     else frozen += left;
   }
 
   earned -= bonuses.reduce((sum, b) => sum + b.amount_usd, 0);
   const spent = expenses.reduce((sum, e) => sum + e.amount_usd, 0);
-  return { earned, frozen, expenses: spent, pool: earned - spent };
+  return { earned, frozen, expenses: spent, pool: earned - spent, own, ownFrozen };
 }
 
 export type FounderShare = {
@@ -526,7 +544,9 @@ export type FounderShare = {
 export type FounderPayout = FounderShare & {
   /** Внёс за расходы из своих: вернуть до деления. */
   paid_back: number;
-  /** К выплате: доля от «К делению» плюс возврат. */
+  /** Своё направление (лидогенерация): только владельцу, без деления. */
+  own: number;
+  /** К выплате: доля от «К делению», возврат и своё направление. */
   total: number;
 };
 
@@ -562,11 +582,14 @@ export function founderPayouts(
   pool: number,
   founders: readonly Pick<Earner, "id" | "founder_percent">[],
   expenses: readonly Pick<Expense, "amount_usd" | "paid_by">[],
+  /** Остаток лидогенерации (`FoundersPool.own`) и кому он: владельцу. */
+  own?: { staff_id: string; amount_usd: number },
 ): FounderPayout[] {
   const back = paidBack(expenses);
   return founderShares(pool, founders).map((share) => {
     const paid = back.get(share.staff_id) ?? 0;
-    return { ...share, paid_back: paid, total: share.amount_usd + paid };
+    const mine = own && own.staff_id === share.staff_id ? own.amount_usd : 0;
+    return { ...share, paid_back: paid, own: mine, total: share.amount_usd + paid + mine };
   });
 }
 
