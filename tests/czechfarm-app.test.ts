@@ -1100,3 +1100,19 @@ test("czechfarm: «Наши партнёры» — настоящие логот
   assert.ok(home.includes('alt="ILKO İlaç"'));
   assert.ok(readFileSync(join(site(), "ar/index.html"), "utf8").includes("شركاؤنا"));
 });
+
+test("czechfarm: главная закрыта заставкой, пока сцена не загрузилась целиком, — с настоящим ходом загрузки", () => {
+  /* Владелец DevUz, 23.11.2026: «Пока не прогрузится эта сцена целиком, сайт не показывается… сделать реальный индикатор прогресса загрузки этого блока». */
+  const home = readFileSync(join(site(), "index.html"), "utf8"), about = readFileSync(join(site(), "about/index.html"), "utf8");
+  assert.ok(home.includes('id="cf-pre"') && home.includes('role="progressbar"'), "на главной нет заставки");
+  assert.ok(!about.includes('id="cf-pre"'), "заставка только на главной");
+  /* Число даёт движок сцены (кадры или байты видео), конец — тоже он; отказ закрывает заставку. */
+  assert.equal(home.split("w.cfPre&&w.cfPre(k)").length - 1, 2);
+  assert.equal(home.split("w.cfPreEnd&&w.cfPreEnd(ready)").length - 1, 4);
+  assert.match(home, /if\(done>=F&&!ready\)/);
+  /* Без скрипта, при «меньше движения» и без шифра — сайт сразу: класс ставит только скрипт заставки. */
+  assert.match(home, /html\.cf-wait \.cf-pre\{display:grid\}/);
+  assert.match(home, /classList\.contains\('rm'\)\|\|!w\.crypto/);
+  assert.match(home, /setTimeout\(close,120000\)/);
+  assert.ok(readFileSync(join(site(), "ar/index.html"), "utf8").includes("جارٍ تحميل المشهد"));
+});

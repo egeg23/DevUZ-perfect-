@@ -61,6 +61,15 @@ function nekScene() {
       if (!body.includes(from)) throw new Error("nek/land.js изменился: нет " + from);
       body = body.replace(from, to);
     }
+    /* Заставка загрузки (preHtml): ход загрузки кадров или видео — ей, конец
+       загрузки или отказ — ей же (владелец DevUz, 23.11.2026: «Пока не
+       прогрузится эта сцена целиком, сайт не показывается… сделать реальный
+       индикатор прогресса загрузки этого блока»). */
+    for (const [from, to, n] of [["n.textContent=Math.floor(k*100)", "n.textContent=Math.floor(k*100);w.cfPre&&w.cfPre(k)", 2], ["$('#hs-load').classList.add('ok')", "(function(){$('#hs-load').classList.add('ok');w.cfPreEnd&&w.cfPreEnd(ready)})()", 4]]) {
+      const parts = body.split(from);
+      if (parts.length - 1 !== n) throw new Error(`nek/land.js изменился: «${from}» ${parts.length - 1} раз вместо ${n}`);
+      body = parts.join(to);
+    }
   }
   return `(function(){${helpers}\n${body}\n})()`;
 }
@@ -633,6 +642,7 @@ ${LANGS.filter((x) => x !== l).map((x) => `<link rel="alternate" hreflang="${x}"
 <body data-lang="${l}" data-page="${p || "home"}">
 ${dz}
 ${isHome ? introHtml(l) : ""}
+${isHome && PROD ? preHtml(l) : ""}
 <a class="skip" href="#main">${t("К содержанию", "Asosiy qismga", "Skip to content")}</a>
 ${headerHtml(l, p)}
 <main id="main">
@@ -667,6 +677,36 @@ if(!ok){o.parentNode.removeChild(o);return}
 r.classList.add('cfi');try{sessionStorage.setItem('cf-intro','1')}catch(e){}
 window.cfiOff=function(){r.classList.remove('cfi');o.classList.add('out');setTimeout(function(){if(o.parentNode)o.parentNode.removeChild(o)},900)};
 var last=Date.now();(function w(){if(window.cfiOn||!o.parentNode)return;if(document.getElementById('dzi'))last=Date.now();if(Date.now()-last>4000){window.cfiOff();return}setTimeout(w,200)})();
+})()`;
+/* Заставка загрузки сцены — только боевой сайт, только главная (владелец DevUz,
+   23.11.2026: «красивый индикатор загрузки сайта? Пока не прогрузится эта сцена
+   целиком, сайт не показывается… реальный индикатор прогресса загрузки»).
+   Число — настоящее: доля загруженных кадров сцены (компьютер) или байт видео
+   (телефон), его даёт движок сцены (cfPre); закрывается, когда сцена готова
+   (cfPreEnd). Без скриптов, при «меньше движения» и без шифра в браузере
+   заставки нет: класс cf-wait ставит только этот скрипт. Сеть встала —
+   через 15 с «Открыть сайт», через 2 минуты открывается сам. */
+function preHtml(l) {
+  const t = T(l), say = t("Загружаем сцену", "Sahna yuklanmoqda", "Loading the scene");
+  return `<div class="cf-pre" id="cf-pre" role="progressbar" aria-label="${say}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+<div class="cf-pre-ring"><svg class="rg" viewBox="0 0 120 120" aria-hidden="true"><circle class="tr" cx="60" cy="60" r="56"/><circle class="fg" cx="60" cy="60" r="56" pathLength="100"/></svg>${MARK}</div>
+<p class="cf-pre-n"><b id="cf-pre-n">0</b>%</p>
+<p class="cf-pre-t">${say}</p>
+<p class="cf-pre-w" aria-hidden="true">CZECHFARM <span>${[..."ALLIANCE"].map((c) => `<i>${c}</i>`).join("")}</span></p>
+<button type="button" class="cf-pre-skip" hidden>${t("Открыть сайт", "Saytni ochish", "Open the site")}</button>
+</div>
+<script>${PRE_JS}</script>`;
+}
+const PRE_JS = `(function(){var r=document.documentElement,o=document.getElementById('cf-pre'),w=window;if(!o)return;
+if(r.classList.contains('rm')||!w.crypto||!crypto.subtle||!w.Blob||!w.fetch){o.parentNode.removeChild(o);return}
+r.classList.add('cf-wait');
+var want=0,shown=0,raf=0,gone=false,n=o.querySelector('#cf-pre-n'),fg=o.querySelector('.fg');
+function close(){if(gone)return;gone=true;cancelAnimationFrame(raf);try{scrollTo(0,0)}catch(e){}r.classList.remove('cf-wait');o.classList.add('out');setTimeout(function(){if(o.parentNode)o.parentNode.removeChild(o)},900)}
+function paint(){raf=0;shown+=(want-shown)*.16;if(want-shown<.003)shown=want;var p=Math.floor(shown*100);n.textContent=p;o.setAttribute('aria-valuenow',p);fg.style.strokeDashoffset=(100-shown*100).toFixed(2);
+if(shown<want)raf=requestAnimationFrame(paint);else if(want>=1)setTimeout(close,350)}
+w.cfPre=function(k){if(gone||!(k>want))return;want=Math.min(1,k);if(!raf)raf=requestAnimationFrame(paint)};
+w.cfPreEnd=function(ok){if(ok)w.cfPre(1);else close()};
+var s=o.querySelector('.cf-pre-skip');s.onclick=close;setTimeout(function(){if(!gone)s.hidden=false},15000);setTimeout(close,120000);
 })()`;
 function introHtml(l) {
   const skip = { ru: "Пропустить", uz: "O‘tkazib yuborish", en: "Skip", ar: "تخطٍّ" }[l];

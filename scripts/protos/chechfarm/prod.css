@@ -44,3 +44,27 @@
 @media (max-width:640px){.pl-track li{width:150px;height:76px;padding:12px 16px;margin-inline-end:12px}}
 @media (prefers-reduced-motion:reduce){.pl-track{animation:none;flex-wrap:wrap;justify-content:center;width:auto;max-width:var(--w);margin:0 auto}.pl-track li[aria-hidden]{display:none}.pl-row{-webkit-mask-image:none;mask-image:none}}
 .rm .pl-track{animation:none;flex-wrap:wrap;justify-content:center;width:auto}.rm .pl-track li[aria-hidden]{display:none}
+/* Заставка загрузки сцены главной (preHtml в gen.mjs): пока сцена не загружена
+   целиком, сайт закрыт; кольцо и число — настоящий ход загрузки. */
+.cf-pre{display:none}
+html.cf-wait,html.cf-wait body{overflow:hidden}
+html.cf-wait .cf-pre{display:grid}
+.cf-pre{position:fixed;inset:0;z-index:2147481000;place-content:center;justify-items:center;gap:14px;padding:24px;text-align:center;color:#f1ece1;background:radial-gradient(60% 50% at 50% 42%,#0d2c29 0%,#071a18 70%);touch-action:none;transition:opacity .7s ease}
+.cf-pre.out{opacity:0;pointer-events:none}
+.cf-pre-ring{position:relative;width:148px;height:148px;display:grid;place-items:center;transition:transform .7s cubic-bezier(.2,.7,.2,1)}
+.cf-pre.out .cf-pre-ring{transform:scale(1.08)}
+.cf-pre-ring .rg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+[dir="rtl"] .cf-pre-ring .rg{transform:rotate(-90deg) scaleY(-1)}
+.cf-pre-ring circle{fill:none;stroke-width:3}
+.cf-pre-ring .tr{stroke:rgb(241 236 225 / .12)}
+.cf-pre-ring .fg{stroke:var(--gold2);stroke-linecap:round;stroke-dasharray:100;stroke-dashoffset:100;filter:drop-shadow(0 0 6px rgb(229 201 143 / .45))}
+.cf-pre-ring .mk{position:relative;width:62px;height:62px}
+.cf-pre-ring .mk .b{fill:#fff}
+.cf-pre-n{margin:6px 0 0;font:600 44px/1 var(--disp);letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.cf-pre-n b{font-weight:inherit}
+.cf-pre-t{margin:0;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:rgb(241 236 225 / .62)}
+.cf-pre-w{margin:18px 0 0;font-size:12px;font-weight:700;letter-spacing:.32em;color:rgb(241 236 225 / .4)}
+.cf-pre-w span{font-weight:400}.cf-pre-w i{font-style:normal}
+.cf-pre-skip{margin-top:10px;min-height:44px;padding:8px 18px;border:1px solid rgb(241 236 225 / .24);border-radius:999px;background:rgb(7 26 24 / .4);color:rgb(241 236 225 / .8);font:500 13px/1 inherit;letter-spacing:.06em;cursor:pointer}
+.cf-pre-skip[hidden]{display:none}
+@media (prefers-reduced-motion:reduce){.cf-pre,.cf-pre-ring{transition:none}}
