@@ -179,6 +179,12 @@ export const salesStagesDict = defineDict({
     uz: (stage: string) => `«${stage}» va undan keyingilarni olib tashlaymizmi? Bosqich hisobdan chiqadi, jurnalda qoladi. Keyinroq haqiqatan bo‘lsa, yana belgilanadi.`,
     pl: (stage: string) => `Zdjąć «${stage}» i wszystko, co dalej? Etap zniknie z liczenia, w dzienniku zostanie. Jeśli później naprawdę się wydarzy, zaznaczy się ponownie.`,
   },
+  // Лидогенерация после оплаты (lib/admin/leadgen-lock.ts).
+  rPaid: {
+    ru: "Клиент лидогенерации уже оплатил: ступени теперь меняют владелец или руководитель.",
+    uz: "Lidogeneratsiya mijozi allaqachon to‘lagan: endi bosqichlarni egasi yoki rahbar o‘zgartiradi.",
+    pl: "Klient generowania leadów już zapłacił: etapy zmienia teraz właściciel lub kierownik.",
+  },
   rForbidden: {
     ru: "Это не ваш лид — отметить может тот, у кого он, руководитель или владелец.",
     uz: "Bu sizning lidingiz emas — uni lid kimda bo‘lsa o‘sha xodim, rahbar yoki egasi belgilashi mumkin.",

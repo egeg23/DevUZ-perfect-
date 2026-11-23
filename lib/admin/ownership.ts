@@ -1,3 +1,4 @@
+import { lockedAfterPay } from "@/lib/admin/leadgen-lock";
 import { seesEveryone } from "@/lib/admin/roles";
 import { record } from "@/lib/admin/audit";
 import { mayTake } from "@/lib/admin/lead-queue";
@@ -32,7 +33,7 @@ export type ActionSource = "panel" | "telegram";
 
 export type OwnershipResult =
   | { ok: true }
-  | { ok: false; reason: "offline" | "taken" | "forbidden" | "gone" | "failed" | "queued" | "share" };
+  | { ok: false; reason: "offline" | "taken" | "forbidden" | "gone" | "failed" | "queued" | "share" | "paid" };
 
 /**
  * Право менять лид: владелец или админ.
@@ -290,6 +291,8 @@ export async function setStatus(
   const lead = await ownerOf(leadId);
   if (!lead) return { ok: false, reason: "gone" };
   if (!canEdit(lead, staff)) return { ok: false, reason: "forbidden" };
+  // Лидогенерация после оплаты — только владелец и руководитель (lib/admin/leadgen-lock.ts).
+  if (await lockedAfterPay(leadId, staff)) return { ok: false, reason: "paid" };
 
   // «Новый» у закреплённого лида — противоречие: лид «новый», но чей-то, в
   // свободных его нет, и взять его никто не может. Так 23 сентября и вышло:

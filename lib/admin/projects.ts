@@ -1,5 +1,5 @@
 import { record } from "@/lib/admin/audit";
-import { DEFAULT_TAX_PERCENT, isDealKind, type DealKind } from "@/lib/admin/finance";
+import { DEFAULT_TAX_PERCENT, LEADGEN_TAX_PERCENT, isDealKind, type DealKind } from "@/lib/admin/finance";
 import { parseQuote, type QuoteInput } from "@/lib/admin/quote";
 import type { Staff } from "@/lib/admin/session";
 import { teamOf } from "@/lib/admin/team";
@@ -228,16 +228,20 @@ export async function createProject(
   let partnerModel: string | null = null;
   let partnerAgencyId: string | null = null;
   let partnerClientId: string | null = null;
+  // Проект из лида лидогенерации — свой продукт и налог 7% (lib/admin/finance.ts,
+  // LEADGEN_MANAGER_PERCENT): так «Финансы» сразу считают 25% ведущему.
+  let leadgen = false;
   if (fields.leadId) {
     const { data: lead } = await db
       .from("leads")
-      .select("partner_id, partner_void_reason, partner_model, partner_agency_id, partner_client_id, assigned_staff_id")
+      .select("partner_id, partner_void_reason, partner_model, partner_agency_id, partner_client_id, assigned_staff_id, source")
       .eq("id", fields.leadId)
       .maybeSingle();
     // Проект из лида ведёт тот, у кого лид, если ведущий не указан
     // (владелец, 13.10.2026): так продажа записывается на того, кто её
     // довёл, и продажи по людям наконец считаются.
     const leadOwner = (lead?.assigned_staff_id as string | null) ?? null;
+    leadgen = lead?.source === "leadgen";
     // Менеджер так проект на другого не запишет: ему — только на себя.
     if (!fields.ownerStaffId && staff.role !== "manager" && leadOwner && leadOwner !== owner && (await activeStaff(leadOwner))) {
       owner = leadOwner;
@@ -264,6 +268,7 @@ export async function createProject(
       amount_usd: fields.amountUsd ?? null,
       deadline: fields.deadline || null,
       started_at: new Date().toISOString().slice(0, 10),
+      ...(leadgen ? { product: "leadgen", tax_percent: LEADGEN_TAX_PERCENT } : {}),
     })
     .select("id")
     .maybeSingle();
@@ -278,7 +283,7 @@ export async function createProject(
     targetType: "project",
     targetId: data.id as string,
     ip,
-    meta: { title },
+    meta: { title, ...(leadgen ? { product: "leadgen" } : {}) },
   });
 
   return data.id as string;

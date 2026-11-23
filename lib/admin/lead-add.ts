@@ -31,6 +31,11 @@ export type ManualLeadForm = {
   from: string;
   /** «Кто это»: клиент, агентство или блогер (lib/admin/lead-party.ts). Пусто — клиент. */
   party?: string;
+  /**
+   * Направление: «leadgen» — лидогенерация (владелец, 23.11.2026: «сделай
+   * добавление Лида в ручную "лидогенерации"»), иначе разработка.
+   */
+  line?: string;
 };
 
 export type ContactKind = "telegram" | "phone" | "email" | "none";
@@ -43,6 +48,8 @@ export type ManualLead = {
   need: string;
   from: string;
   party: LeadParty;
+  /** Лид лидогенерации: источник `leadgen`, его проект — 25% ведущему (lib/admin/finance.ts). */
+  leadgen: boolean;
 };
 
 export type ManualLeadError = "no_name" | "no_contact";
@@ -82,6 +89,7 @@ export function parseManualLead(form: ManualLeadForm): { ok: true; lead: ManualL
       need: form.need.trim().slice(0, 2000),
       from: form.from.trim().slice(0, 200),
       party: partyOf(form.party),
+      leadgen: form.line === "leadgen",
     },
   };
 }
@@ -104,7 +112,7 @@ export function manualLeadRow(
 ): Record<string, unknown> {
   const who = lead.company ? `${lead.name}, ${lead.company}` : lead.name;
   return {
-    source: "manual",
+    source: lead.leadgen ? "leadgen" : "manual",
     party: lead.party,
     request_no: requestNo,
     locale: "ru",
@@ -139,6 +147,7 @@ export function manualLeadRow(
     notes: [
       `Добавлен вручную: ${addedBy.display_name}.`,
       `Кто это: ${PARTY_NOTE[lead.party]}.`,
+      lead.leadgen ? "Направление: лидогенерация." : "",
       `Откуда клиент: ${lead.from || "не указали"}.`,
       lead.need ? `\nЧто нужно: ${lead.need}` : "",
     ]
@@ -196,7 +205,13 @@ export async function addManualLead(
     targetType: "lead",
     targetId: id,
     ip,
-    meta: { assignee: assignee.id, contact_kind: parsed.lead.kind, party: parsed.lead.party, assigned_to: handleOf(assignee) },
+    meta: {
+      assignee: assignee.id,
+      contact_kind: parsed.lead.kind,
+      party: parsed.lead.party,
+      line: parsed.lead.leadgen ? "leadgen" : "dev",
+      assigned_to: handleOf(assignee),
+    },
   });
 
   // Как у взятого лида: забытый всплывёт сам.

@@ -81,7 +81,7 @@ export async function addLead(formData: FormData) {
   const text = (key: string) => String(formData.get(key) ?? "");
   const result = await addManualLead(
     staff,
-    { name: text("name"), company: text("company"), contact: text("contact"), need: text("need"), from: text("from"), party: text("party") },
+    { name: text("name"), company: text("company"), contact: text("contact"), need: text("need"), from: text("from"), party: text("party"), line: text("line") },
     text("assignee"),
     await requestIp(),
   );

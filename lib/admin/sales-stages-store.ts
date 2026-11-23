@@ -1,3 +1,4 @@
+import { lockedAfterPay } from "@/lib/admin/leadgen-lock";
 import { record } from "@/lib/admin/audit";
 import { QUEUE_ROLES } from "@/lib/admin/lead-queue";
 import { wants } from "@/lib/admin/notify-prefs";
@@ -203,7 +204,7 @@ async function readDeals(now: Date, days: number, limit: number): Promise<Deal[]
 
 /* ── Отметки «Есть интерес», «Показал макет», «Назвал цену» ──────────── */
 
-export type MarkResult = "ok" | "forbidden" | "gone" | "bad" | "failed";
+export type MarkResult = "ok" | "forbidden" | "gone" | "bad" | "failed" | "paid";
 
 /**
  * Отметить ступень по лиду или касанию. Менеджер — только по своему
@@ -225,7 +226,7 @@ export async function markStage(
   if (input.kind === "priced" && !input.amountUsd) return "bad";
 
   const target = await markTarget(db, leadId, prospectId, staff);
-  if (target === "gone" || target === "forbidden") return target;
+  if (target === "gone" || target === "forbidden" || target === "paid") return target;
   const ownLeadId = target.leadId;
 
   const { error } = await db.from("sales_marks").insert({
@@ -263,7 +264,7 @@ async function markTarget(
   leadId: string | null,
   prospectId: string | null,
   staff: Pick<Staff, "id" | "role">,
-): Promise<{ leadId: string | null } | "gone" | "forbidden"> {
+): Promise<{ leadId: string | null } | "gone" | "forbidden" | "paid"> {
   const [{ data: lead }, { data: prospect }] = await Promise.all([
     leadId ? db.from("leads").select("id, assigned_staff_id").eq("id", leadId).maybeSingle() : Promise.resolve({ data: null }),
     prospectId
@@ -285,6 +286,8 @@ async function markTarget(
     touched_by: str(prospect?.touched_by),
   });
   if (!ok) return "forbidden";
+  // Лидогенерация после оплаты — ступени двигают только владелец и руководитель.
+  if (await lockedAfterPay(ownLeadId, staff)) return "paid";
   return { leadId: ownLeadId };
 }
 
@@ -307,7 +310,7 @@ export async function undoStage(
   if (!leadId && !prospectId) return "bad";
 
   const target = await markTarget(db, leadId, prospectId, staff);
-  if (target === "gone" || target === "forbidden") return target;
+  if (target === "gone" || target === "forbidden" || target === "paid") return target;
 
   const { error } = await db.from("sales_marks").insert({
     kind: "undo",
