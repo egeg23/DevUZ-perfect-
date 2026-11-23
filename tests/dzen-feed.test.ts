@@ -94,6 +94,8 @@ test("Дзен: адрес ленты вне /api и не закрыт middlewar
   assert.equal(FEED_PATH, "/dzen/rss.xml");
   const route = readFileSync("app/dzen/rss.xml/route.ts", "utf8");
   assert.match(route, /application\/rss\+xml/);
+  assert.match(route, /dynamic = "force-dynamic"/, "на сборке базы нет: лента собирается при запросе");
+  assert.doesNotMatch(route, /export const revalidate/);
   const mw = readFileSync("middleware.ts", "utf8");
   assert.match(mw, /xml\|/, "xml мимо middleware");
   const layout = readFileSync("app/[locale]/layout.tsx", "utf8");
