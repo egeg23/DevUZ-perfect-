@@ -1084,4 +1084,17 @@ test("czechfarm: правка текста страницы — своё «Со�
     const js = readFileSync(new URL("admin/app.js", APP), "utf8");
     assert.match(js, /data-sv disabled>Сохранить</); assert.doesNotMatch(js, /id="pgs"/);
   } finally { await a.close(); }
+test("czechfarm: «Наши партнёры» — настоящие логотипы бегущей строкой на главной и «Партнёрам»", async () => {
+  /* Владелец DevUz, 23.11.2026: «партнеры (логотипы их), надо сделать бегущей строкой», «Найди лого и вставь тоже». */
+  const list = JSON.parse(readFileSync(new URL("partners.json", ROOT), "utf8"));
+  assert.ok(list.length >= 19);
+  for (const p of list) {
+    const f = new URL(`../../../public/protos/chechfarm/partners/${p.file}`, ROOT);
+    assert.ok(existsSync(f), "нет файла " + p.file);
+    if (p.file.endsWith(".svg")) { const svg = readFileSync(f, "utf8"); assert.doesNotMatch(svg, /<script|\son\w+=/i); assert.match(svg.slice(0, 300), /\swidth=/, "SVG без размера режется в <img>"); }
+  }
+  const home = readFileSync(join(site(), "index.html"), "utf8"), part = readFileSync(join(site(), "partners/index.html"), "utf8");
+  assert.ok(home.includes('id="our-partners"') && part.includes('id="partner-logos"'));
+  assert.ok(home.includes('alt="ILKO İlaç"'));
+  assert.ok(readFileSync(join(site(), "ar/index.html"), "utf8").includes("شركاؤنا"));
 });

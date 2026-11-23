@@ -1,0 +1,135 @@
+[
+ {
+  "key": "ilko",
+  "name": "ILKO İlaç",
+  "file": "ilko.webp",
+  "w": 378,
+  "h": 110
+ },
+ {
+  "key": "deva",
+  "name": "DEVA Holding",
+  "file": "deva.svg",
+  "w": 71,
+  "h": 120
+ },
+ {
+  "key": "donga",
+  "name": "Dong-A ST",
+  "file": "donga.webp",
+  "w": 99,
+  "h": 24
+ },
+ {
+  "key": "wooshin",
+  "name": "Wooshin Labottach",
+  "file": "wooshin.webp",
+  "w": 80,
+  "h": 59
+ },
+ {
+  "key": "mt",
+  "name": "MT Sağlık Ürünleri",
+  "file": "mt.webp",
+  "w": 184,
+  "h": 35
+ },
+ {
+  "key": "windmill",
+  "name": "Windmill Health Products",
+  "file": "windmill.webp",
+  "w": 201,
+  "h": 96
+ },
+ {
+  "key": "catalysis",
+  "name": "Catalysis",
+  "file": "catalysis.webp",
+  "w": 192,
+  "h": 57
+ },
+ {
+  "key": "medochemie",
+  "name": "Medochemie",
+  "file": "medochemie.webp",
+  "w": 119,
+  "h": 83
+ },
+ {
+  "key": "platin",
+  "name": "Platin Kimya",
+  "file": "platin.webp",
+  "w": 293,
+  "h": 59
+ },
+ {
+  "key": "abdi",
+  "name": "Abdi İbrahim",
+  "file": "abdi.svg",
+  "w": 995,
+  "h": 120
+ },
+ {
+  "key": "genuone",
+  "name": "GenuOne Sciences",
+  "file": "genuone.webp",
+  "w": 200,
+  "h": 60
+ },
+ {
+  "key": "bcworld",
+  "name": "BCWorld Pharm",
+  "file": "bcworld.webp",
+  "w": 257,
+  "h": 37
+ },
+ {
+  "key": "daihan",
+  "name": "Dai Han Pharm",
+  "file": "daihan.webp",
+  "w": 262,
+  "h": 19
+ },
+ {
+  "key": "saba",
+  "name": "Saba İlaç",
+  "file": "saba.svg",
+  "w": 77,
+  "h": 120
+ },
+ {
+  "key": "rion",
+  "name": "Ріон",
+  "file": "rion.webp",
+  "w": 139,
+  "h": 62
+ },
+ {
+  "key": "proxima",
+  "name": "PROXIMA Research",
+  "file": "proxima.webp",
+  "w": 217,
+  "h": 57
+ },
+ {
+  "key": "apteka-ua",
+  "name": "Аптека.UA",
+  "file": "apteka-ua.webp",
+  "w": 248,
+  "h": 49
+ },
+ {
+  "key": "umj",
+  "name": "Український медичний часопис",
+  "file": "umj.webp",
+  "w": 208,
+  "h": 49
+ },
+ {
+  "key": "compendium",
+  "name": "Компендіум",
+  "file": "compendium.webp",
+  "w": 147,
+  "h": 49
+ }
+]

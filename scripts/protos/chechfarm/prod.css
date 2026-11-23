@@ -30,3 +30,17 @@
    полоса шире. */
 .hs-load:not(.ok){padding:12px 16px;border-radius:14px;background:rgb(7 26 24 / .62);box-shadow:0 8px 24px rgb(0 0 0 / .25)}
 .hs-load:not(.ok) i{width:180px;height:4px}
+/* «Наши партнёры»: логотипы бегущей строкой, два ряда навстречу (gen.mjs, partnersBlock). */
+.pl{overflow:hidden}
+.pl-row{overflow:hidden;padding:10px 0;-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
+.pl-track{display:flex;width:max-content;margin:0;padding:0;list-style:none;animation:pl-run 60s linear infinite}
+.pl-row.rev .pl-track{animation-direction:reverse}
+.pl-row:hover .pl-track{animation-play-state:paused}
+.pl-track li{flex:none;margin-inline-end:20px;display:grid;place-items:center;width:200px;height:96px;padding:16px 22px;border-radius:18px;background:var(--card);box-shadow:var(--sh1)}
+.pl-track img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain}
+@keyframes pl-run{to{transform:translateX(-50%)}}
+[dir="rtl"] .pl-track{animation-name:pl-run-rtl}
+@keyframes pl-run-rtl{to{transform:translateX(50%)}}
+@media (max-width:640px){.pl-track li{width:150px;height:76px;padding:12px 16px;margin-inline-end:12px}}
+@media (prefers-reduced-motion:reduce){.pl-track{animation:none;flex-wrap:wrap;justify-content:center;width:auto;max-width:var(--w);margin:0 auto}.pl-track li[aria-hidden]{display:none}.pl-row{-webkit-mask-image:none;mask-image:none}}
+.rm .pl-track{animation:none;flex-wrap:wrap;justify-content:center;width:auto}.rm .pl-track li[aria-hidden]{display:none}

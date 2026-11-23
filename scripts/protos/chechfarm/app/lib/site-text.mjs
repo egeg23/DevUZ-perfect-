@@ -18,7 +18,7 @@ export const BLOCK_NAMES = {
   hero: "Первый экран и сцена", launch: "Путь вашего бренда", compare: "Сам или с CZECHFARM", mission: "Миссия", formula: "Формула бренда",
   model: "Как работает модель", audience: "Аудитории", portfolio: "Продукты (анонс)", contact: "Обращение", purpose: "Цель и миссия",
   role: "Роль компании", globe: "Маршрут партнёра", steps: "Шаги запуска", form: "Форма обращения", thesis: "Инвестиционное позиционирование",
-  blocks: "Семь шагов в стекле", materials: "Материалы инвестору", "catalog-sec": "Каталог", acc: "Кабинет", story: "С 2011 года: история", philosophy: "Наша философия: 7 шагов", assets: "Три стратегических актива", engine: "Brand Growth Engine", bhag: "Миссия и цель к 2035", kpi: "KPI к 2035 году", promise: "Обещание: 90 дней", chrome: "Шапка, меню и подвал", data: "Подписи, подсказки и сообщения",
+  blocks: "Семь шагов в стекле", materials: "Материалы инвестору", "catalog-sec": "Каталог", acc: "Кабинет", story: "С 2011 года: история", philosophy: "Наша философия: 7 шагов", assets: "Три стратегических актива", engine: "Brand Growth Engine", bhag: "Миссия и цель к 2035", kpi: "KPI к 2035 году", promise: "Обещание: 90 дней", "our-partners": "Наши партнёры (логотипы)", "partner-logos": "Наши партнёры (логотипы)", chrome: "Шапка, меню и подвал", data: "Подписи, подсказки и сообщения",
 };
 /* Эти блоки скрыть нельзя: без них страница не работает. */
 export const KEEP = new Set(["hero", "acc", "catalog-sec", "chrome", "data"]);
@@ -71,7 +71,7 @@ function split(html) {
    «Делаем»): свои файлы сайта, кроме кадров сцены. Ключ — отпечаток адреса с
    буквой i впереди, одна замена на все языки. Подставляется только файл,
    загруженный через панель. */
-const IMG = /<img\b[^>]*>/g, SRC = /\ssrc="(\/protos\/chechfarm\/(?!seq\/|launch\/)[^"]+)"/;
+const IMG = /<img\b[^>]*>/g, SRC = /\ssrc="(\/protos\/chechfarm\/(?!seq\/|launch\/|partners\/)[^"]+)"/;
 export const imgKey = (src) => "i" + hashOf(src);
 export const UPLOADED = /^\/uploads\/[0-9a-f]{32}\.(?:jpg|png|webp)$/;
 function outside(html, fn) {
