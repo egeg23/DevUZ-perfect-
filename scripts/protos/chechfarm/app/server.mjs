@@ -13,13 +13,18 @@ import { sameSecret } from "./lib/crypt.mjs";
 import { HERO_SLOTS, heroStyle, imageSize } from "./lib/hero.mjs";
 import { blocksOf, applyTexts, applyImages, orderBlocks, hideBlocks } from "./lib/site-text.mjs";
 import { addCustom, titleOf, cleanBlocks } from "./lib/custom-blocks.mjs";
-import { translate, trState, fillLangs, productPlan, TR_LANGS } from "./lib/translate.mjs";
+import { translate, trState, fillLangs, productPlan, TR_LANGS, columns } from "./lib/translate.mjs";
+import { readSheet } from "./lib/sheet.mjs";
 
 const MIME = {
   ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8",
   ".json": "application/json; charset=utf-8", ".webp": "image/webp", ".png": "image/png", ".jpg": "image/jpeg",
   ".svg": "image/svg+xml", ".mp4": "video/mp4", ".ico": "image/x-icon", ".txt": "text/plain; charset=utf-8", ".xml": "application/xml",
   ".pdf": "application/pdf", ".bin": "application/octet-stream",
+  ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document", ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  ".pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation", ".doc": "application/msword", ".xls": "application/vnd.ms-excel",
+  ".ppt": "application/vnd.ms-powerpoint", ".odt": "application/vnd.oasis.opendocument.text", ".ods": "application/vnd.oasis.opendocument.spreadsheet",
+  ".odp": "application/vnd.oasis.opendocument.presentation", ".rtf": "application/rtf", ".csv": "text/csv; charset=utf-8",
   ".wasm": "application/wasm", ".mjs": "text/javascript; charset=utf-8", ".onnx": "application/octet-stream",
 };
 const COOKIE = "cf_s", ACOOKIE = "cf_a";
@@ -46,6 +51,35 @@ export function fileKind(buf) {
   if (buf.subarray(0, 4).toString() === "RIFF" && buf.subarray(8, 12).toString() === "WEBP") return "webp";
   if (buf.subarray(0, 5).toString() === "%PDF-") return "pdf";
   return "";
+}
+
+/* Документ для комнаты инвестора (владелец DevUz, 23.11.2026: «возможность
+   добавления всех видов документов, таблиц и презентаций, не только пдф»):
+   PDF, Word, Excel, PowerPoint, OpenDocument, RTF, CSV, TXT и фото. Вид — по
+   первым байтам, а среди ZIP- и OLE-файлов — по расширению имени: внутри
+   они одинаковые. Чужое (исполняемое, HTML, SVG) не принимается. */
+export const DOC_KINDS = ["pdf", "docx", "xlsx", "pptx", "doc", "xls", "ppt", "odt", "ods", "odp", "rtf", "csv", "txt", "jpg", "png", "webp"];
+export function docKind(buf, name) {
+  const k = fileKind(buf); if (k) return k;
+  const ext = (/\.([a-z0-9]{2,5})$/i.exec(String(name || "")) || [])[1]?.toLowerCase() || "";
+  const hex = buf.subarray(0, 4).toString("hex");
+  if (hex === "504b0304" && ["docx", "xlsx", "pptx", "odt", "ods", "odp"].includes(ext)) return ext;
+  if (hex === "d0cf11e0" && ["doc", "xls", "ppt"].includes(ext)) return ext;
+  if (buf.subarray(0, 5).toString() === "{\\rtf") return "rtf";
+  if (["csv", "txt"].includes(ext) && !buf.includes(0) && !/<\s*(script|html|svg)/i.test(buf.subarray(0, 4096).toString("utf8"))) return ext;
+  return "";
+}
+
+/* Какой из текстов блока на другом языке — перевод исходной фразы: сходство по
+   тройкам букв, лучший с запасом над вторым, иначе — никакой (лучше не
+   перевести, чем подменить чужой текст). */
+const grams = (s) => { const t = " " + String(s || "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim() + " ", g = new Set(); for (let i = 0; i + 3 <= t.length; i++) g.add(t.slice(i, i + 3)); return g; };
+export function matchText(want, list) {
+  if (!want || !list?.length) return null;
+  const a = grams(want);
+  if (a.size < 2) return null;
+  const sc = list.map((t) => { const b = grams(t.def); let n = 0; for (const x of a) if (b.has(x)) n++; return { t, s: (2 * n) / (a.size + b.size) }; }).sort((x, y) => y.s - x.s);
+  return sc[0].s >= 0.45 && (sc.length < 2 || sc[0].s - sc[1].s >= 0.1) ? sc[0].t : null;
 }
 
 /* Адрес страницы → [язык, страница]: /, /about, /uz/, /en/news, /ar/contacts. */
@@ -78,7 +112,7 @@ export function visitorLang(accept, ua = "") {
   return l === "ru" ? "" : l;
 }
 
-export function createApp({ core, siteDir, adminDir, dataDir = "", setupCode = "", publicUrl = "", trustProxy = false, commit = "", sceneKey = "", tr = translate, trOn = () => trState() }) {
+export function createApp({ core, siteDir, adminDir, dataDir = "", setupCode = "", publicUrl = "", trustProxy = false, commit = "", sceneKey = "", tr = translate, trOn = () => trState(), cols = columns }) {
   /* Перевод в панели (lib/translate.mjs): свои блоки, новости, продукты.
      Не вышел — сохраняется как есть, панель пишет почему. */
   const trCall = (from, to, items) => (trOn().on ? tr(from, to, items) : Promise.resolve(null));
@@ -178,6 +212,63 @@ export function createApp({ core, siteDir, adminDir, dataDir = "", setupCode = "
     const stale = Object.values(own).filter((r) => !known.has(r.h)).map((r) => ({ h: r.h, def: r.def, val: r.v, img: r.h[0] === "i" }));
     return { lang, page: pg, blocks: list, hidden: star ? [] : core.site.hidden(pg), order, stale, customMax: 12, customCount: custom.length, translate: trOn() };
   }
+  /* Тексты страницы по блокам: { блок: [{ h, def }] } — у всех языков страница
+     собрана одним шаблоном, текст блока на месте i есть тот же текст на другом
+     языке. Блок, где число текстов не совпало, не переводится. */
+  function slotsOf(lang, pg) {
+    const star = pg === "*", f = pageFile(lang, star || pg === "home" ? "" : pg);
+    if (!existsSync(f)) return null;
+    let html = readFileSync(f, "utf8").split("__SITE_URL__").join(publicUrl);
+    if (!star) html = addCustom(html, core.site.custom(pg), lang);
+    const { blocks, chrome } = blocksOf(html);
+    const out = {};
+    for (const bl of star ? (chrome ? [chrome] : []) : blocks) out[bl.id] = bl.texts;
+    return out;
+  }
+  /* Правка на одном языке — сразу на остальных (владелец DevUz, 23.11.2026:
+     «когда меняли слово на одном языке, автоматически тянулось на всех.
+     Хайку наш подключи на тот же срок»): переводит тот же Haiku, что свои
+     блоки и новости, до TR_UNTIL. Язык, где текст поправили руками, перевод
+     не трогает (site_text.auto = 0); вернули исходный текст — уходят и
+     переводы с него. */
+  async function translateTexts(b, before) {
+    if (!LANGS.includes(b.lang) || !b.texts || typeof b.texts !== "object") return null;
+    const src = slotsOf(b.lang, b.page); if (!src) return null;
+    const where = new Map();
+    for (const [id, list] of Object.entries(src)) list.forEach((t, i) => where.set(t.h, [id, i]));
+    const others = LANGS.filter((l) => l !== b.lang), slots = Object.fromEntries(others.map((l) => [l, slotsOf(l, b.page)]));
+    /* Где этот текст на другом языке: в блоке с тем же числом текстов — на том же
+       месте; иначе — тот текст блока, что ближе всего к переводу исходной фразы. */
+    const jobs = [];
+    for (const [h, x] of Object.entries(b.texts)) {
+      const v = String(x?.v || "").trim().replace(/\s+/g, " "), was = before[h];
+      if (!where.has(h) || v === (was?.v || "")) continue;
+      const [id, i] = where.get(h), dst = {}, guess = {};
+      for (const l of others) { const list = slots[l]?.[id]; if (!list?.length) continue; if (list.length === src[id].length) dst[l] = list[i]; else guess[l] = list; }
+      if (Object.keys(dst).length || Object.keys(guess).length) jobs.push({ v, def: src[id][i].def, dst, guess });
+    }
+    if (!jobs.length) return null;
+    const anyGuess = jobs.some((j) => Object.keys(j.guess).length);
+    const items = {};
+    jobs.forEach((j, n) => { if (j.v) items["t" + n] = j.v; if (Object.keys(j.guess).length) items["d" + n] = j.def; });
+    let out = null;
+    if (Object.keys(items).length) {
+      if (!trOn().on) { if (jobs.some((j) => j.v)) return { langs: [], failed: false, off: true }; }
+      else { out = await tr(b.lang, others, items); if (!out && (jobs.some((j) => j.v) || anyGuess)) return { langs: [], failed: true }; }
+    }
+    const langs = new Set(); let failed = false;
+    jobs.forEach((j, n) => {
+      for (const l of others) {
+        const t = j.dst[l] || (j.guess[l] && matchText(out?.[l]?.["d" + n], j.guess[l]));
+        if (!t) { if (j.guess[l] || j.dst[l]) failed = failed || !!j.v; continue; }
+        if (!j.v) { core.site.setAuto(l, b.page, t.h, "", t.def); continue; }
+        const v = out?.[l]?.["t" + n];
+        if (!v) { failed = true; continue; }
+        if (core.site.setAuto(l, b.page, t.h, v, t.def)) langs.add(l);
+      }
+    });
+    return jobs.some((j) => j.v) ? { langs: [...langs], failed } : null;
+  }
   /* Шапка «Продуктов»: на подиум встаёт упаковка, выбранная в панели;
      ширина — по её пропорциям в рамке места (hero.mjs). */
   function imgFile(u) {
@@ -234,12 +325,12 @@ export function createApp({ core, siteDir, adminDir, dataDir = "", setupCode = "
     res.writeHead(code, { ...h, "Content-Length": Buffer.byteLength(pg.html) }); res.end(req.method === "HEAD" ? undefined : pg.html);
   }
 
-  function saveFile(dataUrl, dir, allowKinds, max) {
+  function saveFile(dataUrl, dir, allowKinds, max, fileName = "") {
     if (!dir) throw new HttpError(400, "Загрузка работает на сервере компании");
-    const m = /^data:[\w/+.-]+;base64,([A-Za-z0-9+/=]+)$/.exec(String(dataUrl || ""));
+    const m = /^data:[\w/+.-]*;base64,([A-Za-z0-9+/=]+)$/.exec(String(dataUrl || ""));
     if (!m) throw new HttpError(400, "Файл не прочитался, выберите его ещё раз");
-    const buf = Buffer.from(m[1], "base64"), ext = fileKind(buf);
-    if (!allowKinds.includes(ext)) throw new HttpError(400, allowKinds.includes("pdf") && allowKinds.length === 1 ? "Нужен PDF" : "Нужно фото JPG, PNG, WebP или PDF");
+    const buf = Buffer.from(m[1], "base64"), ext = allowKinds === DOC_KINDS ? docKind(buf, fileName) : fileKind(buf);
+    if (!allowKinds.includes(ext)) throw new HttpError(400, allowKinds === DOC_KINDS ? "Нужен документ: PDF, Word, Excel, PowerPoint, OpenDocument, CSV, TXT или фото" : allowKinds.includes("pdf") && allowKinds.length === 1 ? "Нужен PDF" : "Нужно фото JPG, PNG, WebP или PDF");
     if (buf.length > max) throw new HttpError(400, `Файл больше ${Math.round(max / 1048576)} МБ`);
     const name = createHash("sha256").update(buf).digest("hex").slice(0, 32) + "." + ext;
     mkdirSync(dir, { recursive: true });
@@ -300,7 +391,13 @@ export function createApp({ core, siteDir, adminDir, dataDir = "", setupCode = "
     /* Страницы сайта — всем ролям (владелец DevUz, 19.11.2026: «полное
        управление сайтом внутри», открыть и менеджерам). */
     if (M === "GET" && path === "/pages") { const q = new URL(req.url, "http://x").searchParams; return pagesView(q.get("lang") || "ru", q.get("page") || "home"); }
-    if (M === "POST" && path === "/pages") { const b = await body(req, 512 * 1024); core.site.save(b, who); return pagesView(b.lang, b.page); }
+    if (M === "POST" && path === "/pages") {
+      const b = await body(req, 512 * 1024);
+      const before = LANGS.includes(b.lang) ? Object.fromEntries(core.site.own(b.lang, b.page).map((r) => [r.h, r])) : {};
+      core.site.save(b, who);
+      const tr = await translateTexts(b, before);
+      return { ...pagesView(b.lang, b.page), tr };
+    }
     if (M === "POST" && path === "/pages/custom") {
       const b = await body(req, 256 * 1024);
       if (!PAGES.includes(b.page) || !LANGS.includes(b.lang)) throw new HttpError(400, "Нет такой страницы");
@@ -314,7 +411,7 @@ export function createApp({ core, siteDir, adminDir, dataDir = "", setupCode = "
     if (path.startsWith("/ir")) {
       lead();
       if (M === "GET" && path === "/ir") return { docs: core.ir.docs(), links: core.ir.links() };
-      if (M === "POST" && path === "/ir/docs") { const b = await body(req, 40 * 1024 * 1024); const f = saveFile(b.data, irDir, ["pdf"], 25 * 1048576); core.ir.addDoc({ title: b.title, file: f.name, name: b.name, size: f.size }, who); return { docs: core.ir.docs() }; }
+      if (M === "POST" && path === "/ir/docs") { const b = await body(req, 70 * 1024 * 1024); const f = saveFile(b.data, irDir, DOC_KINDS, 50 * 1048576, b.name); core.ir.addDoc({ title: b.title, file: f.name, name: b.name, size: f.size }, who); return { docs: core.ir.docs() }; }
       if (M === "POST" && /^\/ir\/docs\/\d+\/del$/.test(path)) { const file = core.ir.removeDoc(id, who); if (file && irDir && !core.ir.fileUsed(file)) try { unlinkSync(join(irDir, file)); } catch { /* уже нет */ } return { docs: core.ir.docs() }; }
       if (M === "POST" && path === "/ir/links") { const url = core.ir.addLink(await body(req), who); return { url, links: core.ir.links() }; }
       const lk = /^\/ir\/links\/([\w-]+)(\/revoke)?$/.exec(path);
@@ -328,6 +425,28 @@ export function createApp({ core, siteDir, adminDir, dataDir = "", setupCode = "
     if (M === "POST" && /^\/broadcasts\/\d+\/cancel$/.test(path)) { lead(); core.aud.bc.cancel(id, who); return { broadcasts: core.aud.bc.list() }; }
     /* Кабинеты партнёров и клиентов: видят все, одобряет и блокирует руководитель или владелец. */
     if (path === "/accounts" && M === "GET") return { accounts: core.aud.acc.list(), status: ACC_STATUS };
+    /* Партнёры из таблицы: загрузка (разбор столбцов — Haiku на devuz.studio,
+       нет — по заголовкам), список со статусом «в боте», удаление. */
+    if (path === "/partners" && M === "GET") return { partners: core.aud.pl.list(core.botName()) };
+    if (M === "POST" && path === "/partners/read") {
+      lead();
+      const b = await body(req, 30 * 1024 * 1024);
+      const m = /^data:[\w/+.-]*;base64,([A-Za-z0-9+/=]+)$/.exec(String(b.data || ""));
+      if (!m) throw new HttpError(400, "Файл не прочитался, выберите его ещё раз");
+      let t; try { t = readSheet(Buffer.from(m[1], "base64"), b.name); } catch (e) { throw new HttpError(400, e.message); }
+      const fields = core.aud.pl.FIELDS, ai = await cols(t.headers, t.rows);
+      const map = ai && fields.some((f) => ai[f] >= 0) ? Object.fromEntries(fields.map((f) => [f, Number.isInteger(ai[f]) && ai[f] < t.headers.length ? ai[f] : -1])) : core.aud.pl.guess(t.headers);
+      return { headers: t.headers, rows: t.rows, map, by: ai ? "ai" : "headers" };
+    }
+    if (M === "POST" && path === "/partners/import") {
+      lead();
+      const b = await body(req, 30 * 1024 * 1024);
+      if (!Array.isArray(b.rows) || !b.map || typeof b.map !== "object") throw new HttpError(400, "Загрузите таблицу заново");
+      const map = Object.fromEntries(core.aud.pl.FIELDS.map((f) => [f, Number.isInteger(b.map[f]) && b.map[f] >= 0 && b.map[f] < 40 ? b.map[f] : -1]));
+      const rows = b.rows.filter(Array.isArray).map((r) => r.slice(0, 40).map((c) => String(c ?? "")));
+      return { ...core.aud.pl.import(rows, map, who), partners: core.aud.pl.list(core.botName()) };
+    }
+    if (M === "POST" && /^\/partners\/\d+\/del$/.test(path)) { lead(); core.aud.pl.remove(Number(path.split("/")[2]), who); return { partners: core.aud.pl.list(core.botName()) }; }
     if (M === "POST" && /^\/accounts\/\d+$/.test(path)) { lead(); core.aud.acc.setStatus(id, (await body(req)).status, who); return { accounts: core.aud.acc.list() }; }
 
     /* Подключения и команда — владелец. */
@@ -460,7 +579,9 @@ export function createApp({ core, siteDir, adminDir, dataDir = "", setupCode = "
         const nh = { "X-Robots-Tag": "noindex, nofollow", "Cache-Control": "private, no-store", "X-Frame-Options": "DENY" };
         if (room[2]) {
           if (!r?.doc || !irDir) return send(res, 404, "Документа нет", nh);
-          return staticFile(req, res, irDir, r.doc.file, "private, no-store", { ...nh, "Content-Disposition": `inline; filename*=UTF-8''${encodeURIComponent(r.doc.name || "document.pdf")}` }) || send(res, 404, "Документа нет", nh);
+          /* PDF и фото открываются во вкладке, остальное (Word, Excel…) скачивается. */
+          const inline = /\.(pdf|jpg|png|webp)$/.test(r.doc.file) ? "inline" : "attachment";
+          return staticFile(req, res, irDir, r.doc.file, "private, no-store", { ...nh, "Content-Disposition": `${inline}; filename*=UTF-8''${encodeURIComponent(r.doc.name || "document")}` }) || send(res, 404, "Документа нет", nh);
         }
         const html = roomHtml(r);
         res.writeHead(r ? 200 : 404, { ...nh, "Content-Type": MIME[".html"] });

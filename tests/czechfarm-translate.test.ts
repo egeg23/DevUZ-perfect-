@@ -30,3 +30,14 @@ test("перевод CZECHFARM: запрос панели проверяется
   assert.equal(cfProblem("Таблетки", "أقراص", "ar"), null);
   assert.equal(cfProblem("Качество и доверие", "Quality — trust", "en"), "тире");
 });
+
+test("czechfarm: столбцы таблицы партнёров — Haiku видит только заголовки и несколько строк, ответ проверяет код", async () => {
+  const { cfColumnsRequestOf, cfMapOf, CF_SAMPLE_MAX } = await import("@/lib/czechfarm/columns");
+  assert.equal(cfColumnsRequestOf({}), "headers");
+  assert.equal(cfColumnsRequestOf({ headers: Array(41).fill("x") }), "headers");
+  const req = cfColumnsRequestOf({ headers: ["ФИО", "Тел"], sample: Array(20).fill(["Али", "+998", "лишнее"]) });
+  assert.ok(typeof req !== "string");
+  if (typeof req !== "string") { assert.equal(req.sample.length, CF_SAMPLE_MAX); assert.deepEqual(req.sample[0], ["Али", "+998"]); }
+  /* Чужой номер столбца, повтор и не число — «нет». */
+  assert.deepEqual(cfMapOf({ name: 0, phone: 1, org: 1, email: 7, tg: "x" }, 2), { name: 0, org: 1, phone: -1, email: -1, country: -1, city: -1, tg: -1, note: -1 });
+});

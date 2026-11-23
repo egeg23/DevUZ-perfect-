@@ -56,11 +56,18 @@ create table if not exists accounts(
   status text not null, created_at integer not null, approved_by text not null default '', tg_chat text not null default '');
 create table if not exists account_sessions(id text primary key, account_id integer not null, created_at integer not null, last_at integer not null);
 create table if not exists acc_codes(code text primary key, account_id integer not null, until integer not null);
+/* Партнёры, загруженные таблицей: в рассылку попадают, когда сами нажмут /start в боте. */
+create table if not exists partner_list(
+  id integer primary key, name text not null default '', org text not null default '', phone text not null default '',
+  email text not null default '', country text not null default '', city text not null default '', tg text not null default '',
+  note text not null default '', code text unique not null, chat text not null default '', joined_at integer,
+  created_at integer not null, by text not null default '');
 `;
 /* Правки текстов страниц из панели: страница «*» — шапка и подвал на всех страницах. */
 const SITE_TEXT = "create table if not exists site_text(lang text not null, page text not null, h text not null, v text not null, def text not null default '', primary key(lang, page, h))";
 /* Колонки, добавленные после первой выкатки: в базе, созданной раньше, их нет. */
-const LATER = ["alter table leads add column account_id integer"];
+/* site_text.auto = 1 — текст переведён сам с другого языка (переводится заново при новой правке). */
+const LATER = ["alter table leads add column account_id integer", "alter table site_text add column auto integer not null default 0"];
 
 export function openDb(file) {
   if (file !== ":memory:") mkdirSync(dirname(file), { recursive: true });

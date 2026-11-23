@@ -43,12 +43,14 @@ export function tgUpdate(update) {
   const m = update && update.message;
   if (!m || !m.chat || m.chat.type !== "private") return null;
   const text = (m.text || m.caption || "").trim();
-  const what = m.text ? "text" : m.photo ? "фото" : m.voice ? "голосовое" : m.video_note ? "кружок" : m.video ? "видео" : m.document ? "файл" : m.sticker ? "стикер" : "сообщение";
+  const what = m.text ? "text" : m.photo ? "фото" : m.voice ? "голосовое" : m.video_note ? "кружок" : m.video ? "видео" : m.document ? "файл" : m.sticker ? "стикер" : m.contact ? "контакт" : "сообщение";
   const f = m.from || {};
   return {
     kind: "message", chat: String(m.chat.id), messageId: m.message_id, at: (m.date || 0) * 1000 || Date.now(),
     text: text || `[${what}]`, name: [f.first_name, f.last_name].filter(Boolean).join(" ") || f.username || "Без имени",
     photo: m.photo && m.photo.length ? m.photo[m.photo.length - 1].file_id : "",
+    /* Номер, которым человек поделился кнопкой (только свой, не чужой контакт). */
+    contact: m.contact && (!m.contact.user_id || m.contact.user_id === f.id) ? String(m.contact.phone_number || "") : "",
     username: f.username || "", lang: String(f.language_code || "").slice(0, 2), replyTo: m.reply_to_message ? m.reply_to_message.message_id : null,
     start: /^\/start(?:\s+(\S+))?$/.exec(m.text || "")?.[1] ?? (m.text === "/start" ? "" : null),
   };

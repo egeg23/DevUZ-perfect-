@@ -168,5 +168,72 @@ export function makeAudience({ db, note, tg, now, publicUrl = "", onLead = null 
     },
   };
 
-  return { subs, bc, acc };
+  /* ── Партнёры из таблицы (владелец DevUz, 23.11.2026: «добавлять партнеров
+     через загрузку таблицы… эти партнеры уже активируются к рассылке через
+     бота когда нажмут /старт в боте, их статус тоже показывай онлайн: в боте
+     или нет они»). Партнёр находит себя в боте сам: личной ссылкой
+     (/start p<код>), по нику Telegram из таблицы или по номеру телефона,
+     которым поделился кнопкой. Привязался — в сегменте «Партнёрам». */
+  const digits = (s) => String(s || "").replace(/\D/g, "");
+  const phoneKey = (s) => { const d = digits(s); return d.length >= 9 ? d.slice(-9) : ""; };
+  const nick = (s) => (/(?:t\.me\/|@)?([A-Za-z][\w]{3,31})\b/.exec(String(s || "").trim()) || [])[1]?.toLowerCase() || "";
+  const pl = {
+    FIELDS: ["name", "org", "phone", "email", "country", "city", "tg", "note"],
+    /* Запасной разбор столбцов по заголовкам, если модель недоступна. */
+    guess(headers) {
+      const has = (h, re) => re.test(String(h).toLowerCase());
+      const RULES = { tg: /telegram|телеграм|tg\b|ник|username/, email: /e-?mail|почт|pochta/, phone: /тел|phone|моб|номер|raqam|telefon/,
+        org: /компан|организац|фирм|аптек|company|organi[sz]|kompaniya|tashkilot|юр/, country: /стран|country|davlat|mamlakat/,
+        city: /город|регион|область|city|region|shahar|viloyat/, name: /фио|имя|контакт|name|ism|ф\.и\.о|представ/, note: /коммент|примеч|note|izoh|заметк/ };
+      const map = {}, used = new Set();
+      for (const f of pl.FIELDS) { const i = headers.findIndex((h, j) => !used.has(j) && has(h, RULES[f])); map[f] = i; if (i >= 0) used.add(i); }
+      return map;
+    },
+    /* rows — строки таблицы, map — { поле: номер столбца }. */
+    import(rows, map, by) {
+      const at = (r, f) => (map[f] >= 0 ? cut(r[map[f]], f === "note" ? 500 : 160) : "");
+      const have = db.all("select phone, email, tg from partner_list");
+      const seen = new Set(have.flatMap((x) => [phoneKey(x.phone) && "p" + phoneKey(x.phone), x.email && "e" + x.email.toLowerCase(), nick(x.tg) && "t" + nick(x.tg)]).filter(Boolean));
+      let added = 0, dup = 0, empty = 0;
+      db.tx(() => { for (const r of rows.slice(0, 5000)) {
+        const o = Object.fromEntries(pl.FIELDS.map((f) => [f, at(r, f)]));
+        if (!o.name && !o.org) { empty++; continue; }
+        if (!o.phone && !o.email && !o.tg) { empty++; continue; }
+        const keys = [phoneKey(o.phone) && "p" + phoneKey(o.phone), o.email && "e" + o.email.toLowerCase(), nick(o.tg) && "t" + nick(o.tg)].filter(Boolean);
+        if (keys.some((k) => seen.has(k))) { dup++; continue; }
+        keys.forEach((k) => seen.add(k));
+        db.run("insert into partner_list(name, org, phone, email, country, city, tg, note, code, created_at, by) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+          o.name, o.org, o.phone, o.email.toLowerCase(), o.country, o.city, o.tg, o.note, "p" + token(8).replace(/[^\w]/g, "x"), now(), by);
+        added++;
+      } });
+      note(by, `Загрузил партнёров таблицей: добавлено ${added}${dup ? `, уже были ${dup}` : ""}${empty ? `, без имени или контакта ${empty}` : ""}`);
+      return { added, dup, empty };
+    },
+    list(bot) {
+      return db.all(`select p.*, b.blocked_at, b.last_at from partner_list p left join bot_users b on b.chat = p.chat and p.chat != '' order by p.id desc limit 5000`).map((p) => ({
+        id: p.id, name: p.name, org: p.org, phone: p.phone, email: p.email, country: p.country, city: p.city, tg: p.tg, note: p.note,
+        state: !p.chat ? "out" : p.blocked_at ? "blocked" : "in", joined_at: p.joined_at, last_at: p.last_at || null,
+        link: bot ? `https://t.me/${bot}?start=${p.code}` : "",
+      }));
+    },
+    remove(id, by) { const p = db.get("select name, org from partner_list where id = ?", id); db.run("delete from partner_list where id = ?", id); note(by, `Убрал партнёра из списка: ${p?.name || p?.org || id}`); },
+    join(p, chat) {
+      db.run("update partner_list set chat = ?, joined_at = coalesce(joined_at, ?) where id = ?", chat, now(), p.id);
+      db.run("update bot_users set kind = 'partner' where chat = ?", chat);
+      note("бот", `Партнёр в боте: ${p.name || p.org}`);
+      return p;
+    },
+    /* Кто это в боте: код из ссылки, ник, номер. Уже привязанный — сам по себе. */
+    find({ chat, code, username, phone }) {
+      const mine = db.get("select * from partner_list where chat = ?", chat);
+      if (mine) return { p: mine, fresh: false };
+      let p = null;
+      if (code) p = db.get("select * from partner_list where code = ? and chat = ''", code);
+      if (!p && username) p = db.all("select * from partner_list where chat = '' and tg != ''").find((x) => nick(x.tg) === String(username).toLowerCase()) || null;
+      if (!p && phoneKey(phone)) p = db.all("select * from partner_list where chat = '' and phone != ''").find((x) => phoneKey(x.phone) === phoneKey(phone)) || null;
+      return p ? { p: pl.join(p, chat), fresh: true } : null;
+    },
+  };
+
+  return { subs, bc, acc, pl };
 }

@@ -882,3 +882,120 @@ test("czechfarm: вход техподдержки DevUz — владелец п
   assert.match(route, /verifyGithubOidc/);
   assert.doesNotMatch(route, /CZECHFARM_SUPPORT_PASS"\)/);
 });
+
+test("czechfarm: правка текста страницы на одном языке переводится на остальные, правленое руками — нет", async () => {
+  /* Владелец DevUz, 23.11.2026: «когда меняли слово на одном языке, автоматически тянулось на всех. Хайку наш подключи на тот же срок». */
+  const tr = async (from: string, to: string[], items: Record<string, string>) => Object.fromEntries(to.map((l) => [l, Object.fromEntries(Object.entries(items).map(([k, v]) => [k, `[${l}] ${v}`]))]));
+  const a = await boot({ tr, trOn: () => ({ on: true, until: "2027-01-19T00:00:00+05:00" }) });
+  try {
+    await owner(a);
+    const ru = (await a.call("/api/admin/pages?lang=ru&page=home")).json;
+    const views = await Promise.all(["uz", "en", "ar"].map(async (l) => (await a.call(`/api/admin/pages?lang=${l}&page=home`)).json.blocks));
+    /* Блок, где у всех языков столько же текстов: текст на том же месте. */
+    const blk = ru.blocks.find((b: any) => b.texts.length && views.every((v: any[]) => v.find((x) => x.id === b.id)?.texts.length === b.texts.length));
+    assert.ok(blk, "нет блока с одинаковым числом текстов");
+    const t = blk.texts[0], uz = views[0].find((x: any) => x.id === blk.id);
+    let r = (await a.adminPost("/pages", { lang: "ru", page: "home", texts: { [t.h]: { v: "Свяжитесь с нами", def: t.def } } })).json;
+    assert.deepEqual(r.tr.langs.sort(), ["ar", "en", "uz"]);
+    assert.ok((await a.call("/uz/")).text.includes("[uz] Свяжитесь с нами"), "перевод не на узбекской странице");
+    /* Узбекский поправили руками — следующая русская правка его не трогает. */
+    const uh = uz.texts[0].h;
+    await a.adminPost("/pages", { lang: "uz", page: "home", texts: { [uh]: { v: "Biz bilan bog‘laning", def: uz.texts[0].def } } });
+    r = (await a.adminPost("/pages", { lang: "ru", page: "home", texts: { [t.h]: { v: "Напишите нам", def: t.def } } })).json;
+    assert.deepEqual(r.tr.langs.sort(), ["ar", "en"]);
+    assert.ok((await a.call("/uz/")).text.includes("Biz bilan bog‘laning"));
+    assert.ok((await a.call("/en/")).text.includes("[en] Напишите нам"));
+    /* Вернули русский исходный — уходят и переводы с него, ручной узбекский остаётся. */
+    await a.adminPost("/pages", { lang: "ru", page: "home", texts: { [t.h]: { v: "", def: t.def } } });
+    assert.ok(!(await a.call("/en/")).text.includes("[en] Напишите нам"));
+    assert.ok((await a.call("/uz/")).text.includes("Biz bilan bog‘laning"));
+    /* Блок, где у языка другое число текстов: текст ищется по переводу исходной фразы. */
+    const { matchText } = await load("server.mjs");
+    const list = [{ h: "1", def: "Write to us" }, { h: "2", def: "Our office in Tashkent" }, { h: "3", def: "Working hours" }];
+    assert.equal(matchText("Our office is in Tashkent", list).h, "2");
+    assert.equal(matchText("Something else entirely", list), null, "не похоже — не подменяем");
+  } finally { await a.close(); }
+});
+
+test("czechfarm: партнёры из таблицы — Excel и CSV, столбцы от Haiku или по заголовкам, в боте сами по /start", async () => {
+  /* Владелец DevUz, 23.11.2026: «добавлять партнеров через загрузку таблицы… эти партнеры уже активируются к рассылке через бота когда нажмут /старт… статус: в боте или нет». */
+  const { readSheet } = await load("lib/sheet.mjs");
+  const csv = "ФИО;Компания;Телефон;Telegram\nАли Валиев;Pharma Line;+998 90 111-22-33;@ali_pharma\nБек;Med Plus;+998 91 222 33 44;\n;;;\n";
+  const t = readSheet(Buffer.from(csv), "p.csv");
+  assert.deepEqual(t.headers, ["ФИО", "Компания", "Телефон", "Telegram"]);
+  assert.equal(t.rows.length, 2);
+  assert.throws(() => readSheet(Buffer.from("d0cf11e0a1b11ae1", "hex"), "p.xls"), /xlsx или CSV/);
+  /* Настоящий .xlsx: ZIP с общими строками и листом. */
+  const { deflateRawSync } = await import("node:zlib");
+  const files: [string, string][] = [
+    ["xl/workbook.xml", '<workbook><sheets><sheet name="Лист1" sheetId="1" r:id="rId1"/></sheets></workbook>'],
+    ["xl/_rels/workbook.xml.rels", '<Relationships><Relationship Id="rId1" Target="worksheets/sheet1.xml"/></Relationships>'],
+    ["xl/sharedStrings.xml", "<sst><si><t>Name</t></si><si><t>Company</t></si><si><t>Phone</t></si><si><t>Dana</t></si><si><t>Bio &amp; Co</t></si></sst>"],
+    ["xl/worksheets/sheet1.xml", '<worksheet><sheetData><row r="1"><c r="A1" t="s"><v>0</v></c><c r="B1" t="s"><v>1</v></c><c r="C1" t="s"><v>2</v></c></row><row r="2"><c r="A2" t="s"><v>3</v></c><c r="B2" t="s"><v>4</v></c><c r="C2"><v>998935551122</v></c></row></sheetData></worksheet>'],
+  ];
+  const locals: Buffer[] = [], central: Buffer[] = []; let off = 0;
+  for (const [name, body] of files) {
+    const raw = Buffer.from(body), z = deflateRawSync(raw), nm = Buffer.from(name);
+    const lh = Buffer.alloc(30); lh.writeUInt32LE(0x04034b50, 0); lh.writeUInt16LE(8, 8); lh.writeUInt32LE(z.length, 18); lh.writeUInt32LE(raw.length, 22); lh.writeUInt16LE(nm.length, 26);
+    const ch = Buffer.alloc(46); ch.writeUInt32LE(0x02014b50, 0); ch.writeUInt16LE(8, 10); ch.writeUInt32LE(z.length, 20); ch.writeUInt32LE(raw.length, 24); ch.writeUInt16LE(nm.length, 28); ch.writeUInt32LE(off, 42);
+    locals.push(lh, nm, z); central.push(ch, nm); off += 30 + nm.length + z.length;
+  }
+  const cd = Buffer.concat(central), end = Buffer.alloc(22); end.writeUInt32LE(0x06054b50, 0); end.writeUInt16LE(files.length, 8); end.writeUInt16LE(files.length, 10); end.writeUInt32LE(cd.length, 12); end.writeUInt32LE(off, 16);
+  const xlsx = Buffer.concat([...locals, cd, end]);
+  assert.deepEqual(readSheet(xlsx, "p.xlsx"), { headers: ["Name", "Company", "Phone"], rows: [["Dana", "Bio & Co", "998935551122"]] });
+
+  let asked = 0;
+  const cols = async (headers: string[]) => { asked++; return headers[0] === "ФИО" ? { name: 0, org: 1, phone: 2, email: -1, country: -1, city: -1, tg: 3, note: -1 } : null; };
+  const a = await boot({ cols });
+  try {
+    await owner(a);
+    await a.adminPost("/connect/tg", { token: "123456:" + "A".repeat(35) });
+    const data = "data:text/csv;base64," + Buffer.from(csv).toString("base64");
+    let r = (await a.adminPost("/partners/read", { data, name: "p.csv" })).json;
+    assert.equal(r.by, "ai"); assert.equal(r.map.tg, 3); assert.equal(asked, 1);
+    r = (await a.adminPost("/partners/import", { rows: r.rows, map: r.map })).json;
+    assert.equal(r.added, 2);
+    assert.deepEqual(r.partners.map((p: any) => p.state), ["out", "out"]);
+    /* Та же таблица ещё раз — повторов нет. */
+    assert.equal((await a.adminPost("/partners/import", { rows: t.rows, map: { name: 0, org: 1, phone: 2, tg: 3 } })).json.dup, 2);
+    /* Модель не ответила — столбцы по заголовкам. */
+    const x = (await a.adminPost("/partners/read", { data: "data:;base64," + xlsx.toString("base64"), name: "p.xlsx" })).json;
+    assert.equal(x.by, "headers"); assert.equal(x.map.name, 0); assert.equal(x.map.org, 1); assert.equal(x.map.phone, 2);
+    /* Али нажал /start — нашёлся по нику, в сегменте «Партнёрам». */
+    await a.tg({ message: { message_id: 1, date: 1, chat: { id: 701, type: "private" }, from: { id: 701, first_name: "Али", username: "Ali_Pharma" }, text: "/start" } });
+    let list = (await a.call("/api/admin/partners")).json.partners;
+    assert.equal(list.find((p: any) => p.org === "Pharma Line").state, "in");
+    assert.deepEqual(a.core.aud.subs.recipients("partner"), ["701"]);
+    /* Бек — номером, которым поделился кнопкой (свой, не чужой контакт). */
+    await a.tg({ message: { message_id: 2, date: 1, chat: { id: 702, type: "private" }, from: { id: 702, first_name: "Бек" }, contact: { phone_number: "998912223344", user_id: 999 } } });
+    assert.equal((await a.call("/api/admin/partners")).json.partners.find((p: any) => p.org === "Med Plus").state, "out", "чужой контакт засчитан");
+    await a.tg({ message: { message_id: 3, date: 1, chat: { id: 702, type: "private" }, from: { id: 702, first_name: "Бек" }, contact: { phone_number: "+998912223344", user_id: 702 } } });
+    list = (await a.call("/api/admin/partners")).json.partners;
+    assert.equal(list.find((p: any) => p.org === "Med Plus").state, "in");
+    assert.ok(list.every((p: any) => p.link.startsWith("https://t.me/czechfarm_bot?start=p")));
+    /* Заблокировал бота — так и видно. */
+    a.db.run("update bot_users set blocked_at = 1 where chat = '702'");
+    assert.equal((await a.call("/api/admin/partners")).json.partners.find((p: any) => p.org === "Med Plus").state, "blocked");
+  } finally { await a.close(); }
+});
+
+test("czechfarm: в комнату инвестора — любые документы, таблицы и презентации, не только PDF", async () => {
+  const { docKind, DOC_KINDS } = await load("server.mjs");
+  const zip = Buffer.from("504b030414000000", "hex"), ole = Buffer.from("d0cf11e0a1b11ae1", "hex");
+  assert.equal(docKind(zip, "Презентация.pptx"), "pptx");
+  assert.equal(docKind(zip, "KPI.xlsx"), "xlsx");
+  assert.equal(docKind(ole, "old.doc"), "doc");
+  assert.equal(docKind(Buffer.from("%PDF-1.7"), "a.pdf"), "pdf");
+  assert.equal(docKind(Buffer.from("a;b\n1;2"), "t.csv"), "csv");
+  assert.equal(docKind(zip, "evil.exe"), "", "ZIP с чужим расширением");
+  assert.equal(docKind(Buffer.from("<html><script>x</script>"), "x.txt"), "", "HTML под видом текста");
+  assert.equal(docKind(Buffer.from("MZ\x90\x00"), "a.docx"), "", "программа под видом Word");
+  assert.ok(DOC_KINDS.includes("pptx"));
+  const a = await boot();
+  try {
+    await owner(a);
+    const data = "data:application/vnd.openxmlformats-officedocument.presentationml.presentation;base64," + Buffer.concat([zip, Buffer.alloc(100)]).toString("base64");
+    const r = (await a.adminPost("/ir/docs", { title: "Презентация", data, name: "deck.pptx" })).json;
+    assert.equal(r.docs[0].name, "deck.pptx");
+  } finally { await a.close(); }
+});
