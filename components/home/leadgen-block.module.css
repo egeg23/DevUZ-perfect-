@@ -65,6 +65,9 @@
 .big { font-size: 64px; line-height: 1; color: var(--gold); font-variant-numeric: tabular-nums; }
 .statText { font-size: 16px; color: var(--soft); max-width: 220px; }
 
+.proof { font-size: 15px; color: var(--soft); }
+.proof b { color: var(--gold); font-weight: 600; }
+
 .flow { color: var(--ink); padding: 8px 0 0; }
 
 .price { font-size: 15px; color: var(--muted); }

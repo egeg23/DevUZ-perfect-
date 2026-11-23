@@ -159,3 +159,40 @@ export const LEADGEN_FAQ = [
     a: "Россия, Беларусь и Казахстан. Работаем по договору, расчёты в рублях.",
   },
 ] as const;
+
+/**
+ * Числа направления — со слов владельца, 23.11.2026: «72 стоматологии на
+ * постоянной работе с нами; 7 автосалонов, 2 компании по строительству
+ * модульных домов; ежемесячно им приводим более 9500 лидов». Меняются —
+ * только здесь.
+ */
+export const LEADGEN_PROOF = {
+  dental: 72,
+  auto: 7,
+  modular: 2,
+  monthlyLeads: 9500,
+} as const;
+
+/** Слайдер расчёта: сколько квалифицированных лидов нужно. */
+export const QUOTE_MIN = 30;
+export const QUOTE_MAX = 250;
+export const QUOTE_STEP = 5;
+
+export type LeadgenQuote = {
+  tariff: LeadgenTariff;
+  /** Цена за лида при этом числе лидов, если тариф с ценой. */
+  perLead: number | null;
+};
+
+/**
+ * Какой тариф даст нужное число лидов: самый дешёвый, у которого верхняя
+ * граница не ниже запроса (нижнюю гарантирует договор, верхняя — «до»).
+ * Больше, чем даёт «Стандарт», — «Максимум», цена договорная. Своих цен
+ * между тарифами не придумываем.
+ */
+export function quoteFor(leads: number): LeadgenQuote {
+  const priced = LEADGEN_TARIFFS.filter((t) => t.price !== null && t.leads !== null);
+  const tariff = priced.find((t) => t.leads![1] >= leads) ?? LEADGEN_TARIFFS.find((t) => t.key === "max")!;
+  const per = tariff.price !== null ? Math.round(tariff.price / Math.max(leads, tariff.leads![0]) / 10) * 10 : null;
+  return { tariff, perLead: per };
+}

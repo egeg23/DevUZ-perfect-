@@ -59,3 +59,24 @@ test("лидогенерация: анимация стоит при «мень�
     assert.doesNotMatch(css, /animation[^;]*\b(width|height|left|top)\b/);
   }
 });
+
+test("лидогенерация: ползунок берёт цену только из тарифов", async () => {
+  const { quoteFor, LEADGEN_PROOF, QUOTE_MIN, QUOTE_MAX } = await import("@/content/leadgen");
+  assert.equal(quoteFor(30).tariff.key, "test");
+  assert.equal(quoteFor(55).tariff.key, "test");
+  assert.equal(quoteFor(60).tariff.key, "smart", "больше 55 — уже Смарт мини");
+  assert.equal(quoteFor(60).perLead, 5710, "лидов будет не меньше 70 по договору");
+  assert.equal(quoteFor(125).tariff.key, "smart");
+  assert.equal(quoteFor(150).tariff.key, "standard");
+  assert.equal(quoteFor(171).tariff.key, "max");
+  assert.equal(quoteFor(QUOTE_MAX).perLead, null, "Максимум — договорная");
+  assert.ok(QUOTE_MIN <= 30);
+  const prices = new Set(LEADGEN_TARIFFS.map((t) => t.price));
+  for (let n = QUOTE_MIN; n <= QUOTE_MAX; n += 5) assert.ok(prices.has(quoteFor(n).tariff.price));
+  assert.deepEqual({ ...LEADGEN_PROOF }, { dental: 72, auto: 7, modular: 2, monthlyLeads: 9500 });
+  const page = readFileSync("app/[locale]/leadgen/page.tsx", "utf8");
+  assert.match(page, /<LeadgenCalc \/>/);
+  assert.match(page, /LEADGEN_PROOF\.dental/);
+  assert.match(readFileSync("components/home/leadgen-block.tsx", "utf8"), /LEADGEN_PROOF\.monthlyLeads/);
+  assert.match(readFileSync("components/leadgen/calc.module.css", "utf8"), /prefers-reduced-motion/);
+});
