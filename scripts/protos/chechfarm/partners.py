@@ -23,6 +23,8 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(ROOT, "../../../public/protos/chechfarm/partners")
 os.makedirs(OUT, exist_ok=True)
 H = 120
+# Логотипы, сделанные под тёмный фон (белые буквы): белое — цветом текста сайта, цветное как есть.
+DARKEN = {"catalysis", "genuone"}
 out = []
 for key, name in LIST:
     src = next((os.path.join(SRC, key + e) for e in (".svg", ".png", ".webp", ".jpg", ".jpeg") if os.path.exists(os.path.join(SRC, key + e))), None)
@@ -34,6 +36,9 @@ for key, name in LIST:
             print("SVG со скриптом, пропуск:", key); continue
         m = re.search(r'viewBox="[\d.\-]+[ ,]+[\d.\-]+[ ,]+([\d.]+)[ ,]+([\d.]+)"', svg)
         w, h = (float(m.group(1)), float(m.group(2))) if m else (200, 60)
+        # Без width и height браузер рисует SVG в <img> окном 300×150 и режет его.
+        if not re.search(r"<svg[^>]*\swidth=", svg[:500]):
+            svg = re.sub(r"<svg\b", f'<svg width="{w:g}" height="{h:g}"', svg, count=1)
         open(os.path.join(OUT, key + ".svg"), "w", encoding="utf8").write(svg)
         out.append({"key": key, "name": name, "file": key + ".svg", "w": round(w * H / h), "h": H}); continue
     im = Image.open(src).convert("RGBA")
@@ -44,6 +49,11 @@ for key, name in LIST:
             for x in range(im.width):
                 r, g, b, a = px[x, y]
                 if r > 245 and g > 245 and b > 245: px[x, y] = (255, 255, 255, 0)
+    if key in DARKEN:
+        for y in range(im.height):
+            for x in range(im.width):
+                r, g, b, a = px[x, y]
+                if a and r > 200 and g > 200 and b > 200: px[x, y] = (14, 29, 27, a)
     box = im.getchannel("A").point(lambda v: 255 if v > 8 else 0).getbbox()
     if box: im = im.crop(box)
     if im.height > H: im = im.resize((round(im.width * H / im.height), H), Image.LANCZOS)
