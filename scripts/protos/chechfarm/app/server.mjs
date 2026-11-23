@@ -291,6 +291,7 @@ export function createApp({ core, siteDir, adminDir, dataDir = "", setupCode = "
     });
     return html;
   }
+  const trJobs = new Map(); let trSeq = 0;
   let cache = new Map(), seen = 0;
   function page(lang, pg) {
     if (core.version() !== seen) { cache = new Map(); seen = core.version(); }
@@ -320,7 +321,8 @@ export function createApp({ core, siteDir, adminDir, dataDir = "", setupCode = "
   }
   function sendHtml(req, res, pg, code = 200) {
     if (!pg) return send(res, code === 404 ? 404 : 503, code === 404 ? "Страница не найдена" : "Сайт ещё собирается");
-    const h = { "Content-Type": MIME[".html"], "Cache-Control": "no-cache", Vary: "Accept-Encoding", "X-Frame-Options": "SAMEORIGIN" };
+    /* no-store: телефон, открывший вкладку снова, не показывает страницу из памяти до правки в панели. */
+    const h = { "Content-Type": MIME[".html"], "Cache-Control": "no-store", Vary: "Accept-Encoding", "X-Frame-Options": "SAMEORIGIN" };
     if (/\bgzip\b/.test(String(req.headers["accept-encoding"] || ""))) { res.writeHead(code, { ...h, "Content-Encoding": "gzip", "Content-Length": pg.gz.length }); return res.end(req.method === "HEAD" ? undefined : pg.gz); }
     res.writeHead(code, { ...h, "Content-Length": Buffer.byteLength(pg.html) }); res.end(req.method === "HEAD" ? undefined : pg.html);
   }
@@ -395,9 +397,22 @@ export function createApp({ core, siteDir, adminDir, dataDir = "", setupCode = "
       const b = await body(req, 512 * 1024);
       const before = LANGS.includes(b.lang) ? Object.fromEntries(core.site.own(b.lang, b.page).map((r) => [r.h, r])) : {};
       core.site.save(b, who);
+      /* Сохранение одного поля (владелец DevUz, 23.11.2026: «не сразу видно изменение»,
+         «кнопку сохранить рядом с каждым полем»): ответ сразу после записи, перевод на
+         остальные языки идёт следом, панель спрашивает итог по номеру. */
+      if (b.quick) {
+        let job = 0;
+        if (b.texts && trOn().on) {
+          job = ++trSeq; trJobs.set(job, null);
+          translateTexts(b, before).then((r) => trJobs.set(job, r || { langs: [], failed: false }), (e) => { console.error("перевод страницы", e.message); trJobs.set(job, { langs: [], failed: true }); });
+          for (const k of trJobs.keys()) { if (trJobs.size <= 300) break; trJobs.delete(k); }
+        }
+        return { ok: true, job };
+      }
       const tr = await translateTexts(b, before);
       return { ...pagesView(b.lang, b.page), tr };
     }
+    if (M === "GET" && /^\/pages\/tr\/\d+$/.test(path)) { const r = trJobs.get(id); return r === undefined ? { gone: true } : r === null ? { pending: true } : { done: true, tr: r }; }
     if (M === "POST" && path === "/pages/custom") {
       const b = await body(req, 256 * 1024);
       if (!PAGES.includes(b.page) || !LANGS.includes(b.lang)) throw new HttpError(400, "Нет такой страницы");
@@ -420,7 +435,21 @@ export function createApp({ core, siteDir, adminDir, dataDir = "", setupCode = "
     }
 
     /* Подписчики бота и рассылки — руководитель и владелец (менеджеру не видно). */
-    if (path === "/audience" && M === "GET") { lead(); return { counts: core.aud.subs.counts(), broadcasts: core.aud.bc.list(), segments: SEGMENTS }; }
+    if (path === "/audience" && M === "GET") { lead(); return { counts: core.aud.subs.counts(), broadcasts: core.aud.bc.list(), segments: SEGMENTS, groups: core.aud.grp.list() }; }
+    /* Группы рассылки: аптеки одной сети, врачи одного направления — руководитель и владелец. */
+    if (path.startsWith("/groups")) {
+      lead();
+      const G = core.aud.grp, view = (gid) => ({ group: G.get(gid), members: G.members(gid), groups: G.list() });
+      if (M === "POST" && path === "/groups") { const b = await body(req); return view(G.create(b.name, who)); }
+      if (!/^\/groups\/\d+(\/\w+)?$/.test(path) || !G.get(id)) throw new HttpError(404, "Нет такой группы");
+      if (M === "GET" && path === `/groups/${id}`) return view(id);
+      if (M === "GET" && path === `/groups/${id}/find`) return { found: G.find(new URL(req.url, "http://x").searchParams.get("q") || "", id) };
+      if (M === "POST" && path === `/groups/${id}/add`) { const n = G.add(id, (await body(req, 256 * 1024)).refs, who); return { added: n, ...view(id) }; }
+      if (M === "POST" && path === `/groups/${id}/drop`) { G.drop(id, (await body(req)).ref, who); return view(id); }
+      if (M === "POST" && path === `/groups/${id}/rename`) { G.rename(id, (await body(req)).name, who); return view(id); }
+      if (M === "POST" && path === `/groups/${id}/del`) { G.remove(id, who); return { groups: G.list() }; }
+      throw new HttpError(404, "Нет такого адреса");
+    }
     if (path === "/broadcasts" && M === "POST") { lead(); const b = await body(req, 16 * 1024); const bid = core.aud.bc.create({ text: b.text, photo: b.photo, seg: b.seg }, who); return { id: bid, broadcasts: core.aud.bc.list() }; }
     if (M === "POST" && /^\/broadcasts\/\d+\/cancel$/.test(path)) { lead(); core.aud.bc.cancel(id, who); return { broadcasts: core.aud.bc.list() }; }
     /* Кабинеты партнёров и клиентов: видят все, одобряет и блокирует руководитель или владелец. */
