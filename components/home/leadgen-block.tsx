@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { LeadFlow } from "@/components/leadgen/flow";
-import { LEADGEN_COUNTRIES, LEADGEN_NICHES, LEADGEN_PATH, LEADGEN_TARIFFS, rub } from "@/content/leadgen";
+import { LEADGEN_COUNTRIES, LEADGEN_NICHES, LEADGEN_PATH, LEADGEN_PROOF, LEADGEN_TARIFFS, rub } from "@/content/leadgen";
 import { cn } from "@/lib/cn";
 import { localeHref } from "@/lib/i18n";
 
@@ -48,14 +48,16 @@ export function LeadgenBlock() {
             </div>
             <div className={s.side}>
               <div className={s.stat}>
-                <span className={s.big}>
-                  {test.leads?.[0]}–{test.leads?.[1]}
-                </span>
-                <span className={s.statText}>квалифицированных лидов за {test.term} теста</span>
+                <span className={s.big}>{LEADGEN_PROOF.monthlyLeads.toLocaleString("ru-RU").replace(/ /g, "\u00a0")}+</span>
+                <span className={s.statText}>лидов в месяц приводим нашим клиентам</span>
               </div>
+              <p className={s.proof}>
+                <b>{LEADGEN_PROOF.dental}</b> стоматологии, <b>{LEADGEN_PROOF.auto}</b> автосалонов и{" "}
+                <b>{LEADGEN_PROOF.modular}</b> компании по модульным домам работают с нами постоянно
+              </p>
               <LeadFlow className={s.flow} />
               <p className={s.price}>
-                Тестовый прогон <b>{rub(test.price ?? 0)}</b>, дальше тариф по цифрам теста
+                Тестовый прогон <b>{rub(test.price ?? 0)}</b>: {test.leads?.[0]}–{test.leads?.[1]} лидов за {test.term}
               </p>
             </div>
           </div>

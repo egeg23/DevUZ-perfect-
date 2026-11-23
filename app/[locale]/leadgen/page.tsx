@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
 import { SectionHeading } from "@/components/ui/section-heading";
+import { LeadgenCalc } from "@/components/leadgen/calc";
 import { LeadFlow } from "@/components/leadgen/flow";
 import { LeadgenForm } from "@/components/leadgen/form";
 import {
@@ -12,6 +13,7 @@ import {
   LEADGEN_LOCALES,
   LEADGEN_NICHES,
   LEADGEN_PATH,
+  LEADGEN_PROOF,
   LEADGEN_QUALIFIED,
   LEADGEN_SOURCES,
   LEADGEN_STEPS,
@@ -101,6 +103,25 @@ export default async function LeadgenPage({ params }: { params: Promise<{ locale
         </Container>
       </section>
 
+      {/* Цифры направления (владелец, 23.11.2026). */}
+      <section aria-label="С кем работаем" className="border-b border-line py-12 md:py-16">
+        <Container>
+          <ul className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            {[
+              { n: `${LEADGEN_PROOF.dental}`, t: "стоматологии на постоянной работе с нами" },
+              { n: `${LEADGEN_PROOF.auto}`, t: "автосалонов" },
+              { n: `${LEADGEN_PROOF.modular}`, t: "компании строят модульные дома" },
+              { n: `${LEADGEN_PROOF.monthlyLeads.toLocaleString("ru-RU").replace(/ /g, "\u00a0")}+`, t: "лидов приводим им каждый месяц" },
+            ].map((x) => (
+              <li key={x.t} className="box-glass rounded-2xl p-5 sm:p-6">
+                <p className="font-display text-[clamp(2rem,5vw,3rem)] font-extrabold leading-none text-white">{x.n}</p>
+                <p className="mt-2 text-[0.9rem] leading-snug text-white/70">{x.t}</p>
+              </li>
+            ))}
+          </ul>
+        </Container>
+      </section>
+
       {/* Ниши. */}
       <section aria-labelledby="leadgen-niches" className="border-b border-line py-20 md:py-28">
         <Container>
@@ -165,7 +186,10 @@ export default async function LeadgenPage({ params }: { params: Promise<{ locale
       <section id="tariffs" aria-labelledby="leadgen-tariffs" className="border-b border-line py-20 md:py-28">
         <Container>
           <SectionHeading kicker="Тарифы" title={<span id="leadgen-tariffs">Начните с теста, дальше по цифрам</span>} description="Количество лидов «от и до» фиксируем в договоре. Обработку лида после нашего звонка берёт на себя ваш отдел продаж." />
-          <div className="mt-12 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-12">
+            <LeadgenCalc />
+          </div>
+          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {LEADGEN_TARIFFS.map((t, i) => {
               const per = perLead(t);
               return (
