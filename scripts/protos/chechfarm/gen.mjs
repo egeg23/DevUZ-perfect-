@@ -312,6 +312,22 @@ function ctaEnd(l) {
 }
 
 /* ── Страницы ──────────────────────────────────────────────────────── */
+/* «Наши партнёры» бегущей строкой (владелец DevUz, 23.11.2026: «На их
+   изначальном сайте есть уже партнеры (логотипы их), надо сделать бегущей
+   строкой их», и список производителей, с которыми работает компания: «Найди
+   лого и вставь тоже»). Только боевой сайт. Логотипы — настоящие, с их
+   прежнего сайта czechfarm.uz и сайтов самих компаний: partners.py кладёт их
+   в public/protos/chechfarm/partners и пишет partners.json. Два ряда
+   навстречу, наведение останавливает; при «меньше движения» — стопкой. */
+const LOGOS = existsSync(DIR + "partners.json") ? JSON.parse(readFileSync(DIR + "partners.json", "utf8")) : [];
+function partnersBlock(l, id = "our-partners") {
+  if (!PROD || !LOGOS.length) return "";
+  const t = T(l), half = Math.ceil(LOGOS.length / 2);
+  const row = (list, dir) => `<div class="pl-row${dir ? " rev" : ""}"><ul class="pl-track">${[...list, ...list].map((p, i) => `<li${i >= list.length ? ' aria-hidden="true"' : ""}><img src="${IMG}/partners/${p.file}" alt="${i >= list.length ? "" : p.name}" width="${p.w}" height="${p.h}" loading="lazy" decoding="async"></li>`).join("")}</ul></div>`;
+  return `<section class="sec pl" id="${id}"><div class="wrap"><div class="sec-h mv mv-up"><p class="kicker">${t("Наши партнёры", "Hamkorlarimiz", "Our partners")}</p><h2 class="h2">${t("Работаем с производителями <b>из разных стран</b>", "Turli mamlakatlardagi <b>ishlab chiqaruvchilar</b> bilan ishlaymiz", "We work with manufacturers <b>from many countries</b>")}</h2><p class="lead">${t("Турция, Южная Корея, Кипр, Испания, Грузия, США и другие: препараты наших партнёров доходят до аптек Узбекистана через CZECHFARM.", "Turkiya, Janubiy Koreya, Kipr, Ispaniya, Gruziya, AQSh va boshqalar: hamkorlarimiz dori vositalari CZECHFARM orqali O‘zbekiston dorixonalariga yetib boradi.", "Turkey, South Korea, Cyprus, Spain, Georgia, the USA and more: our partners’ medicines reach pharmacies in Uzbekistan through CZECHFARM.")}</p></div></div>
+${row(LOGOS.slice(0, half), false)}${row(LOGOS.slice(half), true)}</section>`;
+}
+
 function home(l) {
   const t = T(l);
   const hero = PB.heroScene(l, `<div class="hero-in"><div style="display:grid;gap:24px">
@@ -325,7 +341,7 @@ function home(l) {
     k: t("Как работает модель CZECHFARM", "CZECHFARM modeli qanday ishlaydi", "How the CZECHFARM model works"),
     h: t("Улучшение здоровья <b>создаёт стоимость</b>", "Salomatlikni yaxshilash <b>qiymat yaratadi</b>", "Better health <b>creates value</b>"),
     p: t("Семь шагов от здоровья человека до роста компании. Импульс идёт по цепочке сам; нажмите на шаг, чтобы прочитать о нём.", "Inson salomatligidan kompaniya o‘sishigacha yetti qadam. Impuls zanjir bo‘ylab o‘zi yuradi; qadam haqida o‘qish uchun uni bosing.", "Seven steps from a person’s health to the company’s growth. The pulse runs on its own; tap a step to read about it."),
-  }), PB.audienceSwitch(l), portfolioTeaser(l), ctaEnd(l), PROD ? "" : PB.priceBlock(l)].join("\n");
+  }), PB.audienceSwitch(l), portfolioTeaser(l), partnersBlock(l), ctaEnd(l), PROD ? "" : PB.priceBlock(l)].join("\n");
 }
 
 function about(l) {
@@ -415,6 +431,7 @@ function partners(l) {
     t("Точки сбыта: у CZECHFARM они уже налажены, искать их самому не нужно.", "Sotuv nuqtalari: CZECHFARMda ular allaqachon yo‘lga qo‘yilgan, o‘zingiz qidirishingiz shart emas.", "Points of sale: CZECHFARM already has them in place, so you do not need to find them yourself."),
   ].map((x) => `<li>${ICON.check}<span>${x}</span></li>`).join("")}</ul></div></section>`,
   PROD ? SB.promise(l) : "",
+  partnersBlock(l, "partner-logos"),
   PB.globeBlock(l),
   `<section class="sec dark" id="steps"><div class="wrap"><div class="sec-h mv mv-up"><p class="kicker">${t("Как идёт запуск", "Ishga tushirish qanday o‘tadi", "How a launch goes")}</p><h2 class="h2">${t("Пять шагов <b>от заявки до запуска</b>", "Arizadan ishga tushirishgacha <b>besh qadam</b>", "Five steps <b>from request to launch</b>")}</h2></div>
 <ol class="steps">${PARTNER_STEPS.map((s, i) => `<li class="glass-d mv mv-up" style="--d:${i * 90}ms"><h3>${L3(s, l)[0]}</h3><p>${L3(s, l)[1]}</p></li>`).join("")}</ol></div></section>`,

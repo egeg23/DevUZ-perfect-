@@ -18,7 +18,7 @@ export const BLOCK_NAMES = {
   hero: "Первый экран и сцена", launch: "Путь вашего бренда", compare: "Сам или с CZECHFARM", mission: "Миссия", formula: "Формула бренда",
   model: "Как работает модель", audience: "Аудитории", portfolio: "Продукты (анонс)", contact: "Обращение", purpose: "Цель и миссия",
   role: "Роль компании", globe: "Маршрут партнёра", steps: "Шаги запуска", form: "Форма обращения", thesis: "Инвестиционное позиционирование",
-  blocks: "Семь шагов в стекле", materials: "Материалы инвестору", "catalog-sec": "Каталог", acc: "Кабинет", story: "С 2011 года: история", philosophy: "Наша философия: 7 шагов", assets: "Три стратегических актива", engine: "Brand Growth Engine", bhag: "Миссия и цель к 2035", kpi: "KPI к 2035 году", promise: "Обещание: 90 дней", chrome: "Шапка, меню и подвал", data: "Подписи, подсказки и сообщения",
+  blocks: "Семь шагов в стекле", materials: "Материалы инвестору", "catalog-sec": "Каталог", acc: "Кабинет", story: "С 2011 года: история", philosophy: "Наша философия: 7 шагов", assets: "Три стратегических актива", engine: "Brand Growth Engine", bhag: "Миссия и цель к 2035", kpi: "KPI к 2035 году", promise: "Обещание: 90 дней", "our-partners": "Наши партнёры (логотипы)", "partner-logos": "Наши партнёры (логотипы)", chrome: "Шапка, меню и подвал", data: "Подписи, подсказки и сообщения",
 };
 /* Эти блоки скрыть нельзя: без них страница не работает. */
 export const KEEP = new Set(["hero", "acc", "catalog-sec", "chrome", "data"]);
