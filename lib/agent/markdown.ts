@@ -1,12 +1,17 @@
 import { agentCopy } from "@/content/agent-copy";
+import { BOX_NAME, BOX_PATH, named } from "@/content/box";
+import { CALLHELPER_ANCHOR, CALLHELPER_COPY } from "@/content/callhelper";
 import { caseBySlug, caseDate, casesOnSite, type Case } from "@/content/cases";
 import { company, proof } from "@/content/company";
 import { getDictionary } from "@/content/dictionaries";
+import { homeCopy } from "@/content/home-copy";
+import { LEADGEN_COUNTRIES, LEADGEN_PATH, LEADGEN_TARIFFS, rub } from "@/content/leadgen";
 import { MARKETING_PATH } from "@/content/marketing";
 import { LANDINGS, LANDING_TEXT, landingBySlug, type LandingMeta } from "@/content/service-landings";
 import { calcPrice, landingMoney, landingText, weeksRange } from "@/content/service-landings/fill";
 import { serviceBySlug, services, type Service } from "@/content/services";
 import { QUIET_FROM_HOUR, QUIET_TO_HOUR } from "@/lib/admin/tasks";
+import { CALLHELPER_OVER_RUB, CALLHELPER_TARIFFS, CALLHELPER_TRIAL, launchText } from "@/lib/callhelper/tariffs";
 import {
   AGENT_LEAD_PATH,
   AGENT_LOCALES,
@@ -145,6 +150,32 @@ function factsLine(locale: Locale): string {
   ].join("\n");
 }
 
+/**
+ * «Продукты студии»: те же продукты, что на главной для людей. Новый продукт
+ * или страница на сайте — строкой здесь (правило владельца, 25.11.2026: «Не
+ * забудь добавлять каждую новую страницу или продукт в версию для Ии
+ * агентов»). Ссылки — на страницы для людей простым адресом, не markdown-ссылкой:
+ * у этих страниц нет текстового двойника. Лидогенерация и CallHelper — только на русском, как на сайте:
+ * другим языкам — ссылка на русскую версию.
+ */
+export function productsBlock(locale: Locale): string {
+  const box = getDictionary(locale).box.hero;
+  const lines = [`- ${BOX_NAME}: ${named(box.tagline)} ${named(box.badge)}. ${htmlUrl(locale, [BOX_PATH])}`];
+  if (locale === "ru") {
+    const test = LEADGEN_TARIFFS[0];
+    lines.push(
+      `- Лидогенерация со звонком (${htmlUrl("ru", [LEADGEN_PATH])}): находим клиентов и прозваниваем каждого, вы получаете запись разговора или звонок сразу на своего менеджера. ${LEADGEN_COUNTRIES.join(", ")}, по договору. Тестовый прогон ${rub(test.price ?? 0)}: ${test.leads?.[0]}-${test.leads?.[1]} лидов за ${test.term}.`,
+    );
+    const tariffs = CALLHELPER_TARIFFS.map((x) => `«${x.name}» ${rub(x.rub)} ${CALLHELPER_COPY.per}, ${x.minutes.toLocaleString("ru-RU").replace(/\s/g, " ")} ${CALLHELPER_COPY.minutes}`).join("; ");
+    lines.push(
+      `- ${CALLHELPER_COPY.title.replace("\u2011", "-")} (${htmlUrl("ru")}#${CALLHELPER_ANCHOR}), запуск ${launchText().replace("\u00a0", " ")}: ${CALLHELPER_COPY.lead.charAt(0).toLowerCase()}${CALLHELPER_COPY.lead.slice(1)} Кому: ${CALLHELPER_COPY.who.join(", ").toLowerCase()}. Тарифы: ${tariffs}; сверх пакета ${CALLHELPER_OVER_RUB} ₽ за минуту; пробный период ${CALLHELPER_TRIAL.days} дня и ${CALLHELPER_TRIAL.minutes} минут на компанию. ${CALLHELPER_COPY.privacy}`,
+    );
+  } else {
+    lines.push(`- ${agentCopy[locale].ruProducts}: ${mdUrl("ru")}`);
+  }
+  return join([`## ${homeCopy[locale].products.title}`, lines.join("\n")]);
+}
+
 function homeDoc(locale: Locale): AgentDoc {
   const copy = agentCopy[locale];
   const dict = getDictionary(locale);
@@ -159,6 +190,7 @@ function homeDoc(locale: Locale): AgentDoc {
       t(company.description, locale),
       factsLine(locale),
       servicesList(locale),
+      productsBlock(locale),
       `## ${ui.mockupTitle}`,
       `${ui.mockupText}\n\n${htmlUrl(locale)}#maket`,
       `## ${ui.casesTitle}`,
@@ -413,6 +445,7 @@ export function llmsIndex(): string {
       AGENT_LOCALES.map((l) => `- [${localeLabel[l]}](${mdUrl(l)}): ${t(company.tagline, l)}`).join("\n"),
       `## ${copy.services}`,
       [...landings, ...rest].join("\n"),
+      productsBlock(locale),
       `## ${ui.casesTitle}`,
       [`- [${ui.casesAll}](${mdUrl(locale, ["cases"])})`, ...casesOnSite.slice(0, 8).map((item) => caseLine(item, locale))].join("\n"),
       `## ${copy.contacts}`,

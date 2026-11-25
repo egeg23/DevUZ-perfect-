@@ -23,6 +23,8 @@ export type AgentCopy = {
   fullFile: string;
   languages: string;
   articles: string;
+  /** Строка о продуктах только на русском (лидогенерация, CallHelper) в версиях на других языках. */
+  ruProducts: string;
   agentTitle: string;
   agentSteps: readonly string[];
 };
@@ -42,6 +44,7 @@ export const agentCopy: Record<Locale, AgentCopy> = {
     fullFile: "Весь сайт одним файлом",
     languages: "Другие языки",
     articles: "Статьи и разборы сайтов (страницы для людей)",
+    ruProducts: "Только на русском",
     agentTitle: "ИИ-агентам: как оставить заявку за клиента",
     agentSteps: [
       "Отправьте POST на {endpoint} с JSON в теле запроса.",
@@ -67,6 +70,7 @@ export const agentCopy: Record<Locale, AgentCopy> = {
     fullFile: "The whole site in one file",
     languages: "Other languages",
     articles: "Articles and website reviews (pages for people)",
+    ruProducts: "Russian-language products (lead generation by phone, DevUz CallHelper call prompter)",
     agentTitle: "For AI agents: how to send a request on behalf of a client",
     agentSteps: [
       "Send a POST to {endpoint} with a JSON body.",
@@ -92,6 +96,7 @@ export const agentCopy: Record<Locale, AgentCopy> = {
     fullFile: "Butun sayt bitta faylda",
     languages: "Boshqa tillar",
     articles: "Maqolalar va saytlar tahlili (odamlar uchun sahifalar)",
+    ruProducts: "Faqat rus tilidagi mahsulotlar (qo‘ng‘iroq bilan lidogeneratsiya, DevUz CallHelper suflyori)",
     agentTitle: "SI-agentlar uchun: mijoz nomidan arizani qanday qoldirish",
     agentSteps: [
       "{endpoint} manziliga JSON bilan POST yuboring.",
@@ -117,6 +122,7 @@ export const agentCopy: Record<Locale, AgentCopy> = {
     fullFile: "整站合并为一个文件",
     languages: "其他语言",
     articles: "文章与网站点评（面向访客的页面）",
+    ruProducts: "仅限俄语的产品（电话获客、DevUz CallHelper 通话提词助手）",
     agentTitle: "致 AI 智能体：如何代客户提交需求",
     agentSteps: [
       "向 {endpoint} 发送 POST 请求，正文为 JSON。",
@@ -142,6 +148,7 @@ export const agentCopy: Record<Locale, AgentCopy> = {
     fullFile: "Увесь сайт одним файлом",
     languages: "Інші мови",
     articles: "Статті та розбори сайтів (сторінки для людей)",
+    ruProducts: "Продукти лише російською (лідогенерація з дзвінком, суфлер DevUz CallHelper)",
     agentTitle: "ШІ-агентам: як залишити заявку за клієнта",
     agentSteps: [
       "Надішліть POST на {endpoint} з JSON у тілі запиту.",
@@ -167,6 +174,7 @@ export const agentCopy: Record<Locale, AgentCopy> = {
     fullFile: "Cały serwis w jednym pliku",
     languages: "Inne języki",
     articles: "Artykuły i analizy stron (strony dla ludzi)",
+    ruProducts: "Produkty tylko po rosyjsku (generowanie leadów telefonicznie, suflerka DevUz CallHelper)",
     agentTitle: "Dla agentów AI: jak zostawić zapytanie w imieniu klienta",
     agentSteps: [
       "Wyślij POST na {endpoint} z JSON-em w treści żądania.",

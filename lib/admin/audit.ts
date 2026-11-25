@@ -60,6 +60,8 @@ export const AUDIT_ACTIONS = [
   "claudery.scenario_saved",
   "claudery.key_saved",
   "claudery.paid",
+  // Ключ распознавания речи DevUz CallHelper (только имена, без значений).
+  "callhelper.stt_key_saved",
   // Статьи на площадках (lib/outside/store.ts): опубликовал, пропустил, кто публикует.
   "outside.published",
   "outside.skipped",

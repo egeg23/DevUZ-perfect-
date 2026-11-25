@@ -136,10 +136,10 @@ test("реплики из запроса: только два вида, длин
   assert.deepEqual(cleanLines([{ who: "hacker", text: "a" }]), [{ who: "client", text: "a" }]);
 });
 
-test("раздел в панели всем, вкладкой «Холодных касаний»; маршрут проверяет раздел и лимит", () => {
+test("раздел пока только у владельца, вкладкой «Холодных касаний»; маршрут проверяет раздел и лимит", () => {
   const section = SECTIONS.find((s) => s.href === "/admin/callhelper");
   assert.ok(section);
-  assert.deepEqual([...section.roles].sort(), ["admin", "head", "manager"]);
+  assert.deepEqual([...section.roles], ["admin"], "владелец, 25.11.2026: «доступ к этим раздел пока только у меня»");
   assert.equal(section.parent, "/admin/prospect");
   const route = readFileSync("app/admin/callhelper/suggest/route.ts", "utf8");
   assert.match(route, /opens\(staff, "\/admin\/callhelper"\)/);
@@ -191,4 +191,38 @@ test("пробный: 3 дня и 50 минут на компанию; ИНН, �
   assert.equal(t.trialLeft({ startedAt: now, minutes: 50 }, now).over, true);
   assert.equal(t.trialLeft({ startedAt: now, minutes: 0 }, now + 3 * 86_400_000).over, true);
   assert.equal(t.TRIAL_LIMITS.operators, 1);
+});
+
+test("ключ распознавания: форма, ответ Яндекса словом, пишется только после проверки и только владельцем", async () => {
+  const { parseSttForm, sttVerdict } = await import("@/lib/callhelper/stt-keys");
+  assert.deepEqual(parseSttForm({ key: "AQVN" + "x".repeat(36), folder: "B1G" + "a".repeat(17) }), {
+    ok: true,
+    key: "AQVN" + "x".repeat(36),
+    folder: "b1g" + "a".repeat(17),
+  });
+  assert.deepEqual(parseSttForm({ key: "с пробелом и кириллицей", folder: "b1g" + "a".repeat(17) }), { ok: false, field: "key" });
+  assert.deepEqual(parseSttForm({ key: "A".repeat(40), folder: "b1g" }), { ok: false, field: "folder" });
+  assert.equal(sttVerdict(200, ""), "ok");
+  assert.equal(sttVerdict(401, ""), "key");
+  assert.equal(sttVerdict(403, "Permission denied"), "key");
+  assert.equal(sttVerdict(403, "folder not found"), "folder");
+  assert.equal(sttVerdict(400, "bad folderId"), "folder");
+  assert.equal(sttVerdict(503, ""), "down");
+  const actions = readFileSync("app/admin/callhelper/actions.ts", "utf8");
+  assert.match(actions, /requireRole\("admin"\)/);
+  assert.ok(actions.indexOf("checkStt(") < actions.indexOf("saveAppSecret("), "сначала Яндекс, потом хранилище");
+  assert.doesNotMatch(actions, /console\.(log|error)\([^)]*key/, "значение ключа в лог не идёт");
+});
+
+test("главная: блок CallHelper только на русской, дата запуска и цены из тарифов", async () => {
+  const home = readFileSync("components/home/glass-home.tsx", "utf8");
+  assert.match(home, /locale === "ru" \? \([\s\S]*<CallHelperBlock \/>/);
+  const { CALLHELPER_LAUNCH, launchText } = await import("@/lib/callhelper/tariffs");
+  assert.equal(CALLHELPER_LAUNCH, "2026-12-14");
+  assert.equal(launchText(), "14\u00a0декабря 2026");
+  const block = readFileSync("components/home/callhelper-block.tsx", "utf8");
+  assert.match(block, /CALLHELPER_TARIFFS\.map/);
+  assert.match(block, /CALLHELPER_TRIAL/);
+  assert.doesNotMatch(block, /4\s?900|9\s?900/, "цены — из тарифов, не строкой");
+  assert.doesNotMatch(block, /[—–]/, "без длинных тире");
 });

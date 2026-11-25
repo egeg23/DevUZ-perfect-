@@ -27,6 +27,7 @@ import { localeHref, t, type Locale } from "@/lib/i18n";
 import { CardVideo } from "./card-video";
 import { HeroVideo } from "./hero-video";
 import { InstantMaker } from "./instant-maker";
+import { CallHelperBlock } from "./callhelper-block";
 import { LeadgenBlock } from "./leadgen-block";
 import { ProtoForm } from "./proto-form";
 import s from "./glass.module.css";
@@ -339,6 +340,13 @@ export function GlassHome({ locale, dict }: { locale: Locale; dict: Dictionary }
       {locale === "ru" ? (
         <CodeBoot code={"leads.filter((l) => l.called && l.ready)"} calmIfVisible>
           <LeadgenBlock />
+        </CodeBoot>
+      ) : null}
+
+      {/* DevUz CallHelper — только русская главная: суфлёр по-русски, цены в рублях. */}
+      {locale === "ru" ? (
+        <CodeBoot code={"call.on(\"line\", (l) => helper.suggest(l))"} calmIfVisible>
+          <CallHelperBlock />
         </CodeBoot>
       ) : null}
 

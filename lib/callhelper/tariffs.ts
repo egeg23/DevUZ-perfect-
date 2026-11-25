@@ -36,3 +36,16 @@ export function studioNet(rub: number, minutes: number, minuteCost: number): num
   const profit = rub - minutes * minuteCost - rub * CALLHELPER_FEES;
   return Math.round(profit * (1 - CALLHELPER_MANAGER_PERCENT / 100));
 }
+
+/**
+ * Дата запуска для клиентов (владелец, 25.11.2026: «напиши что запуск будет
+ * 14.12.26 года»). Блок на главной говорит «запуск 14 декабря 2026».
+ */
+export const CALLHELPER_LAUNCH = "2026-12-14";
+
+/** «14 декабря 2026» из CALLHELPER_LAUNCH, с неразрывным пробелом после числа. */
+export function launchText(iso = CALLHELPER_LAUNCH): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  const months = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
+  return `${d}\u00a0${months[m - 1]} ${y}`;
+}
