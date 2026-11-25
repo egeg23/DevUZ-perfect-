@@ -21,12 +21,12 @@ export const company = {
   } satisfies LocalizedText,
 
   description: {
-    ru: "Студия полного цикла из Ташкента: сайты, мобильные приложения, AI-продукты на LLM и RAG, маркетплейсы и сервисы доставки.",
-    en: "A full-cycle studio in Tashkent: websites, mobile apps, AI products built on LLM and RAG, marketplaces and delivery services.",
+    ru: "Студия разработки полного цикла: сайты, мобильные приложения, AI-продукты на LLM и RAG, маркетплейсы и сервисы доставки. Офис в Ташкенте, работаем с клиентами по всему миру.",
+    en: "A full-cycle development studio: websites, mobile apps, AI products built on LLM and RAG, marketplaces and delivery services. Office in Tashkent, clients worldwide.",
     uz: "Toshkentdagi to‘liq siklli studiya: veb-saytlar, mobil ilovalar, LLM va RAG asosidagi AI mahsulotlar, marketpleyslar va yetkazib berish xizmatlari.",
-    zh: "位于塔什干的全流程开发工作室：网站、移动应用、基于 LLM 与 RAG 的 AI 产品、电商平台与配送服务。",
-    uk: "Студія повного циклу з Ташкента: сайти, мобільні застосунки, AI-продукти на LLM і RAG, маркетплейси та сервіси доставки.",
-    pl: "Studio pełnego cyklu z Taszkentu: strony internetowe, aplikacje mobilne, produkty AI oparte na LLM i RAG, marketplace’y i serwisy dostaw.",
+    zh: "全流程开发工作室：网站、移动应用、基于 LLM 与 RAG 的 AI 产品、电商平台与配送服务。办公室在塔什干，服务全球客户。",
+    uk: "Студія розробки повного циклу: сайти, мобільні застосунки, AI-продукти на LLM і RAG, маркетплейси та сервіси доставки. Офіс у Ташкенті, працюємо з клієнтами по всьому світу.",
+    pl: "Software house pełnego cyklu: strony internetowe, aplikacje mobilne, produkty AI oparte na LLM i RAG, marketplace’y i serwisy dostaw. Biuro w Taszkencie, klienci na całym świecie.",
   } satisfies LocalizedText,
 
   // ─── Контакты ──────────────────────────────────────────────────────────────
@@ -130,6 +130,15 @@ export const company = {
     telegram: "https://t.me/Devuz_studio_bot",
     github: "https://github.com/egeg23",
   },
+
+  /**
+   * Профили студии на чужих площадках: каталоги и рейтинги студий, карты,
+   * соцсети. Идут в `sameAs` разметки организации (lib/schema.ts): по ним
+   * поисковик и ИИ-подборки связывают сайт с отзывами и рейтингами — без
+   * этого студию «по всему миру» рекомендовать не с чего. Только настоящие
+   * страницы студии; завели профиль — строка сюда (владелец, 25.11.2026).
+   */
+  profiles: [] as readonly string[],
 
   /**
    * Реквизиты.

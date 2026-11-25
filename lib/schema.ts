@@ -1,22 +1,44 @@
-import { company } from "@/content/company";
+import { company, proof } from "@/content/company";
 import type { Case } from "@/content/cases";
 import type { Product } from "@/content/products";
-import type { Service } from "@/content/services";
+import { LANDING_AREA } from "@/content/service-landings";
+import { services, type Service } from "@/content/services";
 import { absoluteUrl } from "@/lib/seo";
-import { hreflang, t, type Locale } from "@/lib/i18n";
+import { hreflang, locales, t, type Locale } from "@/lib/i18n";
 
 /**
  * Сборщики JSON-LD.
  *
- * Разметка — это не украшение выдачи, а способ объяснить поисковику, что
- * DevUz — местная компания в Ташкенте с конкретным набором услуг. Для
- * локального поиска (а он в Узбекистане даёт заметную часть трафика) это
- * работает сильнее, чем любые ключевые слова в тексте.
+ * Разметка — это не украшение выдачи, а способ объяснить поисковику и ИИ,
+ * который собирает подборки, кто такая DevUz и где она работает.
+ *
+ * До 25.11.2026 разметка говорила «местная компания в Ташкенте»: три
+ * страны в `areaServed`. Владелец, 25.11.2026: «чтобы в рекомендациях по
+ * запросу Гугла или Яндекса мы выдавались в топ подборке от Ии. Не только
+ * по Ташкенту, мы работаем по всему миру». Теперь организация — с офисом в
+ * Ташкенте (адрес остаётся: это факт и локальный поиск Узбекистана) и
+ * работой по всему миру (`WORLD`, страны — те, где у страниц услуг свой
+ * язык и регион, `LANDING_AREA`).
  */
 
 type Json = Record<string, unknown>;
 
 const ORG_ID = absoluteUrl("#organization");
+
+/** Работаем удалённо с любой страной: так это читают Google и ИИ-подборки. */
+const WORLD = { "@type": "Place", name: "Worldwide" } as const;
+
+/** Страны, где у страниц услуг свой язык и регион, без повторов. */
+const SERVED_COUNTRIES = [...new Set(Object.values(LANDING_AREA).flatMap((area) => area.countries))];
+
+/** Страна номера — по коду: «+48» раньше попадал в «US». */
+function phoneCountry(e164: string): string {
+  if (e164.startsWith("+998")) return "UZ";
+  if (e164.startsWith("+7")) return "RU";
+  if (e164.startsWith("+48")) return "PL";
+  if (e164.startsWith("+1")) return "US";
+  return "UZ";
+}
 const SITE_ID = absoluteUrl("#website");
 
 export function organizationSchema(locale: Locale): Json {
@@ -40,13 +62,12 @@ export function organizationSchema(locale: Locale): Json {
       latitude: company.address.lat,
       longitude: company.address.lon,
     },
-    areaServed: [
-      { "@type": "Country", name: "Uzbekistan" },
-      { "@type": "Country", name: "Kazakhstan" },
-      { "@type": "Country", name: "Russia" },
-    ],
-    knowsLanguage: ["ru", "uz", "en", "zh"],
-    sameAs: [company.social.telegram, company.social.github],
+    areaServed: [WORLD, ...SERVED_COUNTRIES.map((name) => ({ "@type": "Country", name }))],
+    knowsLanguage: [...locales],
+    slogan: t(company.tagline, locale),
+    numberOfEmployees: { "@type": "QuantitativeValue", value: proof.staff },
+    knowsAbout: services.map((service) => t(service.title, locale)),
+    sameAs: [company.social.telegram, company.social.github, ...company.profiles],
     telephone: company.phones[0].e164,
     // Каждый номер — своей точкой контакта: поисковику так видно, какой
     // номер для какой страны, и в карточке организации он покажет нужный.
@@ -55,13 +76,14 @@ export function organizationSchema(locale: Locale): Json {
         "@type": "ContactPoint",
         contactType: "sales",
         url: company.telegramUrl,
-        availableLanguage: ["ru", "uz", "en", "zh"],
+        availableLanguage: [...locales],
+        areaServed: WORLD,
       },
       ...company.phones.map((phone) => ({
         "@type": "ContactPoint",
         contactType: "sales",
         telephone: phone.e164,
-        areaServed: phone.e164.startsWith("+998") ? "UZ" : phone.e164.startsWith("+7") ? "RU" : "US",
+        areaServed: phoneCountry(phone.e164),
         availableLanguage: ["ru", "uz", "en"],
       })),
     ],
@@ -108,7 +130,7 @@ export function serviceSchema(service: Service, locale: Locale): Json {
     description: t(service.description, locale),
     serviceType: t(service.title, locale),
     provider: { "@id": ORG_ID },
-    areaServed: { "@type": "Country", name: "Uzbekistan" },
+    areaServed: [WORLD, ...LANDING_AREA[locale].countries.map((name) => ({ "@type": "Country", name }))],
     url: absoluteUrl(`${locale}/services/${service.slug}`),
     offers: {
       "@type": "Offer",
