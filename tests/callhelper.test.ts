@@ -153,3 +153,42 @@ test("модель недорогая и без размышлений: подс
   assert.match(src, /CALLHELPER_MODEL \|\| "claude-haiku-/);
   assert.match(src, /thinking: \{ type: "disabled" \}/);
 });
+
+test("тарифы владельца: цены прежние, минут меньше; менеджеру 20% от прибыли; маржа держится даже на дорогой минуте", async () => {
+  const t = await import("@/lib/callhelper/tariffs");
+  assert.deepEqual(t.CALLHELPER_TARIFFS.map((x) => [x.rub, x.minutes]), [[4900, 1000], [9900, 2500]]);
+  assert.equal(t.CALLHELPER_MANAGER_PERCENT, 20);
+  for (const tariff of t.CALLHELPER_TARIFFS) {
+    const worst = t.studioNet(tariff.rub, tariff.minutes, t.CALLHELPER_MINUTE_COST.high);
+    assert.ok(worst / tariff.rub >= 0.4, `${tariff.name}: чистыми ${worst} из ${tariff.rub}`);
+  }
+  assert.ok(t.CALLHELPER_OVER_RUB > t.CALLHELPER_MINUTE_COST.high * 1.5);
+});
+
+test("пробный: 3 дня и 50 минут на компанию; ИНН, телефон, Telegram — один раз; адрес и браузер — раз в 30 дней", async () => {
+  const t = await import("@/lib/callhelper/trial");
+  assert.deepEqual({ ...t.TRIAL }, { days: 3, minutes: 50 });
+  assert.ok(t.innValid("7707083893"));
+  assert.ok(t.innValid("500100732259"));
+  assert.ok(!t.innValid("7707083894"), "выдуманный ИНН");
+  assert.ok(!t.innValid("0000000000"));
+  assert.equal(t.normPhone("8 (912) 345-67-89"), t.normPhone("+79123456789"));
+  const now = Date.UTC(2026, 10, 25);
+  const ask = { inn: "7707083893", phone: "+79123456789", tg: "111", ipHash: t.ipPrint("1.2.3.4", "s"), device: "d1" };
+  assert.deepEqual(t.trialVerdict(ask, [], now), { ok: true });
+  assert.deepEqual(t.trialVerdict({ ...ask, inn: "123" }, [], now), { ok: false, reason: "inn" });
+  assert.deepEqual(t.trialVerdict({ ...ask, phone: "" }, [], now), { ok: false, reason: "phone" });
+  const old = { inn: "7707083893", phone: "70000000000", tg: null, ipHash: "x", device: "z", at: now - 400 * 86_400_000 };
+  assert.deepEqual(t.trialVerdict(ask, [old], now), { ok: false, reason: "used" }, "тот же ИНН — никогда");
+  const other = { inn: "500100732259", phone: "79123456789", tg: null, ipHash: "x", device: "z", at: now - 400 * 86_400_000 };
+  assert.deepEqual(t.trialVerdict(ask, [other], now), { ok: false, reason: "used" }, "тот же телефон с новым ИНН");
+  const sameIp = { inn: "500100732259", phone: "70000000001", tg: null, ipHash: ask.ipHash, device: "z", at: now - 86_400_000 };
+  assert.deepEqual(t.trialVerdict(ask, [sameIp], now), { ok: false, reason: "ip" });
+  assert.deepEqual(t.trialVerdict(ask, [{ ...sameIp, at: now - 31 * 86_400_000 }], now), { ok: true }, "через 30 дней адрес снова можно");
+  assert.deepEqual(t.trialVerdict(ask, [{ ...sameIp, ipHash: "y", device: "d1" }], now), { ok: false, reason: "device" });
+  assert.ok(!t.ipPrint("1.2.3.4", "s").includes("1.2.3.4"));
+  assert.deepEqual(t.trialLeft({ startedAt: now, minutes: 20 }, now + 86_400_000), { minutes: 30, hours: 48, over: false });
+  assert.equal(t.trialLeft({ startedAt: now, minutes: 50 }, now).over, true);
+  assert.equal(t.trialLeft({ startedAt: now, minutes: 0 }, now + 3 * 86_400_000).over, true);
+  assert.equal(t.TRIAL_LIMITS.operators, 1);
+});
