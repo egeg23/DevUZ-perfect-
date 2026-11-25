@@ -153,3 +153,14 @@ test("модель недорогая и без размышлений: подс
   assert.match(src, /CALLHELPER_MODEL \|\| "claude-haiku-/);
   assert.match(src, /thinking: \{ type: "disabled" \}/);
 });
+
+test("тарифы владельца: цены прежние, минут меньше; менеджеру 20% от прибыли; маржа держится даже на дорогой минуте", async () => {
+  const t = await import("@/lib/callhelper/tariffs");
+  assert.deepEqual(t.CALLHELPER_TARIFFS.map((x) => [x.rub, x.minutes]), [[4900, 1000], [9900, 2500]]);
+  assert.equal(t.CALLHELPER_MANAGER_PERCENT, 20);
+  for (const tariff of t.CALLHELPER_TARIFFS) {
+    const worst = t.studioNet(tariff.rub, tariff.minutes, t.CALLHELPER_MINUTE_COST.high);
+    assert.ok(worst / tariff.rub >= 0.4, `${tariff.name}: чистыми ${worst} из ${tariff.rub}`);
+  }
+  assert.ok(t.CALLHELPER_OVER_RUB > t.CALLHELPER_MINUTE_COST.high * 1.5);
+});
