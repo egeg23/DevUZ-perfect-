@@ -543,17 +543,17 @@ export const leadsSections: Record<string, HelpEntry> = {
           manager: [
             "Na górze jest link do sekcji [«Zadania»](/admin/tasks) i przycisk [«Rozpatrz leady»](#leads-sort). Niżej wyszukiwarka «Znajdź leada». Wpisz nazwę firmy, imię, numer zgłoszenia lub branżę i kliknij «Szukaj». «Wyczyść» czyści wyszukiwanie.",
             "Dalej przełącznik [«Lista» / «Tablica»](#leads-board) i filtry: «wszystkie leady», «wolne», «moje leady», priorytet i status. Pod nimi sama [lista](#leads-list).",
-            "Klient przyszedł nie przez stronę i nie przez bota? Zapisz go przyciskiem [«Dodaj leada ręcznie»](#leads-add) na samym dole strony.",
+            "Klient przyszedł nie przez stronę i nie przez bota? Zapisz go przyciskiem [«Dodaj leada ręcznie»](#leads-add) na górze strony, tuż nad «Rozpatrz leady».",
           ],
           head: [
             "Gdy menedżer prosi o przekazanie leada koledze, na górze pojawia się blok «Czeka na Twoją decyzję». Więcej w punkcie [przekazanie leada](#leads-transfer).",
             "Niżej link do [«Zadania»](/admin/tasks), przycisk [«Rozpatrz leady»](#leads-sort) i wyszukiwarka «Znajdź leada». Obok pole «Czyje»: wybierz pracownika, a zobaczysz tylko jego leady. Dalej przełącznik [«Lista» / «Tablica»](#leads-board), filtry i [lista](#leads-list).",
-            "Na samym dole przycisk [«Dodaj leada ręcznie»](#leads-add). Tygodniowe liczby zespołu, plan i rekomendacje są na dole [«Pulpit»](#hq-week).",
+            "Przycisk [«Dodaj leada ręcznie»](#leads-add) jest na górze, tuż nad «Rozpatrz leady». Tygodniowe liczby zespołu, plan i rekomendacje są na dole [«Pulpit»](#hq-week).",
           ],
           admin: [
             "Gdy menedżer prosi o przekazanie leada koledze, na górze pojawia się blok «Czeka na Twoją decyzję». Więcej w punkcie [przekazanie leada](#leads-transfer).",
             "Niżej link do [«Zadania»](/admin/tasks), przycisk [«Rozpatrz leady»](#leads-sort) i wyszukiwarka «Znajdź leada». Obok pole «Czyje»: wybierz pracownika, a zobaczysz tylko jego leady. Dalej przełącznik [«Lista» / «Tablica»](#leads-board), filtry i [lista](#leads-list).",
-            "Na samym dole przycisk [«Dodaj leada ręcznie»](#leads-add). Tygodniowe liczby zespołu, plan i rekomendacje są na dole [«Pulpit»](#hq-week). Kasa i oczekiwane płatności są w sekcji [«Finanse»](/admin/finance).",
+            "Przycisk [«Dodaj leada ręcznie»](#leads-add) jest na górze, tuż nad «Rozpatrz leady». Tygodniowe liczby zespołu, plan i rekomendacje są na dole [«Pulpit»](#hq-week). Kasa i oczekiwane płatności są w sekcji [«Finanse»](/admin/finance).",
           ],
         },
       },
@@ -677,7 +677,7 @@ export const leadsSections: Record<string, HelpEntry> = {
         id: "add",
         title: "«Dodaj leada ręcznie»: klient przyszedł z pominięciem strony i bota",
         body: [
-          "Klient zadzwonił, przyszedł z polecenia albo spotkaliście się osobiście? Zapisz go przyciskiem «Dodaj leada ręcznie» pod listą. Obowiązkowe są «Imię klienta» i «Telefon, Telegram lub e-mail», reszta jest opcjonalna.",
+          "Klient zadzwonił, przyszedł z polecenia albo spotkaliście się osobiście? Zapisz go przyciskiem «Dodaj leada ręcznie» na górze strony «Leady». Obowiązkowe są «Imię klienta» i «Telefon, Telegram lub e-mail», reszta jest opcjonalna.",
           "Lead od razu jest w toku, bez kolejki, a po 4 godzinach bot zapyta, co dalej. Menedżer dodaje leada sobie. Kierownik i właściciel wybierają w «Komu lead» dowolnego pracownika, a on dostaje «Вам добавили лид».",
           "Na górze formularza jest «Kto to jest»: «Klient», «Agencja» albo «Bloger». Agencję załóż w sekcji [«Agencje»](/admin/agencies), tam liczą się jej 15%. Blogera jako partnera zakładają kierownik i właściciel.",
           "Jeszcze wyżej jest «Kierunek»: «Tworzenie» albo «Generowanie leadów». Jeśli to klient generowania leadów (zamówił u nas strumień leadów z telefonem), wybierz «Generowanie leadów». Projekt z takiego leada zakłada się z podatkiem 7%, a prowadzący dostaje 20% tego, co zostaje: kwota minus koszt własny minus 7% podatku. Przykład: wpłynęło 200 000 ₽, koszt 135 000 ₽, podatek 14 000 ₽, zostaje 51 000 ₽, prowadzący dostaje 10 200 ₽. Procent idzie od każdej wpłaty, dopóki klient z nami pracuje: przedłużenie załóż jako nowy projekt z tego samego leada. Status i etapy takiego leada menedżer ustawia sam, dopóki klient nie zapłaci. Po pierwszej wpłacie zmieniają je tylko kierownik i właściciel.",
