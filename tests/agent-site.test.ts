@@ -13,7 +13,8 @@ import { services } from "@/content/services";
 import { leadKindOf } from "@/lib/admin/lead-kinds";
 import { INBOUND_SOURCES } from "@/lib/admin/sales-stages";
 import { AGENT_SOURCE, agentLeadInput, agentName, contactLooksReal, parseAgentLead } from "@/lib/agent/lead";
-import { agentPage, agentSegments, agentServiceSlugs, llmsFull, llmsIndex } from "@/lib/agent/markdown";
+import { agentPage, agentSegments, agentServiceSlugs, llmsFull, llmsIndex, productsBlock } from "@/lib/agent/markdown";
+import { CALLHELPER_LAUNCH, CALLHELPER_TARIFFS } from "@/lib/callhelper/tariffs";
 import { AGENT_LEAD_PATH, agentMdHref, agentPath, wantsMarkdown } from "@/lib/agent/paths";
 import { locales } from "@/lib/i18n";
 
@@ -208,4 +209,21 @@ test("middleware: двойник раньше языкового разбора,
   const route = read("app/agent-md/[...path]/route.ts");
   assert.match(route, /rel="canonical"/, "двойник называет поисковику страницу для людей");
   assert.match(route, /text\/markdown; charset=utf-8/);
+});
+
+test("продукты студии — в версии для агентов: Box везде, лидогенерация и CallHelper по-русски", () => {
+  // Владелец, 25.11.2026: «Не забудь добавлять каждую новую страницу или продукт в версию для Ии агентов».
+  const ru = agentPage("ru", [])!.body;
+  assert.ok(ru.includes("DevUz Box") && ru.includes("/ru/box"));
+  assert.ok(ru.includes("/ru/leadgen"), "лидогенерация");
+  assert.ok(ru.includes("DevUz CallHelper") && ru.includes("#callhelper"), "CallHelper");
+  assert.ok(ru.includes("14 декабря 2026"), `запуск ${CALLHELPER_LAUNCH}`);
+  for (const t of CALLHELPER_TARIFFS) assert.ok(ru.includes(t.name), t.name);
+  for (const locale of locales) {
+    const block = productsBlock(locale);
+    assert.ok(block.includes(`/${locale}/box`), `${locale}: Box`);
+    if (locale !== "ru") assert.ok(block.includes("/ru.md"), `${locale}: ссылка на русские продукты`);
+    assert.ok(agentPage(locale, [])!.body.includes(block), `${locale}: на главной`);
+  }
+  assert.ok(llmsIndex().includes(productsBlock("en")));
 });

@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { CALLHELPER_ANCHOR, CALLHELPER_COPY as C } from "@/content/callhelper";
 import { company } from "@/content/company";
 import { cn } from "@/lib/cn";
 import { CALLHELPER_OVER_RUB, CALLHELPER_TARIFFS, CALLHELPER_TRIAL, launchText } from "@/lib/callhelper/tariffs";
@@ -10,20 +11,6 @@ import s from "./callhelper-block.module.css";
 
 const nb = (n: number) => n.toLocaleString("ru-RU").replace(/\s/g, " ");
 
-const WHO = [
-  "Колл-центры на аутсорсе",
-  "Отделы продаж с холодными звонками",
-  "Клиники и автосалоны с записью по телефону",
-  "Входящая линия и поддержка",
-  "Новые операторы без опыта",
-];
-
-const STEPS = [
-  { t: "Сценарий", d: "Вы задаёте этапы звонка, ответы на возражения, обязательные и запрещённые слова." },
-  { t: "Звонок", d: "Суфлёр слушает разговор оператора с клиентом прямо в браузере." },
-  { t: "Подсказка", d: "Оператор видит на экране, что сказать сейчас, и как ответить на возражение." },
-];
-
 /**
  * DevUz CallHelper на главной (владелец, 25.11.2026: «На главной тоже
  * размести информацию что у нас есть такой функционал, напиши что запуск
@@ -33,7 +20,7 @@ const STEPS = [
  */
 export function CallHelperBlock() {
   return (
-    <section id="callhelper" className={s.block} aria-labelledby="callhelper-home-title">
+    <section id={CALLHELPER_ANCHOR} className={s.block} aria-labelledby="callhelper-home-title">
       <div className={g.wrap}>
         <div className={s.card}>
           <div className={s.grid}>
@@ -43,14 +30,13 @@ export function CallHelperBlock() {
                 Запуск {launchText()}
               </span>
               <h2 id="callhelper-home-title" className={cn(g.serif, g.h2, s.title)}>
-                DevUz CallHelper: ИИ&#8209;суфлёр для звонков
+                {C.title}
               </h2>
               <p className={cn(g.lead, s.text)}>
-                Слушает разговор оператора с клиентом и прямо во время звонка подсказывает, что сказать дальше: узнаёт
-                возражения, ведёт по этапам вашего сценария и предупреждает, если прозвучало запрещённое слово.
+                {C.lead}
               </p>
               <ol className={s.steps}>
-                {STEPS.map((step, i) => (
+                {C.steps.map((step, i) => (
                   <li key={step.t}>
                     <span className={s.num}>{i + 1}</span>
                     <span>
@@ -60,7 +46,7 @@ export function CallHelperBlock() {
                 ))}
               </ol>
               <p className={s.small}>
-                Голос распознаётся в России. Телефоны и почта вырезаются из разговора до того, как текст уходит ИИ.
+                {C.privacy}
               </p>
             </div>
 
@@ -68,7 +54,7 @@ export function CallHelperBlock() {
               <div>
                 <h3 className={s.h3}>Кому нужен</h3>
                 <div className={s.who}>
-                  {WHO.map((w) => (
+                  {C.who.map((w) => (
                     <span key={w}>{w}</span>
                   ))}
                 </div>
@@ -81,8 +67,8 @@ export function CallHelperBlock() {
                     <div key={t.key} className={s.tariff}>
                       <span className={s.name}>{t.name}</span>
                       <span className={s.price}>{nb(t.rub)}&nbsp;₽</span>
-                      <span className={s.per}>за оператора в месяц</span>
-                      <span className={s.mins}>{nb(t.minutes)} минут разговора</span>
+                      <span className={s.per}>{C.per}</span>
+                      <span className={s.mins}>{nb(t.minutes)} {C.minutes}</span>
                     </div>
                   ))}
                 </div>
