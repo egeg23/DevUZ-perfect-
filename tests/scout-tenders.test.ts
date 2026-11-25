@@ -111,6 +111,25 @@ test("тендеры: закупка техники не наша, даже с �
   assert.equal(tenderVerdict("Сунъий интеллект технологияларини жорий этиш хизмати").ours, true);
 });
 
+test("тендеры: автоматика производства (SCADA, контроллеры) не наша", () => {
+  // Владелец, 25.11.2026: «Убираем». Лот 527528 ушёл лидом: контроллер и SCADA на газовом объекте.
+  const plant = [
+    "SHNGQCHB Axirbuloq GDTQda texnologik jarayonlarni avtomatik boshqarish uchun kontroller o'rnatish va SCADA tizimini jori",
+    "Установка контроллера и внедрение SCADA системы для автоматизации технологических процессов",
+    "Разработка АСУ ТП компрессорной станции",
+    "Внедрение системы телемеханики и автоматизации на насосной станции",
+    "Технологик жараёнларни автоматлаштириш тизимини жорий этиш",
+    "Программирование PLC и автоматизация линии розлива",
+  ];
+  for (const title of plant) {
+    assert.equal(tenderVerdict(title).ours, false, title);
+    assert.equal(tenderVerdict(title, "", true).ours, false, `${title} (IT-категория)`);
+  }
+  // Автоматизация бизнеса программой — по-прежнему наша.
+  assert.equal(tenderVerdict("Автоматизация документооборота: разработка информационной системы").ours, true);
+  assert.equal(tenderVerdict("Biznes jarayonlarni avtomatlashtirish uchun axborot tizimini ishlab chiqish", "", true).ours, true);
+});
+
 test("тендеры: время площадки — Ташкент, дата без времени — конец дня", () => {
   assert.equal(tashkentIso("2026-11-17T16:13:35"), "2026-11-17T11:13:35.000Z");
   assert.equal(tashkentIso("2026-11-12"), "2026-11-12T18:59:00.000Z");
