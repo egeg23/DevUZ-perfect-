@@ -122,6 +122,8 @@ services:
       TENDER_RU_MODEL: ${TENDER_RU_MODEL:-}
       # Перевод слов клиента бота на русский для команды. Пусто — Haiku.
       CLIENT_RU_MODEL: ${CLIENT_RU_MODEL:-}
+      # DevUz CallHelper: фраза оператору. Пусто — Haiku без размышлений.
+      CALLHELPER_MODEL: ${CALLHELPER_MODEL:-}
       INSTANT_READ_MODEL: ${INSTANT_READ_MODEL:-}
       # ИИ-сотрудники по подписке (docs/ai-staff/design.md). Модели: пусто —
       # Sonnet для ответов покупателям, Opus для тарифа «Про», Haiku для

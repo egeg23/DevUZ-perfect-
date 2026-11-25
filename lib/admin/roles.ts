@@ -168,6 +168,18 @@ export const SECTIONS: readonly Section[] = [
     parent: "/admin/prospect",
     aka: ["Закупки", "Госзакупки", "Лоты", "Xaridlar", "Davlat xaridlari", "Zamówienia publiczne"],
   },
+  // DevUz CallHelper — суфлёр для операторов колл-центра (владелец,
+  // 25.11.2026: «Делаем, название: DevUz CallHelper»). Всем: звонят и
+  // операторы лидогенерации, и любой менеджер учится на нём отвечать на
+  // возражения. Вкладка «Холодных касаний», в «Найти раздел» — и по «суфлёр».
+  {
+    href: "/admin/callhelper",
+    label: { ru: "DevUz CallHelper", uz: "DevUz CallHelper", pl: "DevUz CallHelper" },
+    roles: EVERYONE,
+    group: "prospect",
+    parent: "/admin/prospect",
+    aka: ["Суфлёр", "Звонки", "Колл-центр", "Возражения", "Suflyor", "Qo‘ng‘iroqlar", "Suflerka", "Rozmowy"],
+  },
   // Разбор переписки — уроки из разговоров касаний. Всем, а не только
   // владельцу: урок нужен тому, кто пишет следующее письмо.
   { href: "/admin/talks", label: { ru: "Разбор переписки", uz: "Yozishmalar tahlili", pl: "Analiza rozmów" }, roles: EVERYONE, group: "prospect", parent: "/admin/prospect" },
