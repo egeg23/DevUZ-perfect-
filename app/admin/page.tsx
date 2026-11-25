@@ -217,6 +217,11 @@ export default async function AdminHome({
         </Link>
       </p>
 
+      {/* «Добавить лид вручную» — наверху, свёрнуто (владелец, 25.11.2026:
+          «Перенеси кнопку для добавления лидов в ручную наверх, а то она в
+          самом низу и надо листать»). */}
+      <LeadAdd locale={locale} selfId={staff.id} assignees={assignees} notice={params.add} />
+
       {/* «Разобрать лиды» — скопившееся по одному, решение в одно нажатие
           (владелец, 03.11.2026: «более удобный способ разгребать лиды»). */}
       <Link
@@ -362,11 +367,6 @@ export default async function AdminHome({
       ) : null}
         </>
       )}
-
-      {/* Добавить лид руками — ниже списка и свёрнуто: это редкое действие. */}
-      <div className="mt-8">
-        <LeadAdd locale={locale} selfId={staff.id} assignees={assignees} notice={params.add} />
-      </div>
 
       <p className="mt-8 max-w-2xl text-xs leading-relaxed text-faint">{t.listNote}</p>
     </AdminShell>

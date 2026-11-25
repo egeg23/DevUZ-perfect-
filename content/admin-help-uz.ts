@@ -544,17 +544,17 @@ export const uz: HelpCopy = {
             manager: [
               "Tepada [«Vazifalar»](/admin/tasks) bo‘limiga havola va [«Lidlarni saralash»](#leads-sort) tugmasi. Pastda «Lidni topish» qidiruvi. Kompaniya nomi, ism, ariza raqami yoki sohani yozing va «Topish»ni bosing. «Tozalash» qidiruvni tozalaydi.",
               "Keyin [«Ro‘yxat» / «Taxta»](#leads-board) almashtirgichi va filtrlar: «barcha lidlar», «bo‘sh lidlar», «meniki», ustuvorlik va holat. Ularning ostida [ro‘yxat](#leads-list)ning o‘zi.",
-              "Mijoz sayt yoki bot orqali kelmadimi? Uni sahifaning eng pastidagi [«Lidni qo‘lda qo‘shish»](#leads-add) tugmasi bilan yozib qo‘ying.",
+              "Mijoz sayt yoki bot orqali kelmadimi? Uni sahifa tepasidagi, «Lidlarni saralash» ustidagi [«Lidni qo‘lda qo‘shish»](#leads-add) tugmasi bilan yozib qo‘ying.",
             ],
             head: [
               "Menejer lidni hamkasbga berishni so‘rasa, tepada «Qaroringizni kutmoqda» bloki chiqadi. Batafsil: [lidni berish](#leads-transfer) bandida.",
               "Pastda [«Vazifalar»](/admin/tasks) havolasi, [«Lidlarni saralash»](#leads-sort) tugmasi va «Lidni topish» qidiruvi. Yonida «Kimniki» maydoni: xodimni tanlang, faqat uning lidlari ko‘rinadi. Keyin [«Ro‘yxat» / «Taxta»](#leads-board) almashtirgichi, filtrlar va [ro‘yxat](#leads-list).",
-              "Eng pastda [«Lidni qo‘lda qo‘shish»](#leads-add) tugmasi. Jamoaning haftalik raqamlari, reja va tavsiyalar [«Bosh sahifa»](#hq-week) pastida.",
+              "[«Lidni qo‘lda qo‘shish»](#leads-add) tugmasi tepada, «Lidlarni saralash» ustida. Jamoaning haftalik raqamlari, reja va tavsiyalar [«Bosh sahifa»](#hq-week) pastida.",
             ],
             admin: [
               "Menejer lidni hamkasbga berishni so‘rasa, tepada «Qaroringizni kutmoqda» bloki chiqadi. Batafsil: [lidni berish](#leads-transfer) bandida.",
               "Pastda [«Vazifalar»](/admin/tasks) havolasi, [«Lidlarni saralash»](#leads-sort) tugmasi va «Lidni topish» qidiruvi. Yonida «Kimniki» maydoni: xodimni tanlang, faqat uning lidlari ko‘rinadi. Keyin [«Ro‘yxat» / «Taxta»](#leads-board) almashtirgichi, filtrlar va [ro‘yxat](#leads-list).",
-              "Eng pastda [«Lidni qo‘lda qo‘shish»](#leads-add) tugmasi. Jamoaning haftalik raqamlari, reja va tavsiyalar [«Bosh sahifa»](#hq-week) pastida. Kassa va kutilayotgan to‘lovlar [«Moliya»](/admin/finance) bo‘limida.",
+              "[«Lidni qo‘lda qo‘shish»](#leads-add) tugmasi tepada, «Lidlarni saralash» ustida. Jamoaning haftalik raqamlari, reja va tavsiyalar [«Bosh sahifa»](#hq-week) pastida. Kassa va kutilayotgan to‘lovlar [«Moliya»](/admin/finance) bo‘limida.",
             ],
           },
         },
@@ -678,7 +678,7 @@ export const uz: HelpCopy = {
           id: "add",
           title: "«Lidni qo‘lda qo‘shish»: mijoz sayt va botsiz keldi",
           body: [
-            "Mijoz qo‘ng‘iroq qildimi, tavsiya bilan keldimi yoki shaxsan uchrashdingizmi? Uni ro‘yxat ostidagi «Lidni qo‘lda qo‘shish» tugmasi bilan yozing. «Mijoz ismi» va «Telefon, Telegram yoki pochta» majburiy, qolgani ixtiyoriy.",
+            "Mijoz qo‘ng‘iroq qildimi, tavsiya bilan keldimi yoki shaxsan uchrashdingizmi? Uni «Lidlar» sahifasi tepasidagi «Lidni qo‘lda qo‘shish» tugmasi bilan yozing. «Mijoz ismi» va «Telefon, Telegram yoki pochta» majburiy, qolgani ixtiyoriy.",
             "Lid darhol ishda, navbatsiz, 4 soatdan keyin bot keyin nima bo‘lishini so‘raydi. Menejer lidni o‘ziga qo‘shadi. Rahbar va egasi «Lid kimga»da istalgan xodimni tanlaydi, unga «Вам добавили лид» keladi.",
             "Forma tepasida «Bu kim» bor: «Mijoz», «Agentlik» yoki «Bloger». Agentlikni [«Agentliklar»](/admin/agencies) bo‘limida oching, uning 15% shu yerda hisoblanadi. Blogerni hamkor qilib rahbar va egasi ochadi.",
             "Undan ham yuqorida «Yo‘nalish»: «Ishlab chiqish» yoki «Lidogeneratsiya». Lidogeneratsiya mijozi (bizdan qo‘ng‘iroqli lidlar oqimini buyurtma qilgan) bo‘lsa, «Lidogeneratsiya»ni tanlang. Bunday liddan loyiha 7% soliq bilan ochiladi va olib boruvchiga qolgan summaning 20% i tushadi: summa minus tannarx minus 7% soliq. Misol: 200 000 ₽ keldi, tannarx 135 000 ₽, soliq 14 000 ₽, qoldiq 51 000 ₽, olib boruvchiga 10 200 ₽. Foiz mijoz biz bilan ishlagan vaqt davomida har bir to‘lovdan tushadi: uzaytirishni o‘sha liddan yangi loyiha qilib oching. Mijoz to‘lamaguncha bunday lidning holati va bosqichlarini menejer o‘zi qo‘yadi. Birinchi to‘lovdan keyin ularni faqat rahbar va egasi o‘zgartiradi.",
