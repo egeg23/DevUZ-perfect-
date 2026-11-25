@@ -19,8 +19,8 @@ export const CALLHELPER_TARIFFS: readonly CallTariff[] = [
 /** Минута сверх пакета. */
 export const CALLHELPER_OVER_RUB = 3;
 
-/** Пробный период: дни и минуты на компанию. */
-export const CALLHELPER_TRIAL = { days: 3, minutes: 300 } as const;
+/** Пробный период: дни и минуты на компанию (правила — trial.ts). */
+export { TRIAL as CALLHELPER_TRIAL } from "@/lib/callhelper/trial";
 
 /** Ведущему — процент от прибыли подписки (сумма − себестоимость − 9%). */
 export const CALLHELPER_MANAGER_PERCENT = 20;
