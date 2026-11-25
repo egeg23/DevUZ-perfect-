@@ -15,6 +15,7 @@ export const leadChannelDict = defineDict({
   form: { ru: "форма на сайте", uz: "saytdagi forma", pl: "formularz na stronie" },
   box: { ru: "лист ожидания DevUz Box", uz: "DevUz Box kutish ro‘yxati", pl: "lista oczekujących DevUz Box" },
   leadgen: { ru: "заявка на лидогенерацию", uz: "lidogeneratsiyaga ariza", pl: "zgłoszenie na generowanie leadów" },
+  agent: { ru: "заявка от ИИ-агента", uz: "SI-agentdan ariza", pl: "zgłoszenie od agenta AI" },
   mockup: { ru: "макет в боте", uz: "botdagi maket", pl: "makieta w bocie" },
   "mockup-manual": { ru: "макет вручную из бота", uz: "botdan qo‘lda maket", pl: "makieta ręcznie z bota" },
   claudery: { ru: "бот Claudery — помощь с ИИ", uz: "Claudery boti — SI bo‘yicha yordam", pl: "bot Claudery — pomoc z AI" },

@@ -905,6 +905,7 @@ export const moreSections: Record<string, HelpEntry> = {
           "W bloku «Moje» jest **«Jakie leady wysyłać»**. To zaznaczenia według rodzajów leadów: «Zimne kontakty», «Przetargi», «Sygnały z grup (skaut)», «Partnerzy i agencje», «Zgłoszenia ze strony i z bota», «Makieta z bota» i «Pomoc z AI (Claudery)». Na początku zaznaczone są wszystkie.",
           "Odznacz zbędne i kliknij **«Zapisz»**. Bot przestanie wysyłać takie leady, a [kolejka](#leads-queue) nie będzie ci ich proponować. Od razu trafią do tych, którzy mają zaznaczone.",
           "Jeśli rodzaju nie wybrał nikt, lead i tak przychodzi do wszystkich, żeby klient nie przepadł. Kierownik i właściciel mogą ustawić te zaznaczenia za ciebie w «Zespół».",
+          "Zgłoszenie w imieniu klienta może przysłać także agent AI, na przykład asystent, którego ktoś poprosił o znalezienie studia. Takie zgłoszenie trafia do «Zgłoszenia ze strony i z bota», a w karcie leada ma kanał: zgłoszenie od agenta AI. Kontakt i zadanie są zapisane ze słów agenta, z klientem nikt nie rozmawiał: napisz do niego i sam ustal, czego potrzebuje.",
         ],
       },
       {
