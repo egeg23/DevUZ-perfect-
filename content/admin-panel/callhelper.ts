@@ -166,4 +166,18 @@ export const callhelperDict = defineDict({
         empty: "W sejfie nie ma jeszcze klucza.",
       } as Record<string, string>)[code] ?? "Sprawdzenie nie przeszło.",
   },
+  waitTitle: { ru: "Лист ожидания", uz: "Kutish ro‘yxati", pl: "Lista oczekujących" },
+  waitLead: {
+    ru: "Заявки с главной сайта, форма в блоке CallHelper. Это не лиды: в общий список, очередь и бот команды они не идут, их видите только вы. Повтор того же контакта не заводит новую строку, а обновляет старую.",
+    uz: "Sayt bosh sahifasidagi CallHelper blokidagi formadan arizalar. Bular lid emas: umumiy ro‘yxatga, navbatga va jamoa botiga tushmaydi, ularni faqat siz ko‘rasiz. Bir xil kontakt qayta yozsa, yangi qator ochilmaydi, eskisi yangilanadi.",
+    pl: "Zgłoszenia ze strony głównej, formularz w bloku CallHelper. To nie leady: nie trafiają na wspólną listę, do kolejki ani do bota zespołu, widzisz je tylko ty. Ten sam kontakt ponownie nie tworzy nowego wiersza, tylko aktualizuje stary.",
+  },
+  waitEmpty: { ru: "Пока никто не записался.", uz: "Hozircha hech kim yozilmadi.", pl: "Na razie nikt się nie zapisał." },
+  waitCount: { ru: (n: number = 0) => `Всего: ${n}`, uz: (n: number = 0) => `Jami: ${n}`, pl: (n: number = 0) => `Razem: ${n}` },
+  waitWhen: { ru: "Когда", uz: "Qachon", pl: "Kiedy" },
+  waitWho: { ru: "Кто", uz: "Kim", pl: "Kto" },
+  waitContact: { ru: "Контакт", uz: "Kontakt", pl: "Kontakt" },
+  waitOps: { ru: "Операторов", uz: "Operatorlar", pl: "Operatorów" },
+  waitNote: { ru: "Что написал", uz: "Nima yozdi", pl: "Co napisał" },
+  waitTimes: { ru: (n: number = 2) => `обращался ${n} раза`, uz: (n: number = 2) => `${n} marta yozgan`, pl: (n: number = 2) => `pisał ${n} razy` },
 });

@@ -28,3 +28,21 @@ export const CALLHELPER_COPY = {
 
 /** Якорь блока на русской главной. */
 export const CALLHELPER_ANCHOR = "callhelper";
+
+/** Лист ожидания на главной (components/home/callhelper-wait.tsx). */
+export const CALLHELPER_WAIT = {
+  title: "Лист ожидания",
+  lead: "Оставьте контакт: напишем первыми, когда откроем подключение, и дадим попробовать до запуска.",
+  name: "Ваше имя",
+  company: "Компания",
+  contact: "Телефон или Telegram",
+  operators: "Сколько операторов",
+  comment: "Что продаёте или чем занимается линия",
+  button: "В лист ожидания",
+  sending: "Отправляем…",
+  sent: "Вы в листе ожидания. Напишем, как только откроем подключение.",
+  bad: "Проверьте контакт: нужен телефон, @ник в Telegram или почта.",
+  failed: "Не отправилось. Попробуйте ещё раз или напишите нам в Telegram.",
+  privacy: "Контакт нужен только для связи о CallHelper. Как храним данные:",
+  privacyLink: "политика конфиденциальности",
+} as const;

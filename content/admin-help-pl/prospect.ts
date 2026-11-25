@@ -165,6 +165,15 @@ export const prospectSections: Record<string, HelpEntry> = {
           "Panel pokazuje potem tylko „ustawiony” albo „pusty”, samego klucza nie widzi nikt. «Sprawdź ponownie» pyta Yandex kluczem, który już leży w sejfie. W dzienniku zostaje wpis, kto wkleił klucz, bez samego klucza. Nie wysyłaj klucza na czat i nie wrzucaj go do GitHuba: repozytorium jest otwarte.",
         ],
       },
+      {
+        id: "wait",
+        title: "Lista oczekujących",
+        body: [
+          "Blok «Lista oczekujących» w sekcji. Trafiają tu zgłoszenia z formularza w bloku CallHelper na rosyjskiej stronie głównej: imię, firma, kontakt, liczba operatorów i to, co ktoś napisał. Nowe na górze, czas według Taszkentu.",
+          "To nie leady. Zgłoszenie nie trafia do «Leady», kolejki ciepłych leadów, «Skrzynka» ani do bota zespołu, nie widzi go żaden menedżer ani kierownik: blok i samo zgłoszenie są tylko u ciebie. Ten sam kontakt ponownie nie tworzy nowego wiersza: stary się aktualizuje, a pod godziną widać, ile razy ktoś pisał.",
+          "W dzień, od 08:00 do 21:00 czasu Taszkentu, bot pisze o nowym zgłoszeniu tylko do ciebie, linijką z linkiem tutaj. W nocy linijki nie ma, zgłoszenie po prostu czeka na liście. Formularz przyjmuje telefon, @nick w Telegramie albo e-mail, które wyglądają na prawdziwe; z jednego adresu najwyżej trzy zgłoszenia na 10 minut.",
+        ],
+      },
     ],
   },
   "/admin/markets": {

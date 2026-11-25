@@ -1045,6 +1045,15 @@ export const uz: HelpCopy = {
             "Panel faqat «berilgan» yoki «bo‘sh» deb ko‘rsatadi, kalitning o‘zini hech kim ko‘rmaydi. «Yana tekshirish» omborda turgan kalit bilan Yandex’dan so‘raydi. Jurnalda kalitni kim kiritgani yoziladi, kalitning o‘zisiz. Kalitni chatga yubormang va GitHub’ga qo‘ymang: repozitoriy ochiq.",
           ],
         },
+        {
+          id: "wait",
+          title: "Kutish ro‘yxati",
+          body: [
+            "Bo‘limdagi «Kutish ro‘yxati» bloki. Bu yerga saytning rus bosh sahifasidagi CallHelper blokidagi formadan arizalar tushadi: ism, kompaniya, kontakt, nechta operator va odam nima yozgani. Yangilari tepada, vaqt Toshkent bo‘yicha.",
+            "Bular lid emas. Ariza «Lidlar», issiq lidlar navbati, «Kiruvchi» va jamoa botiga tushmaydi, uni birorta menejer ham, rahbar ham ko‘rmaydi: blok va arizaning o‘zi faqat sizda. Bir xil kontakt qayta yozsa, yangi qator ochilmaydi: eskisi yangilanadi va vaqt ostida odam necha marta yozgani ko‘rinadi.",
+            "Kunduzi, Toshkent bo‘yicha 08:00 dan 21:00 gacha bot yangi ariza haqida faqat sizga shu yerga havolali qator yozadi. Kechasi qator yo‘q, ariza ro‘yxatda kutib turadi. Forma haqiqiyga o‘xshash telefon, Telegram’dagi @nik yoki pochtani qabul qiladi; bitta manzildan 10 daqiqada uchtadan ortiq ariza bo‘lmaydi.",
+          ],
+        },
       ],
     },
     "/admin/markets": {
