@@ -1014,6 +1014,30 @@ export const uz: HelpCopy = {
       ],
     },
 
+    "/admin/callhelper": {
+      what: "Qo‘ng‘iroqlar uchun suflyor: operatorga keyin nima deyishni ko‘rsatadi, mijoz e’tirozlarini taniydi va taqiqlangan so‘zlarni kuzatadi. Tez orada qo‘ng‘iroq markazlari uchun obunali alohida mahsulotga aylanadi.",
+      items: [
+        {
+          id: "call",
+          title: "Suflyor bilan qo‘ng‘iroqni qanday olib borish",
+          body: [
+            "Ovoz hali ulanmagan, shuning uchun replikalar qo‘lda kiritiladi. Mijoz nima deganini yozing va «Mijoz aytdi» tugmasini (yoki Enter) bosing. O‘z iborangizni «Operator aytdi» tugmasi bilan yozib boring.",
+            "«Hozir ayting» bloki darhol ssenariyingizdagi iborani ko‘rsatadi: e’tirozga javob yoki joriy bosqich iborasi. Bir soniyadan keyin uni sun’iy intellektdan jonli ibora almashtirishi mumkin, sarlavha ostidagi yozuv ibora qayerdan ekanini aytadi. «Operator buni aytdi» tugmasi uni suhbatga yozadi.",
+            "Maslahat ostida suflyor ogohlantiradi: operator taqiqlangan so‘zni aytsa, suhbat yozib olinayotgani haqida ogohlantirmasa (busiz qo‘ng‘iroqni yozib olish shaxsiy ma’lumotlar haqidagi qonunni buzadi) va qaysi majburiy iboralar hali aytilmagan bo‘lsa. «Qo‘ng‘iroq bosqichlari» o‘tilganini belgi bilan belgilaydi, strelka joriy bosqichni ko‘rsatadi.",
+            "«Yangi qo‘ng‘iroq» suhbatni tozalaydi, ssenariy qoladi. Telefonlar, pochta va hujjat raqamlari suhbat sun’iy intellektga yuborilishidan oldin olib tashlanadi.",
+          ],
+        },
+        {
+          id: "script",
+          title: "Qo‘ng‘iroq ssenariysi",
+          body: [
+            "O‘ngda «Qo‘ng‘iroq ssenariysi»: bu suflyor parametrlarining o‘zi. «Mahsulot» va «Qo‘ng‘iroq maqsadi» bir qatorda. «Bosqichlar» har qatorda: nomi | nima deyish | bosqich o‘tilganini bildiruvchi operator so‘zlari vergul bilan.",
+            "«E’tirozlar» har qatorda: nomi | mijoz so‘zlari vergul bilan | sizning javobingiz. So‘z boshidan tutiladi: bitta so‘z boshi uning barcha shakllarini tutadi. O‘z javobingiz bo‘lmasa, suflyor umumiy javob beradi va o‘zingiznikini yozish yaxshiroq ekanini qayd etadi.",
+            "«Majburiy iboralar» har qatorga bittadan, «Taqiqlangan so‘zlar» vergul bilan. «Ssenariyni saqlash» uni shu brauzerda eslab qoladi, «Namunani qaytarish» stomatologiya uchun namunani qo‘yadi. Qo‘ng‘iroq markazi kabineti paydo bo‘lganda ssenariylar o‘sha yerda saqlanadi.",
+          ],
+        },
+      ],
+    },
     "/admin/markets": {
       what: "Bu yerda boshqa mamlakatlarda mijozlarni qayerdan qidirish kerakligi jamlangan. Har bir mamlakat bo‘yicha havolalar va maslahatlar bilan maydonchalar bor.",
       items: [

@@ -134,6 +134,30 @@ export const prospectSections: Record<string, HelpEntry> = {
     ],
   },
 
+  "/admin/callhelper": {
+    what: "Suflerka do rozmów: pokazuje operatorowi, co powiedzieć dalej, rozpoznaje zastrzeżenia klienta i pilnuje zakazanych słów. Wkrótce stanie się osobnym produktem dla call center w subskrypcji.",
+    items: [
+      {
+        id: "call",
+        title: "Jak prowadzić rozmowę z suflerką",
+        body: [
+          "Dopóki głos nie jest podłączony, wypowiedzi wpisuje się ręcznie. Wpisz, co powiedział klient, i kliknij «Powiedział klient» (albo Enter). Swoje zdanie zapisuj przyciskiem «Powiedział operator».",
+          "Blok «Powiedz teraz» od razu pokazuje zdanie z twojego scenariusza: odpowiedź na zastrzeżenie albo zdanie bieżącego etapu. Po sekundzie może je zastąpić żywe zdanie od AI, podpis pod nagłówkiem mówi, skąd jest zdanie. Przycisk «Operator to powiedział» zapisuje je w rozmowie.",
+          "Pod podpowiedzią suflerka ostrzega: jeśli operator powiedział zakazane słowo, jeśli nie uprzedził, że rozmowa jest nagrywana (bez tego nagrywanie rozmowy narusza ustawę o danych osobowych), i jakie obowiązkowe zwroty jeszcze nie padły. «Etapy rozmowy» zaznaczają zaliczone etapy, strzałka pokazuje bieżący.",
+          "«Nowa rozmowa» czyści rozmowę, scenariusz zostaje. Telefony, e-maile i numery dokumentów są usuwane z rozmowy, zanim trafi ona do AI.",
+        ],
+      },
+      {
+        id: "script",
+        title: "Scenariusz rozmowy",
+        body: [
+          "Po prawej «Scenariusz rozmowy»: to są właśnie parametry suflerki. «Produkt» i «Cel rozmowy» w jednej linii. «Etapy» po linii: nazwa | co powiedzieć | słowa operatora po przecinku, po których etap jest zaliczony.",
+          "«Zastrzeżenia» po linii: nazwa | słowa klienta po przecinku | twoja odpowiedź. Słowo łapie się od początku: początek słowa złapie wszystkie jego formy. Jeśli nie ma własnej odpowiedzi, suflerka da ogólną i zaznaczy, że lepiej wpisać własną.",
+          "«Obowiązkowe zwroty» po jednym na linię, «Zakazane słowa» po przecinku. «Zapisz scenariusz» zapamiętuje go w tej przeglądarce, «Przywróć przykład» wstawia przykład dla stomatologii. Gdy powstanie panel call center, scenariusze będą przechowywane tam.",
+        ],
+      },
+    ],
+  },
   "/admin/markets": {
     what: "Tutaj zebraliśmy, gdzie szukać klientów w innych krajach. Dla każdego kraju są platformy z linkami i wskazówkami.",
     items: [
