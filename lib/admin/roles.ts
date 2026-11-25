@@ -175,7 +175,8 @@ export const SECTIONS: readonly Section[] = [
   {
     href: "/admin/callhelper",
     label: { ru: "DevUz CallHelper", uz: "DevUz CallHelper", pl: "DevUz CallHelper" },
-    roles: EVERYONE,
+    // Пока только владелец (25.11.2026: «доступ к этим раздел пока только у меня»).
+    roles: ADMIN_ONLY,
     group: "prospect",
     parent: "/admin/prospect",
     aka: ["Суфлёр", "Звонки", "Колл-центр", "Возражения", "Suflyor", "Qo‘ng‘iroqlar", "Suflerka", "Rozmowy"],

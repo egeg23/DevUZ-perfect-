@@ -135,7 +135,7 @@ export const prospectSections: Record<string, HelpEntry> = {
   },
 
   "/admin/callhelper": {
-    what: "Suflerka do rozmów: pokazuje operatorowi, co powiedzieć dalej, rozpoznaje zastrzeżenia klienta i pilnuje zakazanych słów. Wkrótce stanie się osobnym produktem dla call center w subskrypcji.",
+    what: "Suflerka do rozmów: pokazuje operatorowi, co powiedzieć dalej, rozpoznaje zastrzeżenia klienta i pilnuje zakazanych słów. Wkrótce stanie się osobnym produktem dla call center w subskrypcji, start 14 grudnia 2026. Na razie sekcja jest otwarta tylko dla właściciela.",
     items: [
       {
         id: "call",
@@ -154,6 +154,15 @@ export const prospectSections: Record<string, HelpEntry> = {
           "Po prawej «Scenariusz rozmowy»: to są właśnie parametry suflerki. «Produkt» i «Cel rozmowy» w jednej linii. «Etapy» po linii: nazwa | co powiedzieć | słowa operatora po przecinku, po których etap jest zaliczony.",
           "«Zastrzeżenia» po linii: nazwa | słowa klienta po przecinku | twoja odpowiedź. Słowo łapie się od początku: początek słowa złapie wszystkie jego formy. Jeśli nie ma własnej odpowiedzi, suflerka da ogólną i zaznaczy, że lepiej wpisać własną.",
           "«Obowiązkowe zwroty» po jednym na linię, «Zakazane słowa» po przecinku. «Zapisz scenariusz» zapamiętuje go w tej przeglądarce, «Przywróć przykład» wstawia przykład dla stomatologii. Gdy powstanie panel call center, scenariusze będą przechowywane tam.",
+        ],
+      },
+      {
+        id: "stt",
+        title: "Klucz rozpoznawania mowy",
+        body: [
+          "Na dole sekcji jest blok «Klucz rozpoznawania mowy». Głos w suflerce będzie rozpoznawał Yandex SpeechKit w Rosji: głos klienta nie wyjeżdża za granicę, czego wymaga ustawa o danych osobowych. Model AI nie słyszy głosu, dostaje gotowy tekst rozmowy.",
+          "Weź z Yandex Cloud klucz API konta serwisowego z rolą ai.speechkit-stt.user i numer katalogu (kroki są w samym bloku), wklej je i kliknij «Zapisz i sprawdź». Serwer wyśle do Yandex 0,1 sekundy ciszy (kosztuje mniej niż rubla): jeśli klucz zostanie przyjęty, zapisze go w sejfie sekretów, jeśli nie, niczego nie zapisze i powie, co jest nie tak.",
+          "Panel pokazuje potem tylko „ustawiony” albo „pusty”, samego klucza nie widzi nikt. «Sprawdź ponownie» pyta Yandex kluczem, który już leży w sejfie. W dzienniku zostaje wpis, kto wkleił klucz, bez samego klucza. Nie wysyłaj klucza na czat i nie wrzucaj go do GitHuba: repozytorium jest otwarte.",
         ],
       },
     ],

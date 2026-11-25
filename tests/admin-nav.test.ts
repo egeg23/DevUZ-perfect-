@@ -82,7 +82,7 @@ test("вкладки: редкие разделы — над страницей 
   assert.deepEqual(family(admin, "/admin/audit"), ["/admin/audit", "/admin/usage"]);
   // Менеджеру — только положенное: без «Аккаунтов», «Прототипов», «Расходов».
   const manager = { role: "manager" as const };
-  assert.deepEqual(family(manager, "/admin/prospect"), ["/admin/prospect", "/admin/scout", "/admin/tenders", "/admin/callhelper", "/admin/talks", "/admin/markets"]);
+  assert.deepEqual(family(manager, "/admin/prospect"), ["/admin/prospect", "/admin/scout", "/admin/tenders", "/admin/talks", "/admin/markets"]);
   assert.equal(family(manager, "/admin/mockups"), undefined, "одна вкладка — не выбор");
   assert.equal(family(manager, "/admin/finance"), undefined);
   // Вкладка у вкладки не бывает, и родитель — раздел из списка.
@@ -117,7 +117,7 @@ test("«Рынки» — и вкладкой «Холодных касаний»
 test("закрыт раздел — его вкладка встаёт в меню сама, а не теряется", () => {
   const who = { role: "manager" as const, section_access: { "/admin/prospect": false } };
   const prospect = menuOf(who).find((g) => g.group === "prospect");
-  assert.deepEqual(prospect?.sections.map((s) => s.href), ["/admin/scout", "/admin/tenders", "/admin/callhelper", "/admin/talks"]);
+  assert.deepEqual(prospect?.sections.map((s) => s.href), ["/admin/scout", "/admin/tenders", "/admin/talks"]);
   assert.deepEqual(menuOf(who).find((g) => g.group === "markets")?.sections.map((s) => s.href), ["/admin/markets"]);
   assert.equal(tabsOf(who).find((f) => f[0].href === "/admin/prospect"), undefined);
 });

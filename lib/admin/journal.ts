@@ -75,6 +75,7 @@ export const ACTION_LABEL: Record<AuditAction, Tr> = {
   "claudery.scenario_saved": { ru: "сохранил сценарий бота Claudery", uz: "Claudery boti ssenariysini saqladi", pl: "zapisał scenariusz bota Claudery" },
   "claudery.key_saved": { ru: "вставил ключи бота Claudery", uz: "Claudery boti kalitlarini kiritdi", pl: "wkleił klucze bota Claudery" },
   "claudery.paid": { ru: "клиент Claudery оплатил", uz: "Claudery mijozi to‘ladi", pl: "klient Claudery zapłacił" },
+  "callhelper.stt_key_saved": { ru: "вставил ключ распознавания речи для CallHelper", uz: "CallHelper uchun nutqni tanish kalitini kiritdi", pl: "wkleił klucz rozpoznawania mowy dla CallHelper" },
   "scout.settings_saved": { ru: "поменял режим скаута", uz: "skaut rejimini o‘zgartirdi", pl: "zmienił tryb skauta" },
   "scout.chat_added": { ru: "добавил группу для скаута", uz: "skaut uchun guruh qo‘shdi", pl: "dodał grupę dla skauta" },
   "scout.chat_removed": { ru: "убрал группу скаута", uz: "skaut guruhini olib tashladi", pl: "usunął grupę skauta" },

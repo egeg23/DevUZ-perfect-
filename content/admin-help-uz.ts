@@ -1015,7 +1015,7 @@ export const uz: HelpCopy = {
     },
 
     "/admin/callhelper": {
-      what: "Qo‘ng‘iroqlar uchun suflyor: operatorga keyin nima deyishni ko‘rsatadi, mijoz e’tirozlarini taniydi va taqiqlangan so‘zlarni kuzatadi. Tez orada qo‘ng‘iroq markazlari uchun obunali alohida mahsulotga aylanadi.",
+      what: "Qo‘ng‘iroqlar uchun suflyor: operatorga keyin nima deyishni ko‘rsatadi, mijoz e’tirozlarini taniydi va taqiqlangan so‘zlarni kuzatadi. Tez orada qo‘ng‘iroq markazlari uchun obunali alohida mahsulotga aylanadi, ishga tushirish 2026-yil 14-dekabr. Hozircha bo‘lim faqat egasiga ochiq.",
       items: [
         {
           id: "call",
@@ -1034,6 +1034,15 @@ export const uz: HelpCopy = {
             "O‘ngda «Qo‘ng‘iroq ssenariysi»: bu suflyor parametrlarining o‘zi. «Mahsulot» va «Qo‘ng‘iroq maqsadi» bir qatorda. «Bosqichlar» har qatorda: nomi | nima deyish | bosqich o‘tilganini bildiruvchi operator so‘zlari vergul bilan.",
             "«E’tirozlar» har qatorda: nomi | mijoz so‘zlari vergul bilan | sizning javobingiz. So‘z boshidan tutiladi: bitta so‘z boshi uning barcha shakllarini tutadi. O‘z javobingiz bo‘lmasa, suflyor umumiy javob beradi va o‘zingiznikini yozish yaxshiroq ekanini qayd etadi.",
             "«Majburiy iboralar» har qatorga bittadan, «Taqiqlangan so‘zlar» vergul bilan. «Ssenariyni saqlash» uni shu brauzerda eslab qoladi, «Namunani qaytarish» stomatologiya uchun namunani qo‘yadi. Qo‘ng‘iroq markazi kabineti paydo bo‘lganda ssenariylar o‘sha yerda saqlanadi.",
+          ],
+        },
+        {
+          id: "stt",
+          title: "Nutqni tanish kaliti",
+          body: [
+            "Bo‘lim pastida «Nutqni tanish kaliti» bloki. Suflyordagi ovozni Rossiyada Yandex SpeechKit taniydi: mijoz ovozi chet elga ketmaydi, shaxsiy ma’lumotlar haqidagi qonun shuni talab qiladi. Sun’iy intellekt modeli ovozni eshitmaydi, u suhbatning tayyor matnini oladi.",
+            "Yandex Cloud’dan ai.speechkit-stt.user rolli servis akkauntining API kalitini va katalog raqamini oling (qadamlar blokning o‘zida yozilgan), ularni kiriting va «Saqlash va tekshirish» tugmasini bosing. Server Yandex’ga 0,1 soniya sukunat yuboradi (bir rubldan arzon): kalit qabul qilinsa, uni maxfiy omborga yozadi, qabul qilinmasa, hech narsa yozmaydi va nima noto‘g‘riligini aytadi.",
+            "Panel faqat «berilgan» yoki «bo‘sh» deb ko‘rsatadi, kalitning o‘zini hech kim ko‘rmaydi. «Yana tekshirish» omborda turgan kalit bilan Yandex’dan so‘raydi. Jurnalda kalitni kim kiritgani yoziladi, kalitning o‘zisiz. Kalitni chatga yubormang va GitHub’ga qo‘ymang: repozitoriy ochiq.",
           ],
         },
       ],

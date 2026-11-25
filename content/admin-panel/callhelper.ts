@@ -98,4 +98,72 @@ export const callhelperDict = defineDict({
     uz: "Telefonlar, pochta va hujjat raqamlari suhbat sun’iy intellektga yuborilishidan oldin olib tashlanadi.",
     pl: "Telefony, e-maile i numery dokumentów są usuwane z rozmowy, zanim trafi ona do AI.",
   },
+  sttTitle: { ru: "Ключ распознавания речи", uz: "Nutqni tanish kaliti", pl: "Klucz rozpoznawania mowy" },
+  sttLead: {
+    ru: "Голос в суфлёре распознаёт Яндекс SpeechKit в России. Вставьте API-ключ и номер каталога из Яндекс Облака: сервер спросит Яндекс, работает ли ключ, и только тогда запишет его в хранилище секретов. Обратно панель показывает только «задано» или «пусто».",
+    uz: "Suflyordagi ovozni Rossiyada Yandex SpeechKit taniydi. Yandex Cloud’dan API kalit va katalog raqamini kiriting: server Yandex’dan kalit ishlashini so‘raydi va faqat shundan keyin uni maxfiy omborga yozadi. Panel faqat «berilgan» yoki «bo‘sh» deb ko‘rsatadi.",
+    pl: "Głos w suflerce rozpoznaje Yandex SpeechKit w Rosji. Wklej klucz API i numer katalogu z Yandex Cloud: serwer zapyta Yandex, czy klucz działa, i dopiero wtedy zapisze go w sejfie sekretów. Panel pokazuje potem tylko „ustawiony” albo „pusty”.",
+  },
+  sttStep1: {
+    ru: "Откройте console.yandex.cloud, заведите платёжный аккаунт и каталог (каталог default создаётся сам).",
+    uz: "console.yandex.cloud’ni oching, to‘lov akkaunti va katalog oching (default katalog o‘zi yaratiladi).",
+    pl: "Otwórz console.yandex.cloud, załóż konto płatnicze i katalog (katalog default tworzy się sam).",
+  },
+  sttStep2: {
+    ru: "В каталоге: «Сервисные аккаунты» → «Создать», роль ai.speechkit-stt.user.",
+    uz: "Katalogda: Service accounts → Create, rol ai.speechkit-stt.user (konsol inglizcha bo‘lsa).",
+    pl: "W katalogu: Service accounts → Create, rola ai.speechkit-stt.user (konsola po angielsku).",
+  },
+  sttStep3: {
+    ru: "В сервисном аккаунте: «Создать новый ключ» → «Создать API-ключ». Ключ показывается один раз.",
+    uz: "Servis akkauntida: Create new key → Create API key. Kalit bir marta ko‘rsatiladi.",
+    pl: "W koncie serwisowym: Create new key → Create API key. Klucz pokazuje się tylko raz.",
+  },
+  sttStep4: {
+    ru: "Номер каталога виден вверху консоли, 20 знаков, обычно начинается с b1g.",
+    uz: "Katalog raqami konsol tepasida ko‘rinadi, 20 belgi, odatda b1g bilan boshlanadi.",
+    pl: "Numer katalogu widać u góry konsoli, 20 znaków, zwykle zaczyna się od b1g.",
+  },
+  sttKey: { ru: "API-ключ", uz: "API kalit", pl: "Klucz API" },
+  sttFolder: { ru: "Номер каталога", uz: "Katalog raqami", pl: "Numer katalogu" },
+  sttSet: { ru: "задано", uz: "berilgan", pl: "ustawiony" },
+  sttEmpty: { ru: "пусто", uz: "bo‘sh", pl: "pusty" },
+  sttSave: { ru: "Сохранить и проверить", uz: "Saqlash va tekshirish", pl: "Zapisz i sprawdź" },
+  sttWait: { ru: "Спрашиваю Яндекс…", uz: "Yandex’dan so‘rayapman…", pl: "Pytam Yandex…" },
+  sttRecheck: { ru: "Проверить ещё раз", uz: "Yana tekshirish", pl: "Sprawdź ponownie" },
+  sttResult: {
+    ru: (code: string) =>
+      ({
+        ok: "Яндекс принял ключ, он сохранён в хранилище.",
+        "bad-key": "Ключ не похож на API-ключ Яндекса: одна строка без пробелов.",
+        "bad-folder": "Номер каталога: 20 латинских букв и цифр.",
+        key: "Яндекс не принял ключ. Проверьте ключ и роль ai.speechkit-stt.user у сервисного аккаунта.",
+        folder: "Яндекс не принял номер каталога. Ключ должен быть из того же каталога.",
+        down: "Яндекс сейчас не ответил, ничего не сохранено. Попробуйте через минуту.",
+        failed: "Ключ рабочий, но хранилище не ответило. Попробуйте ещё раз.",
+        empty: "В хранилище ещё нет ключа.",
+      } as Record<string, string>)[code] ?? "Проверка не прошла.",
+    uz: (code: string) =>
+      ({
+        ok: "Yandex kalitni qabul qildi, u omborga saqlandi.",
+        "bad-key": "Kalit Yandex API kalitiga o‘xshamaydi: bo‘sh joysiz bitta qator.",
+        "bad-folder": "Katalog raqami: 20 ta lotin harfi va raqam.",
+        key: "Yandex kalitni qabul qilmadi. Kalitni va servis akkauntidagi ai.speechkit-stt.user rolini tekshiring.",
+        folder: "Yandex katalog raqamini qabul qilmadi. Kalit shu katalogdan bo‘lishi kerak.",
+        down: "Yandex hozir javob bermadi, hech narsa saqlanmadi. Bir daqiqadan keyin urinib ko‘ring.",
+        failed: "Kalit ishlaydi, lekin ombor javob bermadi. Yana urinib ko‘ring.",
+        empty: "Omborda hali kalit yo‘q.",
+      } as Record<string, string>)[code] ?? "Tekshiruv o‘tmadi.",
+    pl: (code: string) =>
+      ({
+        ok: "Yandex przyjął klucz, zapisano go w sejfie.",
+        "bad-key": "To nie wygląda na klucz API Yandex: jedna linia bez spacji.",
+        "bad-folder": "Numer katalogu: 20 liter łacińskich i cyfr.",
+        key: "Yandex nie przyjął klucza. Sprawdź klucz i rolę ai.speechkit-stt.user konta serwisowego.",
+        folder: "Yandex nie przyjął numeru katalogu. Klucz musi być z tego samego katalogu.",
+        down: "Yandex teraz nie odpowiedział, nic nie zapisano. Spróbuj za minutę.",
+        failed: "Klucz działa, ale sejf nie odpowiedział. Spróbuj jeszcze raz.",
+        empty: "W sejfie nie ma jeszcze klucza.",
+      } as Record<string, string>)[code] ?? "Sprawdzenie nie przeszło.",
+  },
 });
