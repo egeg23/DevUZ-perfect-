@@ -218,6 +218,7 @@ test("продукты студии — в версии для агентов: B
   assert.ok(ru.includes("/ru/leadgen"), "лидогенерация");
   assert.ok(ru.includes("DevUz CallHelper") && ru.includes("#callhelper"), "CallHelper");
   assert.ok(ru.includes("14 декабря 2026"), `запуск ${CALLHELPER_LAUNCH}`);
+  assert.ok(ru.includes("лист ожидания"), "CallHelper: лист ожидания");
   for (const t of CALLHELPER_TARIFFS) assert.ok(ru.includes(t.name), t.name);
   for (const locale of locales) {
     const block = productsBlock(locale);
