@@ -12,6 +12,7 @@ import {
   wantedPath,
 } from "@/lib/admin/return-to";
 import { adLocale, defaultLocale, isAdClick, isLocale, locales, matchLocale } from "@/lib/i18n";
+import { AGENT_MD_ROUTE, agentMdHref, agentPath, wantsMarkdown } from "@/lib/agent/paths";
 import { REF_COOKIE, REF_COOKIE_OPTIONS, formatRef, parseRef } from "@/lib/partners/ref-cookie";
 
 const COOKIE = "NEXT_LOCALE";
@@ -189,6 +190,17 @@ export function middleware(request: NextRequest) {
   // Страницы бота Claudery (app/claudery: оферта) — русские, вне языков сайта.
   if (pathname === "/claudery" || pathname.startsWith("/claudery/")) return NextResponse.next();
 
+  // Версия для ИИ-агентов (lib/agent/paths.ts): страница с `.md` на конце
+  // или та же страница с `Accept: text/markdown` — текстовый двойник из
+  // app/agent-md. Адрес у клиента остаётся прежним.
+  const agent = agentPath(pathname);
+  if (agent && (agent.md || wantsMarkdown(request.headers.get("accept")))) {
+    const target = request.nextUrl.clone();
+    target.pathname = `${AGENT_MD_ROUTE}/${[agent.locale, ...agent.segments].join("/")}`;
+    target.search = "";
+    return NextResponse.rewrite(target);
+  }
+
   const hasLocale = locales.some(
     (locale) => pathname === `/${locale}` || pathname.startsWith(`/${locale}/`),
   );
@@ -200,6 +212,12 @@ export function middleware(request: NextRequest) {
     // Без этого китаец, попавший на битую ссылку, получал русскую страницу.
     const headers = new Headers(request.headers);
     headers.set(LOCALE_HEADER, pathname.split("/")[1]);
+    // Агенту, который читает обычную страницу, — где лежит её текстовая версия.
+    if (agent) {
+      const response = NextResponse.next({ request: { headers } });
+      response.headers.set("Link", `<${agentMdHref(agent.locale, agent.segments)}>; rel="alternate"; type="text/markdown"`);
+      return rememberRef(request, response);
+    }
     return rememberRef(request, NextResponse.next({ request: { headers } }));
   }
 

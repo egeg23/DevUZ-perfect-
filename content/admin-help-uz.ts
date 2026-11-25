@@ -3258,6 +3258,7 @@ export const uz: HelpCopy = {
             "«Meniki» blokida **«Qaysi lidlarni yuborish»** bor. Bu lid turlari bo‘yicha belgilar: «Sovuq aloqalar», «Tenderlar», «Guruhlardan signallar (skaut)», «Hamkorlar va agentliklar», «Sayt va botdan buyurtmalar», «Botdan maket» va «SI bo‘yicha yordam (Claudery)». Boshida hammasi belgilangan.",
             "Ortiqchasini olib tashlab, **«Saqlash»**ni bosing. Bot bunday lidlarni yubormaydi, [navbat](#leads-queue) ham ularni sizga taklif qilmaydi. Ular darhol belgisi turganlarga ketadi.",
             "Bu turni hech kim tanlamagan bo‘lsa, mijoz yo‘qolmasligi uchun lid baribir hammaga keladi. Rahbar va egasi bu belgilarni siz uchun «Jamoa»da qo‘ya oladi.",
+            "Mijoz nomidan arizani SI-agent ham yuborishi mumkin, masalan, odam studiya topishni so‘ragan yordamchi. Bunday ariza «Sayt va botdan buyurtmalar» turiga tushadi, lid kartochkasida uning kanali SI-agentdan ariza deb yoziladi. Kontakt va vazifa agent so‘zlaridan yozilgan, mijoz bilan hech kim gaplashmagan: unga o‘zingiz yozing va vazifani aniqlang.",
           ],
         },
         {

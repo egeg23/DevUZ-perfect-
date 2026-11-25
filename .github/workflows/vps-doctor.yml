@@ -293,6 +293,22 @@ jobs:
               echo "  с подписью Google эти страницы за сутки никто не открывал"
             fi
             echo "  лимит частоты за сутки (nginx): $(cat "$ERRLOG.1" "$ERRLOG" 2>/dev/null | awk -v s="$SINCE24" '($1" "$2) >= s' | grep -cE 'limiting (requests|connections)')"
+            echo
+            echo "════ ИИ-агенты за сутки ════"
+            # Версия сайта для ИИ-агентов (lib/agent, владелец 24.11.2026):
+            # сколько раз забирали указатель и текстовые страницы, кто из
+            # известных роботов ходил по сайту и сколько заявок прислали
+            # агенты. Только счёт: адреса и тексты в открытый лог не идут.
+            echo "  /llms.txt и /llms-full.txt: $(grep -cE '"(GET|HEAD) /llms(-full)?\.txt[ ?]' "$GA.all")"
+            echo "  текстовые страницы (.md): $(grep -cE '"(GET|HEAD) /[a-z]{2}(/[a-z0-9/-]*)?\.md[ ?]' "$GA.all")"
+            echo "  чаще всего (.md):"
+            grep -oE '"(GET|HEAD) /[a-z]{2}(/[a-z0-9/-]*)?\.md[ ?]' "$GA.all" | awk '{print $2}' | sort | uniq -c | sort -rn | head -8 | sed 's/^/    /'
+            echo "  роботы ИИ, все запросы к сайту:"
+            for B in GPTBot OAI-SearchBot ChatGPT-User ClaudeBot Claude-SearchBot Claude-User PerplexityBot Perplexity-User Applebot meta-externalagent Bytespider CCBot Amazonbot; do
+              N="$(grep -cF "$B" "$GA.all")"
+              [ "$N" -gt 0 ] && echo "    $B: $N"
+            done
+            echo "  заявки от агентов (POST /api/agent/lead), по кодам ответа: $(grep -E '"POST /api/agent/lead[ ?]' "$GA.all" | awk -F'"' '{split($3,s," "); print s[1]}' | sort | uniq -c | awk '{printf "%s×%s ", $2, $1}')"
             rm -f "$GA.all" "$GA.ips" "$GA.g"
             echo
             echo "════ Реквизиты студии для договоров и счетов ════"

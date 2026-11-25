@@ -221,12 +221,12 @@ export const services: Service[] = [
   {
     slug: "ai-llm-rag",
     seoTitle: {
-      ru: "Внедрение ИИ в бизнес под ключ — Ташкент | DevUz",
-      en: "AI for Business: LLM and RAG in Tashkent — DevUz",
+      ru: "Внедрение ИИ в бизнес под ключ | DevUz Studio",
+      en: "AI for Business: LLM, RAG and AI Agents — DevUz",
       uz: "Biznesga AI joriy etish — Toshkent | DevUz",
       zh: "企业 AI 落地：LLM 与 RAG — DevUz",
-      uk: "Впровадження ШІ в бізнес під ключ — Ташкент | DevUz",
-      pl: "Wdrożenie AI w firmie pod klucz — Taszkent | DevUz",
+      uk: "Впровадження ШІ в бізнес під ключ | DevUz Studio",
+      pl: "Wdrożenie AI w firmie pod klucz | DevUz Studio",
     },
     seoDescription: {
       ru: "AI-ассистенты, поиск по базе знаний на RAG, квалификация лидов и автоответы. Считаем стоимость и окупаемость до старта, а не после.",
@@ -307,12 +307,12 @@ export const services: Service[] = [
   {
     slug: "marketplace-delivery",
     seoTitle: {
-      ru: "Разработка маркетплейса под ключ в Ташкенте — DevUz",
-      en: "Marketplace Development in Tashkent — DevUz",
+      ru: "Разработка маркетплейса под ключ — DevUz Studio",
+      en: "Marketplace Development Company — DevUz Studio",
       uz: "Marketpleys yaratish — Toshkent | DevUz Studio",
-      zh: "塔什干电商平台开发 — DevUz Studio",
-      uk: "Розробка маркетплейсу під ключ у Ташкенті — DevUz",
-      pl: "Tworzenie marketplace’u pod klucz w Taszkencie — DevUz",
+      zh: "电商平台开发，交钥匙 — DevUz Studio",
+      uk: "Розробка маркетплейсу під ключ — DevUz Studio",
+      pl: "Tworzenie marketplace’u pod klucz — DevUz Studio",
     },
     seoDescription: {
       ru: "Маркетплейсы, интернет-магазины и сервисы доставки: кабинет продавца, приложение курьера, трекинг на карте, интеграция с кассами и платежами.",
@@ -393,12 +393,12 @@ export const services: Service[] = [
   {
     slug: "integrations-automation",
     seoTitle: {
-      ru: "Автоматизация бизнес-процессов в Ташкенте — DevUz",
-      en: "Business Process Automation in Tashkent — DevUz",
+      ru: "Автоматизация бизнес-процессов под ключ — DevUz",
+      en: "Business Process Automation Services — DevUz",
       uz: "Biznes jarayonlarini avtomatlashtirish — DevUz",
-      zh: "塔什干业务流程自动化 — DevUz",
-      uk: "Автоматизація бізнес-процесів у Ташкенті — DevUz",
-      pl: "Automatyzacja procesów biznesowych w Taszkencie — DevUz",
+      zh: "业务流程自动化 — DevUz Studio",
+      uk: "Автоматизація бізнес-процесів під ключ — DevUz",
+      pl: "Automatyzacja procesów biznesowych — DevUz Studio",
     },
     seoDescription: {
       ru: "Связываем 1С, CRM, кассы, платёжные шлюзы и Telegram в один рабочий контур. Убираем ручной перенос данных между системами.",

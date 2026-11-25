@@ -141,9 +141,9 @@ export const LEAD_KIND_TITLE: Record<LeadKind, { title: Tr; note: Tr }> = {
   inbound: {
     title: { ru: "Заявки с сайта и из бота", uz: "Sayt va botdan buyurtmalar", pl: "Zgłoszenia ze strony i z bota" },
     note: {
-      ru: "форма и чат на сайте, разговор с ботом студии, витрина, лист ожидания DevUz Box",
-      uz: "saytdagi forma va chat, studiya boti bilan suhbat, vitrina, DevUz Box kutish ro‘yxati",
-      pl: "formularz i czat na stronie, rozmowa z botem studia, witryna, lista oczekujących DevUz Box",
+      ru: "форма и чат на сайте, разговор с ботом студии, витрина, лист ожидания DevUz Box, заявки от ИИ-агентов",
+      uz: "saytdagi forma va chat, studiya boti bilan suhbat, vitrina, DevUz Box kutish ro‘yxati, SI-agentlardan arizalar",
+      pl: "formularz i czat na stronie, rozmowa z botem studia, witryna, lista oczekujących DevUz Box, zgłoszenia od agentów AI",
     },
   },
   mockup: {

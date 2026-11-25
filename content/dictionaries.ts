@@ -34,7 +34,7 @@ const ru = {
     writeUs: "Написать нам",
   },
   hero: {
-    eyebrow: "Маркетинг и разработка · Ташкент",
+    eyebrow: "Маркетинг и разработка · по всему миру",
     titleLead: "Мы делаем маркетинг и пишем код,",
     titleAccent: "которые приносят деньги",
     lead: "Маркетинг, который приводит заявки, сайты, мобильные приложения, AI-продукты на LLM и RAG, маркетплейсы и сервисы доставки. Для бизнеса Узбекистана — на русском, узбекском, английском и китайском.",
@@ -173,13 +173,13 @@ const ru = {
     kicker: "вопросы",
     title: "Отвечаем заранее",
     items: [
-      { q: "Сколько стоит разработка сайта в Ташкенте?", a: `Разработка сайта в Ташкенте у DevUz Studio начинается от ${SITE_PRICES.landing} $ за лендинг, от 1 000 $ за корпоративный сайт, от 8 000 $ за мобильное приложение и от 15 000 $ за маркетплейс. Цена зависит от четырёх вещей: количества языков, числа ролей пользователей, глубины интеграций со сторонними системами и того, нужен ли отдельный дизайн или подойдёт адаптация готовой сетки. Сайт на четырёх языках с админкой обойдётся дороже одноязычного лендинга примерно в полтора раза. Точную цену за выбранный состав можно посчитать самому калькулятором на сайте: за минуту он покажет фиксированную сумму и срок в неделях, без разговора с менеджером.` },
+      { q: "Сколько стоит разработка сайта?", a: `Разработка сайта у DevUz Studio начинается от ${SITE_PRICES.landing} $ за лендинг, от 1 000 $ за корпоративный сайт, от 8 000 $ за мобильное приложение и от 15 000 $ за маркетплейс. Цена зависит от четырёх вещей: количества языков, числа ролей пользователей, глубины интеграций со сторонними системами и того, нужен ли отдельный дизайн или подойдёт адаптация готовой сетки. Сайт на четырёх языках с админкой обойдётся дороже одноязычного лендинга примерно в полтора раза. Точную цену за выбранный состав можно посчитать самому калькулятором на сайте: за минуту он покажет фиксированную сумму и срок в неделях, без разговора с менеджером.` },
       { q: "Сколько времени занимает разработка сайта или приложения?", a: "Корпоративный сайт или лендинг DevUz Studio собирает за 3–8 недель, мобильное приложение на Flutter — за 6–14 недель, маркетплейс или сервис доставки — за 10–20 недель. Отсчёт идёт с момента, когда согласован объём работ и получены доступы, а не с первого письма. На срок сильнее всего влияют три фактора: готовность контента со стороны заказчика, количество внешних интеграций и скорость согласований внутри компании. Проект на четыре языка добавляет к сроку примерно 15% — переводы и проверка вёрстки на каждом языке занимают время. Мы работаем недельными итерациями: каждую пятницу заказчик видит работающую сборку на тестовом домене, а не отчёт о проделанной работе." },
       { q: "Что входит в разработку сайта под ключ?", a: "Под ключ у DevUz Studio означает, что заказчик получает работающий сайт, а не набор файлов. В объём входят: дизайн под ваш бренд, вёрстка и программирование, админка, где контент правит менеджер без разработчика, мультиязычность с hreflang-разметкой, техническое SEO — sitemap, Schema.org, скорость в зелёной зоне Core Web Vitals, подключение домена и SSL, настройка аналитики и перенос существующего контента. Отдельно оплачиваются только хостинг и покупка домена — обычно 5–15 $ в месяц. После запуска действует месяц бесплатной поддержки: правим то, что всплыло на боевом трафике. Исходный код передаётся заказчику полностью, включая репозиторий и историю коммитов." },
       { q: "Сколько стоит внедрение ИИ в бизнес?", a: "Внедрение ИИ в бизнес в DevUz Studio начинается от 4 000 $ и занимает 4–10 недель. За эти деньги получается работающий продукт, а не эксперимент: чаще всего это ассистент первой линии, который отвечает клиентам круглосуточно, разбирается в задаче и передаёт менеджеру готовую сводку, либо поиск по базе знаний компании на технологии RAG. Стоимость складывается из объёма данных, которые нужно подготовить, количества интеграций с вашими системами и того, нужна ли дообученная модель или достаточно готовой. Отдельная статья — расходы на сами запросы к модели: для среднего потока обращений это 30–150 $ в месяц. Окупаемость мы считаем до старта: если по цифрам не сходится, честно об этом говорим." },
       { q: "Сколько стоит разработка маркетплейса под ключ?", a: "Разработка маркетплейса под ключ в DevUz Studio стоит от 15 000 $ и занимает 10–20 недель. В базовый объём входят витрина с поиском и фильтрами, кабинет продавца с загрузкой товаров и статистикой, корзина и оформление заказа, приём онлайн-платежей через местные шлюзы, админка модерации и базовая аналитика. Сервис доставки добавляет приложение курьера, распределение заказов и трекинг на карте — это ещё 4 000–8 000 $. Интеграция с кассовыми системами и 1С считается отдельно, обычно от 2 000 $. Самый частый способ сэкономить — запустить первую версию только с ключевым сценарием и добавлять остальное на живом трафике: так первые продажи приходят на два-три месяца раньше." },
       { q: "Кому принадлежит код после разработки?", a: "Весь исходный код проекта принадлежит заказчику с момента полной оплаты — это зафиксировано в договоре. DevUz Studio передаёт репозиторий с полной историей коммитов, документацию по развёртыванию и все доступы: к серверу, домену, базе данных и сторонним сервисам. Никаких закрытых частей, лицензионных отчислений или зависимости от нашей инфраструктуры в проектах нет. Мы пишем на открытом стеке — Next.js, PostgreSQL, Flutter, — поэтому поддерживать проект дальше может любая команда, а не только мы. Это осознанная позиция: подрядчик, который держит клиента технической зависимостью, зарабатывает на несвободе, а не на качестве работы." },
-      { q: "Работаете ли вы с клиентами за пределами Узбекистана?", a: "Да. DevUz Studio базируется в Ташкенте, но работает с клиентами из Узбекистана, Казахстана и России, а также с компаниями, которые продают на экспорт. Сайт работает на шести языках, а общаемся мы на русском, узбекском, английском и китайском, — поэтому языкового барьера не возникает ни с местным бизнесом, ни с международными покупателями. Несколько проектов в портфолио сделаны именно под экспорт и внешние рынки. Работаем удалённо: созвоны, недельные демонстрации на тестовом домене, переписка в удобном для заказчика мессенджере. Оплата возможна переводом на счёт ИП в Узбекистане или по договору с юридическим лицом." },
+      { q: "В каких странах вы работаете?", a: "По всему миру. Офис DevUz Studio в Ташкенте, а работаем удалённо с клиентами из любой страны: из России, Казахстана, Узбекистана и других стран СНГ, из Европы и США. Для звонков есть номера в Узбекистане, России, Польше и США. Сайт работает на шести языках, а общаемся мы на русском, узбекском, английском и китайском, — поэтому языкового барьера не возникает ни с местным бизнесом, ни с международными покупателями. Несколько проектов в портфолио сделаны именно под экспорт и внешние рынки. Работаем удалённо: созвоны, недельные демонстрации на тестовом домене, переписка в удобном для заказчика мессенджере. Оплата возможна переводом на счёт ИП в Узбекистане или по договору с юридическим лицом." },
       { q: "Кто отвечает в чате на сайте?", a: "В чате на сайте DevUz Studio первым отвечает AI-менеджер — первая линия общения на кастомной LLM-сборке студии. Он работает круглосуточно и на языке посетителя: русском, узбекском, английском, китайском, украинском или польском. Его задача не продать, а разобраться в задаче: он задаёт уточняющие вопросы, подсказывает, с чего начать, и передаёт живому менеджеру всё, что вы рассказали, вместе с номером заявки. Повторять свою историю человеку не придётся. Финальные цены и скидки называет только человек — это принципиально, потому что цена зависит от деталей, которые видит специалист. Если хотите продолжить разговор в Telegram, чат перенесёт переписку туда: диалог продолжится с того же места." },
       { q: "Как работает гарантия ответа за 20 секунд?", a: "Первый ответ в чате на сайте DevUz Studio приходит за 20 секунд, в любое время суток. Если ответа за это время нет, чат сам показывает, что скидка 30% на проект уже за вами — просить и доказывать ничего не нужно, счётчик виден прямо в окне чата. Скидка действует на первый проект и учитывается менеджером при расчёте сметы. Отсчёт идёт с момента, когда вы нажали «Отправить», то есть меряется то ожидание, которое видите вы, а не время работы сервера. Смысл гарантии простой: в разработке принято отвечать на заявку через день, и мы считаем это главной причиной, по которой клиенты уходят к тем, кто ответил первым." },
       { q: "Что за минута на скидку 30%?", a: "Когда вы впервые открываете сайт DevUz Studio, рядом с кнопкой чата запускается таймер на одну минуту. Если за эту минуту написать нашему ассистенту — в чат на сайте или в Telegram по кнопке рядом с таймером, — скидка 30% на первый проект закрепляется за вами: чат сразу это показывает, а менеджер видит скидку в заявке и учитывает её в расчёте. Скидка сохраняется, если вы вернётесь к разговору позже с того же браузера или продолжите его в Telegram. Таймер один на человека и не перезапускается, если обновить страницу. Когда минута вышла, действует обычная гарантия: первый ответ за 20 секунд, не уложимся — те же 30%. Скидки не складываются." },
@@ -376,12 +376,12 @@ const ru = {
   },
   seo: {
     home: {
-      title: "Разработка сайтов и приложений в Ташкенте — DevUz",
+      title: "Разработка сайтов и приложений под ключ — DevUz Studio",
       description:
-        "Маркетинг и разработка в Ташкенте: продвижение, которое приводит заявки, сайты, мобильные приложения, маркетплейсы, AI-продукты. Считаем стоимость онлайн.",
+        "Маркетинг и разработка для бизнеса в СНГ и по всему миру: продвижение, которое приводит заявки, сайты, приложения, маркетплейсы, AI-продукты. Цена онлайн.",
     },
     services: {
-      title: "Услуги: сайты, приложения, AI — Ташкент | DevUz",
+      title: "Услуги: сайты, приложения, AI под ключ | DevUz Studio",
       description:
         "Пять направлений: корпоративные сайты, мобильные приложения, AI-продукты, маркетплейсы и доставка, интеграции. Вилка цен и срок по каждому направлению.",
     },
@@ -391,7 +391,7 @@ const ru = {
         "Проекты в продакшене: сервис доставки, маркетплейс, AI-квалификация лидов, аренда техники. По каждому — задача, стек и результат.",
     },
     calculator: {
-      title: "Стоимость разработки сайта в Ташкенте — калькулятор",
+      title: "Стоимость разработки сайта — онлайн-калькулятор | DevUz",
       description:
         "Посчитайте цену сайта, приложения или маркетплейса за минуту. Отметьте нужные опции — калькулятор покажет точную цену в сумах и долларах и срок в неделях.",
     },
@@ -406,18 +406,18 @@ const ru = {
         "Введите адрес сайта и получите отчёт: скорость, мобильная вёрстка, сертификат, видимость в поиске. Без регистрации, результат сразу на экране.",
     },
     contact: {
-      title: "Заказать разработку сайта в Ташкенте — DevUz",
+      title: "Заказать разработку сайта — DevUz Studio",
       description:
         "Напишите в чат — ответим за 20 секунд, круглосуточно. Не успеем — скидка 30% на проект. Обсудим задачу, сроки и стоимость разработки.",
     },
     about: {
-      title: "О студии DevUz — разработка в Ташкенте",
+      title: "О студии DevUz — разработка для бизнеса по всему миру",
       description:
-        "Кто мы, как работаем и на чём пишем. Команда из Ташкента: сайты, мобильные приложения, маркетплейсы и AI-продукты для бизнеса Узбекистана.",
+        "Кто мы, как работаем и на чём пишем. Офис в Ташкенте, клиенты по всему миру: сайты, мобильные приложения, маркетплейсы и AI-продукты для бизнеса.",
     },
   },
   footer: {
-    tagline: "Студия разработки полного цикла в Ташкенте",
+    tagline: "Студия разработки полного цикла. Работаем по всему миру",
     services: "Услуги",
     company: "Студия",
     contacts: "Контакты",
@@ -487,7 +487,7 @@ const en: Dictionary = {
     writeUs: "Write to us",
   },
   hero: {
-    eyebrow: "Marketing & development · Tashkent",
+    eyebrow: "Marketing & development · worldwide",
     titleLead: "We do marketing and write code",
     titleAccent: "that make money",
     lead: "Marketing that brings in leads, websites, mobile apps, AI products built on LLM and RAG, marketplaces and delivery services. For businesses in Uzbekistan — in Russian, Uzbek, English and Chinese.",
@@ -616,13 +616,13 @@ const en: Dictionary = {
     kicker: "questions",
     title: "Answered upfront",
     items: [
-      { q: "How much does website development in Tashkent cost?", a: `Website development at DevUz Studio in Tashkent starts at $${SITE_PRICES.landing} for a landing page, $1,000 for a corporate site, $8,000 for a mobile app and $15,000 for a marketplace. The price depends on four things: how many languages you need, how many user roles the system has, how deep the integrations with third-party systems go, and whether you want original design or an adaptation of an existing grid. A four-language site with an admin panel costs roughly one and a half times more than a single-language landing page. You can get the exact price for the scope you pick yourself with the calculator on the site: in about a minute it shows a fixed amount and a timeline in weeks.` },
+      { q: "How much does website development cost?", a: `Website development at DevUz Studio starts at $${SITE_PRICES.landing} for a landing page, $1,000 for a corporate site, $8,000 for a mobile app and $15,000 for a marketplace. The price depends on four things: how many languages you need, how many user roles the system has, how deep the integrations with third-party systems go, and whether you want original design or an adaptation of an existing grid. A four-language site with an admin panel costs roughly one and a half times more than a single-language landing page. You can get the exact price for the scope you pick yourself with the calculator on the site: in about a minute it shows a fixed amount and a timeline in weeks.` },
       { q: "How long does it take to build a website or an app?", a: "DevUz Studio builds a corporate site or landing page in 3–8 weeks, a Flutter mobile app in 6–14 weeks, and a marketplace or delivery service in 10–20 weeks. The clock starts when scope is agreed and access is granted, not at the first email. Three things drive the timeline most: how ready your content is, how many external integrations are involved, and how fast approvals move inside your company. A four-language project adds roughly 15% — translation and layout checks in every language take time. We work in weekly iterations: every Friday you see a working build on a staging domain, not a progress report." },
       { q: "What is included in turnkey website development?", a: "Turnkey at DevUz Studio means you get a working website, not a folder of files. The scope includes design for your brand, front-end and back-end development, an admin panel where a manager edits content without a developer, multilingual support with hreflang markup, technical SEO — sitemap, Schema.org, Core Web Vitals in the green zone — domain and SSL setup, analytics, and migration of existing content. Only hosting and the domain are billed separately, typically $5–15 a month. After launch you get a month of free support for whatever surfaces under real traffic. The source code is handed over in full, including the repository and its commit history." },
       { q: "How much does AI implementation for business cost?", a: "AI implementation at DevUz Studio starts at $4,000 and takes 4–10 weeks. That budget buys a working product, not an experiment: most often a first-line assistant that answers customers around the clock, works out the task and hands a finished summary to a human manager, or a RAG-based search across the company knowledge base. The cost depends on how much data needs preparing, how many integrations with your systems are required, and whether a fine-tuned model is needed or an off-the-shelf one will do. Model usage is a separate line: for an average flow of enquiries that is $30–150 a month. We size the payback before the start — if the numbers do not work, we say so." },
       { q: "How much does turnkey marketplace development cost?", a: "Turnkey marketplace development at DevUz Studio costs from $15,000 and takes 10–20 weeks. The base scope covers a storefront with search and filters, a seller dashboard with product upload and statistics, cart and checkout, online payments through local gateways, a moderation panel and basic analytics. A delivery service adds a courier app, order dispatch and live map tracking — another $4,000–8,000. POS and 1C integrations are quoted separately, usually from $2,000. The most common way to save is to launch a first version with the core scenario only and add the rest on live traffic: first sales then arrive two or three months earlier." },
       { q: "Who owns the code after development?", a: "All source code belongs to the client from the moment of full payment — it is written into the contract. DevUz Studio hands over the repository with its full commit history, deployment documentation and every access credential: server, domain, database and third-party services. There are no closed parts, no licence fees and no dependency on our infrastructure. We build on an open stack — Next.js, PostgreSQL, Flutter — so any team can maintain the project afterwards, not only us. This is a deliberate position: a contractor who holds a client through technical dependency earns from that dependency rather than from the quality of the work." },
-      { q: "Do you work with clients outside Uzbekistan?", a: "Yes. DevUz Studio is based in Tashkent and works with clients from Uzbekistan, Kazakhstan and Russia, as well as companies selling for export. The site runs in six languages, and we communicate in Russian, Uzbek, English and Chinese — so there is no language barrier with local business or with international buyers. Several projects in the portfolio were built specifically for export and foreign markets. We work remotely: calls, weekly demos on a staging domain, and messaging in whatever channel suits you. Payment can be made to a sole-proprietor account in Uzbekistan or under a contract with a legal entity." },
+      { q: "Which countries do you work in?", a: "Worldwide. DevUz Studio has its office in Tashkent and works remotely with clients from any country: the US, the UK, Canada and Europe, Russia, Kazakhstan, Uzbekistan and the rest of the CIS. There are phone numbers in Uzbekistan, Russia, Poland and the US. The site runs in six languages, and we communicate in Russian, Uzbek, English and Chinese — so there is no language barrier with local business or with international buyers. Several projects in the portfolio were built specifically for export and foreign markets. We work remotely: calls, weekly demos on a staging domain, and messaging in whatever channel suits you. Payment can be made to a sole-proprietor account in Uzbekistan or under a contract with a legal entity." },
       { q: "Who replies in the chat on the website?", a: "The first reply in the DevUz Studio chat comes from an AI manager — a first line of contact running on the studio's own custom LLM setup. It works around the clock and in the visitor's language: Russian, Uzbek, English, Chinese, Ukrainian or Polish. Its job is not to sell but to understand the task: it asks follow-up questions, suggests where to start, and passes everything you said to a human manager along with a request number, so you never repeat yourself. Final prices and discounts are quoted by a person only — deliberately, because price depends on details a specialist sees. If you would rather continue on Telegram, the chat carries the conversation over and it picks up where it left off." },
       { q: "How does the 20-second reply guarantee work?", a: "The first reply in the DevUz Studio chat arrives within 20 seconds, at any hour. If it does not, the chat itself shows that a 30% discount on your project is already yours — nothing to ask for or prove, and the countdown is visible right in the chat window. The discount applies to your first project and the manager factors it into the quote. The clock starts when you press Send, so what is measured is the wait you actually experience, not server time. The reasoning is simple: in this industry a reply the next day is normal, and we think that is the main reason clients go to whoever answered first." },
       { q: "What is the one-minute 30% discount?", a: "When you first open the DevUz Studio website, a one-minute timer starts next to the chat button. If you message our assistant within that minute — in the website chat or on Telegram via the button next to the timer — 30% off your first project is locked in for you: the chat shows it right away, and the manager sees the discount on your request and applies it to the quote. The discount stays with you if you come back to the conversation later from the same browser or continue it on Telegram. There is one timer per person, and reloading the page does not restart it. Once the minute is over, the usual guarantee applies: the first reply within 20 seconds, and if we miss it — the same 30%. The discounts do not stack." },
@@ -807,12 +807,12 @@ const en: Dictionary = {
   },
   seo: {
     home: {
-      title: "Web & Mobile Development in Tashkent — DevUz",
+      title: "Web & Mobile App Development Company — DevUz Studio",
       description:
-        "Marketing and development in Tashkent, Uzbekistan: promotion that brings in leads, websites, mobile apps, marketplaces, AI products. Online cost estimate.",
+        "Marketing and development for businesses worldwide: promotion that brings in leads, websites, mobile apps, marketplaces, AI products. Online cost estimate.",
     },
     services: {
-      title: "Services: Websites, Apps, AI — Tashkent | DevUz",
+      title: "Services: Websites, Apps, AI | DevUz Studio",
       description:
         "Five directions: corporate websites, mobile apps, AI products, marketplaces and delivery, integrations. Price range and timeline for each.",
     },
@@ -822,7 +822,7 @@ const en: Dictionary = {
         "Projects in production: a delivery service, a marketplace, AI lead qualification, equipment rental. Task, stack and outcome for each.",
     },
     calculator: {
-      title: "Development Cost Calculator — Tashkent | DevUz",
+      title: "Website & App Development Cost Calculator | DevUz",
       description:
         "Estimate the price of a website, app or marketplace in a minute. Pick the options you need and get the exact price and a timeline in weeks.",
     },
@@ -837,18 +837,18 @@ const en: Dictionary = {
         "Enter your website address and get a report: speed, mobile layout, certificate, search visibility. No sign-up, results right on the screen.",
     },
     contact: {
-      title: "Hire a Development Studio in Tashkent — DevUz",
+      title: "Hire a Web Development Studio — DevUz Studio",
       description:
         "Write in the chat — we reply within 20 seconds, around the clock. If we miss it, you get 30% off. Let's discuss scope, timeline and cost.",
     },
     about: {
-      title: "About DevUz — Development Studio in Tashkent",
+      title: "About DevUz — a Development Studio Working Worldwide",
       description:
-        "Who we are, how we work and what we build with. A Tashkent team: websites, mobile apps, marketplaces and AI products for business in Uzbekistan.",
+        "Who we are, how we work and what we build with. An office in Tashkent, clients worldwide: websites, mobile apps, marketplaces and AI products for business.",
     },
   },
   footer: {
-    tagline: "A full-cycle development studio in Tashkent",
+    tagline: "A full-cycle development studio. We work worldwide",
     services: "Services",
     company: "Studio",
     contacts: "Contacts",
@@ -1335,7 +1335,7 @@ const zh: Dictionary = {
     writeUs: "联系我们",
   },
   hero: {
-    eyebrow: "营销与开发 · 塔什干",
+    eyebrow: "营销与开发 · 服务全球",
     titleLead: "我们做的营销和代码，",
     titleAccent: "为你创造收益",
     lead: "带来客户的营销、网站、移动应用、基于 LLM 与 RAG 的 AI 产品、电商平台与配送服务。服务乌兹别克斯坦企业 —— 提供俄语、乌兹别克语、英语与中文四种语言。",
@@ -1464,13 +1464,13 @@ const zh: Dictionary = {
     kicker: "常见问题",
     title: "先把话说清楚",
     items: [
-      { q: "在塔什干做一个网站要多少钱？", a: `DevUz Studio 在塔什干的网站开发起价为：落地页 ${SITE_PRICES.landing} 美元，企业官网 1000 美元，移动应用 8000 美元，电商平台 15000 美元。价格取决于四个因素：需要多少种语言、系统有多少种用户角色、与第三方系统的对接有多深，以及需要原创设计还是沿用现成栅格进行适配。一个带后台、支持四种语言的网站，价格约为单语言落地页的一点五倍。所选内容的确切价格可以用网站上的计算器自己算：一分钟即可得到固定金额和以周计的周期。` },
+      { q: "做一个网站要多少钱？", a: `DevUz Studio 的网站开发起价为：落地页 ${SITE_PRICES.landing} 美元，企业官网 1000 美元，移动应用 8000 美元，电商平台 15000 美元。价格取决于四个因素：需要多少种语言、系统有多少种用户角色、与第三方系统的对接有多深，以及需要原创设计还是沿用现成栅格进行适配。一个带后台、支持四种语言的网站，价格约为单语言落地页的一点五倍。所选内容的确切价格可以用网站上的计算器自己算：一分钟即可得到固定金额和以周计的周期。` },
       { q: "做一个网站或应用需要多长时间？", a: "DevUz Studio 完成企业官网或落地页需要 3–8 周，Flutter 移动应用 6–14 周，电商平台或配送服务 10–20 周。计时从需求范围确认、账号权限到位那一刻开始，而不是从第一封邮件开始。影响周期最大的有三点：客户方内容的准备程度、外部对接的数量，以及公司内部审批的速度。四语言项目会让周期增加约 15%——翻译和逐语言的版面检查都需要时间。我们按周迭代：每周五客户都能在测试域名上看到可运行的版本，而不是一份工作汇报。" },
       { q: "交钥匙的网站开发包含哪些内容？", a: "在 DevUz Studio，交钥匙意味着客户拿到的是一个可运行的网站，而不是一堆文件。范围包括：契合品牌的设计、前后端开发、让运营人员无需开发者即可修改内容的后台、带 hreflang 标注的多语言支持、技术 SEO（sitemap、Schema.org、Core Web Vitals 保持绿色区间）、域名与 SSL 配置、统计分析接入，以及既有内容的迁移。单独计费的只有主机和域名，通常每月 5–15 美元。上线后享有一个月的免费维护，用于修复真实流量下暴露的问题。源代码全部交付，包含代码仓库及其提交历史。" },
       { q: "企业落地 AI 需要多少预算？", a: "DevUz Studio 的 AI 落地起价 4000 美元，周期 4–10 周。这笔预算买到的是可用的产品，而不是一次实验：最常见的是全天候接待客户、厘清需求并把整理好的摘要交给真人经理的第一线助手，或者基于 RAG 技术的企业知识库检索。成本取决于需要整理的数据量、与贵方系统对接的数量，以及是需要微调模型还是现成模型即可。模型调用是另一项开支：按平均咨询量计算，每月约 30–150 美元。投入产出我们在启动前就算清楚——如果账算不过来，我们会直说。" },
       { q: "交钥匙的电商平台开发要多少钱？", a: "DevUz Studio 的交钥匙电商平台开发起价 15000 美元，周期 10–20 周。基础范围包括带搜索与筛选的商品前台、含上架与统计的商家后台、购物车与下单流程、通过本地网关的在线支付、审核后台与基础数据分析。若需配送服务，还要加上骑手 App、订单派发与地图实时追踪，另计 4000–8000 美元。与收银系统及 1C 的对接单独报价，通常 2000 美元起。最常见的省钱方式，是先只带核心场景上线第一版，其余在真实流量中逐步补齐：这样首批成交会提前两到三个月到来。" },
       { q: "开发完成后代码归谁所有？", a: "项目的全部源代码自付清尾款之日起归客户所有，这一点写入合同。DevUz Studio 会交付包含完整提交历史的代码仓库、部署文档，以及全部账号权限：服务器、域名、数据库与第三方服务。没有闭源部分，没有授权费，也不存在对我们基础设施的依赖。我们采用开放技术栈——Next.js、PostgreSQL、Flutter——因此日后任何团队都能接手维护，而不只是我们。这是有意的立场：靠技术依赖捆住客户的承包方，赚的是不自由的钱，而不是工作质量的钱。" },
-      { q: "你们接乌兹别克斯坦以外的客户吗？", a: "接。DevUz Studio 位于塔什干，同时服务来自乌兹别克斯坦、哈萨克斯坦和俄罗斯的客户，以及面向出口销售的公司。网站支持六种语言，沟通使用俄语、乌兹别克语、英语和中文——因此无论对本地企业还是国际买家都不存在语言障碍。作品集中有数个项目正是为出口与海外市场打造的。我们远程协作：视频会议、每周在测试域名上的演示，以及在客户习惯的通讯工具中沟通。付款可汇入乌兹别克斯坦的个体经营者账户，或按与法人主体签订的合同进行。" },
+      { q: "你们在哪些国家开展业务？", a: "面向全球。DevUz Studio 的办公室在塔什干，以远程方式服务任何国家的客户：俄罗斯、哈萨克斯坦、乌兹别克斯坦及其他独联体国家，以及欧洲和美国。在乌兹别克斯坦、俄罗斯、波兰和美国均设有联系电话。网站支持六种语言，沟通使用俄语、乌兹别克语、英语和中文——因此无论对本地企业还是国际买家都不存在语言障碍。作品集中有数个项目正是为出口与海外市场打造的。我们远程协作：视频会议、每周在测试域名上的演示，以及在客户习惯的通讯工具中沟通。付款可汇入乌兹别克斯坦的个体经营者账户，或按与法人主体签订的合同进行。" },
       { q: "网站聊天里是谁在回复？", a: "DevUz Studio 网站聊天中第一个回复你的是 AI 客户经理——运行在工作室自有定制 LLM 之上的第一线接待。它全天候工作，并使用访客的语言：俄语、乌兹别克语、英语、中文、乌克兰语或波兰语。它的任务不是推销，而是厘清需求：提出补充问题、建议从哪里入手，并把你说过的一切连同申请编号一起转交真人经理，你不必重复第二遍。最终报价与折扣只由真人给出——这是刻意的，因为价格取决于专业人员才能看见的细节。若你想转到 Telegram 继续，聊天会把对话一并带过去，从中断处接着聊。" },
       { q: "20 秒回复保证是怎么运作的？", a: "DevUz Studio 网站聊天的第一条回复会在 20 秒内到达，任何时段都是如此。若超时未回，聊天本身会显示项目 30% 的折扣已经归你——无需索取，也无需证明，倒计时就显示在聊天窗口里。折扣适用于首个项目，客户经理会在报价中计入。计时从你按下「发送」那一刻开始，也就是说，衡量的是你实际经历的等待，而不是服务器耗时。这项保证的逻辑很简单：在这个行业里，隔天回复咨询被视为常态，而我们认为这正是客户转向先回复者的首要原因。" },
       { q: "什么是「一分钟锁定 30% 折扣」？", a: "您第一次打开 DevUz Studio 网站时，聊天按钮旁会开始一分钟倒计时。只要在这一分钟内给我们的助手发消息——在网站聊天中，或通过倒计时旁的按钮在 Telegram 中——首个项目 30% 的折扣即为您锁定：聊天会立即显示，客户经理也会在申请中看到这一折扣并在报价中计入。之后您用同一浏览器回到对话，或在 Telegram 中继续，折扣依然保留。每人只有一次倒计时，刷新页面不会重新开始。一分钟结束后，适用常规保证：20 秒内首次回复，超时未回——同样 30%。折扣不叠加。" },
@@ -1654,12 +1654,12 @@ const zh: Dictionary = {
   },
   seo: {
     home: {
-      title: "塔什干网站与应用开发 — DevUz Studio",
+      title: "网站与应用开发，服务全球 — DevUz Studio",
       description:
-        "乌兹别克斯坦塔什干的营销与开发工作室：带来客户的推广、网站、移动应用、电商平台，以及基于 LLM 与 RAG 的 AI 产品。在线估价。",
+        "面向全球企业的营销与开发工作室：带来客户的推广、网站、移动应用、电商平台，以及基于 LLM 与 RAG 的 AI 产品。在线估价。",
     },
     services: {
-      title: "服务：网站、应用、AI — 塔什干 | DevUz",
+      title: "服务：网站、应用、AI | DevUz Studio",
       description: "五大方向：企业网站、移动应用、AI 产品、电商平台与配送、系统集成。每个方向均标注价格区间与周期。",
     },
     cases: {
@@ -1667,7 +1667,7 @@ const zh: Dictionary = {
       description: "已上线的项目：配送服务、电商平台、AI 线索甄别、设备租赁。每个项目均含需求、技术栈与结果。",
     },
     calculator: {
-      title: "开发报价计算器 — 塔什干 | DevUz",
+      title: "网站与应用开发报价计算器 | DevUz",
       description: "一分钟估算网站、应用或电商平台的价格。勾选所需选项，即可得到确切价格与以周计的周期。",
     },
     products: {
@@ -1681,16 +1681,16 @@ const zh: Dictionary = {
         "输入网址即可获得报告：速度、移动端排版、证书、搜索可见性。无需注册，结果即刻呈现。",
     },
     contact: {
-      title: "在塔什干委托开发 — DevUz Studio",
+      title: "委托网站与应用开发 — DevUz Studio",
       description: "在聊天中留言 —— 我们 20 秒内回复，全天候。超时未回，项目立减 30%。一起聊聊范围、周期与费用。",
     },
     about: {
-      title: "关于 DevUz — 塔什干开发工作室",
-      description: "我们是谁、怎么工作、用什么技术。一支塔什干团队：为乌兹别克斯坦企业打造网站、移动应用、电商平台与 AI 产品。",
+      title: "关于 DevUz — 服务全球的开发工作室",
+      description: "我们是谁、怎么工作、用什么技术。办公室在塔什干，客户遍布全球：为企业打造网站、移动应用、电商平台与 AI 产品。",
     },
   },
   footer: {
-    tagline: "位于塔什干的全流程开发工作室",
+    tagline: "全流程开发工作室，服务全球客户",
     services: "服务",
     company: "工作室",
     contacts: "联系方式",
@@ -1766,7 +1766,7 @@ const uk: Dictionary = {
     writeUs: "Написати нам",
   },
   hero: {
-    eyebrow: "Маркетинг і розробка · Ташкент",
+    eyebrow: "Маркетинг і розробка · по всьому світу",
     titleLead: "Ми робимо маркетинг і пишемо код,",
     titleAccent: "які приносять гроші",
     lead: "Маркетинг, що приводить заявки, сайти, мобільні застосунки, AI-продукти на LLM і RAG, маркетплейси та сервіси доставки. Для бізнесу Узбекистану — російською, узбецькою, англійською та китайською.",
@@ -1898,13 +1898,13 @@ const uk: Dictionary = {
     kicker: "питання",
     title: "Відповідаємо заздалегідь",
     items: [
-      { q: "Скільки коштує розробка сайту в Ташкенті?", a: `Розробка сайту в Ташкенті в DevUz Studio коштує від ${SITE_PRICES.landing} $ за лендинг, від 1 000 $ за корпоративний сайт, від 8 000 $ за мобільний застосунок і від 15 000 $ за маркетплейс. Ціна залежить від чотирьох речей: кількості мов, кількості ролей користувачів, глибини інтеграцій зі сторонніми системами і того, чи потрібен окремий дизайн, чи підійде адаптація готової сітки. Сайт чотирма мовами з адмінкою коштуватиме приблизно в півтора раза дорожче, ніж одномовний лендинг. Точну ціну за обраний склад можна порахувати самому калькулятором на сайті: за хвилину він покаже фіксовану суму і термін у тижнях, без розмови з менеджером.` },
+      { q: "Скільки коштує розробка сайту?", a: `Розробка сайту в DevUz Studio коштує від ${SITE_PRICES.landing} $ за лендинг, від 1 000 $ за корпоративний сайт, від 8 000 $ за мобільний застосунок і від 15 000 $ за маркетплейс. Ціна залежить від чотирьох речей: кількості мов, кількості ролей користувачів, глибини інтеграцій зі сторонніми системами і того, чи потрібен окремий дизайн, чи підійде адаптація готової сітки. Сайт чотирма мовами з адмінкою коштуватиме приблизно в півтора раза дорожче, ніж одномовний лендинг. Точну ціну за обраний склад можна порахувати самому калькулятором на сайті: за хвилину він покаже фіксовану суму і термін у тижнях, без розмови з менеджером.` },
       { q: "Скільки часу займає розробка сайту або застосунку?", a: "Корпоративний сайт або лендинг DevUz Studio збирає за 3–8 тижнів, мобільний застосунок на Flutter — за 6–14 тижнів, маркетплейс або сервіс доставки — за 10–20 тижнів. Відлік іде з моменту, коли погоджено обсяг робіт і отримано доступи, а не з першого листа. Найбільше на термін впливають три чинники: готовність контенту з боку замовника, кількість зовнішніх інтеграцій і швидкість погоджень усередині компанії. Проєкт чотирма мовами додає до терміну приблизно 15% — переклади й перевірка верстки кожною мовою потребують часу. Ми працюємо тижневими ітераціями: щоп'ятниці замовник бачить робочу збірку на тестовому домені, а не звіт про виконану роботу." },
       { q: "Що входить у розробку сайту під ключ?", a: "Під ключ у DevUz Studio означає, що замовник отримує робочий сайт, а не набір файлів. В обсяг входять: дизайн під ваш бренд, верстка й програмування, адмінка, де контент редагує менеджер без розробника, багатомовність із розміткою hreflang, технічне SEO — sitemap, Schema.org, швидкість у зеленій зоні Core Web Vitals, підключення домену та SSL, налаштування аналітики й перенесення наявного контенту. Окремо оплачуються тільки хостинг і купівля домену — зазвичай 5–15 $ на місяць. Після запуску діє місяць безкоштовної підтримки: виправляємо те, що виявилося на бойовому трафіку. Вихідний код передається замовникові повністю, разом із репозиторієм та історією комітів." },
       { q: "Скільки коштує впровадження ШІ в бізнес?", a: "Впровадження ШІ в бізнес у DevUz Studio коштує від 4 000 $ і займає 4–10 тижнів. За ці гроші ви отримуєте робочий продукт, а не експеримент: найчастіше це асистент першої лінії, який цілодобово відповідає клієнтам, розбирається в завданні й передає менеджерові готове зведення, або пошук базою знань компанії на технології RAG. Вартість складається з обсягу даних, які треба підготувати, кількості інтеграцій з вашими системами і того, чи потрібна донавчена модель, чи вистачить готової. Окрема стаття — витрати на самі запити до моделі: для середнього потоку звернень це 30–150 $ на місяць. Окупність ми рахуємо до старту: якщо за цифрами не сходиться, чесно про це кажемо." },
       { q: "Скільки коштує розробка маркетплейсу під ключ?", a: "Розробка маркетплейсу під ключ у DevUz Studio коштує від 15 000 $ і займає 10–20 тижнів. До базового обсягу входять вітрина з пошуком і фільтрами, кабінет продавця із завантаженням товарів і статистикою, кошик і оформлення замовлення, приймання онлайн-платежів через місцеві шлюзи, адмінка модерації та базова аналітика. Сервіс доставки додає застосунок кур'єра, розподіл замовлень і відстеження на карті — це ще 4 000–8 000 $. Інтеграцію з касовими системами та 1С рахуємо окремо, зазвичай від 2 000 $. Найпоширеніший спосіб заощадити — запустити першу версію лише з ключовим сценарієм і додавати решту на живому трафіку: так перші продажі з'являються на два-три місяці раніше." },
       { q: "Кому належить код після розробки?", a: "Увесь вихідний код проєкту належить замовникові з моменту повної оплати — це зафіксовано в договорі. DevUz Studio передає репозиторій з повною історією комітів, документацію з розгортання і всі доступи: до сервера, домену, бази даних і сторонніх сервісів. Жодних закритих частин, ліцензійних відрахувань чи залежності від нашої інфраструктури в проєктах немає. Ми пишемо на відкритому стеку — Next.js, PostgreSQL, Flutter, — тому підтримувати проєкт далі може будь-яка команда, а не тільки ми. Це свідома позиція: підрядник, який тримає клієнта технічною залежністю, заробляє на несвободі, а не на якості роботи." },
-      { q: "Чи працюєте ви з клієнтами за межами Узбекистану?", a: "Так. DevUz Studio базується в Ташкенті, але працює з клієнтами з Узбекистану, Казахстану та Росії, а також із компаніями, які продають на експорт. Сайт доступний шістьма мовами, а спілкуємося ми російською, узбецькою, англійською та китайською, — тож мовного бар'єру не виникає ні з місцевим бізнесом, ні з міжнародними покупцями. Кілька проєктів у портфоліо зроблено саме під експорт і зовнішні ринки. Працюємо віддалено: дзвінки, щотижневі демонстрації на тестовому домені, листування в зручному для замовника месенджері. Оплата можлива переказом на рахунок ІП в Узбекистані або за договором з юридичною особою." },
+      { q: "У яких країнах ви працюєте?", a: "По всьому світу. Офіс DevUz Studio в Ташкенті, а працюємо віддалено з клієнтами з будь-якої країни: з України та Європи, США, Казахстану, Узбекистану. Для дзвінків є номери в Узбекистані, Польщі та США. Сайт доступний шістьма мовами, а спілкуємося ми російською, узбецькою, англійською та китайською, — тож мовного бар'єру не виникає ні з місцевим бізнесом, ні з міжнародними покупцями. Кілька проєктів у портфоліо зроблено саме під експорт і зовнішні ринки. Працюємо віддалено: дзвінки, щотижневі демонстрації на тестовому домені, листування в зручному для замовника месенджері. Оплата можлива переказом на рахунок ІП в Узбекистані або за договором з юридичною особою." },
       { q: "Хто відповідає в чаті на сайті?", a: "У чаті на сайті DevUz Studio першим відповідає AI-менеджер — перша лінія спілкування на власній LLM-збірці студії. Він працює цілодобово й мовою відвідувача: російською, узбецькою, англійською, китайською, українською чи польською. Його завдання не продати, а розібратися в задачі: він ставить уточнювальні запитання, підказує, з чого почати, і передає живому менеджерові все, що ви розповіли, разом із номером заявки. Повторювати свою історію людині не доведеться. Остаточні ціни та знижки називає тільки людина — це принципово, бо ціна залежить від деталей, які бачить фахівець. Якщо хочете продовжити розмову в Telegram, чат перенесе листування туди: діалог продовжиться з того самого місця." },
       { q: "Як працює гарантія відповіді за 20 секунд?", a: "Перша відповідь у чаті на сайті DevUz Studio надходить за 20 секунд, у будь-який час доби. Якщо відповіді за цей час немає, чат сам показує, що знижка 30% на проєкт уже ваша — просити й доводити нічого не треба, лічильник видно просто у вікні чату. Знижка діє на перший проєкт, і менеджер враховує її під час розрахунку кошторису. Відлік іде з моменту, коли ви натиснули «Надіслати», тобто вимірюється те очікування, яке бачите ви, а не час роботи сервера. Суть гарантії проста: у розробці заведено відповідати на заявку наступного дня, і ми вважаємо це головною причиною, чому клієнти йдуть до тих, хто відповів першим." },
       { q: "Що за хвилина на знижку 30%?", a: "Коли ви вперше відкриваєте сайт DevUz Studio, поруч із кнопкою чату запускається таймер на одну хвилину. Якщо за цю хвилину написати нашому асистентові — у чат на сайті або в Telegram за кнопкою поруч із таймером, — знижка 30% на перший проєкт закріплюється за вами: чат одразу це показує, а менеджер бачить знижку в заявці й ураховує її в розрахунку. Знижка зберігається, якщо ви повернетеся до розмови пізніше з того самого браузера або продовжите її в Telegram. Таймер один на людину й не перезапускається, якщо оновити сторінку. Коли хвилина минула, діє звичайна гарантія: перша відповідь за 20 секунд, не встигнемо — ті самі 30%. Знижки не підсумовуються." },
@@ -2089,12 +2089,12 @@ const uk: Dictionary = {
   },
   seo: {
     home: {
-      title: "Розробка сайтів і застосунків у Ташкенті — DevUz",
+      title: "Розробка сайтів і застосунків під ключ — DevUz Studio",
       description:
-        "Маркетинг і розробка в Ташкенті: просування, що приводить заявки, сайти, мобільні застосунки, маркетплейси, AI-продукти. Рахуємо вартість онлайн.",
+        "Маркетинг і розробка для бізнесу по всьому світу: просування, що приводить заявки, сайти, мобільні застосунки, маркетплейси, AI-продукти. Рахуємо вартість онлайн.",
     },
     services: {
-      title: "Послуги: сайти, застосунки, AI — Ташкент | DevUz",
+      title: "Послуги: сайти, застосунки, AI під ключ | DevUz Studio",
       description:
         "П'ять напрямів: корпоративні сайти, мобільні застосунки, AI-продукти, маркетплейси й доставка, інтеграції. Діапазон цін і термін за кожним напрямом.",
     },
@@ -2104,7 +2104,7 @@ const uk: Dictionary = {
         "Проєкти в продакшені: сервіс доставки, маркетплейс, AI-кваліфікація лідів, оренда техніки. Для кожного — завдання, стек і результат.",
     },
     calculator: {
-      title: "Вартість розробки сайту в Ташкенті — калькулятор",
+      title: "Вартість розробки сайту — онлайн-калькулятор | DevUz",
       description:
         "Порахуйте ціну сайту, застосунку чи маркетплейсу за хвилину. Позначте потрібні опції — калькулятор покаже точну ціну в сумах і доларах і термін у тижнях.",
     },
@@ -2119,18 +2119,18 @@ const uk: Dictionary = {
         "Введіть адресу сайту й отримайте звіт: швидкість, мобільна верстка, сертифікат, видимість у пошуку. Без реєстрації, результат одразу на екрані.",
     },
     contact: {
-      title: "Замовити розробку сайту в Ташкенті — DevUz",
+      title: "Замовити розробку сайту — DevUz Studio",
       description:
         "Напишіть у чат — відповімо за 20 секунд, цілодобово. Не встигнемо — знижка 30% на проєкт. Обговоримо завдання, терміни й вартість розробки.",
     },
     about: {
-      title: "Про студію DevUz — розробка в Ташкенті",
+      title: "Про студію DevUz — розробка для бізнесу по всьому світу",
       description:
-        "Хто ми, як працюємо і на чому пишемо. Команда з Ташкента: сайти, мобільні застосунки, маркетплейси та AI-продукти для бізнесу Узбекистану.",
+        "Хто ми, як працюємо і на чому пишемо. Офіс у Ташкенті, клієнти по всьому світу: сайти, мобільні застосунки, маркетплейси та AI-продукти для бізнесу.",
     },
   },
   footer: {
-    tagline: "Студія розробки повного циклу в Ташкенті",
+    tagline: "Студія розробки повного циклу. Працюємо по всьому світу",
     services: "Послуги",
     company: "Студія",
     contacts: "Контакти",
@@ -2210,7 +2210,7 @@ const pl: Dictionary = {
     writeUs: "Napisz do nas",
   },
   hero: {
-    eyebrow: "Marketing i programowanie · Taszkent",
+    eyebrow: "Marketing i programowanie · na całym świecie",
     titleLead: "Robimy marketing i piszemy kod,",
     titleAccent: "które zarabiają pieniądze",
     lead: "Marketing, który przynosi zapytania, strony internetowe, aplikacje mobilne, produkty AI oparte na LLM i RAG, marketplace'y i serwisy dostaw. Dla biznesu w Uzbekistanie — po rosyjsku, uzbecku, angielsku i chińsku.",
@@ -2342,13 +2342,13 @@ const pl: Dictionary = {
     kicker: "pytania",
     title: "Odpowiadamy z wyprzedzeniem",
     items: [
-      { q: "Ile kosztuje stworzenie strony internetowej w Taszkencie?", a: `Tworzenie strony w Taszkencie w DevUz Studio zaczyna się od ${SITE_PRICES.landing} $ za landing page, od 1 000 $ za stronę firmową, od 8 000 $ za aplikację mobilną i od 15 000 $ za marketplace. Cena zależy od czterech rzeczy: liczby języków, liczby ról użytkowników, zakresu integracji z zewnętrznymi systemami oraz tego, czy potrzebny jest indywidualny projekt graficzny, czy wystarczy adaptacja gotowego układu. Strona w czterech językach z panelem administracyjnym kosztuje mniej więcej półtora raza więcej niż jednojęzyczny landing page. Dokładną cenę za wybrany zakres policzysz sam kalkulatorem na stronie: w minutę pokaże stałą kwotę i termin w tygodniach, bez rozmowy z menedżerem.` },
+      { q: "Ile kosztuje stworzenie strony internetowej?", a: `Tworzenie strony w DevUz Studio zaczyna się od ${SITE_PRICES.landing} $ za landing page, od 1 000 $ za stronę firmową, od 8 000 $ za aplikację mobilną i od 15 000 $ za marketplace. Cena zależy od czterech rzeczy: liczby języków, liczby ról użytkowników, zakresu integracji z zewnętrznymi systemami oraz tego, czy potrzebny jest indywidualny projekt graficzny, czy wystarczy adaptacja gotowego układu. Strona w czterech językach z panelem administracyjnym kosztuje mniej więcej półtora raza więcej niż jednojęzyczny landing page. Dokładną cenę za wybrany zakres policzysz sam kalkulatorem na stronie: w minutę pokaże stałą kwotę i termin w tygodniach, bez rozmowy z menedżerem.` },
       { q: "Ile trwa stworzenie strony lub aplikacji?", a: "Stronę firmową lub landing page DevUz Studio przygotowuje w 3–8 tygodni, aplikację mobilną we Flutterze — w 6–14 tygodni, marketplace lub serwis dostaw — w 10–20 tygodni. Czas liczymy od momentu uzgodnienia zakresu prac i otrzymania dostępów, a nie od pierwszego maila. Na termin najmocniej wpływają trzy czynniki: gotowość treści po stronie klienta, liczba zewnętrznych integracji i tempo akceptacji wewnątrz firmy. Projekt w czterech językach wydłuża termin o około 15% — tłumaczenia i sprawdzenie układu w każdym języku wymagają czasu. Pracujemy w tygodniowych iteracjach: w każdy piątek klient widzi działającą wersję na domenie testowej, a nie raport z wykonanych prac." },
       { q: "Co obejmuje stworzenie strony pod klucz?", a: "„Pod klucz” w DevUz Studio oznacza, że klient dostaje działającą stronę, a nie zestaw plików. Zakres obejmuje: projekt graficzny pod Twoją markę, kodowanie i programowanie, panel administracyjny, w którym treści edytuje menedżer bez udziału programisty, wielojęzyczność ze znacznikami hreflang, techniczne SEO — sitemap, Schema.org, szybkość w zielonej strefie Core Web Vitals, podpięcie domeny i SSL, konfigurację analityki oraz przeniesienie istniejących treści. Osobno płatny jest tylko hosting i zakup domeny — zwykle 5–15 $ miesięcznie. Po uruchomieniu przez miesiąc obowiązuje bezpłatne wsparcie: poprawiamy to, co wyszło przy prawdziwym ruchu. Kod źródłowy przekazujemy klientowi w całości, razem z repozytorium i historią commitów." },
       { q: "Ile kosztuje wdrożenie AI w firmie?", a: "Wdrożenie AI w firmie w DevUz Studio zaczyna się od 4 000 $ i trwa 4–10 tygodni. Za te pieniądze dostajesz działający produkt, a nie eksperyment: najczęściej jest to asystent pierwszej linii, który odpowiada klientom całą dobę, rozpracowuje zadanie i przekazuje menedżerowi gotowe podsumowanie, albo wyszukiwarka w firmowej bazie wiedzy oparta na technologii RAG. Koszt zależy od ilości danych do przygotowania, liczby integracji z Twoimi systemami i tego, czy potrzebny jest douczony model, czy wystarczy gotowy. Osobna pozycja to koszt samych zapytań do modelu: przy średnim natężeniu zgłoszeń to 30–150 $ miesięcznie. Zwrot z inwestycji liczymy przed startem: jeśli liczby się nie spinają, uczciwie o tym mówimy." },
       { q: "Ile kosztuje stworzenie marketplace'u pod klucz?", a: "Stworzenie marketplace'u pod klucz w DevUz Studio kosztuje od 15 000 $ i trwa 10–20 tygodni. Podstawowy zakres obejmuje witrynę z wyszukiwarką i filtrami, panel sprzedawcy z dodawaniem produktów i statystykami, koszyk i składanie zamówień, płatności online przez lokalne bramki, panel moderacji i podstawową analitykę. Serwis dostaw dodaje aplikację kuriera, przydzielanie zamówień i śledzenie na mapie — to kolejne 4 000–8 000 $. Integrację z systemami kasowymi i 1C wyceniamy osobno, zwykle od 2 000 $. Najczęstszy sposób na oszczędność to uruchomienie pierwszej wersji tylko z kluczowym scenariuszem i dokładanie reszty przy prawdziwym ruchu: w ten sposób pierwsze sprzedaże przychodzą o dwa-trzy miesiące wcześniej." },
       { q: "Do kogo należy kod po zakończeniu prac?", a: "Cały kod źródłowy projektu należy do klienta od momentu pełnej zapłaty — jest to zapisane w umowie. DevUz Studio przekazuje repozytorium z pełną historią commitów, dokumentację wdrożeniową i wszystkie dostępy: do serwera, domeny, bazy danych i usług zewnętrznych. W naszych projektach nie ma zamkniętych elementów, opłat licencyjnych ani zależności od naszej infrastruktury. Piszemy na otwartym stacku — Next.js, PostgreSQL, Flutter — więc dalej projekt może rozwijać dowolny zespół, nie tylko my. To świadome stanowisko: wykonawca, który trzyma klienta technicznym uzależnieniem, zarabia na braku wolności, a nie na jakości pracy." },
-      { q: "Czy pracujecie z klientami spoza Uzbekistanu?", a: "Tak. DevUz Studio ma siedzibę w Taszkencie, ale pracuje z klientami z Uzbekistanu, Kazachstanu i Rosji, a także z firmami, które sprzedają na eksport. Strona działa w sześciu językach, a rozmawiamy po rosyjsku, uzbecku, angielsku i chińsku — dlatego bariera językowa nie pojawia się ani z lokalnym biznesem, ani z zagranicznymi kupującymi. Kilka projektów w portfolio powstało właśnie z myślą o eksporcie i rynkach zagranicznych. Pracujemy zdalnie: rozmowy wideo, cotygodniowe prezentacje na domenie testowej, korespondencja w komunikatorze wygodnym dla klienta. Płatność jest możliwa przelewem na rachunek działalności gospodarczej w Uzbekistanie lub na podstawie umowy z osobą prawną." },
+      { q: "W jakich krajach pracujecie?", a: "Na całym świecie. Biuro DevUz Studio jest w Taszkencie, a pracujemy zdalnie z klientami z dowolnego kraju: z Polski i Europy, USA, Kazachstanu, Uzbekistanu. Mamy numery telefonów w Polsce, Uzbekistanie i USA. Strona działa w sześciu językach, a rozmawiamy po rosyjsku, uzbecku, angielsku i chińsku — dlatego bariera językowa nie pojawia się ani z lokalnym biznesem, ani z zagranicznymi kupującymi. Kilka projektów w portfolio powstało właśnie z myślą o eksporcie i rynkach zagranicznych. Pracujemy zdalnie: rozmowy wideo, cotygodniowe prezentacje na domenie testowej, korespondencja w komunikatorze wygodnym dla klienta. Płatność jest możliwa przelewem na rachunek działalności gospodarczej w Uzbekistanie lub na podstawie umowy z osobą prawną." },
       { q: "Kto odpowiada na czacie na stronie?", a: "Na czacie na stronie DevUz Studio jako pierwszy odpowiada menedżer AI — pierwsza linia kontaktu, działająca na autorskim zestawie LLM studia. Pracuje całą dobę i w języku odwiedzającego: rosyjskim, uzbeckim, angielskim, chińskim, ukraińskim lub polskim. Jego zadaniem nie jest sprzedaż, tylko zrozumienie zadania: zadaje pytania doprecyzowujące, podpowiada, od czego zacząć, i przekazuje żywemu menedżerowi wszystko, co opowiedziałeś, razem z numerem zgłoszenia. Nie trzeba będzie powtarzać swojej historii człowiekowi. Ostateczne ceny i rabaty podaje wyłącznie człowiek — to zasada, bo cena zależy od szczegółów, które widzi specjalista. Jeśli wolisz kontynuować rozmowę w Telegramie, czat przeniesie tam korespondencję: dialog potoczy się od tego samego miejsca." },
       { q: "Jak działa gwarancja odpowiedzi w 20 sekund?", a: "Pierwsza odpowiedź na czacie na stronie DevUz Studio przychodzi w 20 sekund, o każdej porze dnia i nocy. Jeśli w tym czasie odpowiedzi nie ma, czat sam pokazuje, że rabat 30% na projekt już jest Twój — nie trzeba o nic prosić ani niczego udowadniać, licznik widać bezpośrednio w oknie czatu. Rabat obowiązuje na pierwszy projekt, a menedżer uwzględnia go w kosztorysie. Czas liczymy od chwili, gdy klikniesz „Wyślij”, czyli mierzymy to oczekiwanie, które widzisz Ty, a nie czas pracy serwera. Sens gwarancji jest prosty: w branży przyjęło się odpowiadać na zapytanie po dniu, a my uważamy to za główny powód, dla którego klienci odchodzą do tych, którzy odpowiedzieli pierwsi." },
       { q: "Co to za minuta na rabat 30%?", a: "Gdy pierwszy raz otwierasz stronę DevUz Studio, obok przycisku czatu uruchamia się minutnik na jedną minutę. Jeśli w tej minucie napiszesz do naszego asystenta — na czacie na stronie lub w Telegramie przez przycisk obok minutnika — rabat 30% na pierwszy projekt zostaje przypisany do Ciebie: czat od razu to pokazuje, a menedżer widzi rabat w zgłoszeniu i uwzględnia go w wycenie. Rabat zostaje zachowany, jeśli wrócisz do rozmowy później z tej samej przeglądarki lub będziesz ją kontynuować w Telegramie. Minutnik jest jeden na osobę i nie uruchamia się ponownie po odświeżeniu strony. Gdy minuta minie, obowiązuje zwykła gwarancja: pierwsza odpowiedź w 20 sekund, a jeśli się nie zmieścimy — te same 30%. Rabaty się nie sumują." },
@@ -2533,12 +2533,12 @@ const pl: Dictionary = {
   },
   seo: {
     home: {
-      title: "Tworzenie stron i aplikacji w Taszkencie — DevUz",
+      title: "Tworzenie stron i aplikacji pod klucz — DevUz Studio",
       description:
-        "Marketing i programowanie w Taszkencie: promocja, która przynosi zapytania, strony, aplikacje mobilne, marketplace'y, produkty AI. Wycena online.",
+        "Marketing i programowanie dla firm na całym świecie: promocja, która przynosi zapytania, strony, aplikacje mobilne, marketplace'y, produkty AI. Wycena online.",
     },
     services: {
-      title: "Usługi: strony, aplikacje, AI — Taszkent | DevUz",
+      title: "Usługi: strony, aplikacje, AI pod klucz | DevUz Studio",
       description:
         "Pięć specjalizacji: strony firmowe, aplikacje mobilne, produkty AI, marketplace'y i dostawy, integracje. Widełki cen i terminy dla każdej z nich.",
     },
@@ -2548,7 +2548,7 @@ const pl: Dictionary = {
         "Projekty na produkcji: serwis dostaw, marketplace, kwalifikacja leadów przez AI, wynajem sprzętu. Przy każdym — zadanie, stack i wynik.",
     },
     calculator: {
-      title: "Koszt stworzenia strony w Taszkencie — kalkulator",
+      title: "Koszt stworzenia strony — kalkulator online | DevUz",
       description:
         "Policz cenę strony, aplikacji lub marketplace'u w minutę. Zaznacz potrzebne opcje — kalkulator pokaże dokładną cenę w sumach i dolarach oraz termin w tygodniach.",
     },
@@ -2563,18 +2563,18 @@ const pl: Dictionary = {
         "Wpisz adres strony i otrzymaj raport: szybkość, wersja mobilna, certyfikat, widoczność w wyszukiwarce. Bez rejestracji, wynik od razu na ekranie.",
     },
     contact: {
-      title: "Zamów stworzenie strony w Taszkencie — DevUz",
+      title: "Zamów stworzenie strony — DevUz Studio",
       description:
         "Napisz na czacie — odpowiemy w 20 sekund, całą dobę. Nie zdążymy — rabat 30% na projekt. Omówimy zadanie, terminy i koszt realizacji.",
     },
     about: {
-      title: "O studiu DevUz — software house w Taszkencie",
+      title: "O studiu DevUz — software house dla firm z całego świata",
       description:
-        "Kim jesteśmy, jak pracujemy i w czym piszemy. Zespół z Taszkentu: strony, aplikacje mobilne, marketplace'y i produkty AI dla biznesu w Uzbekistanie.",
+        "Kim jesteśmy, jak pracujemy i w czym piszemy. Biuro w Taszkencie, klienci na całym świecie: strony, aplikacje mobilne, marketplace'y i produkty AI dla biznesu.",
     },
   },
   footer: {
-    tagline: "Software house w Taszkencie",
+    tagline: "Software house. Pracujemy na całym świecie",
     services: "Usługi",
     company: "Studio",
     contacts: "Kontakt",
