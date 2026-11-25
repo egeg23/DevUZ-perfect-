@@ -226,3 +226,48 @@ test("главная: блок CallHelper только на русской, да
   assert.doesNotMatch(block, /4\s?900|9\s?900/, "цены — из тарифов, не строкой");
   assert.doesNotMatch(block, /[—–]/, "без длинных тире");
 });
+
+test("лист ожидания: разбор, отпечаток контакта, повтор обновляет строку", async () => {
+  const { parseWait, waitKey, mergeWait, readWait, sortWait, WAIT_PREFIX } = await import("@/lib/callhelper/waitlist");
+  assert.deepEqual(parseWait(null), { ok: false, error: "invalid_json" });
+  assert.deepEqual(parseWait({ contact: "" }), { ok: false, error: "contact_required" });
+  assert.deepEqual(parseWait({ contact: "1234567" }), { ok: false, error: "contact_invalid" });
+  const ok = parseWait({ name: " Анна ", contact: "+7 (912) 345-67-89", operators: "25 человек", comment: "x".repeat(900) });
+  assert.ok(ok.ok);
+  if (!ok.ok) return;
+  assert.equal(ok.entry.name, "Анна");
+  assert.equal(ok.entry.operators, 25);
+  assert.equal(ok.entry.comment.length, 600);
+  assert.ok(waitKey("+7 (912) 345-67-89").startsWith(WAIT_PREFIX));
+  assert.equal(waitKey("+7 (912) 345-67-89"), waitKey("79123456789"), "тот же номер — та же строка");
+  assert.equal(waitKey("https://t.me/Anna_Call"), waitKey("@anna_call"));
+  const first = mergeWait(null, ok.entry, new Date("2026-11-25T10:00:00Z"));
+  assert.equal(first.times, 1);
+  const again = mergeWait(first, { ...ok.entry, name: "", operators: 0, comment: "" }, new Date("2026-11-26T10:00:00Z"));
+  assert.equal(again.times, 2);
+  assert.equal(again.name, "Анна");
+  assert.equal(again.operators, 25);
+  assert.equal(again.first_at, first.first_at);
+  assert.equal(readWait({ foo: 1 }), null);
+  assert.deepEqual(sortWait([first, again]).map((r) => r.times), [2, 1]);
+});
+
+test("лист ожидания: только владельцу, не лид и не очередь команды", () => {
+  const page = readFileSync("app/admin/callhelper/page.tsx", "utf8");
+  assert.match(page, /owner \? <CallHelperWaitlist/);
+  assert.match(page, /owner \? await Promise\.all\(\[sttState\(\), listWait\(\)\]\)/);
+  const route = readFileSync("app/api/callhelper/wait/route.ts", "utf8");
+  for (const off of ["saveLead", "routeNewLead", "salesRecipients", "api/lead"]) {
+    assert.doesNotMatch(route, new RegExp(off), `${off} — не для листа ожидания`);
+  }
+  assert.match(route, /rateLimit/);
+  const store = readFileSync("lib/callhelper/waitlist-store.ts", "utf8");
+  assert.match(store, /\.eq\("role", "admin"\)/, "строка в Telegram — только владельцу");
+  assert.doesNotMatch(store, /"head"|"manager"/);
+  assert.match(store, /messageWindow\(now\)/, "ночью строки нет");
+  const form = readFileSync("components/home/callhelper-wait.tsx", "utf8");
+  assert.match(form, /\/api\/callhelper\/wait/);
+  assert.doesNotMatch(form, /\/api\/lead/);
+  const block = readFileSync("components/home/callhelper-block.tsx", "utf8");
+  assert.match(block, /<CallHelperWait /);
+});

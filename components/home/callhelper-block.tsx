@@ -1,11 +1,10 @@
-import Link from "next/link";
-
 import { CALLHELPER_ANCHOR, CALLHELPER_COPY as C } from "@/content/callhelper";
 import { company } from "@/content/company";
 import { cn } from "@/lib/cn";
 import { CALLHELPER_OVER_RUB, CALLHELPER_TARIFFS, CALLHELPER_TRIAL, launchText } from "@/lib/callhelper/tariffs";
 import { localeHref } from "@/lib/i18n";
 
+import { CallHelperWait } from "./callhelper-wait";
 import g from "./glass.module.css";
 import s from "./callhelper-block.module.css";
 
@@ -78,10 +77,8 @@ export function CallHelperBlock() {
                 </p>
               </div>
 
+              <CallHelperWait privacyHref={localeHref("ru", "privacy")} />
               <div className={s.actions}>
-                <Link href={localeHref("ru", "contact")} className={cn(g.btn, g.primary)}>
-                  Подключить первыми
-                </Link>
                 <a href={company.telegramUrl} target="_blank" rel="noopener noreferrer" className={cn(g.btn, g.ghost)}>
                   Спросить в Telegram
                 </a>
