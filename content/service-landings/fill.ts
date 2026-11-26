@@ -1,6 +1,6 @@
 import { proof } from "@/content/company";
 import { PROTOTYPE_HOURS } from "@/lib/admin/outreach";
-import { defaultSelection, estimate, formatUsd, formatUzs } from "@/lib/calculator";
+import { LOCALE_CURRENCIES, defaultSelection, estimate, formatIn, formatUsd } from "@/lib/calculator";
 import type { Locale } from "@/lib/i18n";
 
 import { LANDING_TEXT, type LandingMeta, type LandingSlug, type LandingText } from "@/content/service-landings";
@@ -28,11 +28,11 @@ export function shortUzs(uzs: number, locale: Locale): string {
 }
 
 /**
- * Валюта страницы — по языку и его региону (владелец, 18.11.2026: «делаем
- * по снг рынок без упора на Узбекистан»). Русская страница — для всего СНГ,
- * английская, польская и украинская — для своих стран: цена в долларах,
- * сумов нет. Узбекская — для Узбекистана, в сумах и рядом в долларах;
- * китайская — как была.
+ * Валюта страницы — по языку и его региону: та же, что у калькулятора
+ * (`LOCALE_CURRENCIES` в lib/calculator.ts). Главная — доллар, у узбекской —
+ * сум; рядом «≈» — рубль у русской, злотый у польской, гривна у украинской,
+ * доллар у узбекской (владелец, 26.11.2026: «Если язык русский — цена должна
+ * показываться в долларах / рублях. Если английский — в долларах»).
  */
 export const LANDING_MONEY: Record<Locale, "usd" | "uzs"> = {
   ru: "usd",
@@ -40,13 +40,13 @@ export const LANDING_MONEY: Record<Locale, "usd" | "uzs"> = {
   pl: "usd",
   uk: "usd",
   uz: "uzs",
-  zh: "uzs",
+  zh: "usd",
 };
 
-/** Цена на странице: главная строка и подпись «≈ …» (у долларовых языков подписи нет). */
+/** Цена на странице: главная строка и подпись «≈ …» (у английской и китайской подписи нет). */
 export function landingMoney(uzs: number, locale: Locale): { main: string; sub?: string } {
-  if (LANDING_MONEY[locale] === "usd") return { main: formatUsd(uzs) };
-  return { main: formatUzs(uzs, locale), sub: formatUsd(uzs) };
+  const [main, sub] = LOCALE_CURRENCIES[locale];
+  return { main: formatIn(uzs, main, locale), ...(sub ? { sub: formatIn(uzs, sub, locale) } : {}) };
 }
 
 export function weeksRange(p: CalcPrice): string {

@@ -1,4 +1,4 @@
-import { USD_RATE } from "@/content/company";
+import { PER_USD, USD_RATE } from "@/content/company";
 import {
   RANGE_FACTOR,
   WEEKS_FACTOR,
@@ -59,6 +59,52 @@ export function usdOf(uzs: number): number {
 
 export function formatUsd(uzs: number): string {
   return `$${usdOf(uzs).toLocaleString("en-US")}`;
+}
+
+/** Валюты сайта: сум — для Узбекистана, доллар — всем, рубль, злотый и гривна — рядом с долларом. */
+export type Currency = "uzs" | "usd" | keyof typeof PER_USD;
+
+/**
+ * Валюты по языку: первая — главная, вторая — «≈» рядом и вторая кнопка в
+ * калькуляторе (владелец, 26.11.2026: «Если язык русский — цена должна
+ * показываться в долларах / рублях. Если английский — в долларах. Ну понял
+ * логику»). Русская версия — для всего СНГ, поэтому доллар и рубль;
+ * узбекская — сум и доллар; польская и украинская — доллар и своя валюта;
+ * английская и китайская (Тайвань, Гонконг, Сингапур) — только доллар.
+ */
+export const LOCALE_CURRENCIES: Record<Locale, readonly Currency[]> = {
+  ru: ["usd", "rub"],
+  uz: ["uzs", "usd"],
+  en: ["usd"],
+  zh: ["usd"],
+  pl: ["usd", "pln"],
+  uk: ["usd", "uah"],
+};
+
+/** Шаг округления «≈»: прикидка, а не расчёт до копейки. */
+const LOCAL_STEP: Record<keyof typeof PER_USD, number> = { rub: 1000, pln: 10, uah: 100 };
+const LOCAL_SIGN: Record<keyof typeof PER_USD, string> = { rub: "₽", pln: "zł", uah: "₴" };
+
+export function formatIn(uzs: number, currency: Currency, locale: Locale): string {
+  if (currency === "uzs") return formatUzs(uzs, locale);
+  if (currency === "usd") return formatUsd(uzs);
+  const step = LOCAL_STEP[currency];
+  const value = Math.round((usdOf(uzs) * PER_USD[currency]) / step) * step;
+  const grouped = value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  return `${grouped} ${LOCAL_SIGN[currency]}`;
+}
+
+export const CURRENCY_CODE: Record<Currency, string> = { uzs: "UZS", usd: "USD", rub: "RUB", pln: "PLN", uah: "UAH" };
+
+/** Цена в долларах (priceFromUsd услуг) строкой на языке — тем же правилом, что priceLine. */
+export function usdLine(usd: number, locale: Locale): string {
+  return priceLine(usd * USD_RATE, locale);
+}
+
+/** Цена строкой на языке: «$500 (≈ 41 000 ₽)», «5 925 000 so‘m ($500)», «$500». */
+export function priceLine(uzs: number, locale: Locale): string {
+  const [main, sub] = LOCALE_CURRENCIES[locale];
+  return sub ? `${formatIn(uzs, main, locale)} (≈ ${formatIn(uzs, sub, locale)})` : formatIn(uzs, main, locale);
 }
 
 /** Цена типа проекта без допов: та же сумма, что калькулятор покажет при выборе. */
@@ -174,7 +220,7 @@ export function estimateToMessage(
     prefix,
     "",
     `• ${categoryTitle}`,
-    `• ${formatUzs(result.priceUzs, locale)} (${formatUsd(result.priceUzs)})`,
+    `• ${priceLine(result.priceUzs, locale)}`,
     `• ${result.weeksLow}–${result.weeksHigh} ${weeksLabel}`,
   ];
 

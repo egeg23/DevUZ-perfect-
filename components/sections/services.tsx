@@ -8,6 +8,7 @@ import { SectionHeading } from "@/components/ui/section-heading";
 import type { Dictionary } from "@/content/dictionaries";
 import { LANDING_SLUGS, LANDING_TEXT } from "@/content/service-landings";
 import { services } from "@/content/services";
+import { usdLine } from "@/lib/calculator";
 import { localeHref, t, tList, type Locale } from "@/lib/i18n";
 
 export function ServicesSection({ locale, dict }: { locale: Locale; dict: Dictionary }) {
@@ -66,7 +67,7 @@ export function ServicesSection({ locale, dict }: { locale: Locale; dict: Dictio
                 )}
 
                 <p className="mt-5 border-t border-line pt-4 font-mono text-[0.72rem] text-faint">
-                  {dict.services.from} ${service.priceFromUsd.toLocaleString("en-US")}
+                  {dict.services.from} {usdLine(service.priceFromUsd, locale)}
                   <span className="mx-2 text-line">·</span>
                   {service.weeksFrom}–{service.weeksTo} {dict.services.weeks}
                   <span className="ml-3 inline-block text-green transition-transform duration-300 group-hover:translate-x-1">

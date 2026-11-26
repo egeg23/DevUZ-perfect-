@@ -14,6 +14,8 @@ import { test } from "node:test";
 import { cases } from "@/content/cases";
 import { LANDING_AREA, LANDINGS, LANDING_SLUGS, LANDING_TEXT } from "@/content/service-landings";
 import { calcPrice, fillText, LANDING_MONEY, landingMoney, landingText, shortUzs } from "@/content/service-landings/fill";
+import { USD_RATE } from "@/content/company";
+import { LOCALE_CURRENCIES, formatIn, priceLine } from "@/lib/calculator";
 import { categories } from "@/content/calculator";
 import { locales } from "@/lib/i18n";
 
@@ -147,15 +149,27 @@ test("страницы под запросы: русская — для всег
 });
 
 test("страницы под запросы: валюта и страны разметки — по языку", () => {
+  // Владелец, 26.11.2026: «Если язык русский — цена должна показываться в
+  // долларах / рублях. Если английский — в долларах. Ну понял логику».
   const p = calcPrice("landing");
-  for (const l of ["ru", "en", "pl", "uk"] as const) {
+  for (const l of ["ru", "en", "pl", "uk", "zh"] as const) {
     assert.equal(LANDING_MONEY[l], "usd");
+    assert.equal(LOCALE_CURRENCIES[l][0], "usd");
     assert.match(landingMoney(p.uzs, l).main, /^\$\d/);
-    assert.equal(landingMoney(p.uzs, l).sub, undefined);
     assert.match(fillText("{price} {priceShort}", p, l), /^\$[\d,]+ \$[\d,]+$/);
   }
+  assert.match(landingMoney(p.uzs, "ru").sub ?? "", /^\d[\d ]* ₽$/);
+  assert.match(landingMoney(p.uzs, "pl").sub ?? "", / zł$/);
+  assert.match(landingMoney(p.uzs, "uk").sub ?? "", / ₴$/);
+  assert.equal(landingMoney(p.uzs, "en").sub, undefined);
+  assert.equal(landingMoney(p.uzs, "zh").sub, undefined);
   assert.equal(LANDING_MONEY.uz, "uzs");
   assert.match(landingMoney(p.uzs, "uz").main, /so‘m/);
+  assert.match(landingMoney(p.uzs, "uz").sub ?? "", /^\$\d/);
+  // Рубли считаются от тех же долларов, что на странице: $500 → 41 000 ₽.
+  assert.equal(formatIn(500 * USD_RATE, "rub", "ru"), "41 000 ₽");
+  assert.equal(priceLine(500 * USD_RATE, "ru"), "$500 (≈ 41 000 ₽)");
+  assert.equal(priceLine(500 * USD_RATE, "en"), "$500");
   assert.ok(LANDING_AREA.ru.countries.includes("Russia") && LANDING_AREA.ru.countries.includes("Kazakhstan"));
   assert.equal(LANDING_AREA.ru.city, undefined);
   assert.equal(LANDING_AREA.uz.city, "Tashkent");

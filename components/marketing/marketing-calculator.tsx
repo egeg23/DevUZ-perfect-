@@ -9,12 +9,11 @@ import {
   channels,
   type MarketingCopy,
 } from "@/content/marketing";
-import { formatUsd, formatUzs } from "@/lib/calculator";
+import { CURRENCY_CODE, LOCALE_CURRENCIES, formatIn, type Currency } from "@/lib/calculator";
 import { cn } from "@/lib/cn";
 import { t, type Locale } from "@/lib/i18n";
 import { estimateMarketing, type ContextChoice } from "@/lib/marketing/estimate";
 
-type Currency = "uzs" | "usd";
 
 const CONTEXT: ContextChoice[] = ["none", "google", "both"];
 
@@ -32,7 +31,8 @@ export function MarketingCalculator({ locale, copy }: { locale: Locale; copy: Ma
   const [budget, setBudget] = useState(DEFAULT_AD_BUDGET);
   const [siteToo, setSiteToo] = useState(false);
   const [currency, setCurrency] = useState<Currency>(
-    locale === "en" || locale === "zh" || locale === "uk" || locale === "pl" ? "usd" : "uzs",
+    // Валюты по языку — LOCALE_CURRENCIES (lib/calculator.ts): первая главная.
+    LOCALE_CURRENCIES[locale][0],
   );
   const [sent, setSent] = useState(false);
 
@@ -42,7 +42,7 @@ export function MarketingCalculator({ locale, copy }: { locale: Locale; copy: Ma
   );
   const hasAds = result?.lines.some((c) => c.ads) ?? false;
 
-  const money = (value: number) => (currency === "uzs" ? formatUzs(value, locale) : formatUsd(value));
+  const money = (value: number) => formatIn(value, currency, locale);
   const contextLabel: Record<ContextChoice, string> = {
     none: copy.calc.contextNone,
     google: copy.calc.contextGoogle,
@@ -202,8 +202,9 @@ export function MarketingCalculator({ locale, copy }: { locale: Locale; copy: Ma
         <div className="overflow-hidden rounded-2xl border border-green/25 bg-gradient-to-b from-green/[0.07] to-surface">
           <div className="flex items-center justify-between border-b border-line px-6 py-4">
             <p className="font-mono text-[0.66rem] uppercase tracking-[0.2em] text-green">{copy.calc.kicker}</p>
+            {LOCALE_CURRENCIES[locale].length > 1 ? (
             <div className="flex gap-0.5 rounded-lg border border-line p-0.5">
-              {(["uzs", "usd"] as const).map((code) => (
+              {LOCALE_CURRENCIES[locale].map((code) => (
                 <button
                   key={code}
                   type="button"
@@ -214,10 +215,11 @@ export function MarketingCalculator({ locale, copy }: { locale: Locale; copy: Ma
                     currency === code ? "bg-green text-ink" : "text-faint hover:text-text",
                   )}
                 >
-                  {code === "uzs" ? "UZS" : "USD"}
+                  {CURRENCY_CODE[code]}
                 </button>
               ))}
             </div>
+            ) : null}
           </div>
 
           {result ? (

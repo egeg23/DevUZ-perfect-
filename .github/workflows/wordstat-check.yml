@@ -7,15 +7,16 @@
 # «landings» — сверка запросов шести страниц услуг (scripts/seo/wordstat-landings.mjs).
 # «tomsk» — запросы страниц сайта клиники «Сияние Севера» по Томску (регион 67), тот же скрипт.
 # «planner» — те же шесть страниц по планировщику Google Ads, Узбекистан (scripts/seo/planner-landings.mjs).
+# «site» — главная, кейсы, калькулятор, «О студии», коробка и лидогенерация, Россия и СНГ (тот же wordstat-landings.mjs).
 name: Вордстат — проверить ключ
 
 on:
   workflow_dispatch:
     inputs:
       what:
-        description: "Что проверить: key — ключ, landings — запросы страниц услуг, tomsk — запросы сайта клиники по Томску, planner — страницы услуг по Google"
+        description: "Что проверить: key — ключ, landings — запросы страниц услуг, tomsk — запросы сайта клиники по Томску, planner — страницы услуг по Google, site — главная, кейсы и разделы по России и СНГ"
         type: choice
-        options: [key, landings, tomsk, planner]
+        options: [key, landings, tomsk, planner, site]
         default: key
 
 permissions:
@@ -42,6 +43,7 @@ jobs:
             case "${{ inputs.what || 'key' }}" in
               landings) file=wordstat-landings.mjs ;;
               tomsk) file=wordstat-landings.mjs; arg=tomsk ;;
+              site) file=wordstat-landings.mjs; arg=site ;;
               planner) file=planner-landings.mjs ;;
               *) file=wordstat-check.mjs ;;
             esac
