@@ -32,3 +32,27 @@ test("IndexNow после выкатки: маршрут шлёт и главн�
   assert.match(announce, /job: "indexnow-site"/);
   assert.match(announce, /site \? siteUrls\(siteUrl\)/);
 });
+
+// Сверка по Вордстату 26.11.2026: «сайт для ресторана» 2 112, «сайт для
+// стоматологии» 917, «сайт для турагентства» 749 в месяц.
+test("заголовок кейса: запрос «сайт для <ниши>» у русских сайтов ниши, приложения — без него", async () => {
+  const { caseTitle } = await import("@/lib/seo/case-title");
+  const { caseBySlug } = await import("@/content/cases");
+  const nek = caseBySlug("nek-dental")!;
+  assert.equal(caseTitle(nek, "ru"), "Nek Dental Studio: сайт для стоматологии — кейс DevUz");
+  assert.ok(!caseTitle(nek, "en").includes("сайт для"));
+  assert.match(caseTitle(caseBySlug("karomat")!, "ru"), /сайт для ресторана/);
+  assert.ok(!caseTitle(caseBySlug("inapp")!, "ru").includes("сайт для"), "приложение — не сайт");
+});
+
+test("SEO русских страниц — под запросы Вордстата", async () => {
+  const { getDictionary } = await import("@/content/dictionaries");
+  const seo = getDictionary("ru").seo;
+  assert.match(seo.home.title, /Разработка сайтов под ключ/);
+  assert.match(seo.home.title, /веб-студия/);
+  assert.match(seo.cases.title, /Примеры сайтов/);
+  assert.match(seo.calculator.title, /Сколько стоит сайт/);
+  assert.match(seo.calculator.description, /долларах и рублях/, "у русской версии цена в $ и ₽");
+  assert.doesNotMatch(getDictionary("pl").seo.calculator.description, /sumach/);
+  assert.doesNotMatch(getDictionary("uk").seo.calculator.description, /сумах/);
+});
