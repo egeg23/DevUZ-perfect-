@@ -114,6 +114,19 @@ export async function handleApi(req: ApiRequest, store: ApiStore, now: Date = ne
     });
   }
 
+  // Смена в расширении: распознать кусок до начала звонка, чтобы гудки и тишина не заводили пустых звонков.
+  // Минуты здесь не идут: счёт начинается со звонка.
+  if (route === "POST stt") {
+    if (!gate.ok) return fail(402, gate.reason);
+    if (!store.limit(`probe:${org.id}`, 30 * seatsOf(org))) return fail(429, "rate");
+    const pcm = await req.bytes();
+    if (pcm.byteLength > AUDIO_MAX_BYTES) return fail(413, "too_big", { max_bytes: AUDIO_MAX_BYTES });
+    if (pcm.byteLength < AUDIO_MIN_BYTES || pcm.byteLength % 2) return fail(400, "audio");
+    const heard = await store.recognize(pcm);
+    if ("error" in heard) return fail(503, heard.error);
+    return ok({ who: req.query.get("who") === "operator" ? "operator" : "client", text: heard.text });
+  }
+
   if (route === "GET scripts") return ok({ scripts: (await store.scripts(org.id)).map(scriptOut) });
 
   // Пример сценария: с него начинает колл-центр, у которого своего ещё нет.

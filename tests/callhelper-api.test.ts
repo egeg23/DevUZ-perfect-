@@ -206,6 +206,19 @@ test("итог звонка считает код: этапы, возражен�
   assert.equal(s.stages.length, EXAMPLE_SCRIPT.stages.length);
 });
 
+test("проверка до звонка: текст без звонка и без минут, по тарифу и с пределом частоты", async () => {
+  const w = world();
+  const heard = await w.ask("POST", "stt?who=client");
+  assert.equal(heard.status, 200);
+  assert.deepEqual(heard.body, { who: "client", text: "а сколько это стоит" });
+  assert.equal(w.calls.length, 0, "звонок не заводится");
+  assert.ok(!w.state.trialStarted, "пробный не начинается");
+  assert.equal((await w.ask("POST", "stt", undefined, { bytes: new Uint8Array(101) })).status, 400);
+  assert.equal((await w.ask("POST", "stt", undefined, { bytes: new Uint8Array(AUDIO_MAX_BYTES + 2) })).status, 413);
+  assert.equal((await world({ active: false }).ask("POST", "stt")).status, 402);
+  assert.equal((await w.ask("POST", "stt", undefined, { key: null })).status, 401);
+});
+
 test("описание API: каждый адрес со страницы есть в коде, каждая ошибка названа", async () => {
   const w = world({ plan: "work", operators: 5 });
   await w.ask("PUT", "scripts", { name: "Кухни", script: EXAMPLE_SCRIPT });
