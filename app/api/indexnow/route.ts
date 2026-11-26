@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { announceRazbors } from "@/lib/razbor/announce";
+import { announceDeploy } from "@/lib/razbor/announce";
 import { secretOk } from "@/lib/secret-ok";
 
 export const runtime = "nodejs";
@@ -27,14 +27,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
-  const done = await announceRazbors();
+  // Свежие разборы, а раз в сутки — и главные страницы с проектами.
+  const done = await announceDeploy();
   if (done.state === "no-key") return NextResponse.json({ skipped: "no key" });
   if (done.state === "bad-input") return NextResponse.json({ error: done.why }, { status: 400 });
 
   const { report } = done;
   // Ключ в ответе не повторяем: его читает лог выкатки.
   return NextResponse.json(
-    { ok: report.ok, status: report.status, urls: report.urls, text: report.text },
+    { ok: report.ok, status: report.status, urls: report.urls, text: report.text, site: done.site ?? false },
     { status: report.ok ? 200 : 502 },
   );
 }

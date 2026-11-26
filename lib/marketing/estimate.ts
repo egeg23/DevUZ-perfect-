@@ -5,7 +5,7 @@ import {
   channels,
   type MarketingChannel,
 } from "@/content/marketing";
-import { formatUsd, formatUzs } from "@/lib/calculator";
+import { priceLine } from "@/lib/calculator";
 import type { Locale } from "@/lib/i18n";
 
 /** Контекстная реклама — один из двух вариантов или без неё. */
@@ -80,11 +80,12 @@ export function estimateMarketing(selection: MarketingSelection): MarketingEstim
 }
 
 /**
- * Цена для текста страницы: в сумах для Узбекистана, для остальных — сумы и
- * доллары рядом. Договор у студии в сумах, но зарубежному читателю «23 256 000
+ * Цена для текста страницы по языку: доллар и рубль по-русски, сум и доллар
+ * по-узбекски, доллар по-английски (владелец, 26.11.2026). Раньше: в сумах
+ * для Узбекистана, для остальных — сумы и доллары рядом; зарубежному читателю «23 256 000
  * UZS» без перевода ничего не скажет.
  */
 export function priceText(value: number, locale: Locale): string {
-  if (locale === "ru" || locale === "uz") return formatUzs(value, locale);
-  return `${formatUzs(value, locale)} (≈ ${formatUsd(value)})`;
+  // Валюты по языку — те же, что у калькулятора сайта (LOCALE_CURRENCIES).
+  return priceLine(value, locale);
 }

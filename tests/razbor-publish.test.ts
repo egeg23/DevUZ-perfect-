@@ -80,7 +80,12 @@ test("публикация зовёт поисковиков, а не ждёт �
   // Один список адресов на выкатку и на кнопку. Разойдясь, они стали бы
   // пинговать разные наборы, и «дошло или нет» выяснять было бы нечем.
   const route = read("app/api/indexnow/route.ts");
-  assert.match(route, /announceRazbors/, "выкатка собирает пинг сама");
+  // С 26.11.2026 выкатка зовёт announceDeploy: те же свежие разборы, а раз в
+  // сутки ещё главные страницы и проекты (tests/indexnow-site.test.ts).
+  assert.match(route, /announceDeploy/, "выкатка собирает пинг сама");
+  const announce = read("lib/razbor/announce.ts");
+  const deploy = announce.slice(announce.indexOf("export async function announceDeploy"));
+  assert.match(deploy, /freshRazborUrls\(siteUrl, \{ locales: RAZBOR_LOCALES, items: razbors \}\)/, "выкатка и кнопка пингуют разные разборы");
   for (const gone of ["buildPayload", "freshRazborUrls", "sendPing"]) {
     assert.ok(!route.includes(gone), `сборка пинга вернулась в маршрут: ${gone}`);
   }

@@ -10,14 +10,15 @@ import {
   defaultSelection,
   estimate,
   estimateToMessage,
-  formatUsd,
-  formatUzs,
+  CURRENCY_CODE,
+  LOCALE_CURRENCIES,
+  formatIn,
+  type Currency,
   type Selection,
 } from "@/lib/calculator";
 import { cn } from "@/lib/cn";
 import { t, type Locale } from "@/lib/i18n";
 
-type Currency = "uzs" | "usd";
 
 /**
  * Калькулятор предварительной оценки.
@@ -47,11 +48,8 @@ export function PriceCalculator({
     defaultSelection(categories[0].slug),
   );
   const [currency, setCurrency] = useState<Currency>(
-    // Местный заказчик думает в сумах, зарубежный — в долларах. Локаль
-    // угадывает это лучше, чем любое значение по умолчанию для всех.
-    // Украинский и польский — тоже зарубежный заказчик: сум для него
-    // незнакомая валюта, и первая же цифра в ней ничего не скажет.
-    locale === "en" || locale === "zh" || locale === "uk" || locale === "pl" ? "usd" : "uzs",
+    // Валюты по языку — LOCALE_CURRENCIES (lib/calculator.ts): первая главная.
+    LOCALE_CURRENCIES[locale][0],
   );
   const [sent, setSent] = useState(false);
 
@@ -87,7 +85,7 @@ export function PriceCalculator({
   }
 
   const money = (value: number) =>
-    currency === "uzs" ? formatUzs(value, locale) : formatUsd(value);
+    formatIn(value, currency, locale);
 
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_23rem]">
@@ -255,8 +253,9 @@ export function PriceCalculator({
             <p className="font-mono text-[0.66rem] uppercase tracking-[0.2em] text-green">
               03 · {dict.calculator.result}
             </p>
+            {LOCALE_CURRENCIES[locale].length > 1 ? (
             <div className="flex gap-0.5 rounded-lg border border-line p-0.5">
-              {(["uzs", "usd"] as const).map((code) => (
+              {LOCALE_CURRENCIES[locale].map((code) => (
                 <button
                   key={code}
                   type="button"
@@ -267,10 +266,11 @@ export function PriceCalculator({
                     currency === code ? "bg-green text-ink" : "text-faint hover:text-text",
                   )}
                 >
-                  {code === "uzs" ? "UZS" : "USD"}
+                  {CURRENCY_CODE[code]}
                 </button>
               ))}
             </div>
+            ) : null}
           </div>
 
           {result ? (

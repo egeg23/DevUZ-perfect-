@@ -10,7 +10,7 @@ import { Reveal } from "@/components/ui/reveal";
 import { getDictionary } from "@/content/dictionaries";
 import { LANDING_AREA, LANDING_SLUGS, LANDING_TEXT, landingBySlug } from "@/content/service-landings";
 import { calcPrice, LANDING_MONEY, landingText } from "@/content/service-landings/fill";
-import { usdOf } from "@/lib/calculator";
+import { usdLine, usdOf } from "@/lib/calculator";
 import { serviceBySlug, services } from "@/content/services";
 import { isLocale, locales, localeHref, t, tList, type Locale } from "@/lib/i18n";
 import { breadcrumbSchema, faqSchema, jsonLdGraph, landingSchema, serviceSchema } from "@/lib/schema";
@@ -147,7 +147,7 @@ export default async function ServicePage({
               {dict.services.from}
             </p>
             <p className="mt-1.5 font-display text-2xl font-bold text-green">
-              ${service.priceFromUsd.toLocaleString("en-US")}
+              {usdLine(service.priceFromUsd, locale)}
             </p>
           </div>
           <div>

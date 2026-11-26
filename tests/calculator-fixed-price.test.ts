@@ -33,8 +33,10 @@ test("калькулятор: в чат уходит одна цена", () => {
   const e = estimate(c.slug, defaultSelection(c.slug), "ru");
   assert.ok(e);
   const text = estimateToMessage("Сайт", e, "ru", "Привет", "недель");
-  const priceLine = text.split("\n").find((l) => l.includes("сум"));
+  // По-русски цена — в долларах и рублях (владелец, 26.11.2026).
+  const priceLine = text.split("\n").find((l) => l.includes("$"));
   assert.ok(priceLine);
+  assert.match(priceLine, /₽/);
   assert.doesNotMatch(priceLine, /[–—]/, "без вилки");
 });
 
