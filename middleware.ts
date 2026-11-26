@@ -34,6 +34,7 @@ export const LOCALE_SECTIONS = [
   "audit",
   "box",
   "calculator",
+  "callhelper",
   "cases",
   "contact",
   "contract",

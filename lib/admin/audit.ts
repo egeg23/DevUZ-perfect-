@@ -62,6 +62,10 @@ export const AUDIT_ACTIONS = [
   "claudery.paid",
   // Ключ распознавания речи DevUz CallHelper (только имена, без значений).
   "callhelper.stt_key_saved",
+  // Колл-центры CallHelper: выдали ключ, перевыпустили, поменяли тариф (без самого ключа).
+  "callhelper.org_created",
+  "callhelper.org_key_reissued",
+  "callhelper.org_updated",
   // Статьи на площадках (lib/outside/store.ts): опубликовал, пропустил, кто публикует.
   "outside.published",
   "outside.skipped",

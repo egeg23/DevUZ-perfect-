@@ -1054,6 +1054,15 @@ export const uz: HelpCopy = {
             "Kunduzi, Toshkent bo‘yicha 08:00 dan 21:00 gacha bot yangi ariza haqida faqat sizga shu yerga havolali qator yozadi. Kechasi qator yo‘q, ariza ro‘yxatda kutib turadi. Forma haqiqiyga o‘xshash telefon, Telegram’dagi @nik yoki pochtani qabul qiladi; bitta manzildan 10 daqiqada uchtadan ortiq ariza bo‘lmaydi.",
           ],
         },
+        {
+          id: "orgs",
+          title: "Koll-markazlar va kalitlar",
+          body: [
+            "Bo‘limdagi «Koll-markazlar va kalitlar» bloki. Bu yerda koll-markazga suflyorga kirish berasiz: nomi, kontakt, tarif va operatorlar sonini kiriting va «Kalit berish» tugmasini bosing. Kalit chk_ bilan boshlanadi va bir marta, berilgandan so‘ng darhol ko‘rsatiladi: «Nusxa olish» tugmasi bilan nusxalab, koll-markazga bering. Bazada kalitning o‘zi yo‘q, faqat izi bor, shuning uchun yo‘qolgan kalitni tiklab bo‘lmaydi, faqat yangisini berish mumkin.",
+            "Bitta kalitdan operatorlar ham (brauzer kengaytmasiga kiritishadi), koll-markazning bizga API orqali ulanadigan dasturlari ham foydalanadi: raqam terish xizmati, telefoniya, CRM. «Ulanish uchun API tavsifi» havolasi ularning dasturchilari uchun sayt sahifasiga olib boradi.",
+            "Jadvalda har bir koll-markaz uchun kirish ishlayotgani, qancha daqiqa ketgani va qancha qolgani ko‘rinadi. «Sinov» birinchi qo‘ng‘iroqdan boshlab 3 kun va 50 daqiqa, bir vaqtda bitta qo‘ng‘iroq va bitta ssenariy beradi. «Start» va «Ishchi» daqiqalarni har bir to‘langan operator uchun oyma-oy sanaydi; paketdan ortiq daqiqalar kirishni yopmaydi, hisobga qo‘shiladi. «Shu kungacha to‘langan» aytilgan kundan keyin kirishni yopadi, bo‘sh bo‘lsa muddat yo‘q. «Yoqilgan» belgisi olib tashlansa, kalit darhol ishlamay qoladi. «Yangi kalit» boshqa kalit beradi, eskisi shu daqiqada ishlamay qoladi.",
+          ],
+        },
       ],
     },
     "/admin/markets": {

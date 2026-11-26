@@ -174,6 +174,15 @@ export const prospectSections: Record<string, HelpEntry> = {
           "W dzień, od 08:00 do 21:00 czasu Taszkentu, bot pisze o nowym zgłoszeniu tylko do ciebie, linijką z linkiem tutaj. W nocy linijki nie ma, zgłoszenie po prostu czeka na liście. Formularz przyjmuje telefon, @nick w Telegramie albo e-mail, które wyglądają na prawdziwe; z jednego adresu najwyżej trzy zgłoszenia na 10 minut.",
         ],
       },
+      {
+        id: "orgs",
+        title: "Call center i klucze",
+        body: [
+          "Blok «Call center i klucze» w sekcji. Tutaj wydajesz call center dostęp do suflerki: wpisz nazwę, kontakt, taryfę i liczbę operatorów i kliknij «Wydaj klucz». Klucz zaczyna się od chk_ i pokazuje się raz, od razu po wydaniu: skopiuj go przyciskiem «Kopiuj» i przekaż call center. W bazie nie ma samego klucza, tylko jego odcisk, więc zgubionego klucza nie da się odzyskać, można tylko wydać nowy.",
+          "Z jednego klucza korzystają i operatorzy (wklejają go do rozszerzenia przeglądarki), i programy call center, które łączą się z nami przez API: dialer, telefonia, CRM. Link «Opis API do integracji» prowadzi na stronę dla ich programistów.",
+          "W tabeli przy każdym call center widać, czy dostęp działa, ile minut zużyto i ile zostało. «Próbna» daje 3 dni i 50 minut od pierwszej rozmowy, jedną rozmowę naraz i jeden scenariusz. «Start» i «Robocza» liczą minuty miesięcznie na każdego opłaconego operatora; minuty ponad pakiet nie zamykają dostępu, trafiają na rachunek. «Opłacone do» zamyka dostęp po podanym dniu, puste oznacza bez terminu. Odznaczone «Włączone»: klucz od razu przestaje działać. «Nowy klucz» wydaje inny klucz, stary przestaje działać w tej samej minucie.",
+        ],
+      },
     ],
   },
   "/admin/markets": {
