@@ -180,4 +180,62 @@ export const callhelperDict = defineDict({
   waitOps: { ru: "Операторов", uz: "Operatorlar", pl: "Operatorów" },
   waitNote: { ru: "Что написал", uz: "Nima yozdi", pl: "Co napisał" },
   waitTimes: { ru: (n: number = 2) => `обращался ${n} раза`, uz: (n: number = 2) => `${n} marta yozgan`, pl: (n: number = 2) => `pisał ${n} razy` },
+  orgsTitle: { ru: "Колл-центры и ключи", uz: "Koll-markazlar va kalitlar", pl: "Call center i klucze" },
+  orgsLead: {
+    ru: "Каждый колл-центр получает свой ключ: его вставляют в расширение браузера у операторов и в программы, которые подключаются к нам по API. Ключ показывается один раз, сразу после выдачи. Пробный период начинается с первого звонка, а не с выдачи ключа.",
+    uz: "Har bir koll-markaz o‘z kalitini oladi: uni operatorlarning brauzer kengaytmasiga va bizga API orqali ulanadigan dasturlarga kiritishadi. Kalit bir marta, berilgandan so‘ng darhol ko‘rsatiladi. Sinov davri kalit berilgandan emas, birinchi qo‘ng‘iroqdan boshlanadi.",
+    pl: "Każde call center dostaje własny klucz: wkleja się go do rozszerzenia przeglądarki u operatorów i do programów, które łączą się z nami przez API. Klucz pokazujemy raz, od razu po wydaniu. Okres próbny zaczyna się od pierwszej rozmowy, nie od wydania klucza.",
+  },
+  orgsEmpty: { ru: "Ключей ещё никому не выдавали.", uz: "Hali hech kimga kalit berilmagan.", pl: "Nikomu jeszcze nie wydano klucza." },
+  orgName: { ru: "Колл-центр", uz: "Koll-markaz", pl: "Call center" },
+  orgContact: { ru: "Контакт", uz: "Kontakt", pl: "Kontakt" },
+  orgPlan: { ru: "Тариф", uz: "Tarif", pl: "Taryfa" },
+  orgSeats: { ru: "Операторов", uz: "Operatorlar", pl: "Operatorów" },
+  orgKey: { ru: "Ключ", uz: "Kalit", pl: "Klucz" },
+  orgUsed: { ru: "Минут", uz: "Daqiqa", pl: "Minut" },
+  orgPaidUntil: { ru: "Оплачено до", uz: "Shu kungacha to‘langan", pl: "Opłacone do" },
+  orgActive: { ru: "Включён", uz: "Yoqilgan", pl: "Włączone" },
+  orgCreate: { ru: "Выдать ключ", uz: "Kalit berish", pl: "Wydaj klucz" },
+  orgCreating: { ru: "Выдаю…", uz: "Beryapman…", pl: "Wydaję…" },
+  orgSave: { ru: "Сохранить", uz: "Saqlash", pl: "Zapisz" },
+  orgReissue: { ru: "Новый ключ", uz: "Yangi kalit", pl: "Nowy klucz" },
+  orgReissueSure: {
+    ru: "Прежний ключ перестанет работать сразу. Выдать новый?",
+    uz: "Eski kalit darhol ishlamay qoladi. Yangisini beraymi?",
+    pl: "Stary klucz od razu przestanie działać. Wydać nowy?",
+  },
+  orgKeyOnce: {
+    ru: (name: string = "") => `Ключ для «${name}». Скопируйте сейчас: второй раз он не покажется.`,
+    uz: (name: string = "") => `«${name}» uchun kalit. Hozir nusxa oling: ikkinchi marta ko‘rsatilmaydi.`,
+    pl: (name: string = "") => `Klucz dla «${name}». Skopiuj teraz: drugi raz się nie pokaże.`,
+  },
+  orgCopy: { ru: "Скопировать", uz: "Nusxa olish", pl: "Kopiuj" },
+  orgCopied: { ru: "Скопировано", uz: "Nusxa olindi", pl: "Skopiowano" },
+  orgPlanName: {
+    ru: (plan: string = "trial") => ({ trial: "Пробный", start: "Старт", work: "Рабочий" } as Record<string, string>)[plan] ?? String(plan),
+    uz: (plan: string = "trial") => ({ trial: "Sinov", start: "Start", work: "Ishchi" } as Record<string, string>)[plan] ?? String(plan),
+    pl: (plan: string = "trial") => ({ trial: "Próbna", start: "Start", work: "Robocza" } as Record<string, string>)[plan] ?? String(plan),
+  },
+  orgAccess: {
+    ru: (code: string = "ok") =>
+      ({ ok: "работает", inactive: "выключен", trial_over: "пробный кончился", unpaid: "оплата кончилась" } as Record<string, string>)[code] ?? String(code),
+    uz: (code: string = "ok") =>
+      ({ ok: "ishlayapti", inactive: "o‘chirilgan", trial_over: "sinov tugadi", unpaid: "to‘lov tugadi" } as Record<string, string>)[code] ?? String(code),
+    pl: (code: string = "ok") =>
+      ({ ok: "działa", inactive: "wyłączone", trial_over: "okres próbny minął", unpaid: "opłata wygasła" } as Record<string, string>)[code] ?? String(code),
+  },
+  orgError: {
+    ru: (code: string = "failed") =>
+      ({ name: "Впишите название колл-центра.", plan: "Проверьте тариф и число операторов.", failed: "Не получилось, попробуйте ещё раз." } as Record<string, string>)[code] ?? "Не получилось.",
+    uz: (code: string = "failed") =>
+      ({ name: "Koll-markaz nomini kiriting.", plan: "Tarif va operatorlar sonini tekshiring.", failed: "Bo‘lmadi, yana urinib ko‘ring." } as Record<string, string>)[code] ?? "Bo‘lmadi.",
+    pl: (code: string = "failed") =>
+      ({ name: "Wpisz nazwę call center.", plan: "Sprawdź taryfę i liczbę operatorów.", failed: "Nie udało się, spróbuj ponownie." } as Record<string, string>)[code] ?? "Nie udało się.",
+  },
+  orgResult: {
+    ru: (code: string = "saved") => ({ saved: "Сохранено.", bad: "Проверьте поля.", failed: "Не сохранилось, попробуйте ещё раз." } as Record<string, string>)[code] ?? "Готово.",
+    uz: (code: string = "saved") => ({ saved: "Saqlandi.", bad: "Maydonlarni tekshiring.", failed: "Saqlanmadi, yana urinib ko‘ring." } as Record<string, string>)[code] ?? "Tayyor.",
+    pl: (code: string = "saved") => ({ saved: "Zapisano.", bad: "Sprawdź pola.", failed: "Nie zapisano, spróbuj ponownie." } as Record<string, string>)[code] ?? "Gotowe.",
+  },
+  orgApiDocs: { ru: "Описание API для подключения", uz: "Ulanish uchun API tavsifi", pl: "Opis API do integracji" },
 });

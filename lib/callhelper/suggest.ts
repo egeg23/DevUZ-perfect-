@@ -121,7 +121,7 @@ export async function suggest(script: CallScript, lines: readonly CallLine[], as
 }
 
 /** Реплики из тела запроса: только два вида, длина и число ограничены. */
-export function cleanLines(raw: unknown): CallLine[] {
+export function cleanLines(raw: unknown, max = 60): CallLine[] {
   if (!Array.isArray(raw)) return [];
   return raw
     .filter((l): l is Record<string, unknown> => !!l && typeof l === "object")
@@ -130,5 +130,5 @@ export function cleanLines(raw: unknown): CallLine[] {
       text: String(l.text ?? "").replace(/\s+/g, " ").trim().slice(0, 800),
     }))
     .filter((l) => l.text)
-    .slice(-60);
+    .slice(-max);
 }
