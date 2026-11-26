@@ -11,7 +11,7 @@ import { appSecret } from "@/lib/secrets";
  * Продавец и ИНН — из хранилища (`app.INVOICE_RU_*`) при показе, в
  * репозитории их нет. Подвал со ссылками — на каждой странице Claudery.
  */
-export const DOCS_DATE = "19.11.2026";
+export const DOCS_DATE = "26.11.2026";
 
 /**
  * Кодовое слово для банка Platega на время согласования (Platega, 19.11.2026:
