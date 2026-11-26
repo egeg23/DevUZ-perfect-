@@ -4,7 +4,7 @@
  * по-русски, без длинных тире.
  */
 export const CALLHELPER_EXT_PATH = "callhelper/extension";
-export const CALLHELPER_EXT_ZIP = "/callhelper/devuz-callhelper.zip";
+export const CALLHELPER_EXT_ZIP = "/callhelper-ext/devuz-callhelper.zip";
 
 export const CALLHELPER_EXT = {
   title: "Расширение DevUz CallHelper для Chrome",

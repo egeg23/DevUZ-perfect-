@@ -1,5 +1,5 @@
 // Собирает расширение DevUz CallHelper (extension/callhelper) в архив
-// public/callhelper/devuz-callhelper.zip: его скачивают со страницы
+// public/callhelper-ext/devuz-callhelper.zip: его скачивают со страницы
 // /ru/callhelper/extension. Архив без сжатия и с одной датой у файлов, чтобы
 // сборка на любой машине давала те же байты: тест сверяет его с исходниками.
 //
@@ -11,7 +11,7 @@ import { crc32 } from "node:zlib";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 export const EXT_DIR = join(ROOT, "extension", "callhelper");
-export const ZIP_PATH = join(ROOT, "public", "callhelper", "devuz-callhelper.zip");
+export const ZIP_PATH = join(ROOT, "public", "callhelper-ext", "devuz-callhelper.zip");
 
 function files(dir) {
   const out = [];

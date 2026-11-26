@@ -985,7 +985,7 @@ https://claude.ai/artifact/G9YB1JE9UN2oEnnD9Do7Y2.
   правится в панели теми же текстовыми полями, что в разделе (`form` в
   `PUT /scripts`, пример — `GET /scripts/example`). В страницы колл-центра
   расширение не встраивается, ходит только на наш API, разговор живёт в
-  памяти панели до конца звонка. Архив — `public/callhelper/devuz-callhelper.zip`
+  памяти панели до конца звонка. Архив — `public/callhelper-ext/devuz-callhelper.zip`
   (`node scripts/callhelper/pack-extension.mjs` после любой правки
   расширения, иначе тест красный), установка по шагам —
   `/ru/callhelper/extension` (`content/callhelper-extension.ts`). В магазин
