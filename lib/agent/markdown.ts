@@ -2,6 +2,7 @@ import { agentCopy } from "@/content/agent-copy";
 import { BOX_NAME, BOX_PATH, named } from "@/content/box";
 import { CALLHELPER_ANCHOR, CALLHELPER_COPY, CALLHELPER_WAIT } from "@/content/callhelper";
 import { CALLHELPER_API_PATH } from "@/content/callhelper-api";
+import { CALLHELPER_EXT_PATH } from "@/content/callhelper-extension";
 import { caseBySlug, caseDate, casesOnSite, type Case } from "@/content/cases";
 import { company, proof } from "@/content/company";
 import { getDictionary } from "@/content/dictionaries";
@@ -169,7 +170,7 @@ export function productsBlock(locale: Locale): string {
     );
     const tariffs = CALLHELPER_TARIFFS.map((x) => `«${x.name}» ${rub(x.rub)} ${CALLHELPER_COPY.per}, ${x.minutes.toLocaleString("ru-RU").replace(/\s/g, " ")} ${CALLHELPER_COPY.minutes}`).join("; ");
     lines.push(
-      `- ${CALLHELPER_COPY.title.replace("\u2011", "-")} (${htmlUrl("ru")}#${CALLHELPER_ANCHOR}), запуск ${launchText().replace("\u00a0", " ")}: ${CALLHELPER_COPY.lead.charAt(0).toLowerCase()}${CALLHELPER_COPY.lead.slice(1)} Кому: ${CALLHELPER_COPY.who.join(", ").toLowerCase()}. Тарифы: ${tariffs}; сверх пакета ${CALLHELPER_OVER_RUB} ₽ за минуту; пробный период ${CALLHELPER_TRIAL.days} дня и ${CALLHELPER_TRIAL.minutes} минут на компанию. ${CALLHELPER_COPY.privacy} До запуска открыт ${CALLHELPER_WAIT.title.toLowerCase()}: форма в этом блоке на главной, контакт клиент оставляет сам, первыми напишем тем, кто в листе. Для сервисов набора, телефонии и CRM есть API: ${absoluteUrl(`ru/${CALLHELPER_API_PATH}`)}`,
+      `- ${CALLHELPER_COPY.title.replace("\u2011", "-")} (${htmlUrl("ru")}#${CALLHELPER_ANCHOR}), запуск ${launchText().replace("\u00a0", " ")}: ${CALLHELPER_COPY.lead.charAt(0).toLowerCase()}${CALLHELPER_COPY.lead.slice(1)} Кому: ${CALLHELPER_COPY.who.join(", ").toLowerCase()}. Тарифы: ${tariffs}; сверх пакета ${CALLHELPER_OVER_RUB} ₽ за минуту; пробный период ${CALLHELPER_TRIAL.days} дня и ${CALLHELPER_TRIAL.minutes} минут на компанию. ${CALLHELPER_COPY.privacy} До запуска открыт ${CALLHELPER_WAIT.title.toLowerCase()}: форма в этом блоке на главной, контакт клиент оставляет сам, первыми напишем тем, кто в листе. Для сервисов набора, телефонии и CRM есть API: ${absoluteUrl(`ru/${CALLHELPER_API_PATH}`)}. Оператору суфлёр ставится расширением для Chrome: ${absoluteUrl(`ru/${CALLHELPER_EXT_PATH}`)}`,
     );
   } else {
     lines.push(`- ${agentCopy[locale].ruProducts}: ${mdUrl("ru")}`);

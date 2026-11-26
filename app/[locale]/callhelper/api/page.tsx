@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { Container } from "@/components/ui/container";
 import { CALLHELPER_API_BASE, CALLHELPER_API_DOCS, CALLHELPER_API_ERRORS, CALLHELPER_API_INTRO as I, CALLHELPER_API_PATH } from "@/content/callhelper-api";
 import { CALLHELPER_ANCHOR } from "@/content/callhelper";
+import { CALLHELPER_EXT_PATH } from "@/content/callhelper-extension";
 import { company } from "@/content/company";
 import { isLocale } from "@/lib/i18n";
 import { absoluteUrl, buildMetadata } from "@/lib/seo";
@@ -48,6 +49,9 @@ export default async function CallHelperApiPage({ params }: { params: Promise<{ 
             </a>
             <a href={company.telegramUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center rounded-full border border-white/20 px-6 py-3 text-[0.95rem] font-semibold text-white hover:border-white/50">
               Спросить в Telegram
+            </a>
+            <a href={`/ru/${CALLHELPER_EXT_PATH}`} className="inline-flex items-center rounded-full border border-white/20 px-6 py-3 text-[0.95rem] font-semibold text-white hover:border-white/50">
+              Расширение для оператора
             </a>
           </div>
         </Container>

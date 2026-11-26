@@ -31,7 +31,7 @@ export default async function CallHelperPage({ searchParams }: { searchParams: P
   return (
     <AdminShell staff={staff}>
       <CallHelperDesk />
-      {owner ? <CallHelperOrgs rows={orgs} result={o && ORG_RESULTS.has(o) ? o : null} docsHref="/ru/callhelper/api" /> : null}
+      {owner ? <CallHelperOrgs rows={orgs} result={o && ORG_RESULTS.has(o) ? o : null} docsHref="/ru/callhelper/api" extHref="/ru/callhelper/extension" /> : null}
       {owner ? <CallHelperWaitlist locale={staff.panel_locale} rows={wait} /> : null}
       {owner && state ? <CallHelperKeys locale={staff.panel_locale} state={state} result={k && RESULTS.has(k) ? k : null} /> : null}
     </AdminShell>
