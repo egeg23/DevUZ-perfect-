@@ -107,6 +107,11 @@ test("фраза модели: запрещённые слова, придума
   assert.ok(phraseProblems("Гарантируем, что всё пройдёт отлично", EXAMPLE_SCRIPT, lines).some((p) => p.startsWith("запрещённое")));
   assert.ok(phraseProblems("Стоит всего 30000 рублей", EXAMPLE_SCRIPT, lines).includes("число, которого нет в сценарии"));
   assert.ok(phraseProblems("Да. ".repeat(100), EXAMPLE_SCRIPT, lines).includes("длинно"));
+  // Живой звонок 26.11.2026: модель сказала клиенту «Спасибо, Дмитрий», а Дмитрий — оператор.
+  const named = [{ who: "operator" as const, text: "Здравствуйте, это клиника, меня зовут дмитрий" }, { who: "client" as const, text: "Да, удобно" }];
+  assert.ok(phraseProblems("Спасибо, Дмитрий. Какой зуб вас беспокоит?", EXAMPLE_SCRIPT, named).includes("клиента назвали именем оператора"));
+  assert.deepEqual(phraseProblems("Меня зовут Дмитрий, разговор записывается. Вам удобно говорить?", EXAMPLE_SCRIPT, named), []);
+  assert.deepEqual(phraseProblems("Спасибо, Дмитрий. Какой зуб вас беспокоит?", EXAMPLE_SCRIPT, [...named, { who: "client" as const, text: "Я тоже Дмитрий" }]), []);
 });
 
 test("подсказка: фраза модели прошла — от модели; не прошла или модели нет — из сценария", async () => {
