@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { record } from "@/lib/admin/audit";
 import { requestIp, requireRole } from "@/lib/admin/guard";
 import { createOrg, parseOrgPatch, reissueKey, updateOrg } from "@/lib/callhelper/orgs-admin";
+import { setSignupOpen } from "@/lib/callhelper/signup-store";
 import { STT_FOLDER, STT_KEY, checkStt, parseSttForm } from "@/lib/callhelper/stt-keys";
 import { appSecret, saveAppSecret } from "@/lib/secrets";
 
@@ -35,6 +36,15 @@ export async function recheckSttKey(): Promise<void> {
   const [key, folder] = await Promise.all([appSecret(STT_KEY), appSecret(STT_FOLDER)]);
   if (!key || !folder) redirect(`${PAGE}?k=empty#stt`);
   redirect(`${PAGE}?k=${await checkStt(key, folder)}#stt`);
+}
+
+/** Открыть или закрыть регистрацию колл-центров на странице продукта. Только владелец. */
+export async function switchSignup(form: FormData): Promise<void> {
+  const staff = await requireRole("admin");
+  const open = str(form, "open", 1) === "1";
+  if (await setSignupOpen(open)) await record("callhelper.signup_switched", { actorStaffId: staff.id, ip: await requestIp(), meta: { open } });
+  revalidatePath(PAGE);
+  redirect(`${PAGE}#signup`);
 }
 
 export type OrgKeyState = { ok: true; key: string; name: string } | { ok: false; error: "name" | "plan" | "failed" } | null;

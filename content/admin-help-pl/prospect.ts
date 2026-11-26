@@ -183,6 +183,14 @@ export const prospectSections: Record<string, HelpEntry> = {
           "W tabeli przy każdym call center widać, czy dostęp działa, ile minut zużyto i ile zostało. «Próbna» daje 3 dni i 50 minut od pierwszej rozmowy, jedną rozmowę naraz i jeden scenariusz. «Start» i «Robocza» liczą minuty miesięcznie na każdego opłaconego operatora; minuty ponad pakiet nie zamykają dostępu, trafiają na rachunek. «Opłacone do» zamyka dostęp po podanym dniu, puste oznacza bez terminu. Odznaczone «Włączone»: klucz od razu przestaje działać. «Nowy klucz» wydaje inny klucz, stary przestaje działać w tej samej minucie.",
         ],
       },
+      {
+        id: "signup",
+        title: "Rejestracja call center",
+        body: [
+          "Blok «Rejestracja call center» w sekcji. Dopóki rejestracja jest zamknięta, na stronie CallHelper w serwisie zamiast formularza jest lista oczekujących, a klucze wydajesz tylko ty w bloku «Call center i klucze». Kliknij «Otwórz rejestrację», a call center samo weźmie okres próbny: wpisuje nazwę firmy i INN, przechodzi do bota studia i klika tam «Подтвердить мой номер». Telegram sam przekazuje nam jego numer, więc SMS-y nie są potrzebne. Bot wysyła klucz raz, do tego samego czatu, a ty dostajesz wiadomość, że pojawiło się nowe call center. Od razu widać je w tabeli bloku «Call center i klucze».",
+          "Okres próbny firma dostaje raz: po INN, numerze telefonu i koncie Telegram na zawsze, z jednej przeglądarki i jednej sieci raz na 30 dni. Temu, kto próbuje drugi raz, bot odpowiada, że okres próbny już był, i proponuje napisać do nas. Zapis o okresie próbnym zostaje, nawet jeśli call center zostanie usunięte. «Zamknij rejestrację» przywraca na stronie listę oczekujących; wydane klucze działają dalej. Linki «Strona CallHelper w serwisie» i «Panel call center» otwierają to, co widzi klient: do panelu wchodzi kluczem, edytuje scenariusze i ogląda podsumowania rozmów.",
+        ],
+      },
     ],
   },
   "/admin/markets": {

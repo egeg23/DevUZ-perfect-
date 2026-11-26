@@ -4,6 +4,8 @@ import { CallHelperKeys } from "@/components/admin/callhelper-keys";
 import { CallHelperOrgs } from "@/components/admin/callhelper-orgs";
 import { CallHelperWaitlist } from "@/components/admin/callhelper-waitlist";
 import { requireSection } from "@/lib/admin/guard";
+import { CallHelperSignupSwitch } from "@/components/admin/callhelper-signup-switch";
+import { signupOpen } from "@/lib/callhelper/signup-store";
 import { listOrgs } from "@/lib/callhelper/orgs-admin";
 import { sttState } from "@/lib/callhelper/stt-keys";
 import { listWait } from "@/lib/callhelper/waitlist-store";
@@ -27,11 +29,12 @@ export default async function CallHelperPage({ searchParams }: { searchParams: P
   const staff = await requireSection("/admin/callhelper");
   const { k, o } = await searchParams;
   const owner = staff.role === "admin";
-  const [state, wait, orgs] = owner ? await Promise.all([sttState(), listWait(), listOrgs()]) : [null, [], []];
+  const [state, wait, orgs, open] = owner ? await Promise.all([sttState(), listWait(), listOrgs(), signupOpen()]) : [null, [], [], false];
   return (
     <AdminShell staff={staff}>
       <CallHelperDesk />
       {owner ? <CallHelperOrgs rows={orgs} result={o && ORG_RESULTS.has(o) ? o : null} docsHref="/ru/callhelper/api" extHref="/ru/callhelper/extension" /> : null}
+      {owner ? <CallHelperSignupSwitch locale={staff.panel_locale} open={open} /> : null}
       {owner ? <CallHelperWaitlist locale={staff.panel_locale} rows={wait} /> : null}
       {owner && state ? <CallHelperKeys locale={staff.panel_locale} state={state} result={k && RESULTS.has(k) ? k : null} /> : null}
     </AdminShell>

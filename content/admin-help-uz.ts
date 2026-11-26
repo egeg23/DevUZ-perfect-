@@ -1063,6 +1063,14 @@ export const uz: HelpCopy = {
             "Jadvalda har bir koll-markaz uchun kirish ishlayotgani, qancha daqiqa ketgani va qancha qolgani ko‘rinadi. «Sinov» birinchi qo‘ng‘iroqdan boshlab 3 kun va 50 daqiqa, bir vaqtda bitta qo‘ng‘iroq va bitta ssenariy beradi. «Start» va «Ishchi» daqiqalarni har bir to‘langan operator uchun oyma-oy sanaydi; paketdan ortiq daqiqalar kirishni yopmaydi, hisobga qo‘shiladi. «Shu kungacha to‘langan» aytilgan kundan keyin kirishni yopadi, bo‘sh bo‘lsa muddat yo‘q. «Yoqilgan» belgisi olib tashlansa, kalit darhol ishlamay qoladi. «Yangi kalit» boshqa kalit beradi, eskisi shu daqiqada ishlamay qoladi.",
           ],
         },
+        {
+          id: "signup",
+          title: "Koll-markazlarni ro‘yxatdan o‘tkazish",
+          body: [
+            "Bo‘limdagi «Koll-markazlarni ro‘yxatdan o‘tkazish» bloki. Ro‘yxatdan o‘tish yopiq bo‘lsa, saytdagi CallHelper sahifasida forma o‘rniga kutish ro‘yxati turadi, kalitlarni esa faqat siz «Koll-markazlar va kalitlar» blokida berasiz. «Ro‘yxatdan o‘tishni ochish» tugmasini bosing, shunda koll-markaz sinov davrini o‘zi oladi: kompaniya nomi va INN ni yozadi, studiya botiga o‘tadi va u yerda «Подтвердить мой номер» tugmasini bosadi. Telegram uning raqamini bizga o‘zi uzatadi, shuning uchun SMS kerak emas. Bot kalitni bir marta, o‘sha chatga yuboradi, sizga esa yangi koll-markaz paydo bo‘lgani haqida xabar keladi. U darhol «Koll-markazlar va kalitlar» bloki jadvalida ko‘rinadi.",
+            "Sinov davri kompaniyaga bir marta beriladi: INN, telefon raqami va Telegram akkaunti bo‘yicha butunlay, bitta brauzer va bitta tarmoqdan 30 kunda bir marta. Ikkinchi marta urinib ko‘rganga bot sinov davri allaqachon bo‘lganini aytadi va bizga yozishni taklif qiladi. Koll-markaz o‘chirilsa ham sinov haqidagi yozuv qoladi. «Ro‘yxatdan o‘tishni yopish» sahifaga kutish ro‘yxatini qaytaradi; berilgan kalitlar ishlashda davom etadi. «Saytdagi CallHelper sahifasi» va «Koll-markaz kabineti» havolalari mijoz ko‘radigan narsani ochadi: kabinetga u kalit bilan kiradi, ssenariylarni tahrirlaydi va qo‘ng‘iroqlar yakunini ko‘radi.",
+          ],
+        },
       ],
     },
     "/admin/markets": {

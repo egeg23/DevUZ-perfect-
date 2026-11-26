@@ -37,6 +37,7 @@ import {
   esc,
   markBriefHandled,
   sendForceReply,
+  sendContactRequest,
   sendMessage,
   sendPlain,
   sendWithButtons,
@@ -116,6 +117,8 @@ import { seesTrash, trashedLabel } from "@/lib/admin/lead-trash";
 import { trashLead } from "@/lib/admin/lead-trash-store";
 import { takeOverFromBot } from "@/lib/admin/outreach-talk-store";
 import { contactAsk, contactReply, seesContacts } from "@/lib/admin/contact-find";
+import { SIGNUP_BOT, signupTokenOf } from "@/lib/callhelper/signup";
+import { bindSignupChat, doneText, finishSignup, signupWaits, tellOwnerSignup } from "@/lib/callhelper/signup-store";
 import { findContacts } from "@/lib/admin/contact-find-store";
 import { answerStaff, claimsStaff, helperLang, notStaffText } from "@/lib/admin/staff-helper";
 import { alertStaffClaim, claimedBefore } from "@/lib/admin/staff-helper-store";
@@ -201,6 +204,8 @@ type Update = {
     /** Фото и стикер от клиента — уходят владельцу и руководителю копией (bot-inbox-store). */
     photo?: { file_id: string }[];
     sticker?: { file_id: string; emoji?: string };
+    /** Свой номер кнопкой Telegram — так регистрация CallHelper подтверждает телефон (lib/callhelper/signup.ts). */
+    contact?: { phone_number: string; user_id?: number };
   };
   callback_query?: {
     id: string;
@@ -328,6 +333,14 @@ async function route(update: Update): Promise<void> {
           return;
         }
         if (appCodeCommand(update.message.text) && (await handleAppCodeButton(update.message))) return;
+        // Регистрация колл-центра в CallHelper: /start ch<токен> со страницы продукта и
+        // свой номер кнопкой. Раньше чата продаж: владелец проверяет её из своей лички.
+        const signup = signupTokenOf(start);
+        if (signup) {
+          await handleCallhelperStart(chat.id, signup);
+          return;
+        }
+        if (update.message.contact && (await handleCallhelperContact(chat.id, update.message.from?.id, update.message.contact))) return;
       }
 
       // Ответ владельца или руководителя на «📩 Обращение в бота» — клиенту
@@ -442,6 +455,35 @@ async function route(update: Update): Promise<void> {
  * руководителю копией (lib/qualify/bot-inbox-store.ts, relayClientMedia).
  * Сотруднику, приславшему не текст мимо своих путей, — как раньше, ничего.
  */
+async function handleCallhelperStart(chatId: number, token: string) {
+  const bound = await bindSignupChat(token, chatId);
+  if (bound === "closed" || bound === "stale") {
+    await sendMessage(chatId, SIGNUP_BOT[bound], { mirror: false });
+    return;
+  }
+  await sendContactRequest(chatId, SIGNUP_BOT.ask(esc(bound.company)), SIGNUP_BOT.button);
+}
+
+/** Номер пришёл: только если чат ждёт регистрацию CallHelper, иначе контакт идёт дальше, как шёл. */
+async function handleCallhelperContact(chatId: number, fromId: number | undefined, contact: { phone_number: string; user_id?: number }): Promise<boolean> {
+  if (!(await signupWaits(chatId))) return false;
+  // Чужой контакт из списка номер не подтверждает.
+  if (!fromId || contact.user_id !== fromId) {
+    await sendMessage(chatId, SIGNUP_BOT.foreign, { mirror: false });
+    return true;
+  }
+  const done = await finishSignup(chatId, fromId, contact.phone_number);
+  if (!done.ok) {
+    const text = done.reason === "stale" || done.reason === "closed" || done.reason === "failed" ? SIGNUP_BOT[done.reason] : SIGNUP_BOT.refused(done.reason);
+    await sendMessage(chatId, text, { mirror: false });
+    return true;
+  }
+  // Ключ — секрет: без пуша и колокольчика, если регистрируется сотрудник.
+  await sendMessage(chatId, doneText(done.key), { mirror: false });
+  await tellOwnerSignup(done.company).catch((error) => console.error("callhelper: строка владельцу о регистрации", error));
+  return true;
+}
+
 async function handleClientMedia(message: NonNullable<Update["message"]>) {
   const media = mediaOf(message);
   if (!media || !message.message_id || !message.from?.id) return;

@@ -166,6 +166,18 @@ export const callhelperDict = defineDict({
         empty: "W sejfie nie ma jeszcze klucza.",
       } as Record<string, string>)[code] ?? "Sprawdzenie nie przeszło.",
   },
+  signupTitle: { ru: "Регистрация колл-центров", uz: "Koll-markazlarni ro‘yxatdan o‘tkazish", pl: "Rejestracja call center" },
+  signupLead: {
+    ru: "Пока открыта, любой колл-центр сам берёт пробный период на странице CallHelper: компания, ИНН и номер, подтверждённый в боте. Закрыта: на странице вместо формы лист ожидания.",
+    uz: "Ochiq bo‘lsa, har qanday koll-markaz CallHelper sahifasida sinov davrini o‘zi oladi: kompaniya, INN va botda tasdiqlangan raqam. Yopiq bo‘lsa, sahifada forma o‘rniga kutish ro‘yxati turadi.",
+    pl: "Gdy otwarta, każde call center samo bierze okres próbny na stronie CallHelper: firma, INN i numer potwierdzony w bocie. Gdy zamknięta, na stronie zamiast formularza jest lista oczekujących.",
+  },
+  signupOpen: { ru: "Сейчас открыта", uz: "Hozir ochiq", pl: "Teraz otwarta" },
+  signupClosed: { ru: "Сейчас закрыта", uz: "Hozir yopiq", pl: "Teraz zamknięta" },
+  signupOpenBtn: { ru: "Открыть регистрацию", uz: "Ro‘yxatdan o‘tishni ochish", pl: "Otwórz rejestrację" },
+  signupCloseBtn: { ru: "Закрыть регистрацию", uz: "Ro‘yxatdan o‘tishni yopish", pl: "Zamknij rejestrację" },
+  signupPage: { ru: "Страница CallHelper на сайте", uz: "Saytdagi CallHelper sahifasi", pl: "Strona CallHelper w serwisie" },
+  signupCabinet: { ru: "Кабинет колл-центра", uz: "Koll-markaz kabineti", pl: "Panel call center" },
   waitTitle: { ru: "Лист ожидания", uz: "Kutish ro‘yxati", pl: "Lista oczekujących" },
   waitLead: {
     ru: "Заявки с главной сайта, форма в блоке CallHelper. Это не лиды: в общий список, очередь и бот команды они не идут, их видите только вы. Повтор того же контакта не заводит новую строку, а обновляет старую.",

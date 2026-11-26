@@ -48,7 +48,7 @@ export async function listOrgs(now: Date = new Date()): Promise<OrgRowView[]> {
   });
 }
 
-export async function createOrg(input: { name: string; contact: string; plan: OrgPlan; operators: number; staffId: string }): Promise<{ id: string; key: string } | null> {
+export async function createOrg(input: { name: string; contact: string; plan: OrgPlan; operators: number; staffId: string | null }): Promise<{ id: string; key: string } | null> {
   const db = serviceClient();
   if (!db) return null;
   const key = newOrgKey();

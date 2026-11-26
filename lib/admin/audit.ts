@@ -66,6 +66,7 @@ export const AUDIT_ACTIONS = [
   "callhelper.org_created",
   "callhelper.org_key_reissued",
   "callhelper.org_updated",
+  "callhelper.signup_switched",
   // Статьи на площадках (lib/outside/store.ts): опубликовал, пропустил, кто публикует.
   "outside.published",
   "outside.skipped",

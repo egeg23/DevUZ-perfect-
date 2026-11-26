@@ -79,6 +79,9 @@ export function CallHelperBlock() {
 
               <CallHelperWait privacyHref={localeHref("ru", "privacy")} />
               <div className={s.actions}>
+                <a href="/ru/callhelper" className={cn(g.btn, g.ghost)}>
+                  Подробнее о CallHelper
+                </a>
                 <a href={company.telegramUrl} target="_blank" rel="noopener noreferrer" className={cn(g.btn, g.ghost)}>
                   Спросить в Telegram
                 </a>
