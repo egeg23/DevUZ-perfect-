@@ -259,7 +259,10 @@ function probe(piece) {
       }
       beginCall(made);
       insertLine(call.lines, { who: "client", text: heard.text, t: piece.startMs });
-      for (const p of keepHeld(mine.held.splice(0), piece.startMs)) hear("operator", p);
+      // Приветствие оператора догоняет звонок: подсказку просим, когда оно распознано, иначе она советует поздороваться ещё раз.
+      const back = keepHeld(mine.held.splice(0), piece.startMs);
+      call.catchup = back.length;
+      for (const p of back) hear("operator", p, true);
       renderLines();
       askHint();
     } catch (error) {
@@ -281,6 +284,7 @@ function beginCall(made) {
     lastHeard: Date.now(),
     lines: [],
     queue: { client: Promise.resolve(), operator: Promise.resolve() },
+    catchup: 0,
     hintBusy: false,
     hintAgain: false,
     ending: false,
@@ -311,13 +315,18 @@ function showIdle() {
 }
 
 /** Реплика ушла на распознавание. По одной на голос за раз: порядок внутри голоса не путается. */
-function hear(who, piece) {
+function hear(who, piece, late = false) {
   const mine = call;
   mine.queue[who] = mine.queue[who].then(async () => {
+    if (late) mine.catchup -= 1;
     if (call !== mine) return;
     try {
       const heard = await api("POST", `/calls/${mine.id}/stt?who=${who}`, null, piece.pcm.buffer);
-      if (call !== mine || !heard.text) return;
+      if (call !== mine) return;
+      if (!heard.text) {
+        if (late && !mine.catchup) askHint();
+        return;
+      }
       mine.lastHeard = Date.now();
       insertLine(mine.lines, { who, text: heard.text, t: piece.startMs });
       renderLines();
@@ -364,7 +373,7 @@ function renderLines() {
 
 async function askHint() {
   const mine = call;
-  if (!mine || mine.ending) return;
+  if (!mine || mine.ending || mine.catchup > 0) return;
   if (mine.hintBusy) {
     mine.hintAgain = true;
     return;
