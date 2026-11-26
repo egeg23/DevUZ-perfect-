@@ -12,6 +12,7 @@ export const metadata: Metadata = { title: "Claudery — подписки на �
 
 /** Цвет и знак карточки по названию подписки: свой у Claude и ChatGPT, общий у остальных. */
 function look(title: string): { acc: string; mark: string } {
+  if (/deepseek/i.test(title)) return { acc: "#4d6bfe", mark: "D" };
   if (/claude/i.test(title)) return { acc: "#d97757", mark: "C" };
   if (/gpt|openai/i.test(title)) return { acc: "#10a37f", mark: "G" };
   if (/gemini/i.test(title)) return { acc: "#4f7cf7", mark: "G" };

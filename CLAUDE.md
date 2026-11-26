@@ -436,6 +436,12 @@ https://devuz.studio/sia-cms/admin.
   футер сайта, к примеру), после одобрения можно будет убрать»): `BANK_WORD`
   в `app/claudery/docs.tsx`, строкой в `Footer` на всех страницах Claudery.
   Банк одобрил — `BANK_WORD = ""`.
+- **Подписки Claude нет — вместо неё DeepSeek** (банк Platega, 26.11.2026:
+  «убрать подписку на клод»; владелец: «Давай переименуем на дипсик»):
+  первый товар в `claudery-setup` — «Подписка DeepSeek, 1 месяц», в
+  соглашении пример — «DeepSeek, ChatGPT и другие» (редакция `DOCS_DATE`
+  26.11.2026), у карточки DeepSeek свой цвет и знак (`look`). Название
+  бота «Claudery» не менялось.
 - Держит `tests/claudery-bot.test.ts`.
 
 ## Сайт CZECHFARM — на сервере компании, всё по смете
