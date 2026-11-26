@@ -20,7 +20,7 @@ const day = (iso: string | null) => (iso ? new Date(Date.parse(iso) + 3 * 3600_0
  * Ключ приходит один раз в ответе формы (createOrgAction, reissueOrgKeyAction)
  * и живёт только в памяти этой вкладки.
  */
-export function CallHelperOrgs({ rows, result, docsHref }: { rows: OrgRowView[]; result: string | null; docsHref: string }) {
+export function CallHelperOrgs({ rows, result, docsHref, extHref }: { rows: OrgRowView[]; result: string | null; docsHref: string; extHref: string }) {
   const t = usePanelDict(callhelperDict);
   const [made, create, creating] = useActionState<OrgKeyState, FormData>(createOrgAction, null);
   const [again, reissue, reissuing] = useActionState<OrgKeyState, FormData>(reissueOrgKeyAction, null);
@@ -44,6 +44,10 @@ export function CallHelperOrgs({ rows, result, docsHref }: { rows: OrgRowView[];
         {t.orgsLead}{" "}
         <a href={docsHref} target="_blank" rel="noopener noreferrer" className="text-green underline-offset-2 hover:underline">
           {t.orgApiDocs}
+        </a>
+        {" · "}
+        <a href={extHref} target="_blank" rel="noopener noreferrer" className="text-green underline-offset-2 hover:underline">
+          {t.orgExtDocs}
         </a>
       </p>
 

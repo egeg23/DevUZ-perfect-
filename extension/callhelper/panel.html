@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DevUz CallHelper</title>
+    <link rel="stylesheet" href="panel.css" />
+  </head>
+  <body>
+    <header class="top">
+      <img src="icons/48.png" alt="" width="24" height="24" />
+      <b>CallHelper</b>
+      <span id="org" class="org"></span>
+      <button id="gear" class="link" hidden>Ключ</button>
+    </header>
+
+    <p id="alert" class="alert" role="alert" hidden></p>
+
+    <!-- 1. Ключ колл-центра -->
+    <section id="v-key" class="view" hidden>
+      <h1>Вставьте ключ</h1>
+      <p>Ключ колл-центра начинается на <code>chk_</code>. Его выдаёт руководитель или DevUz.</p>
+      <form id="key-form">
+        <input id="key" type="password" autocomplete="off" spellcheck="false" placeholder="chk_…" required />
+        <input id="operator" autocomplete="name" maxlength="120" placeholder="Ваше имя: так звонок подпишется в отчёте" />
+        <button class="btn primary" type="submit">Войти</button>
+      </form>
+    </section>
+
+    <!-- 2. Готов к звонку -->
+    <section id="v-ready" class="view" hidden>
+      <p id="quota" class="note"></p>
+      <label class="field">
+        Сценарий звонка
+        <select id="script"></select>
+      </label>
+      <div class="row">
+        <button id="edit" class="btn ghost" type="button">Изменить</button>
+        <button id="new" class="btn ghost" type="button">Новый сценарий</button>
+      </div>
+      <button id="start" class="btn primary big" type="button">Начать звонок</button>
+      <ol class="steps">
+        <li>Откройте вкладку, где идёт звонок.</li>
+        <li>Нажмите на значок CallHelper на этой вкладке.</li>
+        <li>Нажмите «Начать звонок». Лучше в наушниках: так суфлёр не путает голоса.</li>
+      </ol>
+    </section>
+
+    <!-- 3. Сценарий -->
+    <section id="v-script" class="view" hidden>
+      <h1 id="script-title">Сценарий</h1>
+      <p id="script-problems" class="alert" hidden></p>
+      <form id="script-form">
+        <label class="field">Название<input name="name" maxlength="120" required /></label>
+        <label class="field">Что продаём<textarea name="product" rows="2" required></textarea></label>
+        <label class="field">Цель звонка<textarea name="goal" rows="2" required></textarea></label>
+        <label class="field">
+          Этапы: по строке на этап
+          <small>Название | что сказать | слова, по которым этап пройден</small>
+          <textarea name="stages" rows="6" required></textarea>
+        </label>
+        <label class="field">
+          Возражения: по строке
+          <small>Название | слова клиента через запятую | ваш ответ</small>
+          <textarea name="objections" rows="5"></textarea>
+        </label>
+        <label class="field">Обязательные фразы: по строке<textarea name="must" rows="2"></textarea></label>
+        <label class="field">Запрещённые слова: через запятую<textarea name="banned" rows="2"></textarea></label>
+        <div class="row">
+          <button class="btn primary" type="submit">Сохранить</button>
+          <button id="example" class="btn ghost" type="button">Вставить пример</button>
+          <button id="script-back" class="btn ghost" type="button">Назад</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- 4. Звонок -->
+    <section id="v-call" class="view" hidden>
+      <div class="live">
+        <span class="dot" aria-hidden="true"></span>
+        <span id="timer">0:00</span>
+        <span id="ears" class="ears"></span>
+        <button id="stop" class="btn danger" type="button">Завершить</button>
+      </div>
+      <div class="hintbox">
+        <p id="objection" class="tag" hidden></p>
+        <p id="phrase" class="phrase">Слушаю разговор…</p>
+      </div>
+      <ul id="warn" class="warn"></ul>
+      <ol id="stages" class="stages"></ol>
+      <h2>Разговор</h2>
+      <ul id="lines" class="lines" aria-live="polite"></ul>
+    </section>
+
+    <!-- 5. Итог -->
+    <section id="v-summary" class="view" hidden>
+      <h1>Итог звонка</h1>
+      <div id="summary"></div>
+      <button id="again" class="btn primary big" type="button">Новый звонок</button>
+    </section>
+
+    <script type="module" src="panel.mjs"></script>
+  </body>
+</html>

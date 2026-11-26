@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "DevUz CallHelper",
+  "short_name": "CallHelper",
+  "version": "0.1.0",
+  "description": "ИИ-суфлёр для звонков: слышит разговор во вкладке и подсказывает оператору, что сказать.",
+  "minimum_chrome_version": "116",
+  "permissions": ["sidePanel", "tabCapture", "activeTab", "storage"],
+  "host_permissions": ["https://devuz.studio/*"],
+  "background": { "service_worker": "sw.js" },
+  "action": { "default_title": "DevUz CallHelper: открыть суфлёр на этой вкладке" },
+  "side_panel": { "default_path": "panel.html" },
+  "icons": { "16": "icons/16.png", "48": "icons/48.png", "128": "icons/128.png" }
+}

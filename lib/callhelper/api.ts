@@ -12,7 +12,7 @@ import {
   type CallSummary,
   type Org,
 } from "@/lib/callhelper/orgs";
-import { cleanScript, scriptProblems, type CallScript } from "@/lib/callhelper/script";
+import { EXAMPLE_SCRIPT, cleanScript, formFromScript, scriptFromForm, scriptProblems, type CallScript, type ScriptForm } from "@/lib/callhelper/script";
 import { cleanLines, type Suggestion } from "@/lib/callhelper/suggest";
 
 /**
@@ -73,7 +73,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-
 const text = (value: unknown, max: number) =>
   typeof value === "string" ? value.replace(/[\u0000-\u001f\u007f]+/g, " ").replace(/\s+/g, " ").trim().slice(0, max) : "";
 
-const scriptOut = (s: StoredScript) => ({ id: s.id, name: s.name, script: s.script, updated_at: s.updatedAt });
+const scriptOut = (s: StoredScript) => ({ id: s.id, name: s.name, script: s.script, form: formFromScript(s.script), updated_at: s.updatedAt });
 const callOut = (c: StoredCall) => ({
   id: c.id,
   script_id: c.scriptId,
@@ -116,6 +116,9 @@ export async function handleApi(req: ApiRequest, store: ApiStore, now: Date = ne
 
   if (route === "GET scripts") return ok({ scripts: (await store.scripts(org.id)).map(scriptOut) });
 
+  // Пример сценария: с него начинает колл-центр, у которого своего ещё нет.
+  if (route === "GET scripts/:id" && id === "example") return ok({ script: EXAMPLE_SCRIPT, form: formFromScript(EXAMPLE_SCRIPT) });
+
   if (route === "PUT scripts" || route === "PUT scripts/:id") {
     if (id && !UUID.test(id)) return fail(404, "not_found");
     let body: Record<string, unknown>;
@@ -125,7 +128,8 @@ export async function handleApi(req: ApiRequest, store: ApiStore, now: Date = ne
       return fail(400, "bad_json");
     }
     const name = text(body?.name, 120) || "Сценарий";
-    const script = cleanScript(body?.script);
+    // Сценарий — готовой структурой или простыми текстовыми полями, как в панели (`form`).
+    const script = body?.form && typeof body.form === "object" ? scriptFromForm(body.form as Partial<ScriptForm>) : cleanScript(body?.script);
     const problems = scriptProblems(script);
     if (problems.length) return fail(400, "script", { problems });
     if (!id && (await store.scripts(org.id)).length >= scriptsLimitOf(org)) return fail(402, "scripts_limit", { limit: scriptsLimitOf(org) });

@@ -3,6 +3,7 @@ import type { MetadataRoute } from "next";
 import { cases } from "@/content/cases";
 import { BOX_PATH } from "@/content/box";
 import { CALLHELPER_API_PATH } from "@/content/callhelper-api";
+import { CALLHELPER_EXT_PATH } from "@/content/callhelper-extension";
 import { LEADGEN_PATH } from "@/content/leadgen";
 import { FRIEND_PATH } from "@/content/friend-site";
 import { MOCKUP_TERMS_PATH } from "@/content/mockup-terms";
@@ -170,6 +171,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const leadgen: MetadataRoute.Sitemap = [
     { url: absoluteUrl(`ru/${LEADGEN_PATH}`), changeFrequency: "monthly", priority: 0.85 },
     { url: absoluteUrl(`ru/${CALLHELPER_API_PATH}`), changeFrequency: "monthly", priority: 0.5 },
+    { url: absoluteUrl(`ru/${CALLHELPER_EXT_PATH}`), changeFrequency: "monthly", priority: 0.5 },
   ];
 
   return [...leadgen, ...aiStaff, ...razborEntries, ...articleEntries, ...paths.flatMap((entry) =>

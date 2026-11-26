@@ -237,5 +237,6 @@ export const callhelperDict = defineDict({
     uz: (code: string = "saved") => ({ saved: "Saqlandi.", bad: "Maydonlarni tekshiring.", failed: "Saqlanmadi, yana urinib ko‘ring." } as Record<string, string>)[code] ?? "Tayyor.",
     pl: (code: string = "saved") => ({ saved: "Zapisano.", bad: "Sprawdź pola.", failed: "Nie zapisano, spróbuj ponownie." } as Record<string, string>)[code] ?? "Gotowe.",
   },
+  orgExtDocs: { ru: "Как поставить расширение оператору", uz: "Operatorga kengaytmani qanday o‘rnatish", pl: "Jak zainstalować rozszerzenie operatorowi" },
   orgApiDocs: { ru: "Описание API для подключения", uz: "Ulanish uchun API tavsifi", pl: "Opis API do integracji" },
 });
