@@ -14,6 +14,7 @@ import { caseBySlug, caseDate, cases, casesOnSite, type Case } from "@/content/c
 import { getDictionary } from "@/content/dictionaries";
 import { company } from "@/content/company";
 import { MOCKUP_TERMS_PATH } from "@/content/mockup-terms";
+import { caseTitle } from "@/lib/seo/case-title";
 import { isLocale, locales, localeHref, t, type Locale } from "@/lib/i18n";
 import { caseProtoHref } from "@/lib/proto/case-link";
 import { breadcrumbSchema, caseSchema, jsonLdGraph } from "@/lib/schema";
@@ -35,7 +36,7 @@ export async function generateMetadata({
   return buildMetadata({
     locale,
     path: `cases/${slug}`,
-    title: `${item.name} — ${t(item.category, locale)}`,
+    title: caseTitle(item, locale),
     description: t(item.summary, locale),
   });
 }
