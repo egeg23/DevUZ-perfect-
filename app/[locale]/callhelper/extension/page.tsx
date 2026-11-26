@@ -3,7 +3,6 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { Container } from "@/components/ui/container";
-import { CALLHELPER_ANCHOR } from "@/content/callhelper";
 import { CALLHELPER_API_PATH } from "@/content/callhelper-api";
 import { CALLHELPER_EXT as E, CALLHELPER_EXT_PATH, CALLHELPER_EXT_ZIP } from "@/content/callhelper-extension";
 import { isLocale } from "@/lib/i18n";
@@ -53,8 +52,8 @@ export default async function CallHelperExtensionPage({ params }: { params: Prom
             <a href={CALLHELPER_EXT_ZIP} download className="box-cta inline-flex items-center rounded-full px-6 py-3 text-[0.95rem] font-semibold text-ink">
               {E.download}
             </a>
-            <a href={`/ru#${CALLHELPER_ANCHOR}`} className="inline-flex items-center rounded-full border border-white/20 px-6 py-3 text-[0.95rem] font-semibold text-white hover:border-white/50">
-              Нет ключа: лист ожидания
+            <a href="/ru/callhelper#start" className="inline-flex items-center rounded-full border border-white/20 px-6 py-3 text-[0.95rem] font-semibold text-white hover:border-white/50">
+              Нет ключа: как получить
             </a>
           </div>
           <p className="mt-4 text-[0.85rem] text-white/55">{E.browsers}</p>

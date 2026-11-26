@@ -260,7 +260,7 @@ test("лист ожидания: разбор, отпечаток контакт
 test("лист ожидания: только владельцу, не лид и не очередь команды", () => {
   const page = readFileSync("app/admin/callhelper/page.tsx", "utf8");
   assert.match(page, /owner \? <CallHelperWaitlist/);
-  assert.match(page, /owner \? await Promise\.all\(\[sttState\(\), listWait\(\), listOrgs\(\)\]\)/);
+  assert.match(page, /owner \? await Promise\.all\(\[sttState\(\), listWait\(\), listOrgs\(\), signupOpen\(\)\]\)/);
   const route = readFileSync("app/api/callhelper/wait/route.ts", "utf8");
   for (const off of ["saveLead", "routeNewLead", "salesRecipients", "api/lead"]) {
     assert.doesNotMatch(route, new RegExp(off), `${off} — не для листа ожидания`);

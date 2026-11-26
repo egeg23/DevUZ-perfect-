@@ -4,6 +4,7 @@ import { cases } from "@/content/cases";
 import { BOX_PATH } from "@/content/box";
 import { CALLHELPER_API_PATH } from "@/content/callhelper-api";
 import { CALLHELPER_EXT_PATH } from "@/content/callhelper-extension";
+import { CALLHELPER_OFFER_PATH, CALLHELPER_PAGE_PATH } from "@/content/callhelper-page";
 import { LEADGEN_PATH } from "@/content/leadgen";
 import { FRIEND_PATH } from "@/content/friend-site";
 import { MOCKUP_TERMS_PATH } from "@/content/mockup-terms";
@@ -170,6 +171,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Лидогенерация — только по-русски (Россия, Беларусь, Казахстан).
   const leadgen: MetadataRoute.Sitemap = [
     { url: absoluteUrl(`ru/${LEADGEN_PATH}`), changeFrequency: "monthly", priority: 0.85 },
+    { url: absoluteUrl(`ru/${CALLHELPER_PAGE_PATH}`), changeFrequency: "monthly", priority: 0.85 },
+    { url: absoluteUrl(`ru/${CALLHELPER_OFFER_PATH}`), changeFrequency: "yearly", priority: 0.3 },
     { url: absoluteUrl(`ru/${CALLHELPER_API_PATH}`), changeFrequency: "monthly", priority: 0.5 },
     { url: absoluteUrl(`ru/${CALLHELPER_EXT_PATH}`), changeFrequency: "monthly", priority: 0.5 },
   ];

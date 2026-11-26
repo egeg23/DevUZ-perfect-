@@ -78,6 +78,7 @@ export const ACTION_LABEL: Record<AuditAction, Tr> = {
   "callhelper.stt_key_saved": { ru: "вставил ключ распознавания речи для CallHelper", uz: "CallHelper uchun nutqni tanish kalitini kiritdi", pl: "wkleił klucz rozpoznawania mowy dla CallHelper" },
   "callhelper.org_created": { ru: "выдал ключ CallHelper колл-центру", uz: "koll-markazga CallHelper kalitini berdi", pl: "wydał klucz CallHelper dla call center" },
   "callhelper.org_key_reissued": { ru: "перевыпустил ключ CallHelper", uz: "CallHelper kalitini qayta chiqardi", pl: "wydał nowy klucz CallHelper" },
+  "callhelper.signup_switched": { ru: "открыл или закрыл регистрацию в CallHelper", uz: "CallHelper’da ro‘yxatdan o‘tishni ochdi yoki yopdi", pl: "otworzył lub zamknął rejestrację w CallHelper" },
   "callhelper.org_updated": { ru: "поменял тариф колл-центра в CallHelper", uz: "CallHelper’da koll-markaz tarifini o‘zgartirdi", pl: "zmienił taryfę call center w CallHelper" },
   "scout.settings_saved": { ru: "поменял режим скаута", uz: "skaut rejimini o‘zgartirdi", pl: "zmienił tryb skauta" },
   "scout.chat_added": { ru: "добавил группу для скаута", uz: "skaut uchun guruh qo‘shdi", pl: "dodał grupę dla skauta" },

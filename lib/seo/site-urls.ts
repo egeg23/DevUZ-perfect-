@@ -28,5 +28,6 @@ export function siteUrls(base: string): string[] {
     for (const slug of fresh) urls.push(`${root}/${l}/cases/${slug}`);
   }
   for (const l of LEADGEN_LOCALES) urls.push(`${root}/${l}/leadgen`);
+  urls.push(`${root}/ru/callhelper`);
   return [...new Set(urls)];
 }

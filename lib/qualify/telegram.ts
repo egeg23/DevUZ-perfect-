@@ -1220,6 +1220,22 @@ export async function editMessage(
 }
 
 /**
+ * Кнопка «поделиться своим номером» внизу чата: Telegram сам передаёт номер
+ * аккаунта, вводить его не нужно. Так регистрация CallHelper подтверждает
+ * телефон без SMS (lib/callhelper/signup.ts). Без пуша: это разговор с
+ * клиентом, а не уведомление команде.
+ */
+export async function sendContactRequest(chatId: number | string, text: string, label: string): Promise<boolean> {
+  return call("sendMessage", {
+    chat_id: chatId,
+    text,
+    parse_mode: "HTML",
+    link_preview_options: { is_disabled: true },
+    reply_markup: { keyboard: [[{ text: label, request_contact: true }]], resize_keyboard: true, one_time_keyboard: true },
+  });
+}
+
+/**
  * Сообщение с постоянной клавиатурой внизу чата — кнопки, которые остаются
  * под полем ввода, а не под одним сообщением. Нажатие присылает боту текст
  * кнопки обычным сообщением. Так устроены «▶️ Получать лиды» и
