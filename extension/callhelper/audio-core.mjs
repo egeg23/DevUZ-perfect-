@@ -150,3 +150,18 @@ export function insertLine(lines, line) {
   lines.splice(i, 0, line);
   return lines;
 }
+
+/**
+ * Смена: звонки идут подряд, начало и конец суфлёр понимает по голосу сам.
+ * Звонок кончился, если столько миллисекунд никто не сказал ни слова.
+ * Реплики оператора до начала звонка держим не дольше `holdMs`: это его
+ * приветствие, сказанное раньше, чем клиент ответил.
+ */
+export const SHIFT = { silenceMs: 30_000, holdMs: 20_000 };
+
+export const callIsOver = (lastHeardAt, now) => now - lastHeardAt >= SHIFT.silenceMs;
+
+/** Куски оператора, сказанные не раньше чем за `holdMs` до `nowMs` (время потока). */
+export function keepHeld(pieces, nowMs) {
+  return pieces.filter((p) => nowMs - p.startMs <= SHIFT.holdMs).slice(-4);
+}

@@ -38,6 +38,10 @@
         <button id="edit" class="btn ghost" type="button">Изменить</button>
         <button id="new" class="btn ghost" type="button">Новый сценарий</button>
       </div>
+      <label class="check">
+        <input id="shift" type="checkbox" />
+        <span>Смена: звонки идут подряд. Суфлёр сам начнёт звонок, когда услышит клиента, и сам завершит после тишины.</span>
+      </label>
       <button id="start" class="btn primary big" type="button">Начать звонок</button>
       <ol class="steps">
         <li>Откройте вкладку, где идёт звонок.</li>
@@ -76,12 +80,13 @@
 
     <!-- 4. Звонок -->
     <section id="v-call" class="view" hidden>
-      <div class="live">
+      <div id="live" class="live">
         <span class="dot" aria-hidden="true"></span>
         <span id="timer">0:00</span>
         <span id="ears" class="ears"></span>
         <button id="stop" class="btn danger" type="button">Завершить</button>
       </div>
+      <button id="stop-shift" class="btn ghost wide" type="button" hidden>Завершить смену</button>
       <div class="hintbox">
         <p id="objection" class="tag" hidden></p>
         <p id="phrase" class="phrase">Слушаю разговор…</p>
@@ -90,6 +95,10 @@
       <ol id="stages" class="stages"></ol>
       <h2>Разговор</h2>
       <ul id="lines" class="lines" aria-live="polite"></ul>
+      <div id="last-box" hidden>
+        <h2>Прошлый звонок</h2>
+        <div id="last"></div>
+      </div>
     </section>
 
     <!-- 5. Итог -->

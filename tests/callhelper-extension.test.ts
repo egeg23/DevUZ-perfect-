@@ -5,7 +5,7 @@ import { test } from "node:test";
 import { CALLHELPER_API_BASE } from "@/content/callhelper-api";
 import { AUDIO_MAX_BYTES, AUDIO_MIN_BYTES, AUDIO_RATE } from "@/lib/callhelper/orgs";
 
-import { RATE, Segmenter, insertLine, makeResampler, toPcm16 } from "../extension/callhelper/audio-core.mjs";
+import { RATE, SHIFT, Segmenter, callIsOver, insertLine, keepHeld, makeResampler, toPcm16 } from "../extension/callhelper/audio-core.mjs";
 import { ZIP_PATH, packExtension } from "../scripts/callhelper/pack-extension.mjs";
 
 /**
@@ -100,4 +100,19 @@ test("расширение: третья версия манифеста, пра
 
 test("архив расширения на сайте собран из текущих файлов", () => {
   assert.ok(packExtension().equals(readFileSync(ZIP_PATH)), "запустите node scripts/callhelper/pack-extension.mjs");
+});
+
+test("смена: звонок начинается по слову клиента и кончается по тишине, чужих сервисов не нужно", () => {
+  assert.equal(callIsOver(0, SHIFT.silenceMs - 1), false);
+  assert.equal(callIsOver(0, SHIFT.silenceMs), true, "полминуты тишины — звонок кончился");
+  const held = keepHeld([{ startMs: 0 }, { startMs: 5_000 }, { startMs: 24_000 }], 25_000);
+  assert.deepEqual(held.map((p: { startMs: number }) => p.startMs), [5_000, 24_000], "старое приветствие в новый звонок не идёт");
+  assert.ok(keepHeld(Array.from({ length: 9 }, (_, i) => ({ startMs: i })), 10).length <= 4);
+
+  const panel = readFileSync(`${EXT}/panel.mjs`, "utf8");
+  assert.match(panel, /api\("POST", "\/stt\?who=client"/, "между звонками проверяется только голос клиента");
+  assert.match(panel, /if \(who === "operator"\) rig\.held = keepHeld/, "оператор между звонками на сервер не уходит");
+  assert.doesNotMatch(panel, /\/events|webhook|whk_/, "события от сервисов набора не нужны: расширение слушает само");
+  const html = readFileSync(`${EXT}/panel.html`, "utf8");
+  for (const id of ["shift", "stop-shift", "last-box"]) assert.ok(html.includes(`id="${id}"`), id);
 });

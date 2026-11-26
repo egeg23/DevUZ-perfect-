@@ -1,7 +1,7 @@
 // DevUz CallHelper: боковая панель оператора. Слушает микрофон и звук вкладки
 // со звонком, режет речь на реплики, шлёт их в API CallHelper и показывает
 // подсказку. Разговор живёт только в памяти этой панели до конца звонка.
-import { Segmenter, insertLine, makeResampler } from "./audio-core.mjs";
+import { Segmenter, callIsOver, insertLine, keepHeld, makeResampler } from "./audio-core.mjs";
 
 const DEFAULT_BASE = "https://devuz.studio/api/callhelper/v1";
 const $ = (id) => document.getElementById(id);
@@ -26,10 +26,11 @@ const SCRIPT_PROBLEMS = {
   stageWords: "У каждого этапа третьей частью строки нужны слова, по которым он считается пройденным.",
 };
 
-let cfg = { key: "", operator: "", scriptId: "", base: DEFAULT_BASE };
+let cfg = { key: "", operator: "", scriptId: "", shift: false, base: DEFAULT_BASE };
 let scripts = [];
 let editing = null;
 let call = null;
+let rig = null;
 
 function show(view) {
   for (const v of VIEWS) $(v).hidden = v !== view;
@@ -137,7 +138,9 @@ async function saveScript(event) {
   }
 }
 
-// --- звонок ---
+// --- звук и звонок ---
+// rig — открытый звук (микрофон и вкладка): на один звонок или на всю смену.
+// call — идущий звонок. В смене звонков за один rig много.
 
 async function tabStream() {
   const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
@@ -146,7 +149,10 @@ async function tabStream() {
   return navigator.mediaDevices.getUserMedia({ audio: { mandatory: { chromeMediaSource: "tab", chromeMediaSourceId: id } }, video: false });
 }
 
-async function startCall() {
+const FATAL = ["trial_over", "unpaid", "inactive", "unauthorized"];
+const newCall = () => api("POST", "/calls", { script_id: rig.scriptId, operator: cfg.operator, source: "extension" });
+
+async function start() {
   alertText("");
   $("start").disabled = true;
   let tab = null;
@@ -155,61 +161,59 @@ async function startCall() {
     try {
       tab = await tabStream();
     } catch {
-      alertText("Не слышу вкладку со звонком. Откройте её, нажмите на значок CallHelper на этой вкладке и снова «Начать звонок».");
+      alertText("Не слышу вкладку со звонком. Откройте её, нажмите на значок CallHelper на этой вкладке и снова нажмите кнопку.");
       return;
     }
     try {
       mic = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true }, video: false });
     } catch {
-      alertText("Нужен доступ к микрофону. Мы открыли вкладку: разрешите там микрофон и нажмите «Начать звонок» ещё раз.");
+      alertText("Нужен доступ к микрофону. Мы открыли вкладку: разрешите там микрофон и нажмите кнопку ещё раз.");
       chrome.tabs.create({ url: chrome.runtime.getURL("mic.html") });
       return;
     }
     const scriptId = $("script").value || null;
-    const made = await api("POST", "/calls", { script_id: scriptId, operator: cfg.operator, source: "extension" });
     cfg.scriptId = scriptId || "";
-    chrome.storage.local.set({ scriptId: cfg.scriptId });
-    await runCall(made, tab, mic);
+    cfg.shift = $("shift").checked;
+    chrome.storage.local.set({ scriptId: cfg.scriptId, shift: cfg.shift });
+    await openRig(tab, mic, scriptId, cfg.shift);
     tab = null;
     mic = null;
+    if (rig.shift) showIdle();
+    else beginCall(await newCall());
+    show("v-call");
   } catch (error) {
     alertText(explain(error));
+    closeRig();
   } finally {
     for (const s of [tab, mic]) s?.getTracks().forEach((t) => t.stop());
-    if (!call) $("start").disabled = false;
+    if (!rig) $("start").disabled = false;
   }
 }
 
-async function runCall(made, tab, mic) {
+async function openRig(tab, mic, scriptId, shift) {
   const ctx = new AudioContext();
   await ctx.audioWorklet.addModule(chrome.runtime.getURL("tap.js"));
-  call = {
-    id: made.call.id,
-    limit: made.limits?.call_seconds || 0,
-    startedAt: Date.now(),
-    lines: [],
-    ctx,
-    ears: [],
-    queue: { client: Promise.resolve(), operator: Promise.resolve() },
-    hintBusy: false,
-    hintAgain: false,
-    ending: false,
-  };
+  rig = { ctx, ears: [], scriptId, shift, closing: false, held: [], probeQ: Promise.resolve() };
   // Вкладку играем обратно в наушники: захваченный звук иначе пропадает у оператора.
-  call.ears.push(listen(tab, "client", true), listen(mic, "operator", false));
-  tab.getAudioTracks()[0]?.addEventListener("ended", () => stopCall());
-  $("lines").textContent = "";
-  $("warn").textContent = "";
-  $("stages").textContent = "";
-  $("objection").hidden = true;
-  $("phrase").textContent = "Слушаю разговор…";
-  call.timer = setInterval(tick, 1000);
-  tick();
-  show("v-call");
+  rig.ears.push(listen(tab, "client", true), listen(mic, "operator", false));
+  tab.getAudioTracks()[0]?.addEventListener("ended", () => stopAll());
+  $("stop-shift").hidden = !shift;
+  $("last-box").hidden = true;
+}
+
+function closeRig() {
+  const mine = rig;
+  if (!mine) return;
+  rig = null;
+  for (const ear of mine.ears) {
+    ear.node.port.onmessage = null;
+    ear.stream.getTracks().forEach((t) => t.stop());
+  }
+  mine.ctx.close().catch(() => {});
 }
 
 function listen(stream, who, playback) {
-  const { ctx } = call;
+  const { ctx } = rig;
   const source = ctx.createMediaStreamSource(stream);
   const node = new AudioWorkletNode(ctx, "tap", {
     numberOfInputs: 1,
@@ -223,10 +227,87 @@ function listen(stream, who, playback) {
   const resample = makeResampler(ctx.sampleRate);
   const segmenter = new Segmenter();
   node.port.onmessage = (event) => {
-    if (!call || call.ending) return;
-    for (const piece of segmenter.feed(resample(event.data))) hear(who, piece);
+    if (!rig || rig.closing) return;
+    for (const piece of segmenter.feed(resample(event.data))) route(who, piece);
   };
   return { stream, node, segmenter, who };
+}
+
+/** Куда идёт реплика: в идущий звонок, а в смене между звонками — на проверку «это клиент заговорил?». */
+function route(who, piece) {
+  if (call && !call.ending) return hear(who, piece);
+  if (!rig.shift) return;
+  // Оператор между звонками: на сервер не шлём, держим последние секунды на случай, если это уже приветствие.
+  if (who === "operator") rig.held = keepHeld([...rig.held, piece], piece.startMs);
+  else probe(piece);
+}
+
+/** Смена, звонка нет: клиент сказал слово — начинаем звонок сами. Гудки и тишина дают пустой текст. */
+function probe(piece) {
+  const mine = rig;
+  mine.probeQ = mine.probeQ.then(async () => {
+    if (call?.ending) await call.gone;
+    if (rig !== mine || mine.closing) return;
+    if (call) return hear("client", piece);
+    try {
+      const heard = await api("POST", "/stt?who=client", null, piece.pcm.buffer);
+      if (rig !== mine || mine.closing || !heard.text) return;
+      const made = await newCall();
+      if (rig !== mine || mine.closing) {
+        api("POST", `/calls/${made.call.id}/end`, { lines: [] }).catch(() => {});
+        return;
+      }
+      beginCall(made);
+      insertLine(call.lines, { who: "client", text: heard.text, t: piece.startMs });
+      for (const p of keepHeld(mine.held.splice(0), piece.startMs)) hear("operator", p);
+      renderLines();
+      askHint();
+    } catch (error) {
+      if (FATAL.includes(error.code) || error.code === "stt_off") {
+        alertText(explain(error));
+        stopAll();
+      }
+    }
+  });
+}
+
+function beginCall(made) {
+  let finish;
+  const gone = new Promise((resolve) => (finish = resolve));
+  call = {
+    id: made.call.id,
+    limit: made.limits?.call_seconds || 0,
+    startedAt: Date.now(),
+    lastHeard: Date.now(),
+    lines: [],
+    queue: { client: Promise.resolve(), operator: Promise.resolve() },
+    hintBusy: false,
+    hintAgain: false,
+    ending: false,
+    gone,
+    finish,
+  };
+  $("lines").textContent = "";
+  $("warn").textContent = "";
+  $("stages").textContent = "";
+  $("objection").hidden = true;
+  $("phrase").textContent = "Слушаю разговор…";
+  $("live").classList.remove("idle");
+  $("stop").disabled = false;
+  call.timer = setInterval(tick, 1000);
+  tick();
+}
+
+function showIdle() {
+  $("live").classList.add("idle");
+  $("timer").textContent = "Смена";
+  $("ears").textContent = "жду звонок";
+  $("stop").disabled = true;
+  $("objection").hidden = true;
+  $("warn").textContent = "";
+  $("stages").textContent = "";
+  $("lines").textContent = "";
+  $("phrase").textContent = "Жду звонок. Начну сам, как только услышу клиента.";
 }
 
 /** Реплика ушла на распознавание. По одной на голос за раз: порядок внутри голоса не путается. */
@@ -237,13 +318,17 @@ function hear(who, piece) {
     try {
       const heard = await api("POST", `/calls/${mine.id}/stt?who=${who}`, null, piece.pcm.buffer);
       if (call !== mine || !heard.text) return;
+      mine.lastHeard = Date.now();
       insertLine(mine.lines, { who, text: heard.text, t: piece.startMs });
       renderLines();
       askHint();
     } catch (error) {
-      if (["call_limit", "trial_over", "unpaid", "inactive", "unauthorized"].includes(error.code)) {
+      if (error.code === "call_limit") {
         alertText(explain(error));
-        stopCall();
+        endCall();
+      } else if (FATAL.includes(error.code)) {
+        alertText(explain(error));
+        stopAll();
       }
     }
   });
@@ -257,7 +342,9 @@ function tick() {
   $("ears").textContent = `вы: ${you} · клиент: ${call.lines.length - you}`;
   if (call.limit && seconds >= call.limit) {
     alertText(ERRORS.call_limit);
-    stopCall();
+    endCall();
+  } else if (rig?.shift && callIsOver(call.lastHeard, Date.now())) {
+    endCall();
   }
 }
 
@@ -290,7 +377,7 @@ async function askHint() {
   } catch (error) {
     if (error.code === "call_limit") {
       alertText(explain(error));
-      stopCall();
+      endCall();
     }
   } finally {
     mine.hintBusy = false;
@@ -329,18 +416,16 @@ function renderHint(result) {
   }
 }
 
-async function stopCall() {
+/** Завершить идущий звонок. В смене звук остаётся открытым и суфлёр ждёт следующий. */
+async function endCall() {
   const mine = call;
-  if (!mine || mine.ending) return;
+  if (!mine) return;
+  if (mine.ending) return mine.gone;
   mine.ending = true;
   clearInterval(mine.timer);
   $("stop").disabled = true;
-  for (const ear of mine.ears) {
-    ear.node.port.onmessage = null;
-    ear.stream.getTracks().forEach((t) => t.stop());
-  }
-  mine.ctx.close().catch(() => {});
-  // Дослушать то, что уже ушло на распознавание, но не дольше трёх секунд.
+  // В смене звук не закрываем, поэтому ждём только уже отправленное, но не дольше трёх секунд.
+  if (!rig?.shift || rig.closing) closeRig();
   await Promise.race([Promise.allSettled([mine.queue.client, mine.queue.operator]), new Promise((r) => setTimeout(r, 3000))]);
   let summary = null;
   try {
@@ -350,10 +435,27 @@ async function stopCall() {
     summary = null;
   }
   call = null;
-  $("stop").disabled = false;
+  if (rig && !rig.closing) {
+    renderSummary(summary, $("last"));
+    $("last-box").hidden = false;
+    showIdle();
+  } else {
+    $("stop").disabled = false;
+    $("start").disabled = false;
+    renderSummary(summary, $("summary"));
+    show("v-summary");
+  }
+  mine.finish();
+}
+
+/** Завершить всё: звонок, если идёт, и смену. */
+async function stopAll() {
+  if (!rig && !call) return;
+  if (rig) rig.closing = true;
+  if (call) return endCall();
+  closeRig();
   $("start").disabled = false;
-  renderSummary(summary);
-  show("v-summary");
+  show("v-ready");
 }
 
 function block(title, text, bad) {
@@ -365,8 +467,7 @@ function block(title, text, bad) {
   return div;
 }
 
-function renderSummary(ended) {
-  const box = $("summary");
+function renderSummary(ended, box) {
   box.textContent = "";
   const s = ended?.summary;
   if (!s) {
@@ -417,8 +518,11 @@ $("example").addEventListener("click", async () => {
     alertText(explain(error));
   }
 });
-$("start").addEventListener("click", startCall);
-$("stop").addEventListener("click", stopCall);
+$("start").addEventListener("click", start);
+$("stop").addEventListener("click", endCall);
+$("stop-shift").addEventListener("click", stopAll);
+const startLabel = () => ($("start").textContent = $("shift").checked ? "Начать смену" : "Начать звонок");
+$("shift").addEventListener("change", startLabel);
 $("again").addEventListener("click", async () => {
   try {
     await enter();
@@ -429,8 +533,10 @@ $("again").addEventListener("click", async () => {
 });
 
 (async () => {
-  const saved = await chrome.storage.local.get(["key", "operator", "scriptId", "base"]);
-  cfg = { key: saved.key || "", operator: saved.operator || "", scriptId: saved.scriptId || "", base: saved.base || DEFAULT_BASE };
+  const saved = await chrome.storage.local.get(["key", "operator", "scriptId", "shift", "base"]);
+  cfg = { key: saved.key || "", operator: saved.operator || "", scriptId: saved.scriptId || "", shift: !!saved.shift, base: saved.base || DEFAULT_BASE };
+  $("shift").checked = cfg.shift;
+  startLabel();
   if (!cfg.key) {
     show("v-key");
     return;
