@@ -424,5 +424,20 @@ export const MARKETING_TOPICS: MarketingTopic[] = (() => {
 
 /** Следующая ненаписанная тема или null, если темы кончились. */
 export function nextMarketingTopic(done: ReadonlySet<string>): MarketingTopic | null {
-  return MARKETING_TOPICS.find((topic) => !done.has(topic.key) && (CASES_IN_ROTATION || topic.kind !== "case")) ?? null;
+  return marketingCandidates(done, 1)[0] ?? null;
+}
+
+/**
+ * Сколько ненаписанных тем сверяем со спросом перед статьёй.
+ *
+ * Пятничный замер 27.11.2026: тема бралась первой по списку, а Вордстат и
+ * Trends спрашивались уже после выбора — выходили статьи, которых никто не
+ * ищет. Владелец: «Да». Теперь смена смотрит до трёх тем по порядку и берёт
+ * первую, у которой источник показал спрос (`pickByDemand` в articles-run).
+ */
+export const DEMAND_CANDIDATES = 3;
+
+/** Первые `n` ненаписанных тем по порядку списка. */
+export function marketingCandidates(done: ReadonlySet<string>, n = DEMAND_CANDIDATES): MarketingTopic[] {
+  return MARKETING_TOPICS.filter((topic) => !done.has(topic.key) && (CASES_IN_ROTATION || topic.kind !== "case")).slice(0, n);
 }

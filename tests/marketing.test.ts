@@ -293,7 +293,7 @@ test("запрос — у каждой темы и на обоих языках:
   assert.equal(blend.query?.ru, "Will It Blend", "вопрос из названия в запрос не идёт");
   const niche = MARKETING_TOPICS.find((t) => t.key === "niche:stomatologii:instagram")!;
   assert.equal(niche.query?.uz, "stomatologiya uchun Instagram reklama");
-  assert.match(read("lib/marketing/articles-run.ts"), /if \(ruQuery\) research\.ru = await keywordResearch\(ruQuery, regionFor\("ru"\)\);/);
+  assert.match(read("lib/marketing/articles-run.ts"), /if \(ruQuery\) research\.ru = asked\[at\] \?\? \(await keywordResearch\(ruQuery, regionFor\("ru"\)\)\);/);
 });
 
 test("запрос — в заголовке, описании и первом абзаце, по началу слова", () => {
@@ -379,4 +379,24 @@ test("кейсы западных брендов в очередь статей 
     assert.notEqual(topic.kind, "case");
     done.add(topic.key);
   }
+});
+
+test("статьи: тема по спросу — первая, где источник ответил по самой фразе", async () => {
+  const { demandScore, pickByDemand } = await import("@/lib/marketing/topic-demand");
+  const { marketingCandidates, DEMAND_CANDIDATES } = await import("@/content/marketing-topics");
+  const no = { ok: false as const, reason: "нет" };
+  const yes = { ok: true as const, phrases: [{ phrase: "x", value: 120 }] };
+  const wide = { ok: true as const, phrases: [{ phrase: "x", value: 50 }], asked: "x" };
+  const r = (wordstat: typeof no | typeof yes | typeof wide) => ({ query: "q", trends: no, wordstat, related: [] });
+  assert.equal(demandScore(null), 0);
+  assert.equal(demandScore(r(no)), 0);
+  assert.equal(demandScore(r(wide)), 1);
+  assert.equal(demandScore(r(yes)), 2);
+  assert.equal(pickByDemand([0, 0, 0]), 0);
+  assert.equal(pickByDemand([0, 1, 2]), 2);
+  assert.equal(pickByDemand([1, 0, 1]), 0);
+  assert.equal(marketingCandidates(new Set()).length, DEMAND_CANDIDATES);
+  const run = readFileSync("lib/marketing/articles-run.ts", "utf8");
+  assert.match(run, /marketingCandidates\(written\)/);
+  assert.match(run, /asked\[at\] \?\?/);
 });

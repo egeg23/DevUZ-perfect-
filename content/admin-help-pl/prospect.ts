@@ -586,7 +586,7 @@ export const prospectSections: Record<string, HelpEntry> = {
         id: "manual",
         title: "«Napisz ręcznie»: telefon bez Telegrama",
         body: [
-          "«Napisz ręcznie» znaczy, że klienta nie znaleziono w Telegramie. Na przykład na stronie jest tylko numer stacjonarny albo link prowadzi do kanału. W Telegramie przyjdzie wiersz «только звонок или WhatsApp».",
+          "«Napisz ręcznie» znaczy, że klienta nie znaleziono w Telegramie. Na przykład na stronie jest tylko numer stacjonarny albo link prowadzi do kanału. W Telegramie przyjdzie wiersz «только звонок или WhatsApp». W dni robocze od 10:00 do 12:00 bot jeszcze raz wysyła listę takich kart z trzech dni jednym wierszem «📞 Письма ждут WhatsApp или звонка», pod zaznaczeniem «Porcja kontaktów na dzień»: list jest gotowy, zostało go wysłać samemu.",
           "W karcie są przyciski **«Otwórz WhatsApp z gotowym tekstem»**, **«Zadzwoń»** i **«Kopiuj tekst»**. Napisałeś albo zadzwoniłeś? Kliknij **«Skontaktowano samodzielnie»**.",
           "Klient odpisał w WhatsAppie? Wklej jego odpowiedź w pole «Co odpisał klient» i kliknij **«Zapisz odpowiedź»**. Bot napisze kolejną odpowiedź, możesz ją skopiować albo od razu otworzyć w WhatsAppie.",
           "Nie będziesz pisać? Kliknij «nie piszemy» i podaj powód.",

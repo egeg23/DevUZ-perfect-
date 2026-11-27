@@ -2,10 +2,13 @@ import { bonusesOf, gradeBook } from "@/lib/admin/grade-month";
 import { wants, type NoticeKind } from "@/lib/admin/notify-prefs";
 import {
   askCoach,
+  bumpTries,
+  coachTriesKey,
   dailyDue,
   dailyPrompt,
   parseReview,
   snapshotOf,
+  triesLeft,
   weeklyDue,
   weeklyPrompt,
   type CompanySnapshot,
@@ -96,6 +99,26 @@ async function saveReview(staffId: string, kind: ReviewKind, periodStart: string
   return !error;
 }
 
+/** Неудачные попытки за день по людям (`daily` — общая дневная). */
+async function loadTries(day: string): Promise<Record<string, number>> {
+  const db = serviceClient();
+  if (!db) return {};
+  const { data } = await db.from("stats_snapshots").select("payload").eq("key", coachTriesKey(day)).maybeSingle();
+  const raw = (data?.payload as { counts?: Record<string, unknown> } | null)?.counts ?? {};
+  const out: Record<string, number> = {};
+  for (const [k, v] of Object.entries(raw)) if (typeof v === "number" && Number.isFinite(v)) out[k] = v;
+  return out;
+}
+
+async function saveTries(day: string, counts: Record<string, number>): Promise<void> {
+  const db = serviceClient();
+  if (!db) return;
+  const { error } = await db
+    .from("stats_snapshots")
+    .upsert({ key: coachTriesKey(day), payload: { counts }, computed_at: new Date().toISOString() }, { onConflict: "key" });
+  if (error) console.error("coach: не записал попытки", error.message);
+}
+
 export type CoachRun = { weekly: number; daily: number; skipped: number; errors: string[] };
 
 /**
@@ -139,6 +162,21 @@ export async function runCoach(now: Date, opts: { force?: boolean; only?: readon
   const needWeekly = wantWeekly && (opts.force || weeklyIds.some((id) => weeklyHad.get(id)?.period_start !== weekStart));
   const needDaily = wantDaily && (opts.force || dailyIds.some((id) => dailyHad.get(id)?.period_start !== today));
   if (!needWeekly && !needDaily) {
+    run.skipped = (wantWeekly ? weeklyIds.length : 0) + (wantDaily ? dailyIds.length : 0);
+    return run;
+  }
+
+  // Модель не прошла проверку — свип спросил бы снова через пять минут, и
+  // так весь день. Три неудачи на человека в день, дальше — до завтра.
+  let tries = opts.force ? {} : await loadTries(today);
+  const outOfTries = (who: string) => !opts.force && !triesLeft(tries, who);
+  const failed = async (who: string) => {
+    if (opts.force) return;
+    tries = bumpTries(tries, [who]);
+    await saveTries(today, tries);
+  };
+  const weeklyLeft = needWeekly && weeklyIds.some((id) => weeklyHad.get(id)?.period_start !== weekStart && !outOfTries(id));
+  if (!opts.force && !weeklyLeft && !(needDaily && !outOfTries("daily"))) {
     run.skipped = (wantWeekly ? weeklyIds.length : 0) + (wantDaily ? dailyIds.length : 0);
     return run;
   }
@@ -202,10 +240,15 @@ export async function runCoach(now: Date, opts: { force?: boolean; only?: readon
         run.skipped += 1;
         continue;
       }
+      if (outOfTries(person.staffId)) {
+        run.skipped += 1;
+        continue;
+      }
       const previous = had && had.period_start !== weekStart ? had.body : null;
       const result = await askCoach("weekly", weeklyPrompt(person, previous, weekStart));
       if (!result.ok) {
         run.errors.push(`${person.name}: ${result.why}`);
+        await failed(person.staffId);
         continue;
       }
       if (await saveReview(person.staffId, "weekly", weekStart, result.review, person)) {
@@ -243,8 +286,10 @@ export async function runCoach(now: Date, opts: { force?: boolean; only?: readon
       .sort((a, b) => Number(b.role === "admin") - Number(a.role === "admin"))
       .map((reader) => existing.get(reader.id))
       .find((had) => had && had.period_start !== today);
-    const shared = waiting.length ? await askCoach("daily", dailyPrompt(company, team, earlier?.body ?? null, today)) : null;
-    for (const reader of waiting) {
+    const shared = waiting.length && !outOfTries("daily") ? await askCoach("daily", dailyPrompt(company, team, earlier?.body ?? null, today)) : null;
+    if (!shared) run.skipped += waiting.length;
+    else if (!shared.ok) await failed("daily");
+    for (const reader of shared ? waiting : []) {
       const result = shared!;
       if (!result.ok) {
         run.errors.push(`${reader.display_name}: ${result.why}`);

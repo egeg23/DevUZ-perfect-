@@ -88,6 +88,29 @@ export function dailyDue(now: Date): boolean {
   return tashkentHour(now) >= 7;
 }
 
+/**
+ * Сколько раз за день спрашиваем модель об одной рекомендации.
+ *
+ * Пятничный замер 27.11.2026: модель не прошла проверку (числа, которых нет
+ * в данных), а свип каждые пять минут спрашивал снова — весь день. Владелец:
+ * «Да». Теперь три попытки на человека в день (дневная общая — одна строка
+ * `daily`), дальше — до завтра. Кнопка «собрать сейчас» (`force`) не
+ * ограничена: её жмёт человек.
+ */
+export const COACH_TRIES = 3;
+
+export const coachTriesKey = (day: string) => `coach-tries:${day}`;
+
+export function triesLeft(counts: Readonly<Record<string, number>>, who: string): boolean {
+  return (counts[who] ?? 0) < COACH_TRIES;
+}
+
+export function bumpTries(counts: Readonly<Record<string, number>>, who: readonly string[]): Record<string, number> {
+  const next = { ...counts };
+  for (const id of who) next[id] = (next[id] ?? 0) + 1;
+  return next;
+}
+
 /* ── Промпт ────────────────────────────────────────────────────────────── */
 
 const SYSTEM = `Ты — опытный руководитель отдела продаж веб-студии DevUz Studio в Ташкенте. Студия делает сайты, магазины, приложения и автоматизацию для малого и среднего бизнеса Узбекистана.

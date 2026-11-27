@@ -19,6 +19,7 @@ import { sendBotSubsReport } from "@/lib/admin/bot-subs-report-store";
 import { deliverFriendGifts } from "@/lib/partners/friend-store";
 import { checkClauderyPayments } from "@/lib/claudery/store";
 import { sendHelperStats } from "@/lib/admin/helper-stats-store";
+import { sendNoTelegram } from "@/lib/admin/no-telegram-store";
 import { sendInstantOpenNote } from "@/lib/proto/instant/announce-store";
 import { sendStaffWeek } from "@/lib/admin/staff-week-store";
 import { runTraceMonth } from "@/lib/proto/trace-month-store";
@@ -324,6 +325,9 @@ async function sweep(): Promise<Response> {
     // Кто сколько спросил помощника в боте — каждый день с 18:00
     // (lib/admin/helper-stats-store).
     await sendHelperStats(new Date()).catch((error) => console.error("помощник, сводка:", error));
+    // Письма без Telegram — менеджеру утром по будням: WhatsApp или звонок
+    // (lib/admin/no-telegram-store).
+    await sendNoTelegram(new Date()).catch((error) => console.error("письма без телеграма:", error));
     // «Макет в боте открыт всем» — один раз каждому сотруднику
     // (lib/proto/instant/announce-store), днём.
     await sendInstantOpenNote(new Date()).catch((error) => console.error("макет в боте, уведомление:", error));
