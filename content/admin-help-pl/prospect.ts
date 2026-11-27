@@ -289,11 +289,11 @@ export const prospectSections: Record<string, HelpEntry> = {
       },
       {
         id: "autopilot",
-        title: "Automatyczne kontakty: 20 dziennie, dowolne nisze",
+        title: "Automatyczne kontakty: po 5 dziennie z konta, po uzbecku",
         roles: ["head", "admin"],
         body: {
           head: [
-            "Automatyczne kontakty same piszą pierwsze wiadomości do firm, bez menedżera. Norma: co najmniej 20 wysłanych «Здравствуйте» w dni robocze i 60 w weekend. Nisze dowolne. Blok «Automatyczne kontakty · dowolne nisze» na górze sekcji pokazuje, ile wyszło dziś, ile osób odpisało i ile leadów wzięto.",
+            "Automatyczne kontakty same piszą pierwsze wiadomości do firm, bez menedżera. Norma: po 5 «Здравствуйте» dziennie z każdego dodatkowego konta roboczego, także w weekend, nie częściej niż raz na półtorej godziny z konta. Pisze tylko do firm z Uzbekistanu (strona .uz albo numer +998), powitanie «Assalomu alaykum», wiadomość i rozmowa po uzbecku; klient odpisał po rosyjsku, to dalej po rosyjsku. Nisze dowolne. Blok «Automatyczne kontakty · dowolne nisze» na górze sekcji pokazuje, ile wyszło dziś, ile osób odpisało i ile leadów wzięto.",
             "Wiadomości przygotowują się od 07:00 do 17:30, w weekend do 20:00. Wychodzą od 07:30 do 20:30, najwyżej trzy nowe na godzinę z jednego konta. Przed pierwszą wiadomością panel [sprawdza stronę na żywo](#prospect-fact-check).",
             "Automatyczne kontakty piszą tylko z dodatkowych kont firmowych, z głównego nie. Jeśli wszystkie dodatkowe są wstrzymane albo ograniczone, wszystko stoi i nic się nie przygotowuje. Sprawdź [«Konta»](/admin/accounts).",
             "Piszą do wolnych firm z puli, których nie ma w niczyjej porcji. Najpierw do tych, które mają Telegram na stronie, potem na numer komórkowy. Na numery stacjonarne nie piszą. Pulę uzupełniają wyszukiwanie na mapach i Firecrawl (serwis, który szuka firm i ich kontaktów w internecie).",
@@ -302,7 +302,7 @@ export const prospectSections: Record<string, HelpEntry> = {
             "Automatyczne kontakty zatrzymuje i uruchamia właściciel.",
           ],
           admin: [
-            "Automatyczne kontakty same piszą pierwsze wiadomości do firm, bez menedżera. Norma: co najmniej 20 wysłanych «Здравствуйте» w dni robocze i 60 w weekend. Nisze dowolne. Blok «Automatyczne kontakty · dowolne nisze» na górze sekcji pokazuje, ile wyszło dziś, ile osób odpisało i ile leadów wzięto.",
+            "Automatyczne kontakty same piszą pierwsze wiadomości do firm, bez menedżera. Norma: po 5 «Здравствуйте» dziennie z każdego dodatkowego konta roboczego, także w weekend, nie częściej niż raz na półtorej godziny z konta. Pisze tylko do firm z Uzbekistanu (strona .uz albo numer +998), powitanie «Assalomu alaykum», wiadomość i rozmowa po uzbecku; klient odpisał po rosyjsku, to dalej po rosyjsku. Nisze dowolne. Blok «Automatyczne kontakty · dowolne nisze» na górze sekcji pokazuje, ile wyszło dziś, ile osób odpisało i ile leadów wzięto.",
             "Wiadomości przygotowują się od 07:00 do 17:30, w weekend do 20:00. Wychodzą od 07:30 do 20:30, najwyżej trzy nowe na godzinę z jednego konta. Przed pierwszą wiadomością panel [sprawdza stronę na żywo](#prospect-fact-check).",
             "Automatyczne kontakty piszą tylko z dodatkowych kont firmowych, z głównego nie. Jeśli wszystkie dodatkowe są wstrzymane albo ograniczone, wszystko stoi i nic się nie przygotowuje. Sprawdź [«Konta»](/admin/accounts).",
             "Piszą do wolnych firm z puli, których nie ma w niczyjej porcji. Najpierw do tych, które mają Telegram na stronie, potem na numer komórkowy. Na numery stacjonarne nie piszą. Pulę uzupełniają wyszukiwanie na mapach i Firecrawl (serwis, który szuka firm i ich kontaktów w internecie).",

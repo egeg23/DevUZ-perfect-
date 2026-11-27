@@ -13,7 +13,9 @@ import { DISPATCH_STALE_MS, MAIN_ACCOUNT, accountOf, mayTake, takesAutopilot } f
 import { queueEtas, type Eta, type EtaAccount } from "@/lib/admin/queue-eta";
 import { isFrozenError } from "@/lib/admin/tg-frozen";
 import { mainLimitUntil } from "@/lib/admin/account-ban-store";
-import { HELLO_TEXT, helloFor, type HelloTexts } from "@/lib/admin/hello-first";
+import { HELLO_TEXT, sentHello, type HelloTexts } from "@/lib/admin/hello-first";
+import { autopilotRoom } from "@/lib/admin/autopilot";
+import { tashkentMidnight, todayInTashkent } from "@/lib/admin/pulse";
 import { helloTexts } from "@/lib/admin/hello-text-store";
 import { pickArm } from "@/lib/admin/sales-after-reply";
 import { bloggerSendsLastHour, lastBloggerSendAt } from "@/lib/bloggers/tg-sent";
@@ -189,7 +191,8 @@ function toQueued(data: Record<string, unknown> | null, hellos: HelloTexts = HEL
     kind: (data.target_kind as RouteKind | null) ?? "handle",
     message: String(data.message ?? ""),
     // Своё приветствие руководителя или владельца (lib/admin/hello-text.ts), нет — обычное.
-    hello: helloFor(String(data.message ?? ""), (data.walked as { lang?: string } | null)?.lang, hellos),
+    // Автопрогон — по-узбекски (sentHelloLang).
+    hello: sentHello(data, hellos),
     // Им скаут подписывает номер в контактах рабочего аккаунта. У компании
     // без сайта — название: «null» в списке контактов клиент видел сам
     // (Koshona, 24.10.2026).
@@ -250,6 +253,23 @@ export async function nextQueued(
   const assigned = await assignments(db);
   const hellos = await helloTexts();
 
+  // «Здравствуйте» автопрогона с этого аккаунта за сегодня — один раз за вызов.
+  let autoSent: number[] | null = null;
+  const autopilotSentToday = async (): Promise<number[]> => {
+    if (autoSent) return autoSent;
+    const { data: rows } = await db
+      .from("prospects")
+      .select("sent_at, sent_via")
+      .eq("status", "sent")
+      .not("autopilot_at", "is", null)
+      .gte("sent_at", tashkentMidnight(todayInTashkent(new Date(now))).toISOString())
+      .limit(200);
+    autoSent = (rows ?? [])
+      .filter((r) => accountOf(r.sent_via as string | null) === account)
+      .map((r) => Date.parse(String(r.sent_at)));
+    return autoSent;
+  };
+
   /** Верхние свободные задания — по одному, пока одно не возьмётся этим аккаунтом. */
   const takeFirst = async (owners: string[] | null): Promise<Queued | null> => {
     let query = db
@@ -263,8 +283,13 @@ export async function nextQueued(
     for (const row of data ?? []) {
       const by = (row as { claimed_by?: string | null }).claimed_by ?? null;
       if (by && !mayTake(account, assigned.get(by))) continue;
-      // «Здравствуйте» автопрогона главный аккаунт не берёт (AUTOPILOT_ON_MAIN).
-      if ((row as { autopilot_at?: string | null }).autopilot_at && !takesAutopilot(account)) continue;
+      // «Здравствуйте» автопрогона главный аккаунт не берёт (AUTOPILOT_ON_MAIN),
+      // а рабочий — не больше пяти в день и не чаще раза в полтора часа
+      // (autopilotRoom, владелец, 28.11.2026: «5 касаний… с каждого аккаунта»).
+      if ((row as { autopilot_at?: string | null }).autopilot_at) {
+        if (!takesAutopilot(account)) continue;
+        if (!autopilotRoom(await autopilotSentToday(), now)) continue;
+      }
       const job = toQueued(row as Record<string, unknown>, hellos);
       if (job && (await take(db, job.id, account, now))) return job;
     }
@@ -443,7 +468,7 @@ export async function markSent(
       lead_id: data.lead_id ?? null,
       direction: "out",
       author: "staff",
-      body: hello || helloFor(String(data.message ?? ""), (data.walked as { lang?: string } | null)?.lang, await helloTexts()),
+      body: hello || sentHello(data, await helloTexts()),
       status: "sent",
       sent_at: new Date().toISOString(),
     });

@@ -61,7 +61,8 @@ test("автопрогон выбирает карточки без разбор
   const cols = store.match(/const POOL_COLUMNS = "([^"]+)"/)?.[1] ?? "";
   assert.ok(cols.includes("f0:findings->0->>code"), "есть ли находки — по коду первой");
   assert.doesNotMatch(cols, /(^|, )findings(,|$)/, "весь разбор не читаем");
-  assert.match(store, /rank\(\(\(data \?\? \[\]\) as Record<string, unknown>\[\]\)\.map\(poolRow\), busy\)/);
+  assert.match(store, /const rows = \(\(data \?\? \[\]\) as Record<string, unknown>\[\]\)\.map\(poolRow\);/);
+  assert.match(store, /return rank\(pool, busy\)/);
 });
 
 test("модель берёт только свои разговоры: отпущенные не занимают очередь", () => {

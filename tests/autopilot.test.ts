@@ -314,7 +314,7 @@ test("автопрогон с главного аккаунта не пишет 
   // Очередь: «Здравствуйте» автопрогона главный аккаунт пропускает.
   assert.match(
     src("lib/admin/outreach-queue.ts"),
-    /if \(\(row as \{ autopilot_at\?: string \| null \}\)\.autopilot_at && !takesAutopilot\(account\)\) continue;/,
+    /if \(!takesAutopilot\(account\)\) continue;/,
   );
   // Писать некому — автопрогон не готовит письма впрок.
   const store = src("lib/admin/autopilot-store.ts");

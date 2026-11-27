@@ -115,6 +115,47 @@ export function targetFor(now: Date, target: number): number {
 }
 
 /**
+ * Пять «Здравствуйте» в день с каждого рабочего аккаунта, по-узбекски.
+ *
+ * Владелец, 28.11.2026: «5 касаний автоматически с каждого аккаунта, без
+ * спама, максимально живое общение сделай на узбекском»; на вопросы —
+ * «Только два рабочих» (главный автопрогон не берёт, AUTOPILOT_ON_MAIN) и
+ * «Всем по-узбекски» (только компаниям Узбекистана, приветствие, письмо и
+ * переписка на узбекском; ответил по-русски — дальше по-русски).
+ *
+ * Норма дня — PER_ACCOUNT на каждый живой аккаунт, и в выходные тоже: вместо
+ * DAILY_TARGET и WEEKEND_TARGET (`dayTarget`). Аккаунт берёт «Здравствуйте»
+ * автопрогона, только пока у него сегодня меньше PER_ACCOUNT таких отправок
+ * и с прошлой прошло не меньше GAP_MS (`autopilotRoom`): пять сообщений
+ * разносятся по дню, а не уходят подряд. Откат — UZ_ONLY = false и прежние
+ * нормы: `dayTarget` с PER_ACCOUNT = 0.
+ */
+export const AUTOPILOT_PER_ACCOUNT = 5;
+export const AUTOPILOT_GAP_MS = 90 * 60_000;
+export const AUTOPILOT_UZ_ONLY = true;
+
+/** Норма дня: по PER_ACCOUNT на каждый аккаунт, который берёт автопрогон. */
+export function dayTarget(accounts: number, perAccount: number = AUTOPILOT_PER_ACCOUNT): number {
+  return Math.max(0, accounts) * perAccount;
+}
+
+/** Может ли аккаунт взять ещё одно «Здравствуйте» автопрогона: отправки за сегодня — времена в мс. */
+export function autopilotRoom(sentToday: readonly number[], now: number): boolean {
+  if (sentToday.length >= AUTOPILOT_PER_ACCOUNT) return false;
+  const last = sentToday.length ? Math.max(...sentToday) : 0;
+  return !last || now - last >= AUTOPILOT_GAP_MS;
+}
+
+/**
+ * Компания из Узбекистана: мобильный +998 в контактах или сайт на .uz.
+ * По одному @адресу страну не узнать — без сайта .uz и номера +998 не берём.
+ */
+export function uzbekProspect(row: { host?: string | null; contacts: { phones: readonly string[]; whatsapp: readonly string[] } }): boolean {
+  if (row.host && /\.uz$/i.test(row.host.trim())) return true;
+  return [...row.contacts.phones, ...row.contacts.whatsapp].some((p) => /^\+?998\d{9}$/.test(p.replace(/[\s()-]/g, "")));
+}
+
+/**
  * Сколько писем автопрогона может одновременно ждать отправки.
  *
  * Очередь у скаута общая и идёт по времени постановки: двадцать писем
