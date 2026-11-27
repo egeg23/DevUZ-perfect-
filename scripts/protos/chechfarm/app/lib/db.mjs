@@ -66,6 +66,11 @@ create table if not exists partner_list(
    подписчик бота (c:<чат>) или партнёр из таблицы (p:<номер>, в рассылку — когда в боте). */
 create table if not exists bc_groups(id integer primary key, name text not null, created_at integer not null, by text not null default '');
 create table if not exists bc_group_members(group_id integer not null, ref text not null, primary key(group_id, ref));
+/* Электронные визитки сотрудников: страница /card/<slug>, на неё ведёт QR. */
+create table if not exists cards(
+  id integer primary key, slug text unique not null, data text not null, user_id integer not null,
+  off integer not null default 0, views integer not null default 0, last_view integer,
+  created_at integer not null, at integer not null);
 `;
 /* Правки текстов страниц из панели: страница «*» — шапка и подвал на всех страницах. */
 const SITE_TEXT = "create table if not exists site_text(lang text not null, page text not null, h text not null, v text not null, def text not null default '', primary key(lang, page, h))";

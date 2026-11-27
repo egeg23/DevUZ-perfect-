@@ -1116,3 +1116,74 @@ test("czechfarm: главная закрыта заставкой, пока сц
   assert.match(home, /setTimeout\(close,120000\)/);
   assert.ok(readFileSync(join(site(), "ar/index.html"), "utf8").includes("جارٍ تحميل المشهد"));
 });
+
+test("czechfarm: электронные визитки — страница по QR, звонок, сайт, контакт, вид из готовых, права", async () => {
+  const a = await boot();
+  try {
+    await owner(a);
+    const card = { name: "Дильёра Шавкатовна", title: "Основатель", phones: [{ label: "Мобильный", value: "+998 90 123 45 67" }], email: "info@czechfarm.org", tg: "@czechfarm", extra: [{ label: "Сайт <b>", value: "https://czechfarm.org" }], about: "<script>alert(1)</script>", theme: "ivory", anim: "waves", accent: "gold" };
+    /* Без способа связи и без имени — не сохраняется. */
+    assert.equal((await a.adminPost("/cards", { ...card, phones: [], email: "", tg: "" })).status, 400);
+    assert.equal((await a.adminPost("/cards", { ...card, name: "" })).status, 400);
+    assert.equal((await a.adminPost("/cards/slug", { name: "Дильёра Шавкатовна" })).json.slug, "dilyora-shavkatovna");
+    const r = await a.adminPost("/cards", card);
+    assert.equal(r.status, 200);
+    assert.equal(r.json.card.url, "https://czechfarm.test/card/dilyora-shavkatovna");
+    /* Тот же адрес второй раз не выдаётся. */
+    assert.equal((await a.adminPost("/cards", { ...card, slug: "dilyora-shavkatovna" })).status, 400);
+    const pg = await a.call("/card/dilyora-shavkatovna");
+    assert.equal(pg.status, 200);
+    assert.ok(pg.text.includes('href="tel:+998901234567"'), "кнопка звонка");
+    assert.ok(pg.text.includes('href="https://czechfarm.test/"') || pg.text.includes("czechfarm.test"), "кнопка сайта");
+    assert.ok(pg.text.includes('href="/card/dilyora-shavkatovna.vcf"'));
+    assert.ok(pg.text.includes('class="a-waves"') && pg.text.includes("#d9b46a") && pg.text.includes("#f4efe4"), "фон, анимация и цвет из готовых");
+    assert.ok(!pg.text.includes("<script") && pg.text.includes("&lt;script&gt;") && pg.text.includes("Сайт &lt;b&gt;"), "текст сотрудника экранирован");
+    assert.equal(pg.headers.get("x-robots-tag"), "noindex, nofollow");
+    assert.ok(/default-src 'none'/.test(pg.headers.get("content-security-policy") || ""));
+    const vcf = await a.call("/card/dilyora-shavkatovna.vcf");
+    assert.ok(vcf.headers.get("content-type")?.startsWith("text/vcard") && vcf.text.includes("TEL;TYPE=CELL,VOICE:+998901234567") && vcf.text.includes("FN:Дильёра Шавкатовна"));
+    assert.equal(a.db.get("select views from cards").views, 1, "открытие по QR посчитано, vcf — нет");
+    await a.call("/card/dilyora-shavkatovna", undefined, { "User-Agent": "TelegramBot (like TwitterBot)" });
+    assert.equal(a.db.get("select views from cards").views, 1, "робот превью не считается");
+    /* Правка — страница сразу новая, адрес прежний. */
+    const id = r.json.id;
+    await a.adminPost(`/cards/${id}`, { ...card, title: "Директор", slug: "other" });
+    const pg2 = await a.call("/card/dilyora-shavkatovna");
+    assert.ok(pg2.text.includes("Директор"));
+    assert.equal((await a.call("/card/other")).status, 404);
+    /* Предпросмотр — только вошедшему в панель. */
+    const tk = (await a.adminPost("/cards/preview", { ...card, name: "Черновик" })).json.token;
+    assert.ok((await a.call(`/card-preview/${tk}`)).text.includes("Черновик"));
+    const saved = a.getCookie(); a.setCookie("");
+    assert.equal((await a.call(`/card-preview/${tk}`)).status, 404);
+    a.setCookie(saved);
+    /* Менеджер правит только свои. */
+    a.core.users.add({ login: "man", name: "Менеджер", role: "manager", pass: "длинный-пароль-2" }, "тест");
+    const ownerCookie = a.getCookie(); a.setCookie("");
+    assert.equal((await a.adminPost("/login", { login: "man", pass: "длинный-пароль-2" })).status, 200);
+    assert.equal((await a.adminPost(`/cards/${id}`, card)).status, 403);
+    assert.equal((await a.adminPost(`/cards/${id}/del`, {})).status, 403);
+    const mine = await a.adminPost("/cards", { ...card, name: "Менеджер Один" });
+    assert.equal(mine.status, 200);
+    assert.equal((await a.adminPost(`/cards/${mine.json.id}/off`, {})).status, 200);
+    assert.equal((await a.call("/card/menedzher-odin")).status, 410, "выключенная визитка");
+    a.setCookie(ownerCookie);
+    assert.equal((await a.adminPost(`/cards/${id}/del`, {})).status, 200);
+    assert.equal((await a.call("/card/dilyora-shavkatovna")).status, 404);
+  } finally { await a.close(); }
+});
+
+test("czechfarm: QR визитки — сверен с эталонной библиотекой бит в бит", async () => {
+  const { runInNewContext } = await import("node:vm");
+  const { createHash } = await import("node:crypto");
+  const ctx: any = {}; ctx.globalThis = ctx;
+  runInNewContext(readFileSync(new URL("admin/qr.js", APP), "utf8"), ctx);
+  const hash = (m: boolean[][]) => createHash("sha256").update(m.map((r) => r.map((x) => (x ? 1 : 0)).join("")).join("\n")).digest("hex").slice(0, 16);
+  /* Эталон — python-qrcode с той же версией и маской (уровень M). */
+  const a = ctx.cfQr.make("https://czechfarm.org/card/dilyora-shavkatovna");
+  assert.deepEqual([a.version, a.mask, hash(a.matrix)], [4, 2, "d15ff92b04c17449"]);
+  const b = ctx.cfQr.make("https://czechfarm.org/card/" + "k".repeat(150));
+  assert.deepEqual([b.version, b.mask, hash(b.matrix)], [9, 1, "7b9ead9501746b92"], "версия с блоком версии и выравниванием");
+  assert.ok(ctx.cfQr.svg("https://czechfarm.org/card/x").startsWith("<svg"));
+  assert.throws(() => ctx.cfQr.make("x".repeat(400)));
+});

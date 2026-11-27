@@ -5,7 +5,7 @@
 import { createServer } from "node:http";
 import { gzipSync } from "node:zlib";
 import { createReadStream, existsSync, statSync, readFileSync, mkdirSync, writeFileSync, unlinkSync } from "node:fs";
-import { createHash } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { basename, extname, join, normalize, resolve, sep } from "node:path";
 import { openDb } from "./lib/db.mjs";
 import { makeCore, ROLES, STATUS, KINDS, LANGS, PAGES, CONTACT_KEYS, SEGMENTS, ACC_STATUS } from "./lib/core.mjs";
@@ -15,6 +15,7 @@ import { blocksOf, applyTexts, applyImages, orderBlocks, hideBlocks } from "./li
 import { addCustom, titleOf, cleanBlocks } from "./lib/custom-blocks.mjs";
 import { translate, trState, fillLangs, productPlan, TR_LANGS, columns } from "./lib/translate.mjs";
 import { readSheet } from "./lib/sheet.mjs";
+import { cardHtml, goneHtml, vcard, normCard, THEMES, ANIMS, ACCENTS, CARD_LANGS } from "./lib/cards.mjs";
 
 const MIME = {
   ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8",
@@ -28,6 +29,8 @@ const MIME = {
   ".wasm": "application/wasm", ".mjs": "text/javascript; charset=utf-8", ".onnx": "application/octet-stream",
 };
 const COOKIE = "cf_s", ACOOKIE = "cf_a";
+/* Страница визитки: без скриптов; встраивать можно только в свою панель (предпросмотр). */
+const CARD_CSP = "default-src 'none'; img-src 'self' data: https:; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; base-uri 'none'; form-action 'none'; frame-ancestors 'self'";
 const SITE_PAGES = ["", "about", "products", "partners", "investors", "news", "contacts", "privacy", "account"];
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
@@ -156,6 +159,8 @@ export function createApp({ core, siteDir, adminDir, dataDir = "", setupCode = "
     return { d: { ...d, tr: t }, tr: r };
   }
   const allow = limiter();
+  const cardPreviews = new Map();
+  const randomTok = () => randomBytes(18).toString("base64url");
   const uploadsDir = dataDir ? join(dataDir, "uploads") : "", irDir = dataDir ? join(dataDir, "ir") : "";
   const ipOf = (req) => (trustProxy && String(req.headers["x-forwarded-for"] || "").split(",")[0].trim()) || req.socket.remoteAddress || "?";
   const cookies = (req) => Object.fromEntries(String(req.headers.cookie || "").split(";").map((c) => c.trim().split("=")).filter((x) => x[0]).map(([k, ...v]) => [k, decodeURIComponent(v.join("="))]));
@@ -422,6 +427,25 @@ export function createApp({ core, siteDir, adminDir, dataDir = "", setupCode = "
     if (M === "POST" && path === "/site/counters") { lead(); core.connect.counters(await body(req), who); return { ok: true }; }
     if (M === "POST" && path === "/site/faq") { const b = await body(req, 256 * 1024); if (b.texts) core.faq.setTexts(b.texts, who); return { faq: core.faq.save(b.faq, who), botTexts: core.faq.texts() }; }
 
+    /* Электронные визитки — любой сотрудник; менеджер правит свои, руководитель и владелец — любые. */
+    if (path.startsWith("/cards")) {
+      const C = core.cards, view = () => ({ cards: C.list(), site: C.site, me: user.id, themes: Object.fromEntries(Object.entries(THEMES).map(([k, v]) => [k, { name: v.name, light: v.light, bg: v.bg, g1: v.g1, g2: v.g2 }])), anims: ANIMS, accents: ACCENTS, langs: CARD_LANGS });
+      const act = (fn) => { try { return fn(); } catch (e) { throw new HttpError(e.code === 403 ? 403 : 400, e.message); } };
+      if (M === "GET" && path === "/cards") return view();
+      if (M === "POST" && path === "/cards/slug") { const b = await body(req); return { slug: C.slugFor(b.name || "", Number(b.id) || 0) }; }
+      if (M === "POST" && path === "/cards/preview") {
+        const b = await body(req, 32 * 1024);
+        let d; try { d = normCard({ ...b, name: b.name || "Имя Фамилия", phones: b.phones && b.phones.some((x) => x && x.value) ? b.phones : [{ value: "+998 00 000 00 00" }] }, { site: C.site }); } catch (e) { throw new HttpError(400, e.message); }
+        const tk = randomTok();
+        cardPreviews.set(tk, { html: cardHtml(d, { slug: "" }), user: user.id, until: Date.now() + 10 * 6e4 });
+        for (const [k, v] of cardPreviews) if (v.until < Date.now() || cardPreviews.size > 200) cardPreviews.delete(k);
+        return { token: tk };
+      }
+      if (M === "POST" && (path === "/cards" || /^\/cards\/\d+$/.test(path))) { const b = await body(req, 32 * 1024); const nid = act(() => C.save(user, id, b)); return { id: nid, card: C.get(nid), ...view() }; }
+      if (M === "POST" && /^\/cards\/\d+\/(off|on|del)$/.test(path)) { const a = path.split("/")[3]; act(() => (a === "del" ? C.remove(user, id) : C.setOff(user, id, a === "off"))); return view(); }
+      throw new HttpError(404, "Нет такого адреса");
+    }
+
     /* Комната инвестора — руководитель и владелец. */
     if (path.startsWith("/ir")) {
       lead();
@@ -588,7 +612,7 @@ export function createApp({ core, siteDir, adminDir, dataDir = "", setupCode = "
       const p = decodeURIComponent(url.pathname);
       if (p === "/admin" || p === "/admin/") {
         res.setHeader("X-Frame-Options", "DENY");
-        res.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self'; frame-src https:; frame-ancestors 'none'; base-uri 'none'; form-action 'self'");
+        res.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self'; frame-src 'self' https:; frame-ancestors 'none'; base-uri 'none'; form-action 'self'");
         return staticFile(req, res, adminDir, "index.html", "no-cache") || send(res, 404, "Нет панели");
       }
       /* Движок и модель вырезки фона: имена с версией, браузер качает их один раз. */
@@ -616,7 +640,31 @@ export function createApp({ core, siteDir, adminDir, dataDir = "", setupCode = "
         res.writeHead(r ? 200 : 404, { ...nh, "Content-Type": MIME[".html"] });
         return res.end(html);
       }
-      if (p === "/robots.txt") return send(res, 200, `User-agent: *\nDisallow: /admin\nDisallow: /api/\nDisallow: /room/\n${publicUrl ? `Sitemap: ${publicUrl}/sitemap.xml\n` : ""}`, { "Content-Type": MIME[".txt"], "Cache-Control": "max-age=3600" });
+      /* Электронная визитка: сюда ведёт QR. Без скриптов, только своя разметка. */
+      const card = /^\/card\/([a-z0-9-]{3,40})(\.vcf)?$/.exec(p);
+      if (card) {
+        if (!allow("card:" + ipOf(req), 120, 6e4)) return send(res, 429, "Подождите минуту");
+        const c = core.cards.bySlug(card[1]);
+        const ch = { "X-Robots-Tag": "noindex, nofollow", "Cache-Control": "no-cache", "Content-Security-Policy": CARD_CSP };
+        if (!c || c.off) { res.writeHead(c ? 410 : 404, { ...ch, "Content-Type": MIME[".html"] }); return res.end(goneHtml(c?.data.lang || "ru", core.cards.site)); }
+        const abs = (u) => (publicUrl || core.cards.site) + u;
+        if (card[2]) {
+          res.writeHead(200, { ...ch, "Content-Type": "text/vcard; charset=utf-8", "Content-Disposition": `attachment; filename="${c.slug}.vcf"` });
+          return res.end(vcard(c.data, { url: c.url, photoUrl: c.data.photo ? abs(c.data.photo) : "" }));
+        }
+        if (req.method === "GET" && !BOT.test(req.headers["user-agent"] || "") && !/prefetch|prerender/i.test(req.headers["sec-purpose"] || req.headers.purpose || "")) core.cards.seen(c.id);
+        res.writeHead(200, { ...ch, "Content-Type": MIME[".html"] });
+        return res.end(cardHtml(c.data, { slug: c.slug, abs }));
+      }
+      /* Предпросмотр визитки в панели: только тому, кто вошёл. */
+      const cpv = /^\/card-preview\/([\w-]{20,40})$/.exec(p);
+      if (cpv) {
+        const pv = cardPreviews.get(cpv[1]), u = core.auth.user(cookies(req)[COOKIE]);
+        if (!pv || !u || pv.user !== u.id || pv.until < Date.now()) return send(res, 404, "Нет предпросмотра");
+        res.writeHead(200, { "Content-Type": MIME[".html"], "Cache-Control": "private, no-store", "X-Robots-Tag": "noindex", "Content-Security-Policy": CARD_CSP });
+        return res.end(pv.html);
+      }
+      if (p === "/robots.txt") return send(res, 200, `User-agent: *\nDisallow: /admin\nDisallow: /api/\nDisallow: /room/\nDisallow: /card/\nDisallow: /card-preview/\n${publicUrl ? `Sitemap: ${publicUrl}/sitemap.xml\n` : ""}`, { "Content-Type": MIME[".txt"], "Cache-Control": "max-age=3600" });
       if (p === "/sitemap.xml") {
         const urls = [];
         for (const l of ["ru", "uz", "en", "ar"]) for (const pg of SITE_PAGES) if (existsSync(join(siteDir, ...(l === "ru" ? [] : [l]), ...(pg ? [pg] : []), "index.html"))) urls.push(`${publicUrl}/${l === "ru" ? "" : l + "/"}${pg}`);

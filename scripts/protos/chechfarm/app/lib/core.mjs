@@ -13,6 +13,7 @@ import { CATALOG_TR, packImg } from "./catalog-tr.mjs";
 import { HERO_SLOTS } from "./hero.mjs";
 import { cleanBlocks, titleOf } from "./custom-blocks.mjs";
 import { cleanTr } from "./translate.mjs";
+import { makeCards } from "./cards.mjs";
 
 /* Поля форм сайта сверх основных: «Масштаб запуска» производителя и «Что нужно» инвестора. */
 export const LEAD_EXTRA = ["scale", "want"];
@@ -48,6 +49,7 @@ const json = (s, def) => { try { return JSON.parse(s); } catch { return def; } }
 /* Номер обращения: CF- и шесть знаков без похожих букв. */
 const NO_ABC = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const leadNo = () => "CF-" + [...randomBytes(6)].map((b) => NO_ABC[b % NO_ABC.length]).join("");
+
 
 export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = () => Date.now() }) {
   const box = sealer(secret);
@@ -833,5 +835,6 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
     botName: () => getS("tg.bot"), aud, users, auth, connect, settingsView, leads, faq, products, hero, news, seo, contacts, ir, summary, log, live, seoFor, site, botProfile, catTr,
     hook, tgSecret: () => getS("tg.secret"), counters: () => ({ metrika: getS("seo.metrika"), yandex: getS("seo.yandex"), google: getS("seo.google") }),
     version: () => version, leadText,
+    cards: makeCards({ db, note, now, publicUrl }),
   };
 }

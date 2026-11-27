@@ -157,3 +157,27 @@ ul{padding-left:20px}li{margin:3px 0}
 .cbp{display:grid;grid-template-columns:96px minmax(0,1fr) auto auto;gap:10px;align-items:center}
 .cbp img{width:96px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
 @media (max-width:600px){.cbp{grid-template-columns:72px minmax(0,1fr)}.cbp img{width:72px;height:54px}.cbp .btn{grid-column:auto}}
+/* Электронные визитки: форма слева, справа QR и телефон с живой страницей. */
+.vcl{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,460px),1fr));gap:14px}
+.vci{display:grid;grid-template-columns:120px minmax(0,1fr);gap:16px;padding:16px;border-radius:var(--r)}.vci.off{opacity:.6}
+.vcq{background:#fff;border-radius:14px;padding:6px;align-self:start}.vcq svg{display:block;width:100%;height:auto}
+.vcm{display:grid;gap:4px;min-width:0}.vcm>a{overflow-wrap:anywhere}.vcm .row{margin-top:8px}.vcm .row .btn{min-height:34px;padding:5px 12px;font-size:13px}
+.vc{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:20px;align-items:start}
+.vcp{position:sticky;top:16px;display:grid;gap:12px}
+.vcqr{display:grid;grid-template-columns:132px minmax(0,1fr);gap:12px;align-items:center;padding:14px;border-radius:var(--r)}.vcqr #vqr{background:#fff;border-radius:12px;padding:6px;min-height:120px;display:grid;place-items:center}.vcqr #vqr svg{width:100%;height:auto;display:block}.vcqr #vqr .note{color:#334;font-size:12px;text-align:center}
+.vcqr #vqu{margin:0;overflow-wrap:anywhere}.vcqr #vqb{grid-column:1/-1}.vcqr #vqb .btn{min-height:34px;padding:5px 12px;font-size:13px}
+.vcphone{width:100%;aspect-ratio:390/760;border-radius:38px;border:8px solid #050807;box-shadow:0 0 0 1px var(--line),0 24px 60px rgb(0 0 0 / .45);overflow:hidden;background:#000}
+.vcphone iframe{display:block;width:100%;height:100%;border:0}
+.vcph{display:flex;gap:14px;align-items:center;flex-wrap:wrap}.vcav{width:76px;height:76px;border-radius:50%;border:1px dashed var(--line);display:grid;place-items:center;overflow:hidden;color:var(--mute);font-size:12px;flex:none}.vcav img{width:100%;height:100%;object-fit:cover}
+.vcrw{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr) auto;gap:8px}
+.vcsw{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:10px}
+.vcsw button{display:grid;gap:6px;padding:6px;border-radius:16px;border:1px solid var(--line);background:rgb(0 0 0 / .2);cursor:pointer;font-size:12px;color:var(--mute)}.vcsw i{display:block;height:58px;border-radius:11px;border:1px solid rgb(255 255 255 / .1)}
+.vcsw button[aria-pressed="true"],.vcch button[aria-pressed="true"]{border-color:var(--gold);color:var(--ink);box-shadow:0 0 0 1px var(--gold)}
+.vcch{display:flex;flex-wrap:wrap;gap:8px}.vcch button{min-height:38px;padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:rgb(0 0 0 / .2);cursor:pointer;font-size:13px}
+.vcac{display:flex;gap:10px;flex-wrap:wrap}.vcac button{width:40px;height:40px;border-radius:50%;padding:4px;border:1px solid var(--line);background:transparent;cursor:pointer}.vcac i{display:block;width:100%;height:100%;border-radius:50%}.vcac button[aria-pressed="true"]{box-shadow:0 0 0 2px var(--gold)}
+.vcsave{position:sticky;bottom:12px;z-index:3;padding:10px 14px;border-radius:999px;background:rgb(4 16 15 / .85);border:1px solid var(--line);margin-top:16px}
+@media (max-width:1100px){.vc{grid-template-columns:1fr}.vcp{position:static;max-width:420px}}
+@media (max-width:520px){.vci{grid-template-columns:84px minmax(0,1fr)}.vcrw{grid-template-columns:1fr auto}.vcrw input:first-child{grid-column:1/-1}.vcqr{grid-template-columns:110px minmax(0,1fr)}}
+/* Общее правило svg панели (контуры без заливки) QR не касается. */
+.vcq svg rect,.vcqr #vqr svg rect{fill:#fff;stroke:none}.vcq svg path,.vcqr #vqr svg path{fill:#000;stroke:none}
+.vcp{top:100px}.vcphone{max-width:340px;margin:0 auto}
