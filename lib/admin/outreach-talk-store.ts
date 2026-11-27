@@ -54,12 +54,12 @@ import {
   circleFailText,
   circleLangFor,
   circleLangOf,
-  letterLang,
   pitchAfter,
   replyLang,
   waitsForPitch,
   withoutGreeting,
   type HelloLang,
+  sentHelloLang,
 } from "@/lib/admin/hello-first";
 
 /**
@@ -660,7 +660,7 @@ async function answerHello(
     .select("id");
   if (!claimed?.length) return { matched: true, host, verdict: "hello" };
 
-  const sentLang = letterLang(String(prospect.message ?? ""), (prospect.walked as { lang?: string } | null)?.lang);
+  const sentLang = sentHelloLang({ message: prospect.message as string | null, walked: prospect.walked, autopilot_at: (prospect as { autopilot_at?: unknown }).autopilot_at as string | null });
   const lang = replyLang(body, sentLang);
 
   // Кружок говорит «посмотрели ваш сайт, нашли ошибки». Компании без сайта
@@ -763,7 +763,7 @@ async function queueHelloLetter(
   // не утверждает. Раньше такой ответ уходил человеку «проверке больше трёх
   // дней», а касание автопрогона ничьё — клиент ждал молча.
   const noSite = withoutSite(prospect);
-  const sentLang = letterLang(String(prospect.message ?? ""), (prospect.walked as { lang?: string } | null)?.lang);
+  const sentLang = sentHelloLang({ message: prospect.message as string | null, walked: prospect.walked, autopilot_at: (prospect as { autopilot_at?: unknown }).autopilot_at as string | null });
 
   const handOverHello = async (reason: string) => {
     await db.from("prospects").update({ ai_handling: false, handover_reason: reason }).eq("id", id);
@@ -1450,7 +1450,7 @@ export async function markCircleSkipped(id: string, reason: string): Promise<voi
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
-  const sentLang = letterLang(String(prospect.message ?? ""), (prospect.walked as { lang?: string } | null)?.lang);
+  const sentLang = sentHelloLang({ message: prospect.message as string | null, walked: prospect.walked, autopilot_at: (prospect as { autopilot_at?: unknown }).autopilot_at as string | null });
   const lang = inbound ? replyLang(String(inbound.body ?? ""), sentLang) : CIRCLE_LANG;
   await queueHelloLetter(prospect, lang, Date.now(), `(${why.slice(0, 200)})`);
 }

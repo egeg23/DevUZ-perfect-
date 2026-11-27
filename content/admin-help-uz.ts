@@ -1169,11 +1169,11 @@ export const uz: HelpCopy = {
         },
         {
           id: "autopilot",
-          title: "Avtomatik aloqalar: kuniga 20 ta, istalgan nishalar",
+          title: "Avtomatik aloqalar: har akkauntdan kuniga 5 ta, o‘zbekcha",
           roles: ["head", "admin"],
           body: {
             head: [
-              "Avtomatik aloqalar kompaniyalarga birinchi xabarni menejersiz o‘zi yozadi. Norma: ish kunlari kamida 20 ta, dam olish kunlari 60 ta yuborilgan «Здравствуйте». Nishalar istalgan. Bo‘lim tepasidagi «Avtomatik aloqalar · istalgan nishalar» bloki bugun nechta ketgani, nechta javob kelgani va nechta lid olinganini ko‘rsatadi.",
+              "Avtomatik aloqalar kompaniyalarga birinchi xabarni menejersiz o‘zi yozadi. Norma: har bir qo‘shimcha ishchi akkauntdan kuniga 5 ta «Здравствуйте», dam olish kunlari ham, bitta akkauntdan bir yarim soatda bir martadan ko‘p emas. Faqat O‘zbekiston kompaniyalariga yozadi (sayt .uz yoki raqam +998), salomlashish «Assalomu alaykum», xat va yozishma o‘zbekcha; mijoz ruscha javob bersa, keyin ruscha. Nishalar istalgan. Bo‘lim tepasidagi «Avtomatik aloqalar · istalgan nishalar» bloki bugun nechta ketgani, nechta javob kelgani va nechta lid olinganini ko‘rsatadi.",
               "Xatlar 07:00 dan 17:30 gacha, dam olish kunlari 20:00 gacha tayyorlanadi. Ular 07:30 dan 20:30 gacha ketadi, bitta akkauntdan soatiga uchtadan ko‘p emas. Birinchi xabardan oldin panel [saytni fakt bo‘yicha tekshiradi](#prospect-fact-check).",
               "Avtomatik aloqalar faqat qo‘shimcha ishchi akkauntlardan yozadi, asosiysidan yozmaydi. Qo‘shimchalarning hammasi pauzada yoki cheklangan bo‘lsa, u to‘xtab turadi va hech narsa tayyorlamaydi. [«Akkauntlar»](/admin/accounts) ni tekshiring.",
               "U puldagi bo‘sh kompaniyalarga yozadi, ya’ni hech kimning to‘plamida yo‘qlarga. Avval saytida Telegram borlarga, keyin mobil raqam bo‘yicha. Shahar raqamlariga yozmaydi. Pulni xaritalar bo‘yicha avtoqidiruv va Firecrawl (internetdan kompaniyalar va ularning kontaktlarini qidiradigan servis) to‘ldiradi.",
@@ -1182,7 +1182,7 @@ export const uz: HelpCopy = {
               "Avtomatik aloqalarni ega to‘xtatadi va ishga tushiradi.",
             ],
             admin: [
-              "Avtomatik aloqalar kompaniyalarga birinchi xabarni menejersiz o‘zi yozadi. Norma: ish kunlari kamida 20 ta, dam olish kunlari 60 ta yuborilgan «Здравствуйте». Nishalar istalgan. Bo‘lim tepasidagi «Avtomatik aloqalar · istalgan nishalar» bloki bugun nechta ketgani, nechta javob kelgani va nechta lid olinganini ko‘rsatadi.",
+              "Avtomatik aloqalar kompaniyalarga birinchi xabarni menejersiz o‘zi yozadi. Norma: har bir qo‘shimcha ishchi akkauntdan kuniga 5 ta «Здравствуйте», dam olish kunlari ham, bitta akkauntdan bir yarim soatda bir martadan ko‘p emas. Faqat O‘zbekiston kompaniyalariga yozadi (sayt .uz yoki raqam +998), salomlashish «Assalomu alaykum», xat va yozishma o‘zbekcha; mijoz ruscha javob bersa, keyin ruscha. Nishalar istalgan. Bo‘lim tepasidagi «Avtomatik aloqalar · istalgan nishalar» bloki bugun nechta ketgani, nechta javob kelgani va nechta lid olinganini ko‘rsatadi.",
               "Xatlar 07:00 dan 17:30 gacha, dam olish kunlari 20:00 gacha tayyorlanadi. Ular 07:30 dan 20:30 gacha ketadi, bitta akkauntdan soatiga uchtadan ko‘p emas. Birinchi xabardan oldin panel [saytni fakt bo‘yicha tekshiradi](#prospect-fact-check).",
               "Avtomatik aloqalar faqat qo‘shimcha ishchi akkauntlardan yozadi, asosiysidan yozmaydi. Qo‘shimchalarning hammasi pauzada yoki cheklangan bo‘lsa, u to‘xtab turadi va hech narsa tayyorlamaydi. [«Akkauntlar»](/admin/accounts) ni tekshiring.",
               "U puldagi bo‘sh kompaniyalarga yozadi, ya’ni hech kimning to‘plamida yo‘qlarga. Avval saytida Telegram borlarga, keyin mobil raqam bo‘yicha. Shahar raqamlariga yozmaydi. Pulni xaritalar bo‘yicha avtoqidiruv va Firecrawl (internetdan kompaniyalar va ularning kontaktlarini qidiradigan servis) to‘ldiradi.",

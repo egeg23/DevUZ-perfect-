@@ -88,12 +88,12 @@ test("скаут из очереди пишет только приветств�
   assert.doesNotMatch(runner, /sendMessage\(userId, \{ message: job\.message \}\)/);
   const queue = read("lib/admin/outreach-queue.ts");
   // Приветствие — своё руководителя или владельца, если задано (lib/admin/hello-text.ts).
-  assert.match(queue, /hello: helloFor\(String\(data\.message \?\? ""\), \(data\.walked as \{ lang\?: string \} \| null\)\?\.lang, hellos\)/);
+  assert.match(queue, /hello: sentHello\(data, hellos\)/);
   assert.match(queue, /const hellos = await helloTexts\(\);/);
   const sent = between(queue, "export async function markSent(", "export async function markDelivered(");
   assert.match(sent, /hello_at: new Date\(\)\.toISOString\(\)/);
   // В ленту — то, что ушло: приветствие, а не письмо.
-  assert.match(sent, /body: hello \|\| helloFor\(String\(data\.message \?\? ""\), \(data\.walked/);
+  assert.match(sent, /body: hello \|\| sentHello\(data, await helloTexts\(\)\)/);
 });
 
 test("язык ответа: по-русски — кружок, на другом языке — письмо, без слов — язык приветствия", () => {

@@ -1,3 +1,4 @@
+import { AUTOPILOT_UZ_ONLY } from "@/lib/admin/autopilot";
 import type { CircleLang } from "@/lib/admin/circle-store";
 import { detectLang } from "@/lib/talk/language";
 
@@ -79,6 +80,21 @@ export function letterLang(letter: string, lang?: string | null): HelloLang {
 
 export function helloFor(letter: string, lang?: string | null, texts: HelloTexts = HELLO_TEXT): string {
   return texts[letterLang(letter, lang)];
+}
+
+/**
+ * На каком языке ушло «Здравствуйте» этому касанию: автопрогон — всегда
+ * по-узбекски (владелец, 28.11.2026: «Всем по-узбекски», AUTOPILOT_UZ_ONLY),
+ * остальное — по письму и обходу сайта (letterLang).
+ */
+export function sentHelloLang(p: { message?: string | null; walked?: unknown; autopilot_at?: string | null }): HelloLang {
+  if (p.autopilot_at && AUTOPILOT_UZ_ONLY) return "uz";
+  return letterLang(String(p.message ?? ""), (p.walked as { lang?: string } | null)?.lang);
+}
+
+/** Текст «Здравствуйте» этому касанию — своё приветствие руководителя или обычное. */
+export function sentHello(p: { message?: string | null; walked?: unknown; autopilot_at?: string | null }, texts: HelloTexts = HELLO_TEXT): string {
+  return texts[sentHelloLang(p)];
 }
 
 /**

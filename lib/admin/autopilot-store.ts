@@ -1,7 +1,11 @@
 import { record } from "@/lib/admin/audit";
 import {
   AUTOPILOT_NICHES,
+  AUTOPILOT_PER_ACCOUNT,
+  AUTOPILOT_UZ_ONLY,
   DAILY_TARGET,
+  dayTarget,
+  uzbekProspect,
   LETTER_AFTER_REPLY,
   prepareWindow,
   reportDue,
@@ -39,7 +43,18 @@ export async function autopilotSettings(now: Date = new Date()): Promise<Autopil
   // Строки нет (миграция ещё не дошла) — автопрогон молчит: включённым его
   // делает строка, которую кладёт миграция, а не отсутствие строки.
   if (!data) return { enabled: false, target: DAILY_TARGET };
+  // С 28.11.2026 — по AUTOPILOT_PER_ACCOUNT на каждый живой аккаунт, и в
+  // выходные тоже (lib/admin/autopilot → dayTarget).
+  if (AUTOPILOT_PER_ACCOUNT > 0) return { enabled: Boolean(data.enabled), target: dayTarget(await readyAccounts(db, now)) };
   return { enabled: Boolean(data.enabled), target: targetFor(now, Number(data.daily_target ?? DAILY_TARGET)) };
+}
+
+/** Сколько аккаунтов сейчас берут автопрогон: главный — только при AUTOPILOT_ON_MAIN, дополнительные — живые без ограничения. */
+async function readyAccounts(db: Db, now: Date): Promise<number> {
+  const { data, error } = await db.from("tg_accounts").select("id, flood_until").eq("status", "active").limit(50);
+  if (error) return 0;
+  const extra = (data ?? []).filter((row) => !row.flood_until || Date.parse(String(row.flood_until)) <= now.getTime()).length;
+  return extra + (takesAutopilot(MAIN_ACCOUNT) ? 1 : 0);
 }
 
 /** Включить или выключить. Только владелец — проверка в действии панели. */
@@ -110,7 +125,10 @@ export async function candidates(limit: number, now: Date = new Date()): Promise
     .order("score", { ascending: true, nullsFirst: false })
     .order("created_at", { ascending: true })
     .limit(600);
-  return rank(((data ?? []) as Record<string, unknown>[]).map(poolRow), busy).slice(0, limit);
+  const rows = ((data ?? []) as Record<string, unknown>[]).map(poolRow);
+  // «Всем по-узбекски» (владелец, 28.11.2026): только компании Узбекистана.
+  const pool = AUTOPILOT_UZ_ONLY ? rows.filter((r) => uzbekProspect({ host: r.host, contacts: contactsFrom(r.contacts) })) : rows;
+  return rank(pool, busy).slice(0, limit);
 }
 
 /** Годные — по порядку: @адрес, сайт, без сайта; внутри — как пришли (худший сайт первым). */
