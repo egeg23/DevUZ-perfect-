@@ -55,7 +55,7 @@
   }
 
   /* ── Каркас ────────────────────────────────────────────────────── */
-  var NAV = [["home", "Сводка"], ["leads", "Обращения"], ["accounts", "Партнёры и клиенты"], ["bc", "Рассылки в бот", "head"], ["products", "Продукты"], ["news", "Новости"], ["ir", "Комната инвестора", "head"], ["pages", "Страницы сайта"], ["site", "Сайт и бот"], ["connect", "Подключения"], ["team", "Команда"], ["log", "История", "head"]];
+  var NAV = [["home", "Сводка"], ["leads", "Обращения"], ["accounts", "Партнёры и клиенты"], ["bc", "Рассылки в бот", "head"], ["products", "Продукты"], ["news", "Новости"], ["cards", "Визитки"], ["ir", "Комната инвестора", "head"], ["pages", "Страницы сайта"], ["site", "Сайт и бот"], ["connect", "Подключения"], ["team", "Команда"], ["log", "История", "head"]];
   /* Значки разделов — свои контуры, как в панели Agora (Glassy V7 + CRM). */
   var IC = {
     home: '<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
@@ -69,6 +69,7 @@
     site: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.7 5.6 3.7 9s-1.2 6.4-3.7 9c-2.5-2.6-3.7-5.6-3.7-9S9.5 5.6 12 3z"/>',
     connect: '<path d="M9 7V3M15 7V3M6 7h12v4a6 6 0 0 1-12 0zM12 17v4"/>',
     team: '<circle cx="12" cy="8" r="4"/><path d="M4 21c.8-4.2 3.9-6.5 8-6.5s7.2 2.3 8 6.5"/>',
+    cards: '<rect x="2.5" y="5" width="19" height="14" rx="2.5"/><circle cx="8" cy="11" r="2.2"/><path d="M4.8 16c.5-1.7 1.7-2.6 3.2-2.6s2.7.9 3.2 2.6M14 9.5h5M14 12.5h5M14 15.5h3"/>',
     log: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
     out: '<path d="M15 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4M10 8l-4 4 4 4M6 12h10"/>',
     web: '<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
@@ -94,7 +95,7 @@
     $$("#side a").forEach(function (a) { if (a.getAttribute("data-s") === (sec === "lead" ? "leads" : sec)) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
     $("#side").classList.remove("open");
     var main = $("#main"); main.innerHTML = '<p class="note">Загружаем…</p>';
-    var V = { accounts: accounts, bc: broadcasts, home: home, leads: leads, lead: lead, products: products, news: news, ir: ir, pages: pages, site: site, connect: connect, team: team, log: logV }[sec] || home;
+    var V = { accounts: accounts, bc: broadcasts, home: home, leads: leads, lead: lead, products: products, news: news, ir: ir, cards: cards, pages: pages, site: site, connect: connect, team: team, log: logV }[sec] || home;
     Promise.resolve(V(main, hs.split("/")[1])).catch(fail);
     api("/summary").then(function (s) { var n = $("#nfresh"); if (n) { n.hidden = !s.fresh; n.textContent = s.fresh; } }).catch(function () {});
   }
@@ -613,6 +614,111 @@
     }
     function refreshCounts(groups) { groups.forEach(function (g) { var o = $('#bs option[value="g:' + g.id + '"]'); if (o) o.textContent = "Группа «" + g.name + "» · " + g.inBot; }); }
     return api("/groups/" + gid).then(function (r) { draw(r); box.scrollIntoView({ block: "start", behavior: "smooth" }); }).catch(fail);
+  }
+
+  /* ── Электронные визитки: страница /card/<адрес>, на неё ведёт QR ── */
+  var VC_LANG = { ru: "Русский", uz: "Узбекский", en: "Английский", ar: "Арабский" };
+  function qrSvg(url, size) { try { return window.cfQr.svg(url, { size: size || 0 }); } catch (e) { return '<p class="note">' + h(e.message) + "</p>"; } }
+  function dl(name, blob) { var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500); }
+  function qrPng(url, name) {
+    var q = window.cfQr.make(url), n = q.matrix.length, pad = 4, px = Math.floor(2048 / (n + pad * 2)), s = px * (n + pad * 2), c = document.createElement("canvas"), x = c.getContext("2d");
+    c.width = c.height = s; x.fillStyle = "#fff"; x.fillRect(0, 0, s, s); x.fillStyle = "#000";
+    for (var r = 0; r < n; r++) for (var k = 0; k < n; k++) if (q.matrix[r][k]) x.fillRect((k + pad) * px, (r + pad) * px, px, px);
+    c.toBlob(function (b) { dl(name + ".png", b); }, "image/png");
+  }
+  function qrButtons(url, slug) { return '<div class="row"><button type="button" class="btn" data-qsvg="' + h(url) + '" data-qn="' + h(slug) + '">QR для печати (SVG)</button><button type="button" class="btn" data-qpng="' + h(url) + '" data-qn="' + h(slug) + '">QR картинкой (PNG)</button></div>'; }
+  function bindQr(root) {
+    $$("[data-qsvg]", root).forEach(function (b) { b.onclick = function () { dl("qr-" + b.getAttribute("data-qn") + ".svg", new Blob([window.cfQr.svg(b.getAttribute("data-qsvg"))], { type: "image/svg+xml" })); }; });
+    $$("[data-qpng]", root).forEach(function (b) { b.onclick = function () { qrPng(b.getAttribute("data-qpng"), "qr-" + b.getAttribute("data-qn")); }; });
+  }
+  function cards(main, sub) {
+    return api("/cards").then(function (j) {
+      if (sub) { var c = sub === "new" ? null : j.cards.filter(function (x) { return String(x.id) === sub; })[0]; if (sub !== "new" && !c) { location.hash = "#cards"; return; } return cardEdit(main, j, c); }
+      var b = head(main, "Электронные визитки", '<a class="btn pri" href="#cards/new">Новая визитка</a>', "QR на бумажной визитке ведёт на страницу сотрудника: позвонить одним нажатием, перейти на сайт, сохранить контакт в телефон.");
+      var mine = function (c) { return ME.role !== "manager" || c.user_id === ME.id; };
+      b.innerHTML = j.cards.length ? '<div class="vcl">' + j.cards.map(function (c) {
+        return '<div class="card vci' + (c.off ? " off" : "") + '"><div class="vcq">' + qrSvg(c.url) + '</div><div class="vcm"><b>' + h(c.data.name) + "</b>" + (c.data.title ? '<span class="note">' + h(c.data.title) + "</span>" : "") +
+          '<a href="/card/' + h(c.slug) + '" target="_blank" rel="noopener">' + h(c.url.replace(/^https?:\/\//, "")) + "</a>" +
+          '<span class="note">Открывали: ' + c.views + (c.last_view ? " · последний раз " + dt(c.last_view) : "") + " · сделал(а) " + h(c.owner || "—") + "</span>" + (c.off ? '<span class="pill off">выключена</span>' : "") +
+          '<div class="row">' + (mine(c) ? '<a class="btn" href="#cards/' + c.id + '">Изменить</a>' : "") + '<a class="btn" href="/card/' + h(c.slug) + '" target="_blank" rel="noopener">Открыть</a>' + qrButtons(c.url, c.slug).replace(/^<div class="row">|<\/div>$/g, "") +
+          (mine(c) ? '<button class="btn" data-off="' + c.id + '" data-v="' + (c.off ? "on" : "off") + '">' + (c.off ? "Включить" : "Выключить") + '</button><button class="btn warn" data-del="' + c.id + '">Удалить</button>' : "") + "</div></div></div>";
+      }).join("") + "</div>" : '<div class="card"><p>Визиток пока нет.</p><p class="note">Нажмите «Новая визитка»: заполните имя, должность и телефон, выберите вид страницы и сохраните. QR появится сразу, его можно скачать для печати.</p><a class="btn pri" href="#cards/new">Новая визитка</a></div>';
+      bindQr(b);
+      $$("[data-off]", b).forEach(function (x) { x.onclick = function () { var v = x.getAttribute("data-v"); if (v === "off" && !confirm("Выключить визитку? По QR откроется «Визитка больше не действует».")) return; api("/cards/" + x.getAttribute("data-off") + "/" + v, {}).then(function () { cards(main); }).catch(fail); }; });
+      $$("[data-del]", b).forEach(function (x) { x.onclick = function () { if (confirm("Удалить визитку навсегда? Напечатанный QR перестанет работать, а адрес освободится.")) api("/cards/" + x.getAttribute("data-del") + "/del", {}).then(function () { toast("Визитка удалена"); cards(main); }).catch(fail); }; });
+    });
+  }
+  function cardEdit(main, j, c) {
+    var d = c ? JSON.parse(JSON.stringify(c.data)) : { lang: "ru", company: "CZECHFARM Alliance", site: j.site, phones: [{ label: "", value: "" }], extra: [], theme: "emerald", anim: "drift", accent: "red", logo: true };
+    if (!d.phones.length) d.phones = [{ label: "", value: "" }];
+    var slug = c ? c.slug : "", slugTouched = false;
+    var b = head(main, c ? "Визитка: " + h(d.name) : "Новая визитка", '<a class="btn" href="#cards">← Все визитки</a>');
+    var inp = function (id, label, val, ph, extra) { return '<label class="f">' + label + '<input id="' + id + '" value="' + h(val || "") + '"' + (ph ? ' placeholder="' + h(ph) + '"' : "") + (extra || "") + "></label>"; };
+    b.innerHTML = '<div class="vc"><div class="vcf">' +
+      '<h2>Кто на визитке</h2><div class="card grid"><div class="grid g2">' + inp("vn", "Имя и фамилия *", d.name, "Дильёра Шавкатовна") + inp("vt", "Должность", d.title, "Директор по развитию") + inp("vco", "Компания", d.company) +
+      '<label class="f">Язык страницы<select id="vl">' + j.langs.map(function (l) { return '<option value="' + l + '"' + (l === d.lang ? " selected" : "") + ">" + VC_LANG[l] + "</option>"; }).join("") + "</select></label></div>" +
+      '<div class="vcph"><div class="vcav" id="vav">' + (d.photo ? '<img src="' + h(d.photo) + '" alt="">' : "фото") + '</div><label class="f">Фото (JPG, PNG или WebP)<input type="file" accept=".jpg,.jpeg,.png,.webp" id="vpf"></label><button type="button" class="btn" id="vpx"' + (d.photo ? "" : " hidden") + ">Убрать фото</button></div></div>" +
+      '<h2>Как связаться</h2><div class="card grid"><p class="note">Первый телефон — большая кнопка «Позвонить». Остальные — строками ниже, тоже нажимаются.</p><div id="vphs" class="grid"></div><button type="button" class="btn" id="vpadd">+ Ещё телефон</button>' +
+      '<div class="grid g2">' + inp("ve", "Почта", d.email, "name@czechfarm.org", ' type="email"') + inp("vs", "Сайт (кнопка «Перейти на сайт»)", d.site, "https://czechfarm.org") + inp("vtg", "Telegram", d.tg, "@nik или t.me/nik") + inp("vwa", "WhatsApp", d.wa, "+998 90 123 45 67") + "</div>" + inp("va", "Адрес офиса (откроется на карте)", d.address, "Ташкент, …") + "</div>" +
+      '<h2>Дополнительно</h2><div class="card grid"><p class="note">Свои строки: «Направление — Неврология», «Instagram — https://…». Ссылка, почта и телефон сами станут нажимаемыми.</p><div id="vexs" class="grid"></div><button type="button" class="btn" id="vexadd">+ Добавить поле</button>' +
+      '<label class="f">О себе (до 500 знаков)<textarea id="vab" rows="3">' + h(d.about || "") + "</textarea></label></div>" +
+      '<h2>Вид страницы</h2><div class="card grid"><span class="f">Фон</span><div class="vcsw" id="vth">' + Object.keys(j.themes).map(function (k) { var t = j.themes[k]; return '<button type="button" data-th="' + k + '" aria-pressed="' + (k === d.theme) + '"><i></i><span>' + h(t.name) + "</span></button>"; }).join("") + "</div>" +
+      '<div id="vbgw"' + (d.theme === "photo" ? "" : " hidden") + '><label class="f">Фото фона (офис, производство…)<input type="file" accept=".jpg,.jpeg,.png,.webp" id="vbgf"></label><p class="note" id="vbgn">' + (d.bg ? "Фон загружен." : "Фон ещё не загружен.") + "</p></div>" +
+      '<span class="f">Анимация</span><div class="vcch" id="van">' + Object.keys(j.anims).map(function (k) { return '<button type="button" data-an="' + k + '" aria-pressed="' + (k === d.anim) + '">' + h(j.anims[k]) + "</button>"; }).join("") + "</div>" +
+      '<span class="f">Цвет кнопок</span><div class="vcac" id="vac">' + Object.keys(j.accents).map(function (k) { var a = j.accents[k]; return '<button type="button" data-ac="' + k + '" aria-pressed="' + (k === d.accent) + '" title="' + h(a.name) + '" aria-label="' + h(a.name) + '"><i></i></button>'; }).join("") + "</div>" +
+      '<label class="chk"><input type="checkbox" id="vlogo"' + (d.logo ? " checked" : "") + "> Знак CZECHFARM рядом с названием компании</label></div>" +
+      '<h2>Адрес визитки</h2><div class="card grid">' + (c ? '<p><b>' + h(c.url) + '</b></p><p class="note">Адрес не меняется: он зашит в QR, который уже могли напечатать.</p>' : '<label class="f">' + h(j.site.replace(/^https?:\/\//, "")) + '/card/<input id="vsl" value="" placeholder="dilyora-shavkatovna" autocomplete="off"></label><p class="note">Латиница, цифры и дефис. Подставляется из имени, можно поправить. После сохранения адрес не меняется: он в QR.</p>') + "</div>" +
+      '<div class="row vcsave"><button class="btn pri" id="vsave">Сохранить</button><span class="note" id="vsaid"></span></div>' +
+      '</div><aside class="vcp"><div class="card vcqr"><div id="vqr"></div><p class="note" id="vqu"></p><div id="vqb"></div></div><div class="vcphone"><iframe id="vfr" title="Как увидит человек" loading="lazy"></iframe></div><p class="note">Так страницу увидят по QR. Обновляется сама, пока вы печатаете.</p></aside></div>';
+
+    function phonesUi() { $("#vphs").innerHTML = d.phones.map(function (p, i) { return '<div class="vcrw"><input class="i" data-pl="' + i + '" placeholder="' + (i ? "Подпись (рабочий…)" : "Подпись (мобильный…)") + '" value="' + h(p.label) + '"><input class="i" data-pv="' + i + '" inputmode="tel" placeholder="+998 90 123 45 67" value="' + h(p.value) + '">' + (d.phones.length > 1 ? '<button type="button" class="btn" data-px="' + i + '" aria-label="Убрать телефон">×</button>' : "") + "</div>"; }).join(""); $("#vpadd").hidden = d.phones.length >= 3; }
+    function extraUi() { $("#vexs").innerHTML = d.extra.map(function (x, i) { return '<div class="vcrw"><input class="i" data-el="' + i + '" placeholder="Название (Направление…)" value="' + h(x.label) + '"><input class="i" data-ev="' + i + '" placeholder="Значение" value="' + h(x.value) + '"><button type="button" class="btn" data-ex="' + i + '" aria-label="Убрать поле">×</button></div>'; }).join(""); $("#vexadd").hidden = d.extra.length >= 6; }
+    /* Образцы фона и цвета: стили ставим через CSSOM — встроенный style запрещён политикой панели. */
+    $$("[data-th]", b).forEach(function (x) { var t = j.themes[x.getAttribute("data-th")]; x.querySelector("i").style.background = "radial-gradient(70% 70% at 20% 15%," + t.g1 + ",transparent),radial-gradient(70% 70% at 90% 95%," + t.g2 + ",transparent)," + t.bg; });
+    $$("[data-ac]", b).forEach(function (x) { x.querySelector("i").style.background = j.accents[x.getAttribute("data-ac")].c; });
+    phonesUi(); extraUi();
+    function read() {
+      d.name = $("#vn").value.trim(); d.title = $("#vt").value.trim(); d.company = $("#vco").value.trim(); d.lang = $("#vl").value;
+      d.email = $("#ve").value.trim(); d.site = $("#vs").value.trim(); d.tg = $("#vtg").value.trim(); d.wa = $("#vwa").value.trim(); d.address = $("#va").value.trim(); d.about = $("#vab").value; d.logo = $("#vlogo").checked;
+      $$("[data-pl]", b).forEach(function (x) { d.phones[+x.getAttribute("data-pl")].label = x.value.trim(); }); $$("[data-pv]", b).forEach(function (x) { d.phones[+x.getAttribute("data-pv")].value = x.value.trim(); });
+      $$("[data-el]", b).forEach(function (x) { d.extra[+x.getAttribute("data-el")].label = x.value.trim(); }); $$("[data-ev]", b).forEach(function (x) { d.extra[+x.getAttribute("data-ev")].value = x.value.trim(); });
+      if (!c) { var s = $("#vsl"); if (s) slug = s.value.trim().toLowerCase(); }
+      return d;
+    }
+    function url() { return j.site + "/card/" + (slug || "…"); }
+    function drawQr() {
+      var u = url(); $("#vqu").innerHTML = '<a href="' + (c ? "/card/" + h(slug) : "#") + '"' + (c ? ' target="_blank" rel="noopener"' : "") + ">" + h(u.replace(/^https?:\/\//, "")) + "</a>" + (c ? "" : "<br>QR заработает после «Сохранить»");
+      $("#vqr").innerHTML = slug ? qrSvg(u) : '<p class="note">Впишите имя — появится адрес и QR.</p>';
+      $("#vqb").innerHTML = slug ? qrButtons(u, slug) : ""; bindQr($("#vqb"));
+    }
+    var pvT = 0, slugT = 0, pvN = 0;
+    function preview() { clearTimeout(pvT); pvT = setTimeout(function () { var n = ++pvN; api("/cards/preview", read()).then(function (r) { if (n === pvN) $("#vfr").src = "/card-preview/" + r.token; }).catch(function () {}); }, 450); }
+    function suggest() { if (c || slugTouched) return; clearTimeout(slugT); slugT = setTimeout(function () { api("/cards/slug", { name: $("#vn").value }).then(function (r) { if (slugTouched) return; slug = r.slug || ""; $("#vsl").value = slug; drawQr(); }).catch(function () {}); }, 350); }
+    b.addEventListener("input", function (e) { if (e.target.id === "vsl") { slugTouched = true; slug = e.target.value.trim().toLowerCase(); drawQr(); return; } if (e.target.id === "vn") suggest(); preview(); });
+    b.addEventListener("change", preview);
+    b.addEventListener("click", function (e) {
+      var t = e.target.closest("button"); if (!t) return;
+      if (t.hasAttribute("data-th")) { read(); d.theme = t.getAttribute("data-th"); $$("[data-th]", b).forEach(function (x) { x.setAttribute("aria-pressed", x === t); }); $("#vbgw").hidden = d.theme !== "photo"; preview(); }
+      else if (t.hasAttribute("data-an")) { read(); d.anim = t.getAttribute("data-an"); $$("[data-an]", b).forEach(function (x) { x.setAttribute("aria-pressed", x === t); }); preview(); }
+      else if (t.hasAttribute("data-ac")) { read(); d.accent = t.getAttribute("data-ac"); $$("[data-ac]", b).forEach(function (x) { x.setAttribute("aria-pressed", x === t); }); preview(); }
+      else if (t.id === "vpadd") { read(); d.phones.push({ label: "", value: "" }); phonesUi(); }
+      else if (t.hasAttribute("data-px")) { read(); d.phones.splice(+t.getAttribute("data-px"), 1); phonesUi(); preview(); }
+      else if (t.id === "vexadd") { read(); d.extra.push({ label: "", value: "" }); extraUi(); }
+      else if (t.hasAttribute("data-ex")) { read(); d.extra.splice(+t.getAttribute("data-ex"), 1); extraUi(); preview(); }
+      else if (t.id === "vpx") { d.photo = ""; $("#vav").textContent = "фото"; t.hidden = true; preview(); }
+    });
+    $("#vpf").addEventListener("change", function () { upload($("#vpf")).then(function (u) { d.photo = u; $("#vav").innerHTML = '<img src="' + h(u) + '" alt="">'; $("#vpx").hidden = false; preview(); }).catch(fail); });
+    $("#vbgf").addEventListener("change", function () { upload($("#vbgf")).then(function (u) { d.bg = u; $("#vbgn").textContent = "Фон загружен."; preview(); }).catch(fail); });
+    $("#vsave").addEventListener("click", function () {
+      var x = read(), body = JSON.parse(JSON.stringify(x)); body.phones = body.phones.filter(function (p) { return p.value; }); body.extra = body.extra.filter(function (e) { return e.label && e.value; }); if (!c) body.slug = slug;
+      $("#vsave").disabled = true;
+      api(c ? "/cards/" + c.id : "/cards", body).then(function (r) {
+        toast(c ? "Сохранено: страница уже обновилась" : "Визитка готова: страница открыта по адресу и QR работает");
+        location.hash = "#cards/" + r.id; if (c) cards(main, String(r.id));
+      }).catch(function (e) { $("#vsave").disabled = false; fail(e); });
+    });
+    if (!c && d.name) suggest();
+    drawQr(); preview();
   }
 
   /* ── История ───────────────────────────────────────────────────── */
