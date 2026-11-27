@@ -1,0 +1,227 @@
+# Память сервера — каждый день, только владельцу.
+#
+# Владелец, 28.11.2026: «Я хочу чтобы ты мониторил состояние памяти сервера
+# каждый день. Чтобы мы не уперлись в лимит и если мы в критической зоне 5%
+# запаса предлагал оптимизацию», и следом: «Только мне, не Александру».
+#
+# Раз в сутки, в 08:41 по Ташкенту, задача заходит на сервер и ТОЛЬКО
+# смотрит: диск (место и inodes), оперативную память, swap, убийства из-за
+# нехватки памяти за сутки. Ничего не удаляет и не перезапускает — уборка
+# остаётся кнопкой «Место на сервере» (vps-disk.yml). Все команды — с nice,
+# ionice и timeout: на сервере ещё полтора десятка сайтов.
+#
+# Владельцу ботом студии — строка каждый день: сколько свободно, сколько ушло
+# за сутки и на сколько дней хватит диска. Запас 5% и меньше (`CRIT`) —
+# критично: что занимает место или память и что можно убрать. 10% и меньше
+# (`WARN`) — жёлтая пометка. Вчерашний замер — строкой stats_snapshots
+# «vps-memory:<день>» (ключ базы — из .env приложения, через stdin).
+#
+# Репозиторий открытый, лог Actions видят все: в лог — одна строка, подробное
+# — только в Telegram, чужие имена контейнеров туда же, не в лог.
+name: Память сервера
+
+on:
+  schedule:
+    - cron: "41 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vps-memory
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: Осмотр памяти
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Посмотреть диск и память по SSH (только чтение)
+        uses: appleboy/ssh-action@v1
+        env:
+          VPS_APP_DIR_IN: ${{ secrets.VPS_APP_DIR }}
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          envs: VPS_APP_DIR_IN
+          command_timeout: 8m
+          script: |
+            set -uo pipefail
+            umask 077
+            # В публичный лог — только итог через дескриптор 3.
+            exec 3>&1 1>/dev/null 2>&1
+
+            APP_DIR="${VPS_APP_DIR_IN:-/opt/devuz}"
+            CRIT=5
+            WARN=10
+            W="$(mktemp -d /tmp/devuz-mem.XXXXXX)" || { echo "осмотр не начался: нет места во /tmp" >&3; exit 1; }
+            trap 'rm -rf "$W"' EXIT
+            R="$W/report"; : > "$R"
+
+            SUDO=""
+            if [ "$(id -u)" != 0 ] && sudo -n true 2>/dev/null; then SUDO="sudo -n"; fi
+            low() { local t="$1"; shift; $SUDO timeout "$t" nice -n 19 ionice -c3 "$@" 2>/dev/null; }
+            line() { printf '%s\n' "$*" >> "$R"; }
+            envval() {
+              grep -m1 "^$1=" "$APP_DIR/.env" 2>/dev/null | cut -d= -f2- | sed -e 's/^"\(.*\)"$/\1/' -e "s/^'\(.*\)'$/\1/"
+            }
+            # КБ → «12,3 ГБ» или «850 МБ».
+            human() { awk -v k="$1" 'BEGIN{ if (k >= 1048576) { s=sprintf("%.1f ГБ", k/1048576) } else { s=sprintf("%d МБ", k/1024) } gsub(/\./, ",", s); print s }'; }
+            pct() { awk -v a="$1" -v t="$2" 'BEGIN{ if (t > 0) printf "%d", a*100/t; else print 0 }'; }
+            mark() { if [ "$1" -le "$CRIT" ]; then echo "🔴"; elif [ "$1" -le "$WARN" ]; then echo "🟡"; else echo "🟢"; fi; }
+
+            # ─── Замер ────────────────────────────────────────────────────
+            read -r D_TOTAL D_AVAIL <<< "$(df -Pk / | awk 'NR==2{print $2, $4}')"
+            read -r I_TOTAL I_FREE <<< "$(df -Pi / | awk 'NR==2{print $2, $4}')"
+            M_TOTAL="$(awk '/^MemTotal:/{print $2}' /proc/meminfo)"
+            M_AVAIL="$(awk '/^MemAvailable:/{print $2}' /proc/meminfo)"
+            S_TOTAL="$(awk '/^SwapTotal:/{print $2}' /proc/meminfo)"
+            S_FREE="$(awk '/^SwapFree:/{print $2}' /proc/meminfo)"
+            D_PCT="$(pct "${D_AVAIL:-0}" "${D_TOTAL:-0}")"
+            # btrfs и xfs отдают 0 inodes всего — там предела нет.
+            I_PCT=100; [ "${I_TOTAL:-0}" -gt 0 ] && I_PCT="$(pct "$I_FREE" "$I_TOTAL")"
+            M_PCT="$(pct "${M_AVAIL:-0}" "${M_TOTAL:-0}")"
+            S_PCT=100; [ "${S_TOTAL:-0}" -gt 0 ] && S_PCT="$(pct "$S_FREE" "$S_TOTAL")"
+            DOCKER_PART=""
+            if mountpoint -q /var/lib/docker 2>/dev/null; then
+              read -r DD_TOTAL DD_AVAIL <<< "$(df -Pk /var/lib/docker | awk 'NR==2{print $2, $4}')"
+              DD_PCT="$(pct "${DD_AVAIL:-0}" "${DD_TOTAL:-0}")"
+              DOCKER_PART=1
+            fi
+            OOM="$(low 20 journalctl -k --since '-24h' --no-pager | grep -ciE 'out of memory|oom-kill|killed process')"
+            OOM="${OOM:-0}"
+
+            # ─── Вчерашний замер и прогноз ───────────────────────────────
+            SB_URL="$(envval NEXT_PUBLIC_SUPABASE_URL)"; SB_KEY="$(envval SUPABASE_SERVICE_ROLE_KEY)"
+            TODAY="$(TZ=Asia/Tashkent date +%F)"
+            YDAY="$(TZ=Asia/Tashkent date -d yesterday +%F)"
+            rest() {  # rest <метод> <путь> [тело] — ключ через stdin, не в ps
+              local method="$1" path="$2" data=()
+              [ -n "${3:-}" ] && data=(--data "$3")
+              printf 'url = "%s/rest/v1/%s"\nheader = "apikey: %s"\nheader = "Authorization: Bearer %s"\nheader = "Content-Type: application/json"\nheader = "Prefer: resolution=merge-duplicates"\n' "$SB_URL" "$path" "$SB_KEY" "$SB_KEY" \
+                | timeout 20 curl -sS --max-time 15 -X "$method" -K - "${data[@]}"
+            }
+            Y_AVAIL=""
+            if [ -n "$SB_URL" ] && [ -n "$SB_KEY" ]; then
+              Y_AVAIL="$(rest GET "stats_snapshots?select=payload&key=eq.vps-memory:$YDAY" | grep -oE '"disk_avail_kb":[0-9]+' | grep -oE '[0-9]+$' | head -1)"
+              rest POST "stats_snapshots?on_conflict=key" "{\"key\":\"vps-memory:$TODAY\",\"computed_at\":\"$(date -u +%FT%TZ)\",\"payload\":{\"disk_total_kb\":${D_TOTAL:-0},\"disk_avail_kb\":${D_AVAIL:-0},\"mem_total_kb\":${M_TOTAL:-0},\"mem_avail_kb\":${M_AVAIL:-0},\"swap_total_kb\":${S_TOTAL:-0},\"swap_free_kb\":${S_FREE:-0},\"inodes_free_pct\":$I_PCT,\"oom_24h\":$OOM}}" >/dev/null
+            fi
+            TREND=""
+            if [ -n "$Y_AVAIL" ]; then
+              DROP=$((Y_AVAIL - D_AVAIL))
+              if [ "$DROP" -gt 102400 ]; then
+                FLOOR=$((D_TOTAL * CRIT / 100))
+                LEFT=$(( (D_AVAIL - FLOOR) / DROP ))
+                if [ "$D_AVAIL" -le "$FLOOR" ]; then
+                  TREND="за сутки диск −$(human "$DROP")"
+                else
+                  TREND="за сутки диск −$(human "$DROP"), такими темпами до 5% запаса ≈ ${LEFT} дн."
+                fi
+              elif [ "$DROP" -lt -102400 ]; then
+                TREND="за сутки диск освободился на $(human $(( -DROP )))"
+              else
+                TREND="за сутки диск почти не изменился"
+              fi
+            fi
+
+            # ─── Отчёт ────────────────────────────────────────────────────
+            CRITICAL=""
+            for p in "$D_PCT" "$I_PCT" "$M_PCT"; do [ "$p" -le "$CRIT" ] && CRITICAL=1; done
+            [ -n "$DOCKER_PART" ] && [ "$DD_PCT" -le "$CRIT" ] && CRITICAL=1
+            [ "${S_TOTAL:-0}" -gt 0 ] && [ "$S_PCT" -le "$CRIT" ] && [ "$M_PCT" -le "$WARN" ] && CRITICAL=1
+
+            if [ -n "$CRITICAL" ]; then
+              line "🔴 Память сервера: критично, запас 5% и меньше — $(TZ=Asia/Tashkent date '+%d.%m %H:%M')"
+            else
+              line "🧠 Память сервера — $(TZ=Asia/Tashkent date '+%d.%m %H:%M')"
+            fi
+            line "$(mark "$D_PCT") Диск: свободно $(human "$D_AVAIL") из $(human "$D_TOTAL") (${D_PCT}%)"
+            [ -n "$DOCKER_PART" ] && line "$(mark "$DD_PCT") Диск Docker: свободно $(human "$DD_AVAIL") из $(human "$DD_TOTAL") (${DD_PCT}%)"
+            [ "$I_PCT" -le "$WARN" ] && line "$(mark "$I_PCT") Файлов (inodes): свободно ${I_PCT}%"
+            line "$(mark "$M_PCT") Оперативная: свободно $(human "$M_AVAIL") из $(human "$M_TOTAL") (${M_PCT}%)"
+            if [ "${S_TOTAL:-0}" -gt 0 ]; then
+              line "· Swap: занято $(human $((S_TOTAL - S_FREE))) из $(human "$S_TOTAL")"
+            else
+              line "· Swap: нет"
+            fi
+            [ "$OOM" -gt 0 ] && line "⚠️ За сутки система убивала процессы из-за нехватки памяти: $OOM раз"
+            [ -n "$TREND" ] && line "· $TREND"
+
+            # ─── Что предложить, когда тесно ─────────────────────────────
+            DISK_TIGHT=""; [ "$D_PCT" -le "$CRIT" ] || { [ -n "$DOCKER_PART" ] && [ "$DD_PCT" -le "$CRIT" ]; } || [ "$I_PCT" -le "$CRIT" ] && DISK_TIGHT=1
+            MEM_TIGHT=""; [ "$M_PCT" -le "$CRIT" ] || [ "$OOM" -gt 0 ] || { [ "${S_TOTAL:-0}" -gt 0 ] && [ "$S_PCT" -le "$CRIT" ] && [ "$M_PCT" -le "$WARN" ]; } && MEM_TIGHT=1
+
+            if [ -n "$DISK_TIGHT" ]; then
+              line ""
+              line "Что занимает диск и что можно убрать:"
+              OLD="$(low 20 docker images --format '{{.Repository}}:{{.Tag}}' ghcr.io/egeg23/devuz | grep -vcE ':(latest|previous)$')"
+              [ "${OLD:-0}" -gt 0 ] && line "• старых образов сайта DevUz: $OLD (по ~800 МБ) — убираются безопасно"
+              low 30 docker system df --format '{{.Type}}|{{.Size}}|{{.Reclaimable}}' | while IFS='|' read -r t s r; do
+                case "$t" in
+                  Images) line "• образы Docker: $s, можно освободить $r" ;;
+                  "Build Cache") line "• кэш сборки Docker: $s, можно освободить $r — пересоберётся сам" ;;
+                  "Local Volumes") line "• тома Docker: $s (это данные сайтов, сами не трогаем)" ;;
+                esac
+              done
+              J="$(low 20 journalctl --disk-usage | grep -oE '[0-9.]+[KMGT]' | head -1)"
+              [ -n "$J" ] && line "• системный журнал: $J — можно сжать до 300 МБ"
+              LOGS="$(low 30 find /var/lib/docker/containers -name '*-json.log' -size +200M -printf '%s\n' | awk '{s+=$1; n++} END{ if (n) printf "%d|%d", n, s/1024 }')"
+              [ -n "$LOGS" ] && line "• журналы контейнеров больше 200 МБ: ${LOGS%%|*} шт., $(human "${LOGS##*|}") — обрезаются безопасно"
+              NC="$(low 30 du -sk "$APP_DIR/.next/cache" | cut -f1)"
+              [ -n "$NC" ] && [ "$NC" -gt 102400 ] && line "• кэш Next в каталоге DevUz: $(human "$NC") — серверу не нужен"
+              line "Где больше всего:"
+              low 120 du -xk --max-depth=1 / | sort -rn | sed -n '2,6p' | while read -r k d; do line "  $(human "$k")  $d"; done
+              line "→ Безопасная уборка: GitHub → Actions → «Место на сервере» → Run workflow с галочкой «Убрать безопасное». Скажите — запущу сам."
+            fi
+
+            if [ -n "$MEM_TIGHT" ]; then
+              line ""
+              line "Кто ест оперативную память:"
+              low 30 docker stats --no-stream --format '{{.MemUsage}}|{{.Name}}' | sort -t'|' -k1 -h -r | head -8 | while IFS='|' read -r u n; do line "  ${u%% /*}  контейнер $n"; done
+              ps -eo rss=,comm= --sort=-rss 2>/dev/null | head -5 | while read -r k c; do line "  $(human "$k")  процесс $c"; done
+              line "→ Что можно сделать: перезапустить контейнер, который раздуло; поставить ему предел памяти (как у панели SIA, 700 МБ);"
+              line "  контейнеры чужих сайтов — решать с их владельцами; если тесно каждый день — добавить swap или память у хостера."
+            fi
+
+            if [ -z "$CRITICAL" ]; then
+              if [ "$D_PCT" -le "$WARN" ] || [ "$M_PCT" -le "$WARN" ]; then
+                line "🟡 Запас меньше 10% — пока не критично, слежу."
+              else
+                line "✓ Запас есть."
+              fi
+            fi
+
+            # ─── Только владельцу ────────────────────────────────────────
+            TOKEN="$(envval TELEGRAM_BOT_TOKEN)"
+            CHATS="$(envval TELEGRAM_OWNER_CHAT_ID)"
+            if [ -n "$SB_URL" ] && [ -n "$SB_KEY" ]; then
+              CHATS="$CHATS $(rest GET 'staff?select=telegram_user_id&is_active=eq.true&role=eq.admin&telegram_user_id=not.is.null' | grep -oE '"telegram_user_id":"?[0-9]+' | grep -oE '[0-9]+$')"
+            fi
+            CHATS="$(printf '%s\n' $CHATS | grep -E '^-?[0-9]+$' | sort -u)"
+            PROXY="$(envval HTTPS_PROXY)"
+            send() {
+              local chat="$1" road
+              for road in direct proxy; do
+                if [ "$road" = proxy ]; then [ -n "$PROXY" ] || continue; via=(--proxy "$PROXY"); else via=(--noproxy '*'); fi
+                if printf 'url = "https://api.telegram.org/bot%s/sendMessage"\n' "$TOKEN" \
+                  | timeout 25 curl -fsS --max-time 20 "${via[@]}" -K - --data-urlencode "chat_id=$chat" --data-urlencode "text@$R" -d disable_web_page_preview=true >/dev/null; then
+                  return 0
+                fi
+              done
+              return 1
+            }
+            TO=0
+            if [ -n "$TOKEN" ]; then
+              for chat in $CHATS; do send "$chat" && TO=$((TO + 1)); done
+            fi
+            STATE="запас есть"; [ -n "$CRITICAL" ] && STATE="критично"
+            if [ "$TO" -gt 0 ]; then
+              echo "осмотр памяти прошёл ($STATE), отчёт ушёл владельцу в Telegram" >&3
+            else
+              echo "осмотр памяти прошёл ($STATE), но отчёт в Telegram НЕ ушёл (нет токена, чата или дороги до Telegram)" >&3
+              exit 1
+            fi
