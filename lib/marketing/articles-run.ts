@@ -1,7 +1,7 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import { revalidatePath } from "next/cache";
 
-import { nextMarketingTopic, type MarketingTopic } from "@/content/marketing-topics";
+import { marketingCandidates, type MarketingTopic } from "@/content/marketing-topics";
 import { TASHKENT_OFFSET_MS, todayInTashkent } from "@/lib/admin/pulse";
 import { buildPayload, sendPing } from "@/lib/indexnow";
 import { checkArticle, missingStems, type CheckProblem } from "@/lib/marketing/article-check";
@@ -17,6 +17,7 @@ import {
 import { anthropic } from "@/lib/model-road";
 import { keywordResearch, regionFor, whereFor, type KeywordResearch } from "@/lib/seo/keywords";
 import { checkSitemap, sitemapLine } from "@/lib/seo/sitemap-check";
+import { demandScore, pickByDemand } from "@/lib/marketing/topic-demand";
 import { siteUrl } from "@/lib/seo";
 import { serviceClient } from "@/lib/supabase";
 
@@ -89,7 +90,19 @@ export async function runMarketingArticles(now = new Date()): Promise<ArticleRun
     await report(run, "Статья не вышла: база не ответила.");
     return run;
   }
-  const topic = nextMarketingTopic(written);
+  // Тема — по спросу (пятничный замер 27.11.2026, владелец: «Да»): до трёх
+  // ненаписанных тем по порядку, первая, где Вордстат, Trends или
+  // планировщик ответили. Не ответил никто — первая, как раньше.
+  const candidates = marketingCandidates(written);
+  const asked: Array<KeywordResearch | null> = [];
+  for (const candidate of candidates) {
+    const query = candidate.query?.ru;
+    const found = query ? await keywordResearch(query, regionFor("ru")) : null;
+    asked.push(found);
+    if (demandScore(found) === 2) break;
+  }
+  const at = pickByDemand(asked.map(demandScore));
+  const topic = candidates[at] ?? null;
   if (!topic) {
     // Раз в день, а не на каждый слот: напоминание дважды в день — уже шум.
     if (slot === 1) {
@@ -111,7 +124,7 @@ export async function runMarketingArticles(now = new Date()): Promise<ArticleRun
     // в строку статьи.
     const research: Partial<Record<ArticleLocale, KeywordResearch>> = {};
     const ruQuery = topic.query?.ru;
-    if (ruQuery) research.ru = await keywordResearch(ruQuery, regionFor("ru"));
+    if (ruQuery) research.ru = asked[at] ?? (await keywordResearch(ruQuery, regionFor("ru")));
     const ru = await writeChecked(topic, "ru", null, research.ru?.related ?? []);
     const uzQuery = topic.query?.uz;
     if (typeof ru !== "string" && uzQuery) research.uz = await keywordResearch(uzQuery, regionFor("uz"));

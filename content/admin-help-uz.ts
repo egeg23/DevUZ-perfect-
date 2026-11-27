@@ -1466,7 +1466,7 @@ export const uz: HelpCopy = {
           id: "manual",
           title: "«Qo‘lda yozish»: Telegramsiz telefon",
           body: [
-            "«Qo‘lda yozish» mijoz Telegramda topilmaganini bildiradi. Masalan, saytda faqat shahar raqami bor yoki havola kanalga olib boradi. Telegramga «только звонок или WhatsApp» degan qator keladi.",
+            "«Qo‘lda yozish» mijoz Telegramda topilmaganini bildiradi. Masalan, saytda faqat shahar raqami bor yoki havola kanalga olib boradi. Telegramga «только звонок или WhatsApp» degan qator keladi. Ish kunlari soat 10:00 dan 12:00 gacha bot uch kunlik shunday kartochkalar ro‘yxatini «📞 Письма ждут WhatsApp или звонка» qatori bilan yana yuboradi, «Aloqalarning kunlik to‘plami» belgisi ostida: xat tayyor, uni o‘zingiz yuborishingiz qoldi.",
             "Kartochkada **«WhatsApp’ni tayyor matn bilan ochish»**, **«Qo‘ng‘iroq qilish»** va **«Matnni nusxalash»** tugmalari bor. Yozdingiz yoki qo‘ng‘iroq qildingizmi? **«O‘zim bog‘landim»** tugmasini bosing.",
             "Mijoz WhatsApp’da javob berdimi? Uning javobini «Mijoz nima deb javob berdi» maydoniga qo‘ying va **«Javobni yozib qo‘yish»** tugmasini bosing. Bot keyingi javobni yozadi, uni nusxalash yoki darhol WhatsApp’da ochish mumkin.",
             "Yozmaysizmi? «yozmaymiz» tugmasini bosing va sababini yozing.",

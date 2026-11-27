@@ -45,7 +45,7 @@ test("дневная рекомендация — один вызов модел
   const daily = coach.slice(coach.indexOf("Дневные: владельцу и руководителям"));
   assert.equal(daily.match(/askCoach\("daily"/g)?.length, 1);
   assert.doesNotMatch(daily, /for \(const reader of [\s\S]{0,200}askCoach\("daily"/, "вызов модели снова в цикле по читателям");
-  assert.match(daily, /waiting\.length \? await askCoach\("daily"/, "все прочитали — модель не зовём");
+  assert.match(daily, /waiting\.length && !outOfTries\("daily"\) \? await askCoach\("daily"/, "все прочитали или попытки кончились — модель не зовём");
 });
 
 test("последняя фраза первички — готовым текстом, на каждом языке", () => {

@@ -2,6 +2,10 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
+  bumpTries,
+  COACH_TRIES,
+  coachTriesKey,
+  triesLeft,
   dailyDue,
   dailyPrompt,
   inventedNumbers,
@@ -143,4 +147,19 @@ test("свип зовёт тренера каждый проход, а кноп�
 test("ответ модели с выдуманным числом не публикуется", () => {
   const coach = read("lib/admin/coach.ts");
   assert.match(coach, /const invented = inventedNumbers\(review, prompt\);\n    if \(invented\.length\) return \{ ok: false/);
+});
+
+test("коуч: три неудачи на человека в день, дальше до завтра", () => {
+  let counts: Record<string, number> = {};
+  for (let i = 0; i < COACH_TRIES; i++) {
+    assert.equal(triesLeft(counts, "a"), true);
+    counts = bumpTries(counts, ["a"]);
+  }
+  assert.equal(triesLeft(counts, "a"), false);
+  assert.equal(triesLeft(counts, "b"), true);
+  assert.equal(coachTriesKey("2026-11-27"), "coach-tries:2026-11-27");
+  const store = readFileSync("lib/admin/coach-store.ts", "utf8");
+  assert.match(store, /await failed\(person\.staffId\)/);
+  assert.match(store, /await failed\("daily"\)/);
+  assert.match(store, /outOfTries\("daily"\)/);
 });
