@@ -36,6 +36,7 @@ import {
   updateScoutChat,
 } from "@/lib/scout/extra-chats-store";
 import { SAVED_GAP_MS, finishSaved, takeSaved } from "@/lib/scout/saved-outbox";
+import { FILE_MAX, FILES_TOTAL_MAX, finishRead, keepFile, pickDialog, storeName, takeRead } from "@/lib/scout/read-chat";
 import { classify } from "@/lib/scout/classify";
 import { DROP_LABEL } from "@/lib/scout/digest";
 import { EMPTY_PULSE, accumulate, writePulse } from "@/lib/scout/health";
@@ -425,6 +426,9 @@ async function live() {
   // Сообщения себе в «Избранное» (ссылки на группы для ручного вступления).
   startSavedOutbox(client);
 
+  // Чтение чата по строке в базе (lib/scout/read-chat.ts): история и файлы — в базу и закрытое хранилище.
+  startChatReader(client);
+
   // Вступление в группы из «Сигналов скаута» — с главного, он же читает.
   startJoiner({
     client,
@@ -551,6 +555,84 @@ function startSavedOutbox(client) {
     void tick();
     setInterval(() => void tick(), SAVED_TICK_MS);
   }, 90_000);
+}
+
+const READ_TICK_MS = 2 * 60_000;
+
+/**
+ * Чтение чата по просьбе из базы (lib/scout/read-chat.ts): владелец,
+ * 28.11.2026, добавил скаута в чат с CZECHFARM — «они там сегодня накидали
+ * сертификатов… просили добавить новых партнеров». Только читает: в чат не
+ * пишет и прочитанным не отмечает. В журнал — числа, без текста и имён.
+ */
+function startChatReader(client) {
+  let busy = false;
+  const tick = async () => {
+    if (busy) return;
+    busy = true;
+    let name = "";
+    try {
+      const row = await takeRead();
+      if (!row) return;
+      name = row.name;
+      if (!row.ask) return void (await finishRead(name, { error: "в строке нет chat" }));
+      const { chat, limit, days, files } = row.ask;
+      const dialogs = await client.getDialogs({ limit: 500 });
+      const dialog = pickDialog(dialogs, chat);
+      if (!dialog) return void (await finishRead(name, { error: "такого чата у скаута нет" }));
+      const since = Date.now() - days * 86_400_000;
+      const history = await client.getMessages(dialog.entity, { limit });
+      const messages = [];
+      let total = 0;
+      let kept = 0;
+      for (const message of history) {
+        if (!message || message.date * 1000 < since) continue;
+        let from = "";
+        try {
+          const sender = await message.getSender();
+          from = [sender?.firstName, sender?.lastName].filter(Boolean).join(" ") || sender?.title || (sender?.username ? `@${sender.username}` : "");
+        } catch { /* без имени */ }
+        const item = { id: message.id, at: new Date(message.date * 1000).toISOString(), from, text: message.message ?? "" };
+        if (message.replyTo?.replyToMsgId) item.reply = message.replyTo.replyToMsgId;
+        const doc = message.document;
+        if (files && (message.photo || doc)) {
+          const size = Number(doc?.size ?? 0);
+          const fileAttr = doc?.attributes?.find((a) => a?.className === "DocumentAttributeFilename");
+          const mime = doc?.mimeType ?? (message.photo ? "image/jpeg" : "application/octet-stream");
+          const ext = message.photo ? "jpg" : String(mime.split("/")[1] ?? "").replace(/[^a-z0-9]/gi, "").slice(0, 6);
+          const fname = storeName(message.id, fileAttr?.fileName ?? "", ext);
+          if (size > FILE_MAX) item.skipped = "файл больше 45 МБ";
+          else if (total + size > FILES_TOTAL_MAX) item.skipped = "предел 400 МБ на чтение";
+          else {
+            try {
+              const body = await client.downloadMedia(message, {});
+              if (body?.length) {
+                total += body.length;
+                const stored = await keepFile(name, fname, Buffer.from(body), mime);
+                if (stored) { item.file = { name: fileAttr?.fileName ?? fname, size: body.length, mime, ...stored }; kept += 1; }
+                else item.skipped = "хранилище не приняло файл";
+              }
+            } catch {
+              item.skipped = "файл не скачался";
+            }
+          }
+        }
+        messages.push(item);
+      }
+      messages.reverse();
+      await finishRead(name, { chat: String(dialog.title ?? dialog.name ?? ""), id: String(dialog.id ?? ""), messages });
+      console.log(`чтение чата: ${name} — сообщений ${messages.length}, файлов ${kept}`);
+    } catch (error) {
+      console.error(`чтение чата: сорвалось — ${error?.errorMessage ?? error?.message ?? error}`);
+      if (name) await finishRead(name, { error: "чтение сорвалось" }).catch(() => {});
+    } finally {
+      busy = false;
+    }
+  };
+  setTimeout(() => {
+    void tick();
+    setInterval(() => void tick(), READ_TICK_MS);
+  }, 120_000);
 }
 
 /** Как часто скаут смотрит, пора ли вступать в следующую группу. */
