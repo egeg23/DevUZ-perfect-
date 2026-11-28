@@ -126,7 +126,8 @@ test("czechfarm: страницы на четырёх языках, без сл�
   }
   const ar = readFileSync(dir + "ar/index.html", "utf8");
   assert.match(ar, /<html lang="ar" dir="rtl"( class="on-dark")?>/);
-  const text = ar.slice(ar.indexOf("<body")).replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<svg[\s\S]*?<\/svg>/g, "").replace(/<[^>]+>/g, " ");
+  const text = ar.slice(ar.indexOf("<body")).replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<svg[\s\S]*?<\/svg>/g, "").replace(/<li translate="no" lang="en">[^<]*<\/li>/g, "").replace(/<[^>]+>/g, " ");
+  /* Названия оптовиков (distBlock) — имена компаний латиницей, помечены translate="no". */
   const latin = [...new Set(text.match(/[A-Za-z]{4,}/g) || [])].filter((w) => !["CZECHFARM", "Health", "Trust", "Value", "alliance"].includes(w));
   assert.deepEqual(latin, [], "английский на арабской главной");
   assert.ok(!existsSync(new URL("ar-missing.json", ROOT)), "у арабского не хватает строк");

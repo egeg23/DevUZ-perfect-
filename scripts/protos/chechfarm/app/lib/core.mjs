@@ -11,6 +11,7 @@ import { UPLOADED } from "./site-text.mjs";
 import { CATALOG, AREAS, CATALOG_FIXES } from "./catalog.mjs";
 import { CATALOG_TR, packImg } from "./catalog-tr.mjs";
 import { HERO_SLOTS } from "./hero.mjs";
+import { CERT_OF } from "./certs.mjs";
 import { cleanBlocks, titleOf } from "./custom-blocks.mjs";
 import { cleanTr } from "./translate.mjs";
 import { makeCards } from "./cards.mjs";
@@ -712,7 +713,7 @@ export function makeCore({ db, secret, publicUrl = "", fetchImpl = fetch, now = 
   /* То, что сервер кладёт в страницу (K.live): только опубликованное. */
   function live(lang) {
     return {
-      prod: products.list().filter((p) => p.pub).map(({ sort, dose, key, ...p }) => localProduct(p, key, lang)),
+      prod: products.list().filter((p) => p.pub).map(({ sort, dose, key, ...p }) => { const o = localProduct(p, key, lang); return CERT_OF[key] ? { ...o, rc: CERT_OF[key] } : o; }),
       news: news.list().filter((n) => n.pub).map((n) => ({ id: n.id, pub: true, ts: n.ts, img: n.img, title: n[lang]?.title || n.ru.title, body: n[lang]?.title ? n[lang].body : n.ru.body })),
       contacts: contacts.get(),
     };

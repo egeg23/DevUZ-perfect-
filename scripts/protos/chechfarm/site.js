@@ -163,11 +163,11 @@ function openDlg(html){lastFocus=d.activeElement;$('.dlg-b',dlg).innerHTML=html;
 function closeDlg(){if(!dlg||dlg.hidden)return;dlg.hidden=true;d.body.style.overflow='';lastFocus&&lastFocus.focus()}
 dlg&&dlg.addEventListener('click',function(e){if(e.target===dlg||e.target.closest('.dlg-x'))closeDlg()});
 function safeUrl(u){u=String(u||'');return /^(https:\/\/|\/uploads\/|\/protos\/chechfarm\/products\/[\w-]+\.webp$)/.test(u)?u:''}
-function prodPage(p){if(K.prod&&p&&K.areas){var a=areaOf(p),doc=safeUrl(p.doc),im=pimg(p.img,'(max-width: 759px) 90vw, 420px'),lab=K.areas[p.area]||p.dir||'';
+function prodPage(p){if(K.prod&&p&&K.areas){var a=areaOf(p),doc=safeUrl(p.doc),rc=/^\/protos\/chechfarm\/certs\/[\w-]+\.pdf$/.test(String(p.rc||''))?p.rc:'',im=pimg(p.img,'(max-width: 759px) 90vw, 420px'),lab=K.areas[p.area]||p.dir||'';
     var rows=['inn','comp','form','pack','group','doctors','maker'].filter(function(k){return p[k]&&!(k==='comp'&&p.comp===p.inn)});
     return '<div class="pp"><div class="pp-st pc-'+a+' a-'+a+'">'+(im||'<span class="pc-box" aria-hidden="true"><b>'+h(p.name)+'</b><span>CZECHFARM</span></span>')+'</div><div class="pp-tx">'+(lab?'<p class="kicker">'+h(lab)+'</p>':'')+'<h2>'+h(p.name)+'</h2>'+(p.rx==='rx'?'<span class="chip">'+h(K.pl.rx)+'</span>':'')+
     '<dl class="pp-dl">'+rows.map(function(k){return '<div><dt>'+h(K.pl[k])+'</dt><dd>'+h(p[k])+'</dd></div>'}).join('')+'</dl>'+(p.about?'<p>'+h(p.about).replace(/\n/g,'<br>')+'</p>':'')+
-    '<div class="hero-act">'+(doc?'<a class="btn btn-line" href="'+h(doc)+'" target="_blank" rel="noopener">'+K.icInfo+'<span>'+h(K.leaflet)+'</span></a>':'')+'<a class="btn btn-gold" href="'+h(K.contactsHref)+'">'+h(K.pl.ask)+'</a></div>'+
+    '<div class="hero-act">'+(doc?'<a class="btn btn-line" href="'+h(doc)+'" target="_blank" rel="noopener">'+K.icInfo+'<span>'+h(K.leaflet)+'</span></a>':'')+(rc&&K.pl.rc?'<a class="btn btn-line" href="'+h(rc)+'" target="_blank" rel="noopener">'+K.icInfo+'<span>'+h(K.pl.rc)+'</span></a>':'')+'<a class="btn btn-gold" href="'+h(K.contactsHref)+'">'+h(K.pl.ask)+'</a></div>'+
     '<p class="warn">'+K.icInfo+'<span>'+h(K.medNote)+'</span></p></div></div>'}
   if(K.prod&&p){var doc=safeUrl(p.doc);return (p.dir?'<p class="kicker">'+h(p.dir)+'</p>':'')+'<h2>'+h(p.name)+'</h2>'+(safeUrl(p.img)?'<img class="pp-img" src="'+h(safeUrl(p.img))+'" alt="'+h(p.name)+'">':'')+
   '<div class="sect-list">'+K.fields.filter(function(f){return f.id!=='name'&&f.id!=='doc'&&p[f.id]}).map(function(f,i){return '<div><b>'+pad(i+1)+'</b><span><strong>'+h(f.t)+'</strong><br>'+h(val(p,f.id))+'</span></div>'}).join('')+'</div>'+

@@ -12,6 +12,7 @@ import { makeStrategy } from "./strategy.mjs";
 import { CATALOG, AREAS as AREA_KEYS } from "./app/lib/catalog.mjs";
 import { PACK_LANGS } from "./app/lib/catalog-tr.mjs";
 import { HERO_SLOTS, heroStyle } from "./app/lib/hero.mjs";
+import { CERTS, CERT_DIR } from "./app/lib/certs.mjs";
 
 /*
  * Макет корпоративного сайта CZECHFARM (фармацевтическая компания) по ТЗ
@@ -328,13 +329,36 @@ function ctaEnd(l) {
    прежнего сайта czechfarm.uz и сайтов самих компаний: partners.py кладёт их
    в public/protos/chechfarm/partners и пишет partners.json. Два ряда
    навстречу, наведение останавливает; при «меньше движения» — стопкой. */
+/* Регистрационные удостоверения (app/lib/certs.mjs): компания прислала сканы
+   28.11.2026. Список всех документов — на «Наших продуктах», у препарата —
+   кнопка в окне. Только боевой сайт. */
+function certsBlock(l) {
+  if (!PROD || !CERTS.length) return "";
+  const t = T(l), nm = (c) => (l === "ru" ? c.name[0] : c.name[1]);
+  return `<section class="sec rc" id="certificates"><div class="wrap"><div class="sec-h mv mv-up"><p class="kicker">${t("Документы", "Hujjatlar", "Documents")}</p><h2 class="h2">${t("Регистрационные удостоверения <b>Минздрава Узбекистана</b>", "O‘zbekiston Sog‘liqni saqlash vazirligining <b>ro‘yxatdan o‘tganlik guvohnomalari</b>", "Registration certificates <b>of the Ministry of Health of Uzbekistan</b>")}</h2><p class="lead">${t("Препараты портфеля зарегистрированы в Узбекистане. Откройте документ по нужному препарату.", "Portfeldagi dori vositalari O‘zbekistonda ro‘yxatdan o‘tgan. Kerakli dori bo‘yicha hujjatni oching.", "The products in our portfolio are registered in Uzbekistan. Open the document for the product you need.")}</p></div>
+<ul class="rc-list mv mv-up">${CERTS.map((c) => `<li><a href="${CERT_DIR}/${c.file}.pdf" target="_blank" rel="noopener">${ICON.info}<span><b>${nm(c)}</b><i>PDF</i></span></a></li>`).join("")}</ul></div></section>`;
+}
+
+/* Оптовики и аптечные сети, через которых препараты доходят до аптек
+   (компания в общем чате: «можно вообще вывести на сайт „работаем с
+   крупными оптовиками как GRAND PHARM TRADE, MEROS PHARM и др.“»; владелец,
+   28.11.2026: «просили добавить новых партнеров, сделай»). Логотипов не
+   прислали — названия плашками под логотипами партнёров. */
+const DISTRIBUTORS = ["GRAND PHARM TRADE", "MEROS PHARM", "YOUNG PHARM", "FARM LYUKS INVEST", "VERONA", "CITY PHARM", "MEMORY PHARM A.G", "GARMONIYA FARM", "BIOTEK FARM", "AZZAM FARM", "PHARMA COSMOS", "BEK BARAKA SAMARQAND", "AKMALBEK PHARM", "PHARM GATE GROUP", "PARADISE PHARM", "REFLEX PHARM", "BEST PHARM", "OXOTNIK FARM"];
+const CHAINS = [["Сеть аптек «7777»", "«7777» dorixonalar tarmog‘i", "7777 pharmacy chain"], ["Сеть аптек «Навбахор»", "«Navbahor» dorixonalar tarmog‘i", "Navbahor pharmacy chain"]];
+function distBlock(l) {
+  const t = T(l);
+  return `<div class="wrap pd"><div class="sec-h mv mv-up"><h3 class="h3">${t("Работаем с крупными оптовиками <b>и аптечными сетями</b>", "Yirik ulgurji kompaniyalar <b>va dorixona tarmoqlari</b> bilan ishlaymiz", "We work with major wholesalers <b>and pharmacy chains</b>")}</h3><p class="lead">${t("GRAND PHARM TRADE, MEROS PHARM и другие оптовые компании доводят наши препараты до аптек по всему Узбекистану.", "GRAND PHARM TRADE, MEROS PHARM va boshqa ulgurji kompaniyalar dori vositalarimizni butun O‘zbekiston dorixonalariga yetkazadi.", "GRAND PHARM TRADE, MEROS PHARM and other wholesalers bring our products to pharmacies across Uzbekistan.")}</p></div>
+<ul class="pd-list mv mv-up">${CHAINS.map((c) => `<li class="pd-chain">${t(...c)}</li>`).join("")}${DISTRIBUTORS.map((n) => `<li translate="no" lang="en">${n}</li>`).join("")}</ul></div>`;
+}
+
 const LOGOS = existsSync(DIR + "partners.json") ? JSON.parse(readFileSync(DIR + "partners.json", "utf8")) : [];
 function partnersBlock(l, id = "our-partners") {
   if (!PROD || !LOGOS.length) return "";
   const t = T(l), half = Math.ceil(LOGOS.length / 2);
   const row = (list, dir) => `<div class="pl-row${dir ? " rev" : ""}"><ul class="pl-track">${[...list, ...list].map((p, i) => `<li${i >= list.length ? ' aria-hidden="true"' : ""}><img src="${IMG}/partners/${p.file}" alt="${i >= list.length ? "" : p.name}" width="${p.w}" height="${p.h}" loading="lazy" decoding="async"></li>`).join("")}</ul></div>`;
   return `<section class="sec pl" id="${id}"><div class="wrap"><div class="sec-h mv mv-up"><p class="kicker">${t("Наши партнёры", "Hamkorlarimiz", "Our partners")}</p><h2 class="h2">${t("Работаем с производителями <b>из разных стран</b>", "Turli mamlakatlardagi <b>ishlab chiqaruvchilar</b> bilan ishlaymiz", "We work with manufacturers <b>from many countries</b>")}</h2><p class="lead">${t("Турция, Южная Корея, Кипр, Испания, Грузия, США и другие: препараты наших партнёров доходят до аптек Узбекистана через CZECHFARM.", "Turkiya, Janubiy Koreya, Kipr, Ispaniya, Gruziya, AQSh va boshqalar: hamkorlarimiz dori vositalari CZECHFARM orqali O‘zbekiston dorixonalariga yetib boradi.", "Turkey, South Korea, Cyprus, Spain, Georgia, the USA and more: our partners’ medicines reach pharmacies in Uzbekistan through CZECHFARM.")}</p></div></div>
-${row(LOGOS.slice(0, half), false)}${row(LOGOS.slice(half), true)}</section>`;
+${row(LOGOS.slice(0, half), false)}${row(LOGOS.slice(half), true)}${distBlock(l)}</section>`;
 }
 
 function home(l) {
@@ -409,7 +433,8 @@ function productsLive(l) {
 <div class="pf-grid" id="catalog" aria-live="polite"></div>
 <div class="empty mv mv-up pf-more"><p>${t("Ищете препарат для аптеки или клиники? Напишите нам: расскажем о поставках и условиях.", "Dorixona yoki klinika uchun dori qidiryapsizmi? Bizga yozing: yetkazib berish va shartlar haqida aytib beramiz.", "Looking for a product for a pharmacy or clinic? Write to us and we will tell you about supply and terms.")}</p><div class="hero-act"><a class="btn btn-gold" href="${href(l, "contacts")}#form">${t("Написать в компанию", "Kompaniyaga yozish", "Write to the company")}${ICON.arrow}</a></div></div>
 <p class="warn pf-warn">${ICON.info}<span>${t("Информация о продуктах не заменяет консультацию врача. Перед применением прочитайте инструкцию. Схему приёма назначает врач.", "Mahsulotlar haqidagi ma’lumot shifokor maslahatining o‘rnini bosmaydi. Qo‘llashdan oldin yo‘riqnomani o‘qing. Qabul qilish tartibini shifokor belgilaydi.", "Product information does not replace a doctor’s consultation. Read the leaflet before use. The dosing regimen is set by a doctor.")}</span></p>
-</div></section>`].join("\n");
+</div></section>`,
+  certsBlock(l)].join("\n");
 }
 
 function products(l) {
@@ -576,7 +601,7 @@ function K(l, p) {
       needAgree: t("Нужно согласие на обработку данных", "Ma’lumotlarni qayta ishlashga rozilik kerak", "Please agree to data processing"),
       shortPass: t("Пароль не короче 8 знаков", "Parol kamida 8 belgi", "The password needs at least 8 characters"),
     } } : {}),
-    ...(PROD && p === "products" ? { areas: Object.fromEntries(AREA_KEYS.map((k) => [k, areaName(l, k)])), pimg: `${IMG}/products`, pl: { comp: t("Состав", "Tarkibi", "Composition"), form: t("Форма выпуска", "Chiqarilish shakli", "Dosage form"), pack: t("В упаковке", "Qadoqda", "Pack"), group: t("Группа", "Guruh", "Group"), doctors: t("Назначают", "Tayinlaydi", "Prescribed by"), maker: t("Производитель", "Ishlab chiqaruvchi", "Manufacturer"), inn: t("Действующее вещество", "Ta’sir etuvchi modda", "Active substance"), ask: t("Спросить о препарате", "Dori haqida so‘rash", "Ask about this product"), rx: t("По рецепту", "Retsept bilan", "Prescription only"), open: t("Подробнее", "Batafsil", "Details") }, contactsHref: href(l, "contacts") + "#form", pv: PACK_V } : {}),
+    ...(PROD && p === "products" ? { areas: Object.fromEntries(AREA_KEYS.map((k) => [k, areaName(l, k)])), pimg: `${IMG}/products`, pl: { comp: t("Состав", "Tarkibi", "Composition"), form: t("Форма выпуска", "Chiqarilish shakli", "Dosage form"), pack: t("В упаковке", "Qadoqda", "Pack"), group: t("Группа", "Guruh", "Group"), doctors: t("Назначают", "Tayinlaydi", "Prescribed by"), maker: t("Производитель", "Ishlab chiqaruvchi", "Manufacturer"), inn: t("Действующее вещество", "Ta’sir etuvchi modda", "Active substance"), ask: t("Спросить о препарате", "Dori haqida so‘rash", "Ask about this product"), rx: t("По рецепту", "Retsept bilan", "Prescription only"), rc: t("Регистрационное удостоверение", "Ro‘yxatdan o‘tganlik guvohnomasi", "Registration certificate"), open: t("Подробнее", "Batafsil", "Details") }, contactsHref: href(l, "contacts") + "#form", pv: PACK_V } : {}),
     ...(PROD ? { prod: true, live: null, rxName: { rx: t("По рецепту", "Retsept bilan", "Prescription only"), otc: t("Без рецепта", "Retseptsiz", "Over the counter") },
     leaflet: t("Открыть инструкцию (PDF)", "Yo‘riqnomani ochish (PDF)", "Open the leaflet (PDF)"),
     sendFail: t("Не получилось отправить. Проверьте интернет и попробуйте ещё раз.", "Yuborib bo‘lmadi. Internetni tekshirib, qayta urinib ko‘ring.", "Could not send. Check your connection and try again.") } : {}),
