@@ -2,8 +2,8 @@
 // со звонком, режет речь на реплики, шлёт их в API CallHelper и показывает
 // подсказку. Разговор живёт только в памяти этой панели до конца звонка.
 import { Segmenter, callIsOver, insertLine, keepHeld, makeResampler } from "./audio-core.mjs";
+import { API_PATH, CLOUD_ORIGIN, checkServer, isBox, permissionFor, quotaLine } from "./server.mjs";
 
-const DEFAULT_BASE = "https://devuz.studio/api/callhelper/v1";
 const $ = (id) => document.getElementById(id);
 const VIEWS = ["v-key", "v-ready", "v-script", "v-call", "v-summary"];
 
@@ -18,6 +18,9 @@ const ERRORS = {
   rate: "Слишком много запросов. Подождите минуту.",
   stt_down: "Распознавание речи сейчас не отвечает. Попробуйте через минуту.",
   stt_off: "Распознавание речи ещё не подключено. Напишите нам.",
+  box_class: "Эта коробка DevUz не тянет живой суфлёр: он работает на модели «Про» и старше.",
+  box_unknown: "Коробка ещё не узнала свою модель. Подождите минуту и попробуйте снова.",
+  forbidden: "Менять сценарии на коробке может руководитель в «Офисе».",
 };
 const SCRIPT_PROBLEMS = {
   product: "Впишите, что продаёте.",
@@ -26,7 +29,8 @@ const SCRIPT_PROBLEMS = {
   stageWords: "У каждого этапа третьей частью строки нужны слова, по которым он считается пройденным.",
 };
 
-let cfg = { key: "", operator: "", scriptId: "", shift: false, base: DEFAULT_BASE };
+let cfg = { key: "", operator: "", scriptId: "", shift: false, server: CLOUD_ORIGIN };
+let box = false;
 let scripts = [];
 let editing = null;
 let call = null;
@@ -42,13 +46,19 @@ function alertText(text) {
   $("alert").hidden = !text;
 }
 
-const explain = (error) => ERRORS[error?.code] || "Не получилось связаться с сервером. Проверьте интернет и попробуйте ещё раз.";
+const explain = (error) => {
+  if (error?.code === "call_limit" && box) return "Звонок дошёл до предела длительности на коробке и завершён.";
+  if (ERRORS[error?.code]) return ERRORS[error.code];
+  if (cfg.server !== CLOUD_ORIGIN && !error?.code)
+    return "Коробка не отвечает. Проверьте, что компьютер в той же сети, что и коробка, и адрес верный. Если браузер ругается на сертификат, откройте адрес коробки во вкладке один раз и подтвердите.";
+  return "Не получилось связаться с сервером. Проверьте интернет и попробуйте ещё раз.";
+};
 
 async function api(method, path, body, raw) {
   const headers = { Authorization: `Bearer ${cfg.key}` };
   if (raw) headers["Content-Type"] = "application/octet-stream";
   else if (body) headers["Content-Type"] = "application/json";
-  const res = await fetch(cfg.base + path, { method, headers, body: raw ?? (body ? JSON.stringify(body) : undefined) });
+  const res = await fetch(cfg.server + API_PATH + path, { method, headers, body: raw ?? (body ? JSON.stringify(body) : undefined) });
   let data = {};
   try {
     data = await res.json();
@@ -69,17 +79,12 @@ async function api(method, path, body, raw) {
 async function enter() {
   alertText("");
   const me = await api("GET", "/me");
+  box = isBox(me);
   $("org").textContent = me.org?.name || "";
   const access = me.access || {};
   $("start").disabled = !access.ok;
   if (!access.ok) alertText(ERRORS[access.reason] || "Доступ закрыт.");
-  $("quota").textContent = access.ok
-    ? access.hours_left != null
-      ? `Пробный период: осталось ${access.minutes_left} мин и ${access.hours_left} ч.`
-      : access.minutes_included != null
-        ? `Минут в этом месяце осталось: ${access.minutes_left}.`
-        : `Пробный период: ${access.minutes_left} минут с первого звонка.`
-    : "";
+  $("quota").textContent = quotaLine(me);
   await loadScripts();
   show("v-ready");
 }
@@ -350,7 +355,7 @@ function tick() {
   const you = call.lines.filter((l) => l.who === "operator").length;
   $("ears").textContent = `вы: ${you} · клиент: ${call.lines.length - you}`;
   if (call.limit && seconds >= call.limit) {
-    alertText(ERRORS.call_limit);
+    alertText(explain({ code: "call_limit" }));
     endCall();
   } else if (rig?.shift && callIsOver(call.lastHeard, Date.now())) {
     endCall();
@@ -495,18 +500,37 @@ function renderSummary(ended, box) {
 
 // --- запуск ---
 
+/** Право ходить на адрес коробки: спрашиваем в самом нажатии, иначе браузер откажет. */
+function askAccess(server) {
+  if (!server.local) return Promise.resolve(true);
+  return chrome.permissions.request({ origins: [permissionFor(server.origin)] }).catch(() => false);
+}
+
 $("key-form").addEventListener("submit", async (event) => {
   event.preventDefault();
+  const server = checkServer($("server").value);
+  if (!server.ok) {
+    alertText(server.error);
+    return;
+  }
+  const granted = askAccess(server);
+  $("server").value = server.origin;
+  if (!(await granted)) {
+    alertText("Браузер не дал расширению доступ к адресу коробки. Нажмите «Войти» ещё раз и выберите «Разрешить».");
+    return;
+  }
+  cfg.server = server.origin;
   cfg.key = $("key").value.trim();
   cfg.operator = $("operator").value.trim();
   try {
     await enter();
-    await chrome.storage.local.set({ key: cfg.key, operator: cfg.operator });
+    await chrome.storage.local.set({ key: cfg.key, operator: cfg.operator, server: cfg.server });
   } catch (error) {
     alertText(explain(error));
   }
 });
 $("gear").addEventListener("click", () => {
+  $("server").value = cfg.server;
   $("key").value = "";
   $("operator").value = cfg.operator;
   show("v-key");
@@ -542,11 +566,21 @@ $("again").addEventListener("click", async () => {
 });
 
 (async () => {
-  const saved = await chrome.storage.local.get(["key", "operator", "scriptId", "shift", "base"]);
-  cfg = { key: saved.key || "", operator: saved.operator || "", scriptId: saved.scriptId || "", shift: !!saved.shift, base: saved.base || DEFAULT_BASE };
+  const saved = await chrome.storage.local.get(["key", "operator", "scriptId", "shift", "server"]);
+  // Сохранённый адрес проверяем заново: в память могли положить что угодно.
+  const server = checkServer(saved.server || CLOUD_ORIGIN);
+  cfg = { key: saved.key || "", operator: saved.operator || "", scriptId: saved.scriptId || "", shift: !!saved.shift, server: server.ok ? server.origin : CLOUD_ORIGIN };
+  $("server").value = cfg.server;
   $("shift").checked = cfg.shift;
   startLabel();
-  if (!cfg.key) {
+  if (!cfg.key || !server.ok) {
+    show("v-key");
+    return;
+  }
+  if (server.local && !(await chrome.permissions.contains({ origins: [permissionFor(server.origin)] }))) {
+    alertText("Нет доступа к адресу коробки. Нажмите «Войти», чтобы разрешить его снова.");
+    $("operator").value = cfg.operator;
+    $("key").value = cfg.key;
     show("v-key");
     return;
   }
