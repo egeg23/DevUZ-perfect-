@@ -19,8 +19,13 @@
     <!-- 1. Ключ колл-центра -->
     <section id="v-key" class="view" hidden>
       <h1>Вставьте ключ</h1>
-      <p>Ключ колл-центра начинается на <code>chk_</code>. Его выдаёт руководитель или DevUz.</p>
+      <p>Ключ колл-центра начинается на <code>chk_</code>. Его выдаёт руководитель или DevUz, а на коробке DevUz — руководитель в «Офисе».</p>
       <form id="key-form">
+        <label class="field">
+          Адрес сервера
+          <small>Облако DevUz или адрес вашей коробки DevUz в сети офиса, например devuz-1234.local или 192.168.1.10</small>
+          <input id="server" autocomplete="url" spellcheck="false" inputmode="url" placeholder="devuz.studio" required />
+        </label>
         <input id="key" type="password" autocomplete="off" spellcheck="false" placeholder="chk_…" required />
         <input id="operator" autocomplete="name" maxlength="120" placeholder="Ваше имя: так звонок подпишется в отчёте" />
         <button class="btn primary" type="submit">Войти</button>

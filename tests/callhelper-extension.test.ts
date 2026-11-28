@@ -6,6 +6,7 @@ import { CALLHELPER_API_BASE } from "@/content/callhelper-api";
 import { AUDIO_MAX_BYTES, AUDIO_MIN_BYTES, AUDIO_RATE } from "@/lib/callhelper/orgs";
 
 import { RATE, SHIFT, Segmenter, callIsOver, insertLine, keepHeld, makeResampler, toPcm16 } from "../extension/callhelper/audio-core.mjs";
+import { API_PATH, CLOUD_ORIGIN, checkServer, isBox, isLocalHost, permissionFor, quotaLine } from "../extension/callhelper/server.mjs";
 import { ZIP_PATH, packExtension } from "../scripts/callhelper/pack-extension.mjs";
 
 /**
@@ -79,14 +80,18 @@ test("реплики двух голосов встают по времени н
   assert.deepEqual(lines.map((l) => l.text), ["а", "б", "в"]);
 });
 
-test("расширение: третья версия манифеста, прав только нужные, ходит только на наш API", () => {
+test("расширение: третья версия манифеста, прав только нужные, ходит только на наш API или коробку", () => {
   const manifest = JSON.parse(readFileSync(`${EXT}/manifest.json`, "utf8"));
   assert.equal(manifest.manifest_version, 3);
   assert.deepEqual([...manifest.permissions].sort(), ["activeTab", "sidePanel", "storage", "tabCapture"]);
-  assert.deepEqual(manifest.host_permissions, ["https://devuz.studio/*"]);
+  assert.deepEqual(manifest.host_permissions, ["https://devuz.studio/*"], "облако — постоянное право");
+  assert.deepEqual(manifest.optional_host_permissions, ["https://*/*", "http://*/*"], "адрес коробки — по запросу у человека");
   assert.equal(manifest.content_scripts, undefined, "в страницы колл-центра расширение не встраивается");
   const panel = readFileSync(`${EXT}/panel.mjs`, "utf8");
-  assert.ok(panel.includes(`"https://devuz.studio${CALLHELPER_API_BASE}"`), "адрес API");
+  assert.equal(CLOUD_ORIGIN + API_PATH, `https://devuz.studio${CALLHELPER_API_BASE}`, "адрес API");
+  assert.match(panel, /fetch\(cfg\.server \+ API_PATH \+ path/, "запросы идут только на проверенный адрес");
+  assert.match(panel, /chrome\.permissions\.request\(\{ origins: \[permissionFor/, "право на коробку спрашивается у человека");
+  assert.match(panel, /checkServer\(saved\.server/, "сохранённый адрес проверяется заново");
   assert.doesNotMatch(panel, /innerHTML|insertAdjacentHTML|eval\(|new Function/, "текст разговора на экран только как текст");
   assert.match(panel, /source\.connect\(ctx\.destination\)/, "звук вкладки возвращается оператору");
   assert.doesNotMatch(panel, /localStorage|indexedDB/, "разговор не хранится");
@@ -115,4 +120,67 @@ test("смена: звонок начинается по слову клиент
   assert.doesNotMatch(panel, /\/events|webhook|whk_/, "события от сервисов набора не нужны: расширение слушает само");
   const html = readFileSync(`${EXT}/panel.html`, "utf8");
   for (const id of ["shift", "stop-shift", "last-box"]) assert.ok(html.includes(`id="${id}"`), id);
+});
+
+test("адрес сервера: облако и коробка в сети офиса, ключ не уходит в чужой интернет", () => {
+  const ok = (input: string, origin: string, local: boolean) => assert.deepEqual(checkServer(input), { ok: true, origin, local }, input);
+  ok("https://devuz.studio", CLOUD_ORIGIN, false);
+  ok("devuz.studio", CLOUD_ORIGIN, false);
+  ok("https://devuz.studio/", CLOUD_ORIGIN, false);
+  ok("https://devuz-1a2b.local", "https://devuz-1a2b.local", true);
+  ok("devuz-1a2b.local", "https://devuz-1a2b.local", true);
+  ok("http://devuz-1a2b.local", "http://devuz-1a2b.local", true);
+  ok("https://192.168.1.10", "https://192.168.1.10", true);
+  ok("http://10.0.0.5:8443", "http://10.0.0.5:8443", true);
+  ok("https://172.20.3.4", "https://172.20.3.4", true);
+  ok("http://[fd12::1]", "http://[fd12::1]", true);
+  ok("http://[fe80::1]", "http://[fe80::1]", true);
+
+  const bad = (input: string) => assert.equal(checkServer(input).ok, false, input);
+  bad("");
+  bad("http://devuz.studio"); // облако — только https
+  bad("https://example.com"); // чужой сервер в интернете
+  bad("http://example.com");
+  bad("https://devuz.studio.evil.com");
+  bad("https://8.8.8.8");
+  bad("http://172.32.0.1");
+  bad("http://192.169.0.1");
+  bad("https://user:pass@192.168.1.10");
+  bad("https://192.168.1.10/office");
+  bad("https://192.168.1.10/?x=1");
+  bad("https://192.168.1.10/#a");
+  bad("ftp://192.168.1.10");
+  bad("javascript:alert(1)");
+  bad("https://.local");
+  bad("http://[2001:db8::1]");
+
+  assert.equal(isLocalHost("box.local"), true);
+  assert.equal(isLocalHost("local"), false);
+  assert.equal(isLocalHost("300.1.1.1"), false);
+  assert.equal(permissionFor("http://10.0.0.5:8443"), "http://10.0.0.5/*", "право — на имя без порта");
+  assert.equal(permissionFor("https://devuz-1a2b.local"), "https://devuz-1a2b.local/*");
+});
+
+test("ответ коробки без тарифа: «Коробка DevUz», без «null» и минут", () => {
+  const boxMe = {
+    org: { id: "box", name: "Клиника", plan: "box", operators: null },
+    access: { ok: true, minutes_left: null, hours_left: null, minutes_included: null },
+    box_class: "pro",
+  };
+  assert.equal(isBox(boxMe), true);
+  assert.equal(quotaLine(boxMe), "Коробка DevUz, класс «pro».");
+  assert.equal(quotaLine({ ...boxMe, box_class: null }), "Коробка DevUz.");
+  assert.equal(quotaLine({ org: { plan: "box" }, access: { ok: true } }), "Коробка DevUz.", "полей минут может не быть вовсе");
+  for (const me of [boxMe, { org: { plan: "box" }, access: { ok: true } }]) assert.doesNotMatch(quotaLine(me), /null|undefined|мин/);
+  assert.equal(quotaLine({ ...boxMe, access: { ok: false, reason: "box_class" } }), "");
+
+  assert.equal(isBox({ org: { plan: "start" }, access: { ok: true } }), false);
+  assert.equal(quotaLine({ access: { ok: true, minutes_left: 40, hours_left: 50 } }), "Пробный период: осталось 40 мин и 50 ч.");
+  assert.equal(quotaLine({ access: { ok: true, minutes_left: 900, minutes_included: 1000 } }), "Минут в этом месяце осталось: 900.");
+  assert.equal(quotaLine({ access: { ok: true, minutes_left: 50, hours_left: null } }), "Пробный период: 50 минут с первого звонка.");
+  assert.equal(quotaLine({ access: { ok: true, minutes_left: null } }), "", "облако без чисел — пустая строка, не «null»");
+
+  const panel = readFileSync(`${EXT}/panel.mjs`, "utf8");
+  for (const code of ["box_class", "box_unknown", "forbidden"]) assert.match(panel, new RegExp(`${code}: "`), `понятный текст для ${code}`);
+  assert.match(panel, /\$\("quota"\)\.textContent = quotaLine\(me\)/);
 });
