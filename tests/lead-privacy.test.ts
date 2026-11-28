@@ -45,7 +45,7 @@ process.env.TELEGRAM_BOT_TOKEN = "stub-token";
 process.env.TELEGRAM_SALES_CHAT_ID = "-1001234567890";
 process.env.NEXT_PUBLIC_SITE_URL = "https://devuz.example";
 
-const { formatLeadBrief, sendLead } = await import("@/lib/qualify/telegram");
+const { CARD_BUTTON, formatLeadBrief, markBriefHandled, sendLead } = await import("@/lib/qualify/telegram");
 
 const HANDLE = "@azizk_direct";
 
@@ -113,9 +113,13 @@ test("в брифе есть ник, но нет телефона и почты"
   );
 });
 
-test("бриф ведёт в карточку, а без карточки — не врёт ссылкой", () => {
+test("бриф ведёт в карточку кнопкой, а без карточки — не врёт", () => {
+  // Владелец, 28.11.2026: ссылка текстом просила войти каждый раз — Telegram
+  // подписывает только кнопку под сообщением. Текст говорит, где кнопка.
   const url = "https://devuz.example/admin/leads/abc";
-  assert.ok(formatLeadBrief(lead(), undefined, url).includes(url));
+  const brief = formatLeadBrief(lead(), undefined, url);
+  assert.ok(!brief.includes("<a href"), "ссылка на карточку текстом снова в брифе");
+  assert.ok(brief.includes(CARD_BUTTON), "бриф не говорит, где карточка");
 
   // Лид не записался в базу — ссылке вести некуда, и её быть не должно.
   const orphan = formatLeadBrief(lead(), undefined, null);
@@ -135,7 +139,26 @@ test("в чат уходит одно сообщение, и стенограм�
   for (const line of TRANSCRIPT) {
     assert.ok(!text.includes(line.content), "кусок переписки ушёл в общий чат");
   }
-  assert.ok(text.includes("https://devuz.example/admin/leads/abc123"), "нет ссылки на карточку");
+  const rows = (messages[0].body.reply_markup as { inline_keyboard: { text: string; login_url?: { url: string } }[][] })
+    .inline_keyboard;
+  assert.equal(rows[0][0].text, CARD_BUTTON);
+  assert.equal(rows[0][0].login_url?.url, "https://devuz.example/admin/enter/leads/abc123", "нет кнопки входа в карточку");
+});
+
+test("после «Взять» кнопка входа в карточку остаётся под надписью", async () => {
+  // Раньше надпись «В работе у …» заменяла все кнопки, и взявшему лид
+  // оставалась ссылка текстом, которая просила войти.
+  calls.length = 0;
+  await markBriefHandled(-100, 7, "✅ В работе у @egor", "abc123");
+  const rows = (calls[0].body.reply_markup as { inline_keyboard: { text: string; login_url?: { url: string } }[][] })
+    .inline_keyboard;
+  assert.equal(rows[0][0].text, "✅ В работе у @egor");
+  assert.equal(rows[1][0].login_url?.url, "https://devuz.example/admin/enter/leads/abc123");
+
+  // Без лида — только надпись, как у прочих сообщений.
+  calls.length = 0;
+  await markBriefHandled(-100, 8, "✅ Закрыто");
+  assert.equal((calls[0].body.reply_markup as { inline_keyboard: unknown[][] }).inline_keyboard.length, 1);
 });
 
 test("несохранённый лид всё равно доходит до отдела продаж", async () => {

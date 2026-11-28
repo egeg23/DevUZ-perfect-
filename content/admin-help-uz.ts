@@ -661,7 +661,7 @@ export const uz: HelpCopy = {
           title: "Telegramdagi lid kartochkasi",
           body: [
             "Telegramdagi yangi lid kartochkasi qisqa. Unda mijoz qanchalik iliqligi yozilgan: «🔥 Горячий», «🟡 Тёплый», «🌱 Присматривается» yoki «👤 Просит живого человека». Keyin ariza raqami, kim va qayerdan yozyapti, «Что хочет», mijoz aytgan bo‘lsa, byudjet va muddatlar.",
-            "Pastda «Можно начать так»: mijozga tayyor birinchi xabar. Ustiga bosing, u nusxalanadi. Butun yozishma va tafsilotlar paneldagi kartochkada, «🔓 Открыть карточку» tugmasi.",
+            "Pastda «Можно начать так»: mijozga tayyor birinchi xabar. Ustiga bosing, u nusxalanadi. Butun yozishma va tafsilotlar paneldagi kartochkada, xabar ostidagi «🔓 Карточка: контакт и переписка» tugmasi. U panelga o‘zi kiradi, kod va tasdiqsiz, lid olingandan keyin ham kartochka ostida qoladi.",
           ],
         },
         {
@@ -689,7 +689,7 @@ export const uz: HelpCopy = {
           title: "Lid kartochkasi",
           body: {
             manager: [
-              "Kartochka ro‘yxatdan, «Bosh sahifa»dan yoki Telegramdagi «🔓 Открыть карточку» tugmasi bilan ochiladi. Har bir ochilish jurnalga yoziladi.",
+              "Kartochka ro‘yxatdan, «Bosh sahifa»dan yoki Telegramdagi «🔓 Карточка: контакт и переписка» tugmasi bilan ochiladi: u bilan kirish tasdiqsiz. Har bir ochilish jurnalga yoziladi.",
               "«Mas’ul» lid kimdaligini ko‘rsatadi. U yerda [«O‘zimga olish» va «Navbatga qaytarish»](#leads-take) hamda [«Berishni so‘rash»](#leads-transfer) tugmalari.",
               "«Holat»ni har bir suhbatdan keyin o‘zgartiring: «ishda», «qoldirilgan», «yutilgan» yoki «yutqazilgan». Statistika holatlar bo‘yicha hisoblanadi. «yutilgan», «yutqazilgan» va «qoldirilgan» avtoeslatmalarni bekor qiladi.",
               "«Kontaktni ko‘rsatish» mijozning telefoni yoki nikini ochadi. [«Lenta»](#leads-timeline)dagi «Yozishmani ko‘rsatish» mijoz botga yoki saytdagi chatga nima aytganini ko‘rsatadi. Ikkala tugma faqat olingan lid bo‘yicha ishlaydi va har bir bosish yoziladi.",

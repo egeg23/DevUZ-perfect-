@@ -169,7 +169,12 @@ test("взяли лида — кнопки гаснут у всей команд
   );
   for (const edit of edits) {
     const keyboard = (edit.body.reply_markup as { inline_keyboard: { text: string }[][] }).inline_keyboard;
-    assert.deepEqual(keyboard, [[{ text: "✅ В работе у @egor", callback_data: "noop" }]]);
+    assert.deepEqual(keyboard[0], [{ text: "✅ В работе у @egor", callback_data: "noop" }]);
+    // Взять и отклонить больше нельзя, а карточку открыть можно — кнопкой
+    // входа (владелец, 28.11.2026: ссылка текстом просила войти).
+    assert.equal(keyboard.length, 2);
+    assert.doesNotMatch(JSON.stringify(keyboard), /take:|drop:/);
+    assert.match(JSON.stringify(keyboard[1]), /admin\/enter\/leads\/lead-1/);
   }
 });
 
