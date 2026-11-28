@@ -151,7 +151,13 @@ export function formatLeadBrief(
     // Ник в Telegram человек и так показывает каждому, кому пишет.
     `💬 ${esc(channelLabel(lead))}${handle ? ` · ${esc(handle)}` : ""} · контакт открывается в карточке`,
     ...originLines(place, origin?.at ?? Date.now()).map((line, i) => `${i === 0 ? "🕒" : "📍"} ${esc(line)}`),
-    ...(cardUrl ? [`🔗 <a href="${esc(cardUrl)}">Карточка: контакт и переписка</a>`] : []),
+    // Ссылки текстом нет (владелец, 28.11.2026: «после нажатия на карточка:
+    // контакт и переписка сразу попадал в панель, без подтверждения… он
+    // просит авторизоваться постоянно»). Ссылку в тексте Telegram не
+    // подписывает, и браузер телефона без сессии уводил на вход. Подписывает
+    // он только кнопку под сообщением (CARD_BUTTON, login_url) — она и
+    // входит сама. Строка говорит, где она.
+    ...(cardUrl ? [`🔓 Контакт и переписка — кнопкой «${CARD_BUTTON}» ниже`] : []),
     "",
     `<b>Что хочет:</b> ${esc(oneLine(s.request) || "не сказал")}`,
     ...(known(s.budget) ? [`<b>Бюджет:</b> ${esc(oneLine(s.budget))}`] : []),
@@ -1065,9 +1071,22 @@ export async function answerCallback(id: string, text: string): Promise<void> {
  * Отдельной функцией, потому что собирают её двое: отправка карточки и
  * возврат кнопок, когда лида отпустили обратно.
  */
+/**
+ * Кнопка входа в карточку лида — та, что открывает панель без входа.
+ *
+ * Остаётся под карточкой и после «Взять» и «Отклонить»: раньше надпись «В
+ * работе у …» заменяла все кнопки, и взявшему оставалась только ссылка, а
+ * по ней панель просила войти.
+ */
+export const CARD_BUTTON = "🔓 Карточка: контакт и переписка";
+
+function cardRow(leadId: string): Button[] {
+  return [{ text: CARD_BUTTON, panel: `/admin/leads/${leadId}` }];
+}
+
 function leadRows(leadId: string, withCard: boolean, trash = false): Button[][] {
   return [
-    ...(withCard ? [[{ text: "🔓 Открыть карточку", panel: `/admin/leads/${leadId}` }]] : []),
+    ...(withCard ? [cardRow(leadId)] : []),
     [
       { text: "✅ Взять в работу", callback_data: `take:${leadId}` },
       { text: "🗄 Отклонить", callback_data: `drop:${leadId}` },
@@ -1124,8 +1143,12 @@ export async function editLeadCards(
   leadId: string,
   status: string | null,
   except?: { chatId: number | string; messageId: number },
+  /** Лид удалён — карточки больше нет, и кнопке в неё вести некуда. */
+  card = true,
 ): Promise<void> {
-  const done = status ? [[{ text: status, callback_data: "noop" }]] : null;
+  const done: Button[][] | null = status
+    ? [[{ text: status, callback_data: "noop" }], ...(card ? [cardRow(leadId)] : [])]
+    : null;
   // Кнопки вернулись (лида отпустили) — «🗑 Мусор» снова только у владельца
   // и руководителя.
   const trash = done ? new Set<string>() : await trashChats(notices.map((n) => n.chatId));
@@ -1137,7 +1160,7 @@ export async function editLeadCards(
         call("editMessageReplyMarkup", {
           chat_id: n.chatId,
           message_id: n.messageId,
-          reply_markup: { inline_keyboard: done ?? forTelegram(leadRows(leadId, true, trash.has(n.chatId))) },
+          reply_markup: { inline_keyboard: forTelegram(done ?? leadRows(leadId, true, trash.has(n.chatId))) },
         }),
       ),
   );
@@ -1260,10 +1283,13 @@ export async function markBriefHandled(
   chatId: number | string,
   messageId: number,
   status: string,
+  /** Карточка лида: кнопка входа в неё остаётся под надписью. */
+  leadId?: string,
 ): Promise<void> {
+  const rows: Button[][] = [[{ text: status, callback_data: "noop" }], ...(leadId ? [cardRow(leadId)] : [])];
   await call("editMessageReplyMarkup", {
     chat_id: chatId,
     message_id: messageId,
-    reply_markup: { inline_keyboard: [[{ text: status, callback_data: "noop" }]] },
+    reply_markup: { inline_keyboard: forTelegram(rows) },
   });
 }

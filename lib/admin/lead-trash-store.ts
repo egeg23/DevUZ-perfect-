@@ -57,7 +57,7 @@ export async function trashLead(
     meta: { request_no: requestNo, status: lead.status, via, label, request: words, owner, by_role: staff.role },
   });
   if (!canTrash(staff.role)) await tellBosses(managerTrashLine(staff, { request_no: requestNo, label, words }));
-  await editLeadCards(notices, leadId, trashedLabel(staff), except).catch((e) =>
+  await editLeadCards(notices, leadId, trashedLabel(staff), except, false).catch((e) =>
     console.error("lead-trash: не переписал карточки", e),
   );
   return { ok: true, requestNo };

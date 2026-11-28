@@ -660,7 +660,7 @@ export const leadsSections: Record<string, HelpEntry> = {
         title: "Karta leada w Telegramie",
         body: [
           "Karta nowego leada w Telegramie jest krótka. Widać w niej, jak ciepły jest klient: «🔥 Горячий», «🟡 Тёплый», «🌱 Присматривается» albo «👤 Просит живого человека». Dalej numer zgłoszenia, kto i skąd pisze, «Что хочет», budżet i terminy, jeśli klient je podał.",
-          "Na dole «Можно начать так»: gotowa pierwsza wiadomość do klienta. Kliknij ją, a się skopiuje. Cała korespondencja i szczegóły są w karcie w panelu, przycisk «🔓 Открыть карточку».",
+          "Na dole «Можно начать так»: gotowa pierwsza wiadomość do klienta. Kliknij ją, a się skopiuje. Cała korespondencja i szczegóły są w karcie w panelu, przycisk «🔓 Карточка: контакт и переписка» pod wiadomością. Wchodzi do panelu sam, bez kodu i potwierdzenia, i zostaje pod kartą także po przejęciu leada.",
         ],
       },
       {
@@ -688,7 +688,7 @@ export const leadsSections: Record<string, HelpEntry> = {
         title: "Karta leada",
         body: {
           manager: [
-            "Kartę otworzysz z listy, z «Pulpit» albo przyciskiem «🔓 Открыть карточку» w Telegramie. Każde otwarcie trafia do dziennika.",
+            "Kartę otworzysz z listy, z «Pulpit» albo przyciskiem «🔓 Карточка: контакт и переписка» w Telegramie: wejście bez potwierdzenia. Każde otwarcie trafia do dziennika.",
             "«Prowadzi» pokazuje, czyj jest lead. Tam są też przyciski [«Przejmij» i «Zwróć do kolejki»](#leads-take) oraz [«Poproś o przekazanie»](#leads-transfer).",
             "«Status» zmieniaj po każdej rozmowie: «w toku», «odłożony», «wygrany» albo «przegrany». Według statusów liczy się statystyka. «wygrany», «przegrany» i «odłożony» wyłączają automatyczne przypomnienia.",
             "«Pokaż dane kontaktowe» otwiera telefon lub nick klienta. «Pokaż korespondencję» w [«Oś zdarzeń»](#leads-timeline) pokazuje, co klient powiedział botowi albo czatowi na stronie. Oba przyciski działają tylko dla przejętego leada, a każde kliknięcie jest zapisywane.",

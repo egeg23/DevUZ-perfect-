@@ -2047,7 +2047,7 @@ async function handleButton(query: NonNullable<Update["callback_query"]>) {
 
     const label = handledLabel(action === "take" ? "take" : "drop", staff);
     if (query.message) {
-      await markBriefHandled(query.message.chat.id, query.message.message_id, label);
+      await markBriefHandled(query.message.chat.id, query.message.message_id, label, leadId);
     }
     // Остальные копии — у всей команды. Без этого надпись менялась только у
     // нажавшего, а семеро других видели живые кнопки у занятого лида.
